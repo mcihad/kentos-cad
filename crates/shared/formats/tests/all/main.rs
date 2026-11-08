@@ -13,6 +13,7 @@ mod cad_spatial;
 mod import_decisions;
 mod cad_sheet;
 mod dxf_units;
+mod dxf_units_once;
 mod exif;
 mod field_csv;
 mod field_gsi;

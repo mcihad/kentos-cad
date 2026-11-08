@@ -1,0 +1,891 @@
+{
+ "note": "The unit applied once (plan/map-cad.md MAP-02, docs/adr/2100): DXF files written in millimetres, centimetres, inches, feet and metres by ezdxf, and where every point, height and text height lands in metres, as ezdxf itself places them (its recursive block decomposition) times the unit's length, without KentOS code.",
+ "ezdxf": "1.4.5",
+ "cases": [
+  {
+   "file": "mm.dxf",
+   "insunits": 4,
+   "metres": 0.001,
+   "objects": [
+    {
+     "kind": "line",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       0.0,
+       1.5
+      ],
+      [
+       1.0,
+       0.0,
+       2.5
+      ]
+     ]
+    },
+    {
+     "kind": "point",
+     "layer": "NOKTA",
+     "points": [
+      [
+       0.5,
+       0.5,
+       1.2345
+      ]
+     ]
+    },
+    {
+     "kind": "polyline",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       2.0,
+       0.777
+      ],
+      [
+       1.0,
+       2.0,
+       0.777
+      ],
+      [
+       1.0,
+       3.0,
+       0.777
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.1,
+       0.2,
+       0.05
+      ]
+     ],
+     "radius": 0.025
+    },
+    {
+     "kind": "arc",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.3,
+       0.2,
+       0.06
+      ]
+     ],
+     "radius": 0.04,
+     "start": 0.0,
+     "end": 90.0
+    },
+    {
+     "kind": "text",
+     "layer": "YAZI",
+     "points": [
+      [
+       0.01,
+       0.02,
+       0.03
+      ]
+     ],
+     "height": 0.25
+    },
+    {
+     "kind": "mtext",
+     "layer": "YAZI",
+     "points": [
+      [
+       0.04,
+       0.05,
+       0.0
+      ]
+     ],
+     "height": 0.18
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       5.4330127019,
+       6.25,
+       0.365
+      ],
+      [
+       5.3580127019,
+       6.3799038106,
+       0.38
+      ]
+     ]
+    },
+    {
+     "kind": "text",
+     "layer": "BLOK",
+     "points": [
+      [
+       5.4125223208,
+       6.2554903811,
+       0.3575
+      ]
+     ],
+     "height": 0.075
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       5.0,
+       6.0,
+       0.3
+      ],
+      [
+       4.875,
+       6.2165063509,
+       0.325
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "layer": "NOKTA",
+     "points": [
+      [
+       1.98,
+       2.0,
+       1.234
+      ],
+      [
+       2.02,
+       2.0,
+       1.234
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "NOKTA",
+     "points": [
+      [
+       2.0,
+       2.0,
+       1.234
+      ]
+     ],
+     "radius": 0.01
+    }
+   ]
+  },
+  {
+   "file": "cm.dxf",
+   "insunits": 5,
+   "metres": 0.01,
+   "objects": [
+    {
+     "kind": "line",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       0.0,
+       15.0
+      ],
+      [
+       10.0,
+       0.0,
+       25.0
+      ]
+     ]
+    },
+    {
+     "kind": "point",
+     "layer": "NOKTA",
+     "points": [
+      [
+       5.0,
+       5.0,
+       12.345
+      ]
+     ]
+    },
+    {
+     "kind": "polyline",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       20.0,
+       7.77
+      ],
+      [
+       10.0,
+       20.0,
+       7.77
+      ],
+      [
+       10.0,
+       30.0,
+       7.77
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "CIZGI",
+     "points": [
+      [
+       1.0,
+       2.0,
+       0.5
+      ]
+     ],
+     "radius": 0.25
+    },
+    {
+     "kind": "arc",
+     "layer": "CIZGI",
+     "points": [
+      [
+       3.0,
+       2.0,
+       0.6
+      ]
+     ],
+     "radius": 0.4,
+     "start": 0.0,
+     "end": 90.0
+    },
+    {
+     "kind": "text",
+     "layer": "YAZI",
+     "points": [
+      [
+       0.1,
+       0.2,
+       0.3
+      ]
+     ],
+     "height": 2.5
+    },
+    {
+     "kind": "mtext",
+     "layer": "YAZI",
+     "points": [
+      [
+       0.4,
+       0.5,
+       0.0
+      ]
+     ],
+     "height": 1.8
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       54.3301270189,
+       62.5,
+       3.65
+      ],
+      [
+       53.5801270189,
+       63.7990381057,
+       3.8
+      ]
+     ]
+    },
+    {
+     "kind": "text",
+     "layer": "BLOK",
+     "points": [
+      [
+       54.1252232084,
+       62.5549038106,
+       3.575
+      ]
+     ],
+     "height": 0.75
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       50.0,
+       60.0,
+       3.0
+      ],
+      [
+       48.75,
+       62.1650635095,
+       3.25
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "layer": "NOKTA",
+     "points": [
+      [
+       19.8,
+       20.0,
+       12.34
+      ],
+      [
+       20.2,
+       20.0,
+       12.34
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "NOKTA",
+     "points": [
+      [
+       20.0,
+       20.0,
+       12.34
+      ]
+     ],
+     "radius": 0.1
+    }
+   ]
+  },
+  {
+   "file": "in.dxf",
+   "insunits": 1,
+   "metres": 0.0254,
+   "objects": [
+    {
+     "kind": "line",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       0.0,
+       38.1
+      ],
+      [
+       25.4,
+       0.0,
+       63.5
+      ]
+     ]
+    },
+    {
+     "kind": "point",
+     "layer": "NOKTA",
+     "points": [
+      [
+       12.7,
+       12.7,
+       31.3563
+      ]
+     ]
+    },
+    {
+     "kind": "polyline",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       50.8,
+       19.7358
+      ],
+      [
+       25.4,
+       50.8,
+       19.7358
+      ],
+      [
+       25.4,
+       76.2,
+       19.7358
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "CIZGI",
+     "points": [
+      [
+       2.54,
+       5.08,
+       1.27
+      ]
+     ],
+     "radius": 0.635
+    },
+    {
+     "kind": "arc",
+     "layer": "CIZGI",
+     "points": [
+      [
+       7.62,
+       5.08,
+       1.524
+      ]
+     ],
+     "radius": 1.016,
+     "start": 0.0,
+     "end": 90.0
+    },
+    {
+     "kind": "text",
+     "layer": "YAZI",
+     "points": [
+      [
+       0.254,
+       0.508,
+       0.762
+      ]
+     ],
+     "height": 6.35
+    },
+    {
+     "kind": "mtext",
+     "layer": "YAZI",
+     "points": [
+      [
+       1.016,
+       1.27,
+       0.0
+      ]
+     ],
+     "height": 4.572
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       137.9985226281,
+       158.75,
+       9.271
+      ],
+      [
+       136.0935226281,
+       162.0495567884,
+       9.652
+      ]
+     ]
+    },
+    {
+     "kind": "text",
+     "layer": "BLOK",
+     "points": [
+      [
+       137.4780669492,
+       158.8894556788,
+       9.0805
+      ]
+     ],
+     "height": 1.905
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       127.0,
+       152.4,
+       7.62
+      ],
+      [
+       123.825,
+       157.899261314,
+       8.255
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "layer": "NOKTA",
+     "points": [
+      [
+       50.292,
+       50.8,
+       31.3436
+      ],
+      [
+       51.308,
+       50.8,
+       31.3436
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "NOKTA",
+     "points": [
+      [
+       50.8,
+       50.8,
+       31.3436
+      ]
+     ],
+     "radius": 0.254
+    }
+   ]
+  },
+  {
+   "file": "ft.dxf",
+   "insunits": 2,
+   "metres": 0.3048,
+   "objects": [
+    {
+     "kind": "line",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       0.0,
+       457.2
+      ],
+      [
+       304.8,
+       0.0,
+       762.0
+      ]
+     ]
+    },
+    {
+     "kind": "point",
+     "layer": "NOKTA",
+     "points": [
+      [
+       152.4,
+       152.4,
+       376.2756
+      ]
+     ]
+    },
+    {
+     "kind": "polyline",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       609.6,
+       236.8296
+      ],
+      [
+       304.8,
+       609.6,
+       236.8296
+      ],
+      [
+       304.8,
+       914.4,
+       236.8296
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "CIZGI",
+     "points": [
+      [
+       30.48,
+       60.96,
+       15.24
+      ]
+     ],
+     "radius": 7.62
+    },
+    {
+     "kind": "arc",
+     "layer": "CIZGI",
+     "points": [
+      [
+       91.44,
+       60.96,
+       18.288
+      ]
+     ],
+     "radius": 12.192,
+     "start": 0.0,
+     "end": 90.0
+    },
+    {
+     "kind": "text",
+     "layer": "YAZI",
+     "points": [
+      [
+       3.048,
+       6.096,
+       9.144
+      ]
+     ],
+     "height": 76.2
+    },
+    {
+     "kind": "mtext",
+     "layer": "YAZI",
+     "points": [
+      [
+       12.192,
+       15.24,
+       0.0
+      ]
+     ],
+     "height": 54.864
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       1655.9822715367,
+       1905.0,
+       111.252
+      ],
+      [
+       1633.1222715367,
+       1944.594681461,
+       115.824
+      ]
+     ]
+    },
+    {
+     "kind": "text",
+     "layer": "BLOK",
+     "points": [
+      [
+       1649.7368033906,
+       1906.6734681461,
+       108.966
+      ]
+     ],
+     "height": 22.86
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       1524.0,
+       1828.8,
+       91.44
+      ],
+      [
+       1485.9,
+       1894.7911357684,
+       99.06
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "layer": "NOKTA",
+     "points": [
+      [
+       603.504,
+       609.6,
+       376.1232
+      ],
+      [
+       615.696,
+       609.6,
+       376.1232
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "NOKTA",
+     "points": [
+      [
+       609.6,
+       609.6,
+       376.1232
+      ]
+     ],
+     "radius": 3.048
+    }
+   ]
+  },
+  {
+   "file": "m.dxf",
+   "insunits": 6,
+   "metres": 1.0,
+   "objects": [
+    {
+     "kind": "line",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       0.0,
+       1500.0
+      ],
+      [
+       1000.0,
+       0.0,
+       2500.0
+      ]
+     ]
+    },
+    {
+     "kind": "point",
+     "layer": "NOKTA",
+     "points": [
+      [
+       500.0,
+       500.0,
+       1234.5
+      ]
+     ]
+    },
+    {
+     "kind": "polyline",
+     "layer": "CIZGI",
+     "points": [
+      [
+       0.0,
+       2000.0,
+       777.0
+      ],
+      [
+       1000.0,
+       2000.0,
+       777.0
+      ],
+      [
+       1000.0,
+       3000.0,
+       777.0
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "CIZGI",
+     "points": [
+      [
+       100.0,
+       200.0,
+       50.0
+      ]
+     ],
+     "radius": 25.0
+    },
+    {
+     "kind": "arc",
+     "layer": "CIZGI",
+     "points": [
+      [
+       300.0,
+       200.0,
+       60.0
+      ]
+     ],
+     "radius": 40.0,
+     "start": 0.0,
+     "end": 90.0
+    },
+    {
+     "kind": "text",
+     "layer": "YAZI",
+     "points": [
+      [
+       10.0,
+       20.0,
+       30.0
+      ]
+     ],
+     "height": 250.0
+    },
+    {
+     "kind": "mtext",
+     "layer": "YAZI",
+     "points": [
+      [
+       40.0,
+       50.0,
+       0.0
+      ]
+     ],
+     "height": 180.0
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       5433.0127018922,
+       6250.0,
+       365.0
+      ],
+      [
+       5358.0127018922,
+       6379.9038105677,
+       380.0
+      ]
+     ]
+    },
+    {
+     "kind": "text",
+     "layer": "BLOK",
+     "points": [
+      [
+       5412.5223208355,
+       6255.4903810568,
+       357.5
+      ]
+     ],
+     "height": 75.0
+    },
+    {
+     "kind": "line",
+     "layer": "BLOK",
+     "points": [
+      [
+       5000.0,
+       6000.0,
+       300.0
+      ],
+      [
+       4875.0,
+       6216.5063509461,
+       325.0
+      ]
+     ]
+    },
+    {
+     "kind": "line",
+     "layer": "NOKTA",
+     "points": [
+      [
+       1980.0,
+       2000.0,
+       1234.0
+      ],
+      [
+       2020.0,
+       2000.0,
+       1234.0
+      ]
+     ]
+    },
+    {
+     "kind": "circle",
+     "layer": "NOKTA",
+     "points": [
+      [
+       2000.0,
+       2000.0,
+       1234.0
+      ]
+     ],
+     "radius": 10.0
+    }
+   ]
+  }
+ ]
+}

@@ -567,6 +567,8 @@ pub struct Emitter<'l> {
     /// A closed LWPOLYLINE or POLYLINE KentOS did not mark is a closed line,
     /// not an area (the reader's `closedPolylines`; docs/adr/0258 §1).
     pub closed_lines: bool,
+    /// Whether a block's objects carry heights (docs/adr/2100 §2), by upper-case name, worked out once.
+    heights: HashMap<String, bool>,
 }
 
 impl<'l> Emitter<'l> {
@@ -583,7 +585,43 @@ impl<'l> Emitter<'l> {
             dim_used: Vec::new(),
             aside: HashMap::new(),
             closed_lines: false,
+            heights: HashMap::new(),
         }
+    }
+
+    /// Whether the block `key`'s own objects carry heights KentOS keeps (a line's ends, a point, a polyline's
+    /// elevation or vertices, a face's corners, a spline's points), or those of a block it inserts (docs/adr/2100 §2).
+    /// A block that includes itself is cut where it comes round again.
+    fn carries_heights(&mut self, key: &str) -> bool {
+        fn of(lib: &Library, key: &str, seen: &mut Vec<String>, cache: &HashMap<String, bool>) -> bool {
+            if let Some(known) = cache.get(key) {
+                return *known;
+            }
+            if seen.iter().any(|k| k == key) {
+                return false;
+            }
+            let Some(block) = lib.blocks.get(key) else { return false };
+            seen.push(key.to_owned());
+            let raised = |p: &P3| p[2] != 0.0;
+            let found = block.entities.iter().any(|e| match &e.kind {
+                Kind::Line { a, b } => raised(a) || raised(b),
+                Kind::Point { p } => raised(p),
+                Kind::LwPolyline { elevation, .. } => *elevation != 0.0,
+                Kind::Polyline { verts, elevation, .. } => *elevation != 0.0 || verts.iter().any(|v| raised(&v.p)),
+                Kind::Face { pts, .. } => pts.iter().any(raised),
+                Kind::Spline { ctrl, fit, .. } => ctrl.iter().chain(fit).any(raised),
+                Kind::Insert { name, .. } => of(lib, &name.to_uppercase(), seen, cache),
+                _ => false,
+            });
+            seen.pop();
+            found
+        }
+        if let Some(known) = self.heights.get(key) {
+            return *known;
+        }
+        let found = of(self.lib, key, &mut Vec::new(), &self.heights);
+        self.heights.insert(key.to_owned(), found);
+        found
     }
 
     /// The reader's id of the text style `key` (upper case), numbered as met.
@@ -3051,8 +3089,10 @@ impl<'l> Emitter<'l> {
     /// (docs/adr/0144 §5): where it is, its scale (the same in X and Y), its
     /// turn and its mirroring, its attributes' values. What a definition's
     /// insert cannot say (an array, unequal scales, a slanted plane, an
-    /// insert inside an opened one) is opened instead, and said why; false
-    /// then. The insert's Z is not kept (a block's insert is flat).
+    /// insert inside an opened one, a block with heights raised or scaled in
+    /// Z: docs/adr/2100 §2) is opened instead, and said why; false then. The
+    /// Z of a flat block's insert is not kept (a block's insert is flat) and
+    /// said, inside a definition too.
     fn keep_insert(
         &mut self,
         ctx: &Ctx,
@@ -3079,6 +3119,9 @@ impl<'l> Emitter<'l> {
             Some("blok dizisi (MINSERT) patlatılarak alındı")
         } else if super::extrusion_z(e.common.extrusion) != 1.0 {
             Some("eğik düzlemdeki yerleştirme patlatılarak alındı")
+        } else if (placed.p[2] != 0.0 || placed.scale[2].abs() != 1.0) && self.carries_heights(&key) {
+            // A kept insert has no height nor Z scale: the block's heights would not land where the file puts them.
+            Some("kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılarak alındı; kotlar dosyadaki yerinde")
         } else if placed.scale[0] == 0.0 || placed.scale[1] == 0.0 {
             Some("ölçeği sıfır olan yerleştirme alınmadı")
         } else {
@@ -3103,12 +3146,13 @@ impl<'l> Emitter<'l> {
         // half turn of the mirror in the block's x axis (the model's).
         let mirror = (sx < 0.0) != (sy < 0.0);
         let degrees = placed.rotation + if sx < 0.0 { 180.0 } else { 0.0 };
-        if placed.p[2] != 0.0 && !ctx.definition {
-            self.note(
-                "Blok (INSERT)",
-                "yerleştirmenin yüksekliği (Z) alınmadı",
-                e.line,
-            );
+        if placed.p[2] != 0.0 {
+            let words = if ctx.definition {
+                "blok tanımının içindeki yerleştirmenin yüksekliği (Z) alınmadı; bloğun nesnelerinde kot yok"
+            } else {
+                "yerleştirmenin yüksekliği (Z) alınmadı; bloğun nesnelerinde kot yok"
+            };
+            self.note("Blok (INSERT)", words, e.line);
         }
         // KentOS's exact turn while the file's degrees are still those it wrote (an edit elsewhere wins).
         let exact = e

@@ -172,7 +172,8 @@ ve nereden geldiği), ızgaralar (adı, türü, özetin başı, kutusu) ve sayı
 ## 7. Kalan
 
 - Ölçek anlatımının sadeleştirilmesi (çizim/pafta ölçeği, kamera, projeksiyon/yer çarpanı tek özet) ve içe aktarmada
-  birim kararının bir kez uygulandığının bağımsız sınaması: bu dilimde yapılmadı.
+  birim kararının bir kez uygulandığının bağımsız sınaması: yapıldı,
+  [ADR 2100](2100-import-unit-once-heights-and-raised-blocks.md).
 - Sorgu, düzenleme ve dışa aktarmanın aynı zinciri taşıması (örneğin dışa aktarmanın kaydı): yalnız dönüşüm komutu
   taşıyor.
 - Önizlemede nokta başına fark (kaynak − hedef) ve nedeni: bugün zincir çağrı başına karar verir.

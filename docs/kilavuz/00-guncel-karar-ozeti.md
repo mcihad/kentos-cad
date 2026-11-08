@@ -137,6 +137,9 @@
 - **Harita işinde içerik revizyonu ve onay damgası (8 Kasım 2026; MAP-01, [ADR 2080](../../docs/adr/2080-map-work-content-revision-and-approval-stamp.md)).**
   Dosyası olmayan öğenin revizyonu tuttuğu nesnelerin özetidir (`kentos.work-content/1`): tasarımdan türetilir, değişince
   kayıt güncel değil. Onay revizyonu damgalar (`.kcad` şema 206); sonra değişen öğe “Onay eskidi”. Yalnız Harita.
+- **İçe aktarmada birim bir kez (8 Kasım 2026; MAP-02, [ADR 2100](../../docs/adr/2100-import-unit-once-heights-and-raised-blocks.md)).**
+  DXF/DWG okuyucusu birimi bir kez uygular (ezdxf'le beş birimde sınandı). Kotlu bloğun yükseltilmiş ya da Z'de
+  ölçeklenmiş yerleştirmesi patlatılır, kotları dosyadaki yerinde; düz sembolün Z'si notla söylenir. CAD + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

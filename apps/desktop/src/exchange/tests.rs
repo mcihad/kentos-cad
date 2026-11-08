@@ -295,8 +295,8 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
     run(&mut app, "file.import.dxf");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     let had = blocks_of(&app).len();
-    // KAPI's, the nested NO's and DAIRE's, kept with its own y factor (docs/adr/0315 §3).
-    assert_eq!(inserts(&app), 3);
+    // DAIRE's, kept with its own y factor (docs/adr/0315 §3), and KENDI's; KAPI's opened for its height (docs/adr/2100).
+    assert_eq!(inserts(&app), 2);
     let dir = scratch("export-dxf-blocks");
     let path = dir.join("bloklar.dxf");
     app.picker = Picker::File(path.clone());
@@ -310,16 +310,17 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
     let back =
         kentos_formats::dxf::read(&std::fs::read(&path).expect("written"), &Default::default())
             .expect("reads");
-    // The blocks the inserts place, in the order the objects place them, each after the ones it
-    // holds (NO is inside KAPI); DAIRE's stretched insert is kept now (docs/adr/0315 §3).
+    // The blocks the inserts place, in the order the objects place them; DAIRE's stretched insert is kept now
+    // (docs/adr/0315 §3). KAPI (and NO inside it) came in opened for KAPI's height (docs/adr/2100 §2): no insert
+    // places them, so they are not written.
     let names: Vec<&str> = back.blocks.iter().map(|b| b.name.as_str()).collect();
-    assert_eq!(names, ["NO", "KAPI", "DAIRE", "KENDI"]);
+    assert_eq!(names, ["DAIRE", "KENDI"]);
     let placed = back
         .entities
         .iter()
         .filter(|e| matches!(e, Entity::Insert(_)))
         .count();
-    assert_eq!(placed, 3);
+    assert_eq!(placed, 2);
     assert_eq!(
         had, 4,
         "every block the file defines came in"
@@ -1062,8 +1063,9 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
         blocks_of(&app)[had.len()..],
         ["NO", "KAPI", "DAIRE", "KENDI"]
     );
-    // KAPI's, the nested NO's and DAIRE's, kept with its own y factor (docs/adr/0315 §3).
-    assert_eq!(inserts(&app), 3);
+    // DAIRE's, kept with its own y factor (docs/adr/0315 §3), and KENDI's; KAPI carries a height and stands at 100:
+    // opened, its point at 101.5 as the file puts it (docs/adr/2100 §2).
+    assert_eq!(inserts(&app), 2);
     assert!(
         app.log.lines().any(|l| l
             .text
@@ -1084,7 +1086,7 @@ fn a_dxfs_blocks_go_in_as_definitions_and_blokları_patlat_opens_them() {
         &app,
         "“blocks.dxf” içindeki 4 bloğun adı çizimde vardı; yeni adla alındı: “NO” → “NO (2)”, “KAPI” → “KAPI (2)”"
     ));
-    assert_eq!(inserts(&app), 6);
+    assert_eq!(inserts(&app), 4);
 
     // Each import is one step; then Blokları patlat: no definition, no insert.
     let _ = app.update(Message::Run("edit.undo"));

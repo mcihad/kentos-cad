@@ -33,8 +33,24 @@ fn table_styles(app: &mut App) {
     crate::files_testing::drive(app, task);
 }
 
+/// docs/adr/2100: a millimetre drawing (`fixtures/formats/v1/units-once/mm.dxf`, ezdxf's) read with its blocks: the
+/// unit taken once, the nested blocks with heights opened so their heights stand where the file puts them, and the flat
+/// symbol raised to a point's height kept as a block, its height said. `KENTOS_SHOTS_ONLY=okuma-birim-bir-kez`.
+fn units_once(app: &mut App) {
+    crate::files_testing::make_cad(app);
+    app.picker = Picker::File(
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/formats/v1/units-once/mm.dxf"),
+    );
+    let task = app.run("file.import.dxf");
+    crate::files_testing::drive(app, task);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("okuma-kararlari", decisions), ("okuma-tablo-stili", table_styles)]
+    vec![
+        ("okuma-kararlari", decisions),
+        ("okuma-tablo-stili", table_styles),
+        ("okuma-birim-bir-kez", units_once),
+    ]
 }
 
 #[cfg(test)]
@@ -54,5 +70,21 @@ mod tests {
         assert!(!notes.iter().any(|n| n.what == "Birim"), "the unit's note is said once, as a decision");
         let line = crate::exchange::words::decision_text(&r.report.decisions[0]);
         assert_eq!(line, "Birim: dosya milimetre biriminde; değerler çizimin birimine, metreye çevrildi");
+    }
+
+    /// docs/adr/2100: the unit said once; the raised block with heights opened and the raised flat symbol's height
+    /// said, both among the notes the window lists.
+    #[test]
+    fn the_import_window_says_the_unit_once_and_what_became_of_raised_blocks() {
+        let mut app = crate::files_testing::app_with_drawing();
+        units_once(&mut app);
+        let Some(crate::exchange::Window::DrawingImport(s)) = &app.exchange else { panic!("the window is open") };
+        let r = s.read_result().expect("read");
+        let line = crate::exchange::words::decision_text(&r.report.decisions[0]);
+        assert_eq!(line, "Birim: dosya milimetre biriminde; değerler çizimin birimine, metreye çevrildi");
+        let notes = crate::exchange::words::notes_beside(&r.report.notes, &r.report.decisions);
+        let said = |words: &str| notes.iter().any(|n| n.what == "Blok (INSERT)" && n.reason.starts_with(words));
+        assert!(said("kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılarak alındı"), "{notes:?}");
+        assert!(said("yerleştirmenin yüksekliği (Z) alınmadı"), "{notes:?}");
     }
 }

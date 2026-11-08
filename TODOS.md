@@ -72,6 +72,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   alanları kayıtlara yaz.
 - MAP-01 / ADR 2080: web'in harita işi işleyicilerinde içerik revizyonu, onay damgası, `revised` ve `own_content`;
   `.kcad` şema 206'nın web okuyucusu ve yazıcısı.
+- MAP-02 / ADR 2100: web'in WASM DXF okuyucusu aynı kuralı alır (kotlu bloğun yükseltilmiş yerleştirmesi patlatılır);
+  `apps/web/src/io/dxf.wasm.test.ts`'nin blok beklentileri yeniden okunmalı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

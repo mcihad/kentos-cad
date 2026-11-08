@@ -32,7 +32,7 @@ sırayla alır.
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080 | nesne türüne göre bağlamsal araçlar; tipli katman profili; onaydan sonra değişen nesneler | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
-| MAP-02 Koordinat zinciri | 1230, 1231 | içe aktarmada birimin kotta ve iç içe blokta bir kez uygulanması; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740 | GVX oturum korelasyonları; bilinen noktanın hız ızgarasıyla ölçme epokuna taşınması; arşiv panelinde bazlar | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760 | alan sınıfları; ayrı inceleme kaydı ve katalog geçiş raporu; pencerede eksik alan girişi | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740 | robust kestirim; m. 15(1)(c) benzerlik dönüşümü; seyrek çözüm | deformasyon için gerçek seri |
@@ -304,6 +304,21 @@ panoya kopyalar; zoom yalnız ekran satırını değiştirir. Python/MCP için s
 PROJ'un `get_factors`'ına karşı 10⁻⁹). Açık: içe aktarmada birimin kot ve iç içe blokta bir kez uygulandığının sınaması,
 ölçme pencerelerinin çarpanı bu komuttan okuması, sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması, nokta başına
 fark önizlemesi, geoit/hız modeli doğruluğu, zamana bağlı Helmert.
+
+**8 Kasım 2026, üçüncü tur — İçe aktarmada birim bir kez ([ADR 2100](../docs/adr/2100-import-unit-once-heights-and-raised-blocks.md)).**
+Kapsam işareti: **CAD + CBS** (ortak DXF okuyucusu; DWG de ondan geçer). Araştırma: Autodesk DXF Reference'ın INSERT'i
+(yerleştirmenin Z'si 30, Z ölçeği 43), ezdxf'in iç içe blok yerleştirmesi (`recursive_decompose`) bağımsız başvuru.
+Kanıtlanan:
+- milimetre, santimetre, inç, ayak ve metre çizimlerinde (3B çizgi, kotlu nokta, yükseltili çoklu çizgi, daire, yay,
+  yazılar, iç içe dönük, ölçekli, yükseltilmiş bloklar, yükseltilmiş düz sembol) her nokta, kot, yarıçap ve yazı boyu
+  ezdxf'inki çarpı birim, 1 nm içinde (`dxf_units_once_cases.py`);
+- bulunan kusur: tutulan yerleştirmenin yüksekliği ve Z ölçeği yoktu; tanımın içindeki yükseltilmiş yerleştirmenin Z'si
+  sessizce düşüyordu. Artık kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılır, kotları
+  dosyadaki yerinde (KAPI'nin noktası 1,5 değil 101,5); düz sembolün Z'si tanımın içinde de söylenir;
+- DXF içe aktar penceresinde not ve resim.
+
+Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması, nokta
+başına fark önizlemesi, daire/yay/yazının kotu, farklı blok birimiyle kotlu blok, zamana bağlı Helmert. Madde `[ ]` kalır.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

@@ -429,22 +429,20 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
             _ => None,
         })
         .collect();
-    let blue = kentos_formats::dxf::aci::color(5);
+    // KAPI carries a height (its point at 1.5) and its insert stands at 100: a kept insert has no height, so it is
+    // opened and the point stands at 101.5 as the file puts it (docs/adr/2100 §2).
     assert_eq!(
         inserts,
         [
-            (
-                id(2),
-                v(1000.0, 2000.0),
-                1.0,
-                PI / 2.0,
-                "KAPILAR",
-                Some(blue.as_str())
-            ),
             (id(3), v(50.0, 50.0), 3.0, 0.0, "0", None),
             (id(4), v(0.0, 0.0), 1.0, 0.0, "0", None),
         ]
     );
+    let point = r.entities.iter().find_map(|e| match e {
+        Entity::Point(p) => Some((p.p, p.z, p.base.layer_id.clone())),
+        _ => None,
+    });
+    assert_eq!(point, Some((v(996.0, 2003.0), Some(101.5), "KAPILAR".to_string())));
     // DAIRE's unequal scales stay its insert's own y factor (docs/adr/0315 §3).
     let daire = r
         .entities
@@ -455,17 +453,17 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
         })
         .expect("DAIRE's insert");
     assert!(daire.y_scale.is_some_and(|y| y != 3.0), "{daire:?}");
-    // NO's array is opened as before: its four circles.
+    // NO's array is opened as before: its four circles; and the NO inside the opened KAPI: a fifth.
     let circles = r
         .entities
         .iter()
         .filter(|e| matches!(e, Entity::Circle(_)))
         .count();
-    assert_eq!(circles, 4);
+    assert_eq!(circles, 5);
     let notes: Vec<&str> = r.report.notes.iter().map(|n| n.reason.as_str()).collect();
     for said in [
         "blok dizisi (MINSERT) patlatılarak alındı",
-        "yerleştirmenin yüksekliği (Z) alınmadı",
+        "kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılarak alındı; kotlar dosyadaki yerinde",
     ] {
         assert!(notes.contains(&said), "{said}: {notes:?}");
     }
@@ -490,9 +488,10 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
         .iter()
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
-    // DAIRE is placed now that its stretched insert is kept: every definition is used.
+    // DAIRE is placed now that its stretched insert is kept; KAPI's one insert was opened for its height, so its
+    // definition stays unplaced (docs/adr/2100 §2).
     assert!(
-        facts.contains(&("Blok", "4 tanım")),
+        facts.contains(&("Blok", "4 tanım (1 tanesi yerleştirilmemiş)")),
         "{facts:?}"
     );
     // Blokları patlat: no definition, every insert opened.

@@ -393,15 +393,16 @@ fn a_geojson_export_writes_an_insert_as_its_blocks_objects() {
             )
         })
         .count();
-    // KAPI's insert: its point, and the nested NO's circle and line; DAIRE's stretched insert (kept, docs/adr/0315
-    // §3): its ellipse; KENDI draws nothing and is left out.
-    assert_eq!(back.entities.len(), plain + 4);
+    // DAIRE's stretched insert (kept, docs/adr/0315 §3): its ellipse; KENDI draws nothing and is left out. KAPI came in
+    // opened for its height (docs/adr/2100 §2): its point and the nested NO's circle and line are plain objects, the
+    // point and the circle on the insert's layer.
+    assert_eq!(back.entities.len(), plain + 1);
     assert!(
         back.entities
             .iter()
             .filter(|e| e.base().layer_id == "KAPILAR")
             .count()
-            >= 3
+            >= 2
     );
     let _ = std::fs::remove_dir_all(&dir);
 }
