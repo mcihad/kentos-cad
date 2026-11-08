@@ -935,7 +935,7 @@ impl SpaceReboundTool {
 }
 impl Tool for SpaceReboundTool {
     fn id(&self)->&'static str {REBOUND_ID}
-    fn label(&self)->&'static str {"İç nokta seç"}
+    fn label(&self)->&'static str {"Mahali yeniden sınırla"}
     fn activate(&mut self,cx:&mut Context<'_>)->Flow {
         if let [slot]=cx.selection.ids() && matches!(cx.doc.get(*slot),Some(Entity::Space(_))) {
             self.space=Some(*slot);
@@ -972,7 +972,7 @@ impl Tool for SpaceReboundTool {
         if let Some(at)=self.hover && self.write(at,cx){Flow::Exit}else{Flow::Stay}
     }
     fn preview(&self,_:&Format)->Preview {
-        let tag=self.hover.map(|at|Tag {at,lines:vec![self.why.clone().unwrap_or_else(||"İç nokta seç · tıklama uygular · Esc vazgeçer".into())]});
+        let tag=self.hover.map(|at|Tag {at,lines:vec![self.why.clone().unwrap_or_else(||"Yeni iç noktaya tıklayın · tıklama uygular · Esc vazgeçer".into())]});
         Preview {tag,tag_tone:if self.why.is_some(){Tone::Danger}else{Tone::Accent},..self.drawn.clone()}
     }
 }

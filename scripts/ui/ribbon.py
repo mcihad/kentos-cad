@@ -782,9 +782,15 @@ CONTEXTUAL = [
     {"id": "ctx.wall", "label": "Duvar", "kinds": ["wall"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Duvar", "wall", [L("tool.wallDimensions"), L("view.properties"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
-            S("tool.wallTrim"), S("tool.wallFlip"), S("tool.wallRestyle"), S("arch.wallJoinCheck")]),
-        P("Açıklık", "door", [S("tool.door"), S("tool.window"), OPENINGS, S("tool.tag")]),
+        # A wall's own work first (docs/adr/3017): Duvarı kaydır large, the wall's edits, Özellikler; the right click's
+        # first section is this panel. Its style and materials, its bonds (the architectural bonds are constraints,
+        # docs/adr/0770: shown, or relaxed for the next edit), what it hosts and how it is documented after.
+        P("Duvar", "wallShift", [L("tool.wallShift"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"),
+            S("tool.wallExtend"), S("tool.wallTrim"), S("tool.wallFlip"), S("view.properties")]),
+        P("Stil", "wallRestyle", [S("tool.wallRestyle"), S("arch.wallStyles"), S("arch.materials")]),
+        P("Bağ", "constraintShow", [S("constraint.show"), S("constraint.relaxNext")]),
+        P("Açıklık", "door", [S("tool.door"), S("tool.window"), OPENINGS]),
+        P("Belgele", "wallDimensions", [L("tool.wallDimensions"), S("tool.tag"), S("arch.wallJoinCheck")]),
     ]},
     {"id": "ctx.opening", "label": "Açıklık", "kinds": ["opening"], "modes": ["cad"], "panels": [
         SEL,
@@ -798,8 +804,12 @@ CONTEXTUAL = [
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
         SEL,
         P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
-        P("Mahal", "space", [L("view.properties"), S("arch.quantities"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.spaceNumber"), S("arch.spaceMerge"), S("tool.spaceFloor"),
-            S("tool.spaceCeiling"), S("tool.tag"), S("tool.scheduleSpaces")]),
+        # The room's own edits (the right click's first section, docs/adr/3017), its finishes, its documents: eleven
+        # buttons in one panel read "Döşeme" for the floor pattern and "Mahal" for the room schedule.
+        P("Mahal", "space", [L("view.properties"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"),
+            S("tool.spaceNumber"), S("arch.spaceMerge")]),
+        P("Kaplama", "spaceFloor", [S("tool.spaceFloor"), S("tool.spaceCeiling")]),
+        P("Belgele", "quantities", [S("arch.quantities"), S("tool.tag"), S("tool.scheduleSpaces")]),
     ]},
     # Döşeme (docs/adr/0722 §6): its own fields in Öznitelikler, a hole cut with the tool's Delik, Metraj.
     {"id": "ctx.slab", "label": "Döşeme", "kinds": ["slab"], "modes": ["cad"], "panels": [
@@ -811,7 +821,8 @@ CONTEXTUAL = [
      "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Mimari", "archGrid", [S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
+        # Özellikler too, as on the other building tabs (docs/adr/3017).
+        P("Mimari", "archGrid", [L("view.properties"), S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
     ]},
 ]
 

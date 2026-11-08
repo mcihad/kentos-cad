@@ -13937,7 +13937,7 @@
   {
    "id": "tool.spaceRebound",
    "kind": "command",
-   "title": "İç nokta seç",
+   "title": "Mahali yeniden sınırla",
    "level": "semantic",
    "via": [
     "cad.spaces.edit"

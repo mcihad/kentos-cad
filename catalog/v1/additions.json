@@ -2576,7 +2576,8 @@
     },
     {
       "id": "tool.spaceRebound",
-      "title": "İç nokta seç",
+      "title": "Mahali yeniden sınırla",
+      "short": "Yeniden sınırla",
       "icon": "spaceRebound",
       "description": "Seçili mahal için yeni bir oda iç noktası seçin; yoksa önce mahalin içine tıklayın. Yeni sınırı önizleyin; tıklama veya tek onay uygular, Escape vazgeçer. Mahalın kimliği, numarası, katı ve kaynak kapsamı korunur; duvar gövdesi oda noktası seçilemez.",
       "aliases": [
@@ -2836,7 +2837,6 @@
     {
       "id": "arch.tagsCheck",
       "title": "Etiketleri denetle",
-      "short": "Denetle",
       "icon": "tagsCheck",
       "description": "Yinelenen numaraları, türü olmayan ve duvarı kopuk açıklıkları, nesnesi olmayan etiketleri, etiketsiz açıklık ve mahalleri bulur; bulgular alt panelin Uyarılar sekmesinde, satır nesneye gider. Çizimi değiştirmez.",
       "aliases": [
@@ -2878,7 +2878,6 @@
     {
       "id": "tool.scheduleSpaces",
       "title": "Mahal çizelgesi",
-      "short": "Mahal",
       "icon": "scheduleSpaces",
       "description": "Çizimin mahallerinin çizelgesini imleçten yerleştirir: numara, ad, kullanım, kat, alan, çevre, yükseklik; toplamıyla. Tür (T), Grup (G), Toplam (O), Sırala (S). Satırları her adımda yeniden yazılır; ad ve kullanım hücreleri mahallere yazılır.",
       "aliases": [
@@ -3101,7 +3100,6 @@
     {
       "id": "tool.spaceCeiling",
       "title": "Tavan ızgarası",
-      "short": "Tavan",
       "icon": "spaceCeiling",
       "description": "Mahallerin içine tıklayın: her birine mahale bağlı asma tavan ızgarası yazılır. Aralık (A: 0.6 ya da 0.6x1.2), Başlangıç (B: mahalin ortası, karşılıklı duvarlarda eşit kesik; ya da sol alt köşe). Katman A-TAVN-IZG.",
       "aliases": [

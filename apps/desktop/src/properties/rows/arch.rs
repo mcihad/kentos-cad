@@ -126,7 +126,7 @@ pub(super) fn arch_rows(
     }));
     items.push(Choice::Separator);
     items.push(Choice::Command {
-        label: "Katlar…",
+        label: "Katları düzenle…",
         icon: crate::icons::from_web(Some("archSettings")),
         id: "arch.settings",
     });

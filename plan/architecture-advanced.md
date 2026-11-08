@@ -69,7 +69,7 @@ talimatla yapılır.
 | S12 | Başlangıç zayıf: Mimari, Giriş sekmesiyle açılıyor; yeni projede kat yok; şablon cm ve 1:50, proje başlangıcı m ve 1:100 (ADR 0626); örnek proje yok | `catalog/v1/templates/mimari.json:7-8` ✓, A1 S10 | Y | ADV-13 |
 | S13 | Tek adımda "oda" (duvar + mahal + etiket) yok. Odayı sürükleyerek büyütme menüde. Mobilya ve vitrifiye Mimari sekmesinde yok; "lavabo" araması sonuç vermiyor | A1 §4.1 | Y | ADV-11, 12 |
 | S14 | Komut geçmişi ham parametre döküyor; Türkçe-İngilizce karışık ve kimlikli ("adopt: evet · frame: corners · wall 01a1b609-…") | M0 resimleri ✓ | O | ADV-08 |
-| S15 | Sağ tık menüsü ve üzerine gelme kartı mimariye özgü değil (kart parsel bilgisi gösteriyor) | A1 S11 | O | ADV-09 |
+| S15 | Sağ tık menüsü ve üzerine gelme kartı mimariye özgü değil (kart parsel bilgisi gösteriyor) **(M17'de düzeldi: sağ tıkın ilk bölümü bina sekmesinin kendi paneli; kartta duvarın stili, kalınlığı ve katı, mahalin numarası, adı ve alanı)** | A1 S11 | O | ADV-09 |
 | S16 | İkonlar: üç duvar aracı bir ikonu, beş mahal aracı bir ikonu, Etiket ile Mahal numarala bir ikonu paylaşıyor; üç araç genel CAD ikonu ödünç alıyor; ikon turunda Mimari yok **(M16'da düzeldi: on yeni ikon, yedi çizelge yeniden çizildi; üç bekçi; ikon turunda 15 Mimari sahnesi)** | ikon tablosu ✓ (A1 §5) | O | ADV-10 |
 | S17 | 1100 px genişlikte sekme satırı taşıyor; etkin bağlam sekmesi (Duvar) ekranda görünmüyor | M0 resmi ✓ | O | ADV-09 |
 | S18 | Duvar seçiliyken Öznitelikler'de önce genel CAD alanları geliyor; duvarın kalınlığı, stili ve yüksekliği kaydırmadan görünmüyor | M0 resmi ✓ | O | ADV-09 |
@@ -603,9 +603,11 @@ _Durum (8 Kasım 2026):_ Sekme satırı ve Öznitelikler yapıldı (M6, [ADR 300
   Yerleştir · Mahal · Donatı · Düzenle · Belgele · Proje.
   - Büyükler Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ (Mutfak, Kitaplık), Ölçü ▾.
   - Proje'de Kat ▾ (Üst kat, Alt kat, kat görünümü) ve Evre ▾; "Katlar" düğmesinin adı "Mimari ayarları".
+- Bağlam (M17, [ADR 3017](../docs/adr/3017-building-context-tabs-right-click-card.md)): Duvar sekmesinde Duvarı kaydır, Stil
+  ve Bağ; Mahal sekmesi Mahal · Kaplama · Belgele; sağ tıkın ilk bölümü bina sekmesinin kendi paneli; kartta mimari alanlar.
 - Kalanlar:
   - pencerelerin yüzer ya da dok paneli olması;
-  - sağ tık menüsü ve üzerine gelme kartı;
+  - kolon, merdiven ve rampanın kendi araçları; seçimin yanında eylem şeridi;
   - alt panel.
 
 **Kullanıcı sonucu:** Ana araçlar ilk bakışta bulunur. Sık iş tek tık, seyrek iş bir menü uzağındadır. Düzenleyici
@@ -1086,7 +1088,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım **(M14, ADR 3014: yapıldı; TS 5319 SN46–SN58 kitaplıkta, yalıtım SN55 zikzağı katmana sığar, kolon 1:20'de SN46 ve kolon aracıyla dolu; perdenin 1:20 taraması kaldı)** |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) **(M15, ADR 3015: yapıldı; 27 düğme, altı büyük, Kat ▾; Oda büyük düğmesi M21'de)** |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe **(M16, ADR 3016: yapıldı; 10 yeni ikon, 7 çizelge, 3 bekçi, 15 tur sahnesi)** |
-| M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart |
+| M17 | Bağlamsal sekmeler, sağ tık, kart | ADV-09 | Duvar sekmesinde Duvarı kaydır; mimari kart **(M17, ADR 3017: yapıldı; sağ tıkın ilk bölümü bina paneli, kart `arch_value`'dan, Mahal sekmesi üç panel, dört Türkçe düzeltme)** |
 
 ### Faz 2 — Hızlı çizilsin
 

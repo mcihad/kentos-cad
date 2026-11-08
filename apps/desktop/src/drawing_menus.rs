@@ -26,6 +26,12 @@
 //! Taşı, Döndür, Ölçekle and Aynala with the grip as their first point.
 //! While a command waits for a point, the command menu offers Nokta hesapla
 //! (docs/adr/0083).
+//!
+//! A building object selected (a wall, an opening, a room, a slab, an axis …)
+//! puts its context tab's own panel first, under the tab's name (docs/adr/3017):
+//! Duvarı kaydır and the wall's edits for a wall, Açıklığı taşı and Çevir for a
+//! door, Mahali böl and Mahal numarala for a room — what an architect reaches
+//! for there, before the edits every object has.
 
 use iced::{Point, Task};
 use kentos_interaction::SnapKind;
@@ -34,7 +40,16 @@ use kentos_ui::icon::Icon;
 use kentos_ui::widget::Menu;
 
 use crate::app::{App, Message};
-use crate::catalog::{Standing, catalog};
+use crate::catalog::{Item, Standing, catalog};
+
+/// The building's context tabs (`scripts/ui/ribbon.py`'s `ARCH_TABS`): their own panel opens the right click.
+const BUILDING_TABS: [&str; 5] = [
+    "ctx.wall",
+    "ctx.opening",
+    "ctx.space",
+    "ctx.slab",
+    "ctx.arch",
+];
 
 /// The kinds a one-shot snap offers, in the order surveyors reach for them
 /// (the web's `SNAP_ORDER`).
@@ -334,6 +349,14 @@ impl App {
             }
             menu = menu.separator();
         }
+        // A building object's own tools first, under its tab's name (docs/adr/3017).
+        if let Some((name, tools)) = self.building_tools() {
+            menu = menu.header(name);
+            menu = tools
+                .into_iter()
+                .fold(menu, |menu, id| self.command_item(menu, id));
+            menu = menu.separator();
+        }
         // The last object template by its name (docs/adr/0176 §3), else the last command.
         let template = self.last_template_name().map(str::to_owned);
         if let Some(last) = self.session.last() {
@@ -406,6 +429,34 @@ impl App {
                 .icon(crate::icons::from_web(Some("externalOpen"))),
             None => menu,
         }
+    }
+
+    /// The selection's building tab's name and its own tools (docs/adr/3017): the first panel after Seçim and
+    /// Düzenle, as the ribbon shows it (a family's every tool), Nesne özellikleri last; none for any other selection.
+    pub(crate) fn building_tools(&self) -> Option<(&'static str, Vec<&'static str>)> {
+        let tab = self
+            .selection_tab()
+            .filter(|t| BUILDING_TABS.contains(&t.id))?;
+        let panel = tab
+            .panels
+            .iter()
+            .find(|p| p.label != "Seçim" && p.label != "Düzenle")?;
+        let mut ids = Vec::new();
+        for item in &panel.items {
+            match item {
+                Item::Command { id, .. } => ids.push(*id),
+                Item::Split { entries, .. } => ids.extend(entries.iter().map(|e| e.id)),
+                Item::Menu { ids: menu, .. } => ids.extend(menu.iter().copied()),
+                Item::Builtin(_) => {}
+            }
+        }
+        // Nesne özellikleri closes the section on every building object (the ribbon puts it first on most tabs):
+        // the object's own tools lead.
+        if let Some(at) = ids.iter().position(|id| *id == "view.properties") {
+            let properties = ids.remove(at);
+            ids.push(properties);
+        }
+        (!ids.is_empty()).then_some((tab.label, ids))
     }
 
     /// The actions of the object under the pointer (else of the one object

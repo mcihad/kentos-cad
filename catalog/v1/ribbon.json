@@ -6580,14 +6580,10 @@
     },
     {
      "label": "Duvar",
-     "icon": "wall",
+     "icon": "wallShift",
      "items": [
       {
-       "command": "tool.wallDimensions",
-       "size": "large"
-      },
-      {
-       "command": "view.properties",
+       "command": "tool.wallShift",
        "size": "large"
       },
       {
@@ -6615,11 +6611,45 @@
        "size": "small"
       },
       {
+       "command": "view.properties",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Stil",
+     "icon": "wallRestyle",
+     "items": [
+      {
        "command": "tool.wallRestyle",
        "size": "small"
       },
       {
-       "command": "arch.wallJoinCheck",
+       "command": "arch.wallStyles",
+       "size": "small"
+      },
+      {
+       "command": "arch.materials",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Bağ",
+     "icon": "constraintShow",
+     "items": [
+      {
+       "command": "constraint.show",
+       "size": "small"
+      },
+      {
+       "command": "constraint.relaxNext",
        "size": "small"
       }
      ],
@@ -6659,9 +6689,26 @@
          "label": "Baca"
         }
        ]
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Belgele",
+     "icon": "wallDimensions",
+     "items": [
+      {
+       "command": "tool.wallDimensions",
+       "size": "large"
       },
       {
        "command": "tool.tag",
+       "size": "small"
+      },
+      {
+       "command": "arch.wallJoinCheck",
        "size": "small"
       }
      ],
@@ -6842,10 +6889,6 @@
        "size": "large"
       },
       {
-       "command": "arch.quantities",
-       "size": "small"
-      },
-      {
        "command": "tool.spaceSplit",
        "size": "small"
       },
@@ -6864,13 +6907,35 @@
       {
        "command": "arch.spaceMerge",
        "size": "small"
-      },
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Kaplama",
+     "icon": "spaceFloor",
+     "items": [
       {
        "command": "tool.spaceFloor",
        "size": "small"
       },
       {
        "command": "tool.spaceCeiling",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Belgele",
+     "icon": "quantities",
+     "items": [
+      {
+       "command": "arch.quantities",
        "size": "small"
       },
       {
@@ -7050,6 +7115,10 @@
      "label": "Mimari",
      "icon": "archGrid",
      "items": [
+      {
+       "command": "view.properties",
+       "size": "large"
+      },
       {
        "command": "tool.gridNumber",
        "size": "small"

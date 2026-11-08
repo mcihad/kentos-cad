@@ -5,7 +5,7 @@ Tarih: 2026-11-08. Durum: kabul (M16, ADV-10; plan S16).
 ## Sorun
 
 - **Mimari sekmesinde on komut üç ikonu paylaşıyordu** (`catalog/v1/additions.json`):
-  - `space`: Mahal, Toplu mahal bul, Mahal ayırıcı, İç nokta seç, Mahal kaynakları;
+  - `space`: Mahal, Toplu mahal bul, Mahal ayırıcı, İç nokta seç (M17'den beri Mahali yeniden sınırla), Mahal kaynakları;
   - `wall`: Duvar, Dikdörtgen duvar, Ölçülü bölme;
   - `tag`: Etiket ve Mahal numarala.
   - Mahal ▾ açılınca üç satırda aynı resim vardı. DESIGN.md §6: "bir açılır listede aynı simge iki kez yoktur."
@@ -39,7 +39,7 @@ Tarih: 2026-11-08. Durum: kabul (M16, ADV-10; plan S16).
   | Ölçülü bölme | `wallPartition` | odada bölme duvar ve duvarın yüzünden ona ölçü oku |
   | Toplu mahal bul | `spaceDiscover` | duvarların kapattığı üç oda, her birinde adı |
   | Mahal ayırıcı | `spaceSeparator` | iki oda arasındaki açıklığı kapatan kesikli çizgi, iki tık |
-  | İç nokta seç | `spaceRebound` | odanın içinde tık, çevresinde bulunan sınır kesikli |
+  | Mahali yeniden sınırla (M17'ye dek İç nokta seç) | `spaceRebound` | odanın içinde tık, çevresinde bulunan sınır kesikli |
   | Mahal kaynakları | `spaceSources` | seçilen duvarlar kalın, kolon dolu, sınırın kalanı kesikli |
   | Mahal numarala | `spaceNumber` | odanın içinde "01" |
   | Duvar ölçüleri | `wallDimensions` | açıklıklı duvarın üstünde eğik çizgili ölçü zinciri |

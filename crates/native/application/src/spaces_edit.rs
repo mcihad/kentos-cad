@@ -152,7 +152,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 spaces::scope_valid(&f,&format!("uids[{at}]"))?;
                 if (f.scope != s.space.scope || f.sources != s.space.sources) && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f) {
                     return Err(fail(codes::INVALID_SPACE,
-                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. İç nokta seç aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
+                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. Mahali yeniden sınırla aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
                         if c.sources.is_some() { "operation.sources" } else { "operation.scope" }));
                 }
                 if (c.method.is_some() || c.level.is_some() || c.columns.is_some() || c.scope.is_some() || c.sources.is_some()) && f.seed.is_some() {

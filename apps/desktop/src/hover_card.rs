@@ -19,6 +19,10 @@
 //!   since their difference is what a surveyor checks; holes; perimeter or
 //!   length, and beside it the length in space (docs/adr/0142) when every
 //!   vertex has an elevation; radius; a text's text; a point's elevation.
+//! - A building object says what an architect asks of it first (docs/adr/3017):
+//!   a wall its style, thickness and storey (its footprint's area is no one's
+//!   question), an opening its type, width and number under its own name
+//!   (Kapı, Pencere), a room its number, name and storey.
 
 use std::time::Duration;
 
@@ -132,7 +136,11 @@ pub(crate) fn card_with(
             .map(String::as_str)
     };
     let parcel = |key: &str| if parcels { attr(key) } else { None };
-    let kind = kind_title(e.kind());
+    // An opening is named by its form (Kapı, Pencere, Niş …), as the drawing calls it.
+    let kind = match e {
+        Entity::Opening(o) => o.opening.form.label(),
+        _ => kind_title(e.kind()),
+    };
     let title = match (
         parcel("Parsel"),
         base.label.as_deref().filter(|l| !l.is_empty()),
@@ -157,13 +165,17 @@ pub(crate) fn card_with(
     if let Some((text, plain)) = deed {
         rows.push(("Tapu alanı", text, plain));
     }
+    rows.extend(building_rows(e, model, format));
     let (area, length) = measures(e);
-    // A closed polyline's enclosed area is shown, while it has none of its own (docs/adr/0258 §1).
-    let area = area.or_else(|| {
-        matches!(e, Entity::Polyline(p) if p.closed)
-            .then(|| kentos_interaction::enclosed(e))
-            .flatten()
-    });
+    // A closed polyline's enclosed area is shown, while it has none of its own (docs/adr/0258 §1). A wall's
+    // footprint area is not shown (its thickness and length say it), and a room's is its own row above.
+    let area = area
+        .or_else(|| {
+            matches!(e, Entity::Polyline(p) if p.closed)
+                .then(|| kentos_interaction::enclosed(e))
+                .flatten()
+        })
+        .filter(|_| !matches!(e, Entity::Wall(_) | Entity::Space(_)));
     if let Some(area) = area {
         let name = if has_deed { "Hesaplanan alan" } else { "Alan" };
         rows.push((name, format.area(area), true));
@@ -229,6 +241,50 @@ pub(crate) fn card_with(
         rows.push(("Ekler", format!("{} ek", base.attachments.len()), false));
     }
     Card { title, layer, rows }
+}
+
+/// A building object's own rows, before the measures (docs/adr/3017): a wall's style, thickness and storey; an
+/// opening's type, width and number; a room's number, name, storey and area. Read as the schedules and tags read
+/// them (`Document::arch_value`), so the card and a tag never say two things.
+fn building_rows(e: &Entity, model: &Model, format: &Format) -> Vec<(&'static str, String, bool)> {
+    use kentos_domain::arch_values::ArchValue;
+    let text = |key: &str| match model.arch_value(e, key, None) {
+        Some(ArchValue::Text(t)) if !t.is_empty() => Some(t),
+        _ => None,
+    };
+    let mut rows = Vec::new();
+    match e {
+        Entity::Wall(w) => {
+            let style =
+                text("style").unwrap_or_else(|| kentos_interaction::wall::NO_STYLE.to_owned());
+            rows.push(("Stil", style, false));
+            rows.push(("Kalınlık", format.length(w.wall.width), true));
+            if let Some(level) = text("level") {
+                rows.push(("Kat", level, false));
+            }
+        }
+        Entity::Opening(o) => {
+            if let Some(name) = text("type") {
+                rows.push(("Tür", name, false));
+            }
+            rows.push(("Genişlik", format.length(o.opening.width), true));
+            if let Some(number) = text("number") {
+                rows.push(("Numara", number, false));
+            }
+        }
+        Entity::Space(_) => {
+            for (label, key) in [("Numara", "number"), ("Ad", "name"), ("Kat", "level")] {
+                if let Some(value) = text(key) {
+                    rows.push((label, value, false));
+                }
+            }
+            if let Some(ArchValue::Area(area)) = model.arch_value(e, "area", None) {
+                rows.push(("Alan", format.area(area), true));
+            }
+        }
+        _ => {}
+    }
+    rows
 }
 
 /// The card as the web draws it: the title with the layer right of it or

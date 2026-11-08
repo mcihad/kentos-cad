@@ -1474,7 +1474,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             }));
             level_items.push(Choice::Separator);
             level_items.push(Choice::Command {
-                label: "Katlar…",
+                label: "Katları düzenle…",
                 icon: crate::icons::from_web(Some("archSettings")),
                 id: "arch.settings",
             });
@@ -1674,7 +1674,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             }));
             level_items.push(Choice::Separator);
             level_items.push(Choice::Command {
-                label: "Katlar…",
+                label: "Katları düzenle…",
                 icon: crate::icons::from_web(Some("archSettings")),
                 id: "arch.settings",
             });
@@ -1735,7 +1735,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             );
             geo.push(Row::text("Kaynaklar", source_summary.clone())
                 .editor(select(source_summary, source_items)));
-            let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
+            let rebound = vec![Choice::Command {label:"Mahali yeniden sınırla…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
                 Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Rebound { seed: None }))),
@@ -1873,7 +1873,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 )
             }));
             level_items.push(Choice::Separator);
-            level_items.push(Choice::Command { label: "Katlar…", icon: crate::icons::from_web(Some("archSettings")), id: "arch.settings" });
+            level_items.push(Choice::Command { label: "Katları düzenle…", icon: crate::icons::from_web(Some("archSettings")), id: "arch.settings" });
             geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
             let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
             let mut phases =

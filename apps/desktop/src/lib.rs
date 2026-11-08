@@ -701,6 +701,8 @@ mod tools_scenes;
 mod tools_screens;
 #[cfg(test)]
 mod arch_icons;
+#[cfg(test)]
+mod building_context_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

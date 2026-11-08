@@ -92,6 +92,11 @@
       (`arch_icons.rs`'in üç bekçisi). Yeni mimari komut kendi ikonunu `catalog/v1/additions.json` › `icons`'a çizer.
     - Çizelgeler solda listelediğinin resmi, sağda liste çizgileriyle çizilir.
     - İkon tablosu: `cargo test -p kentos-desktop --lib arch_icons::icon_table -- --ignored`.
+  - **Bina nesnesinin bağlamı (M17, [ADR 3017](../adr/3017-building-context-tabs-right-click-card.md)):**
+    - Sağ tıkın ilk bölümü seçimin bina sekmesinin (duvar, açıklık, mahal, döşeme, mimari nesne) Seçim ve Düzenle'den sonraki
+      ilk panelidir, başlığı sekmenin adı (`App::building_tools`); kaynak şeridin kendisi.
+    - Kart bina nesnesinde `Document::arch_value`'yu okur: duvar Stil, Kalınlık, Kat; açıklık Tür, Genişlik, Numara
+      (başlığı biçimi); mahal Numara, Ad, Kat, Alan. Duvarın alanı yazılmaz.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

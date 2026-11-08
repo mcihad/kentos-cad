@@ -1,0 +1,52 @@
+# M17 (docs/adr/3017): a building object's context in the real window, on malzeme.kcad (headless scales.rs keeps it)
+# opened on Mimari at 1440 × 900, 13 px text. A rectangle of walls is drawn (Duvar ▾ › Dikdörtgen duvar, two corners)
+# and a room placed in it (Mahal, a click inside, its name written there); then a wall is selected (the Duvar tab with Duvarı kaydır, its
+# right click headed Duvar), the room by its name (the Mahal tab, its right click headed Mahal), and the card read on each.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 34 104   # Duvar ▾
+wait 600
+click 95 172   # araç: Dikdörtgen duvar
+wait 600
+click 500 300
+wait 400
+click 800 550
+wait 800
+key Escape
+wait 500
+click 413 65   # araç: Mahal
+wait 600
+click 650 425
+wait 800
+key Escape
+wait 500
+click 500 425   # the left wall
+wait 1000
+shot m17-10-duvar-sekmesi
+click 500 425 right
+wait 800
+shot m17-11-duvar-sag-tik
+key Escape
+wait 400
+key Escape   # the wall let go: its temporary dimension sits on the room's name
+wait 400
+click 650 425   # the room, by its name where it was placed
+wait 1000
+shot m17-12-mahal-sekmesi
+click 650 425 right
+wait 800
+shot m17-13-mahal-sag-tik
+key Escape
+wait 400
+key Escape
+wait 400
+move 300 700
+wait 300
+move 501 380
+wait 2500
+shot m17-14-duvar-karti
+move 640 450
+wait 300
+move 650 426
+wait 2500
+shot m17-15-mahal-karti
