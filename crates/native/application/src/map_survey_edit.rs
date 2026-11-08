@@ -1099,7 +1099,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.baselines.push(b);
             Ok(Change { id: Some(id), ..Change::new(next, "Baz ekle") })
         }
-        Op::Known { mark, lat, lon, height, srid, epoch, sigma, source } => {
+        Op::Known { mark, lat, lon, height, srid, epoch, sigma, velocity, source } => {
             text(Some(mark), SHORT, "operation.mark", "İşaretin adı")?;
             text(source.as_deref(), kentos_commands::MOST_REASON_TEXT, "operation.source", "Kaynak")?;
             let k = SurveyKnown {
@@ -1111,6 +1111,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 srid: *srid,
                 epoch: *epoch,
                 sigma: *sigma,
+                velocity: *velocity,
                 source: source.clone(),
                 excluded: None,
             };

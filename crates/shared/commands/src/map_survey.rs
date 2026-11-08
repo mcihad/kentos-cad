@@ -582,7 +582,8 @@ pub enum MapSurveyOperation {
         recipe: Option<String>,
     },
     /// A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held
-    /// fixed, or weighted by `sigma` north, east, up (m).
+    /// fixed, or weighted by `sigma` north, east, up (m); with `velocity` (the frame's Earth-centred X, Y, Z, m/yr; a
+    /// station's published velocity) it is carried from its epoch to the measurement epoch by it (docs/adr/2520).
     Known {
         mark: String,
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
@@ -601,6 +602,10 @@ pub enum MapSurveyOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
         sigma: Option<[f64; 3]>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+        velocity: Option<[f64; 3]>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         source: Option<String>,
@@ -805,13 +810,13 @@ pub fn gnss_rules_default() -> Option<GnssRules> {
 ///
 /// The measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times
 /// when every one has its start and end, else none. With one, every known point needs its epoch and one at another
-/// epoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are
-/// in one frame and epoch, the network's.
+/// epoch is moved to it (BÖHHBÜY Madde 15(1)(a)): by its own velocity when it has one (docs/adr/2520), else along the
+/// campaign's velocity grid; without one the known points are in one frame and epoch, the network's.
 ///
 /// Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
 /// `unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,
-/// `epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own
-/// refusals, `network_too_large`, `network_disconnected`.
+/// `epoch_unsupported` (a known point at another epoch without its own velocity, the campaign without a velocity
+/// grid) and the grid's own refusals, `network_too_large`, `network_disconnected`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -853,8 +858,20 @@ pub enum NetworkEpochFrom {
     Known,
 }
 
-/// A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),
-/// docs/adr/2120): its epoch, the years it moved and how far east, north and up (m).
+/// What carried a known point to the measurement epoch (docs/adr/2520): its own velocity, or the campaign's
+/// velocity grid.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum KnownMovedBy {
+    Velocity,
+    Grid,
+}
+
+/// A known point moved to the measurement epoch (BÖHHBÜY Madde 15(1)(a), docs/adr/2120): by its own velocity or along
+/// the campaign's velocity grid (docs/adr/2520), its epoch, the years it moved and how far east, north and up (m).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -863,6 +880,7 @@ pub enum NetworkEpochFrom {
 pub struct KnownMoved {
     pub id: String,
     pub mark: String,
+    pub by: KnownMovedBy,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub from: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]

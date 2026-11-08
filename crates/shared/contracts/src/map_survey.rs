@@ -642,7 +642,8 @@ pub struct SurveyBaseline {
 
 /// A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1
 /// point) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,
-/// east, up (m) weighted; where they come from; left out with a reason, never deleted.
+/// east, up (m) weighted; its own velocity in the frame's Earth-centred X, Y, Z (m/yr, from its epoch; a station's
+/// published velocity, docs/adr/2520); where they come from; left out with a reason, never deleted.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -668,6 +669,10 @@ pub struct SurveyKnown {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub sigma: Option<[f64; 3]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub velocity: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub source: Option<String>,
@@ -818,6 +823,11 @@ impl MapSurvey {
 
     pub fn adjustment(&self, id: &str) -> Option<&SurveyAdjustment> {
         self.adjustments.iter().find(|a| a.id == id)
+    }
+
+    /// Whether it holds what schema 207 brought (docs/adr/2520): a known point's own velocity.
+    pub fn has_velocities(&self) -> bool {
+        self.known.iter().any(|k| k.velocity.is_some())
     }
 
     /// Whether it holds what schema 199 brought (docs/adr/1740): baselines, known points, network adjustments, a point
@@ -1193,8 +1203,22 @@ pub fn known_numbers_problem(k: &SurveyKnown) -> Option<(&'static str, String)> 
     if k.sigma.is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0)) {
         return Some(("sigma", "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into()));
     }
+    // docs/adr/2520 §1: a velocity carries the point from its epoch; stations move centimetres a year, so a component
+    // above a metre a year is a unit's mistake (mm/yr written as m/yr), not a velocity.
+    if k.velocity.is_some_and(|v| !v.iter().all(|c| c.is_finite() && c.abs() <= MAX_KNOWN_VELOCITY)) {
+        return Some((
+            "velocity",
+            "hız yer merkezli VX, VY, VZ olarak yılda metredir; her bileşen en çok 1 m/yıl olan sonlu bir sayı olmalı".into(),
+        ));
+    }
+    if k.velocity.is_some() && k.epoch.is_none() {
+        return Some(("velocity", "hızı olan noktanın epoku verilmeli: hız noktayı o epoktan taşır".into()));
+    }
     None
 }
+
+/// The largest velocity component a known point takes (m/yr, docs/adr/2520 §1): KentOS's bound, not a rule's.
+pub const MAX_KNOWN_VELOCITY: f64 = 1.0;
 
 /// The baselines', known points' and network adjustments' rules (docs/adr/1740); `ids` are the archive's ids so far.
 fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Option<(String, String)> {

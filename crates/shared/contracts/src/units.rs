@@ -139,6 +139,10 @@ pub const UNITS: &[(&str, &str)] = &[
         "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
     ),
     (
+        "m/yr",
+        "Yılda metre: bir noktanın hızı, yer merkezli X, Y, Z (TUSAGA-Aktif istasyonlarının yayımlanan hızları gibi).",
+    ),
+    (
         "size-unit",
         "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     ),

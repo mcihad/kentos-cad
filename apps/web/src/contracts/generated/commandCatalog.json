@@ -62312,7 +62312,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading\nonly. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their\ncovariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first\notherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).\n\nThe measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times\nwhen every one has its start and end, else none. With one, every known point needs its epoch and one at another\nepoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are\nin one frame and epoch, the network's.\n\nRefusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,\n`unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,\n`epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own\nrefusals, `network_too_large`, `network_disconnected`.",
+        "description": "Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading\nonly. The baselines that go into the adjustment (of `campaign` alone when given), the variance factor their\ncovariances are multiplied by (`scale`, 1 when not given), the known point the free stage holds (`hold`, the first\notherwise) and the rule class checked (`class` of `rules`, KentOS's BÖHHBÜY 2018 when not given).\n\nThe measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times\nwhen every one has its start and end, else none. With one, every known point needs its epoch and one at another\nepoch is moved to it (BÖHHBÜY Madde 15(1)(a)): by its own velocity when it has one (docs/adr/2520), else along the\ncampaign's velocity grid; without one the known points are in one frame and epoch, the network's.\n\nRefusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,\n`unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,\n`epoch_unsupported` (a known point at another epoch without its own velocity, the campaign without a velocity\ngrid) and the grid's own refusals, `network_too_large`, `network_disconnected`.",
         "properties": {
           "campaign": {
             "type": [
@@ -108990,6 +108990,10 @@
       "meaning": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası)."
     },
     {
+      "unit": "m/yr",
+      "meaning": "Yılda metre: bir noktanın hızı, yer merkezli X, Y, Z (TUSAGA-Aktif istasyonlarının yayımlanan hızları gibi)."
+    },
+    {
       "unit": "size-unit",
       "meaning": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu."
     },
@@ -144597,8 +144601,11 @@
       "type": "object"
     },
     "KnownMoved": {
-      "description": "A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),\ndocs/adr/2120): its epoch, the years it moved and how far east, north and up (m).",
+      "description": "A known point moved to the measurement epoch (BÖHHBÜY Madde 15(1)(a), docs/adr/2120): by its own velocity or along\nthe campaign's velocity grid (docs/adr/2520), its epoch, the years it moved and how far east, north and up (m).",
       "properties": {
+        "by": {
+          "$ref": "#/$defs/KnownMovedBy"
+        },
         "from": {
           "format": "double",
           "type": "number",
@@ -144629,11 +144636,20 @@
       "required": [
         "id",
         "mark",
+        "by",
         "from",
         "years",
         "shift"
       ],
       "type": "object"
+    },
+    "KnownMovedBy": {
+      "description": "What carried a known point to the measurement epoch (docs/adr/2520): its own velocity, or the campaign's\nvelocity grid.",
+      "enum": [
+        "velocity",
+        "grid"
+      ],
+      "type": "string"
     },
     "KnownPoint": {
       "description": "A known point: a named point of the drawing (its label or its `Ad`, big and small letters alike), or coordinates.",
@@ -149562,7 +149578,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held\nfixed, or weighted by `sigma` north, east, up (m).",
+          "description": "A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held\nfixed, or weighted by `sigma` north, east, up (m); with `velocity` (the frame's Earth-centred X, Y, Z, m/yr; a\nstation's published velocity) it is carried from its epoch to the measurement epoch by it (docs/adr/2520).",
           "properties": {
             "epoch": {
               "format": "double",
@@ -149618,6 +149634,19 @@
               "minimum": 0,
               "type": "integer",
               "x-unit": "epsg"
+            },
+            "velocity": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": [
+                "array",
+                "null"
+              ],
+              "x-unit": "m/yr"
             }
           },
           "required": [
@@ -193304,7 +193333,7 @@
     },
     "SurveyKnown": {
       "additionalProperties": false,
-      "description": "A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1\npoint) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,\neast, up (m) weighted; where they come from; left out with a reason, never deleted.",
+      "description": "A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1\npoint) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,\neast, up (m) weighted; its own velocity in the frame's Earth-centred X, Y, Z (m/yr, from its epoch; a station's\npublished velocity, docs/adr/2520); where they come from; left out with a reason, never deleted.",
       "properties": {
         "epoch": {
           "format": "double",
@@ -193366,6 +193395,19 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "epsg"
+        },
+        "velocity": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "m/yr"
         }
       },
       "required": [

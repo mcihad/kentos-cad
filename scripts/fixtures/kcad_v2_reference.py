@@ -2533,6 +2533,9 @@ def document(d):
         # A GNSS archive's baselines, known points and network adjustments, its points made by a network
         # (docs/adr/1740).
         schema = max(schema, 199)
+    if any("velocity" in k for k in surveyed.get("known", [])):
+        # A known point's own velocity (docs/adr/2520).
+        schema = max(schema, 207)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3507,7 +3510,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-207.kcad"] = container(root(cmap(parts), version=uint(207)))
+    files["schema-version-208.kcad"] = container(root(cmap(parts), version=uint(208)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5922,6 +5925,20 @@ def build():
         broken_network = copy.deepcopy(networked)
         change(broken_network)
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_network))
+    # Schema 207 (docs/adr/2520): the network's held known point at 2005.0 with its own velocity; schema 206 refuses
+    # it, and a velocity without an epoch and one above 1 m/yr are refused.
+    moving = load("map-survey-velocity.json")
+    moving_data = document(moving)
+    assert moving_data.count(b"\x67version\x18\xcf") == 1, "a known point's velocity is schema 207"
+    out["map-survey-velocity.kcad"] = container(moving_data)
+    out["broken/map-survey-velocity-in-schema-206.kcad"] = container(
+        moving_data.replace(b"\x67version\x18\xcf", b"\x67version\x18\xce"))
+    for name, change in (
+            ("velocity-no-epoch", lambda d: d["settings"]["mapSurvey"]["known"][0].pop("epoch")),
+            ("velocity-too-fast", lambda d: d["settings"]["mapSurvey"]["known"][0].update({"velocity": [12.0, 0.0, 0.0]}))):
+        broken_moving = copy.deepcopy(moving)
+        change(broken_moving)
+        out[f"broken/map-survey-{name}.kcad"] = container(document(broken_moving))
     # Schema 188 (docs/adr/1200 §2): a map project's work structure: a GNSS campaign and an orthophoto with their
     # files, an approved design, a delivery package and a derivation of the GNSS point; schema 187 refuses the field, an architecture project's work structure, a layer in two items, a derivation from an
     # item without a file, an object in two derivations and a draft status written are refused.

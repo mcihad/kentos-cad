@@ -9,13 +9,13 @@ import type { GnssRules } from "./GnssRules";
  *
  * The measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times
  * when every one has its start and end, else none. With one, every known point needs its epoch and one at another
- * epoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are
- * in one frame and epoch, the network's.
+ * epoch is moved to it (BÖHHBÜY Madde 15(1)(a)): by its own velocity when it has one (docs/adr/2520), else along the
+ * campaign's velocity grid; without one the known points are in one frame and epoch, the network's.
  *
  * Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
  * `unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,
- * `epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own
- * refusals, `network_too_large`, `network_disconnected`.
+ * `epoch_unsupported` (a known point at another epoch without its own velocity, the campaign without a velocity
+ * grid) and the grid's own refusals, `network_too_large`, `network_disconnected`.
  */
 export type MapSurveyNetwork = { campaign?: string, scale?: number, class?: string, rules?: GnssRules, hold?: string, 
 /**

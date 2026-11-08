@@ -853,11 +853,13 @@ pub const SCHEMA_WITH_CUTFILL_DRAWINGS: u32 = 205;
 /// Schema 206 (docs/adr/2080): a map work item's approval stamp (`approved`) and derivations from an item without a
 /// file (its content revision).
 pub const SCHEMA_WITH_WORK_STAMPS: u32 = 206;
+/// Schema 207 (docs/adr/2520): a GNSS archive's known point's own velocity (`velocity`, Earth-centred X, Y, Z, m/yr).
+pub const SCHEMA_WITH_KNOWN_VELOCITIES: u32 = 207;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 204] = [
+pub const SCHEMAS: [u32; 205] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1062,6 +1064,7 @@ pub const SCHEMAS: [u32; 204] = [
     SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
     SCHEMA_WITH_CUTFILL_DRAWINGS,
     SCHEMA_WITH_WORK_STAMPS,
+    SCHEMA_WITH_KNOWN_VELOCITIES,
 ];
 
 /// The file a drawing is saved as.

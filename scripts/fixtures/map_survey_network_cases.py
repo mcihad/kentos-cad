@@ -37,6 +37,12 @@ one every known point says its epoch (one frame) and one at another epoch is mov
 grid by PROJ (geoid_cases.transformed, the deformation step); the shift is east, north, up at its given place. The
 network's epoch is the measurement epoch; without one it is the known points' one epoch, as before.
 
+ADR 2520 adds a known point's own velocity (a station's published one: the frame's Earth-centred X, Y, Z, m/yr): with
+it the point goes to the measurement epoch linearly, X(t) = X(t₀) + V·(t − t₀) (IERS Conventions 2010 §4.1), its X, Y,
+Z by PROJ (TUREF 3D → geocentric and back), before the campaign's velocity grid is looked at; `moved` says `by`
+(`velocity` or `grid`). The cases give BN1 and BN2 the grid's own velocity at their places (PROJ's deformation over a
+year, as X, Y, Z, rounded to 0.01 mm/yr as a table would print it), so the network fits as it does with the grid.
+
 ADR 2160 adds BÖHHBÜY Madde 15(1)(c): with three known points or more, the 3D similarity given = T + λ·R·free between
 their given coordinates (at the measurement epoch) and the free stage's, by Horn's closed-form absolute orientation
 (unit quaternions; Horn 1987), the scale λ = Σ g'·Rf' / Σ|f'|²; the rotations from R's antisymmetric part (arc-seconds);
@@ -646,20 +652,28 @@ def analyse(m, inp, prefix=""):
     for k in kn:
         given_at = (k["lat"], k["lon"], k["height"])
         if measured is not None and k["epoch"] != measured[0]:
-            if vel is None:
-                raise Refused("epoch_unsupported", f"“{k['id']}” bilinen noktası {epoch_text(k['epoch'])} epokunda, "
-                                                   f"ağın ölçme epoku {epoch_text(measured[0])}: Madde 15(1)(a) "
-                                                   "uyarınca ölçme epokuna taşınmalı. Arazi ölçümüne hız ızgarasını "
-                                                   "verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme "
-                                                   "epokunda girin.", held_wrong)
-            s = ms.gc.transformed([ms.cv.pt(k["lon"], k["lat"], k["height"])],
-                                  frm={"srid": srid, "epoch": k["epoch"], "heights": ms.ELL},
-                                  to={"srid": srid, "epoch": measured[0], "heights": ms.ELL}, vel=vel)
-            q = s["result"]["output"]["points"][0]
-            now = (q["y"], q["x"], q["z"])
+            years = measured[0] - k["epoch"]
+            if "velocity" in k:
+                # ADR 2520: the point's own velocity, linearly in the frame's Earth-centred X, Y, Z.
+                now = geodetic(ecef(*given_at) + np.array(k["velocity"]) * years)
+                by = "velocity"
+            else:
+                if vel is None:
+                    raise Refused("epoch_unsupported", f"“{k['id']}” bilinen noktası {epoch_text(k['epoch'])} "
+                                                       f"epokunda, ağın ölçme epoku {epoch_text(measured[0])}: Madde "
+                                                       "15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya "
+                                                       "kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne "
+                                                       "hız ızgarasını verin (Proje ayarları › Izgaralar) ya da "
+                                                       "bilinen noktayı ölçme epokunda girin.", held_wrong)
+                s = ms.gc.transformed([ms.cv.pt(k["lon"], k["lat"], k["height"])],
+                                      frm={"srid": srid, "epoch": k["epoch"], "heights": ms.ELL},
+                                      to={"srid": srid, "epoch": measured[0], "heights": ms.ELL}, vel=vel)
+                q = s["result"]["output"]["points"][0]
+                now = (q["y"], q["x"], q["z"])
+                by = "grid"
             d = ecef(*now) - ecef(*given_at)
             shift = [float(v) for v in rows(k["lat"], k["lon"]) @ d]
-            moved.append({"id": k["id"], "mark": k["mark"], "from": k["epoch"], "years": measured[0] - k["epoch"],
+            moved.append({"id": k["id"], "mark": k["mark"], "by": by, "from": k["epoch"], "years": years,
                           "shift": shift})
             at[k["id"]] = now
         else:
@@ -1004,11 +1018,42 @@ def at_epoch(mark, epoch):
     return {"lat": round(q["y"], 9), "lon": round(q["x"], 9), "height": round(q["z"], 4)}
 
 
+def grid_velocity(mark):
+    """The campaign's velocity grid at a known point's place as its own Earth-centred velocity (m/yr): PROJ's move over
+    one year (its deformation step is linear in time), rounded to 0.01 mm/yr as a station table prints it."""
+    lat, lon, h = KNOWN_AT[mark]
+    s = ms.gc.transformed([ms.cv.pt(lon, lat, h)], frm={"srid": 5252, "epoch": 2005.0, "heights": ms.ELL},
+                          to={"srid": 5252, "epoch": 2006.0, "heights": ms.ELL}, vel=VEL)
+    q = s["result"]["output"]["points"][0]
+    return [round(float(v), 5) for v in ecef(q["y"], q["x"], q["z"]) - ecef(lat, lon, h)]
+
+
+OWN = {}
+
+
+def own(k, mark, **extra):
+    """A known point at 2005.0 with its own velocity, as a station's published one (worked out once the grid is
+    written)."""
+    if mark not in OWN:
+        OWN[mark] = grid_velocity(mark)
+    return known(k, mark, velocity=OWN[mark], source="TUSAGA-Aktif koordinatı ve hızı (örnek), TUREF, 2005,0", **extra)
+
+
 def timed_cases():
     moving = timed()
     two_epochs = timed(known_points=[KNOWN[0], known(2, "BN2", epoch=2026.84, **at_epoch("BN2", 2026.84),
                                                      source="TUSAGA-Aktif günlük çözümü (örnek), 2026,84")])
+    own_only = timed(velocity=False, known_points=[own(1, "BN1"), own(2, "BN2")])
+    own_undecided = copy.deepcopy(own_only)
+    own_undecided.survey["campaigns"][0].pop("epoch")
+    own_and_grid = timed(known_points=[own(1, "BN1"), KNOWN[1]])
     return [
+        ("Bilinen noktaların kendi hızları (yer merkezli, m/yıl), hız ızgarası yok: ikisi de hızıyla ölçme epokuna "
+         "taşınır, ağ uyuşur; yeni noktalar arazi ölçümünün kararına (2005,0) hız modelsiz taşınamaz", own_only,
+         {"class": "C2"}),
+        ("Bilinen noktaların kendi hızları, arazi ölçümünün epok kararı yok: yeni noktalar ölçme epokunda projeye "
+         "taşınır, ağ kabul edilebilir", own_undecided, {"class": "C2"}),
+        ("BN1 kendi hızıyla, BN2 arazi ölçümünün hız ızgarasıyla taşınır", own_and_grid, {}),
         ("Ölçme epoku bazların gözlem zamanlarından (2 Kasım 2026); 2005,0'daki bilinen noktalar hız ızgarasıyla oraya "
          "taşınır, yeni noktalar karara (2005,0) döner", moving, {}),
         ("Ölçme epoku verilir (2026,5): bazların zamanından önce gelir", moving, {"epoch": 2026.5}),
@@ -1216,6 +1261,21 @@ def edit_cases():
     out.append(ms.case("Bilinen nokta: enlem aralık dışında", [refusal(
         dict(op_known, lat=95.0), "invalid_survey_value", "Bilinen nokta: enlem −90 ile 90 derece arasında olmalı.",
         "operation.lat")]))
+    # ADR 2520: a known point's own velocity (Earth-centred, m/yr), from its epoch.
+    moving = own(1, "BN1")
+    after = base.clone()
+    after.survey["known"] = [copy.deepcopy(moving)]
+    op_moving = dict(op_known, velocity=moving["velocity"], source=moving["source"])
+    out.append(ms.case("Bilinen nokta: kendi hızıyla (yer merkezli VX, VY, VZ, m/yıl), 2005,0'da",
+                       write(base, after, op_moving, {"id": "bn-1"}, "Bilinen nokta ekle")))
+    no_epoch = {k: v for k, v in op_moving.items() if k != "epoch"}
+    out.append(ms.case("Bilinen nokta: hızı var, epoku yok", [refusal(
+        no_epoch, "invalid_survey_value",
+        "Bilinen nokta: hızı olan noktanın epoku verilmeli: hız noktayı o epoktan taşır.", "operation.velocity")]))
+    out.append(ms.case("Bilinen nokta: hız 1 m/yıldan büyük (mm/yıl m/yıl diye yazılmış)", [refusal(
+        dict(op_moving, velocity=[-10.5, 9.8, 11.2]), "invalid_survey_value",
+        "Bilinen nokta: hız yer merkezli VX, VY, VZ olarak yılda metredir; her bileşen en çok 1 m/yıl olan sonlu bir "
+        "sayı olmalı.", "operation.velocity")]))
     with_known = networked()
     out.append(ms.case("Bilinen nokta: işaretin dışlanmamış bilinen noktası var", [refusal(
         op_known, "invalid_survey_value",

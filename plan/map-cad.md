@@ -33,7 +33,7 @@ sırayla alır.
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480 | tipli katman profili; onaydan sonra değişen nesneler (şema 207) | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
@@ -433,6 +433,20 @@ epoku, PROJ deformation, GVX'in GPS zamanı. Kanıtlanan:
 
 Açık: bilinen noktanın kendi hızı, oturum başına epok, GVX oturum korelasyonları, arşiv panelinde bazlar, resmî TUREF
 hız alanı. Madde `[ ]` kalır.
+
+**8 Kasım 2026, dördüncü tur — Bilinen noktanın kendi hızı ([ADR 2520](../docs/adr/2520-known-point-own-velocity.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: IERS Conventions (2010) Bölüm 4 §4.1.2 ve (4.13) (istasyon konumu =
+referans epokundaki konum + (t − t₀)·hız), BÖHHBÜY 15(1)(a), GVX 1.0'ın SESSION/CCM_BLOCK yapısı (sonraki iş için).
+Kanıtlanan:
+- bilinen noktanın yer merkezli hızı (VX, VY, VZ, m/yıl; yeni birim `m/yr`), epokuyla; ağ onu ızgaradan önce kullanır,
+  `moved[].by` velocity ya da grid. Hız ızgarası olmayan arazi ölçümünde 2005,0'daki TUSAGA-Aktif koordinatlarıyla ağ
+  artık dengelenir; yeni noktaların 2005,0 kararına dönmesi yine ızgara ister (söylenir);
+- `.kcad` şema 207 (Rust, bağımsız okuyucu, başvuru yazıcısı; örnek ve üç bozuk dosya);
+- 41 + 135 ortak durum PROJ'la bağımsız (kendi hızı ızgaranın hızıyken iki yol 0,2 mm içinde aynı), Python, MCP;
+  pencerede Hız satırı, özette ve Taşınma sütununda yol.
+
+Açık: GVX oturum korelasyonları (korelasyonlu gözlemde baz testinin kararı), yeni noktaların hızı, doğu/kuzey/yukarı
+hız ve PSD, arşiv panelinde bazlar, resmî hız alanı. Madde `[ ]` kalır.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

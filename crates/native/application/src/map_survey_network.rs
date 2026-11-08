@@ -8,7 +8,8 @@
 //! `network` writes what this reads. The shared cases are `fixtures/commands/v1/map.survey.network.json`.
 //!
 //! The measurement epoch (docs/adr/2120): given, or the mean of the baselines' observation mid-times; the known points
-//! are moved to it along the campaign's velocity grid by the coordinate chain itself (BÖHHBÜY Madde 15(1)(a)).
+//! are moved to it (BÖHHBÜY Madde 15(1)(a)): by their own velocity, linearly in the frame's Earth-centred X, Y, Z
+//! (docs/adr/2520; IERS Conventions 2010 §4.1), else along the campaign's velocity grid by the coordinate chain itself.
 //!
 //! With three known points or more the given coordinates and the free stage's are related by a 3D similarity and its
 //! scale tested (Madde 15(1)(c), docs/adr/2160).
@@ -17,7 +18,8 @@ use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
     BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
-    GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, MapSurvey, MapSurveyNetwork, MapSurveyNetworked,
+    GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, KnownMovedBy, MapSurvey, MapSurveyNetwork,
+    MapSurveyNetworked,
     NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity, NetworkStage, NetworkStation, SimilarityResidual,
     SurveyBaseline, SurveyCampaign, SurveyKnown, VelocityModel, gnss_rules_default,
 };
@@ -332,6 +334,16 @@ fn moved_to(
     }
 }
 
+/// A known point's latitude, longitude (degrees) and ellipsoidal height carried `years` by its own velocity
+/// (docs/adr/2520): linearly in the frame's Earth-centred X, Y, Z, X(t) = X(t₀) + V·(t − t₀) (IERS Conventions 2010
+/// §4.1), on the frame's ellipsoid both ways.
+fn by_velocity(given: (f64, f64, f64), shape: (f64, f64), v: [f64; 3], years: f64) -> (f64, f64, f64) {
+    let p = ecef(given, shape);
+    let q = [p[0] + v[0] * years, p[1] + v[1] * years, p[2] + v[2] * years];
+    let (lat, lon, h) = gnss::to_geodetic(shape.0, shape.1, q);
+    (lat * RAD, lon * RAD, h)
+}
+
 /// A residual vector (ECEF, m) in the local east, north, up of a place.
 fn enu(at: [f64; 3], v: [f64; 3]) -> [f64; 3] {
     let (lat, lon) = gnss::geodetic(at);
@@ -548,31 +560,37 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         })?,
         None => known[0],
     };
-    // Each known point at the measurement epoch (BÖHHBÜY Madde 15(1)(a)): moved along the campaign's velocity grid.
+    // Each known point at the measurement epoch (BÖHHBÜY Madde 15(1)(a)): by its own velocity when it has one
+    // (docs/adr/2520), else along the campaign's velocity grid.
     let mut at: HashMap<String, (f64, f64, f64)> = HashMap::new();
     let mut moved = Vec::new();
     for k in &known {
         let given = (k.lat, k.lon, k.height);
         let place_now = match (measured, k.epoch) {
             (Some((t, _)), Some(e)) if e != t => {
-                let Some(grid) = velocity_of(campaign.as_ref()) else {
-                    return Err(held_wrong(
-                        codes::EPOCH_UNSUPPORTED,
-                        format!(
-                            "“{}” bilinen noktası {} epokunda, ağın ölçme epoku {}: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin.",
-                            k.id,
-                            epoch_text(e),
-                            epoch_text(t)
-                        ),
-                        prefix,
-                    ));
+                let (now, by) = match k.velocity {
+                    Some(v) => (by_velocity(given, shape, v, t - e), KnownMovedBy::Velocity),
+                    None => {
+                        let Some(grid) = velocity_of(campaign.as_ref()) else {
+                            return Err(held_wrong(
+                                codes::EPOCH_UNSUPPORTED,
+                                format!(
+                                    "“{}” bilinen noktası {} epokunda, ağın ölçme epoku {}: Madde 15(1)(a) uyarınca ölçme epokuna taşınmalı. Bilinen noktaya kendi hızını (yer merkezli VX, VY, VZ) verin, arazi ölçümüne hız ızgarasını verin (Proje ayarları › Izgaralar) ya da bilinen noktayı ölçme epokunda girin.",
+                                    k.id,
+                                    epoch_text(e),
+                                    epoch_text(t)
+                                ),
+                                prefix,
+                            ));
+                        };
+                        (moved_to(doc, &grid, given, srid, e, t)?, KnownMovedBy::Grid)
+                    }
                 };
-                let now = moved_to(doc, &grid, given, srid, e, t)?;
                 let (a, b) = (ecef(given, shape), ecef(now, shape));
                 let r = gnss::enu_rows(given.0 / RAD, given.1 / RAD);
                 let d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
                 let shift = [0, 1, 2].map(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2]);
-                moved.push(KnownMoved { id: k.id.clone(), mark: k.mark.clone(), from: e, years: t - e, shift });
+                moved.push(KnownMoved { id: k.id.clone(), mark: k.mark.clone(), by, from: e, years: t - e, shift });
                 now
             }
             _ => given,

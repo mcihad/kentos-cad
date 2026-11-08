@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 207 (docs/adr/2520): a known point's own velocity.
+    if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_velocities) {
+        return crate::SCHEMA_WITH_KNOWN_VELOCITIES;
+    }
     // Schema 206 (docs/adr/2080): a map work item's approval stamp, a derivation from an item without a file.
     if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_stamps) {
         return crate::SCHEMA_WITH_WORK_STAMPS;

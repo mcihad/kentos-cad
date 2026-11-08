@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `206`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-207.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `207`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-208.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -891,6 +891,13 @@ saklanmaz, okunurken nesnelerden hesaplanır. Yazıcı 206'yı bir damga ya da d
 türetmeyi `bad_value` sayar (`broken/map-work-no-file-source.kcad`). Damga onaylı olmayan öğede ya da SHA-256 değilse
 `bad_value` (`broken/map-work-stamp-not-approved.kcad`, `broken/map-work-stamp-not-sha.kcad`). Örnek
 `map-work-stamps.json/.kcad`.
+
+**Şema 207** (ADR 2520; MAP-03): GNSS arşivinin bilinen noktasının kendi hızı. `mapSurvey.known` kaydında isteğe bağlı
+`velocity`: çerçevenin yer merkezli X, Y, Z hızı (m/yıl), noktayı `epoch`'undan ölçme epokuna taşır. Her bileşen sonlu
+ve en çok 1 m/yıldır; hızı olan noktanın `epoch`'u vardır, yoksa `bad_value` (`broken/map-survey-velocity-no-epoch.kcad`,
+`broken/map-survey-velocity-too-fast.kcad`). Yazıcı 207'yi bir bilinen noktanın hızı varken seçer; 206 ve öncesi
+`velocity`'yi `unknown_field` sayar (`broken/map-survey-velocity-in-schema-206.kcad`). Örnek
+`map-survey-velocity.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

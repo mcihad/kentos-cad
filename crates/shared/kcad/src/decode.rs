@@ -1086,6 +1086,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "GNSS arşivinin bazları, bilinen noktaları ve ağ dengelemeleri şema 199'dan önce yazılmaz",
                     ));
                 }
+                // Schema 207 (docs/adr/2520): a known point's own velocity.
+                if !has.known_velocities && v.has_velocities() {
+                    return Err(r.fail_at(Code::UnknownField, at, "bilinen noktada velocity (şema 207'den önce yok)"));
+                }
                 map_survey = Some(v);
             }
             "mapWork" if has.map_work => {

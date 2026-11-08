@@ -8,8 +8,9 @@
 //! and the known points. Kabul et writes it (`map.survey.edit network`): one undo step. Harita only.
 //!
 //! The measurement epoch (docs/adr/2120): typed, or the mean of the baselines' observation times; the known points at
-//! another epoch are moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)), said in the summary and
-//! in Bilinen noktalar. With three known points or more the summary says BÖHHBÜY Madde 15(1)(c)'s similarity (the
+//! another epoch are moved to it (BÖHHBÜY Madde 15(1)(a)) by their own velocity when the form gave one (Earth-centred
+//! VX, VY, VZ, m/yr, docs/adr/2520), else along the campaign's velocity grid, said in the summary and in Bilinen
+//! noktalar. With three known points or more the summary says BÖHHBÜY Madde 15(1)(c)'s similarity (the
 //! scale, its test and the class's limit) and Bilinen noktalar its residuals (docs/adr/2160).
 
 use std::path::PathBuf;
@@ -17,7 +18,8 @@ use std::path::PathBuf;
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkEpochFrom, NetworkStage,
+    CommandResult, KnownMovedBy, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkEpochFrom,
+    NetworkStage,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_survey_network};
@@ -98,6 +100,8 @@ pub struct KnownForm {
     pub srid: String,
     pub epoch: String,
     pub sigma: [String; 3],
+    /// Earth-centred VX, VY, VZ (m/yr), as typed (docs/adr/2520).
+    pub velocity: [String; 3],
     pub source: String,
 }
 
@@ -111,6 +115,7 @@ impl Default for KnownForm {
             srid: "5252".into(),
             epoch: String::new(),
             sigma: Default::default(),
+            velocity: Default::default(),
             source: String::new(),
         }
     }
@@ -126,6 +131,7 @@ pub enum Field {
     Srid,
     Epoch,
     Sigma(usize),
+    Velocity(usize),
     Source,
 }
 
@@ -176,7 +182,7 @@ fn number(text: &str, words: &str) -> Result<Option<f64>, String> {
 }
 
 /// The summary's epoch line (docs/adr/2120): where the network's epoch comes from and how far the known points moved.
-fn epoch_line(a: &MapSurveyNetworked) -> String {
+pub(crate) fn epoch_line(a: &MapSurveyNetworked) -> String {
     // Points before the decimals, as the window's other numbers (m0, vᵀPv, mm).
     let e = |v: f64| format!("{v:.2}");
     let mut line = match (a.epoch_from, a.epoch) {
@@ -188,8 +194,15 @@ fn epoch_line(a: &MapSurveyNetworked) -> String {
     if !a.moved.is_empty() {
         let horizontal = a.moved.iter().map(|m| m.shift[0].hypot(m.shift[1])).fold(0.0, f64::max);
         let up = a.moved.iter().map(|m| m.shift[2].abs()).fold(0.0, f64::max);
+        // By their own velocity, the campaign's grid, or both (docs/adr/2520).
+        let own = a.moved.iter().filter(|m| m.by == KnownMovedBy::Velocity).count();
+        let how = match (own, a.moved.len() - own) {
+            (_, 0) => " kendi hızıyla oraya taşındı".to_owned(),
+            (0, _) => " arazi ölçümünün hız ızgarasıyla oraya taşındı".to_owned(),
+            (o, g) => format!(" oraya taşındı: {o} nokta kendi hızıyla, {g} nokta hız ızgarasıyla"),
+        };
         line.push_str(&format!(
-            " {} bilinen nokta arazi ölçümünün hız ızgarasıyla oraya taşındı (en çok {} mm yatay, {} mm düşey; Madde 15(1)(a)).",
+            " {} bilinen nokta{how} (en çok {} mm yatay, {} mm düşey; Madde 15(1)(a)).",
             a.moved.len(),
             mm(horizontal),
             mm(up)
@@ -317,8 +330,14 @@ impl App {
                 [Some(n), Some(e), Some(u)] => Some([n, e, u]),
                 _ => return Err("σ'nın üçünü birden yazın (ağırlıklı) ya da üçünü de boş bırakın (sabit).".into()),
             };
+            let v = [number(&k.velocity[0], "VX")?, number(&k.velocity[1], "VY")?, number(&k.velocity[2], "VZ")?];
+            let velocity = match v {
+                [None, None, None] => None,
+                [Some(x), Some(y), Some(z)] => Some([x, y, z]),
+                _ => return Err("Hızın üç bileşenini birden yazın (VX, VY, VZ, m/yıl) ya da üçünü de boş bırakın.".into()),
+            };
             let source = Some(k.source.trim().to_owned()).filter(|t| !t.is_empty());
-            Ok(Op::Known { mark: k.mark.trim().to_owned(), lat, lon, height, srid, epoch, sigma, source })
+            Ok(Op::Known { mark: k.mark.trim().to_owned(), lat, lon, height, srid, epoch, sigma, velocity, source })
         };
         match read() {
             Ok(op) => {
@@ -409,6 +428,7 @@ impl App {
                     Field::Srid => k.srid = text,
                     Field::Epoch => k.epoch = text,
                     Field::Sigma(i) => k.sigma[i] = text,
+                    Field::Velocity(i) => k.velocity[i] = text,
                     Field::Source => k.source = text,
                 }
             }
@@ -457,7 +477,7 @@ impl App {
                         fields::input(None, "Bazlardan", &s.epoch, false, false).on_input(|v| msg(Event::Epoch(v)))
                     )
                     .width(140),
-                    label::caption("Boşsa bazların gözlem zamanlarının ortası; bilinen noktalar oraya hız ızgarasıyla taşınır.")
+                    label::caption("Boşsa bazların gözlem zamanlarının ortası; bilinen noktalar oraya kendi hızıyla ya da hız ızgarasıyla taşınır.")
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -629,7 +649,7 @@ impl App {
                             num("h (m)", 75.0),
                             num("EPSG", 50.0),
                             num("Epok", 55.0),
-                            num("Taşınma D/K/Y (mm)", 130.0),
+                            col("Taşınma D/K/Y (mm)", 150.0),
                             num("Artık D/K/Y (mm)", 120.0),
                             col("Ağırlık", 90.0),
                             road_dialog::Col { title: "Kaynak", width: None, number: false },
@@ -647,9 +667,16 @@ impl App {
                                             format!("{:.4}", k.height),
                                             k.srid.to_string(),
                                             k.epoch.map_or(String::new(), |e| format!("{e}")),
-                                            // Moved to the measurement epoch along the velocity grid (docs/adr/2120).
+                                            // Moved to the measurement epoch by its own velocity or along the
+                                            // velocity grid (docs/adr/2120, 2520).
                                             a.moved.iter().find(|m| m.id == k.id).map_or(String::new(), |m| {
-                                                format!("{}/{}/{}", mm(m.shift[0]), mm(m.shift[1]), mm(m.shift[2]))
+                                                format!(
+                                                    "{} {}/{}/{}",
+                                                    if m.by == KnownMovedBy::Velocity { "hız" } else { "ızgara" },
+                                                    mm(m.shift[0]),
+                                                    mm(m.shift[1]),
+                                                    mm(m.shift[2])
+                                                )
                                             }),
                                             // The similarity's residual (Madde 15(1)(c), docs/adr/2160).
                                             a.similarity
@@ -701,6 +728,16 @@ impl App {
                     input(&k.sigma[0], "Kuzey (boş: sabit)", Field::Sigma(0), box_),
                     input(&k.sigma[1], "Doğu", Field::Sigma(1), box_),
                     input(&k.sigma[2], "Yukarı", Field::Sigma(2), box_)
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .field(
+                "Hız (m/yıl)",
+                row![
+                    input(&k.velocity[0], "VX (boş: hızsız)", Field::Velocity(0), box_),
+                    input(&k.velocity[1], "VY", Field::Velocity(1), box_),
+                    input(&k.velocity[2], "VZ", Field::Velocity(2), box_)
                 ]
                 .spacing(8)
                 .align_y(Center),

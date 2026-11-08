@@ -109,6 +109,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   seçimin yüzeyi ya da ağıyla açılması.
 - MAP-02 / ADR 2500: `cad.layers.reproject`'in web işleyicisinde önizleme alanları (shifts, notlar, toplu kayma, zincirin
   kararı; 24 ortak durum) ve ret nedenleri; web'in katman menüsünde Yeniden izdüşür önizlemesi; `fixtures/crs/v1/areas.json`.
+- MAP-03 / ADR 2520: web'in `map.survey.network` ve `map.survey.edit` işleyicilerinde bilinen noktanın `velocity`'si ve
+  `moved[].by`; web'in `.kcad` okuyucusunda şema 207; Arşivden ağ dengelemesi penceresinde Hız satırı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

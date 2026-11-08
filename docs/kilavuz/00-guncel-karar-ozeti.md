@@ -200,6 +200,10 @@
   `cad.layers.reproject`'in cevabı (plan da) nesne başına kayma, EPSG kullanım alanlarının notları, toplu kayma ve
   zincirin kararıdır; ret her nedeni sayısıyla söyler (yazı, daire, yay artık “sistemin dışında” değil). Masaüstünde
   Yeniden izdüşür önizleme penceresi açar, Uygula yazar. Harita + CBS.
+- **Bilinen noktanın kendi hızı (8 Kasım 2026; MAP-03, [ADR 2520](../../docs/adr/2520-known-point-own-velocity.md)).**
+  `bn-N`'nin yer merkezli hızı (m/yıl, epokuyla) noktayı ölçme epokuna doğrusal taşır (IERS 2010 §4.1.2); yoksa hız
+  ızgarası. `moved[].by`; `.kcad` şema 207. Ağ ızgarasız da dengelenir, yeni noktaların karara dönmesi ızgara ister.
+  Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

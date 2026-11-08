@@ -1644,6 +1644,8 @@ __all__ = [
     "KmPlaces",
     "KnownMapSurveyOperation",
     "KnownMoved",
+    "KnownMovedBy",
+    "KnownMovedByName",
     "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",

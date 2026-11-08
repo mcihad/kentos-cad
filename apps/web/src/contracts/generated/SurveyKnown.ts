@@ -3,10 +3,11 @@
 /**
  * A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1
  * point) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,
- * east, up (m) weighted; where they come from; left out with a reason, never deleted.
+ * east, up (m) weighted; its own velocity in the frame's Earth-centred X, Y, Z (m/yr, from its epoch; a station's
+ * published velocity, docs/adr/2520); where they come from; left out with a reason, never deleted.
  */
 export type SurveyKnown = { 
 /**
  * `bn-N`.
  */
-id: string, mark: string, lat: number, lon: number, height: number, srid: number, epoch?: number, sigma?: [number, number, number], source?: string, excluded?: string, };
+id: string, mark: string, lat: number, lon: number, height: number, srid: number, epoch?: number, sigma?: [number, number, number], velocity?: [number, number, number], source?: string, excluded?: string, };

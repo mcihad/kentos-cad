@@ -92,6 +92,7 @@ UNITS: dict[str, str] = {
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
     "arcsec": "Yay saniyesi (″).",
     "year": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
+    "m/yr": "Yılda metre: bir noktanın hızı, yer merkezli X, Y, Z (TUSAGA-Aktif istasyonlarının yayımlanan hızları gibi).",
     "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
     "ms": "Milisaniye: bir işin süresi.",
@@ -3199,6 +3200,18 @@ class JunctionRole(_StrEnum):
 
 JunctionRoleName = Literal["junction", "source", "valve"]
 """The names of :class:`JunctionRole`, for a plain string."""
+
+
+class KnownMovedBy(_StrEnum):
+    """What carried a known point to the measurement epoch (docs/adr/2520): its own velocity, or the campaign's
+    velocity grid.
+    """
+    VELOCITY = "velocity"
+    GRID = "grid"
+
+
+KnownMovedByName = Literal["velocity", "grid"]
+"""The names of :class:`KnownMovedBy`, for a plain string."""
 
 
 class LabelAlign(_StrEnum):
@@ -47951,8 +47964,8 @@ class KmPlaces(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class KnownMoved(_Model):
-    """A known point moved to the measurement epoch along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a),
-    docs/adr/2120): its epoch, the years it moved and how far east, north and up (m).
+    """A known point moved to the measurement epoch (BÖHHBÜY Madde 15(1)(a), docs/adr/2120): by its own velocity or along
+    the campaign's velocity grid (docs/adr/2520), its epoch, the years it moved and how far east, north and up (m).
     Attributes:
         from_: Unit: year.
         years: Unit: year.
@@ -47960,6 +47973,7 @@ class KnownMoved(_Model):
     """
     id: str
     mark: str
+    by: KnownMovedBy | KnownMovedByName
     from_: float
     years: float
     shift: list[float]
@@ -47968,6 +47982,7 @@ class KnownMoved(_Model):
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["mark"] = self.mark
+        out["by"] = _enum_out(self.by)
         out["from"] = float(self.from_)
         out["years"] = float(self.years)
         out["shift"] = [float(e0) for e0 in self.shift]
@@ -47978,6 +47993,7 @@ class KnownMoved(_Model):
         return cls(
             id=data["id"],
             mark=data["mark"],
+            by=_enum_in(KnownMovedBy, data["by"]),
             from_=float(data["from"]),
             years=float(data["years"]),
             shift=[float(e0) for e0 in data["shift"]],
@@ -53467,13 +53483,13 @@ class MapSurveyNetwork(_Model):
 
     The measurement epoch (docs/adr/2120): `epoch` when given, else the mean of the baselines' observation mid-times
     when every one has its start and end, else none. With one, every known point needs its epoch and one at another
-    epoch is moved to it along the campaign's velocity grid (BÖHHBÜY Madde 15(1)(a)); without one the known points are
-    in one frame and epoch, the network's.
+    epoch is moved to it (BÖHHBÜY Madde 15(1)(a)): by its own velocity when it has one (docs/adr/2520), else along the
+    campaign's velocity grid; without one the known points are in one frame and epoch, the network's.
 
     Refusals, in this order: `not_a_map_project`, `unknown_survey_record`, `invalid_survey_value`,
     `unknown_rule_class`, `invalid_epoch`, `no_baselines`, `datum_missing`, `known_differ`, `unknown_frame`,
-    `epoch_unsupported` (a known point at another epoch, the campaign without a velocity grid) and the grid's own
-    refusals, `network_too_large`, `network_disconnected`.
+    `epoch_unsupported` (a known point at another epoch without its own velocity, the campaign without a velocity
+    grid) and the grid's own refusals, `network_too_large`, `network_disconnected`.
     Attributes:
         epoch: The measurement epoch (decimal year, 1900–2100) the known points are moved to (docs/adr/2120). Unit: year.
         scale: Unit: 1.
@@ -94262,7 +94278,8 @@ class SurveyGrid(_Model):
 class SurveyKnown(_Model):
     """A known point `bn-N` (docs/adr/1740): a mark's given coordinates (a TUSAGA-Aktif or TUTGA station, an older C1
     point) in a geographic frame at an epoch, the network's datum: held fixed, or with standard deviations north,
-    east, up (m) weighted; where they come from; left out with a reason, never deleted.
+    east, up (m) weighted; its own velocity in the frame's Earth-centred X, Y, Z (m/yr, from its epoch; a station's
+    published velocity, docs/adr/2520); where they come from; left out with a reason, never deleted.
     Attributes:
         id: `bn-N`.
         lat: Unit: deg.
@@ -94271,6 +94288,7 @@ class SurveyKnown(_Model):
         srid: Unit: epsg.
         epoch: Unit: year.
         sigma: Unit: m.
+        velocity: Unit: m/yr.
     """
     id: str
     mark: str
@@ -94282,6 +94300,7 @@ class SurveyKnown(_Model):
     excluded: str | None | Unset = UNSET
     sigma: list[float] | None | Unset = UNSET
     source: str | None | Unset = UNSET
+    velocity: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -94299,6 +94318,8 @@ class SurveyKnown(_Model):
             out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
         if self.source is not UNSET:
             out["source"] = self.source
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else [float(e0) for e0 in self.velocity]
         return out
 
     @classmethod
@@ -94314,6 +94335,7 @@ class SurveyKnown(_Model):
             excluded=data.get("excluded", UNSET),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
             source=data.get("source", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else [float(e0) for e0 in data["velocity"]],
         )
 
 
@@ -116960,7 +116982,8 @@ class BaselineMapSurveyOperation(MapSurveyOperation):
 @dataclass(kw_only=True, slots=True)
 class KnownMapSurveyOperation(MapSurveyOperation):
     """A known point `bn-N`: a mark's given coordinates in a geographic frame at an epoch (the measurement's); held
-    fixed, or weighted by `sigma` north, east, up (m).
+    fixed, or weighted by `sigma` north, east, up (m); with `velocity` (the frame's Earth-centred X, Y, Z, m/yr; a
+    station's published velocity) it is carried from its epoch to the measurement epoch by it (docs/adr/2520).
     Attributes:
         lat: Unit: deg.
         lon: Unit: deg.
@@ -116968,6 +116991,7 @@ class KnownMapSurveyOperation(MapSurveyOperation):
         srid: Unit: epsg.
         epoch: Unit: year.
         sigma: Unit: m.
+        velocity: Unit: m/yr.
     """
     TAG_VALUE: ClassVar[str] = "known"
     mark: str
@@ -116978,6 +117002,7 @@ class KnownMapSurveyOperation(MapSurveyOperation):
     epoch: float | None | Unset = UNSET
     sigma: list[float] | None | Unset = UNSET
     source: str | None | Unset = UNSET
+    velocity: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"op": "known"}
@@ -116992,6 +117017,8 @@ class KnownMapSurveyOperation(MapSurveyOperation):
             out["sigma"] = None if self.sigma is None else [float(e0) for e0 in self.sigma]
         if self.source is not UNSET:
             out["source"] = self.source
+        if self.velocity is not UNSET:
+            out["velocity"] = None if self.velocity is None else [float(e0) for e0 in self.velocity]
         return out
 
     @classmethod
@@ -117005,6 +117032,7 @@ class KnownMapSurveyOperation(MapSurveyOperation):
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
             source=data.get("source", UNSET),
+            velocity=UNSET if "velocity" not in data else None if data["velocity"] is None else [float(e0) for e0 in data["velocity"]],
         )
 
 
@@ -130029,6 +130057,8 @@ __all__ = [
     "KmPlaces",
     "KnownMapSurveyOperation",
     "KnownMoved",
+    "KnownMovedBy",
+    "KnownMovedByName",
     "KnownPoint",
     "LabelAbbreviate",
     "LabelAlign",
