@@ -88,6 +88,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   bunu da okusun.
 - M13 / ADR 3012: `io/kcad.ts` şema 205 (projenin kesme yüksekliği, `settings.arch.cutHeight`); web'in Proje ayarları ›
   Mimari'si "Planın kesme yüksekliği" alanını alsın, web çizimi görünüşün `cut`'ını projeden (`plan_cut`) versin.
+- M13 / ADR 3012 adım 3: webde kat görünümü yok (ADR 0715); geldiğinde bir üst katın döşemelerini kesikli çizsin
+  (`level_view::looks`'un `overhead`'ı, `slab::Look::overhead`).
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve Arşivden ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

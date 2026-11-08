@@ -1,6 +1,6 @@
 # 3012 — Kesme yüksekliği ve üstteki çizgiler
 
-Tarih: 2026-11-08. Durum: kabul (M13, ADV-15; plan S4). Üç adımda yapılır; bu belge her adımda genişler. Adım 1 ve 2 yapıldı.
+Tarih: 2026-11-08. Durum: kabul (M13, ADV-15; plan S4). Üç adımda yapıldı.
 
 ## Sorun
 
@@ -77,6 +77,28 @@ Tarih: 2026-11-08. Durum: kabul (M13, ADV-15; plan S4). Üç adımda yapılır; 
   İTÜ'nün aralığını söyler.
 - **Betik ve ajan:** `cad.settings.set`'in `arch` girdisi `cutHeight`'ı alır; komutun özeti onu anar.
 
+### Adım 3: üst katın döşemesi alt katın planında kesikli
+
+- **Bir üst katın döşemeleri etkin katın planında kesikli çizilir** (`level_view::shows_below`, `LevelLooks::overhead`):
+  - "Yalnız etkin kat" ve "Etkin kat ve alt kat" görünümlerinde; "Bütün katlar"da her döşeme kendi planındaki gibidir.
+  - Yalnız hemen üstteki kat (`level_view::above`): Archicad'in "Home & One Story Down"ı. En üst katın üstü yoktur.
+  - Yalnız döşeme (`Entity::Slab`: döşeme, balkon, teras). Kiriş ve asma tavan nesnesi henüz yok.
+- **Görünüşü:** döşemenin halkaları (dış çizgisi ve delikleri) kesikli ve ince, nesnenin kaleminin yarısı
+  (`slab::OVERHEAD_PEN`, ISO 128-23'ün kesikli ince çizgisi 02.1). Korkuluk ve parapet çizilmez: onlar üst katın
+  planına aittir.
+- **Bütün döşeme çizilir, yalnız çıkma değil.** Alt katın duvarlarının içinde kalan kısım duvarın çizgisiyle çakışır ya da
+  tavanın sınırını gösterir; çıkma (balkon, konsol) duvarın dışında kesikli okunur. Çıkmayı alt katın duvarlarına göre
+  kesip ayırmak her duvar değişiminde yeniden hesap ister; Archicad da döşemenin bütün dış çizgisini çizer.
+- **Seçilmez, kenetlenir:** alttaki katın merdiveni gibi (ADR 0724 §4). Tıklama etkin katın nesnesini alır.
+- **Pafta:** kat paftası (`cad.sheets.levels`) aynı kuralla basılır; harita kendi kat görünümüyle kendi deposunu kurar
+  (`layers::shows_from_above`).
+- **Durum çubuğu:** Kat hücresinin ipucu "üst katın döşemeleri kesikli" der.
+- **Ekran önbelleği:** çizim alanının biçemli sahnesi belge ya da görünüş (gizli, soluk) değişince yeniden kuruluyordu.
+  "Bütün katlar"a geçiş zemin katta hiçbir gizli ya da soluk nesneyi değiştirmediği için balkon ekranda kesikli
+  kalıyordu (gerçek pencerede görüldü; depo doğruydu). Başka kattan görünen nesneler artık görünüşe not edilir
+  (`Phasing::drawn_across`): yalnız onlar değişse de sahne yeniden kurulur. Aynı açık alttaki katın merdiveninde de
+  vardı; orada başka nesneler de gizlendiği için örtülüyordu.
+
 ## Ölçüm
 
 - **Adım 1, 1:50 PDF** (`headless/scales.rs::a_window_over_the_cut_leaves_its_wall_whole_on_paper`):
@@ -113,7 +135,26 @@ Tarih: 2026-11-08. Durum: kabul (M13, ADV-15; plan S4). Üç adımda yapılır; 
   - Başvuru fikstürleri: `plan-cut.kcad`, şema 204'te `broken/plan-cut-in-schema-204.kcad`, aralık dışı
     `broken/plan-cut-out-of-range.kcad` (`tools/kcad/kcad.py` bağımsız okuyucusu da aynı sonucu verir).
 
+- **Adım 3, 1:50 PDF** (`headless/scales.rs::an_upper_slab_shows_dashed_on_the_plan_below_it`): zemin katta 8 × 6 m
+  duvar halkası, 1. katta 3 × 1,5 m korkuluklu balkon (kalem 0,35 mm), `cad.sheets.levels` ile iki pafta.
+
+  | | Zemin kat: kesikli 0,175 mm | 1. kat: düz 0,35 mm |
+  |---|---|---|
+  | Önce | 3 (paftanın kendi çizgileri) | 8 |
+  | Sonra | 4: balkonun halkası | 8 |
+
+  - Resim: `.run/gui-evidence/mimari-m13/m13-cikma-pdf.png`.
+- **Adım 3, gerçek pencere** (`fixtures/interaction/real/ust-kat-doseme.txt`): çizim dosyayla zemin katta, "Yalnız etkin
+  kat" ile açıldı. Önce balkon görünmüyordu; sonra ince kesikli. Kesikli kenara tıklayınca hiçbir şey seçilmez; durum
+  çubuğunun Kat hücresinden "Bütün katlar"da balkon düz ve korkuluklu, aynı tık onu seçer; 1. katta kendi planındaki
+  gibi. Resim: `.run/gui-evidence/mimari-m13/m13-gercek-cikma.png`.
+- **Adım 3 testleri:** `interaction/tests/all/overhead_slab.rs` (görünümler, seçilmez/kenetlenir, düzenlemeden sonra),
+  `arch_levels::a_slab_edge_is_its_outer_line_at_1_200` (üstten görünüş yalnız halka), masaüstünde
+  `a_slab_of_the_level_above_is_dashed_until_every_level_shows`, stil
+  `a_level_view_that_only_draws_across_still_changes_the_look`.
+
 ## Sonraki adımlar
 
-- Adım 3: üst katın döşeme çıkması alt katın planında kesikli çizilir.
-- Web: `io/kcad.ts` şema 205 ve web'in Proje ayarları › Mimari'sinde kesme yüksekliği (TODOS.md).
+- Kiriş ve asma tavan nesnesi geldiğinde onlar da kesikli çizilir (§14.5.3 o ve t).
+- Web: `io/kcad.ts` şema 205, Proje ayarları › Mimari'de kesme yüksekliği ve üst katın döşemesinin kesikli çizimi
+  (TODOS.md).

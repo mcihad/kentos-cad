@@ -79,6 +79,7 @@ pub fn slab_look(s: &kentos_contracts::SlabFields) -> kentos_geometry_core::geom
                 })
                 .collect(),
         }),
+        overhead: false,
     }
 }
 

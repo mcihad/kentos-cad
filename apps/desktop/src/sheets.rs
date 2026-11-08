@@ -192,7 +192,8 @@ impl SheetMaps {
             annotation.to_bits(),
             unscoped,
             main.ghost_total(),
-            // A level's plan showing the stairs under it from above (docs/adr/0724 §4).
+            // A level's plan showing the stairs under it from above (docs/adr/0724 §4) or the slabs over it dashed
+            // (docs/adr/3012, step 3).
             level
                 .filter(|l| kentos_plot::layers::shows_from_above(&drawing.model, l))
                 .map(|l| (l.id.clone(), l.below)),

@@ -4,6 +4,9 @@
 //! piece.
 //!
 //! `KENTOS_SCALE_PDF_DIR=dir` keeps the three PDFs there.
+//!
+//! The plan's cut (docs/adr/3012): a window over it is dashed and its wall whole; a slab of the level above is dashed on
+//! the plan below it.
 
 use kentos_commands::{CadWork, DrawingFont, DrawingUnit, Workspace};
 use kentos_headless::{NewDrawing, Session};
@@ -399,6 +402,130 @@ fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
     assert!(
         count(0.5, false) > low_cut.0,
         "the wall is cut twice: {strokes:?}"
+    );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// docs/adr/3012, step 3: 1. kat's balcony over Zemin kat's entrance shows on Zemin kat's 1:50 sheet dashed and narrow
+/// (half its pen), its railing left out; on 1. kat's own sheet it is solid, with its railing. Mimarlar Odası §14.5.3 u:
+/// "Planın geçtiği düzlem ile tavan arasında kalan imalat nokta nokta işlenir. (Saçak ara kat çıkma vb.)"
+#[test]
+fn an_upper_slab_shows_dashed_on_the_plan_below_it() {
+    let mut s = Session::new(&NewDrawing {
+        name: "Çıkma".into(),
+        srid: 0,
+        plot_scale: 50.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Architecture),
+        heights: None,
+    })
+    .expect("a new building");
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let mut arch = s
+        .document()
+        .settings()
+        .arch
+        .clone()
+        .expect("a Mimari project");
+    arch.levels.push(
+        serde_json::from_value(
+            json!({"id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0}),
+        )
+        .expect("a level"),
+    );
+    done(
+        s.call(json!({ "command": "cad.settings.set", "input": { "arch": arch } }))
+            .expect("answers"),
+    );
+    done(
+        s.call(json!({ "command": "cad.walls.rectangle", "input": {
+            "layerId": layer,
+            "frame": { "kind": "corners", "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 8.0, "y": 6.0 } },
+            "width": 0.25, "lineWeight": 0.5,
+            "arch": { "level": "zemin" }
+        } }))
+        .expect("answers"),
+    );
+    // The walls' frame is their inner face: the balcony steps out of their outer face, 25 cm under it.
+    let p = |x: f64, y: f64| json!({ "x": x, "y": y });
+    done(
+        s.call(json!({ "command": "cad.slabs.create", "input": {
+            "layerId": layer, "lineWeight": 0.35,
+            "slabs": [{
+                "parts": [{ "outer": { "pts": [p(2.5, -1.75), p(5.5, -1.75), p(5.5, -0.25), p(2.5, -0.25)] } }],
+                "role": "balcony", "edge": { "kind": "railing", "width": 0.05 },
+                "arch": { "level": "kat-1" }
+            }]
+        } }))
+        .expect("answers"),
+    );
+    done(
+        s.call(json!({ "command": "cad.sheets.levels", "input": { "options": { "scale": 50 } } }))
+            .expect("answers"),
+    );
+    let dir = std::env::temp_dir().join(format!("kentos-cikma-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let pdf = dir.join("cikma-1-50.pdf");
+    s.export_pdf(&pdf, &[]).expect("the PDF");
+    if let Ok(keep) = std::env::var("KENTOS_SCALE_PDF_DIR") {
+        std::fs::copy(&pdf, std::path::Path::new(&keep).join("cikma-1-50.pdf")).expect("kept");
+        // The drawing too, opened on Zemin kat alone, for the real window (fixtures/interaction/real/ust-kat-doseme.txt).
+        let mut arch = s
+            .document()
+            .settings()
+            .arch
+            .clone()
+            .expect("a Mimari project");
+        arch.active_level = Some(Some("zemin".into()));
+        arch.level_view = Some(kentos_commands::LevelView::Active);
+        done(
+            s.call(json!({ "command": "cad.settings.set", "input": { "arch": arch } }))
+                .expect("answers"),
+        );
+        s.save(Some(&std::path::Path::new(&keep).join("cikma.kcad")))
+            .expect("kept");
+    }
+    let bytes = std::fs::read(&pdf).expect("written");
+    let strokes = |page: u32| -> Vec<(f64, bool)> {
+        kentos_formats::pdf::read_page(&bytes, page)
+            .expect("its page")
+            .paths
+            .iter()
+            .filter_map(|p| p.stroke.as_ref())
+            .map(|s| ((s.width / PT_PER_MM * 1000.0).round() / 1000.0, s.dashed))
+            .collect()
+    };
+    let count = |strokes: &[(f64, bool)], mm: f64, dashed: bool| {
+        strokes
+            .iter()
+            .filter(|(w, d)| (w - mm).abs() < 0.01 && *d == dashed)
+            .count()
+    };
+    let (ground, first) = (strokes(1), strokes(2));
+    eprintln!(
+        "Zemin kat: 0.175 mm dashed {}, 0.35 mm solid {}; 1. kat: 0.175 mm dashed {}, 0.35 mm solid {}",
+        count(&ground, 0.175, true),
+        count(&ground, 0.35, false),
+        count(&first, 0.175, true),
+        count(&first, 0.35, false)
+    );
+    // Zemin kat: the balcony's ring dashed at half its pen. 1. kat: its own plan's, solid with its railing. The two
+    // sheets' frames and title blocks are alike (three dashed 0.175 mm lines on each before): the difference is the
+    // balcony's.
+    assert!(
+        count(&ground, 0.175, true) > count(&first, 0.175, true),
+        "{ground:?} {first:?}"
+    );
+    assert!(
+        count(&first, 0.35, false) >= count(&ground, 0.35, false) + 2,
+        "{ground:?} {first:?}"
     );
     let _ = std::fs::remove_dir_all(&dir);
 }

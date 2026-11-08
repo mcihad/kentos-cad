@@ -208,6 +208,7 @@ fn a_slab_edge_is_its_outer_line_at_1_200() {
                 bulges: None,
             }],
         }),
+        overhead: false,
     };
     let whole = slab::pieces(&parts, &look).len();
     assert_eq!(slab::pieces_in(&parts, &look, SCHEMATIC).len(), whole);
@@ -215,6 +216,15 @@ fn a_slab_edge_is_its_outer_line_at_1_200() {
     // The ring and the run's outer line; the inner line and the two ends are left out.
     assert_eq!(slab::pieces_in(&parts, &look, SIMPLE).len(), 2);
     assert_eq!(whole, 5);
+    // Seen from the level under it (docs/adr/3012, step 3): its ring alone, at every level, its parapet left out.
+    let over = Look {
+        overhead: true,
+        ..look
+    };
+    for view in [SIMPLE, SCHEMATIC, STANDARD] {
+        assert_eq!(slab::pieces_in(&parts, &over, view).len(), 1, "{view:?}");
+    }
+    assert_eq!(slab::pieces(&parts, &over).len(), 1);
 }
 
 fn piece(shape: Shape) -> Piece {

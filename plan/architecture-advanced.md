@@ -778,13 +778,14 @@ _Durum (7 Kasım 2026):_ Kapı ve pencere ölçeğe göre çiziliyor (M11, [ADR 
   - 1:50'de kolonun ölçüsü (30/50) ve merdivenin rıht ve basamağı (11 × 17.5/28) yazılır: Mimarlar Odası uygulama
     projesinde "kolon isimleri ve ölçüleri", merdivenin "basamak adedi … ve rıht yüksekliği" ister.
   - Aynı kat üç paftada PDF'e basıldı ve gerçek pencerede önceki ikiliyle karşılaştırıldı.
-- Kesme yüksekliği (M13, [ADR 3012](../docs/adr/3012-plan-cut-and-overhead.md)): kesmenin üstündeki pencere duvarı
-  kesmez, kesikli çizilir; yükseklik Proje ayarları › Mimari'de verilir (yeni projede 1,20 m, İTÜ'nün alt ucu).
-  1:50 PDF'te kesme 1,20'de yüksek pencere kesikli, 1,80'de kesik.
+- Kesme yüksekliği ve üstteki çizgiler (M13, [ADR 3012](../docs/adr/3012-plan-cut-and-overhead.md)):
+  - kesmenin üstündeki pencere duvarı kesmez, kesikli çizilir; yükseklik Proje ayarları › Mimari'de verilir (yeni
+    projede 1,20 m, İTÜ'nün alt ucu). 1:50 PDF'te kesme 1,20'de yüksek pencere kesikli, 1,80'de kesik;
+  - bir üst katın döşemeleri (balkon, çıkma) etkin katın planında ince kesikli, seçilmez (Mimarlar Odası §14.5.3 u).
 - Kalanlar:
   - 1:20 kasa profili ve kolonun beton taraması (M14);
   - ölçeğe göre çizgi grubu (sahibin kararı bekleniyor);
-  - üst katın döşeme çıkmasının kesikli izi (M13 adım 3), tarama kitaplığı (M14);
+  - kiriş izi ve asma tavan (nesneleri yok), tarama kitaplığı (M14);
   - mobilyanın parça parça ayrıntı düzeyi, ıslak hacim ve mutfak bloklarının sade gösterimi;
   - web çiziminin düzeyi ölçeğe göre seçmesi.
 
@@ -1067,7 +1068,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M10 | Kalem hiyerarşisi | ADV-14 | Kesilen kalın, görünen ince; ekranda çizgi kalınlığı **(M10, ADR 3009: yapıldı; yay, cam ve malzeme sınırı yarım kalem; 1:50 PDF'te ölçüldü; ölçeğe göre çizgi grubu M11–M12'ye)** |
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı **(M11, ADR 3010: yapıldı; kapı ve pencere çizgisi 1:200'de 2, 1:100'de 5, 1:50'de 9; 1:20 kasa profili kaldı)** |
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte **(M12, ADR 3011: yapıldı; 1:200 sade, 1:50'de kolon ölçüsü ve merdiven bilgisi; kolonun beton taraması M14'e, çizgi grubu sahibin kararına)** |
-| M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler **(M13, ADR 3012: adım 1–2 yapıldı; yüksek pencere kesikli, kesme yüksekliği proje ayarı; üst kat çıkması sürüyor)** |
+| M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler **(M13, ADR 3012: yapıldı; yüksek pencere kesikli, kesme yüksekliği proje ayarı (yeni projede 1,20), üst katın döşemesi alt katta kesikli; kiriş ve asma tavan nesnesi yok)** |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |

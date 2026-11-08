@@ -825,6 +825,16 @@ impl Store {
         label: bool,
         view: crate::geom::wall::View,
     ) -> Vec<crate::block::Piece> {
+        // A slab of the level above (docs/adr/3012, step 3): its rings dashed and narrow.
+        let stroke = if space.slab.as_ref().is_some_and(|l| l.overhead) {
+            crate::block::PieceStroke {
+                line_type: Some("dashed".to_owned()),
+                weight_scale: Some(crate::geom::slab::OVERHEAD_PEN),
+                ..Default::default()
+            }
+        } else {
+            Default::default()
+        };
         crate::geom::space::pieces_with_view(parts, space, view, label)
             .into_iter()
             .map(|shape| crate::block::Piece {
@@ -833,7 +843,7 @@ impl Store {
                 line_weight: None,
                 by_layer: Vec::new(),
                 gates: Vec::new(),
-                stroke: Default::default(),
+                stroke: stroke.clone(),
                 attribute: None,
                 annotation_origin: None,
             })

@@ -15,6 +15,11 @@ pub struct Phasing {
     looks: HashMap<u32, PhaseLook>,
     pens: Vec<RecipePen>,
     mono: bool,
+    /// The objects the store draws as another level's plan shows them (docs/adr/0724 §4, docs/adr/3012 step 3): a
+    /// stair of the level under the active one from above, a slab of the level over it dashed. The store holds that
+    /// look; it is only noted here, so a level view that changes it and no hidden or faint object still builds the
+    /// drawing again (Bütün katlar once kept a balcony dashed on the screen). It changes nothing drawn here.
+    across: Vec<u32>,
 }
 
 impl Phasing {
@@ -72,6 +77,11 @@ impl Phasing {
     /// Object `id` left out (a PDF underlay that is not plotted, docs/adr/0351 §2).
     pub fn hide(&mut self, id: u32) {
         self.looks.insert(id, PhaseLook::Hidden);
+    }
+
+    /// Object `id` drawn by the store as another level's plan shows it (docs/adr/0724 §4, docs/adr/3012 step 3).
+    pub fn drawn_across(&mut self, id: u32) {
+        self.across.push(id);
     }
 
     /// Object `id` drawn faint (the level under the active one, docs/adr/0715 §2) unless it is left out.

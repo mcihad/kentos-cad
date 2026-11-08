@@ -137,6 +137,8 @@ pub struct Spatial {
     elsewhere: HashSet<u32>,
     /// The stairs put as the plan of the level above theirs shows them (docs/adr/0724 §4).
     upper: HashSet<u32>,
+    /// The slabs put as the plan of the level under theirs shows them, dashed (docs/adr/3012, step 3).
+    overhead: HashSet<u32>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled in the
@@ -253,10 +255,10 @@ impl Spatial {
     }
 
     /// Whether the store draws some objects otherwise than the drawing's own plan does: a sheet's map edited in place
-    /// (docs/adr/0716), or the stairs under the active level drawn from above (docs/adr/0724 §4). A sheet's map then
-    /// wants a store of its own.
+    /// (docs/adr/0716), the stairs under the active level drawn from above (docs/adr/0724 §4) or the slabs over it
+    /// dashed (docs/adr/3012, step 3). A sheet's map then wants a store of its own.
     pub fn draws_otherwise(&self) -> bool {
-        self.sheet_view.is_some() || !self.upper.is_empty()
+        self.sheet_view.is_some() || !self.upper.is_empty() || !self.overhead.is_empty()
     }
 
     /// Explicit command input for tools that query the same source through the public catalog.
@@ -437,12 +439,13 @@ impl Spatial {
             looks.hidden.sort_unstable();
             looks.hidden.dedup();
         }
-        self.sync_upper(doc, &looks.upper);
-        // What is faint and what is seen from above is snapped to, never picked.
+        self.sync_upper(doc, &looks.upper, &looks.overhead);
+        // What is faint and what is seen from above or below is snapped to, never picked.
         let unpicked = |l: &crate::level_view::LevelLooks| {
             l.faded
                 .iter()
                 .chain(&l.upper)
+                .chain(&l.overhead)
                 .map(|&id| f64::from(id))
                 .collect::<Vec<_>>()
         };
@@ -452,6 +455,7 @@ impl Spatial {
                 hidden: looks.hidden,
                 faded: looks.faded,
                 upper: looks.upper,
+                overhead: looks.overhead,
                 elsewhere: Vec::new(),
             };
             let mut hidden = kentos_native_application::viewport_scope::hidden_entities(doc);
@@ -470,13 +474,17 @@ impl Spatial {
             hidden: looks.hidden,
             faded: looks.faded,
             upper: looks.upper,
+            overhead: looks.overhead,
             elsewhere: Vec::new(),
         };
         if *self.level_looks != shown {
             self.level_looks = Arc::new(shown);
             self.level_version += 1;
         }
-        if self.level_looks.faded.is_empty() && self.level_looks.upper.is_empty() {
+        if self.level_looks.faded.is_empty()
+            && self.level_looks.upper.is_empty()
+            && self.level_looks.overhead.is_empty()
+        {
             if !self.store.no_unpicked() {
                 self.store.set_unpicked(std::iter::empty());
             }
@@ -520,37 +528,56 @@ impl Spatial {
         self.store.set_phase_hidden(hidden);
     }
 
-    /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4) and those that
-    /// left it as their own level's plan does; a stair put again by a sync came back as its own plan's and is put
-    /// once more. Their labels' texts come again with them.
-    fn sync_upper(&mut self, doc: &Document, upper: &[u32]) {
+    /// Puts the stairs of `upper` as the plan of the level above theirs shows them (docs/adr/0724 §4), the slabs of
+    /// `overhead` as the plan of the level under theirs shows them (docs/adr/3012, step 3), and those that left either
+    /// as their own level's plan does; one put again by a sync came back as its own plan's and is put once more. Their
+    /// labels' texts come again with them.
+    fn sync_upper(&mut self, doc: &Document, upper: &[u32], overhead: &[u32]) {
         let now: HashSet<u32> = upper.iter().copied().collect();
-        let is_upper = |store: &Store, id: u32| {
-            store
-                .get(f64::from(id))
-                .is_some_and(|it| matches!(&it.shape, Shape::Stair { stair, .. } if stair.upper))
+        let over: HashSet<u32> = overhead.iter().copied().collect();
+        let seen_across = |store: &Store, id: u32| {
+            store.get(f64::from(id)).is_some_and(|it| match &it.shape {
+                Shape::Stair { stair, .. } => stair.upper,
+                Shape::Space { space, .. } => space.slab.as_ref().is_some_and(|l| l.overhead),
+                _ => false,
+            })
         };
         let mut again: Vec<u32> = now
             .iter()
+            .chain(&over)
             .copied()
-            .filter(|&id| !is_upper(&self.store, id))
+            .filter(|&id| !seen_across(&self.store, id))
             .collect();
         again.extend(self.upper.iter().copied().filter(|id| !now.contains(id)));
+        again.extend(
+            self.overhead
+                .iter()
+                .copied()
+                .filter(|id| !over.contains(id)),
+        );
         self.upper = now;
+        self.overhead = over;
         if again.is_empty() {
             return;
         }
         again.sort_unstable();
+        again.dedup();
         let scale = self.sheet_view.as_ref().map(|v| v.annotation_scale);
         let entities: Vec<&Entity> = again.iter().filter_map(|&id| doc.get(Slot(id))).collect();
-        let upper = &self.upper;
+        let (upper, overhead) = (&self.upper, &self.overhead);
         let records: Vec<_> = entities
             .iter()
             .filter_map(|e| {
                 let (id, layer, label, mut shape) =
                     kentos_native_application::viewport_scope::record_at(e, scale, doc.settings())?;
-                if let Shape::Stair { stair, .. } = &mut shape {
-                    stair.upper = upper.contains(&e.base().id);
+                match &mut shape {
+                    Shape::Stair { stair, .. } => stair.upper = upper.contains(&e.base().id),
+                    Shape::Space { space, .. } => {
+                        if let Some(look) = space.slab.as_mut() {
+                            look.overhead = overhead.contains(&e.base().id);
+                        }
+                    }
+                    _ => {}
                 }
                 Some((id, layer, label, shape))
             })

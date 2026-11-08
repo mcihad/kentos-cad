@@ -34,3 +34,24 @@ fn phases_look_as_the_reference_says() {
         assert_eq!(drawn.unwrap_or(Value::Null), c["drawn"], "{name}");
     }
 }
+
+/// docs/adr/3012, step 3: an object the store draws as another level's plan shows it (a slab of the level above,
+/// dashed; a stair of the level under, from above) changes no look here, but a phasing noting it is another one. The
+/// drawing area builds again when its look changes: Bütün katlar, which hides and fades nothing more than Yalnız etkin
+/// kat on the level under a balcony, once kept the balcony dashed on the screen.
+#[test]
+fn a_level_view_that_only_draws_across_still_changes_the_look() {
+    use kentos_native_style::phases::Phasing;
+    let plain = Phasing::default();
+    let mut across = Phasing::default();
+    across.drawn_across(7);
+    assert!(
+        across.is_empty(),
+        "nothing hidden, faint or dashed by the phasing itself"
+    );
+    assert_eq!(across.hidden().count(), 0);
+    assert_ne!(
+        across, plain,
+        "but the look is another: what holds object 7 is built again"
+    );
+}

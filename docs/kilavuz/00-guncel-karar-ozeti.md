@@ -69,6 +69,9 @@
       kesmez, kesikli çizilir. Kapı her zaman kesilir.
     - Kesme yüksekliği projenin Mimari ayarıdır (`arch.cutHeight`, `.kcad` 205; 0,30–3,00 m). Yoksa 1,10; yeni Mimari
       projesi 1,20 yazar. Okuyan her yer `ProjectSettings::plan_cut()`'ı sorar.
+    - Bir üst katın döşemesi etkin katın planında halkalarıyla, kesikli ve kalemin yarısıyla çizilir
+      (`level_view::shows_below`, `LevelLooks::overhead`, `slab::Look::overhead`); seçilmez, kenetlenir. Başka kattan
+      görünen nesneler `Phasing::drawn_across` ile görünüşe not edilir, yoksa ekran yeniden kurulmaz.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

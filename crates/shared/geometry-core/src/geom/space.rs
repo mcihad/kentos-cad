@@ -176,7 +176,10 @@ fn slab_look(v: &Json) -> Result<Option<crate::geom::slab::Look>, String> {
             })
         }
     };
-    Ok(Some(crate::geom::slab::Look { edge }))
+    Ok(Some(crate::geom::slab::Look {
+        edge,
+        overhead: false,
+    }))
 }
 
 impl ToJson for Spec {

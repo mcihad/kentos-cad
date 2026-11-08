@@ -39,6 +39,7 @@ mod grip_modes;
 mod grips;
 mod level_view;
 mod opening_distance;
+mod overhead_slab;
 mod program_options;
 mod tag_grips;
 mod tag_settings;

@@ -246,7 +246,8 @@ impl<'a> MapDrawer<'a> {
         let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
         let annotation = m.view.annotation_denominator();
-        // A level's plan showing the stairs under it from above (docs/adr/0724 §4) wants a store of its own.
+        // A level's plan showing the stairs under it from above (docs/adr/0724 §4) or the slabs over it dashed
+        // (docs/adr/3012, step 3) wants a store of its own.
         let upper = m
             .level
             .as_ref()

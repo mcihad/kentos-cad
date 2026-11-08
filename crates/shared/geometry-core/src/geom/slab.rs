@@ -41,7 +41,15 @@ impl Run {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Look {
     pub edge: Option<Edge>,
+    /// Drawn as the plan of the level under its own shows it (docs/adr/3012, step 3): its rings alone, dashed and
+    /// narrow ([`OVERHEAD_PEN`]), its edge left out. A view's, never read from nor written to JSON (as a stair's
+    /// `upper`).
+    pub overhead: bool,
 }
+
+/// The share of its pen a slab of the level above is drawn with on the plan under it (docs/adr/3012, step 3): ISO
+/// 128-23's dashed narrow line (02.1) for what is hidden or over the cut, half the wide line.
+pub const OVERHEAD_PEN: f64 = 0.5;
 
 /// A slab's edge as drawn: a parapet or a railing, its width, its runs.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -337,7 +345,9 @@ pub fn pieces(parts: &[Area], look: &Look) -> Vec<Shape> {
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
         .map(|r| polyline(r.pts.clone(), r.bulges.clone(), true))
         .collect();
-    if let Some(e) = &look.edge {
+    if !look.overhead
+        && let Some(e) = &look.edge
+    {
         out.extend(edge_pieces(e));
     }
     out
@@ -350,7 +360,9 @@ pub fn pieces_in(parts: &[Area], look: &Look, view: crate::geom::wall::View) -> 
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
         .map(|r| polyline(r.pts.clone(), r.bulges.clone(), true))
         .collect();
-    if let Some(e) = &look.edge {
+    if !look.overhead
+        && let Some(e) = &look.edge
+    {
         out.extend(edge_pieces_with(e, !view.simple()));
     }
     out
