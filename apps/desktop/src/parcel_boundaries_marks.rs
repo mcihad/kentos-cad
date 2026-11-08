@@ -1,0 +1,253 @@
+//! Sınır grafiği on the drawing (docs/adr/2220): Çizimde göster closes the window and leaves the graph's marks over
+//! the drawing until İşareti kaldır (`data.unmark`) or another drawing. The graph is worked out again whenever the
+//! drawing changes, so a fixed corner's ring goes at once. Each problem is a ring in the danger colour with its kind's
+//! words. Each corner is a dot with its number (K…), each boundary's number (S…) stands at its middle on its curve.
+//! On the screen a number that would crowd another is left out (a problem's words never), so the view reads at any
+//! zoom. Nothing is written.
+
+use std::cell::RefCell;
+use std::collections::{BTreeMap, HashSet};
+use std::sync::Arc;
+
+use iced::widget::canvas::{self, Path, Stroke, Text};
+use iced::{Pixels, Point, Vector};
+use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
+use kentos_interaction::Vec2;
+use kentos_native_application::parcels_boundaries;
+use kentos_render_wgpu::Camera;
+use kentos_ui::theme::typography;
+
+use crate::app::App;
+use crate::viewport::MarkColors;
+
+/// The most numbers written on the screen at once.
+const MOST_NUMBERS: usize = 600;
+/// A number's room on the screen, logical pixels: no two numbers within a cell of each other.
+const ROOM: (f32, f32) = (34.0, 16.0);
+
+/// What Çizimde göster keeps: the drawing's session, the parcels asked (none: the parcel layer's), and the marks of
+/// the drawing as it was last seen (its generation and revision).
+#[derive(Debug, Default)]
+pub struct Shown {
+    pub session: u64,
+    pub uids: Option<Vec<String>>,
+    made: RefCell<Option<(u64, u64, Option<Arc<GraphMarks>>)>>,
+}
+
+impl Shown {
+    pub fn new(session: u64, uids: Option<Vec<String>>) -> Self {
+        Self { session, uids, made: RefCell::new(None) }
+    }
+}
+
+/// The marks: each problem's place and words, each corner's place and number, each boundary's middle and number.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct GraphMarks {
+    pub problems: Vec<(Vec2, String)>,
+    pub corners: Vec<(Vec2, String)>,
+    pub boundaries: Vec<(Vec2, String)>,
+}
+
+impl GraphMarks {
+    pub fn of(g: &ParcelsBounded) -> Self {
+        let at = |p: [f64; 2]| Vec2::new(p[0], p[1]);
+        let places: BTreeMap<&str, Vec2> = g.corners.iter().map(|c| (c.id.as_str(), at(c.at))).collect();
+        let boundaries = g
+            .boundaries
+            .iter()
+            .filter_map(|b| {
+                let (a, e) = (places.get(b.from.as_str())?, places.get(b.to.as_str())?);
+                // Its middle on its curve: a positive bulge bows right of the way (docs/adr/2000).
+                let (dx, dy) = (e.x - a.x, e.y - a.y);
+                let middle = Vec2::new((a.x + e.x) / 2.0 + dy * b.bulge / 2.0, (a.y + e.y) / 2.0 - dx * b.bulge / 2.0);
+                Some((middle, b.id.clone()))
+            })
+            .collect();
+        Self {
+            problems: g
+                .problems
+                .iter()
+                .map(|p| (at(p.at), crate::parcel_boundaries_window::problem_short(&p.kind).to_owned()))
+                .collect(),
+            corners: g.corners.iter().map(|c| (at(c.at), c.id.clone())).collect(),
+            boundaries,
+        }
+    }
+}
+
+impl App {
+    /// The graph's marks for the drawing as it is: none when nothing is shown, for another drawing, or when the
+    /// parcels asked no longer read (one was deleted). Kept until the drawing changes.
+    pub(crate) fn parcel_graph_marks(&self) -> Option<Arc<GraphMarks>> {
+        let shown = self.parcel_graph.as_ref()?;
+        let doc = self.document.as_ref()?;
+        if doc.session != shown.session {
+            return None;
+        }
+        let (generation, revision) = (doc.model.generation(), doc.model.revision());
+        if let Some((g, r, made)) = shown.made.borrow().as_ref()
+            && *g == generation
+            && *r == revision
+        {
+            return made.clone();
+        }
+        let input = ParcelsBoundaries { uids: shown.uids.clone() };
+        let made = parcels_boundaries::preview(&doc.model, &input).ok().map(|g| Arc::new(GraphMarks::of(&g)));
+        *shown.made.borrow_mut() = Some((generation, revision, made.clone()));
+        made
+    }
+}
+
+/// The cells a number's room takes, to keep the next ones off it.
+#[derive(Default)]
+struct Crowd(HashSet<(i32, i32)>);
+
+impl Crowd {
+    fn cell(p: Point) -> (i32, i32) {
+        ((p.x / ROOM.0).floor() as i32, (p.y / ROOM.1).floor() as i32)
+    }
+
+    /// Takes `p`'s cell when neither it nor a cell next to it is taken.
+    fn take(&mut self, p: Point) -> bool {
+        let (x, y) = Self::cell(p);
+        if (-1..=1).any(|dx| (-1..=1).any(|dy| self.0.contains(&(x + dx, y + dy)))) {
+            return false;
+        }
+        self.0.insert((x, y));
+        true
+    }
+
+    /// The cells of words `width` wide starting at `p`, as tall as a line of them.
+    fn cells(p: Point, width: f32) -> Vec<(i32, i32)> {
+        let (x0, y0) = Self::cell(p);
+        let (x1, y1) = Self::cell(Point::new(p.x + width, p.y + typography::scaled(11.0) * 1.2));
+        (x0..=x1).flat_map(|x| (y0..=y1).map(move |y| (x, y))).collect()
+    }
+
+    /// Whether words `width` wide at `p` meet nothing taken.
+    fn free(&self, p: Point, width: f32) -> bool {
+        self.met(p, width, &[]) == 0
+    }
+
+    /// How many taken cells words `width` wide at `p` meet, but those in `own` (their own ring's).
+    fn met(&self, p: Point, width: f32, own: &[(i32, i32)]) -> usize {
+        Self::cells(p, width).iter().filter(|c| self.0.contains(c) && !own.contains(c)).count()
+    }
+
+    /// Takes the cells of words `width` wide at `p` whatever is there (a problem's words).
+    fn force(&mut self, p: Point, width: f32) {
+        self.0.extend(Self::cells(p, width));
+    }
+}
+
+/// About how wide words are on the screen, logical pixels.
+fn width_of(content: &str) -> f32 {
+    content.chars().count() as f32 * typography::scaled(11.0) * 0.6
+}
+
+/// Words at `at` in `color` on a halo of the area's colour.
+fn words(frame: &mut canvas::Frame, at: Point, content: &str, color: iced::Color, halo: iced::Color, strong: bool) {
+    let text = Text {
+        content: content.to_owned(),
+        position: at,
+        color: halo,
+        size: Pixels(typography::scaled(11.0)),
+        font: if strong { typography::ui_strong() } else { typography::ui() },
+        align_y: iced::alignment::Vertical::Top,
+        ..Text::default()
+    };
+    for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
+        frame.fill_text(Text { position: text.position + Vector::new(dx, dy), ..text.clone() });
+    }
+    frame.fill_text(Text { color, ..text });
+}
+
+/// The marks on the screen: the problems' rings and words first, then the corners' dots and numbers in the accent,
+/// then the boundaries' numbers in the drawing's ink; only what is in the view, numbers thinned.
+pub fn draw(
+    frame: &mut canvas::Frame,
+    m: &GraphMarks,
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+    danger: iced::Color,
+) {
+    let size = frame.size();
+    let screen = |p: Vec2| {
+        let s = camera.world_to_screen(p);
+        Point::new(s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5)
+    };
+    let inside = |p: Point| p.x >= -24.0 && p.y >= -24.0 && p.x <= size.width + 24.0 && p.y <= size.height + 24.0;
+    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let mut crowd = Crowd::default();
+    let problems: Vec<(Point, &str)> =
+        m.problems.iter().map(|(p, w)| (screen(*p), w.as_str())).filter(|(c, _)| inside(*c)).collect();
+    let corners: Vec<(Point, &str)> =
+        m.corners.iter().map(|(p, n)| (screen(*p), n.as_str())).filter(|(c, _)| inside(*c)).collect();
+    // The corners' dots, all of them in the view.
+    let dots = Path::new(|b| {
+        for (c, _) in &corners {
+            b.circle(*c, 2.5);
+        }
+    });
+    frame.stroke(&dots, stroke(2.0, colors.halo));
+    frame.fill(&dots, accent);
+    // The problems: a ring on a halo, the words above right; never left out.
+    let rings = Path::new(|b| {
+        for (c, _) in &problems {
+            b.circle(*c, 9.0);
+        }
+    });
+    frame.stroke(&rings, stroke(4.0, colors.halo));
+    frame.stroke(&rings, stroke(2.0, danger));
+    // The rings first, so no problem's words run over another's ring; then each problem's words where they meet
+    // nothing taken: above right, below right, above left, below left.
+    let ring = |c: Point| Crowd::cells(c + Vector::new(-10.0, -10.0), 20.0);
+    for (c, _) in &problems {
+        crowd.0.extend(ring(*c));
+    }
+    for (c, w) in &problems {
+        let width = width_of(w);
+        let own = ring(*c);
+        // The first spot that meets nothing, else the one that meets least (the first of those).
+        let spots = [
+            Vector::new(12.0, -20.0),
+            Vector::new(12.0, 14.0),
+            Vector::new(-12.0 - width, -20.0),
+            Vector::new(-12.0 - width, 14.0),
+        ]
+        .map(|v| *c + v);
+        let at = spots
+            .iter()
+            .copied()
+            .min_by_key(|p| crowd.met(*p, width, &own))
+            .unwrap_or(spots[0]);
+        crowd.force(at, width);
+        words(frame, at, w, danger, colors.halo, true);
+    }
+    let mut written = 0;
+    for (c, n) in &corners {
+        if written >= MOST_NUMBERS {
+            break;
+        }
+        let at = *c + Vector::new(5.0, -16.0);
+        if crowd.free(at, width_of(n)) && crowd.take(at) {
+            words(frame, at, n, accent, colors.halo, true);
+            written += 1;
+        }
+    }
+    for (p, n) in &m.boundaries {
+        if written >= MOST_NUMBERS {
+            break;
+        }
+        let c = screen(*p);
+        if !inside(c) {
+            continue;
+        }
+        let at = c + Vector::new(-8.0, -7.0);
+        if crowd.free(at, width_of(n)) && crowd.take(at) {
+            words(frame, at, n, colors.fg, colors.halo, false);
+            written += 1;
+        }
+    }
+}

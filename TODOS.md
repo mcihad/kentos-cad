@@ -80,6 +80,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-06 / ADR 2180: web'in Eğimle kot ver penceresinde Sahneden seç (iki tıkla aralık).
 - MAP-07 / ADR 2200: web'in `topology.check` aracında `write` ve `layer` (hata katmanı); web'in İşlem durumları
   koşucusu v2 çizimi (`fixtures/processing/v1/topology.kcad`) okumalı, `topology-check-errors` durumu geçmeli.
+- MAP-08 / ADR 2220: `cad.parcels.boundaries`'ın web işleyicisinde yaylı sınırda eksik köşe (28 ortak durum); web'in
+  Sınır grafiği penceresinde Çizimde göster.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

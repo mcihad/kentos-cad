@@ -96,6 +96,8 @@ pub struct Marks {
     pub extent: Option<([f64; 4], String)>,
     /// The Topoloji tab's finding (docs/adr/0202 §5).
     pub problem: Option<crate::topology::ProblemMark>,
+    /// Sınır grafiği left on the drawing (docs/adr/2220).
+    pub graph: Option<std::sync::Arc<crate::parcel_boundaries_marks::GraphMarks>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
@@ -211,6 +213,7 @@ impl Marks {
             && self.found.is_none()
             && self.extent.is_none()
             && self.problem.is_none()
+            && self.graph.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
@@ -271,6 +274,10 @@ impl<Message> canvas::Program<Message> for Marks {
             &self.colors,
             Tokens::of(theme).danger,
         );
+        if let Some(g) = &self.graph {
+            let tokens = Tokens::of(theme);
+            crate::parcel_boundaries_marks::draw(&mut frame, g, &self.camera, &self.colors, tokens.accent, tokens.danger);
+        }
         if let Some(m) = &self.problem {
             problem(
                 &mut frame,

@@ -37,12 +37,13 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
     köşe arasındaki kenar, aynı kabarıklıkla bir kez; sol ve sağındaki parsel, kenarın
     kendi halkasının yönünden; boy), parseller (kimlik İl/İlçe/Mahalle/Ada/Parsel,
     geometrik alan, sınırları halka sırasıyla, komşuları) ve sorunlar: missingVertex
-    (bir köşe başka bir düz sınırın içinde 1 µm'de, o sınırın orada köşesi yok: sınır
-    yalnız kısmen ortak), splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan
-    koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda iki parselin
-    kenarı). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri verir),
-    kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları. Salt
-    okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid,
+    (bir köşe başka bir sınırın içinde 1 µm'de, o sınırın orada köşesi yok: sınır yalnız
+    kısmen ortak; düz sınırda dikmesinin ayağı uçların arasında, yaylı sınırda yayın
+    çemberinde ve kirişin yay yanında), splitCorner (1 µm'den yakın iki ayrı köşe:
+    tesadüfen çakışan koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda
+    iki parselin kenarı). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri
+    verir), kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları.
+    Salt okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid,
     entity_not_found, not_a_parcel (uids[i]).
     """
     __slots__ = ()
@@ -69,13 +70,15 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         sonra kuzey sırasıyla), sınırlar (S1…: iki köşe arasındaki kenar, aynı kabarıklıkla
         bir kez; sol ve sağındaki parsel, kenarın kendi halkasının yönünden; boy), parseller
         (kimlik İl/İlçe/Mahalle/Ada/Parsel, geometrik alan, sınırları halka sırasıyla,
-        komşuları) ve sorunlar: missingVertex (bir köşe başka bir düz sınırın içinde 1
-        µm'de, o sınırın orada köşesi yok: sınır yalnız kısmen ortak), splitCorner (1 µm'den
-        yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç ya da daha çok
-        parselin, ya da bir yanda iki parselin kenarı). Kimlikler geometriden türetilir
-        (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa parsel
-        katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı alanın
-        üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel (uids[i]).
+        komşuları) ve sorunlar: missingVertex (bir köşe başka bir sınırın içinde 1 µm'de, o
+        sınırın orada köşesi yok: sınır yalnız kısmen ortak; düz sınırda dikmesinin ayağı
+        uçların arasında, yaylı sınırda yayın çemberinde ve kirişin yay yanında),
+        splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç
+        ya da daha çok parselin, ya da bir yanda iki parselin kenarı). Kimlikler geometriden
+        türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa
+        parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı
+        alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel
+        (uids[i]).
 
         Args:
             doc: The drawing it works on.

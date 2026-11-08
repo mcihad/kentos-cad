@@ -38,7 +38,7 @@ sırayla alır.
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000 | kalıcı parsel kaydı ve sınır kimliği; sahnede gösterim; yaylı sınırda eksik köşe | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020 | plan değişikliği taslağı; sembolün karardan seçilmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060 | m. 8(5) yanılma sınırı; ayırma çapının çizimi; değer esaslı dağıtım | ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -744,6 +744,14 @@ sorun olarak: komşuda eksik köşe (T birleşimi), 1 µm'den yakın ayrık kö�
 türetilir (kalıcı kayıt değil); 24 bağımsız durum (Rust, Python); Parsel alan denetiminden açılan Sınır grafiği
 penceresi. Açık: kalıcı parsel kaydı ve sınır kimliği, erişim denetimli hak/pay, sahnede gösterim, yaylı sınırda eksik
 köşe.
+
+**8 Kasım 2026, üçüncü tur — sınır grafiği çizimde, yaylı sınırda eksik köşe ([ADR 2220](../docs/adr/2220-boundary-graph-on-the-drawing-and-arc-corners.md)).**
+Kapsam: ADR 2000'deki gibi (komut Harita + Yol + CBS + Mimari). Araştırma: QGIS Topology Checker'ın hataları tuvalde
+göstermesi, ArcGIS Pro parsel ağının öntanımlı topoloji kuralları, AutoCAD'in kabarıklık tanımı. Kanıtlanan:
+`missingVertex` yaylı sınırda da (yayın çemberine 1 µm, kirişin yay yanında; başvuru çemberi uçlardan ve ortadan
+mpmath'le bulur), 28 ortak durum, MCP; Sınır grafiği'nde Çizimde göster: sorun halkaları ve adları, K ve S numaraları
+ekranda seyreltilerek, çizim değiştikçe yeniden, İşareti kaldır'a dek. Açık: kalıcı parsel kaydı ve sınır kimliği,
+tablodaki satırın çizimde vurgulanması, yay ile kiriş uyuşmazlığı, erişim denetimli hak/pay, resmî kapsam.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

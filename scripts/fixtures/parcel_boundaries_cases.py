@@ -2,8 +2,8 @@
 """The shared cases of `cad.parcels.boundaries` (Sınır grafiği; plan/map-cad.md MAP-08, docs/adr/2000), without KentOS
 code.
 
-    python3 scripts/fixtures/parcel_boundaries_cases.py           # writes fixtures/commands/v1/cad.parcels.boundaries.json
-    python3 scripts/fixtures/parcel_boundaries_cases.py --check   # writes nothing; compares
+    uv run --with mpmath==1.4.1 python scripts/fixtures/parcel_boundaries_cases.py           # writes fixtures/commands/v1/cad.parcels.boundaries.json
+    uv run --with mpmath==1.4.1 python scripts/fixtures/parcel_boundaries_cases.py --check   # writes nothing; compares
 
 The rules, by hand (the ADR's):
 
@@ -19,8 +19,10 @@ The rules, by hand (the ADR's):
   arc's segment r²/2 (θ − sin θ) signed as its bulge, positive), right otherwise; a hole's the other way; a boundary's
   left and right are its first parcel on each side; a further one is an overlap at the edge's middle on its curve;
 - missingVertex: a corner that is no end of a straight boundary, the foot of its perpendicular strictly inside it and
-  within 1 µm; splitCorner: two corners within 1 µm; problems by kind (missingVertex, splitCorner, overlap), then by
-  their corner or boundary;
+  within 1 µm; or no end of an arc boundary, within 1 µm of the arc's circle (the circle through its ends and its
+  middle, its centre where the chords' perpendicular bisectors meet, in mpmath at 50 digits) and strictly on its
+  middle's side of the chord (docs/adr/2220); splitCorner: two corners within 1 µm; problems by kind (missingVertex,
+  splitCorner, overlap), then by their corner, then by the boundary;
 - a parcel: its identity's parts written (İl/İlçe/Mahalle/Ada/Parsel), its net area (outer rings less their holes),
   its boundaries in ring order, its neighbours across them in the drawing's order.
 """
@@ -30,6 +32,10 @@ import math
 import sys
 from fractions import Fraction as F
 from pathlib import Path
+
+import mpmath as mp
+
+mp.mp.dps = 50
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.parcels.boundaries.json"
@@ -93,6 +99,37 @@ PROBLEMS = [
     parcel([(70, 0), (80, 0), (80, 10), (70, 10)], ident(26)),
     parcel([(70, 0), (80, 0), (80, 5), (70, 5)], ident(27)),
 ]
+
+
+# Arcs (docs/adr/2220): R1's top is an arc 2 m high over its 20 m chord (bulge 0.2: radius 26, centre 24 m under the
+# chord's middle); R2 and R3 above it follow the same circle up to its top (110, 12), where R1 has no corner; R4's corner
+# (110, −40) is on the circle but across the chord; R5's corner is 0.4 µm over the arc's top, R6's 3 µm.
+HALF = -math.tan(math.atan(0.2) / 2)
+ARCS = [
+    parcel([(100, 0), (120, 0), (120, 10), (100, 10)], ident(31), bulges=[0, 0, 0.2, 0]),
+    parcel([(100, 10), (110, 12), (110, 20), (100, 20)], ident(32), bulges=[HALF, 0, 0, 0]),
+    parcel([(110, 12), (120, 10), (120, 20), (110, 20)], ident(33), bulges=[HALF, 0, 0, 0]),
+    parcel([(105, -45), (115, -45), (110, -40)], ident(34)),
+    parcel([(110, 12 + 0.0000004), (115, 20), (105, 20)], ident(35)),
+    parcel([(110, 12 + 0.000003), (115, 20), (105, 20)], ident(36)),
+]
+
+
+def arc_near(p, a, b, bulge):
+    """Whether `p` is within 1 µm of the arc from `a` to `b`: of the circle through its ends and middle, and strictly
+    on the middle's side of the chord."""
+    P_, A, B = ([mp.mpf(v) for v in q] for q in (p, a, b))
+    M = [mp.mpf(v) for v in middle(a, b, bulge)]
+    cross = lambda o, u, v: (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0])  # noqa: E731
+    if cross(A, B, P_) * cross(A, B, M) <= 0:
+        return False
+    # The circumcentre of A, B, M, relative to A.
+    bx, by, mx, my = B[0] - A[0], B[1] - A[1], M[0] - A[0], M[1] - A[1]
+    d = 2 * (bx * my - by * mx)
+    ox = (my * (bx * bx + by * by) - by * (mx * mx + my * my)) / d
+    oy = (bx * (mx * mx + my * my) - mx * (bx * bx + by * by)) / d
+    r = mp.sqrt(ox * ox + oy * oy)
+    return abs(mp.sqrt((P_[0] - A[0] - ox) ** 2 + (P_[1] - A[1] - oy) ** 2) - r) <= NEAR
 
 
 def setup(entities, work="map", more=()):
@@ -220,16 +257,17 @@ def graph(entities, chosen):
     for c, p in enumerate(places):
         for j in order:
             lo, hi, bulge, sides = edges[j]
-            if bulge != 0 or c in (lo, hi):
+            if c in (lo, hi):
                 continue
             a, b = places[lo], places[hi]
-            dx, dy = b[0] - a[0], b[1] - a[1]
-            l2 = dx * dx + dy * dy
-            t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2
-            if t <= 0 or t >= 1:
-                continue
-            d = abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / math.sqrt(l2)
-            if d <= NEAR:
+            if bulge != 0:
+                near = arc_near(p, a, b, bulge)
+            else:
+                dx, dy = b[0] - a[0], b[1] - a[1]
+                l2 = dx * dx + dy * dy
+                t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2
+                near = 0 < t < 1 and abs((p[0] - a[0]) * dy - (p[1] - a[1]) * dx) / math.sqrt(l2) <= NEAR
+            if near:
                 on = sorted(set(at_corner[c]) | {k for k, _ in sides})
                 problems.append((0, c, {"kind": "missingVertex", "at": [p[0], p[1]], "parcels": [uids[k] for k in on]}))
     for i in range(len(places)):
@@ -284,6 +322,7 @@ def cases():
     line = {"kind": "line", "layerId": "yol", "attrs": {}, "a": P(0, -5), "b": P(40, -5)}
     with_line = CLEAN + [line]
     sp = setup(PROBLEMS)
+    sa = setup(ARCS)
     return [
         ok("temiz ada: ortak sınırlar, köşede birleşen üç parsel, yaylı dış sınır, delik, saat yönü, iki parça, yaylı ortak sınır",
            CLEAN),
@@ -303,6 +342,12 @@ def cases():
         ok("T birleşimi tek başına: alttaki iki parselin köşesi üstteki kenarın içinde", PROBLEMS, [0, 1, 2], setup_=sp),
         ok("ayrık köşeler tek başına: ortak sınır yok, iki splitCorner", PROBLEMS, [3, 4], setup_=sp),
         ok("bir yanda iki parsel: overlap ve iki eksik köşe", PROBLEMS, [5, 6], setup_=sp),
+        # docs/adr/2220: a corner on an arc boundary that does not end there.
+        ok("yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde", ARCS, [0, 1, 2],
+           setup_=sa),
+        ok("yayın çemberinde ama kirişin öbür yanındaki köşe yayın üstünde değildir", ARCS, [0, 3], setup_=sa),
+        ok("yaydan 0,4 µm uzaktaki köşe eksik köşedir", ARCS, [0, 4], setup_=sa),
+        ok("yaydan 3 µm uzaktaki köşe eksik köşe değildir", ARCS, [0, 5], setup_=sa),
         ok("plan aynı grafiği verir", CLEAN, op="plan"),
         ok("doğrulama", CLEAN, op="validate"),
         ok("CBS projesinde de", CLEAN, [0, 1, 2], setup_=setup(CLEAN, "gis")),
@@ -318,8 +363,9 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.parcels.boundaries", "commandVersion": 1,
            "title": "Sınır grafiği",
-           "note": "ADR 2000. Bağımsız başvuru scripts/fixtures/parcel_boundaries_cases.py: köşeler, sınırlar, iki yanın "
-                   "parselleri, alanlar, boylar ve sorunlar ADR'nin kurallarıyla elle; KentOS kodu yok.",
+           "note": "ADR 2000, 2220. Bağımsız başvuru scripts/fixtures/parcel_boundaries_cases.py: köşeler, sınırlar, iki yanın "
+                   "parselleri, alanlar, boylar ve sorunlar ADR'nin kurallarıyla elle (yayın çemberi uçlarından ve "
+                   "ortasından, mpmath); KentOS kodu yok.",
            "setup": setup(CLEAN), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:

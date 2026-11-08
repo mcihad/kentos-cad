@@ -4,8 +4,9 @@
 //! edge of two parcels once, its parcel on the left and on the right), each parcel's boundaries in ring order and its
 //! neighbours, and what keeps the geometry from being a clean graph:
 //!
-//! - `missingVertex`: a parcel's corner lies on the inside of another parcel's straight edge (within 1 µm), which has
-//!   no corner there: the boundary is shared only in part;
+//! - `missingVertex`: a parcel's corner lies on the inside of another parcel's edge (within 1 µm), which has no corner
+//!   there: the boundary is shared only in part. On a straight edge the foot of its perpendicular is between the ends;
+//!   on an arc it is near the arc's circle and on the arc's side of the chord (docs/adr/2220);
 //! - `splitCorner`: two corners closer than 1 µm that are not the same place: coordinates that meet by chance;
 //! - `overlap`: one edge on three or more parcels.
 //!

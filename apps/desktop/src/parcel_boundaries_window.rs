@@ -2,7 +2,8 @@
 //! Parsel alan denetimi on the same parcels (its scope: the selected areas, else the parcel layer's). The summary
 //! counts the corners and the boundaries, shared and outer, and the problems by kind; a choice shows the boundaries
 //! (their corners, length, the parcel on each side), the corners (their place and parcels) or the problems (where and
-//! which parcels); Sorunluları seç selects the parcels a problem names. Nothing is written.
+//! which parcels); Sorunluları seç selects the parcels a problem names; Çizimde göster closes the window and leaves the
+//! graph's marks on the drawing (parcel_boundaries_marks.rs, docs/adr/2220). Nothing is written.
 
 use iced::{Element, Task};
 use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
@@ -22,6 +23,7 @@ pub const TITLE: &str = "Sınır grafiği";
 pub const OPEN: &str = "Sınır grafiği…";
 const CLOSE: &str = "Kapat";
 const SELECT: &str = "Sorunluları seç";
+pub const SHOW: &str = "Çizimde göster";
 
 /// Which rows the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -54,6 +56,8 @@ pub enum Event {
     Open,
     Show(Show),
     Select,
+    /// Çizimde göster (docs/adr/2220).
+    Draw,
     Close,
 }
 
@@ -66,6 +70,16 @@ pub fn problem_word(kind: &str) -> &'static str {
     match kind {
         "missingVertex" => "Komşuda eksik köşe",
         "splitCorner" => "Ayrık köşe (1 µm'den yakın)",
+        "overlap" => "Çakışan kenar",
+        _ => "Sorun",
+    }
+}
+
+/// A problem's kind in few words, as the drawing writes it beside its ring (docs/adr/2220).
+pub fn problem_short(kind: &str) -> &'static str {
+    match kind {
+        "missingVertex" => "Komşuda eksik köşe",
+        "splitCorner" => "Ayrık köşe",
         "overlap" => "Çakışan kenar",
         _ => "Sorun",
     }
@@ -150,6 +164,29 @@ impl App {
                 self.dialog = None;
                 self.say(Level::Info, format!("{TITLE}: sorunlu {n} parsel seçildi."));
             }
+            Event::Draw => {
+                let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let (corners, problems) = (g.corners.len(), g.problems.len());
+                // The view on the corners, a tenth wider each way.
+                let bounds = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
+                    let [x, y] = c.at;
+                    Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
+                });
+                self.parcel_graph =
+                    Some(crate::parcel_boundaries_marks::Shown::new(doc.session, self.parcel_boundaries.uids.clone()));
+                self.parcel_boundaries = State::default();
+                self.dialog = None;
+                if let Some([x0, y0, x1, y1]) = bounds {
+                    let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
+                    let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+                    self.navigating(|app| app.zoom_to_bounds(&b));
+                }
+                self.say(
+                    Level::Info,
+                    format!("{TITLE} çizimde: {corners} köşe, {problems} sorun. İşareti kaldır işaretleri siler."),
+                );
+            }
             Event::Close => {
                 self.parcel_boundaries = State::default();
                 self.dialog = None;
@@ -164,9 +201,11 @@ impl App {
         let mut lines = Vec::new();
         let mut table_rows = Vec::new();
         let mut problems = 0;
+        let mut drawable = false;
         match &s.answer {
             Some(Ok(g)) => {
                 problems = g.problems.len();
+                drawable = !g.corners.is_empty();
                 lines.push(words::text_line(
                     if problems == 0 { Kind::Ok } else { Kind::Warn },
                     format!(
@@ -192,7 +231,7 @@ impl App {
                 }
                 lines.push(words::text_line(
                     Kind::Info,
-                    "Kimlikler geometriden türetilir (K doğu sonra kuzey sırasıyla, S köşelerine göre); aynı geometri aynı kimlikleri verir. Çizime bir şey yazılmaz.",
+                    "Kimlikler geometriden türetilir (K doğu sonra kuzey sırasıyla, S köşelerine göre); aynı geometri aynı kimlikleri verir. Çizime bir şey yazılmaz; Çizimde göster numaraları ve sorunları yalnız ekranda işaretler.",
                 ));
                 table_rows = rows(g, s.show, &f);
             }
@@ -222,6 +261,7 @@ impl App {
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SELECT, (problems > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(SHOW, drawable.then(|| msg(Event::Draw))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -231,6 +271,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(SHOW) => Some(msg(Event::Draw)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

@@ -757,6 +757,7 @@ impl App {
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     extent: self.extent_mark(),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
+                    graph: self.parcel_graph_marks(),
                     broken: self.broken_marks(),
                     missing: self.missing_pictures(),
                     clips: self.clip_marks(),
@@ -952,6 +953,7 @@ impl App {
             problem: self
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
+            graph: self.parcel_graph_marks(),
             broken: self.broken_marks(),
             missing: self.missing_pictures(),
             clips: self.clip_marks(),

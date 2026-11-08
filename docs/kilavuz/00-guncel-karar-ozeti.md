@@ -154,6 +154,9 @@
 - **Topoloji bulguları hata katmanında (8 Kasım 2026; MAP-07, [ADR 2200](../../docs/adr/2200-topology-findings-on-an-error-layer.md)).**
   Topolojiyi kurallarla denetle istenirse bulguları yerlerinde halka nokta olarak yazar: nesnelerin kalıcı kimlikleri
   ve bulgunun anahtarıyla, tek geri alma adımı (QGIS Check validity, ArcGIS Export Topology Errors). Harita + Yol + CBS.
+- **Sınır grafiği çizimde, yaylı sınırda eksik köşe (8 Kasım 2026; MAP-08, [ADR 2220](../../docs/adr/2220-boundary-graph-on-the-drawing-and-arc-corners.md)).**
+  `missingVertex` yayda da aranır (çembere 1 µm, kirişin yay yanında). Çizimde göster sorun halkalarını, K ve S
+  numaralarını çizimin üstünde bırakır, çizim değiştikçe yeniler; İşareti kaldır siler. Komut ADR 2000'deki gibi.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

@@ -11,8 +11,10 @@
 //!   included, positive), on the right otherwise; a hole's the other way. A boundary's `left` and `right` are its
 //!   first parcel on each side; a further one on a side, or a third parcel, is an `overlap`;
 //! - `missingVertex`: a corner that is no end of a straight boundary yet within 1 µm of its inside (the foot of its
-//!   perpendicular strictly between the ends); `splitCorner`: two corners within 1 µm; problems in order of kind, then
-//!   of their first corner or boundary;
+//!   perpendicular strictly between the ends), or no end of an arc boundary yet within 1 µm of its arc (of the arc's
+//!   circle, strictly on the arc's side of its chord: the chord parts the circle into the arc and the rest,
+//!   docs/adr/2220); `splitCorner`: two corners within 1 µm; problems in order of kind, then of their first corner or
+//!   boundary, then of the boundary;
 //! - a parcel's neighbours: the parcels across its boundaries, in the drawing's order.
 
 use std::collections::BTreeMap;
@@ -94,6 +96,42 @@ fn length(a: Vec2, b: Vec2, bulge: f64) -> f64 {
 fn middle(a: Vec2, b: Vec2, bulge: f64) -> [f64; 2] {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     [(a.x + b.x) / 2.0 + dy * bulge / 2.0, (a.y + b.y) / 2.0 - dx * bulge / 2.0]
+}
+
+/// An arc's circle, relative to its start `a`: the centre and the radius of the arc from `a` to `b` with `bulge`
+/// (non-zero; its centre left of the way when the bulge is positive and under 1).
+fn circle(a: Vec2, b: Vec2, bulge: f64) -> (Vec2, f64) {
+    let (ux, uy) = (b.x - a.x, b.y - a.y);
+    let k = (1.0 - bulge * bulge) / (4.0 * bulge);
+    let centre = Vec2::new(ux / 2.0 - uy * k, uy / 2.0 + ux * k);
+    (centre, ux.hypot(uy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs()))
+}
+
+/// Whether `p` lies within `NEAR` of the arc from `a` to `b` with `bulge`, not at its ends: of its circle, and strictly
+/// on the arc's side of the chord (a positive bulge bows right of the way).
+fn on_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> bool {
+    let (ux, uy) = (b.x - a.x, b.y - a.y);
+    let (px, py) = (p.x - a.x, p.y - a.y);
+    if (ux * py - uy * px) * bulge >= 0.0 {
+        return false;
+    }
+    let (o, r) = circle(a, b, bulge);
+    ((px - o.x).hypot(py - o.y) - r).abs() <= NEAR
+}
+
+/// A boundary's box: its ends'; an arc of at most a half circle's grown by its rise on every side (it bows no farther
+/// from its chord, nor past its ends along it), a greater arc's its circle's.
+fn boundary_box(a: Vec2, b: Vec2, bulge: f64) -> [f64; 4] {
+    let ends = [a.x.min(b.x), a.y.min(b.y), a.x.max(b.x), a.y.max(b.y)];
+    if bulge == 0.0 {
+        return ends;
+    }
+    if bulge.abs() <= 1.0 {
+        let rise = bulge.abs() * (b.x - a.x).hypot(b.y - a.y) / 2.0;
+        return [ends[0] - rise, ends[1] - rise, ends[2] + rise, ends[3] + rise];
+    }
+    let (o, r) = circle(a, b, bulge);
+    [a.x + o.x - r, a.y + o.y - r, a.x + o.x + r, a.y + o.y + r]
 }
 
 /// One ring edge on a boundary: its parcel (index) and whether the parcel lies left of the way from the lower corner
@@ -243,20 +281,20 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             right: right.map(|k| uids[k].clone()),
         });
     }
-    // A corner on the inside of a straight boundary that does not end there: the straight boundaries by the cells of
-    // a grid their boxes (grown by 1 µm) meet, each corner tried against its cell's (the answer is the grid's own
-    // whatever the cell's size).
+    // A corner on the inside of a boundary that does not end there: the boundaries by the cells of a grid their boxes
+    // (grown by 1 µm) meet, each corner tried against its cell's (the answer is the grid's own whatever the cell's
+    // size).
     const CELL: f64 = 20.0;
     let cell = |v: f64| (v / CELL).floor() as i64;
     let mut grid: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
     for (n, &e) in order.iter().enumerate() {
         let edge = &edges[e];
-        if edge.bulge != 0.0 {
+        let [x0, y0, x1, y1] = boundary_box(corners[edge.lo], corners[edge.hi], edge.bulge);
+        if ![x0, y0, x1, y1].iter().all(|v| v.is_finite()) {
             continue;
         }
-        let (a, b) = (corners[edge.lo], corners[edge.hi]);
-        for gx in cell(a.x.min(b.x) - NEAR)..=cell(a.x.max(b.x) + NEAR) {
-            for gy in cell(a.y.min(b.y) - NEAR)..=cell(a.y.max(b.y) + NEAR) {
+        for gx in cell(x0 - NEAR)..=cell(x1 + NEAR) {
+            for gy in cell(y0 - NEAR)..=cell(y1 + NEAR) {
                 grid.entry((gx, gy)).or_default().push(n);
             }
         }
@@ -269,14 +307,15 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                 continue;
             }
             let (a, b) = (corners[edge.lo], corners[edge.hi]);
-            let (dx, dy) = (b.x - a.x, b.y - a.y);
-            let l2 = dx * dx + dy * dy;
-            let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
-            if t <= 0.0 || t >= 1.0 {
-                continue;
-            }
-            let d = ((p.x - a.x) * dy - (p.y - a.y) * dx).abs() / l2.sqrt();
-            if d <= NEAR {
+            let on = if edge.bulge != 0.0 {
+                on_arc(*p, a, b, edge.bulge)
+            } else {
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let l2 = dx * dx + dy * dy;
+                let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
+                t > 0.0 && t < 1.0 && ((p.x - a.x) * dy - (p.y - a.y) * dx).abs() / l2.sqrt() <= NEAR
+            };
+            if on {
                 let mut on: Vec<usize> = at_corner[c].iter().copied().chain(edge.sides.iter().map(|s| s.parcel)).collect();
                 on.sort_unstable();
                 on.dedup();
