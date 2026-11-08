@@ -327,7 +327,8 @@ fn the_answers_are_frozen_for_every_target() {
 /// from PROJ's and GeographicLib's factors): Kutupsal alım places the points
 /// where they are, Aplikasyon gives their ground distances, Poligon hesabı
 /// gives its points back with no misclosure; lengths within 1e-6 m, factors
-/// within 1e-10.
+/// within 1e-10. Kutupsal alım with the points' heights and undulations
+/// reduces each shot at its line's own height (docs/adr/2900 §3).
 mod survey {
     use super::*;
     use kentos_geometry_core::survey::polar::{PolarInput, StakeoutInput, polar_survey, stakeout};
@@ -376,6 +377,8 @@ mod survey {
                     1e-10,
                     &what,
                 );
+                // The height the line was reduced at: its ends' mean, or the grid's (docs/adr/2900 §3).
+                near(p.height.expect("a height"), &want["height"], 1e-9, &what);
             }
             // Through the call table too, as the web calls it.
             let op: Value = serde_json::from_str(

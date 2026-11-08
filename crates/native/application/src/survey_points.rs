@@ -272,7 +272,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
             }
             let station = known(doc, station, "work.station")?;
             let back = known(doc, back, "work.back")?;
-            let points = polar_survey(&PolarInput {
+            let mut input = PolarInput {
                 unit: unit.to_owned(),
                 station,
                 back,
@@ -290,8 +290,13 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                     .collect(),
                 refraction: Some(settings.refraction()),
                 grid: survey_grid(settings),
-            })
-            .map_err(refused)?;
+                undulations: None,
+            };
+            // Each shot at its own line's height, as Kutupsal alım reduces it (docs/adr/2900 §3).
+            if let Some(Ok((u, _))) = crate::survey_heights::polar_undulations(settings, &input) {
+                input.undulations = Some(u);
+            }
+            let points = polar_survey(&input).map_err(refused)?;
             Ok(Laid {
                 points: points
                     .iter()

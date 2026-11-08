@@ -2,10 +2,30 @@
 
 /**
  * Input of `cad.crs.factors` v1: points in the project's coordinates (east, north; metres) and, when given, the mean
- * ellipsoidal height to use instead of the project's (Proje ayarları › Ölçme).
+ * ellipsoidal height to use instead of the project's (Proje ayarları › Ölçme), or each point's own height (docs/adr/2900
+ * §1–2): `heights`, ellipsoidal heights, or `elevations`, the drawing's heights made ellipsoidal by what the project
+ * says its heights are (as they are when ellipsoidal; plus the project's geoid model's N at the point when
+ * orthometric). `lines` asks for the factors of lines between two of the points.
  *
  * Refusals, in this order: `invalid_input` (no point, more than 10 000, a coordinate or the height not finite, a height
- * outside −500…9000 m), `no_system` (a project on its own coordinates), `no_point_scale` (a geographic
- * system, the Pseudo-Mercator or an affine local plane: no one scale at a point).
+ * outside −500…9000 m; more than one of `height`, `heights`, `elevations`; not one per point; a line's end not a
+ * point, its two ends at one place, more than 10 000 lines; heights not in metres), `no_system` (a project on its own
+ * coordinates), `no_point_scale` (a geographic system, the Pseudo-Mercator or an affine local plane: no one scale at a
+ * point); with `elevations`: `heights_unknown` (the project does not say what its heights are), `geoid_required`
+ * (orthometric without a geoid model), `geoid_missing` (the model's grid is not on this device). A point outside the
+ * geoid's grid gets no height (warning `points_outside`).
  */
-export type CrsFactors = { points: Array<[number, number]>, height?: number, };
+export type CrsFactors = { points: Array<[number, number]>, height?: number, 
+/**
+ * Each point's ellipsoidal height, one per point: a point's height factor at its own height, a line's at its ends'
+ * mean.
+ */
+heights?: Array<number>, 
+/**
+ * Each point's height as the drawing keeps it (its Z), one per point, made ellipsoidal by the project's heights.
+ */
+elevations?: Array<number>, 
+/**
+ * Lines between two of the points, by their indexes from 0.
+ */
+lines?: Array<[number, number]>, };

@@ -347,6 +347,7 @@ fn polar_survey_and_stakeout_are_inverse() {
             shots: shots.clone(),
             refraction: None,
             grid: None,
+            undulations: None,
         })
         .unwrap();
         for (k, (got, want)) in pts.iter().zip(&targets).enumerate() {
@@ -451,4 +452,27 @@ fn resection_finds_the_point_and_refuses_the_danger_circle() {
             || e.as_ref().is_ok_and(|r| r.strength < 1e-6),
         "{e:?}"
     );
+}
+
+/// Undulations are one for the station and one for each shot, finite (docs/adr/2900 §3).
+#[test]
+fn undulations_are_one_more_than_the_shots() {
+    let input = |u: Vec<f64>| PolarInput {
+        unit: "grad".into(),
+        station: Vec2::new(1000.0, 2000.0),
+        back: Vec2::new(1000.0, 2500.0),
+        back_reading: 0.0,
+        station_z: Some(100.0),
+        instrument_height: None,
+        shots: vec![Shot { reading: 50.0, distance: 400.0, zenith: Some(98.0), target_height: None }],
+        refraction: None,
+        grid: None,
+        undulations: Some(u),
+    };
+    let e = polar_survey(&input(vec![36.0])).expect_err("one is short");
+    assert!(e.contains("2 ayrım beklenirken 1 verildi"), "{e}");
+    assert!(polar_survey(&input(vec![36.0, f64::NAN])).is_err());
+    // Without the grid the undulations change nothing.
+    let without = PolarInput { undulations: None, ..input(vec![36.0, 36.1]) };
+    assert_eq!(polar_survey(&input(vec![36.0, 36.1])), polar_survey(&without));
 }

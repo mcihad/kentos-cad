@@ -4,4 +4,12 @@
  * One point's factors: none where the system does not reach the point (warning `point_beyond_system`); the height's
  * and the combined only with a height.
  */
-export type PointFactors = { scale?: number, heightFactor?: number, combined?: number, };
+export type PointFactors = { scale?: number, heightFactor?: number, combined?: number, 
+/**
+ * The point's own ellipsoidal height (with `heights` or `elevations`; none outside the geoid's grid).
+ */
+height?: number, 
+/**
+ * The geoid's height above the ellipsoid at the point, when its elevation was orthometric.
+ */
+undulation?: number, };

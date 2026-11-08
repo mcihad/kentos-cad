@@ -9,7 +9,12 @@ at the geodesic's middle in its direction there, ground_cases.py's rule), at the
 
 - Kutupsal alım: from a station oriented on a back point, the readings of the known points (their grid bearings less
   the back's, in the unit) and their ground lengths (horizontal, or slope with a zenith angle); the core, given the
-  grid, must place the points where they are (within 1e-6 m) and give their grid lengths and factors.
+  grid, must place the points where they are (within 1e-6 m) and give their grid lengths, factors and the height each
+  line was reduced at. With the station's height, the points' heights and the geoid's height above the ellipsoid at
+  each (docs/adr/2900 §3), a shot with a zenith angle is reduced at its own line's height: the mean of its two ends'
+  ellipsoidal heights, each the point's height plus its undulation; the slope length and the zenith angle are built
+  from the ground length and the height difference (no refraction, no instrument or target height). A shot without a
+  zenith angle, or a station without a height, is reduced at the project's mean height.
 - Aplikasyon: the known points' grid distances and their ground distances with the factors.
 - Poligon hesabı: a connected traverse through known points, its angles from the grid and its legs' ground lengths;
   the core must give the points back (within 1e-6 m) with no misclosure (within 1e-6 m).
@@ -72,10 +77,44 @@ def polar(name, system, height, unit, station, back, targets, zenith=None):
             z = zenith * 2 * math.pi / turn
             shot = {"reading": reading, "distance": ground_len / math.sin(z), "zenith": zenith}
         shots.append(shot)
-        expect.append({"p": t, "grid": grid_len, "scale": k, "heightFactor": hf})
+        expect.append({"p": t, "grid": grid_len, "scale": k, "heightFactor": hf, "height": height})
     return {"name": name, "input": {"unit": unit, "station": {"x": station[0], "y": station[1]},
                                     "back": {"x": back[0], "y": back[1]}, "backReading": 0.0, "shots": shots,
                                     "grid": {"system": system, "height": height}}, "expect": expect}
+
+
+def polar_heights(name, system, height, unit, station, back, targets, station_z, undulations):
+    """Kutupsal alım with the points' heights: each target (east, north, height or None for a horizontal shot), the
+    undulations at the station and each target (None: not given), each line reduced at its ends' ellipsoidal heights'
+    mean (a shot without a height at the mean height `height`)."""
+    turn = TURN[unit]
+    shots, expect = [], []
+    for i, (x, y, z) in enumerate(targets):
+        t = (x, y)
+        grid_len = dist(station, t)
+        reading = (bearing(station, t, unit) - bearing(station, back, unit)) % turn
+        if z is None or station_z is None or undulations is None:
+            h = height
+        else:
+            h = ((station_z + undulations[0]) + (z + undulations[i + 1])) / 2.0
+        k, hf = factors(system, h, station, t)
+        ground_len = grid_len / (k * hf)
+        if z is None:
+            shot = {"reading": reading, "distance": ground_len}
+        else:
+            dz = z - station_z
+            slope = math.hypot(ground_len, dz)
+            zenith = math.atan2(ground_len, dz) * turn / (2 * math.pi)
+            shot = {"reading": reading, "distance": slope, "zenith": zenith}
+        shots.append(shot)
+        expect.append({"p": t, "grid": grid_len, "scale": k, "heightFactor": hf, "height": h})
+    input_ = {"unit": unit, "station": {"x": station[0], "y": station[1]}, "back": {"x": back[0], "y": back[1]},
+              "backReading": 0.0, "shots": shots, "grid": {"system": system, "height": height}}
+    if station_z is not None:
+        input_["stationZ"] = station_z
+    if undulations is not None:
+        input_["undulations"] = undulations
+    return {"name": name, "input": input_, "expect": expect}
 
 
 def stakeout(name, system, height, unit, station, back, targets):
@@ -138,6 +177,18 @@ def build():
               at(cus, [(400.0, 400.0), (-650.0, 120.0)])),
         polar("benzerlikle bağlı yerel sistemde, h 500", similar, 500.0, "grad", (100.0, 200.0), (100.0, 700.0),
               [(900.0, 650.0), (-450.0, -300.0)]),
+        polar_heights("TM30'un doğu kenarında, elipsoit yükseklikleri: her çizgi uçlarının ortalamasında", tm30, 850.0,
+                      "grad", edge, (edge[0], edge[1] + 500.0),
+                      [(edge[0] + 420.0, edge[1] + 310.0, 1150.0), (edge[0] - 900.0, edge[1] + 260.0, 610.25),
+                       (edge[0] + 1500.0, edge[1] - 1800.0, 2100.0)],
+                      850.0, [0.0, 0.0, 0.0, 0.0]),
+        polar_heights("UTM 36N'de ortometrik kotlar ve geoit ayrımları; başucu açısız çizgi ortalamada", utm36, 1200.0,
+                      "deg", ank, (ank[0] - 400.0, ank[1] + 300.0),
+                      [(ank[0] + 600.0, ank[1] + 150.0, 1180.5), (ank[0] - 220.0, ank[1] - 880.0, 990.0),
+                       (ank[0] + 300.0, ank[1] - 300.0, None)],
+                      1100.0, [36.21, 36.25, 36.18, 36.2]),
+        polar_heights("İstasyon kotu yokken ayrımlar kullanılmaz: ortalama yükseklik", tm30, 850.0, "grad", edge,
+                      (edge[0], edge[1] + 500.0), [(edge[0] + 420.0, edge[1] + 310.0, None)], None, [0.0, 0.0]),
     ]
     stakeouts = [
         stakeout("TM30'un doğu kenarında, h 850", tm30, 850.0, "grad", edge, (edge[0], edge[1] + 500.0),

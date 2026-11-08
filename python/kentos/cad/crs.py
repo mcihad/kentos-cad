@@ -36,10 +36,23 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
     ayarları › Ölçme); ikisi de yoksa yalnız scale. Cevap sistemin adını, kullanılan
     yüksekliği ve ölçme pencerelerinin uzunlukları projeksiyona indirip indirmediğini
     (reducesToGrid) de verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez (ADR
-    1231). Sistemin ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Retler:
-    invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da yükseklik,
-    yükseklik −500…9000 m dışında), no_system (proje yerel koordinatlarda),
-    no_point_scale (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem).
+    1231). Sistemin ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Her
+    noktanın kendi yüksekliği (ADR 2900): heights noktaların elipsoit yükseklikleri;
+    elevations çizimin kotları, projenin kotlarıyla elipsoit yüksekliğine çevrilir
+    (elipsoit yüksekliğiyse olduğu gibi, ortometrikse projenin geoit modelinin noktadaki
+    N'i eklenerek; cevapta height ve undulation). lines noktalar arasındaki çizgileri
+    sıralarıyla [a, b] verir: her çizginin ölçeği (uçlarının ve ortasının ölçeğiyle
+    Simpson), yükseklik çarpanı (jeodeziğin ortasında doğrultusundaki Euler yarıçapı,
+    uçlarının yüksekliklerinin ortalamasında) ve birleşik çarpanı; Kutupsal alım ölçülen
+    uzunluğu bu çarpanlarla indirir. Geoit ızgarasının dışındaki noktanın kotu
+    çevrilmez, uyarı points_outside. Retler: invalid_input (nokta yok, 10 000'den çok,
+    sonlu olmayan koordinat ya da yükseklik, yükseklik −500…9000 m dışında; height,
+    heights ve elevations'tan birden çoğu; nokta başına bir değer değil; çizginin ucu
+    nokta değil, iki ucu aynı yerde, 10 000'den çok çizgi; kotlar metre değil),
+    no_system (proje yerel koordinatlarda), no_point_scale (coğrafi sistem,
+    Pseudo-Mercator ya da afinle bağlı yerel sistem), heights_unknown (elevations:
+    projenin kotlarının ne olduğu söylenmemiş), geoid_required (ortometrik kot, geoit
+    modeli yok), geoid_missing (geoit modelinin ızgarası bu cihazda yok).
     """
     __slots__ = ()
     id = "cad.crs.factors"
@@ -56,7 +69,10 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         /,
         *,
         points: Sequence[Sequence[float]],
+        elevations: Sequence[float] | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        heights: Sequence[float] | None | Unset = UNSET,
+        lines: Sequence[Sequence[int]] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CrsFactorsRead:
@@ -70,15 +86,32 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         yoksa yalnız scale. Cevap sistemin adını, kullanılan yüksekliği ve ölçme
         pencerelerinin uzunlukları projeksiyona indirip indirmediğini (reducesToGrid) de
         verir. Çizim ve kamera ölçeği bu çarpanları değiştirmez (ADR 1231). Sistemin
-        ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Retler: invalid_input
-        (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da yükseklik, yükseklik
-        −500…9000 m dışında), no_system (proje yerel koordinatlarda), no_point_scale
-        (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem).
+        ulaşmadığı nokta çarpansız kalır, uyarı point_beyond_system. Her noktanın kendi
+        yüksekliği (ADR 2900): heights noktaların elipsoit yükseklikleri; elevations çizimin
+        kotları, projenin kotlarıyla elipsoit yüksekliğine çevrilir (elipsoit yüksekliğiyse
+        olduğu gibi, ortometrikse projenin geoit modelinin noktadaki N'i eklenerek; cevapta
+        height ve undulation). lines noktalar arasındaki çizgileri sıralarıyla [a, b] verir:
+        her çizginin ölçeği (uçlarının ve ortasının ölçeğiyle Simpson), yükseklik çarpanı
+        (jeodeziğin ortasında doğrultusundaki Euler yarıçapı, uçlarının yüksekliklerinin
+        ortalamasında) ve birleşik çarpanı; Kutupsal alım ölçülen uzunluğu bu çarpanlarla
+        indirir. Geoit ızgarasının dışındaki noktanın kotu çevrilmez, uyarı points_outside.
+        Retler: invalid_input (nokta yok, 10 000'den çok, sonlu olmayan koordinat ya da
+        yükseklik, yükseklik −500…9000 m dışında; height, heights ve elevations'tan birden
+        çoğu; nokta başına bir değer değil; çizginin ucu nokta değil, iki ucu aynı yerde, 10
+        000'den çok çizgi; kotlar metre değil), no_system (proje yerel koordinatlarda),
+        no_point_scale (coğrafi sistem, Pseudo-Mercator ya da afinle bağlı yerel sistem),
+        heights_unknown (elevations: projenin kotlarının ne olduğu söylenmemiş),
+        geoid_required (ortometrik kot, geoit modeli yok), geoid_missing (geoit modelinin
+        ızgarası bu cihazda yok).
 
         Args:
             doc: The drawing it works on.
             points: Unit: m.
+            elevations: Each point's height as the drawing keeps it (its Z), one per point, made ellipsoidal by the project's heights. Unit: elevation.
             height: Unit: m.
+            heights: Each point's ellipsoidal height, one per point: a point's height factor at its own height, a line's at its ends'
+                mean. Unit: m.
+            lines: Lines between two of the points, by their indexes from 0. Unit: index.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -93,7 +126,10 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         """
         return self.execute_input(doc, CrsFactors(
             points=[list(p) for p in points],
+            elevations=_opt(elevations, lambda x: list(x)),
             height=height,
+            heights=_opt(heights, lambda x: list(x)),
+            lines=_opt(lines, lambda x: [list(p) for p in x]),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -102,14 +138,20 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         /,
         *,
         points: Sequence[Sequence[float]],
+        elevations: Sequence[float] | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        heights: Sequence[float] | None | Unset = UNSET,
+        lines: Sequence[Sequence[int]] | None | Unset = UNSET,
     ) -> CrsFactorsRead:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, CrsFactors(
             points=[list(p) for p in points],
+            elevations=_opt(elevations, lambda x: list(x)),
             height=height,
+            heights=_opt(heights, lambda x: list(x)),
+            lines=_opt(lines, lambda x: [list(p) for p in x]),
         ))
 
     def validate(
@@ -118,14 +160,20 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         /,
         *,
         points: Sequence[Sequence[float]],
+        elevations: Sequence[float] | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        heights: Sequence[float] | None | Unset = UNSET,
+        lines: Sequence[Sequence[int]] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, CrsFactors(
             points=[list(p) for p in points],
+            elevations=_opt(elevations, lambda x: list(x)),
             height=height,
+            heights=_opt(heights, lambda x: list(x)),
+            lines=_opt(lines, lambda x: [list(p) for p in x]),
         ))
 
     def answer(
@@ -134,7 +182,10 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         /,
         *,
         points: Sequence[Sequence[float]],
+        elevations: Sequence[float] | None | Unset = UNSET,
         height: float | None | Unset = UNSET,
+        heights: Sequence[float] | None | Unset = UNSET,
+        lines: Sequence[Sequence[int]] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -146,7 +197,10 @@ class _CrsFactors(LocalCommand[CrsFactors, CrsFactorsRead, CrsFactorsRead]):
         """
         return self.answer_input(doc, CrsFactors(
             points=[list(p) for p in points],
+            elevations=_opt(elevations, lambda x: list(x)),
             height=height,
+            heights=_opt(heights, lambda x: list(x)),
+            lines=_opt(lines, lambda x: [list(p) for p in x]),
         ), op=op, request_id=request_id, expected=expected)
 
 

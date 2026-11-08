@@ -202,6 +202,7 @@ pub mod time_version;
 pub mod roads_edit;
 pub mod survey_adjust;
 pub mod survey_points;
+pub mod survey_heights;
 pub mod shape_edits;
 pub mod shx_text;
 mod shape_split;

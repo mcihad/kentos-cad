@@ -32,7 +32,7 @@ sırayla alır.
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880 | tipli katman profili; değişen nesnenin neyinin değiştiği; silinenin onaylı hâli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
@@ -351,6 +351,15 @@ tutarlılığı), PROJ'un işlem seçimi (nokta işlemin kullanım alanıyla kar
 Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, Koordinat dönüştür'de nokta başına karar, sorgu/düzenleme/dışa
 aktarmanın aynı zinciri taşıması, yazı ve bloğun yeniden izdüşümü, daire/yay/yazının kotu, zamana bağlı Helmert. Madde
 `[ ]` kalır.
+
+**9 Kasım 2026, beşinci tur — ölçme çarpanları çizginin kendi yüksekliğinde ([ADR 2900](../docs/adr/2900-survey-factors-at-each-line-s-own-height.md)).**
+Kapsam: **CAD + CBS**. Araştırma: NGS'nin SPCS2022 yöntemleri (yükseklik çarpanı R/(R + h), h noktanın elipsoit
+yüksekliği). Kanıtlanan: `cad.crs.factors`'ta `heights` (noktaların elipsoit yükseklikleri), `elevations` (çizimin
+kotları projenin kotlarıyla ve geoit modeliyle elipsoit yüksekliğine; tahmin yok, `heights_unknown`, `geoid_required`,
+`geoid_missing`) ve `lines` (çizginin ölçeği, uçlarının ortalama yüksekliğinde yükseklik çarpanı); 43 ortak durum,
+MCP. Kutupsal alım ve `cad.survey.points` her alımı istasyonla noktanın elipsoit yüksekliklerinin ortalamasında
+indirir (çekirdeğin `undulations`'ı, PROJ'a karşı üç yeni durum); pencerede h sütunu, çarpanlar komutunkiyle aynı.
+Açık: Poligon hesabı ve Aplikasyon'da kotlu çizgi, Koordinat dönüştür'de nokta başına karar, zamana bağlı Helmert.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

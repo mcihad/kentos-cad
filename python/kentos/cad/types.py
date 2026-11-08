@@ -25126,30 +25126,53 @@ class CrsDefinition(_Model):
 @dataclass(kw_only=True, slots=True)
 class CrsFactors(_Model):
     """Input of `cad.crs.factors` v1: points in the project's coordinates (east, north; metres) and, when given, the mean
-    ellipsoidal height to use instead of the project's (Proje ayarları › Ölçme).
+    ellipsoidal height to use instead of the project's (Proje ayarları › Ölçme), or each point's own height (docs/adr/2900
+    §1–2): `heights`, ellipsoidal heights, or `elevations`, the drawing's heights made ellipsoidal by what the project
+    says its heights are (as they are when ellipsoidal; plus the project's geoid model's N at the point when
+    orthometric). `lines` asks for the factors of lines between two of the points.
 
     Refusals, in this order: `invalid_input` (no point, more than 10 000, a coordinate or the height not finite, a height
-    outside −500…9000 m), `no_system` (a project on its own coordinates), `no_point_scale` (a geographic
-    system, the Pseudo-Mercator or an affine local plane: no one scale at a point).
+    outside −500…9000 m; more than one of `height`, `heights`, `elevations`; not one per point; a line's end not a
+    point, its two ends at one place, more than 10 000 lines; heights not in metres), `no_system` (a project on its own
+    coordinates), `no_point_scale` (a geographic system, the Pseudo-Mercator or an affine local plane: no one scale at a
+    point); with `elevations`: `heights_unknown` (the project does not say what its heights are), `geoid_required`
+    (orthometric without a geoid model), `geoid_missing` (the model's grid is not on this device). A point outside the
+    geoid's grid gets no height (warning `points_outside`).
     Attributes:
         points: Unit: m.
+        elevations: Each point's height as the drawing keeps it (its Z), one per point, made ellipsoidal by the project's heights. Unit: elevation.
         height: Unit: m.
+        heights: Each point's ellipsoidal height, one per point: a point's height factor at its own height, a line's at its ends'
+            mean. Unit: m.
+        lines: Lines between two of the points, by their indexes from 0. Unit: index.
     """
     points: list[list[float]]
+    elevations: list[float] | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    heights: list[float] | None | Unset = UNSET
+    lines: list[list[int]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
+        if self.elevations is not UNSET:
+            out["elevations"] = None if self.elevations is None else [float(e0) for e0 in self.elevations]
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else [float(e0) for e0 in self.heights]
+        if self.lines is not UNSET:
+            out["lines"] = None if self.lines is None else [list(e0) for e0 in self.lines]
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CrsFactors:
         return cls(
             points=[[float(e1) for e1 in e0] for e0 in data["points"]],
+            elevations=UNSET if "elevations" not in data else None if data["elevations"] is None else [float(e0) for e0 in data["elevations"]],
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else [float(e0) for e0 in data["heights"]],
+            lines=UNSET if "lines" not in data else None if data["lines"] is None else [list(e0) for e0 in data["lines"]],
         )
 
 
@@ -25159,13 +25182,17 @@ class CrsFactorsRead(_Model):
     whether the survey windows take measured lengths to the grid, each point's factors in the input's order, and the
     drawing's revision.
     Attributes:
+        geoid: The geoid model the elevations were made ellipsoidal with.
         height: Unit: m.
+        lines: Each line's factors, in the input's order.
     """
     system: str
     reduces_to_grid: bool
     points: list[PointFactors]
     revision: str
+    geoid: str | None | Unset = UNSET
     height: float | None | Unset = UNSET
+    lines: list[LineFactors] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -25173,8 +25200,12 @@ class CrsFactorsRead(_Model):
         out["reducesToGrid"] = self.reduces_to_grid
         out["points"] = [e0.to_json() for e0 in self.points]
         out["revision"] = self.revision
+        if self.geoid is not UNSET:
+            out["geoid"] = self.geoid
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
+        if self.lines is not UNSET:
+            out["lines"] = [e0.to_json() for e0 in self.lines]
         return out
 
     @classmethod
@@ -25184,7 +25215,9 @@ class CrsFactorsRead(_Model):
             reduces_to_grid=data["reducesToGrid"],
             points=[PointFactors.from_json(e0) for e0 in data["points"]],
             revision=data["revision"],
+            geoid=data.get("geoid", UNSET),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            lines=[LineFactors.from_json(e0) for e0 in data["lines"]] if "lines" in data else UNSET,
         )
 
 
@@ -53006,6 +53039,45 @@ class LineEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class LineFactors(_Model):
+    """One line's factors (docs/adr/2900 §1): the projection's scale along it (Simpson's rule on its ends' and middle's
+    scales), the height's factor R/(R + h) with Euler's radius at the geodesic's middle in its direction and h its ends'
+    mean height (or the one height), their product, and the height used; none where the system does not reach an end,
+    the height's and the combined only with a height.
+    Attributes:
+        combined: Unit: 1.
+        height: Unit: m.
+        height_factor: Unit: 1.
+        scale: Unit: 1.
+    """
+    combined: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    height_factor: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.combined is not UNSET:
+            out["combined"] = None if self.combined is None else float(self.combined)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.height_factor is not UNSET:
+            out["heightFactor"] = None if self.height_factor is None else float(self.height_factor)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LineFactors:
+        return cls(
+            combined=UNSET if "combined" not in data else None if data["combined"] is None else float(data["combined"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            height_factor=UNSET if "heightFactor" not in data else None if data["heightFactor"] is None else float(data["heightFactor"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LinePlan(_Model):
     """What `cad.line.create` would write (plan mode); nothing is written.
     Attributes:
@@ -68965,29 +69037,39 @@ class PointFactors(_Model):
     and the combined only with a height.
     Attributes:
         combined: Unit: 1.
+        height: The point's own ellipsoidal height (with `heights` or `elevations`; none outside the geoid's grid). Unit: m.
         height_factor: Unit: 1.
         scale: Unit: 1.
+        undulation: The geoid's height above the ellipsoid at the point, when its elevation was orthometric. Unit: m.
     """
     combined: float | None | Unset = UNSET
+    height: float | None | Unset = UNSET
     height_factor: float | None | Unset = UNSET
     scale: float | None | Unset = UNSET
+    undulation: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.combined is not UNSET:
             out["combined"] = None if self.combined is None else float(self.combined)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
         if self.height_factor is not UNSET:
             out["heightFactor"] = None if self.height_factor is None else float(self.height_factor)
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
+        if self.undulation is not UNSET:
+            out["undulation"] = None if self.undulation is None else float(self.undulation)
         return out
 
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> PointFactors:
         return cls(
             combined=UNSET if "combined" not in data else None if data["combined"] is None else float(data["combined"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             height_factor=UNSET if "heightFactor" not in data else None if data["heightFactor"] is None else float(data["heightFactor"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            undulation=UNSET if "undulation" not in data else None if data["undulation"] is None else float(data["undulation"]),
         )
 
 
@@ -130924,6 +131006,7 @@ __all__ = [
     "LineEndName",
     "LineEntity",
     "LineEntityGeometry",
+    "LineFactors",
     "LineLabelMode",
     "LineLabelModeName",
     "LinePaperItemKind",

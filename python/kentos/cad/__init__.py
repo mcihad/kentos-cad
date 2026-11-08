@@ -1830,6 +1830,7 @@ __all__ = [
     "LineEndName",
     "LineEntity",
     "LineEntityGeometry",
+    "LineFactors",
     "LineLabelMode",
     "LineLabelModeName",
     "LinePaperItemKind",

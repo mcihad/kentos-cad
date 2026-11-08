@@ -17,6 +17,12 @@
 //! on where the point falls, so in two passes (the point by the length as
 //! measured, the length reduced on that line, the point again; once more).
 //! A set-out length is then given on the ground too.
+//!
+//! With the geoid's height above the ellipsoid at the station and at each
+//! point (`undulations`; zeros for ellipsoidal heights, docs/adr/2900 §3), a
+//! shot with a zenith angle from a station with a height is reduced at its
+//! own line's height, the mean of its two ends' ellipsoidal heights (the
+//! drawing's heights plus the undulations), not the project's mean.
 
 use super::fieldbook::curvature;
 use super::{Unit, bearing, distance, distinct, finite, from_bearing, positive};
@@ -61,6 +67,13 @@ pub struct PolarInput {
     /// The project's grid: the lengths are on the ground and are taken to
     /// it (docs/adr/0171 §4); none: they are the grid's already.
     pub grid: Option<Grid>,
+    /// The geoid's height above the ellipsoid (N, m) at the station and then
+    /// at each shot's point, one more than the shots: the drawing's heights
+    /// plus these are ellipsoidal (zeros when they are already; docs/adr/2900
+    /// §3). With the grid, the station's height and a shot's zenith angle,
+    /// that shot is reduced at its ends' mean ellipsoidal height; otherwise at
+    /// the grid's height.
+    pub undulations: Option<Vec<f64>>,
 }
 
 crate::json_struct!(PolarInput {
@@ -72,7 +85,8 @@ crate::json_struct!(PolarInput {
     instrument_height => "instrumentHeight",
     shots,
     refraction,
-    grid
+    grid,
+    undulations
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -86,10 +100,12 @@ pub struct PolarPoint {
     /// Height difference station mark → point mark, when the shot has a zenith angle.
     pub dz: Option<f64>,
     /// With the project's grid: the horizontal length on the grid, and the
-    /// line's scale and height factor that took it there.
+    /// line's scale and height factor that took it there, and the ellipsoidal
+    /// height it was reduced at (its ends' mean, or the grid's).
     pub grid: Option<f64>,
     pub scale: Option<f64>,
     pub height_factor: Option<f64>,
+    pub height: Option<f64>,
 }
 
 crate::json_struct!(out PolarPoint {
@@ -100,7 +116,8 @@ crate::json_struct!(out PolarPoint {
     dz,
     grid,
     scale,
-    height_factor => "heightFactor"
+    height_factor => "heightFactor",
+    height
 });
 
 /// A ground length from `station` along `t` taken to the grid: the point by
@@ -123,6 +140,19 @@ pub fn polar_survey(input: &PolarInput) -> Result<Vec<PolarPoint>, String> {
     let orient = bearing(input.station, input.back)
         - unit.rad(finite(input.back_reading, "Bakılan noktanın okuması")?);
     let i_h = input.instrument_height.unwrap_or(0.0);
+    if let Some(u) = &input.undulations {
+        if u.len() != input.shots.len() + 1 {
+            return Err(format!(
+                "Geoit ayrımı durulan nokta ve her nokta için birer tane olmalı: {} nokta için {} ayrım beklenirken {} verildi.",
+                input.shots.len(),
+                input.shots.len() + 1,
+                u.len()
+            ));
+        }
+        if u.iter().any(|n| !n.is_finite()) {
+            return Err("Geoit ayrımı sonlu bir sayı olmalı.".into());
+        }
+    }
     input
         .shots
         .iter()
@@ -150,20 +180,30 @@ pub fn polar_survey(input: &PolarInput) -> Result<Vec<PolarPoint>, String> {
             if !(horizontal > 0.0) {
                 return Err(format!("{n}. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."));
             }
+            // The line's own height: its ends' ellipsoidal heights' mean (docs/adr/2900 §3).
+            let own = match (&input.undulations, input.station_z, dz) {
+                (Some(u), Some(zs), Some(d)) => Some(((zs + u[0]) + (zs + d + u[n])) / 2.0),
+                _ => None,
+            };
             let reduced = match &input.grid {
-                Some(g) => Some(to_grid(g, input.station, t, horizontal)?),
+                Some(g) => {
+                    let line = Grid { system: g.system.clone(), height: own.unwrap_or(g.height) };
+                    let (l, f) = to_grid(&line, input.station, t, horizontal)?;
+                    Some((l, f, line.height))
+                }
                 None => None,
             };
-            let length = reduced.map_or(horizontal, |(l, _)| l);
+            let length = reduced.map_or(horizontal, |(l, _, _)| l);
             Ok(PolarPoint {
                 p: from_bearing(input.station, t, length),
                 z: dz.zip(input.station_z).map(|(d, h)| h + d),
                 bearing: unit.of(t),
                 horizontal,
                 dz,
-                grid: reduced.map(|(l, _)| l),
-                scale: reduced.map(|(_, f)| f.scale),
-                height_factor: reduced.map(|(_, f)| f.height_factor),
+                grid: reduced.map(|(l, _, _)| l),
+                scale: reduced.map(|(_, f, _)| f.scale),
+                height_factor: reduced.map(|(_, f, _)| f.height_factor),
+                height: reduced.map(|(_, _, h)| h),
             })
         })
         .collect()

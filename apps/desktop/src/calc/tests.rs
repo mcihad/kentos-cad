@@ -632,6 +632,7 @@ fn the_survey_windows_take_lengths_to_the_grid() {
         }],
         refraction: Some(0.13),
         grid: Some(grid.clone()),
+        undulations: None,
     })
     .expect("the core computes");
     assert_eq!(points, core);

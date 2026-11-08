@@ -2651,8 +2651,8 @@ const ENTRIES: &[Entry] = &[
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
     Entry {
         id: "cad.crs.factors",
-        refusals: &[&["invalid_input", "no_system", "no_point_scale"]],
-        warnings: &["point_beyond_system"],
+        refusals: &[&["invalid_input", "no_system", "no_point_scale", "heights_unknown", "geoid_required", "geoid_missing"]],
+        warnings: &["point_beyond_system", "points_outside"],
         targets: none,
     },
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).

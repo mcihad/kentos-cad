@@ -117,6 +117,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-01 / ADR 2880: web'in `.kcad` okuyucu/yazıcısında şema 210 (harita işi öğesinin `approvedObjects`'i; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), `map.work.query`'nin `changes`'i ve `map.work.edit`'in listeyi yazması
   (32 + 55 ortak durum); web'in Harita işi panelinde Değişenler satırı.
+- MAP-02 / ADR 2900: `cad.crs.factors`'ın web işleyicisinde `heights`, `elevations`, `lines` (43 ortak durum); çekirdeğin
+  `surveyPolar`'ının `undulations`'ı ve noktanın `height`'ı (WASM'la gelir); web'in Kutupsal alımında kotlardan ayrımlar
+  (geoit ızgarası) ve h sütunu.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

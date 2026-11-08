@@ -97,12 +97,14 @@ impl Table for Form {
 
 impl Form {
     pub fn compute(&self, model: &Model) -> PolarRead {
+        let settings = model.settings();
         read_polar(
             self,
             |t| resolve_point(model, t),
-            unit_name(model.settings().angle_unit),
-            Some(model.settings().refraction()),
-            survey_grid(model.settings()),
+            unit_name(settings.angle_unit),
+            Some(settings.refraction()),
+            survey_grid(settings),
+            &|input| kentos_native_application::survey_heights::polar_undulations(settings, input),
         )
     }
 
@@ -126,8 +128,10 @@ impl Form {
     pub fn report(&self, model: &Model, format: &Format) -> Option<Vec<Vec<String>>> {
         let read = self.compute(model);
         let points = read.points?;
-        // With the project's grid: the length on it and the line's factors (docs/adr/0171 §4).
+        // With the project's grid: the length on it and the line's factors (docs/adr/0171 §4), and the height each
+        // line was reduced at when it is its own (docs/adr/2900 §3).
         let reduced = points.iter().any(|p| p.grid.is_some());
+        let own = matches!(read.heights, Some(Ok(_)));
         let mut head = vec!["Nokta", "Semt", "Yatay uzunluk"];
         if reduced {
             head.push("Düzlemde");
@@ -135,6 +139,9 @@ impl Form {
         head.extend(["Y", "X", "Z"]);
         if reduced {
             head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
+        if reduced && own {
+            head.push("Elipsoit yüksekliği");
         }
         let mut lines = vec![
             vec![TITLE.to_owned()],
@@ -157,6 +164,9 @@ impl Form {
             if reduced {
                 row.push(p.scale.map(|k| fixed(k, 8)).unwrap_or_default());
                 row.push(p.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
+            }
+            if reduced && own {
+                row.push(p.height.map(|h| format.length_bare(h)).unwrap_or_default());
             }
             lines.push(row);
         }
@@ -252,7 +262,12 @@ impl Form {
                     .ground_height()
                     .filter(|_| points.iter().any(|p| p.grid.is_some()))
                 {
-                    lines.push((Line::Info, grid_note(h)));
+                    // Each line at its own height, or why at the mean (docs/adr/2900 §3).
+                    match &read.heights {
+                        Some(Ok(model)) => lines.push((Line::Info, own_height_note(h, model.as_deref()))),
+                        Some(Err(why)) => lines.push((Line::Info, format!("{} {why}", grid_note(h)))),
+                        None => lines.push((Line::Info, grid_note(h))),
+                    }
                 }
                 if points.iter().any(|p| p.dz.is_some()) && read_number(&self.station_z).is_none() {
                     lines.push((
@@ -270,7 +285,7 @@ impl Form {
         if let Some(points) = &read.points {
             // With the project's grid the length on it and the line's factor come too (docs/adr/0171 §4).
             let reduced = points.iter().any(|p| p.grid.is_some());
-            let rows = points
+            let rows: Vec<Vec<String>> = points
                 .iter()
                 .zip(&read.names)
                 .map(|(p, name)| {
@@ -300,7 +315,35 @@ impl Form {
                     row
                 })
                 .collect();
-            let table = if reduced {
+            let own = matches!(read.heights, Some(Ok(_)));
+            let rows = if reduced && own {
+                rows.into_iter()
+                    .zip(points)
+                    .map(|(mut row, p)| {
+                        row.push(p.height.map(|h| format.length_bare(h)).unwrap_or_default());
+                        row
+                    })
+                    .collect()
+            } else {
+                rows
+            };
+            let table = if reduced && own {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Zeminde (m)",
+                        "Düzlemde (m)",
+                        "Çarpan",
+                        "Y (sağa)",
+                        "X (yukarı)",
+                        "Z (m)",
+                        "h (m)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true, true, true, true],
+                )
+            } else if reduced {
                 result_table(
                     &[
                         "Nokta",
@@ -344,6 +387,19 @@ impl Form {
         .width(940.0)
         .into()
     }
+}
+
+/// Said when each shot is reduced at its own line's height (docs/adr/2900 §3): its ends' ellipsoidal heights' mean,
+/// the drawing's heights plus the geoid model's N when they are orthometric; a shot without a zenith angle at the mean.
+fn own_height_note(mean: f64, model: Option<&str>) -> String {
+    let made = match model {
+        Some(m) => format!("kotlar artı “{m}” geoit modelinin ayrımı"),
+        None => "kotlar elipsoit yüksekliği".to_owned(),
+    };
+    format!(
+        "Ölçülen uzunluklar projeksiyona indirildi, her çizgi kendi yüksekliğinde: uçlarının elipsoit yüksekliklerinin ortalaması ({made}, h sütunu); başucu açısı olmayan çizgi ortalama elipsoit yüksekliğinde ({} m). Çizginin ölçeği ve yükseklik çarpanıyla (Proje ayarları › Ölçme).",
+        kentos_interaction::ground::trimmed(mean)
+    )
 }
 
 const COLUMNS_GRAD: [Col; 5] = columns("g");

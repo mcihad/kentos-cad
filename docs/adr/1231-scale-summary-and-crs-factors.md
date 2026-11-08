@@ -73,4 +73,5 @@ MCP: `{"tool": "cad.crs.factors", "arguments": {"points": [[550000, 4540000]]}}`
 
 - İçe aktarmada birimin bir kez uygulandığının kot (Z) ve iç içe blok için ayrıca sınanması (DXF'in 64 ortak durumu metin
   boyu ve blok ölçeğini zaten sınıyor, `file.import.dxf.json`).
-- Ölçme pencerelerinin “ölçek çarpanı” satırının bu komuttan okunması; kot farkıyla değişen yükseklik (nokta başına h).
+- Ölçme pencerelerinin “ölçek çarpanı” satırının bu komuttan okunması; kot farkıyla değişen yükseklik (nokta başına h). Yapıldı:
+  [ADR 2900](2900-survey-factors-at-each-line-s-own-height.md) (Kutupsal alım; Poligon ve Aplikasyon Sonra).

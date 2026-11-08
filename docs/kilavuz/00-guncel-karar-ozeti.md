@@ -224,6 +224,10 @@
   Onay dosyasız öğenin nesnelerini özetleriyle tutar (`approvedObjects`, listenin özeti damgadır; `.kcad` şema 210).
   Onayı eskimiş öğenin `changes`'i eklenen, silinen ve değişen nesneleri sayar; Harita işi'nde Değişenler satırı onları
   seçer. Yalnız Harita.
+- **Ölçme çarpanları çizginin kendi yüksekliğinde (9 Kasım 2026; MAP-02, [ADR 2900](../../docs/adr/2900-survey-factors-at-each-line-s-own-height.md)).**
+  `cad.crs.factors`'ta `heights`, `elevations` (kotlar projenin kotlarıyla ve geoit modeliyle elipsoit yüksekliğine;
+  tahmin yok) ve `lines`. Kutupsal alım ve `cad.survey.points` her alımı uçlarının ortalama elipsoit yüksekliğinde
+  indirir; pencerede h sütunu. CAD + CBS.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

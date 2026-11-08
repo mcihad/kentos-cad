@@ -213,6 +213,9 @@ pub struct PolarRead {
     pub names: Vec<String>,
     /// The filled rows as `cad.survey.points` takes them, named.
     pub shots: Vec<SurveyShot>,
+    /// With the grid, a station height and a zenith angle: each shot reduced at its own line's height (the geoid
+    /// model's name when the heights are orthometric), or why at the project's mean height (docs/adr/2900 §3).
+    pub heights: Option<Result<Option<String>, String>>,
 }
 
 /// The core numbers the shots it is given (“2. noktanın …”) and the table
@@ -238,6 +241,7 @@ pub fn read_polar(
     unit: &str,
     refraction: Option<f64>,
     grid: Option<Grid>,
+    heights: &dyn Fn(&PolarInput) -> Option<Result<(Vec<f64>, Option<String>), String>>,
 ) -> PolarRead {
     use super::polar::{DISTANCE, NAME, READING, TARGET, ZENITH};
     let mut errors = Vec::new();
@@ -329,9 +333,10 @@ pub fn read_polar(
             points: None,
             names,
             shots: typed,
+            heights: None,
         };
     };
-    let points = match polar_survey(&PolarInput {
+    let mut input = PolarInput {
         unit: unit.to_owned(),
         station,
         back,
@@ -341,7 +346,16 @@ pub fn read_polar(
         shots,
         refraction,
         grid,
-    }) {
+        undulations: None,
+    };
+    // Each shot at its own line's height when the drawing's heights can be made ellipsoidal (docs/adr/2900 §3).
+    let heights = heights(&input).map(|r| {
+        r.map(|(u, model)| {
+            input.undulations = Some(u);
+            model
+        })
+    });
+    let points = match polar_survey(&input) {
         Ok(points) => Some(points),
         Err(e) => {
             errors.push(at_table_row(&e, |shot| {
@@ -355,6 +369,7 @@ pub fn read_polar(
         points,
         names,
         shots: typed,
+        heights,
     }
 }
 
@@ -487,12 +502,12 @@ mod tests {
             &[],
             &[(NAME, "3"), (READING, "100"), (DISTANCE, "0")],
         ]);
-        let read = read_polar(&form, resolve, "grad", None, None);
+        let read = read_polar(&form, resolve, "grad", None, None, &|_| None);
         assert_eq!(read.points, None);
         assert_eq!(read.errors, ["3. noktanın uzunluğu sıfırdan büyük olmalı."]);
         let form = polar(&[&[], &[], &[(READING, "0"), (DISTANCE, "10"), (ZENITH, "0")]]);
         assert_eq!(
-            read_polar(&form, resolve, "grad", None, None).errors,
+            read_polar(&form, resolve, "grad", None, None, &|_| None).errors,
             [
                 "3. noktanın başucu açısı yatay uzunluk bırakmıyor (0 ile yarım tur arasında olmalı)."
             ]
@@ -509,7 +524,7 @@ mod tests {
         let mut form = polar(&[&[(READING, "0"), (DISTANCE, "10")]]);
         form.station_z = "12a".to_owned();
         form.instrument_height = "x".to_owned();
-        let read = read_polar(&form, resolve, "grad", None, None);
+        let read = read_polar(&form, resolve, "grad", None, None, &|_| None);
         assert_eq!(read.points, None);
         assert_eq!(
             read.errors,
@@ -534,7 +549,7 @@ mod tests {
         ]]);
         form.station_z = "100".to_owned();
         form.instrument_height = "1,5".to_owned();
-        let read = read_polar(&form, resolve, "grad", None, None);
+        let read = read_polar(&form, resolve, "grad", None, None, &|_| None);
         assert!(read.errors.is_empty(), "{:?}", read.errors);
         assert_eq!(read.names, ["A"]);
         let points = read.points.expect("a point");

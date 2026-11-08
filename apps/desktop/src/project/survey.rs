@@ -387,6 +387,7 @@ mod tests {
                 }],
                 refraction,
                 grid: None,
+                undulations: None,
             })
             .expect("the core computes")
         };
