@@ -317,6 +317,7 @@ pub mod pipes_check;
 mod pipes_clearance;
 pub mod pipes_profile;
 pub mod asbuilt_check;
+mod asbuilt_package;
 pub mod field_package;
 pub mod zoning_check;
 pub mod scenarios_impact;

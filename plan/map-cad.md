@@ -49,7 +49,7 @@ sırayla alır.
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920 | iş türleri ve zaman serisi; dönen kaydın pakete eşlenmesi | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940 | işlem sürümü ve çıktı revizyonu; tariften başka projede üretim; iptal | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -1453,6 +1453,15 @@ kaynak özeti), `noktalar.csv` (Ad;Y;X;Z;Kimlik, yuvarlanmadan) ve `cizgiler.csv
 kontrolü penceresinde Saha paketi bölümü (kalite notları, Saha paketi yaz…). Açık: iş türleri ve zaman serisi, dönen
 kaydın paketle otomatik eşlenmesi, yetkili inceleme kaydı, altyapı ve yol varlıklarının kimlikleri, cihaz biçimleri,
 canlı cihaz.
+
+**8 Kasım 2026, üçüncü tur — dönen kaydın kendi paketiyle denetlenmesi ([ADR 2420](../docs/adr/2420-field-record-checked-with-its-package.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: TBC'nin dosya ile proje koordinat sistemi uyuşmazlığında kullanıcıya
+çözüm seçtirmesi, Trimble Access işlerinin kendi sistemini taşıması. Kanıtlanan: `cad.asbuilt.check`'e `package`:
+`saha-paketi.json`'ın özeti beklenen özet olur, sınırları girdi vermediyse uygulanır (kalite sınırı σ özniteliğiyle),
+sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır (dönüştürülmez, söylenir); 36 ortak durum, paketler
+Python'un zipfile'ıyla bayt bayt; MCP; Uygulama kontrolü'nde Kaydın saha paketi satırı. Açık: iş türleri ve zaman
+serisi, paketin eski tasarımıyla karşılaştırma, yetkili inceleme kaydı, varlık kimlikleri, cihaz biçimleri, canlı
+cihaz.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

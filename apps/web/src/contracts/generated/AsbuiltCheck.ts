@@ -8,8 +8,16 @@
  * digest the field record was made against.
  *
  * Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
- * attribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),
+ * attribute's name, `quality` without `qualityField`); the package's (docs/adr/2420; at `package`): `invalid_file_path`
+ * (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a field package; at `expectedDesign`:
+ * another digest than the package's); `layer_not_found` (`measured`, `design`, `lines`),
  * `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
  * (more than 100 000 measured points).
  */
-export type AsbuiltCheck = { measured: string, design?: string, surface?: string, lines?: string, field?: string, search?: number, horizontal?: number, vertical?: number, qualityField?: string, quality?: number, expectedDesign?: string, };
+export type AsbuiltCheck = { measured: string, design?: string, surface?: string, lines?: string, field?: string, search?: number, horizontal?: number, vertical?: number, qualityField?: string, quality?: number, expectedDesign?: string, 
+/**
+ * The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
+ * design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
+ * only with `qualityField`), its system, epoch and heights are set against the project's.
+ */
+package?: string, };

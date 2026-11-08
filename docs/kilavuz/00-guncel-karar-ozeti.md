@@ -184,6 +184,9 @@
 - **Paftada ölçme kalite notu (8 Kasım 2026; MAP-18, [ADR 2400](../../docs/adr/2400-sheet-survey-quality-note.md)).**
   `@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi` projenin GNSS arşivinden
   (`kentos_project::survey_facts`); arşivsiz projede baskı denetimi `survey_quality_missing` der. CAD + CBS.
+- **Dönen kaydın kendi saha paketiyle denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2420](../../docs/adr/2420-field-record-checked-with-its-package.md)).**
+  `cad.asbuilt.check`'in `package`'ı: özet beklenen olur, boş sınırlar paketten, sistem/epok/kot farkı söylenir
+  (dönüştürülmez). Harita + Yol + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

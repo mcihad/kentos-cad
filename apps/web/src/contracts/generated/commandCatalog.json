@@ -58961,7 +58961,7 @@
       "id": "cad.asbuilt.check",
       "version": 1,
       "title": "Uygulama kontrolü",
-      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Retler: invalid_asbuilt_check, layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
+      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch, sameHeights, sınırlar, taken). Retler: invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
       "aliases": [
         "uygulamakontrolu",
         "asbuilt",
@@ -58981,7 +58981,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`); the package's (docs/adr/2420; at `package`): `invalid_file_path`\n(empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a field package; at `expectedDesign`:\nanother digest than the package's); `layer_not_found` (`measured`, `design`, `lines`),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
           "design": {
             "type": [
@@ -59017,6 +59017,13 @@
           },
           "measured": {
             "type": "string"
+          },
+          "package": {
+            "description": "The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its\ndesign digest is the one expected, its acceptance limits apply where this input gives none (its quality limit\nonly with `qualityField`), its system, epoch and heights are set against the project's.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "quality": {
             "format": "double",
@@ -59110,6 +59117,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltPackage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The field package given (docs/adr/2420)."
           },
           "points": {
             "items": {
@@ -59209,6 +59227,17 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "package": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltPackage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The field package given (docs/adr/2420)."
+          },
           "points": {
             "items": {
               "$ref": "#/$defs/AsbuiltPoint"
@@ -59260,6 +59289,8 @@
       "capabilities": {
         "refusals": [
           "invalid_asbuilt_check",
+          "invalid_file_path",
+          "file_not_found",
           "layer_not_found",
           "not_a_road_project",
           "unknown_terrain",
@@ -113949,6 +113980,92 @@
       "required": [
         "uid",
         "name"
+      ],
+      "type": "object"
+    },
+    "AsbuiltPackage": {
+      "description": "The field package a check was given (docs/adr/2420): the file, its stamp, the drawing's revision and the design\ndigest it was written with; its system (`EPSG:5256`), epoch and heights in words and whether each is the project's\nnow; its acceptance limits (metres) and which of them the check took (`horizontal`, `vertical`, `quality`: those the\ninput did not give).",
+      "properties": {
+        "digest": {
+          "type": "string"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "epsg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "heights": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "path": {
+          "type": "string"
+        },
+        "quality": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "sameEpoch": {
+          "type": "boolean"
+        },
+        "sameHeights": {
+          "type": "boolean"
+        },
+        "sameSystem": {
+          "type": "boolean"
+        },
+        "stamp": {
+          "type": "string"
+        },
+        "taken": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "path",
+        "stamp",
+        "revision",
+        "digest",
+        "sameSystem",
+        "sameEpoch",
+        "sameHeights"
       ],
       "type": "object"
     },

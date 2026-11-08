@@ -10,7 +10,8 @@
 //!
 //! The design's digest (its points' names, places and heights) is in the answer. A check given the digest the field
 //! record was made against says when the design has changed since, and still compares, so a record of an older design
-//! is never matched to a newer one silently. Nothing is written. The shared cases are
+//! is never matched to a newer one silently. Given the field package itself (docs/adr/2420), the check reads the digest,
+//! the acceptance limits and the system from it. Nothing is written. The shared cases are
 //! `fixtures/commands/v1/cad.asbuilt.check.json`.
 
 use serde::{Deserialize, Serialize};
@@ -42,7 +43,9 @@ pub const ASBUILT_FLAGS: [&str; 8] = [
 /// digest the field record was made against.
 ///
 /// Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
-/// attribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),
+/// attribute's name, `quality` without `qualityField`); the package's (docs/adr/2420; at `package`): `invalid_file_path`
+/// (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a field package; at `expectedDesign`:
+/// another digest than the package's); `layer_not_found` (`measured`, `design`, `lines`),
 /// `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
 /// (more than 100 000 measured points).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -86,6 +89,56 @@ pub struct AsbuiltCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_design: Option<String>,
+    /// The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
+    /// design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
+    /// only with `qualityField`), its system, epoch and heights are set against the project's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub package: Option<String>,
+}
+
+/// The field package a check was given (docs/adr/2420): the file, its stamp, the drawing's revision and the design
+/// digest it was written with; its system (`EPSG:5256`), epoch and heights in words and whether each is the project's
+/// now; its acceptance limits (metres) and which of them the check took (`horizontal`, `vertical`, `quality`: those the
+/// input did not give).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltPackage {
+    pub path: String,
+    pub stamp: String,
+    pub revision: String,
+    pub digest: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub epsg: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub heights: Option<String>,
+    pub same_system: bool,
+    pub same_epoch: bool,
+    pub same_heights: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub vertical: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub quality: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub taken: Vec<String>,
 }
 
 /// A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or
@@ -198,4 +251,8 @@ pub struct AsbuiltChecked {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_vertical: Option<f64>,
+    /// The field package given (docs/adr/2420).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub package: Option<AsbuiltPackage>,
 }

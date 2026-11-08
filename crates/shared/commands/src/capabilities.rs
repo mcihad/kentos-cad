@@ -2521,6 +2521,9 @@ const ENTRIES: &[Entry] = &[
         id: "cad.asbuilt.check",
         refusals: &[&[
             "invalid_asbuilt_check",
+            // The field package's (docs/adr/2420).
+            "invalid_file_path",
+            "file_not_found",
             "layer_not_found",
             "not_a_road_project",
             "unknown_terrain",

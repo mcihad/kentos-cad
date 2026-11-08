@@ -10,8 +10,8 @@
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltMissing, AsbuiltPoint, CommandResult, Entity,
-    Vec2,
+    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltMissing, AsbuiltPackage, AsbuiltPoint,
+    CommandResult, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
 
@@ -168,6 +168,39 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
 
 fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     asked(input)?;
+    // The field package the record was made with (docs/adr/2420): its digest expected, its limits where the input
+    // gives none (the quality limit only with the σ's attribute).
+    let package = input.package.as_deref().map(crate::asbuilt_package::read).transpose()?;
+    let mut taken: Vec<String> = Vec::new();
+    let effective;
+    let input = match &package {
+        Some(p) => {
+            if input.expected_design.as_deref().is_some_and(|e| e != p.digest) {
+                return Err(refuse(
+                    codes::INVALID_ASBUILT_CHECK,
+                    "Beklenen tasarım özeti saha paketininkinden farklı; yalnız paketi ya da yalnız özeti verin.".into(),
+                    "expectedDesign",
+                ));
+            }
+            let mut e = input.clone();
+            if e.horizontal.is_none() && p.horizontal.is_some() {
+                e.horizontal = p.horizontal;
+                taken.push("horizontal".into());
+            }
+            if e.vertical.is_none() && p.vertical.is_some() {
+                e.vertical = p.vertical;
+                taken.push("vertical".into());
+            }
+            if e.quality.is_none() && p.quality.is_some() && e.quality_field.is_some() {
+                e.quality = p.quality;
+                taken.push("quality".into());
+            }
+            e.expected_design = Some(p.digest.clone());
+            effective = e;
+            &effective
+        }
+        None => input,
+    };
     let layer = |id: &str, path: &str| {
         if doc.layers().get(id).is_some() {
             Ok(())
@@ -390,6 +423,25 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         rms_vertical: rms(sum_v, n_v),
         max_horizontal: max_h,
         max_vertical: max_v,
+        package: package.map(|p| {
+            let facts = kentos_project::facts::coordinate_facts(doc.settings());
+            AsbuiltPackage {
+                same_system: p.epsg.as_deref().unwrap_or("") == facts.epsg,
+                same_epoch: p.epoch == facts.epoch,
+                same_heights: p.heights.as_deref().unwrap_or("") == facts.heights,
+                path: p.path,
+                stamp: p.stamp,
+                revision: p.revision,
+                digest: p.digest,
+                epsg: p.epsg,
+                epoch: p.epoch,
+                heights: p.heights,
+                horizontal: p.horizontal,
+                vertical: p.vertical,
+                quality: p.quality,
+                taken,
+            }
+        }),
     })
 }
 

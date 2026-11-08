@@ -16742,11 +16742,16 @@ class AsbuiltCheck(_Model):
     digest the field record was made against.
 
     Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
-    attribute's name, `quality` without `qualityField`), `layer_not_found` (`measured`, `design`, `lines`),
+    attribute's name, `quality` without `qualityField`); the package's (docs/adr/2420; at `package`): `invalid_file_path`
+    (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a field package; at `expectedDesign`:
+    another digest than the package's); `layer_not_found` (`measured`, `design`, `lines`),
     `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
     (more than 100 000 measured points).
     Attributes:
         horizontal: Unit: length.
+        package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
+            design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
+            only with `qualityField`), its system, epoch and heights are set against the project's.
         quality: Unit: length.
         search: Unit: length.
         vertical: Unit: length.
@@ -16757,6 +16762,7 @@ class AsbuiltCheck(_Model):
     field: str | None | Unset = UNSET
     horizontal: float | None | Unset = UNSET
     lines: str | None | Unset = UNSET
+    package: str | None | Unset = UNSET
     quality: float | None | Unset = UNSET
     quality_field: str | None | Unset = UNSET
     search: float | None | Unset = UNSET
@@ -16776,6 +16782,8 @@ class AsbuiltCheck(_Model):
             out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
         if self.lines is not UNSET:
             out["lines"] = self.lines
+        if self.package is not UNSET:
+            out["package"] = self.package
         if self.quality is not UNSET:
             out["quality"] = None if self.quality is None else float(self.quality)
         if self.quality_field is not UNSET:
@@ -16797,6 +16805,7 @@ class AsbuiltCheck(_Model):
             field=data.get("field", UNSET),
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
             lines=data.get("lines", UNSET),
+            package=data.get("package", UNSET),
             quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
             quality_field=data.get("qualityField", UNSET),
             search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
@@ -16818,6 +16827,7 @@ class AsbuiltChecked(_Model):
         low_quality: Unit: count.
         max_horizontal: Unit: length.
         max_vertical: Unit: length.
+        package: The field package given (docs/adr/2420).
         rms_horizontal: Unit: length.
         rms_vertical: Unit: length.
     """
@@ -16832,6 +16842,7 @@ class AsbuiltChecked(_Model):
     design_changed: bool | Unset = UNSET
     max_horizontal: float | None | Unset = UNSET
     max_vertical: float | None | Unset = UNSET
+    package: AsbuiltPackage | None | Unset = UNSET
     rms_horizontal: float | None | Unset = UNSET
     rms_vertical: float | None | Unset = UNSET
 
@@ -16851,6 +16862,8 @@ class AsbuiltChecked(_Model):
             out["maxHorizontal"] = None if self.max_horizontal is None else float(self.max_horizontal)
         if self.max_vertical is not UNSET:
             out["maxVertical"] = None if self.max_vertical is None else float(self.max_vertical)
+        if self.package is not UNSET:
+            out["package"] = None if self.package is None else self.package.to_json()
         if self.rms_horizontal is not UNSET:
             out["rmsHorizontal"] = None if self.rms_horizontal is None else float(self.rms_horizontal)
         if self.rms_vertical is not UNSET:
@@ -16871,6 +16884,7 @@ class AsbuiltChecked(_Model):
             design_changed=data.get("designChanged", UNSET),
             max_horizontal=UNSET if "maxHorizontal" not in data else None if data["maxHorizontal"] is None else float(data["maxHorizontal"]),
             max_vertical=UNSET if "maxVertical" not in data else None if data["maxVertical"] is None else float(data["maxVertical"]),
+            package=UNSET if "package" not in data else None if data["package"] is None else AsbuiltPackage.from_json(data["package"]),
             rms_horizontal=UNSET if "rmsHorizontal" not in data else None if data["rmsHorizontal"] is None else float(data["rmsHorizontal"]),
             rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
         )
@@ -16893,6 +16907,78 @@ class AsbuiltMissing(_Model):
         return cls(
             uid=data["uid"],
             name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltPackage(_Model):
+    """The field package a check was given (docs/adr/2420): the file, its stamp, the drawing's revision and the design
+    digest it was written with; its system (`EPSG:5256`), epoch and heights in words and whether each is the project's
+    now; its acceptance limits (metres) and which of them the check took (`horizontal`, `vertical`, `quality`: those the
+    input did not give).
+    Attributes:
+        epoch: Unit: year.
+        horizontal: Unit: length.
+        quality: Unit: length.
+        vertical: Unit: length.
+    """
+    path: str
+    stamp: str
+    revision: str
+    digest: str
+    same_system: bool
+    same_epoch: bool
+    same_heights: bool
+    epoch: float | None | Unset = UNSET
+    epsg: str | None | Unset = UNSET
+    heights: str | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
+    quality: float | None | Unset = UNSET
+    taken: list[str] | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["stamp"] = self.stamp
+        out["revision"] = self.revision
+        out["digest"] = self.digest
+        out["sameSystem"] = self.same_system
+        out["sameEpoch"] = self.same_epoch
+        out["sameHeights"] = self.same_heights
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.heights is not UNSET:
+            out["heights"] = self.heights
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.quality is not UNSET:
+            out["quality"] = None if self.quality is None else float(self.quality)
+        if self.taken is not UNSET:
+            out["taken"] = list(self.taken)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltPackage:
+        return cls(
+            path=data["path"],
+            stamp=data["stamp"],
+            revision=data["revision"],
+            digest=data["digest"],
+            same_system=data["sameSystem"],
+            same_epoch=data["sameEpoch"],
+            same_heights=data["sameHeights"],
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            epsg=data.get("epsg", UNSET),
+            heights=data.get("heights", UNSET),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
+            taken=list(data["taken"]) if "taken" in data else UNSET,
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
 
@@ -128359,6 +128445,7 @@ __all__ = [
     "AsbuiltCheck",
     "AsbuiltChecked",
     "AsbuiltMissing",
+    "AsbuiltPackage",
     "AsbuiltPoint",
     "AssetCounts",
     "AssetKind",

@@ -283,6 +283,7 @@ __all__ = [
     "AsbuiltCheck",
     "AsbuiltChecked",
     "AsbuiltMissing",
+    "AsbuiltPackage",
     "AsbuiltPoint",
     "AssetCounts",
     "AssetKind",

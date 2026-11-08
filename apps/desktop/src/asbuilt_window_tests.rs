@@ -2,7 +2,8 @@
 //! window opens on the measured layer, the design points, the kerb and the design surface guessed by their names, no
 //! limit; the cases' limits typed in the form give the shared case's counts; a limit that is no number is said;
 //! Dışındakileri seç selects the points not within; CSV kaydet writes the table; nothing is written to the drawing.
-//! Harita, Yol and GIS offer it, Mimari does not. And its pictures.
+//! Harita, Yol and GIS offer it, Mimari does not. The returned record's field package gives the design digest and the
+//! limits the form leaves empty (docs/adr/2420). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -166,6 +167,74 @@ fn screens() {
         let _ = app.update(Message::RibbonTab("survey"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-serit-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
+fn fixture(rel: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures").join(rel)
+}
+
+/// docs/adr/2420: the record's package chosen with the form's limits empty gives the shared case's answer (its
+/// horizontal and vertical limits taken, its quality limit not without the σ's attribute); the older package says the
+/// design changed and its other system; Paketi kaldır takes it out.
+#[test]
+fn the_record_s_package_gives_the_digest_and_the_limits() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("asbuilt.check"));
+    let _ = app.update(Message::Asbuilt(A::Search("0,5".into())));
+    let _ = app.update(Message::Asbuilt(A::PickedPackage(Some(fixture("asbuilt/v1/files/saha-paketi.zip")))));
+    let r = serde_json::to_value(app.asbuilt.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "paket: σ özniteliği olmadan kalite sınırı alınmaz").cloned().expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    for key in ["within", "outside", "unmatched", "ambiguous", "lowQuality"] {
+        assert_eq!(r[key], want[key], "{key}");
+    }
+    assert_eq!(r["package"]["taken"], want["package"]["taken"]);
+    assert_eq!(r["package"]["sameSystem"], true);
+    assert!(r.get("designChanged").is_none_or(|v| v == false));
+    let _ = app.update(Message::Asbuilt(A::PickedPackage(Some(fixture("asbuilt/v1/files/eski-paket.zip")))));
+    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let p = r.package.clone().expect("the package");
+    assert!(r.design_changed && !p.same_system && !p.same_epoch && !p.same_heights);
+    let _ = app.update(Message::Asbuilt(A::DropPackage));
+    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert!(r.package.is_none() && !r.design_changed);
+}
+
+/// `.run/gui-evidence/saha-paketi-donus-2420/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib asbuilt_window_tests::package_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn package_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/saha-paketi-donus-2420");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name, file) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis", "asbuilt/v1/files/saha-paketi.zip"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar", "asbuilt/v1/files/eski-paket.zip"),
+    ] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("asbuilt.check"));
+        for e in [A::Search("0,5".into()), A::QualityField("Hassasiyet".into())] {
+            let _ = app.update(Message::Asbuilt(e));
+        }
+        let _ = app.update(Message::Asbuilt(A::PickedPackage(Some(fixture(file)))));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-paketle-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

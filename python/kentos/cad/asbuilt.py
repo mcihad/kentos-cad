@@ -35,7 +35,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
     arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen
     denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır;
     expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni
-    tasarıma sessizce bağlanmaz. Retler: invalid_asbuilt_check, layer_not_found,
+    tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i,
+    mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları
+    girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot
+    sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
+    sameSystem, sameEpoch, sameHeights, sınırlar, taken). Retler: invalid_asbuilt_check,
+    invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found,
     not_a_road_project, unknown_terrain, terrain_unbuildable.
     """
     __slots__ = ()
@@ -58,6 +63,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
+        package: str | None | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -81,8 +87,13 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti
         (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve
         tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce
-        bağlanmaz. Retler: invalid_asbuilt_check, layer_not_found, not_a_road_project,
-        unknown_terrain, terrain_unbuildable.
+        bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR
+        2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse
+        uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi
+        projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
+        sameSystem, sameEpoch, sameHeights, sınırlar, taken). Retler: invalid_asbuilt_check,
+        invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found,
+        not_a_road_project, unknown_terrain, terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
@@ -92,6 +103,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             field:
             horizontal: Unit: length.
             lines:
+            package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
+                design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
+                only with `qualityField`), its system, epoch and heights are set against the project's.
             quality: Unit: length.
             quality_field:
             search: Unit: length.
@@ -116,6 +130,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             field=field,
             horizontal=horizontal,
             lines=lines,
+            package=package,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -134,6 +149,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
+        package: str | None | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -150,6 +166,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             field=field,
             horizontal=horizontal,
             lines=lines,
+            package=package,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -168,6 +185,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
+        package: str | None | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -184,6 +202,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             field=field,
             horizontal=horizontal,
             lines=lines,
+            package=package,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -202,6 +221,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
+        package: str | None | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -223,6 +243,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             field=field,
             horizontal=horizontal,
             lines=lines,
+            package=package,
             quality=quality,
             quality_field=quality_field,
             search=search,

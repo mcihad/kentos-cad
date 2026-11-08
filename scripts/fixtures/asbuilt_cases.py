@@ -34,6 +34,8 @@ from pathlib import Path
 sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.asbuilt.check.json"
+# The field packages of docs/adr/2420, written here with Python's zipfile (no KentOS code).
+PACKAGES = ROOT / "fixtures" / "asbuilt" / "v1" / "files"
 X0, Y0 = 487000.0, 4420000.0
 W = 1e-6
 FLAGS = ["proposed", "outsideHorizontal", "outsideVertical", "outsideSurface", "outsideLine", "lowQuality",
@@ -154,6 +156,77 @@ def signed(p, a, b):
     t = 0.0 if l2 == 0 else max(0.0, min(1.0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2))
     d = math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy)
     return -d if dx * (p[1] - a[1]) - dy * (p[0] - a[0]) < 0 else d
+
+
+# ── The field packages (docs/adr/2420) ─────────────────────────────────────────────────────────────────────────────
+def package_manifest(digest_, epsg, epoch, heights, acceptance, stamp, revision):
+    """`saha-paketi.json` as `cad.field.package` writes it (docs/adr/1920 §1)."""
+    return {"format": "kentos.field-package", "version": 1, "project": "Uygulama", "stamp": stamp,
+            "revision": revision, "designDigest": digest_,
+            "system": {"epsg": epsg, "name": None if epsg is None else "TUREF / TM36" if epsg == "EPSG:5256" else epsg},
+            "epoch": epoch, "heights": heights, "acceptance": acceptance, "notes": ["Kontrol noktası K1'den başlayın."],
+            "surface": None, "points": len(DESIGN), "lines": len(LINES),
+            "files": ["saha-paketi.json", "noktalar.csv", "cizgiler.csv"]}
+
+
+# The package of this design (the limits FULL gives), and one of an older design in another system.
+CURRENT = package_manifest(None, "EPSG:5256", None, None, {"horizontal": 0.02, "vertical": 0.03, "quality": 0.05},
+                           "2026-11-08T09:00:00", "12")
+OLDER = package_manifest("0" * 64, "EPSG:2320", 2005.0, "Ortometrik yükseklik", {"horizontal": 0.06},
+                         "2026-10-01T08:30:00", "7")
+
+
+def zipped(entries):
+    """A deterministic .zip of (name, text) entries: a fixed date, stored (no zlib version in the bytes)."""
+    import io
+    import zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w") as z:
+        for name, text in entries:
+            info = zipfile.ZipInfo(name, date_time=(2026, 11, 8, 9, 0, 0))
+            info.compress_type = zipfile.ZIP_STORED
+            z.writestr(info, text.encode("utf-8"))
+    return buf.getvalue()
+
+
+def package_files():
+    """The fixture files: the current package, the older one, and a zip that is not a package."""
+    points = "Ad;Y;X;Z;Kimlik\n" + "".join(f"{n};{X0 + x};{Y0 + y};{z};{u}\n" for (n, x, y, z), u in
+                                         zip(DESIGN, ids()[0]))
+    current = dict(CURRENT, designDigest=digest())
+    return {
+        "saha-paketi.zip": zipped([("saha-paketi.json", json.dumps(current, ensure_ascii=False, indent=2)),
+                                   ("noktalar.csv", points), ("cizgiler.csv", "Kimlik;Sıra;Y;X;Bulge\n")]),
+        "eski-paket.zip": zipped([("saha-paketi.json", json.dumps(OLDER, ensure_ascii=False, indent=2)),
+                                  ("noktalar.csv", points), ("cizgiler.csv", "Kimlik;Sıra;Y;X;Bulge\n")]),
+        "paket-degil.zip": zipped([("notlar.txt", "Saha notları\n")]),
+    }
+
+
+def package_block(manifest, i, path):
+    """The answer's `package`: the file, its stamp, revision and digest, its system against the project's (EPSG:5256,
+    no epoch, no heights), its limits and which the check took (those the input did not give; quality only with
+    qualityField)."""
+    acc = manifest["acceptance"]
+    out = {"path": path, "stamp": manifest["stamp"], "revision": manifest["revision"],
+           "digest": manifest["designDigest"]}
+    if manifest["system"]["epsg"] is not None:
+        out["epsg"] = manifest["system"]["epsg"]
+    if manifest["epoch"] is not None:
+        out["epoch"] = manifest["epoch"]
+    if manifest["heights"] is not None:
+        out["heights"] = manifest["heights"]
+    out["sameSystem"] = manifest["system"]["epsg"] == "EPSG:5256"
+    out["sameEpoch"] = manifest["epoch"] is None
+    out["sameHeights"] = manifest["heights"] is None
+    for k in ("horizontal", "vertical", "quality"):
+        if k in acc:
+            out[k] = acc[k]
+    taken = [k for k in ("horizontal", "vertical", "quality") if k in acc and k not in i
+             and (k != "quality" or "qualityField" in i)]
+    if taken:
+        out["taken"] = taken
+    return out
 
 
 def report(design=True, surface=True, lines=True, search=None, horizontal=None, vertical=None, quality=None,
@@ -281,9 +354,19 @@ def inp(**over):
 
 
 def answer(i):
-    return report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
-                  horizontal=i.get("horizontal"), vertical=i.get("vertical"), quality=i.get("quality"),
-                  expected=i.get("expectedDesign"), quality_field="qualityField" in i)
+    pkg = i.get("package")
+    if pkg is None:
+        return report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
+                      horizontal=i.get("horizontal"), vertical=i.get("vertical"), quality=i.get("quality"),
+                      expected=i.get("expectedDesign"), quality_field="qualityField" in i)
+    manifest = dict(CURRENT, designDigest=digest()) if pkg.endswith("saha-paketi.zip") else OLDER
+    acc = manifest["acceptance"]
+    pick = lambda k: i.get(k, acc.get(k)) if k != "quality" or "qualityField" in i else i.get(k)
+    out = report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
+                 horizontal=pick("horizontal"), vertical=pick("vertical"), quality=pick("quality"),
+                 expected=manifest["designDigest"], quality_field="qualityField" in i)
+    out["package"] = package_block(manifest, i, pkg)
+    return out
 
 
 def ok(name, i, op="plan", setup_=None):
@@ -357,6 +440,42 @@ def cases():
                 "surface"),
         refused("kurulamayan yüzey", inp(surface="Boş"), "terrain_unbuildable", "$any", None),
         refused("CBS projesinde yüzey", FULL, NOT_MAP[0], NOT_MAP[1], None, setup_=setup("gis")),
+    ] + package_cases()
+
+
+PKG = "$fixture:asbuilt/v1/files/saha-paketi.zip"
+OLD_PKG = "$fixture:asbuilt/v1/files/eski-paket.zip"
+
+
+def package_cases():
+    """docs/adr/2420: the record checked with the field package it was made with."""
+    same = answer(inp(horizontal=None, vertical=None, quality=None, package=PKG))
+    full = answer(FULL)
+    assert {k: v for k, v in same.items() if k != "package"} == full, "the package's limits are FULL's"
+    older = answer(inp(horizontal=None, vertical=None, quality=None, package=OLD_PKG))
+    assert older["designChanged"] and not older["package"]["sameSystem"]
+    bad = "invalid_asbuilt_check"
+    return [
+        ok("paket: tasarım özeti ve kabul sınırları paketten", inp(horizontal=None, vertical=None, quality=None,
+                                                                   package=PKG)),
+        ok("paket: girdinin sınırı paketinkinden önce gelir", inp(horizontal=0.06, vertical=None, quality=None,
+                                                                  package=PKG)),
+        ok("paket: σ özniteliği olmadan kalite sınırı alınmaz", inp(horizontal=None, vertical=None, quality=None,
+                                                                    qualityField=None, package=PKG)),
+        ok("paket: eski tasarımın paketi, başka sistem, epok ve kot", inp(horizontal=None, vertical=None, quality=None,
+                                                                         package=OLD_PKG)),
+        ok("paket: aynı beklenen özetle", inp(package=PKG, expectedDesign=digest())),
+        refused("paket: göreli yol", inp(package="saha-paketi.zip"), "invalid_file_path",
+                "Saha paketinin yolu boş ya da göreli; mutlak bir .zip yolu verin.", "package"),
+        refused("paket: .zip değil", inp(package="$fixture:asbuilt/v1/files/saha-paketi.json"), "invalid_file_path",
+                "$any", "package"),
+        refused("paket: olmayan dosya", inp(package="$fixture:asbuilt/v1/files/yok.zip"), "file_not_found", "$any",
+                "package"),
+        refused("paket: saha paketi olmayan zip", inp(package="$fixture:asbuilt/v1/files/paket-degil.zip"), bad, "$any",
+                "package"),
+        refused("paket: beklenen özet paketinkinden farklı", inp(package=PKG, expectedDesign="0" * 64), bad,
+                "Beklenen tasarım özeti saha paketininkinden farklı; yalnız paketi ya da yalnız özeti verin.",
+                "expectedDesign"),
     ]
 
 
@@ -364,13 +483,19 @@ def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.asbuilt.check", "commandVersion": 1,
            "title": "Uygulama kontrolü",
            "note": "ADR 1700. Bağımsız başvuru scripts/fixtures/asbuilt_cases.py: tasarım yüzeyi düzlem, eşleme, farklar, "
-                   "işaretli dik uzaklık, durum ve özet elle; KentOS kodu yok. Toleranslar durumların kendi değerleridir.",
+                   "işaretli dik uzaklık, durum ve özet elle; KentOS kodu yok. Toleranslar durumların kendi değerleridir. "
+                   "ADR 2420: saha paketleri fixtures/asbuilt/v1/files altında Python'un zipfile'ıyla yazılır.",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+    files = package_files()
     if "--check" in sys.argv[1:]:
-        ok_ = OUT.exists() and OUT.read_text("utf-8") == text
+        ok_ = OUT.exists() and OUT.read_text("utf-8") == text and all(
+            (PACKAGES / n).exists() and (PACKAGES / n).read_bytes() == b for n, b in files.items())
         print("Uygulama kontrolü ortak durumları güncel." if ok_ else f"{OUT.relative_to(ROOT)} güncel değil.")
         return 0 if ok_ else 1
+    PACKAGES.mkdir(parents=True, exist_ok=True)
+    for n, b in files.items():
+        (PACKAGES / n).write_bytes(b)
     OUT.write_text(text, "utf-8")
     print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(doc['cases'])} durum)")
     return 0

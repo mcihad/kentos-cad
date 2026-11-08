@@ -33,6 +33,9 @@ const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 const SELECT: &str = "Dışındakileri seç";
 const PACKAGE: &str = "Saha paketi yaz…";
+/// The returned record's field package (docs/adr/2420): chosen, and taken out.
+const PICK_PACKAGE: &str = "Paketi seç…";
+const DROP_PACKAGE: &str = "Paketi kaldır";
 /// The choice that leaves a layer or the surface out.
 const NONE: &str = "";
 
@@ -73,6 +76,8 @@ pub struct State {
     pub answer: Option<Result<AsbuiltChecked, String>>,
     /// The package's quality notes, a line each.
     pub notes: text_editor::Content,
+    /// The field package the measured record was made with (docs/adr/2420); empty: none.
+    pub record_package: String,
 }
 
 #[derive(Clone, Debug)]
@@ -94,6 +99,10 @@ pub enum Event {
     Notes(text_editor::Action),
     Package,
     Packaged(Option<PathBuf>),
+    /// The returned record's package (docs/adr/2420).
+    PickPackage,
+    PickedPackage(Option<PathBuf>),
+    DropPackage,
     Close,
 }
 
@@ -174,6 +183,51 @@ pub fn csv(r: &AsbuiltChecked) -> String {
     out
 }
 
+/// The package's file name, or nothing.
+fn package_name(path: &str) -> &str {
+    std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or("")
+}
+
+/// What the check took from the record's package (docs/adr/2420): its stamp and revision, the limits it gave, and the
+/// system, epoch or heights it was written for when they are not the project's.
+fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Format) -> Vec<Element<'static, Message>> {
+    let mut out = Vec::new();
+    let limit = |k: &str| match k {
+        "horizontal" => p.horizontal.map(|v| format!("yatay {}", f.length(v))),
+        "vertical" => p.vertical.map(|v| format!("düşey {}", f.length(v))),
+        _ => p.quality.map(|v| format!("kalite {}", f.length(v))),
+    };
+    let taken: Vec<String> = p.taken.iter().filter_map(|k| limit(k)).collect();
+    out.push(words::text_line(
+        Kind::Info,
+        format!(
+            "Saha paketi {} (revizyon {}): {}; tasarım özeti paketten.",
+            p.stamp.replace('T', " "),
+            p.revision,
+            if taken.is_empty() { "sınırlar girdinin".to_owned() } else { format!("paketten {}", taken.join(", ")) }
+        ),
+    ));
+    if !p.same_system {
+        out.push(words::text_line(
+            Kind::Warn,
+            format!("Paket {} için yazılmış; projenin sistemi başka.", p.epsg.as_deref().unwrap_or("sistemsiz bir proje")),
+        ));
+    }
+    if !p.same_epoch {
+        out.push(words::text_line(
+            Kind::Warn,
+            format!("Paketin epoku {}; projeninki başka.", p.epoch.map_or("yok".to_owned(), |e| format!("{e}"))),
+        ));
+    }
+    if !p.same_heights {
+        out.push(words::text_line(
+            Kind::Warn,
+            format!("Paketin kot sistemi “{}”; projeninki başka.", p.heights.as_deref().unwrap_or("yok")),
+        ));
+    }
+    out
+}
+
 impl App {
     fn asbuilt_input(&self) -> Result<AsbuiltCheck, String> {
         let s = &self.asbuilt;
@@ -189,6 +243,7 @@ impl App {
             quality_field: opt(&s.quality_field),
             quality: limit(&s.quality, "Kalite sınırı")?,
             expected_design: None,
+            package: opt(&s.record_package),
         })
     }
 
@@ -392,6 +447,22 @@ impl App {
                 return Task::none();
             }
             Event::Packaged(None) => return Task::none(),
+            Event::PickPackage => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title("Kaydın saha paketi")
+                            .add_filter("Saha paketi (.zip)", &["zip"])
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |p| msg(Event::PickedPackage(p)),
+                );
+            }
+            Event::PickedPackage(Some(path)) => s.record_package = path.display().to_string(),
+            Event::PickedPackage(None) => return Task::none(),
+            Event::DropPackage => s.record_package.clear(),
             Event::Close => {
                 self.asbuilt = State::default();
                 self.dialog = None;
@@ -442,6 +513,16 @@ impl App {
                     container(fields::select_owned(with_none(&s.line_layers), &s.lines, |v| msg(Event::Lines(v)))).width(200),
                     label::caption("Yüzey"),
                     container(fields::select_owned(with_none(&s.surfaces), &s.surface, |v| msg(Event::Surface(v)))).width(160)
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            .field(
+                "Kaydın saha paketi",
+                row![
+                    container(fields::input(None, "—", package_name(&s.record_package), false, false)).width(200),
+                    words::secondary(PICK_PACKAGE, Some(msg(Event::PickPackage))),
+                    words::secondary(DROP_PACKAGE, (!s.record_package.is_empty()).then(|| msg(Event::DropPackage)))
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -512,6 +593,9 @@ impl App {
                 if r.design_changed {
                     lines.push(words::text_line(Kind::Error, "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş."));
                 }
+                if let Some(p) = &r.package {
+                    lines.extend(package_lines(p, &f));
+                }
                 if !r.missing.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
@@ -568,6 +652,8 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
             Control::Press(PACKAGE) => Some(msg(Event::Package)),
+            Control::Press(PICK_PACKAGE) => Some(msg(Event::PickPackage)),
+            Control::Press(DROP_PACKAGE) => Some(msg(Event::DropPackage)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
