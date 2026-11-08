@@ -22,6 +22,11 @@
 //! linked or embedded; a database table copied is written as a GeoPackage of the rows its link reads. What a licence
 //! or an access rule keeps out is named in `leaveOut`: a link (its layer's objects go out with it), an object's files
 //! or an external reference's source.
+//!
+//! Asked (`exchange`, docs/adr/2780), the package delivers its project in open exchange formats too: each written by
+//! KentOS's writer into `devir/` and read back there as `file.exchange.check` does, so the losses said are those of the
+//! very file delivered; the support matrix and every format's check go into the answer and `paket.json`, the matrix in
+//! words into `devir/devir-raporu.csv`. The project file stays the source; the open files are what it becomes.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -35,9 +40,11 @@ pub const MAX_PACKAGE_NAME: usize = 255;
 
 /// Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
 /// `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
-/// `invalid_input` (a `leaveOut` entry that names nothing), `source_unreachable`, `source_changed` and
-/// `input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what
-/// was not copied, each said).
+/// `invalid_input` (a `leaveOut` entry that names nothing), `invalid_tolerance` (`exchange.tolerance`) and
+/// `layer_not_found` (`exchange.layers[i]`), `source_unreachable`, `source_changed` and `input_too_large` (a database
+/// table copied, docs/adr/0596 §2), a format's writer's own refusal and `exchange_unreadable` (`exchange.formats[i]`),
+/// `file_unwritable`. Warnings: `package_left` (what was not copied, each said), `export_losses` (what the open files
+/// lose, docs/adr/2780).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -72,6 +79,12 @@ pub struct PackageProject {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub leave_out: Vec<String>,
+    /// The open exchange formats the package delivers its project in (docs/adr/2780), as `file.exchange.matrix` asks
+    /// them (`formats` empty: all six; `layers`, `tolerance`): each written into `devir/<name>.<extension>`, the
+    /// matrix and the checks carried. None: no open file.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub exchange: Option<crate::ExchangeMatrix>,
 }
 
 /// How a bound layer's source goes into a package (docs/adr/0596 §1).
@@ -116,6 +129,9 @@ pub enum PackagedKind {
     Mapping,
     /// A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
     WorkFile,
+    /// The project in an open exchange format, written by KentOS's writer, or the matrix's report (docs/adr/2780):
+    /// `devir/…`, its `from` the command that wrote it.
+    Exchange,
 }
 
 /// A file copied into the package.
@@ -317,6 +333,11 @@ pub struct ProjectPackaged {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageResource>>", optional))]
     pub resources: Vec<PackageResource>,
+    /// The open files' support matrix and checks (docs/adr/2780): what each format delivered keeps, approximates,
+    /// converts, adds or loses of the project. None: none asked.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub exchange: Option<crate::ExchangeMatrixed>,
     /// Every byte written: the project file, the manifest and the copies.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,

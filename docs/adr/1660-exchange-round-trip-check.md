@@ -115,7 +115,8 @@ denetimi** oldu; komutun kimliği (`file.exchange.check`) ve davranışı deği�
 ## Sonra
 
 - Blok, ilişki ve tablo nesnelerinin aynı denetimle sınanması.
-- Teslim paketinin (çizim, bağlı kaynaklar, profil/ızgara bilgisi, kayıp raporu) bu raporu taşıması.
+- Teslim paketinin (çizim, bağlı kaynaklar, profil/ızgara bilgisi, kayıp raporu) bu raporu taşıması. Kayıp raporu ve
+  açık dosyalar [ADR 2780](2780-delivery-package-open-files.md)'de; ızgara bilgisi açık.
 - Kaynak–türev çatışmasının geri almada denetimi.
 - LandXML ve IFC alt modelleri.
 - Kurum profillerine göre biçim önerisi.

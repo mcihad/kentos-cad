@@ -590,6 +590,7 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
         manifest_sha256: "0".repeat(64),
         faces: Vec::new(),
         resources: Vec::new(),
+        exchange: None,
         bytes: 10,
     };
     let warning = kentos_commands::CommandWarning {

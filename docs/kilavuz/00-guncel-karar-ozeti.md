@@ -197,6 +197,10 @@
 - **Dışa aktarma denetiminde bloklar, tablolar ve ilişkiler (8 Kasım 2026; MAP-17, [ADR 2380](../../docs/adr/2380-exchange-blocks-tables-relations.md)).**
   `file.exchange.check` blok tanımı ve ilişki olmadan kurulan kopyaya okur; blockChanged, tableChanged, relationLost;
   matriste Bloklar, Tablolar, İlişkiler. DXF tabloyu KentOS XDATA'sıyla taşır, başka program çizgi ve yazı görür.
+- **Teslim paketinde devir dosyaları (8 Kasım 2026; MAP-17, [ADR 2780](../../docs/adr/2780-delivery-package-open-files.md)).**
+  `file.package`'ın `exchange`'i: paketin nesneleri açık biçimlerde `devir/`'e, her dosya teslim edildiği hâliyle geri
+  okunur; matris ve denetimler cevapta ve `paket.json`'da, Türkçesi `devir/devir-raporu.csv`'de (sözler
+  `kentos_commands::exchange_words`'te ortak); Paketle'de Devir dosyaları. CAD + CBS.
 - **Paftada ölçme kalite notu (8 Kasım 2026; MAP-18, [ADR 2400](../../docs/adr/2400-sheet-survey-quality-note.md)).**
   `@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi` projenin GNSS arşivinden
   (`kentos_project::survey_facts`); arşivsiz projede baskı denetimi `survey_quality_missing` der. CAD + CBS.

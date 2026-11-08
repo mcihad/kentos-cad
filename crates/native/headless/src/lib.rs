@@ -46,6 +46,8 @@ pub mod recover;
 mod sheet_resources;
 mod sheet_preflight;
 mod delivery_integrity;
+/// The delivery package's open files and their losses (docs/adr/2780).
+pub mod package_exchange;
 mod package_resources;
 mod package_sources;
 mod query;

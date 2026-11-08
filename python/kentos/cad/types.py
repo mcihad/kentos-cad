@@ -4642,6 +4642,7 @@ class PackagedKind(_StrEnum):
     - ``profile``: A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).
     - ``mapping``: An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
     - ``workFile``: A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
+    - ``exchange``: The project in an open exchange format, written by KentOS's writer, or the matrix's report (docs/adr/2780):
     """
     SOURCE = "source"
     PICTURE = "picture"
@@ -4653,9 +4654,10 @@ class PackagedKind(_StrEnum):
     PROFILE = "profile"
     MAPPING = "mapping"
     WORK_FILE = "workFile"
+    EXCHANGE = "exchange"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping", "workFile"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping", "workFile", "exchange"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 
@@ -61836,13 +61838,18 @@ class PackagePoint(_Model):
 class PackageProject(_Model):
     """Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
     `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
-    `invalid_input` (a `leaveOut` entry that names nothing), `source_unreachable`, `source_changed` and
-    `input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what
-    was not copied, each said).
+    `invalid_input` (a `leaveOut` entry that names nothing), `invalid_tolerance` (`exchange.tolerance`) and
+    `layer_not_found` (`exchange.layers[i]`), `source_unreachable`, `source_changed` and `input_too_large` (a database
+    table copied, docs/adr/0596 §2), a format's writer's own refusal and `exchange_unreadable` (`exchange.formats[i]`),
+    `file_unwritable`. Warnings: `package_left` (what was not copied, each said), `export_losses` (what the open files
+    lose, docs/adr/2780).
     Attributes:
         path: The folder to make, an absolute path; it must not be there, or be an empty folder.
         databases: How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
             into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
+        exchange: The open exchange formats the package delivers its project in (docs/adr/2780), as `file.exchange.matrix` asks
+            them (`formats` empty: all six; `layers`, `tolerance`): each written into `devir/<name>.<extension>`, the
+            matrix and the checks carried. None: no open file.
         from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
             a relative link is not found (the drawing was never saved).
         geopackages: How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
@@ -61855,6 +61862,7 @@ class PackageProject(_Model):
     """
     path: str
     databases: PackageWay | PackageWayName | None | Unset = UNSET
+    exchange: ExchangeMatrix | None | Unset = UNSET
     from_: str | None | Unset = UNSET
     geopackages: PackageWay | PackageWayName | None | Unset = UNSET
     leave_out: list[str] | Unset = UNSET
@@ -61865,6 +61873,8 @@ class PackageProject(_Model):
         out["path"] = self.path
         if self.databases is not UNSET:
             out["databases"] = None if self.databases is None else _enum_out(self.databases)
+        if self.exchange is not UNSET:
+            out["exchange"] = None if self.exchange is None else self.exchange.to_json()
         if self.from_ is not UNSET:
             out["from"] = self.from_
         if self.geopackages is not UNSET:
@@ -61880,6 +61890,7 @@ class PackageProject(_Model):
         return cls(
             path=data["path"],
             databases=UNSET if "databases" not in data else None if data["databases"] is None else _enum_in(PackageWay, data["databases"]),
+            exchange=UNSET if "exchange" not in data else None if data["exchange"] is None else ExchangeMatrix.from_json(data["exchange"]),
             from_=data.get("from", UNSET),
             geopackages=UNSET if "geopackages" not in data else None if data["geopackages"] is None else _enum_in(PackageWay, data["geopackages"]),
             leave_out=list(data["leaveOut"]) if "leaveOut" in data else UNSET,
@@ -73650,6 +73661,8 @@ class ProjectPackaged(_Model):
         manifest: The manifest, `paket.json` in the folder, and its SHA-256.
         bytes: Every byte written: the project file, the manifest and the copies. Unit: bytes.
         embedded: The links embedded (docs/adr/0596 §1).
+        exchange: The open files' support matrix and checks (docs/adr/2780): what each format delivered keeps, approximates,
+            converts, adds or loses of the project. None: none asked.
         faces: The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
         resources: Every typeface, SHX shape file, line type, hatch pattern and plot style the drawing and its references need,
             and how the package has each (docs/adr/1111): kind, then name.
@@ -73663,6 +73676,7 @@ class ProjectPackaged(_Model):
     manifest_sha256: str
     bytes: int
     embedded: list[PackageEmbedded] | Unset = UNSET
+    exchange: ExchangeMatrixed | None | Unset = UNSET
     faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
     resources: list[PackageResource] | Unset = UNSET
@@ -73679,6 +73693,8 @@ class ProjectPackaged(_Model):
         out["bytes"] = self.bytes
         if self.embedded is not UNSET:
             out["embedded"] = [e0.to_json() for e0 in self.embedded]
+        if self.exchange is not UNSET:
+            out["exchange"] = None if self.exchange is None else self.exchange.to_json()
         if self.faces is not UNSET:
             out["faces"] = [_enum_out(e0) for e0 in self.faces]
         if self.left is not UNSET:
@@ -73699,6 +73715,7 @@ class ProjectPackaged(_Model):
             manifest_sha256=data["manifestSha256"],
             bytes=data["bytes"],
             embedded=[PackageEmbedded.from_json(e0) for e0 in data["embedded"]] if "embedded" in data else UNSET,
+            exchange=UNSET if "exchange" not in data else None if data["exchange"] is None else ExchangeMatrixed.from_json(data["exchange"]),
             faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
             resources=[PackageResource.from_json(e0) for e0 in data["resources"]] if "resources" in data else UNSET,

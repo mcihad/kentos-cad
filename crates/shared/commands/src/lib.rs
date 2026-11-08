@@ -192,6 +192,8 @@ pub mod cad_walls;
 pub mod cad_walls_partition;
 pub mod capabilities;
 pub mod catalog;
+/// The words of an exchange trip's losses and of the support matrix (docs/adr/2780).
+pub mod exchange_words;
 
 pub use cad_addresses::*;
 pub use cad_addresses_compare::*;

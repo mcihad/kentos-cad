@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any  # noqa: F401
 from .._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # noqa: F401
 from ..protocol import Expected  # noqa: F401
 from ..types import (  # noqa: F401
+    ExchangeMatrix,
     KcadRecovered,
     PackageProject,
     PackageWay,
@@ -64,7 +65,12 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
     carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
     substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
     nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
-    paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
+    paket.json'a da yazılır. exchange istenince (docs/adr/2780) paketin nesneleri açık
+    biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her dosya teslim
+    edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve her biçimin
+    denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi
+    devir/devir-raporu.csv'ye yazılır; korunmayan özellikler export_losses uyarısıdır.
+    Proje dosyası kaynaktır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
     geri alma adımı değildir.
     """
     __slots__ = ()
@@ -83,6 +89,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         *,
         path: str,
         databases: PackageWay | PackageWayName | None | Unset = UNSET,
+        exchange: ExchangeMatrix | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
         leave_out: Sequence[str] | Unset = UNSET,
@@ -124,7 +131,12 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok),
         substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve
         nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır,
-        paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
+        paket.json'a da yazılır. exchange istenince (docs/adr/2780) paketin nesneleri açık
+        biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her dosya teslim
+        edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve her biçimin
+        denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi
+        devir/devir-raporu.csv'ye yazılır; korunmayan özellikler export_losses uyarısıdır.
+        Proje dosyası kaynaktır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve
         geri alma adımı değildir.
 
         Args:
@@ -132,6 +144,9 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
             path: The folder to make, an absolute path; it must not be there, or be an empty folder.
             databases: How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied
                 into a GeoPackage in `veri/` (only the rows the link reads), or embedded.
+            exchange: The open exchange formats the package delivers its project in (docs/adr/2780), as `file.exchange.matrix` asks
+                them (`formats` empty: all six; `layers`, `tolerance`): each written into `devir/<name>.<extension>`, the
+                matrix and the checks carried. None: no open file.
             from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
                 a relative link is not found (the drawing was never saved).
             geopackages: How the bound GeoPackages go (docs/adr/0596 §1): copied into `veri/` (none: the default), their links kept as
@@ -156,6 +171,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         return self.execute_input(doc, PackageProject(
             path=path,
             databases=databases,
+            exchange=exchange,
             from_=from_,
             geopackages=geopackages,
             leave_out=_opt(leave_out, lambda x: list(x)),
@@ -169,6 +185,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         *,
         path: str,
         databases: PackageWay | PackageWayName | None | Unset = UNSET,
+        exchange: ExchangeMatrix | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
         leave_out: Sequence[str] | Unset = UNSET,
@@ -180,6 +197,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         return self.plan_input(doc, PackageProject(
             path=path,
             databases=databases,
+            exchange=exchange,
             from_=from_,
             geopackages=geopackages,
             leave_out=_opt(leave_out, lambda x: list(x)),
@@ -193,6 +211,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         *,
         path: str,
         databases: PackageWay | PackageWayName | None | Unset = UNSET,
+        exchange: ExchangeMatrix | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
         leave_out: Sequence[str] | Unset = UNSET,
@@ -204,6 +223,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         return self.validate_input(doc, PackageProject(
             path=path,
             databases=databases,
+            exchange=exchange,
             from_=from_,
             geopackages=geopackages,
             leave_out=_opt(leave_out, lambda x: list(x)),
@@ -217,6 +237,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         *,
         path: str,
         databases: PackageWay | PackageWayName | None | Unset = UNSET,
+        exchange: ExchangeMatrix | None | Unset = UNSET,
         from_: str | None | Unset = UNSET,
         geopackages: PackageWay | PackageWayName | None | Unset = UNSET,
         leave_out: Sequence[str] | Unset = UNSET,
@@ -233,6 +254,7 @@ class _FilePackage(LocalCommand[PackageProject, ProjectPackaged, ProjectPackaged
         return self.answer_input(doc, PackageProject(
             path=path,
             databases=databases,
+            exchange=exchange,
             from_=from_,
             geopackages=geopackages,
             leave_out=_opt(leave_out, lambda x: list(x)),

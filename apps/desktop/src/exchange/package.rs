@@ -1,15 +1,16 @@
-//! Paketle (docs/adr/0506, 0596): with bound layers, a window first asks how their sources go (GeoPackages and
-//! database tables each copied, kept as linked or embedded) and which links stay out of the package; then the folder is
-//! asked, and `file.package` runs on a copy of the drawing off the interface's thread (the files are read whole and
-//! copied, a database table read and written as a GeoPackage): the project file and `veri/` with the files it uses;
-//! what was left said one by one.
+//! Paketle (docs/adr/0506, 0596, 2780): a window first asks, with bound layers, how their sources go (GeoPackages and
+//! database tables each copied, kept as linked or embedded) and which links stay out of the package, and the open
+//! formats the package delivers its project in too (Devir dosyaları, each read back and its losses reported); then the
+//! folder is asked, and `file.package` runs on a copy of the drawing off the interface's thread (the files are read
+//! whole and copied, a database table read and written as a GeoPackage): the project file, `veri/` with the files it
+//! uses and `devir/` with the open files; what was left said one by one.
 
 use std::fmt;
 use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CommandWarning, PackageProject, PackageWay, ProjectPackaged, SourceKind};
+use kentos_commands::{CommandWarning, ExchangeFormat, ExchangeMatrix, PackageProject, PackageWay, ProjectPackaged, SourceKind};
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
@@ -49,6 +50,8 @@ pub struct State {
     pub geopackages: PackageWay,
     pub databases: PackageWay,
     pub links: Vec<Link>,
+    /// Devir dosyaları (docs/adr/2780): the open formats ticked, in their order; none when the window opens.
+    pub formats: Vec<ExchangeFormat>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,6 +60,8 @@ pub enum Event {
     Databases(Way),
     /// A link ticked in or out.
     Take(usize),
+    /// An open format ticked in or out (docs/adr/2780).
+    Format(ExchangeFormat),
     /// Paketle…: the folder asked for.
     Pack,
     /// The folder to make; none when the dialog was cancelled.
@@ -70,7 +75,7 @@ fn event(e: Event) -> Message {
 }
 
 impl App {
-    /// Paketle: its window when the drawing has bound layers, else the folder at once.
+    /// Paketle: its window (the bound layers' ways and links when the drawing has any, and the open files).
     pub(super) fn package_open(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
@@ -92,13 +97,11 @@ impl App {
                 take: true,
             })
             .collect();
-        if links.is_empty() {
-            return self.package_pick();
-        }
         self.open_window(Window::Package(State {
             geopackages: PackageWay::Copy,
             databases: PackageWay::Keep,
             links,
+            formats: Vec::new(),
         }));
         Task::none()
     }
@@ -145,6 +148,11 @@ impl App {
                 .filter(|l| !l.take)
                 .map(|l| l.id.clone())
                 .collect();
+            // The open formats, in the matrix's order (docs/adr/2780).
+            if !s.formats.is_empty() {
+                let formats = ExchangeFormat::ALL.into_iter().filter(|f| s.formats.contains(f)).collect();
+                input.exchange = Some(ExchangeMatrix { formats, ..Default::default() });
+            }
         }
         Some(input)
     }
@@ -168,6 +176,16 @@ impl App {
                     && let Some(l) = s.links.get_mut(i)
                 {
                     l.take = !l.take;
+                }
+                Task::none()
+            }
+            Event::Format(f) => {
+                if let Some(Window::Package(s)) = &mut self.exchange {
+                    if let Some(at) = s.formats.iter().position(|x| *x == f) {
+                        s.formats.remove(at);
+                    } else {
+                        s.formats.push(f);
+                    }
                 }
                 Task::none()
             }
@@ -218,6 +236,17 @@ impl App {
                 match count(&|f| f.table.is_some()) {
                     0 => {}
                     n => extra += &format!(", {n} veritabanı tablosunun kopyası"),
+                }
+                // The open files (docs/adr/2780): the formats and where their losses are.
+                if let Some(m) = &out.exchange {
+                    let names: Vec<&str> = m.checks.iter().map(|c| c.format.title()).collect();
+                    extra += &format!(
+                        ", {} devir dosyası: {}; kayıpları {}/{}'de",
+                        names.len(),
+                        names.join(", "),
+                        kentos_headless::package_exchange::FOLDER,
+                        kentos_headless::package_exchange::REPORT
+                    );
                 }
                 let mut embedded = match out.embedded.len() {
                     0 => String::new(),
@@ -299,20 +328,57 @@ impl App {
                 Some(event(Event::Take(i))),
             ));
         }
+        if !s.links.is_empty() {
+            body = body.push(words::field(
+                "Pakete alınacak bağlı katmanlar",
+                list,
+                Some("İşareti kaldırılan katmanın bağı ve nesneleri pakete girmez: lisansı ya da erişimi dağıtmaya izin vermeyen veri için. Çizim değişmez.".to_owned()),
+            ));
+        }
+        // Devir dosyaları (docs/adr/2780): the open formats, three to a row.
+        let mut formats = Column::new().spacing(4);
+        for three in ExchangeFormat::ALL.chunks(3) {
+            let mut line = iced::widget::Row::new().spacing(16);
+            for &f in three {
+                line = line.push(
+                    iced::widget::container(words::check(s.formats.contains(&f), f.title(), Some(event(Event::Format(f)))))
+                        .width(kentos_ui::theme::typography::scaled(120.0)),
+                );
+            }
+            formats = formats.push(line);
+        }
         body = body.push(words::field(
-            "Pakete alınacak bağlı katmanlar",
-            list,
-            Some("İşareti kaldırılan katmanın bağı ve nesneleri pakete girmez: lisansı ya da erişimi dağıtmaya izin vermeyen veri için. Çizim değişmez.".to_owned()),
+            "Devir dosyaları",
+            formats,
+            Some(format!(
+                "İşaretli biçimlerde projenin açık kopyası {}/ altına yazılır, KentOS'un okuyucusuyla geri okunur; neyin korunup neyin kaybolduğu paket.json'da ve {}/{}'de. Proje dosyası kaynaktır.",
+                kentos_headless::package_exchange::FOLDER,
+                kentos_headless::package_exchange::FOLDER,
+                kentos_headless::package_exchange::REPORT
+            )),
         ));
         let out = s.links.iter().filter(|l| !l.take).count();
         let mut lines = Vec::new();
+        if !s.links.is_empty() {
+            lines.push(words::text_line(
+                Line::Info,
+                match out {
+                    0 => format!("{} bağlı katmanın hepsi pakete girer.", s.links.len()),
+                    n => format!(
+                        "{} bağlı katmandan {n} tanesi dışarıda kalır, nesneleri pakete girmez.",
+                        s.links.len()
+                    ),
+                },
+            ));
+        }
         lines.push(words::text_line(
             Line::Info,
-            match out {
-                0 => format!("{} bağlı katmanın hepsi pakete girer.", s.links.len()),
+            match s.formats.len() {
+                0 => "Devir dosyası yok: proje dosyası ve kullandığı dosyalar.".to_owned(),
                 n => format!(
-                    "{} bağlı katmandan {n} tanesi dışarıda kalır, nesneleri pakete girmez.",
-                    s.links.len()
+                    "{n} biçimde devir dosyası: {}.{}",
+                    ExchangeFormat::ALL.into_iter().filter(|f| s.formats.contains(f)).map(|f| f.title()).collect::<Vec<_>>().join(", "),
+                    if s.links.is_empty() { "" } else { " Dışarıda bırakılan katmanın nesneleri bunlara da girmez." }
                 ),
             },
         ));

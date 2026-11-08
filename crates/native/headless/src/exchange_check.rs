@@ -20,7 +20,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
 use kentos_commands::{
-    CallOp, CommandError, CommandResult, CommandWarning, EXCHANGE_LOSSES, EXCHANGE_TOLERANCE, EXCHANGE_UIDS_LISTED,
+    CallOp, CommandError, CommandResult, EXCHANGE_LOSSES, EXCHANGE_TOLERANCE, EXCHANGE_UIDS_LISTED,
     Entity, ExchangeCheck, ExchangeChecked, ExchangeKindCount, ExchangeLoss, ExchangeNumeric, PathEntity, Vec2, codes,
 };
 use kentos_domain::{Document, Slot};
@@ -253,18 +253,8 @@ impl Drop for Scratch {
 
 /// Runs the check (`validate`: its input only).
 pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<Value> {
-    let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
-    if !(tolerance.is_finite() && tolerance > 0.0 && tolerance <= 10.0) {
-        return refused(
-            codes::INVALID_TOLERANCE,
-            format!("Tolerans {tolerance} geçerli değil: 0'dan büyük, en çok 10 metre olmalı."),
-            Some("tolerance".into()),
-        );
-    }
-    for (i, id) in input.layers.iter().enumerate() {
-        if doc.layers().get(id).is_none() {
-            return refused(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), Some(format!("layers[{i}]")));
-        }
+    if let Err(refusal) = asked(doc, input) {
+        return refusal;
     }
     if op == CallOp::Validate {
         return CommandResult::Completed { output: Value::Null, warnings: Vec::new() };
@@ -283,6 +273,37 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
     }
     let scratch = Scratch(folder);
     let file = scratch.0.join(format!("devir.{}", input.format.extension()));
+    match trip(doc, input, &file) {
+        Ok(output) => {
+            CommandResult::Completed { output: serde_json::to_value(output).unwrap_or(Value::Null), warnings: Vec::new() }
+        }
+        Err(refusal) => refusal,
+    }
+}
+
+/// The question's own refusals: the tolerance, then the layers.
+pub(crate) fn asked(doc: &Document, input: &ExchangeCheck) -> Result<(), CommandResult<Value>> {
+    let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
+    if !(tolerance.is_finite() && tolerance > 0.0 && tolerance <= 10.0) {
+        return Err(refused(
+            codes::INVALID_TOLERANCE,
+            format!("Tolerans {tolerance} geçerli değil: 0'dan büyük, en çok 10 metre olmalı."),
+            Some("tolerance".into()),
+        ));
+    }
+    for (i, id) in input.layers.iter().enumerate() {
+        if doc.layers().get(id).is_none() {
+            return Err(refused(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), Some(format!("layers[{i}]"))));
+        }
+    }
+    Ok(())
+}
+
+/// The trip itself, the question asked: the drawing written by KentOS's writer to `file` (whose folder is there) and
+/// read back from it into an empty copy, compared. The delivery package keeps the file (docs/adr/2780); the check
+/// removes its folder.
+pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path) -> Result<ExchangeChecked, CommandResult<Value>> {
+    let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
     let path = file.display().to_string();
     let (export, import) = input.format.commands();
     // The writer on a copy: its call is the copy's, the open drawing keeps no row of it.
@@ -293,15 +314,15 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
     }
     let written = match crate::file_commands::run(&mut copy, export, CallOp::Execute, asked) {
         Ok(v) => v,
-        Err(why) => return refused(codes::EXCHANGE_UNREADABLE, format!("{export} çalışmadı: {why}"), None),
+        Err(why) => return Err(refused(codes::EXCHANGE_UNREADABLE, format!("{export} çalışmadı: {why}"), None)),
     };
     if written["status"] != "completed" {
         let e = &written["error"];
-        return refused(
+        return Err(refused(
             e["code"].as_str().unwrap_or(codes::EXCHANGE_UNREADABLE),
             format!("Yazıcı reddetti: {}", e["message"].as_str().unwrap_or("")),
             Some(format!("export.{}", e["path"].as_str().unwrap_or(""))),
-        );
+        ));
     }
     // The reader into an empty copy: the settings and layers; no objects, and no block definitions or relations, so the
     // blocks and relations read back are the reader's own (docs/adr/2380).
@@ -309,7 +330,7 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
     bare.blocks.clear();
     bare.settings.relations.clear();
     let Ok(mut empty) = Document::from_snapshot_v2(bare) else {
-        return refused(codes::EXCHANGE_UNREADABLE, "Çizimin boş kopyası kurulamadı.".into(), None);
+        return Err(refused(codes::EXCHANGE_UNREADABLE, "Çizimin boş kopyası kurulamadı.".into(), None));
     };
     let read = {
         let mut cx = ExecutionContext::new(&mut empty);
@@ -318,7 +339,7 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
     let read = match read {
         Ok(v) if v["status"] == "completed" => v,
         Ok(v) => {
-            return refused(
+            return Err(refused(
                 codes::EXCHANGE_UNREADABLE,
                 format!(
                     "KentOS'un {} okuyucusu KentOS'un yazdığı dosyayı reddetti: {}",
@@ -326,13 +347,11 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
                     v["error"]["message"].as_str().unwrap_or("")
                 ),
                 None,
-            );
+            ));
         }
-        Err(e) => return refused(codes::EXCHANGE_UNREADABLE, format!("{import} çalışmadı: {e:?}"), None),
+        Err(e) => return Err(refused(codes::EXCHANGE_UNREADABLE, format!("{import} çalışmadı: {e:?}"), None)),
     };
-    let output = compare(doc, &empty, input, tolerance, messages(&written, "warnings"), messages(&read, "warnings"));
-    let warnings: Vec<CommandWarning> = Vec::new();
-    CommandResult::Completed { output: serde_json::to_value(output).unwrap_or(Value::Null), warnings }
+    Ok(compare(doc, &empty, input, tolerance, messages(&written, "warnings"), messages(&read, "warnings")))
 }
 
 /// The objects the check takes: those of the layers asked (a group gives its layers), else every object.

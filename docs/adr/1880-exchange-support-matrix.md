@@ -70,5 +70,5 @@ MCP: `{"tool": "file.exchange.matrix", ...}`.
 ## Sonra
 
 - Blok, ilişki ve tablo nesnelerinin örnek çizime eklenip satırlarının bağımsız sınanması.
-- Teslim paketinin bu matrisi ve kayıp raporunu taşıması.
+- Teslim paketinin bu matrisi ve kayıp raporunu taşıması. Yapıldı: [ADR 2780](2780-delivery-package-open-files.md).
 - Kurum profillerine göre biçim önerisi (matrisin hangi satırlarının o kurum için önemli olduğu).

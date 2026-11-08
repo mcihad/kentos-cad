@@ -15,6 +15,9 @@
 //! embedded (the link removed in the package's project); a database table is copied as a GeoPackage of the rows its link
 //! reads (`package_sources`). `leaveOut` keeps a link (its layer emptied in the package), an object's files or an
 //! external reference's source out.
+//!
+//! Asked (`exchange`, docs/adr/2780), the package's objects go in open formats too, made and tried back in the scratch
+//! folder (`package_exchange`) and copied into `devir/` like the rest; their matrix in the answer and `paket.json`.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -82,6 +85,8 @@ struct Copies {
     list: Vec<(PathBuf, String, PackagedKind, u32)>,
     /// A database table's copy (its path in the package) → the database's address, the table and its rows.
     databases: BTreeMap<String, (String, String, u64)>,
+    /// An open file made for the package (its path in it, docs/adr/2780) → the command that wrote it.
+    made: BTreeMap<String, String>,
 }
 
 impl Copies {
@@ -284,6 +289,10 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
     };
     // What is left out (docs/adr/0596 §3): the links' layers emptied in a copy of the drawing.
     let leave = Leave::read(doc, &input.leave_out)?;
+    // The open files' question (docs/adr/2780): its tolerance and layers, before any source is read.
+    if let Some(ask) = &input.exchange {
+        crate::package_exchange::asked(doc, ask)?;
+    }
     let emptied = leave.emptied(doc);
     let doc = emptied.as_ref().unwrap_or(doc);
     let snapshot = doc.to_snapshot_v2();
@@ -507,6 +516,22 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
             "path",
         )
     })?;
+    // The open files (docs/adr/2780): the package's objects (what is left out stays out) in each format asked, made and
+    // tried back in the scratch folder, then copied like every other file. A validate makes none.
+    let mut exchange = None;
+    if let (Some(ask), true) = (&input.exchange, read) {
+        if scratch.is_none() {
+            scratch = Some(Scratch::new()?);
+        }
+        let dir = scratch.as_ref().map(|d| d.0.clone()).unwrap_or_default();
+        let stem = Path::new(&name).file_stem().map_or_else(|| "proje".to_owned(), |s| s.to_string_lossy().into_owned());
+        let made = crate::package_exchange::make(doc, ask, &dir, &stem)?;
+        for (file, rel, command) in made.files {
+            copies.made.insert(rel.clone(), command);
+            copies.list.push((file, rel, PackagedKind::Exchange, 0));
+        }
+        exchange = Some(made.matrix);
+    }
     let mut files_out = Vec::with_capacity(copies.list.len());
     let mut bytes = project.len() as u64;
     let mut planned = Vec::with_capacity(copies.list.len());
@@ -521,9 +546,15 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         })?;
         bytes += size;
         let database = copies.databases.get(rel);
+        // A copy names the file it came from; an open file made for the package, the command that wrote it.
+        let source = match (database, copies.made.get(rel)) {
+            (Some(d), _) => d.0.clone(),
+            (None, Some(command)) => command.clone(),
+            (None, None) => from.display().to_string(),
+        };
         files_out.push(PackagedFile {
             path: rel.clone(),
-            from: database.map_or_else(|| from.display().to_string(), |d| d.0.clone()),
+            from: source,
             kind: *kind,
             bytes: size,
             sha256: sha,
@@ -563,6 +594,8 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
     // Every typeface, shape file, line type, hatch pattern and plot style, and how the package has it (docs/adr/1111).
     let (resources, missing) = crate::package_resources::report(doc, &sources_found);
     warnings.extend(missing);
+    // What the open files lose (docs/adr/2780), said once.
+    warnings.extend(exchange.as_ref().and_then(crate::package_exchange::losses));
     let project_path = target.join(&name);
     let project_sha256 = sha256_hex(&project);
     let manifest = manifest_of(
@@ -574,6 +607,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         &embedded,
         &fonts.faces,
         &resources,
+        exchange.as_ref(),
     );
     bytes += manifest.len() as u64;
     Ok(Planned {
@@ -589,6 +623,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
             manifest_sha256: sha256_hex(&manifest),
             faces: fonts.faces,
             resources,
+            exchange,
             bytes,
         },
         warnings,
@@ -657,6 +692,7 @@ fn manifest_of(
     embedded: &[PackageEmbedded],
     faces: &[kentos_commands::DrawingFont],
     resources: &[kentos_commands::PackageResource],
+    exchange: Option<&kentos_commands::ExchangeMatrixed>,
 ) -> Vec<u8> {
     let mut manifest = serde_json::json!({
         "format": MANIFEST_FORMAT,
@@ -672,6 +708,10 @@ fn manifest_of(
     // The links embedded (docs/adr/0596 §1), only when there are any: a package of none keeps its manifest.
     if !embedded.is_empty() {
         manifest["embedded"] = serde_json::json!(embedded);
+    }
+    // The open files' matrix and checks (docs/adr/2780), only when asked.
+    if let Some(m) = exchange {
+        manifest["exchange"] = serde_json::json!(m);
     }
     let mut out = serde_json::to_vec_pretty(&manifest).unwrap_or_default();
     out.push(b'\n');

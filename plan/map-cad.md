@@ -47,7 +47,7 @@ sırayla alır.
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
-| MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440 | işlem sürümü ve çıktı revizyonu (şema 207); tariften başka projede üretim; bütçe | — |
@@ -1485,6 +1485,15 @@ ana nesneye ulaşmayan ilişki); matrise Bloklar, Tablolar, İlişkiler satırla
 blok ve tablo yalnız DXF'te, ilişki yalnız GeoPackage'da korunur; GDAL ilişkili tabloları, ezdxf bloğu ve tablonun
 anonim bloğunu bağımsız okur; MCP. Açık: teslim paketinin matrisi taşıması, DXF'te TABLE ve ATTRIB yazımı (başka
 programlar tabloyu bugün çizgi ve yazı olarak görür), kurum profilleri.
+
+**8 Kasım 2026, dördüncü tur — teslim paketinde devir dosyaları ([ADR 2780](../docs/adr/2780-delivery-package-open-files.md)).**
+Kapsam: **CAD + CBS** (her modül). Araştırma: AutoCAD eTransmit (rapor pakette), MicroStation Create Package, QGIS
+Package layers; hiçbiri açık biçime dönüşün kaybını pakete koymaz. Kanıtlanan: `file.package`'a `exchange`: paketin
+nesneleri istenen açık biçimlerde `devir/`'e yazılır, her dosya teslim edildiği hâliyle geri okunur (denetim o dosyanın
+kendisidir), destek matrisi ve denetimler cevapta ve `paket.json`'da, Türkçesi `devir/devir-raporu.csv`'de; korunmayanlar
+`export_losses`; dışarıda bırakılan katman açık dosyalara da girmez; GDAL, ezdxf, hashlib ve csv ile bağımsız 5 test,
+MCP; Paketle'de Devir dosyaları. Bulunan: öznitelik tanımlı blokların ATTRIB'i DXF'te zaten yazılıyor (ADR 2380'in notu
+düzeltildi). Açık: DXF'te TABLE, tanımı olmayan ek özniteliklerinin ATTRIB'i, paketin ızgara bilgisi, kurum profilleri.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

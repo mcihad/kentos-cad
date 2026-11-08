@@ -6998,16 +6998,21 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "file.package",
+        // The open files (docs/adr/2780): their question's refusals, then a writer's own and the reader's.
         refusals: &[&[
             "invalid_file_path",
             "file_exists",
             "invalid_input",
+            "invalid_tolerance",
+            "layer_not_found",
             "source_unreachable",
             "source_changed",
             "input_too_large",
+            "nothing_to_export",
+            "exchange_unreadable",
             "file_unwritable",
         ]],
-        warnings: &["package_left", "package_resources"],
+        warnings: &["package_left", "package_resources", "export_losses"],
         targets: none,
     },
     Entry {

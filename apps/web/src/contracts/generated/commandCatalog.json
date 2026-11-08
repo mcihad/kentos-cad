@@ -91943,7 +91943,7 @@
       "id": "file.package",
       "version": 1,
       "title": "Paketle",
-      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında), carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok), substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır, paket.json'a da yazılır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. Projenin kendi veri profilleri ve eşlemeleri de (from klasöründeki profiller/<ad>.profil.json ve <ad>.eslem.json) paketteki profiller/ altına bayt bayt kopyalanır, proje dosyasının yanında durduğundan komutlar onları orada bulur; okunamayan dosya kopyalanmaz ve package_left söyler (docs/adr/0558). Adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. Bağlı kaynakların yolu seçilir (docs/adr/0596): geopackages (varsayılan copy) ve databases (varsayılan keep) her biri copy, keep ya da embed. copy kaynağı pakete kopyalar: GeoPackage bayt bayt, veritabanı tablosu bağın okuduğu satırlarla (alanla bağlıda yalnız alanınkiler) projenin sisteminde, kalıcı kimlikleriyle bir GeoPackage olarak (veri/<şema>-<tablo>.gpkg; tablo katmanın son eşleşmesinden beri değiştiyse source_changed, ulaşılamazsa source_unreachable); bağ kopyayı gösterir, uzlaştırma tabanı düşer. keep bağı olduğu gibi bırakır (package_left: kept ya da database). embed paketin projesinde bağı kaldırır, katman nesneleriyle projenin kendi katmanı olur (cevabın embedded'ı). leaveOut pakete girmeyecekleri söyler: bir bağ (kaynak-N; katmanın nesneleri paketten çıkar), bir nesnenin kalıcı kimliği (dosyaları kopyalanmaz) ya da xref:<ad> (dış başvurunun kaynağı kopyalanmaz); package_left excluded der, var olmayanı gösteren öğe invalid_input. validate veritabanını okumaz. Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). Cevabın resources'ı çizimin ve dış başvurularının kullandığı her yazı stili yüzünü, SHX şekil dosyasını, çizgi tipini, tarama desenini ve baskı profilini nasıl taşıdığıyla söyler (docs/adr/1111): builtIn (KentOS'la gelir), embedded (proje dosyasında), carried (yalnız pakete kopyalanan dış başvuru kaynağında; bu çizimde yok), substituted (yerine başka yüzle çizilir) ya da missing; kimin kullandığı (users) ve nesne sayısıyla; eksik ve yalnız kaynakta olanlar package_resources uyarısıdır, paket.json'a da yazılır. exchange istenince (docs/adr/2780) paketin nesneleri açık biçimlerde de devir/ altına yazılır (biçimler boşsa altısı): her dosya teslim edildiği hâliyle KentOS'un okuyucusuyla geri okunur, destek matrisi ve her biçimin denetimi cevabın ve paket.json'un exchange'ine, matrisin Türkçesi devir/devir-raporu.csv'ye yazılır; korunmayan özellikler export_losses uyarısıdır. Proje dosyası kaynaktır. plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "paketle",
         "package"
@@ -91961,7 +91961,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,\n`name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),\n`invalid_input` (a `leaveOut` entry that names nothing), `source_unreachable`, `source_changed` and\n`input_too_large` (a database table copied, docs/adr/0596 §2), `file_unwritable`. Warning: `package_left` (what\nwas not copied, each said).",
+        "description": "Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,\n`name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),\n`invalid_input` (a `leaveOut` entry that names nothing), `invalid_tolerance` (`exchange.tolerance`) and\n`layer_not_found` (`exchange.layers[i]`), `source_unreachable`, `source_changed` and `input_too_large` (a database\ntable copied, docs/adr/0596 §2), a format's writer's own refusal and `exchange_unreadable` (`exchange.formats[i]`),\n`file_unwritable`. Warnings: `package_left` (what was not copied, each said), `export_losses` (what the open files\nlose, docs/adr/2780).",
         "properties": {
           "databases": {
             "anyOf": [
@@ -91973,6 +91973,17 @@
               }
             ],
             "description": "How the bound database tables go (docs/adr/0596 §1): their links kept (none: the default), each table copied\ninto a GeoPackage in `veri/` (only the rows the link reads), or embedded."
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExchangeMatrix"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The open exchange formats the package delivers its project in (docs/adr/2780), as `file.exchange.matrix` asks\nthem (`formats` empty: all six; `layers`, `tolerance`): each written into `devir/<name>.<extension>`, the\nmatrix and the checks carried. None: no open file."
           },
           "from": {
             "description": "The project file's folder, an absolute path: linked files written relative to it are read from there. None:\na relative link is not found (the drawing was never saved).",
@@ -92034,6 +92045,17 @@
               "$ref": "#/$defs/PackageEmbedded"
             },
             "type": "array"
+          },
+          "exchange": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExchangeMatrixed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The open files' support matrix and checks (docs/adr/2780): what each format delivered keeps, approximates,\nconverts, adds or loses of the project. None: none asked."
           },
           "faces": {
             "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
@@ -92117,6 +92139,17 @@
             },
             "type": "array"
           },
+          "exchange": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExchangeMatrixed"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The open files' support matrix and checks (docs/adr/2780): what each format delivered keeps, approximates,\nconverts, adds or loses of the project. None: none asked."
+          },
           "faces": {
             "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
             "items": {
@@ -92186,14 +92219,19 @@
           "invalid_file_path",
           "file_exists",
           "invalid_input",
+          "invalid_tolerance",
+          "layer_not_found",
           "source_unreachable",
           "source_changed",
           "input_too_large",
+          "nothing_to_export",
+          "exchange_unreadable",
           "file_unwritable"
         ],
         "warnings": [
           "package_left",
-          "package_resources"
+          "package_resources",
+          "export_losses"
         ]
       },
       "examples": [
@@ -134268,6 +134306,61 @@
       ],
       "type": "object"
     },
+    "ExchangeMatrix": {
+      "additionalProperties": false,
+      "description": "Input of `file.exchange.matrix` v1 (Destek matrisi; plan/map-cad.md MAP-17, docs/adr/1880): the drawing's round trip\nthrough each of `formats` (empty: all six, in [`ExchangeFormat::ALL`]'s order; one asked twice is tried once) as\n`file.exchange.check` makes it, with its `layers` and `tolerance`, and what each kept, approximated, converted, added\nor lost, aspect by aspect.\n\nRefusals: `file.exchange.check`'s (`invalid_tolerance`, `layer_not_found`, the writer's own, `exchange_unreadable`,\n`file_unwritable`), the format's path `formats[i]` beside the check's.",
+      "properties": {
+        "formats": {
+          "items": {
+            "$ref": "#/$defs/ExchangeFormat"
+          },
+          "type": "array"
+        },
+        "layers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "type": "object"
+    },
+    "ExchangeMatrixed": {
+      "description": "Output of `file.exchange.matrix` v1: the tolerance, the rows in [`EXCHANGE_ASPECTS`]' order, and each format's\n`file.exchange.check` answer the rows are read from.",
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/ExchangeChecked"
+          },
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/ExchangeRow"
+          },
+          "type": "array"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "tolerance",
+        "rows",
+        "checks"
+      ],
+      "type": "object"
+    },
     "ExchangeNumeric": {
       "description": "The numeric differences, the greatest over the objects matched (metres, square metres; none: nothing to measure),\nthe object of the greatest offset, and how many lie farther than the tolerance.",
       "properties": {
@@ -161406,6 +161499,11 @@
         {
           "const": "workFile",
           "description": "A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.",
+          "type": "string"
+        },
+        {
+          "const": "exchange",
+          "description": "The project in an open exchange format, written by KentOS's writer, or the matrix's report (docs/adr/2780):\n`devir/…`, its `from` the command that wrote it.",
           "type": "string"
         }
       ]

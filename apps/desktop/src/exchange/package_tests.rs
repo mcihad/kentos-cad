@@ -1,6 +1,7 @@
-//! Paketle's window on the desktop (docs/adr/0596 §5): with bound layers it asks how their sources go and which links
-//! stay out; its answer is the input `file.package` gets, and the package made says the copies and the links embedded.
-//! Pictures: `paket-*` (`screens`, ignored).
+//! Paketle's window on the desktop (docs/adr/0596 §5, 2780): with bound layers it asks how their sources go and which
+//! links stay out, and always the open files (Devir dosyaları); its answer is the input `file.package` gets, and the
+//! package made says the copies, the links embedded and the open files. Pictures: `paket-*` (`screens`, ignored),
+//! `teslim-devir-2780` (`open_file_screens`, ignored).
 
 use std::path::PathBuf;
 
@@ -99,12 +100,99 @@ fn the_window_asks_the_ways_and_the_links_left_out() {
     );
 }
 
+/// The exchange sample drawing (fixtures/exchange/v1/devir.json, docs/adr/1660) opened, no layer bound.
+fn sample() -> App {
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+    let (mut app, _) = App::boot(None);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/2780: without bound layers the window asks only the open files; DXF and GeoPackage ticked go in the matrix's
+/// order, the package made carries both files and the report, and its message names them.
 #[test]
-fn without_bound_layers_the_folder_is_asked_at_once() {
-    let mut app = app_with_drawing();
-    app.picker = crate::app::Picker::File(scratch("paket-baglisiz").join("teslim"));
+fn the_window_asks_the_open_files_without_bound_layers() {
+    let mut app = sample();
     run(&mut app, "file.package");
-    assert!(app.exchange.is_none());
+    let s = window(&app);
+    assert!(s.links.is_empty() && s.formats.is_empty(), "no link, no open file when it opens");
+    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Dxf)));
+    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Gpkg)));
+    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)));
+    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)));
+    let out = scratch("paket-devir-pencere").join("teslim");
+    let input = app.package_input(&out).expect("an input");
+    let asked = input.exchange.clone().expect("the open files asked");
+    assert_eq!(asked.formats, [kentos_commands::ExchangeFormat::Gpkg, kentos_commands::ExchangeFormat::Dxf]);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let planned = kentos_headless::package::plan(doc, &input).expect("planned");
+    kentos_headless::package::write(&planned).expect("packed");
+    let made: Vec<&str> = planned
+        .output
+        .files
+        .iter()
+        .filter(|f| f.kind == kentos_commands::PackagedKind::Exchange)
+        .map(|f| f.path.as_str())
+        .collect();
+    assert_eq!(made.len(), 3, "{made:?}");
+    assert!(out.join("devir/devir-raporu.csv").is_file());
+    let warned = planned.warnings.iter().any(|w| w.code == "export_losses");
+    assert!(warned, "the open files lose the text outside DXF");
+    send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(
+        said.iter().any(|l| l.contains("2 devir dosyası: GeoPackage, DXF; kayıpları devir/devir-raporu.csv'de")),
+        "{said:?}"
+    );
+    assert!(said.iter().any(|l| l.contains("Devir dosyaları projenin her şeyini taşımaz")), "{said:?}");
+}
+
+/// The open files' window and the package's message; `.run/gui-evidence/teslim-devir-2780/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange::package_tests::open_file_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures, run by hand"]
+fn open_file_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/teslim-devir-2780");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = sample();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(crate::app::Message::WindowResized(size));
+        let _ = app.update(crate::app::Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut picture = |app: &mut App, label: &str| {
+            snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            let path = out.join(format!("{label}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+            println!("{}", path.display());
+        };
+        run(&mut app, "file.package");
+        for f in [kentos_commands::ExchangeFormat::Gpkg, kentos_commands::ExchangeFormat::Shp, kentos_commands::ExchangeFormat::Dxf] {
+            send(&mut app, Event::Package(P::Format(f)));
+        }
+        picture(&mut app, "1-pencere");
+        let target = scratch(&format!("paket-devir-{name}")).join("teslim");
+        let input = app.package_input(&target).expect("an input");
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let planned = kentos_headless::package::plan(doc, &input).expect("planned");
+        kentos_headless::package::write(&planned).expect("packed");
+        let _ = app.update(crate::app::Message::DialogClosed);
+        send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+        picture(&mut app, "2-ileti");
+        // The report as a spreadsheet would show it, for the owner to read beside the pictures.
+        let _ = std::fs::copy(target.join("devir/devir-raporu.csv"), out.join(format!("devir-raporu-{name}.csv")));
+    }
 }
 
 #[test]

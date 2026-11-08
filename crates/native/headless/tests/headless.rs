@@ -51,6 +51,8 @@ mod exchange_set;
 mod package_cases;
 #[path = "headless/package_resources.rs"]
 mod package_resources;
+#[path = "headless/package_exchange.rs"]
+mod package_exchange;
 
 #[path = "headless/recover_cases.rs"]
 mod recover_cases;
