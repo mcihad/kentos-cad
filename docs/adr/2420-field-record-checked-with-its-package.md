@@ -84,5 +84,6 @@ Tarih: 2026-11-08. plan/map-cad.md MAP-19, üçüncü tur. Durum: taslak. Plan s
 
 - İş türleri (as-built, aplikasyon, deformasyon) ve zaman serisi.
 - Paketin tasarım noktalarıyla (eski tasarım) karşılaştırma seçeneği: bugün tasarım çizimden okunur, değişim söylenir.
+  Yapıldı: [ADR 2820](2820-record-checked-with-its-package-design.md).
 - Yetkili inceleme ve kabul edilen gerçekleşen revizyon kaydı.
 - Cihaz biçimlerine paketten çıkış; canlı cihaz.

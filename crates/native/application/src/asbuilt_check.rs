@@ -39,7 +39,8 @@ fn plain(text: &str) -> Option<f64> {
 }
 
 pub(crate) struct Point {
-    pub(crate) slot: Slot,
+    /// Its object's persistent id (a package's design point: the id the package wrote, docs/adr/2820).
+    pub(crate) uid: String,
     pub(crate) name: String,
     pub(crate) p: Vec2,
     pub(crate) z: Option<f64>,
@@ -53,7 +54,7 @@ pub(crate) fn points(doc: &Document, layer: &str, field: &str, quality: Option<&
         .filter(|e| ids.contains(&e.base().layer_id))
         .filter_map(|e| match e {
             Entity::Point(p) => Some(Point {
-                slot: Slot(e.base().id),
+                uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(),
                 name: e.base().attrs.get(field).map(|n| n.trim().to_owned()).unwrap_or_default(),
                 p: p.p,
                 z: p.z,
@@ -66,17 +67,19 @@ pub(crate) fn points(doc: &Document, layer: &str, field: &str, quality: Option<&
 
 /// A design line's vertices and edges' bulges.
 pub(crate) struct Line {
-    pub(crate) slot: Slot,
+    /// Its object's persistent id, as [`Point::uid`].
+    pub(crate) uid: String,
     pub(crate) pts: Vec<Vec2>,
     pub(crate) bulges: Vec<f64>,
 }
 
 pub(crate) fn lines(doc: &Document, layer: &str) -> Vec<Line> {
     let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
+    let uid_of = |e: &Entity| doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
     doc.entities()
         .filter(|e| ids.contains(&e.base().layer_id))
         .filter_map(|e| match e {
-            Entity::Line(l) => Some(Line { slot: Slot(e.base().id), pts: vec![l.a, l.b], bulges: vec![0.0] }),
+            Entity::Line(l) => Some(Line { uid: uid_of(e), pts: vec![l.a, l.b], bulges: vec![0.0] }),
             Entity::Polyline(p) if p.pts.len() >= 2 => {
                 let mut pts = p.pts.clone();
                 if p.closed {
@@ -84,7 +87,7 @@ pub(crate) fn lines(doc: &Document, layer: &str) -> Vec<Line> {
                 }
                 let n = pts.len() - 1;
                 let bulges = (0..n).map(|i| p.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
-                Some(Line { slot: Slot(e.base().id), pts, bulges })
+                Some(Line { uid: uid_of(e), pts, bulges })
             }
             _ => None,
         })
@@ -135,7 +138,7 @@ pub(crate) fn digest(design: &[Point], lines: &[Line]) -> String {
 
 fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     let bad = |m: &str, path: &str| Err(refuse(codes::INVALID_ASBUILT_CHECK, m.to_owned(), path));
-    if input.design.is_none() && input.surface.is_none() && input.lines.is_none() {
+    if input.design.is_none() && input.surface.is_none() && input.lines.is_none() && !input.package_design {
         return bad("Karşılaştırılacak tasarım yok: tasarım noktalarının katmanını, yüzeyi ya da tasarım çizgilerinin katmanını verin.", "design");
     }
     for (v, path, words) in [
@@ -162,6 +165,9 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     }
     if input.quality.is_some() && input.quality_field.is_none() {
         return bad("Kalite sınırı verildi ama σ'nın özniteliği yok; qualityField'ı da verin.", "qualityField");
+    }
+    if input.package_design && input.package.is_none() {
+        return bad("Paketin tasarımıyla denetlemek için kaydın saha paketini (package) de verin.", "packageDesign");
     }
     Ok(())
 }
@@ -236,10 +242,33 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             "measured",
         ));
     }
-    let design = input.design.as_deref().map_or_else(Vec::new, |d| points(doc, d, field, None));
-    let design_lines = input.lines.as_deref().map_or_else(Vec::new, |l| lines(doc, l));
+    let here = input.design.as_deref().map_or_else(Vec::new, |d| points(doc, d, field, None));
+    let here_lines = input.lines.as_deref().map_or_else(Vec::new, |l| lines(doc, l));
+    // The design compared: the drawing's, or the package's own (docs/adr/2820), read back to its digest; then whether
+    // the drawing's design (the layers given) is the package's.
+    let (design, design_lines, design_changed) = match (input.package_design, &package) {
+        (true, Some(p)) => {
+            let (pts, lns) = crate::asbuilt_package::design(&p.path)?;
+            if digest(&pts, &lns) != p.digest {
+                return Err(refuse(
+                    codes::INVALID_ASBUILT_CHECK,
+                    format!(
+                        "“{}” paketinin tasarım dosyaları (noktalar.csv, cizgiler.csv) özetiyle tutmuyor; paket bozulmuş \
+                         ya da elle değiştirilmiş. Paketi Saha paketi yaz… ile yeniden yazın.",
+                        file_name(&p.path)
+                    ),
+                    "package",
+                ));
+            }
+            let changed = (input.design.is_some() || input.lines.is_some()) && digest(&here, &here_lines) != p.digest;
+            (pts, lns, changed)
+        }
+        _ => {
+            let changed = input.expected_design.as_deref().is_some_and(|e| e != digest(&here, &here_lines));
+            (here, here_lines, changed)
+        }
+    };
     let design_digest = digest(&design, &design_lines);
-    let uid = |s: Slot| doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
     // By name: a name one design point has.
     let by_name = |name: &str| -> Vec<usize> {
         if name.is_empty() {
@@ -288,7 +317,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             flags.push("proposed");
         }
         let mut point = AsbuiltPoint {
-            uid: uid(m.slot),
+            uid: m.uid.clone(),
             name: m.name.clone(),
             design_uid: None,
             design_name: None,
@@ -310,7 +339,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             let d = &design[i];
             let (de, dn) = (m.p.x - d.p.x, m.p.y - d.p.y);
             let h = de.hypot(dn);
-            point.design_uid = Some(uid(d.slot));
+            point.design_uid = Some(d.uid.clone());
             point.design_name = Some(d.name.clone());
             point.de = Some(de);
             point.dn = Some(dn);
@@ -353,12 +382,12 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         // within it of a line; its normal offset to the nearest line.
         let mut on_line = false;
         if !design_lines.is_empty() && matched.is_none() && !ambiguous {
-            let mut best: Option<(f64, Slot)> = None;
+            let mut best: Option<(f64, &str)> = None;
             for l in &design_lines {
                 for (k, w) in l.pts.windows(2).enumerate() {
                     let d = signed(m.p, w[0], w[1], l.bulges[k]);
                     if best.is_none_or(|b| d.abs() < b.0.abs()) {
-                        best = Some((d, l.slot));
+                        best = Some((d, l.uid.as_str()));
                     }
                 }
             }
@@ -367,7 +396,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             {
                 on_line = true;
                 point.normal = Some(d);
-                point.line_uid = Some(uid(slot));
+                point.line_uid = Some(slot.to_owned());
                 if input.horizontal.is_some_and(|t| d.abs() > t) {
                     flags.push("outsideLine");
                     outside = true;
@@ -383,8 +412,10 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         }
         // Matched to a design point or a line point: by its limits; neither, with points or lines to match: unmatched;
         // with a surface only: by the surface.
-        let only_surface = input.design.is_none() && design_lines.is_empty();
-        point.status = if input.design.is_some() && ambiguous {
+        // A design of points: the layer's, or the package's (docs/adr/2820).
+        let points_compared = input.design.is_some() || input.package_design;
+        let only_surface = !points_compared && design_lines.is_empty();
+        point.status = if points_compared && ambiguous {
             counts[3] += 1;
             "ambiguous"
         } else if matched.is_none() && !on_line && !only_surface {
@@ -406,11 +437,11 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         .iter()
         .zip(&used)
         .filter(|(_, u)| !**u)
-        .map(|(d, _)| AsbuiltMissing { uid: uid(d.slot), name: d.name.clone() })
+        .map(|(d, _)| AsbuiltMissing { uid: d.uid.clone(), name: d.name.clone() })
         .collect();
     let rms = |sum: f64, n: usize| (n > 0).then(|| (sum / n as f64).sqrt());
     Ok(AsbuiltChecked {
-        design_changed: input.expected_design.as_deref().is_some_and(|e| e != design_digest),
+        design_changed,
         design_digest,
         points: out,
         missing,
@@ -440,9 +471,15 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
                 vertical: p.vertical,
                 quality: p.quality,
                 taken,
+                design: input.package_design,
             }
         }),
     })
+}
+
+/// A path's file name, as a refusal names it.
+fn file_name(path: &str) -> String {
+    std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// Checks the question, writing nothing.

@@ -211,6 +211,9 @@
 - **Dönen kaydın kendi saha paketiyle denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2420](../../docs/adr/2420-field-record-checked-with-its-package.md)).**
   `cad.asbuilt.check`'in `package`'ı: özet beklenen olur, boş sınırlar paketten, sistem/epok/kot farkı söylenir
   (dönüştürülmez). Harita + Yol + CBS.
+- **Kaydın kendi paketinin tasarımıyla denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2820](../../docs/adr/2820-record-checked-with-its-package-design.md)).**
+  `cad.asbuilt.check`'in `packageDesign`'ı: tasarım paketin noktaları ve çizgileri, özetine geri okunarak; katmanlar
+  yalnız çizimdeki değişimi söyler. Uygulama kontrolü'nde paketin tasarımıyla. Harita + Yol + CBS.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

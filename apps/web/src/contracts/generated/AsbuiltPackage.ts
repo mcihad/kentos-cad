@@ -6,4 +6,8 @@
  * now; its acceptance limits (metres) and which of them the check took (`horizontal`, `vertical`, `quality`: those the
  * input did not give).
  */
-export type AsbuiltPackage = { path: string, stamp: string, revision: string, digest: string, epsg?: string, epoch?: number, heights?: string, sameSystem: boolean, sameEpoch: boolean, sameHeights: boolean, horizontal?: number, vertical?: number, quality?: number, taken?: Array<string>, };
+export type AsbuiltPackage = { path: string, stamp: string, revision: string, digest: string, epsg?: string, epoch?: number, heights?: string, sameSystem: boolean, sameEpoch: boolean, sameHeights: boolean, horizontal?: number, vertical?: number, quality?: number, taken?: Array<string>, 
+/**
+ * The design compared was the package's own (docs/adr/2820).
+ */
+design?: boolean, };

@@ -49,7 +49,7 @@ sırayla alır.
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440 | işlem sürümü ve çıktı revizyonu (şema 207); tariften başka projede üretim; bütçe | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -1636,6 +1636,15 @@ sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır (dönüştür�
 Python'un zipfile'ıyla bayt bayt; MCP; Uygulama kontrolü'nde Kaydın saha paketi satırı. Açık: iş türleri ve zaman
 serisi, paketin eski tasarımıyla karşılaştırma, yetkili inceleme kaydı, varlık kimlikleri, cihaz biçimleri, canlı
 cihaz.
+
+**8 Kasım 2026, dördüncü tur — kaydın kendi paketinin tasarımıyla denetlenmesi ([ADR 2820](../docs/adr/2820-record-checked-with-its-package-design.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: Trimble Access'in aplikasyon farkları işteki tasarım noktasına göre saklanır.
+Kanıtlanan: `cad.asbuilt.check`'e `packageDesign`: kayıt paketin `noktalar.csv` ve `cizgiler.csv`'siyle, ekibin elindeki
+tasarımla denetlenir; dosyalar paketin özetine geri okunur (tutmazsa ret); verilen katmanlar yalnız çizimdeki tasarımın
+değişimini söyler, bu kipte uyarı olur; 42 ortak durum (eski tasarımın ve bozuk paketin zip'leri Python'la), MCP;
+Uygulama kontrolü'nde paketin tasarımıyla kutusu. Bulunan: önceki durumların paketlerinin CSV'leri sadık değildi
+(“None”, boş çizgiler), düzeltildi. Açık: iş türleri ve zaman serisi, yetkili inceleme kaydı, paketin yüzeyi, cihaz
+biçimleri, canlı cihaz.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

@@ -118,9 +118,8 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
     let design = input.design.as_deref().map(|l| asbuilt::points(doc, l, field, None)).unwrap_or_default();
     let lines = input.lines.as_deref().map(|l| asbuilt::lines(doc, l)).unwrap_or_default();
     let digest = asbuilt::digest(&design, &lines);
-    let uid = |slot| doc.uid(slot).map(|u| u.to_string()).unwrap_or_default();
     let points: Vec<PackagePoint> =
-        design.iter().map(|p| PackagePoint { name: p.name.clone(), at: [p.p.x, p.p.y], z: p.z, uid: uid(p.slot) }).collect();
+        design.iter().map(|p| PackagePoint { name: p.name.clone(), at: [p.p.x, p.p.y], z: p.z, uid: p.uid.clone() }).collect();
     let vertices: usize = lines.iter().map(|l| l.pts.len()).sum();
     let settings = doc.settings();
     let facts = kentos_project::facts::coordinate_facts(settings);
@@ -134,7 +133,7 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
     }
     let mut strings = String::from("Kimlik;Sıra;Y;X;Bulge\n");
     for l in &lines {
-        let id = uid(l.slot);
+        let id = &l.uid;
         for (k, v) in l.pts.iter().enumerate() {
             let bulge = l.bulges.get(k).copied().unwrap_or(0.0);
             strings.push_str(&format!("{id};{};{};{};{}\n", k + 1, num(v.x), num(v.y), num(bulge)));

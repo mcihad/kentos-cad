@@ -110,6 +110,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   paket akışı ayrı).
 - MAP-18 / ADR 2800: web'in pafta girdilerinde (`app/sheet/inputs.ts`) haritaların köşelerinden `mapSurveys`'in
   doldurulması; web'in ön denetiminde haritanın boş kalite değeri.
+- MAP-19 / ADR 2820: `cad.asbuilt.check`'in web işleyicisinde `packageDesign` (42 ortak durum); web'in Uygulama
+  kontrolü'nde paketin tasarımıyla kutusu.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,
   `surveyQuality` (projenin GNSS arşivinden) ve baskı denetiminde `survey_quality_missing`.
 - MAP-19 / ADR 2420: `cad.asbuilt.check`'in web işleyicisinde `package` (36 ortak durum; zip okuma); web'in Uygulama

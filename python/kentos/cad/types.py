@@ -16758,9 +16758,10 @@ class AsbuiltCheck(_Model):
     digest the field record was made against.
 
     Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
-    attribute's name, `quality` without `qualityField`); the package's (docs/adr/2420; at `package`): `invalid_file_path`
-    (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a field package; at `expectedDesign`:
-    another digest than the package's); `layer_not_found` (`measured`, `design`, `lines`),
+    attribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;
+    at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
+    field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
+    `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820),
     `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
     (more than 100 000 measured points).
     Attributes:
@@ -16768,6 +16769,9 @@ class AsbuiltCheck(_Model):
         package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
             design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
             only with `qualityField`), its system, epoch and heights are set against the project's.
+        package_design: The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),
+            read back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it
+            changed since. Needs `package`.
         quality: Unit: length.
         search: Unit: length.
         vertical: Unit: length.
@@ -16779,6 +16783,7 @@ class AsbuiltCheck(_Model):
     horizontal: float | None | Unset = UNSET
     lines: str | None | Unset = UNSET
     package: str | None | Unset = UNSET
+    package_design: bool | Unset = UNSET
     quality: float | None | Unset = UNSET
     quality_field: str | None | Unset = UNSET
     search: float | None | Unset = UNSET
@@ -16800,6 +16805,8 @@ class AsbuiltCheck(_Model):
             out["lines"] = self.lines
         if self.package is not UNSET:
             out["package"] = self.package
+        if self.package_design is not UNSET:
+            out["packageDesign"] = self.package_design
         if self.quality is not UNSET:
             out["quality"] = None if self.quality is None else float(self.quality)
         if self.quality_field is not UNSET:
@@ -16822,6 +16829,7 @@ class AsbuiltCheck(_Model):
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
             lines=data.get("lines", UNSET),
             package=data.get("package", UNSET),
+            package_design=data.get("packageDesign", UNSET),
             quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
             quality_field=data.get("qualityField", UNSET),
             search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
@@ -16933,6 +16941,7 @@ class AsbuiltPackage(_Model):
     now; its acceptance limits (metres) and which of them the check took (`horizontal`, `vertical`, `quality`: those the
     input did not give).
     Attributes:
+        design: The design compared was the package's own (docs/adr/2820).
         epoch: Unit: year.
         horizontal: Unit: length.
         quality: Unit: length.
@@ -16945,6 +16954,7 @@ class AsbuiltPackage(_Model):
     same_system: bool
     same_epoch: bool
     same_heights: bool
+    design: bool | Unset = UNSET
     epoch: float | None | Unset = UNSET
     epsg: str | None | Unset = UNSET
     heights: str | None | Unset = UNSET
@@ -16962,6 +16972,8 @@ class AsbuiltPackage(_Model):
         out["sameSystem"] = self.same_system
         out["sameEpoch"] = self.same_epoch
         out["sameHeights"] = self.same_heights
+        if self.design is not UNSET:
+            out["design"] = self.design
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.epsg is not UNSET:
@@ -16988,6 +17000,7 @@ class AsbuiltPackage(_Model):
             same_system=data["sameSystem"],
             same_epoch=data["sameEpoch"],
             same_heights=data["sameHeights"],
+            design=data.get("design", UNSET),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             epsg=data.get("epsg", UNSET),
             heights=data.get("heights", UNSET),

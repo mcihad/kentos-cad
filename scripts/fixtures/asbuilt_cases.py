@@ -21,7 +21,9 @@ The rules, by hand (Trimble Business Center's Point and String Conformance repor
 - the status: ambiguous; unmatched when neither a design point nor a line takes it (a surface alone takes every
   point); else outside (a limit broken), within;
 - the digest: SHA-256 of `p<TAB>name<TAB>x<TAB>y<TAB>z` (six decimals, `-` for none) for each design point, then
-  `l<TAB>x,y;x,y` for each design line, each line ended by a newline.
+  `l<TAB>x,y;x,y` for each design line, each line ended by a newline;
+- the package's own design (docs/adr/2820): its `noktalar.csv` and `cizgiler.csv` are the design compared, read back
+  to its digest (else refused); the drawing's layers, given, only say whether the design changed since.
 """
 
 import copy
@@ -138,16 +140,50 @@ def number(text):
     return float(t)
 
 
-def digest(with_design=True, with_lines=True):
+def digest_of(design, lines):
     text = ""
-    if with_design:
-        for name, x, y, z in DESIGN:
-            zt = "-" if z is None else f"{z:.6f}"
-            text += f"p\t{name}\t{X0 + x:.6f}\t{Y0 + y:.6f}\t{zt}\n"
-    if with_lines:
-        for _, pts in LINES:
-            text += "l\t" + ";".join(f"{X0 + x:.6f},{Y0 + y:.6f}" for x, y in pts) + "\n"
+    for name, x, y, z in design:
+        zt = "-" if z is None else f"{z:.6f}"
+        text += f"p\t{name}\t{X0 + x:.6f}\t{Y0 + y:.6f}\t{zt}\n"
+    for _, pts in lines:
+        text += "l\t" + ";".join(f"{X0 + x:.6f},{Y0 + y:.6f}" for x, y in pts) + "\n"
     return hashlib.sha256(text.encode()).hexdigest()
+
+
+def digest(with_design=True, with_lines=True):
+    return digest_of(DESIGN if with_design else [], LINES if with_lines else [])
+
+
+# docs/adr/2820: an older design the field was given: P1 3 cm south, P7 not yet there, P8 with a height, the kerb 2 cm
+# north. Its points keep the drawing's objects' ids.
+OLD_DESIGN = [("P1", 10.0, 9.97, 100.3), ("P2", 20.0, 10.0, 100.5), ("P3", 30.0, 10.0, 100.7), ("P4", 40.0, 10.0, 100.9),
+              ("P5", 60.0, 60.0, 101.8), ("P6", 60.6, 60.0, 101.812), ("P8", 90.0, 10.0, 100.1)]
+OLD_LINES = [("polyline", [(0.0, 30.02), (100.0, 30.02)]), ("line", [(50.0, 40.0), (50.0, 90.0)])]
+
+
+def num(v):
+    """A number as Rust writes an f64 (the shortest text that reads back the same, no `.0` on a whole one)."""
+    t = repr(float(v))
+    assert "e" not in t, t
+    return t[:-2] if t.endswith(".0") else t
+
+
+def csv_points(design, uids):
+    return "Ad;Y;X;Z;Kimlik\n" + "".join(
+        f"{n};{num(X0 + x)};{num(Y0 + y)};{'' if z is None else num(z)};{u}\n" for (n, x, y, z), u in zip(design, uids))
+
+
+def csv_lines(lines, uids):
+    out = "Kimlik;Sıra;Y;X;Bulge\n"
+    for (_, pts), u in zip(lines, uids):
+        out += "".join(f"{u};{k + 1};{num(X0 + x)};{num(Y0 + y)};{num(0.0)}\n" for k, (x, y) in enumerate(pts))
+    return out
+
+
+def old_ids():
+    d_ids, l_ids, _ = ids()
+    by_name = {n: u for (n, *_), u in zip(DESIGN, d_ids)}
+    return [by_name[n] for n, *_ in OLD_DESIGN], l_ids
 
 
 def signed(p, a, b):
@@ -189,17 +225,29 @@ def zipped(entries):
     return buf.getvalue()
 
 
+# The package of the older design (docs/adr/2820): the project's system, FULL's limits.
+OLD_DESIGN_PACKAGE = dict(package_manifest(digest_of(OLD_DESIGN, OLD_LINES), "EPSG:5256", None, None,
+                                           {"horizontal": 0.02, "vertical": 0.03, "quality": 0.05},
+                                           "2026-10-20T10:00:00", "9"), points=len(OLD_DESIGN), lines=len(OLD_LINES))
+
+
 def package_files():
-    """The fixture files: the current package, the older one, and a zip that is not a package."""
-    points = "Ad;Y;X;Z;Kimlik\n" + "".join(f"{n};{X0 + x};{Y0 + y};{z};{u}\n" for (n, x, y, z), u in
-                                         zip(DESIGN, ids()[0]))
+    """The fixture files: the current package, the older one, and a zip that is not a package; the design's files as
+    `cad.field.package` writes them (docs/adr/1920). docs/adr/2820: the older design's package, and the current one
+    with P1 moved 1 cm in its noktalar.csv (its files no longer its digest's)."""
+    d_ids, l_ids, _ = ids()
+    points, strings = csv_points(DESIGN, d_ids), csv_lines(LINES, l_ids)
     current = dict(CURRENT, designDigest=digest())
+    moved = [("P1", 10.01, 10.0, 100.3)] + DESIGN[1:]
+    o_ids, o_lines = old_ids()
+    pack = lambda m, pts, lns: zipped([("saha-paketi.json", json.dumps(m, ensure_ascii=False, indent=2)),  # noqa: E731
+                                       ("noktalar.csv", pts), ("cizgiler.csv", lns)])
     return {
-        "saha-paketi.zip": zipped([("saha-paketi.json", json.dumps(current, ensure_ascii=False, indent=2)),
-                                   ("noktalar.csv", points), ("cizgiler.csv", "Kimlik;Sıra;Y;X;Bulge\n")]),
-        "eski-paket.zip": zipped([("saha-paketi.json", json.dumps(OLDER, ensure_ascii=False, indent=2)),
-                                  ("noktalar.csv", points), ("cizgiler.csv", "Kimlik;Sıra;Y;X;Bulge\n")]),
+        "saha-paketi.zip": pack(current, points, strings),
+        "eski-paket.zip": pack(OLDER, points, strings),
         "paket-degil.zip": zipped([("notlar.txt", "Saha notları\n")]),
+        "eski-tasarim-paketi.zip": pack(OLD_DESIGN_PACKAGE, csv_points(OLD_DESIGN, o_ids), csv_lines(OLD_LINES, o_lines)),
+        "bozuk-tasarim-paketi.zip": pack(current, csv_points(moved, d_ids), strings),
     }
 
 
@@ -230,9 +278,13 @@ def package_block(manifest, i, path):
 
 
 def report(design=True, surface=True, lines=True, search=None, horizontal=None, vertical=None, quality=None,
-           expected=None, quality_field=True):
+           expected=None, quality_field=True, plan=None):
+    """`plan`: the design compared, (points, lines, their ids), the package's (docs/adr/2820); none: the drawing's."""
     d_ids, l_ids, m_ids = ids()
-    names = [n for n, *_ in DESIGN] if design else []
+    DESIGN_, LINES_ = DESIGN, LINES
+    if plan is not None:
+        DESIGN_, LINES_, (d_ids, l_ids) = plan[0], plan[1], plan[2]
+    names = [n for n, *_ in DESIGN_] if design else []
     claimed = set()
     for name, *_ in MEASURED:
         hits = [i for i, n in enumerate(names) if n == name]
@@ -251,7 +303,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
         elif len(hits) > 1:
             amb = True
         elif search is not None and design:
-            near = [i for i, (_, dx, dy, _) in enumerate(DESIGN) if i not in claimed and math.hypot(dx - x, dy - y) <= search]
+            near = [i for i, (_, dx, dy, _) in enumerate(DESIGN_) if i not in claimed and math.hypot(dx - x, dy - y) <= search]
             if len(near) == 1:
                 match, by = near[0], "place"
                 flags.append("proposed")
@@ -262,7 +314,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
         outside = False
         if match is not None:
             used.add(match)
-            dn_, dx, dy, dz = DESIGN[match]
+            dn_, dx, dy, dz = DESIGN_[match]
             de, dn = x - dx, y - dy
             h = math.hypot(de, dn)
             row.update({"designUid": d_ids[match], "designName": dn_, "by": by, "de": de, "dn": dn, "horizontal": h})
@@ -289,7 +341,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
         on_line = False
         if lines and match is None and not amb:
             best = None
-            for li, (_, pts) in enumerate(LINES):
+            for li, (_, pts) in enumerate(LINES_):
                 for a, b in zip(pts, pts[1:]):
                     d = signed((x, y), a, b)
                     if best is None or abs(d) < abs(best[0]):
@@ -306,7 +358,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
         if quality is not None and sigma is not None and sigma > quality:
             flags.append("lowQuality")
             low += 1
-        if z is None and (surface or (match is not None and DESIGN[match][3] is not None)):
+        if z is None and (surface or (match is not None and DESIGN_[match][3] is not None)):
             flags.append("noHeight")
         only_surface = not design and not lines
         if design and amb:
@@ -321,8 +373,8 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
         row["status"] = status
         row["flags"] = sorted(flags, key=FLAGS.index)
         out.append(row)
-    missing = [{"uid": d_ids[i], "name": DESIGN[i][0]} for i in range(len(DESIGN)) if design and i not in used]
-    dig = digest(design, lines)
+    missing = [{"uid": d_ids[i], "name": DESIGN_[i][0]} for i in range(len(DESIGN_)) if design and i not in used]
+    dig = digest_of(DESIGN_ if design else [], LINES_ if lines else [])
     result = {"designDigest": dig, "points": out, "missing": missing, **counts, "lowQuality": low}
     if expected is not None and expected != dig:
         result["designChanged"] = True
@@ -355,6 +407,8 @@ def inp(**over):
 
 def answer(i):
     pkg = i.get("package")
+    if i.get("packageDesign"):
+        return package_design_answer(i)
     if pkg is None:
         return report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
                       horizontal=i.get("horizontal"), vertical=i.get("vertical"), quality=i.get("quality"),
@@ -367,6 +421,29 @@ def answer(i):
                  expected=manifest["designDigest"], quality_field="qualityField" in i)
     out["package"] = package_block(manifest, i, pkg)
     return out
+
+
+def package_design_answer(i):
+    """docs/adr/2820: the package's own design compared; the drawing's layers given only say whether it changed."""
+    pkg = i["package"]
+    old = pkg.endswith("eski-tasarim-paketi.zip")
+    manifest = OLD_DESIGN_PACKAGE if old else dict(CURRENT, designDigest=digest())
+    plan = (OLD_DESIGN, OLD_LINES, old_ids()) if old else (DESIGN, LINES, ids()[:2])
+    acc = manifest["acceptance"]
+    pick = lambda k: i.get(k, acc.get(k)) if k != "quality" or "qualityField" in i else i.get(k)  # noqa: E731
+    out = report(design=True, surface="surface" in i, lines=True, search=i.get("search"), horizontal=pick("horizontal"),
+                 vertical=pick("vertical"), quality=pick("quality"), quality_field="qualityField" in i, plan=plan)
+    assert out["designDigest"] == manifest["designDigest"]
+    out.pop("designChanged", None)
+    if ("design" in i or "lines" in i) and digest("design" in i, "lines" in i) != manifest["designDigest"]:
+        out["designChanged"] = True
+    block = package_block(manifest, i, pkg)
+    block["design"] = True
+    out["package"] = block
+    # The answer's keys in the contract's order: the digest and the change first.
+    order = ["designDigest", "designChanged", "points", "missing", "within", "outside", "unmatched", "ambiguous",
+             "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package"]
+    return {k: out[k] for k in order if k in out}
 
 
 def ok(name, i, op="plan", setup_=None):
@@ -445,6 +522,8 @@ def cases():
 
 PKG = "$fixture:asbuilt/v1/files/saha-paketi.zip"
 OLD_PKG = "$fixture:asbuilt/v1/files/eski-paket.zip"
+OLD_DESIGN_PKG = "$fixture:asbuilt/v1/files/eski-tasarim-paketi.zip"
+BROKEN_PKG = "$fixture:asbuilt/v1/files/bozuk-tasarim-paketi.zip"
 
 
 def package_cases():
@@ -476,6 +555,38 @@ def package_cases():
         refused("paket: beklenen özet paketinkinden farklı", inp(package=PKG, expectedDesign="0" * 64), bad,
                 "Beklenen tasarım özeti saha paketininkinden farklı; yalnız paketi ya da yalnız özeti verin.",
                 "expectedDesign"),
+    ] + package_design_cases()
+
+
+def package_design_cases():
+    """docs/adr/2820: the record checked with its package's own design."""
+    bare = dict(horizontal=None, vertical=None, quality=None)
+    same = answer(inp(**bare, package=PKG, packageDesign=True))
+    full = answer(FULL)
+    assert {k: v for k, v in same.items() if k != "package"} == full, "the package's design is the drawing's"
+    old = answer(inp(**bare, package=OLD_DESIGN_PKG, packageDesign=True))
+    assert old["designChanged"] and old["designDigest"] != full["designDigest"]
+    p1 = next(p for p in old["points"] if p["name"] == "P1")
+    assert abs(p1["dn"] - 0.03) < 1e-9, p1
+    assert [m["name"] for m in old["missing"]] == ["P5", "P6"], old["missing"]
+    layerless = {"measured": "olcum", "surface": "Tasarım", "search": 0.5, "qualityField": "Hassasiyet",
+                 "package": OLD_DESIGN_PKG, "packageDesign": True}
+    assert "designChanged" not in answer(layerless)
+    bad = "invalid_asbuilt_check"
+    return [
+        ok("paketin tasarımı: değişmemiş tasarım, katmanınkiyle aynı sonuç", inp(**bare, package=PKG,
+                                                                                packageDesign=True)),
+        ok("paketin tasarımı: eski tasarım; kayıt sahaya verilenle, çizimdeki tasarım değişti",
+           inp(**bare, package=OLD_DESIGN_PKG, packageDesign=True)),
+        ok("paketin tasarımı katmansız: değişim söylenmez", layerless),
+        refused("paketin tasarımı paketsiz", inp(packageDesign=True), bad,
+                "Paketin tasarımıyla denetlemek için kaydın saha paketini (package) de verin.", "packageDesign"),
+        refused("paketin tasarımı: dosyaları özetiyle tutmuyor", inp(package=BROKEN_PKG, packageDesign=True), bad,
+                "“bozuk-tasarim-paketi.zip” paketinin tasarım dosyaları (noktalar.csv, cizgiler.csv) özetiyle tutmuyor; "
+                "paket bozulmuş ya da elle değiştirilmiş. Paketi Saha paketi yaz… ile yeniden yazın.", "package"),
+        refused("paketin tasarımı: başka özetli eski paket", inp(package=OLD_PKG, packageDesign=True), bad,
+                "“eski-paket.zip” paketinin tasarım dosyaları (noktalar.csv, cizgiler.csv) özetiyle tutmuyor; paket "
+                "bozulmuş ya da elle değiştirilmiş. Paketi Saha paketi yaz… ile yeniden yazın.", "package"),
     ]
 
 

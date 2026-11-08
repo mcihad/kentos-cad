@@ -1,11 +1,13 @@
 //! The field package a returned record was made with, as `cad.asbuilt.check` reads it (plan/map-cad.md MAP-19,
 //! docs/adr/2420): `saha-paketi.json` out of the `.zip` `cad.field.package` wrote (docs/adr/1920): the design digest,
-//! the stamp and the drawing's revision, the system, epoch and heights, and the acceptance limits given. Nothing else of
-//! the package is read; nothing is written.
+//! the stamp and the drawing's revision, the system, epoch and heights, and the acceptance limits given. Asked
+//! (docs/adr/2820), its design too: `noktalar.csv`'s points and `cizgiler.csv`'s lines, each number as the package wrote
+//! it (the shortest text that reads back the same f64), so the digest of what is read is the package's. Nothing is
+//! written.
 
 use std::path::Path;
 
-use kentos_commands::FIELD_PACKAGE_FORMAT;
+use kentos_commands::{FIELD_PACKAGE_FILES, FIELD_PACKAGE_FORMAT, Vec2};
 use kentos_formats::zip;
 use serde_json::Value;
 
@@ -77,4 +79,64 @@ pub(crate) fn read(text: &str) -> Result<Package, Stop> {
         vertical: limit("vertical"),
         quality: limit("quality"),
     })
+}
+
+/// The package's design (docs/adr/2820): `noktalar.csv` (`Ad;Y;X;Z;Kimlik`, Y east, X north; a name may hold `;`, the
+/// four fields after it never do) and `cizgiler.csv` (`Kimlik;Sıra;Y;X;Bulge`, a line starting at Sıra 1, each vertex's
+/// bulge the edge's to the next). Refused at `package` when a file is not there or a row does not read.
+pub(crate) fn design(text: &str) -> Result<(Vec<crate::asbuilt_check::Point>, Vec<crate::asbuilt_check::Line>), Stop> {
+    let name = Path::new(text).file_name().map_or_else(|| text.to_owned(), |n| n.to_string_lossy().into_owned());
+    let unread = |why: String| refuse(codes::INVALID_ASBUILT_CHECK, format!("“{name}” paketinin tasarım dosyaları okunamadı: {why}."));
+    let bytes = std::fs::read(text).map_err(|e| unread(e.to_string()))?;
+    let limits = zip::Limits::default();
+    let listed = zip::list(&bytes, &limits).map_err(unread)?;
+    let wanted = [FIELD_PACKAGE_FILES[1], FIELD_PACKAGE_FILES[2]];
+    let entries = zip::unpack(&bytes, &listed, &limits, |l| wanted.contains(&l.file_name())).map_err(unread)?;
+    let file = |n: &str| -> Result<String, Stop> {
+        let e = entries.iter().find(|e| e.name == n).ok_or_else(|| unread(format!("içinde {n} yok")))?;
+        String::from_utf8(e.data.clone()).map_err(|_| unread(format!("{n} UTF-8 değil")))
+    };
+    let number = |t: &str, row: usize, n: &str| -> Result<f64, Stop> {
+        t.trim().parse::<f64>().ok().filter(|v| v.is_finite()).ok_or_else(|| unread(format!("{n}'nin {row}. satırında “{t}” bir sayı değil")))
+    };
+    let mut points = Vec::new();
+    let pts_file = FIELD_PACKAGE_FILES[1];
+    for (k, line) in file(pts_file)?.lines().enumerate().skip(1).filter(|(_, l)| !l.trim().is_empty()) {
+        let row = k + 1;
+        let f: Vec<&str> = line.rsplitn(5, ';').collect();
+        let [uid, z, north, east, label] = f[..] else {
+            return Err(unread(format!("{pts_file}'nin {row}. satırında beş alan yok")));
+        };
+        points.push(crate::asbuilt_check::Point {
+            uid: uid.trim().to_owned(),
+            name: label.to_owned(),
+            p: Vec2 { x: number(east, row, pts_file)?, y: number(north, row, pts_file)? },
+            z: if z.trim().is_empty() { None } else { Some(number(z, row, pts_file)?) },
+            sigma: None,
+        });
+    }
+    let mut lines: Vec<crate::asbuilt_check::Line> = Vec::new();
+    let lines_file = FIELD_PACKAGE_FILES[2];
+    for (k, line) in file(lines_file)?.lines().enumerate().skip(1).filter(|(_, l)| !l.trim().is_empty()) {
+        let row = k + 1;
+        let f: Vec<&str> = line.split(';').collect();
+        let [uid, order, east, north, bulge] = f[..] else {
+            return Err(unread(format!("{lines_file}'nin {row}. satırında beş alan yok")));
+        };
+        let at = Vec2 { x: number(east, row, lines_file)?, y: number(north, row, lines_file)? };
+        let bulge = number(bulge, row, lines_file)?;
+        match (order.trim(), lines.last_mut()) {
+            ("1", _) | (_, None) => lines.push(crate::asbuilt_check::Line { uid: uid.trim().to_owned(), pts: vec![at], bulges: vec![bulge] }),
+            (_, Some(l)) => {
+                l.pts.push(at);
+                l.bulges.push(bulge);
+            }
+        }
+    }
+    // A vertex's bulge is its edge's to the next: the last vertex's is not an edge's.
+    for l in &mut lines {
+        l.bulges.truncate(l.pts.len().saturating_sub(1));
+    }
+    lines.retain(|l| l.pts.len() >= 2);
+    Ok((points, lines))
 }

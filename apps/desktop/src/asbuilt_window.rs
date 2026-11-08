@@ -8,7 +8,8 @@
 //!
 //! Saha paketi (docs/adr/1920; `cad.field.package`): the same design (points, lines, surface, the names' attribute) and
 //! the same limits, with the quality notes typed below them (a line each), written as one `.zip` for the field; the
-//! file's name is asked, the drawing is not changed.
+//! file's name is asked, the drawing is not changed. Kaydın saha paketi (docs/adr/2420) checks the record with the
+//! package it was made with; paketin tasarımıyla (docs/adr/2820) compares it with that package's own design.
 
 use std::path::PathBuf;
 
@@ -36,6 +37,8 @@ const PACKAGE: &str = "Saha paketi yaz…";
 /// The returned record's field package (docs/adr/2420): chosen, and taken out.
 const PICK_PACKAGE: &str = "Paketi seç…";
 const DROP_PACKAGE: &str = "Paketi kaldır";
+/// The record checked with its package's own design (docs/adr/2820).
+const PACKAGE_DESIGN: &str = "paketin tasarımıyla";
 /// The choice that leaves a layer or the surface out.
 const NONE: &str = "";
 
@@ -78,6 +81,8 @@ pub struct State {
     pub notes: text_editor::Content,
     /// The field package the measured record was made with (docs/adr/2420); empty: none.
     pub record_package: String,
+    /// The record checked with the package's own design, not the drawing's (docs/adr/2820).
+    pub record_design: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -103,6 +108,8 @@ pub enum Event {
     PickPackage,
     PickedPackage(Option<PathBuf>),
     DropPackage,
+    /// The package's own design compared (docs/adr/2820).
+    PackageDesign(bool),
     Close,
 }
 
@@ -201,10 +208,12 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
     out.push(words::text_line(
         Kind::Info,
         format!(
-            "Saha paketi {} (revizyon {}): {}; tasarım özeti paketten.",
+            "Saha paketi {} (revizyon {}): {}; {}.",
             p.stamp.replace('T', " "),
             p.revision,
-            if taken.is_empty() { "sınırlar girdinin".to_owned() } else { format!("paketten {}", taken.join(", ")) }
+            if taken.is_empty() { "sınırlar girdinin".to_owned() } else { format!("paketten {}", taken.join(", ")) },
+            // docs/adr/2820: the package's own points and lines compared, or only its digest expected.
+            if p.design { "tasarım paketin noktaları ve çizgileri" } else { "tasarım özeti paketten" }
         ),
     ));
     if !p.same_system {
@@ -244,6 +253,7 @@ impl App {
             quality: limit(&s.quality, "Kalite sınırı")?,
             expected_design: None,
             package: opt(&s.record_package),
+            package_design: s.record_design && !s.record_package.is_empty(),
         })
     }
 
@@ -462,7 +472,11 @@ impl App {
             }
             Event::PickedPackage(Some(path)) => s.record_package = path.display().to_string(),
             Event::PickedPackage(None) => return Task::none(),
-            Event::DropPackage => s.record_package.clear(),
+            Event::DropPackage => {
+                s.record_package.clear();
+                s.record_design = false;
+            }
+            Event::PackageDesign(on) => s.record_design = on,
             Event::Close => {
                 self.asbuilt = State::default();
                 self.dialog = None;
@@ -522,7 +536,12 @@ impl App {
                 row![
                     container(fields::input(None, "—", package_name(&s.record_package), false, false)).width(200),
                     words::secondary(PICK_PACKAGE, Some(msg(Event::PickPackage))),
-                    words::secondary(DROP_PACKAGE, (!s.record_package.is_empty()).then(|| msg(Event::DropPackage)))
+                    words::secondary(DROP_PACKAGE, (!s.record_package.is_empty()).then(|| msg(Event::DropPackage))),
+                    words::check(
+                        s.record_design,
+                        PACKAGE_DESIGN,
+                        (!s.record_package.is_empty()).then(|| msg(Event::PackageDesign(!s.record_design)))
+                    )
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -590,7 +609,15 @@ impl App {
                         format!("{} noktanın σ'sı kalite sınırının üstünde: ölçüm çözümü zayıf, yapım hatası sayılmadı.", r.low_quality),
                     ));
                 }
-                if r.design_changed {
+                // With the package's own design (docs/adr/2820) the record is checked against what the field had; the
+                // drawing's change is said, not an error of the record.
+                let own = r.package.as_ref().is_some_and(|p| p.design);
+                if r.design_changed && own {
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        "Çizimdeki tasarım paketten sonra değişmiş; kayıt sahaya verilen tasarımla, paketin tasarımıyla denetlendi.",
+                    ));
+                } else if r.design_changed {
                     lines.push(words::text_line(Kind::Error, "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş."));
                 }
                 if let Some(p) = &r.package {
@@ -654,6 +681,7 @@ impl App {
             Control::Press(PACKAGE) => Some(msg(Event::Package)),
             Control::Press(PICK_PACKAGE) => Some(msg(Event::PickPackage)),
             Control::Press(DROP_PACKAGE) => Some(msg(Event::DropPackage)),
+            Control::Check(PACKAGE_DESIGN, on) => Some(msg(Event::PackageDesign(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

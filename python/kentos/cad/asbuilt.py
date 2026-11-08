@@ -39,9 +39,13 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
     mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları
     girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot
     sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
-    sameSystem, sameEpoch, sameHeights, sınırlar, taken). Retler: invalid_asbuilt_check,
-    invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found,
-    not_a_road_project, unknown_terrain, terrain_unbuildable.
+    sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820)
+    kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
+    tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
+    katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
+    cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket
+    yolu), file_not_found (paket yok), layer_not_found, not_a_road_project,
+    unknown_terrain, terrain_unbuildable.
     """
     __slots__ = ()
     id = "cad.asbuilt.check"
@@ -64,6 +68,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
+        package_design: bool | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -91,9 +96,13 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse
         uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi
         projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
-        sameSystem, sameEpoch, sameHeights, sınırlar, taken). Retler: invalid_asbuilt_check,
-        invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found,
-        not_a_road_project, unknown_terrain, terrain_unbuildable.
+        sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820)
+        kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
+        tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
+        katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
+        cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket
+        yolu), file_not_found (paket yok), layer_not_found, not_a_road_project,
+        unknown_terrain, terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
@@ -106,6 +115,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
                 design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
                 only with `qualityField`), its system, epoch and heights are set against the project's.
+            package_design: The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),
+                read back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it
+                changed since. Needs `package`.
             quality: Unit: length.
             quality_field:
             search: Unit: length.
@@ -131,6 +143,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             horizontal=horizontal,
             lines=lines,
             package=package,
+            package_design=package_design,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -150,6 +163,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
+        package_design: bool | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -167,6 +181,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             horizontal=horizontal,
             lines=lines,
             package=package,
+            package_design=package_design,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -186,6 +201,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
+        package_design: bool | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -203,6 +219,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             horizontal=horizontal,
             lines=lines,
             package=package,
+            package_design=package_design,
             quality=quality,
             quality_field=quality_field,
             search=search,
@@ -222,6 +239,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         horizontal: float | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
+        package_design: bool | Unset = UNSET,
         quality: float | None | Unset = UNSET,
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
@@ -244,6 +262,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             horizontal=horizontal,
             lines=lines,
             package=package,
+            package_design=package_design,
             quality=quality,
             quality_field=quality_field,
             search=search,
