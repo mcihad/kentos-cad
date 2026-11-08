@@ -17,7 +17,7 @@ use crate::app::{App, Message};
 use crate::blocks_panel::Event;
 use kentos_interaction::Level;
 
-fn input(operation: BlockEditOperation) -> BlocksEdit {
+pub(crate) fn input(operation: BlockEditOperation) -> BlocksEdit {
     BlocksEdit {
         publication: None,
         clear_publication: None,
@@ -50,7 +50,7 @@ fn input(operation: BlockEditOperation) -> BlocksEdit {
 
 impl App {
     /// `cad.blocks.edit` on the drawing; a refusal said.
-    fn blocks_command(&mut self, input: BlocksEdit) -> Option<BlocksEdited> {
+    pub(crate) fn blocks_command(&mut self, input: BlocksEdit) -> Option<BlocksEdited> {
         let doc = self.document.as_mut()?;
         match blocks_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Some(output),

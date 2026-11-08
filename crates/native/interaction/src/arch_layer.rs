@@ -37,8 +37,8 @@ pub enum Kind {
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
-    /// A fixture or furniture block (Tefriş).
-    Furniture,
+    /// A fixture or furniture block (Tefriş), by its type (Mobilya, Vitrifiye; docs/adr/3024); none: GENEL.
+    Furniture(Option<String>),
     Dimension,
     Tag,
     /// Kot, kuzey oku, kesit işareti.
@@ -66,7 +66,7 @@ impl Kind {
             Kind::Stair => "MERD",
             Kind::Ramp => "RAMP",
             Kind::Grid => "AKSS",
-            Kind::Casework | Kind::Furniture => "TEFR",
+            Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
             | Kind::Dimension
             | Kind::Tag
@@ -81,7 +81,7 @@ impl Kind {
     pub fn detail(&self) -> String {
         let word = |w: &str| w.to_owned();
         match self {
-            Kind::Wall(m) | Kind::Slab(m) => m.clone().unwrap_or_default(),
+            Kind::Wall(m) | Kind::Slab(m) | Kind::Furniture(m) => m.clone().unwrap_or_default(),
             Kind::Void => word("BOSLUK"),
             Kind::Niche => word("NIS"),
             Kind::Casework => word("MUTFAK"),
@@ -97,8 +97,7 @@ impl Kind {
             | Kind::Column
             | Kind::Stair
             | Kind::Ramp
-            | Kind::Grid
-            | Kind::Furniture => String::new(),
+            | Kind::Grid => String::new(),
         }
     }
 
@@ -140,7 +139,7 @@ impl Kind {
             Kind::Ramp => "Rampa",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
-            Kind::Furniture => "Donatı",
+            Kind::Furniture(_) => "Donatı",
             Kind::Dimension => "Ölçü",
             Kind::Tag => "Etiket",
             Kind::Symbol => "İşaret",
@@ -165,7 +164,7 @@ impl Kind {
             Kind::Ramp => "rampa",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
-            Kind::Furniture => "donatı",
+            Kind::Furniture(_) => "donatı",
             Kind::Dimension => "ölçü",
             Kind::Tag => "etiket",
             Kind::Symbol => "işaret",
@@ -196,7 +195,7 @@ impl Kind {
                 line_type: LineType::Dashdot,
                 ..look("#E06C75", 0.18)
             },
-            Kind::Casework | Kind::Furniture => look("fg-dim", 0.18),
+            Kind::Casework | Kind::Furniture(_) => look("fg-dim", 0.18),
             Kind::Dimension => look("#56B6C2", 0.18),
             Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule => look("fg", 0.18),
             Kind::Symbol => look("fg", 0.25),
@@ -377,7 +376,7 @@ mod tests {
             Kind::Ramp,
             Kind::Grid,
             Kind::Casework,
-            Kind::Furniture,
+            Kind::Furniture(Some("Vitrifiye".into())),
             Kind::Dimension,
             Kind::Tag,
             Kind::Symbol,
@@ -395,6 +394,8 @@ mod tests {
         assert_eq!(names[6], "MM-BACA-GENEL");
         assert_eq!(names[7], "MM-XXXX-MAHAL");
         assert_eq!(names[8], "MM-DOSM-BETONARME");
+        assert_eq!(names[13], "MM-TEFR-MUTFAK");
+        assert_eq!(names[14], "MM-TEFR-VITRIFIYE");
         assert_eq!(names[15], "MM-XXXX-OLCU");
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }

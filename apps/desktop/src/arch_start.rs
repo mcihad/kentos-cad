@@ -21,6 +21,9 @@ impl App {
         }
         // Each Mimari object on its kind's EK-4 layer (docs/adr/3008).
         self.memory.layer_keys = true;
+        // Blok ekle's Duvara hizala on (docs/adr/3024): a fixture by a wall stands its back on the face, its front
+        // toward the room (docs/adr/0702); H turns it off.
+        self.memory.block_to_wall = true;
         if let Some(style) = kentos_commands::builtin_wall_styles()
             .into_iter()
             .find(|s| s.id == FIRST_WALL_STYLE)

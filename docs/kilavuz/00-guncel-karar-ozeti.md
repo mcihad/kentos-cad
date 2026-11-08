@@ -117,6 +117,10 @@
     - Mahal döşemesinden seçilir (`store/pick.rs`: net alanıyla alan isabeti; kenarlar ve daha küçük alanlar önce; döşeme
       hariç). Seçili mahalin duvar yüzündeki her düz kenarında `room_grip` tutamacı: Duvarı kaydır'ın planı, kart iç
       ölçü + alan; yazılan sayı yeni iç ölçü, +/− ile fark. Sınırı çizilmiş mahalde ve kilitli duvarda tutamaç yok.
+  - **Donatı araması ve duvara yaslı yerleşim (M24, [ADR 3024](../adr/3024-fixture-search-and-wall-placement.md)):**
+    - Komut ara kitaplığın Islak hacim/Mobilya/Mutfak bloklarını bulur (`fixture_search`, eş anlamlılar `WORDS`); Enter
+      yalnız o tanımı alır ve Blok ekle'yi başlatır. Mimari'de `block_to_wall` açık; donatı `fixture_kind` ile
+      MM-TEFR-MOBILYA / VITRIFIYE / MUTFAK katmanına (`Kind::Furniture(tip)`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

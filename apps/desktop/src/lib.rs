@@ -237,6 +237,7 @@ mod features;
 #[cfg(test)]
 mod files_testing;
 mod find_replace;
+mod fixture_search;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
@@ -703,6 +704,8 @@ mod tools_screens;
 mod arch_icons;
 #[cfg(test)]
 mod building_context_tests;
+#[cfg(test)]
+mod fixture_place_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

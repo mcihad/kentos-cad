@@ -695,7 +695,13 @@ satırına odaklanmak gerekmez. Dayanak S11, S13.
 - 2+1 kabul izi Oda aracı ve imleç yanı seçeneklerle yeniden yazılır: etkileşim 157 → ≤ 80, odak değişimi 15 → ≤ 3.
 - Esc, Undo, Python ve MCP aynı sonucu verir.
 
-#### ADV-12 — Donatı kataloğu ve akıllı yerleşim [ ]
+#### ADV-12 — Donatı kataloğu ve akıllı yerleşim [~]
+
+_Durum (8 Kasım 2026):_ Donatı araması ve duvara yaslı yerleşim yapıldı (M24, [ADR 3024](../docs/adr/3024-fixture-search-and-wall-placement.md)).
+- Menü araması kitaplığın donatılarını bulur (Türkçe eş anlamlılarla); Enter yalnız o bloğu alır, Blok ekle onunla başlar.
+- KentOS Mimari'de Duvara hizala açık başlar; donatı MM-TEFR-MOBILYA / VITRIFIYE / MUTFAK katmanına yazılır.
+- "lavabo"dan duvara yaslı lavaboya 3 eylem (önce 6).
+- Kalanlar: kullanım alanları ve çakışma (M25), Donatı ▾'de kategoriler, sürükle-bırak.
 
 **Kullanıcı sonucu:** "lavabo" yazıp sürükleyerek banyo donatılır. Donatı duvara yaslanır; kapının önünü kesince bu
 söylenir. Dayanak S13.
@@ -756,7 +762,7 @@ _Durum (7 Kasım 2026):_ Katman anahtarı yapıldı (M9, [ADR 3008](../docs/adr/
     kesme düzleminin önündeki çizgiler (M13);
   - ofis ve proje profili;
   - var olan nesneleri dağıtan komut;
-  - donatı ve blok katmanları (M24);
+  - donatı ve blok katmanları (M24'te yapıldı: MM-TEFR-MOBILYA, MM-TEFR-VITRIFIYE, MM-TEFR-MUTFAK);
   - mahal yazısının DXF'e gitmesi.
 
 **Kullanıcı sonucu:** Çizim bir ofis çizimi gibi katmanlıdır. Paftada kesilen duvar kalın, görünen ince, üstteki kesikli
@@ -1110,7 +1116,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda **(M21, ADR 3021: yapıldı; dikdörtgen oda, tek geri alma, mahal adı açık seçim; çokgen oda M22'yle)** |
 | M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan **(M22, ADR 3022: yapıldı; Kapanınca mahal M ile, canlı döngü alanı; çift tık ve hedef farkı sonraya)** |
 | M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından **(M23, ADR 3023: yapıldı; oda döşemesinden seçilir, kenar tutamacı Duvarı kaydır'ın planıyla, yazılan iç ölçü)** |
-| M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim |
+| M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim **(M24, ADR 3024: yapıldı; menü aramasında donatı ve eş anlamlılar, Mimari'de Duvara hizala açık, TEFR katmanları; 3 eylem)** |
 | M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları |
 | M26 | Dört cephe dış ölçü ve iç zincirler | ADV-16 | Tek komut; 3/4 dış, 2+2 iç zincir |
 | M27 | Kot, mahal etiketi, çakışmasız yerleşim | ADV-16 | Elips etiket, EK-3 numarası |

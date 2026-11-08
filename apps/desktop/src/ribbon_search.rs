@@ -33,7 +33,12 @@ const FLASH: Duration = Duration::from_millis(1600);
 /// models (the web registers each as `processing.model.<id>`, “<label>…”).
 pub enum Hit {
     Command(&'static Command),
-    Model { id: String, title: String },
+    Model {
+        id: String,
+        title: String,
+    },
+    /// A furniture or fixture of KentOS's library (Donatı araması, docs/adr/3024).
+    Fixture(&'static crate::fixture_search::Fixture),
 }
 
 /// The commands `query` finds, best first (the web's `CommandRegistry.search`;
@@ -152,6 +157,14 @@ impl App {
                 ));
             }
         }
+        // KentOS's library's furniture and fixtures where blocks are placed (docs/adr/3024).
+        if self.offers("tool.blockInsert") {
+            scored.extend(
+                crate::fixture_search::search(&self.ribbon_search)
+                    .into_iter()
+                    .map(|(score, f)| (score, Hit::Fixture(f))),
+            );
+        }
         scored.sort_by(|a, b| a.0.total_cmp(&b.0));
         scored.into_iter().take(LIMIT).map(|(_, h)| h).collect()
     }
@@ -164,6 +177,18 @@ impl App {
             .map(|hit| {
                 let command = match hit {
                     Hit::Command(command) => command,
+                    Hit::Fixture(f) => {
+                        return Found {
+                            icon: catalog()
+                                .get("tool.blockInsert")
+                                .map_or_else(|| crate::icons::from_web(None), |c| c.icon),
+                            title: f.name.clone().into(),
+                            detail: crate::fixture_search::detail(f).into(),
+                            shortcut: None,
+                            enabled: self.document.is_some(),
+                            revealable: self.home_of("block.library").is_some(),
+                        };
+                    }
                     Hit::Model { title, .. } => {
                         let home = self.home_of("processing.newModel");
                         return Found {
@@ -216,6 +241,14 @@ impl App {
     pub(crate) fn search_run(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            Some(Hit::Fixture(f)) => {
+                if self.document.is_none() {
+                    return Task::none();
+                }
+                self.ribbon_search.clear();
+                let place = self.place_fixture(&f.name);
+                return Task::batch([release_keyboard(), place]);
+            }
             Some(Hit::Model { id, .. }) => {
                 self.ribbon_search.clear();
                 let open = self.processing_command(&format!("processing.model.{id}"));
@@ -235,6 +268,11 @@ impl App {
     pub(crate) fn search_reveal(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            // A fixture's place: Donatı ▾'s Kitaplık (docs/adr/3024).
+            Some(Hit::Fixture(_)) => match catalog().get("block.library") {
+                Some(command) => command,
+                None => return Task::none(),
+            },
             // A model's button in the model library's panel.
             Some(Hit::Model { id, .. }) => {
                 let Some((tab, ..)) = self.home_of("processing.newModel") else {

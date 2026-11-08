@@ -1,0 +1,48 @@
+# M24 (docs/adr/3024): Donatı araması in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on
+# Mimari at 1440 × 900, 13 px text. Oda draws a room; "lavabo" typed in Komut ara lists the washbasins with their
+# category; Enter takes the washbasin in alone and starts Blok ekle with Duvara hizala on; by the room's west wall
+# its ghost stands against the face, a click places it. "karyola" then finds the beds.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 88 75   # araç: Oda
+wait 800
+click 500 300
+wait 500
+move 800 550
+wait 300
+click 800 550
+wait 1200
+key Escape
+wait 500
+key Escape
+wait 500
+click 1165 20   # Menülerde ara
+wait 500
+type lavabo
+wait 1200
+shot m24-10-arama-lavabo
+key Return
+wait 1000
+move 540 420
+wait 300
+move 515 410   # batı duvarının yanı
+wait 1200
+shot m24-11-duvara-yasli
+click 515 410
+wait 1200
+move 650 470
+wait 800
+shot m24-12-yerlesti
+key Escape
+wait 500
+wheel 509 410 6   # yakından
+wait 1200
+shot m24-12-yakin
+wheel 509 410 -6
+wait 800
+click 1165 20
+wait 500
+type karyola
+wait 1200
+shot m24-13-arama-karyola
+key Escape

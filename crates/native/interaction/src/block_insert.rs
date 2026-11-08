@@ -227,6 +227,20 @@ fn chosen_of(
     }
 }
 
+/// The layer a library fixture goes on (docs/adr/3024; docs/adr/3008 had left blocks on the active layer): by its
+/// card's category, Mobilya MM-TEFR-MOBILYA, Islak hacim MM-TEFR-VITRIFIYE, Mutfak MM-TEFR-MUTFAK (Mutfak dizisi's).
+/// None for another block (a symbol, a title block, the drawing's own): it stays on the active layer.
+pub fn fixture_kind(def: &kentos_commands::BlockDefinition) -> Option<crate::arch_layer::Kind> {
+    use crate::arch_layer::Kind;
+    let category = def.card.as_ref()?.category.as_deref()?;
+    match category.split('/').next()?.trim() {
+        "Mobilya" => Some(Kind::Furniture(Some("Mobilya".into()))),
+        "Islak hacim" => Some(Kind::Furniture(Some("Vitrifiye".into()))),
+        "Mutfak" => Some(Kind::Casework),
+        _ => None,
+    }
+}
+
 /// How near a wall's face Duvara hizala takes the block, logical pixels.
 const WALL_REACH_PX: f64 = 40.0;
 
@@ -487,10 +501,29 @@ impl BlockInsert {
         attrs: Option<std::collections::BTreeMap<String, String>>,
         cx: &mut Context<'_>,
     ) {
-        let input = self.insert_input(block, p, turn, attrs, cx);
-        let result = blocks_insert::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
-            self.d.note(out.id, cx);
+        // A library fixture on its tefriş layer (docs/adr/3024), opened with it in its undo step; another block on
+        // the active layer.
+        let Some(kind) = cx.doc.block(block).and_then(fixture_kind) else {
+            let input = self.insert_input(block, p, turn, attrs, cx);
+            let result = blocks_insert::execute(&mut ExecutionContext::new(cx.doc), input);
+            if let Some(out) = points::written(result, cx) {
+                self.d.note(out.id, cx);
+            }
+            return;
+        };
+        let mut placed = None;
+        let this = &*self;
+        crate::arch_layer::writing(&kind, cx, |layer, cx| {
+            let input = BlocksInsert {
+                layer_id: layer.to_owned(),
+                ..this.insert_input(block, p, turn, attrs, cx)
+            };
+            let result = blocks_insert::execute(&mut ExecutionContext::new(cx.doc), input);
+            placed = points::written(result, cx).map(|out| out.id);
+            placed.is_some()
+        });
+        if let Some(id) = placed {
+            self.d.note(id, cx);
         }
     }
 
@@ -747,6 +780,14 @@ impl Tool for BlockInsert {
 
     /// The pane's rows (docs/adr/0726 §4): the block, its size and unit, a dynamic block's sizes and views, the
     /// factors, the turn, Aynala and Duvara hizala.
+    /// A library fixture's tefriş layer (docs/adr/3024): the panel's Katman says it.
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        cx.memory
+            .block_insert
+            .and_then(|id| cx.doc.block(id))
+            .and_then(fixture_kind)
+    }
+
     fn settings(&self, format: &crate::format::Format) -> Vec<Setting> {
         let Some((m, _)) = &self.seen else {
             return Vec::new();
