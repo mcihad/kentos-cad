@@ -104,6 +104,9 @@
   - **Geçici ölçüden kalıcı ölçü (M19, [ADR 3019](../adr/3019-temporary-distance-made-permanent.md)):**
     - Duvarın yüze olan net mesafesinde sayının kilide göre öbür yanında + (`Switch::Permanent`): tıklanınca
       `cad.dimensions.interior`'ın iki yüzü kesen çizgisiyle tek ölçü, iki ucu yüzüne bağlı, Mimari'nin ölçü katmanında.
+  - **Kenet bir binanın diliyle (M20, [ADR 3020](../adr/3020-snap-names-in-a-building-s-words.md)):**
+    - `snap_names::name` depodaki şekilden noktanın çizgisini adlandırır: Duvar yüzü, Çekirdek yüzü (öncelik 1'in sınırı),
+      Katman sınırı, Duvar ekseni, Taban çizgisi; Açıklık ortası, Açıklık kenarı. Kenet işareti "{tür} · {ad}" yazar.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

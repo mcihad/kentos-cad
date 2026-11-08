@@ -224,6 +224,7 @@ pub mod second;
 pub mod sector;
 pub mod segment_edit;
 pub mod select;
+pub mod snap_names;
 pub mod select_circle;
 pub mod select_containing;
 pub mod select_fence;

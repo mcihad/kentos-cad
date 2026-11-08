@@ -1,0 +1,43 @@
+# M20 (docs/adr/3020): the snap marker in a building's words, in the real window, on malzeme.kcad (headless
+# scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text. A room (Duvar ▾ › Dikdörtgen duvar) and a partition
+# in it (Duvar ▾ › Duvar) are drawn; Duvar again, the pointer on the partition's face's middle ("Orta nokta · Duvar
+# yüzü") and its end ("Uç nokta · Duvar yüzü").
+fit KentOS Mimari — Malzeme
+wait 3000
+click 34 104   # Duvar ▾
+wait 600
+click 95 172   # araç: Dikdörtgen duvar
+wait 600
+click 450 250
+wait 400
+click 850 600
+wait 800
+key Escape
+wait 500
+click 34 104   # Duvar ▾ (its face is Dikdörtgen duvar now: the last used)
+wait 600
+click 61 144   # araç: Duvar
+wait 600
+click 620 262
+wait 400
+click 620 588
+wait 400
+key Return
+wait 600
+key Escape
+wait 400
+click 34 104   # Duvar ▾
+wait 600
+click 61 144   # araç: Duvar
+wait 600
+move 600 410
+wait 300
+move 615 425   # the partition's face, its middle
+wait 900
+shot m20-10-bolme-ortasi
+move 640 300
+wait 300
+move 616 266   # the partition's end at the room's face
+wait 900
+shot m20-11-bolme-ucu
+key Escape

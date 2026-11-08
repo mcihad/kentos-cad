@@ -295,3 +295,42 @@ fn the_plus_beside_a_wall_s_distance_writes_a_permanent_dimension_that_follows_t
         "it follows the walls: {moved:?}"
     );
 }
+
+#[test]
+fn the_snap_marker_says_a_wall_s_face_and_axis_in_a_building_s_words() {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_interaction::{SnapHit, SnapKind, Vec2};
+    let (mut app, [a, _], _) = two_walls();
+    let doc = app.document.take().expect("a drawing");
+    app.spatial.sync(&doc.model);
+    app.document = Some(doc);
+    let id = f64::from(a.0);
+    let Some(Shape::Wall { wall: spec, .. }) = app.spatial.store().get(id).map(|i| i.shape.clone())
+    else {
+        panic!("the wall in the store");
+    };
+    // The path runs north at x = 20: its left is west.
+    let left = 20.0 - kentos_geometry_core::geom::wall::left_face(&spec);
+    let right = left + spec.width;
+    let axis = (left + right) / 2.0;
+    let note = |app: &mut App, x: f64, kind: SnapKind| {
+        app.snap = Some(SnapHit {
+            kind,
+            point: Vec2::new(x, 22.5),
+            id,
+        });
+        app.snap_marker_note()
+    };
+    assert_eq!(
+        note(&mut app, right, SnapKind::Midpoint).as_deref(),
+        Some("Duvar yüzü")
+    );
+    assert_eq!(
+        note(&mut app, left, SnapKind::Midpoint).as_deref(),
+        Some("Duvar yüzü")
+    );
+    assert_eq!(
+        note(&mut app, axis, SnapKind::Nearest).as_deref(),
+        Some("Duvar ekseni")
+    );
+}

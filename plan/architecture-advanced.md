@@ -668,7 +668,8 @@ _Durum (8 Kasım 2026):_ İmleç yanı seçenekler yapıldı (M18, [ADR 3018](..
 - Değer kutusunda Tab Uzunluk → Açı → aracın ayarları; Duvar'da Kalınlık ve Hiza, Dikdörtgen duvarda Boyutlar, Kalınlık ve Boy referansı.
 - ↓ çizimin üstünde kutuyu ilk ayarda açar; yazma panelin yolundan (`configure`).
 - Geçici ölçüden kalıcı ölçü (M19, [ADR 3019](../docs/adr/3019-temporary-distance-made-permanent.md)): sayının altındaki + mesafeyi iki yüze bağlı ölçü yapar; duvar kayınca değer güncellenir.
-- Kalanlar: mimari kenet türleri (M20), Oda aracı (M21), 2+1 izinin yeniden yazımı; açıklık ve kolonun geçici ölçüsünden kalıcı ölçü.
+- Kenet dili (M20, [ADR 3020](../docs/adr/3020-snap-names-in-a-building-s-words.md)): kenet işareti duvarın çizgisini (Duvar yüzü, Çekirdek yüzü, Katman sınırı, Duvar ekseni, Taban çizgisi) ve açıklığın yerini (Açıklık ortası, kenarı) söyler.
+- Kalanlar: Oda aracı (M21), 2+1 izinin yeniden yazımı; açıklık ve kolonun geçici ölçüsünden kalıcı ölçü; mimari kenet süzgeci.
 
 **Kullanıcı sonucu:** "4,20 × 3,60 bir yatak odası, yanına 1,20'lik koridor" fareyle ve birkaç sayıyla çizilir; komut
 satırına odaklanmak gerekmez. Dayanak S11, S13.
@@ -1102,7 +1103,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 |---|---|---|---|
 | M18 | İmleç yanında aracın seçenekleri | ADV-11 | Kalınlık, referans ve uzunluk Tab ile **(M18, ADR 3018: yapıldı; Duvar Kalınlık/Hiza, Dikdörtgen duvar Boyutlar/Kalınlık/Boy referansı; ↓ ile açılış)** |
 | M19 | Tıklanabilir geçici ölçü | ADV-11 | Ölçüye yazılan değer duvarı taşır **(M19, ADR 3019: yazılan değerin taşıması ADR 0710'dan vardı; yeni olan sayının altındaki + ile iki yüze bağlı kalıcı ölçü)** |
-| M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı |
+| M20 | Mimari kenet türleri ve kenet dili | ADV-11 | Yüz, eksen, çekirdek; imleç yanında yazı **(M20, ADR 3020: yapıldı; ad noktadan bulunur, kenet değişmez; süzgeç sonraya)** |
 | M21 | Oda aracı | ADV-11 | Duvar + mahal + etiket tek adımda |
 | M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan |
 | M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından |
