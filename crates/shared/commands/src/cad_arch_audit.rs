@@ -73,6 +73,10 @@ pub enum ArchAuditCheck {
     /// The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,
     /// fixtures' clearances; nothing unless the project has a program.
     Program,
+    /// Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older
+    /// sanitary blocks) taken by a wall, a column, another fixture or a door's leaf (passage); checked only when asked
+    /// by name.
+    Fixtures,
 }
 
 /// What kind of problem a door finding is (docs/adr/0772 §5): kept apart, never one for another.
@@ -101,7 +105,7 @@ impl ArchAuditNature {
 }
 
 impl ArchAuditCheck {
-    pub const ALL: [ArchAuditCheck; 16] = [
+    pub const ALL: [ArchAuditCheck; 17] = [
         ArchAuditCheck::Walls,
         ArchAuditCheck::Openings,
         ArchAuditCheck::Spaces,
@@ -118,6 +122,7 @@ impl ArchAuditCheck {
         ArchAuditCheck::Casework,
         ArchAuditCheck::Doors,
         ArchAuditCheck::Program,
+        ArchAuditCheck::Fixtures,
     ];
 
     /// Its name on the wire.
@@ -139,6 +144,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Casework => "casework",
             ArchAuditCheck::Doors => "doors",
             ArchAuditCheck::Program => "program",
+            ArchAuditCheck::Fixtures => "fixtures",
         }
     }
 
@@ -161,6 +167,7 @@ impl ArchAuditCheck {
             ArchAuditCheck::Casework => "Mutfak dizileri",
             ArchAuditCheck::Doors => "Kapılar",
             ArchAuditCheck::Program => "Bina programı",
+            ArchAuditCheck::Fixtures => "Donatılar",
         }
     }
 }
@@ -300,7 +307,8 @@ pub struct ArchAuditFinding {
     /// `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
     /// `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
     /// `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
-    /// `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).
+    /// `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
+    /// `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).
     pub code: String,
     /// What is wrong.
     pub message: String,

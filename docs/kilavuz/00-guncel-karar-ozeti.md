@@ -121,6 +121,10 @@
     - Komut ara kitaplığın Islak hacim/Mobilya/Mutfak bloklarını bulur (`fixture_search`, eş anlamlılar `WORDS`); Enter
       yalnız o tanımı alır ve Blok ekle'yi başlatır. Mimari'de `block_to_wall` açık; donatı `fixture_kind` ile
       MM-TEFR-MOBILYA / VITRIFIYE / MUTFAK katmanına (`Kind::Furniture(tip)`).
+  - **Donatının kullanım alanı denetimde (M25, [ADR 3025](../adr/3025-fixture-use-zones-in-the-audit.md)):**
+    - `ArchAuditCheck::Fixtures` (yalnız adıyla): `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (düzeltme: kapıyı
+      çevir). Alan `Document::fixture_zone` ("Boşluk zarfı") ya da eski bloklarda `fixture_audit::OLDER`; izdüşüm görünüş
+      durumunun gizlediğini saymaz (`hidden_by`). Panel seçili bulgunun alanını kesik kırmızı çizer.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

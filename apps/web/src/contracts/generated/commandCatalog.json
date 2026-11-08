@@ -104602,6 +104602,18 @@
       "meaning": "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı)."
     },
     {
+      "code": "arch_fixture_zone_blocked",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş)."
+    },
+    {
+      "code": "arch_fixture_zone_door",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş)."
+    },
+    {
       "code": "ramp_slope_over_profile",
       "kind": "warning",
       "retryable": false,
@@ -109033,6 +109045,11 @@
           "const": "program",
           "description": "The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,\nfixtures' clearances; nothing unless the project has a program.",
           "type": "string"
+        },
+        {
+          "const": "fixtures",
+          "description": "Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older\nsanitary blocks) taken by a wall, a column, another fixture or a door's leaf (passage); checked only when asked\nby name.",
+          "type": "string"
         }
       ]
     },
@@ -109102,7 +109119,7 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's\n`arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).",
           "type": "string"
         },
         "exception": {

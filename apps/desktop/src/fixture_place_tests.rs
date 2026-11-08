@@ -161,3 +161,140 @@ fn the_other_programs_keep_duvara_hizala_off() {
     let (app, _) = App::start_in(None, None, Settings::memory(), Recovery::off());
     assert!(!app.memory.block_to_wall);
 }
+
+/// Mimari denetim's Donatılar (M25, docs/adr/3025) on a 2.0 × 1.6 m bathroom: a wall-hung WC (its block's “Boşluk
+/// zarfı” 80 × 60 in front), a washbasin of the older blocks (KentOS's 80 × 70 in front of it) whose zone takes the WC,
+/// and a door in the west wall whose leaf opens into the WC's zone, its fix the door turned.
+#[test]
+fn a_bathroom_s_fixture_zones_are_found_taken_by_a_fixture_and_a_door() {
+    let mut app = fresh_mimari();
+    let (layer, level) = {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let level = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.levels.first())
+            .map(|l| l.id.clone())
+            .expect("a storey");
+        (doc.layers().active().to_owned(), level)
+    };
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    // Walls 10 cm thick round the room's clear faces x 0..2.0, y 0..1.6.
+    let wall = |a: (f64, f64), b: (f64, f64)| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.10, "justify": "center", "arch": {"level": level}});
+    let walls = command(
+        &mut app,
+        "cad.walls.create",
+        json!({"layerId": layer, "walls": [
+            wall((-0.05, -0.05), (2.05, -0.05)), wall((2.05, -0.05), (2.05, 1.65)),
+            wall((2.05, 1.65), (-0.05, 1.65)), wall((-0.05, 1.65), (-0.05, -0.05))
+        ]}),
+    );
+    let west = walls["output"]["uids"][3]
+        .as_str()
+        .expect("the west wall")
+        .to_owned();
+    command(
+        &mut app,
+        "cad.blocks.edit",
+        json!({"operation": "import", "name": "kentos-temel"}),
+    );
+    let block = |app: &App, name: &str| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.block_named(name)
+            .map(|b| b.id.to_text())
+            .expect("the library's block")
+    };
+    let (wc, basin) = (block(&app, "Asma klozet"), block(&app, "Lavabo"));
+    // The WC on the south wall facing north; the washbasin on the east wall facing west, its zone over the WC.
+    command(
+        &mut app,
+        "cad.blocks.insert",
+        json!({"block": wc, "at": p(1.0, 0.0), "rotation": 0.0, "layerId": layer, "arch": {"level": level}}),
+    );
+    command(
+        &mut app,
+        "cad.blocks.insert",
+        json!({"block": basin, "at": p(2.0, 0.4), "rotation": std::f64::consts::FRAC_PI_2, "layerId": layer, "arch": {"level": level}}),
+    );
+    command(
+        &mut app,
+        "cad.openings.create",
+        json!({"layerId": layer, "openings": [{"host": west, "at": 0.75, "form": "door", "width": 0.8, "number": "K1"}]}),
+    );
+    // The WC's body without its hidden “Boşluk zarfı”: 54 cm from the wall, not 114; the zone 60 cm in front of it.
+    {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let wc_insert = doc
+            .entities()
+            .find_map(|e| match e {
+                kentos_commands::Entity::Insert(i)
+                    if doc.block(i.block).is_some_and(|b| b.name == "Asma klozet") =>
+                {
+                    Some(i.clone())
+                }
+                _ => None,
+            })
+            .expect("the WC");
+        let depth = |c: [kentos_commands::Vec2; 4]| c.iter().map(|p| p.y).fold(f64::MIN, f64::max);
+        let body = doc.fixture_footprint(&wc_insert).expect("its body");
+        assert!((depth(body) - 0.54).abs() < 1e-9, "{body:?}");
+        let zone = doc.fixture_zone(&wc_insert).expect("its zone");
+        assert!((depth(zone) - 1.14).abs() < 1e-9, "{zone:?}");
+    }
+    // `KENTOS_M25_KCAD=path` keeps the bathroom for the real window.
+    if let Ok(path) = std::env::var("KENTOS_M25_KCAD") {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        std::fs::write(
+            path,
+            kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes"),
+        )
+        .expect("kept");
+    }
+    let audit = command(&mut app, "cad.arch.audit", json!({"checks": ["fixtures"]}));
+    let findings = audit["output"]["findings"]
+        .as_array()
+        .expect("findings")
+        .clone();
+    let codes: Vec<&str> = findings
+        .iter()
+        .map(|f| f["code"].as_str().unwrap_or_default())
+        .collect();
+    let messages: Vec<&str> = findings
+        .iter()
+        .map(|f| f["message"].as_str().unwrap_or_default())
+        .collect();
+    assert!(codes.contains(&"arch_fixture_zone_blocked"), "{messages:?}");
+    assert!(
+        messages.iter().any(|m| m.contains("“Lavabo”")
+            && m.contains("0.80 × 0.70 m")
+            && m.contains("“Asma klozet”")),
+        "{messages:?}"
+    );
+    let door = findings
+        .iter()
+        .find(|f| f["code"] == "arch_fixture_zone_door")
+        .unwrap_or_else(|| panic!("the door's leaf in the WC's zone: {messages:?}"));
+    assert!(
+        door["message"]
+            .as_str()
+            .unwrap_or_default()
+            .contains("K1 kapısının kanadı “Asma klozet”"),
+        "{door}"
+    );
+    assert_eq!(door["nature"], "passage");
+    assert_eq!(
+        door["fix"]["step"]["command"], "cad.openings.edit",
+        "the door turned: {door}"
+    );
+    // Asked with the other groups but not by name: no fixture findings (an older call's answer stays).
+    let all = command(&mut app, "cad.arch.audit", json!({}));
+    assert!(
+        !all["output"]["findings"]
+            .as_array()
+            .expect("findings")
+            .iter()
+            .any(|f| f["check"] == "fixtures"),
+        "only when asked by name"
+    );
+}

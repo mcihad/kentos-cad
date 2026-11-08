@@ -701,7 +701,8 @@ _Durum (8 Kasım 2026):_ Donatı araması ve duvara yaslı yerleşim yapıldı (
 - Menü araması kitaplığın donatılarını bulur (Türkçe eş anlamlılarla); Enter yalnız o bloğu alır, Blok ekle onunla başlar.
 - KentOS Mimari'de Duvara hizala açık başlar; donatı MM-TEFR-MOBILYA / VITRIFIYE / MUTFAK katmanına yazılır.
 - "lavabo"dan duvara yaslı lavaboya 3 eylem (önce 6).
-- Kalanlar: kullanım alanları ve çakışma (M25), Donatı ▾'de kategoriler, sürükle-bırak.
+- Kullanım alanı denetimi (M25, [ADR 3025](../docs/adr/3025-fixture-use-zones-in-the-audit.md)): Mimari denetim'de Donatılar grubu; alana giren duvar, kolon, donatı ve kapı kanadı (düzeltme: kapıyı çevir); izdüşüm gizli zarfı saymıyor (sahte kapı çarpışması gitti).
+- Kalanlar: tezgâh önü, yerleştirirken canlı uyarı, Donatı ▾'de kategoriler, sürükle-bırak.
 
 **Kullanıcı sonucu:** "lavabo" yazıp sürükleyerek banyo donatılır. Donatı duvara yaslanır; kapının önünü kesince bu
 söylenir. Dayanak S13.
@@ -1117,7 +1118,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M22 | Kendiliğinden mahal ve canlı alan | ADV-11 | Döngü kapanınca mahal; sürüklerken alan **(M22, ADR 3022: yapıldı; Kapanınca mahal M ile, canlı döngü alanı; çift tık ve hedef farkı sonraya)** |
 | M23 | Odayı sürükleyerek büyütme | ADV-11, ADV-01 | Mahal kenarından **(M23, ADR 3023: yapıldı; oda döşemesinden seçilir, kenar tutamacı Duvarı kaydır'ın planıyla, yazılan iç ölçü)** |
 | M24 | Donatı galerisi ve akıllı yerleşim | ADV-12 | "lavabo" → duvara yaslı yerleşim **(M24, ADR 3024: yapıldı; menü aramasında donatı ve eş anlamlılar, Mimari'de Duvara hizala açık, TEFR katmanları; 3 eylem)** |
-| M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları |
+| M25 | Kullanım alanları ve çakışma | ADV-12 | Kapı önü ve klozet önü bulguları **(M25, ADR 3025: yapıldı; Donatılar grubu, kanat ve donatı bulguları, kırmızı alan, sahte çarpışma düzeltildi)** |
 | M26 | Dört cephe dış ölçü ve iç zincirler | ADV-16 | Tek komut; 3/4 dış, 2+2 iç zincir |
 | M27 | Kot, mahal etiketi, çakışmasız yerleşim | ADV-16 | Elips etiket, EK-3 numarası |
 | M28 | 90/210, doğrama kodları, odaya göre numara | ADV-16, ADV-03 | K01, P01 |

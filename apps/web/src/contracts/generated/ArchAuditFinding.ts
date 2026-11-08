@@ -25,7 +25,8 @@ key: string, check: ArchAuditCheck,
  * `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
  * `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
  * `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
- * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).
+ * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
+ * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).
  */
 code: string, 
 /**

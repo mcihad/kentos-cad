@@ -438,45 +438,51 @@ impl Document {
     }
 
     /// The box a fixture's block draws as the insert places it (docs/adr/0772 §5): its four corners; none when its
-    /// block draws nothing.
-    pub fn fixture_footprint(&self, i: &kentos_contracts::InsertEntity) -> Option<[kentos_contracts::Vec2; 4]> {
-        use kentos_geometry_core::api::json::{FromJson, Json};
-        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+    /// block draws nothing. What the insert's visibility state hides is no part of it (docs/adr/3025): a WC's
+    /// “Boşluk zarfı” outline, hidden in its “Sade” state, made its body 60 cm deeper and a door struck the air in
+    /// front of it.
+    pub fn fixture_footprint(
+        &self,
+        i: &kentos_contracts::InsertEntity,
+    ) -> Option<[kentos_contracts::Vec2; 4]> {
         let b = self.blocks().iter().find(|b| b.id == i.block)?;
-        let mut seen: Option<[f64; 4]> = None;
-        for e in &b.entities {
-            let Some(core) = serde_json::to_string(e)
-                .ok()
-                .and_then(|t| Json::parse(&t).ok())
-                .and_then(|j| CoreEntity::from_json(&j).ok())
-            else {
-                continue;
-            };
-            let r = entity_bounds(&core.shape);
-            if ![r.min_x, r.min_y, r.max_x, r.max_y].iter().all(|v| v.is_finite()) {
-                continue;
-            }
-            seen = Some(match seen {
-                None => [r.min_x, r.min_y, r.max_x, r.max_y],
-                Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
-            });
+        let hidden = hidden_by(b, &i.parameters);
+        let corners = entities_box(b.entities.iter().filter(|e| !hidden.contains(&e.base().id)))?;
+        Some(placed_box(b, i, corners))
+    }
+
+    /// A fixture's use zone as its block draws it (docs/adr/3025, 0702): the outline its visibility state
+    /// “Boşluk zarfı” shows and its first state hides, as the insert places it; none when its block draws none.
+    pub fn fixture_zone(
+        &self,
+        i: &kentos_contracts::InsertEntity,
+    ) -> Option<[kentos_contracts::Vec2; 4]> {
+        use kentos_contracts::block_dynamic::BlockParameter;
+        let b = self.blocks().iter().find(|b| b.id == i.block)?;
+        let states = b
+            .dynamic
+            .as_ref()?
+            .parameters
+            .iter()
+            .find_map(|p| match p {
+                BlockParameter::Visibility { states, .. } => Some(states),
+                _ => None,
+            })?;
+        let first = states.first()?;
+        let zone = states
+            .iter()
+            .find(|s| fold_name(&s.name) == fold_name(ZONE_STATE))?;
+        let ids: Vec<u32> = first
+            .hidden
+            .iter()
+            .filter(|id| !zone.hidden.contains(id))
+            .copied()
+            .collect();
+        if ids.is_empty() {
+            return None;
         }
-        let [x0, y0, x1, y1] = seen?;
-        let m = kentos_geometry_core::block::placement_xy(
-            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
-            i.scale,
-            i.y_scale.unwrap_or(i.scale),
-            i.rotation,
-            i.mirror,
-        );
-        let at = |x: f64, y: f64| {
-            let (x, y) = (x - b.base.x, y - b.base.y);
-            kentos_contracts::Vec2 {
-                x: m[0] * x + m[2] * y + m[4],
-                y: m[1] * x + m[3] * y + m[5],
-            }
-        };
-        Some([at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)])
+        let corners = entities_box(b.entities.iter().filter(|e| ids.contains(&e.base().id)))?;
+        Some(placed_box(b, i, corners))
     }
 
     /// Where a fixture stands (docs/adr/0733 §2): the middle of its block's drawing as the insert places it, so that a
@@ -633,4 +639,94 @@ impl Document {
         self.uid(crate::identity::Slot(e.base().id))
             .map(|u| u.to_string())
     }
+}
+
+/// The visibility state a sanitary block's use zone is shown in (docs/adr/0702).
+pub const ZONE_STATE: &str = "Boşluk zarfı";
+
+fn fold_name(name: &str) -> String {
+    kentos_contracts::blocks::name_key(name.trim())
+}
+
+/// The local ids `b`'s visibility parameters hide as `values` show it (docs/adr/0318 §1): each parameter's state the
+/// values name, else its first.
+fn hidden_by(
+    b: &kentos_contracts::BlockDefinition,
+    values: &std::collections::BTreeMap<String, kentos_contracts::block_dynamic::ParamValue>,
+) -> Vec<u32> {
+    use kentos_contracts::block_dynamic::{BlockParameter, ParamValue};
+    let Some(dynamic) = &b.dynamic else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for p in &dynamic.parameters {
+        let BlockParameter::Visibility { name, states } = p else {
+            continue;
+        };
+        let chosen = match values.get(name) {
+            Some(ParamValue::Text(state)) => states.iter().find(|s| &s.name == state),
+            _ => None,
+        }
+        .or(states.first());
+        if let Some(state) = chosen {
+            out.extend(state.hidden.iter().copied());
+        }
+    }
+    out
+}
+
+/// The box `entities` draw in their block's frame: `[x0, y0, x1, y1]`; none when they draw nothing.
+fn entities_box<'a>(entities: impl Iterator<Item = &'a Entity>) -> Option<[f64; 4]> {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+    let mut seen: Option<[f64; 4]> = None;
+    for e in entities {
+        let Some(core) = serde_json::to_string(e)
+            .ok()
+            .and_then(|t| Json::parse(&t).ok())
+            .and_then(|j| CoreEntity::from_json(&j).ok())
+        else {
+            continue;
+        };
+        let r = entity_bounds(&core.shape);
+        if ![r.min_x, r.min_y, r.max_x, r.max_y]
+            .iter()
+            .all(|v| v.is_finite())
+        {
+            continue;
+        }
+        seen = Some(match seen {
+            None => [r.min_x, r.min_y, r.max_x, r.max_y],
+            Some(o) => [
+                o[0].min(r.min_x),
+                o[1].min(r.min_y),
+                o[2].max(r.max_x),
+                o[3].max(r.max_y),
+            ],
+        });
+    }
+    seen
+}
+
+/// A box of `b`'s frame as `i` places it: its four corners.
+fn placed_box(
+    b: &kentos_contracts::BlockDefinition,
+    i: &kentos_contracts::InsertEntity,
+    [x0, y0, x1, y1]: [f64; 4],
+) -> [Vec2; 4] {
+    let m = kentos_geometry_core::block::placement_xy(
+        kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+        i.scale,
+        i.y_scale.unwrap_or(i.scale),
+        i.rotation,
+        i.mirror,
+    );
+    let at = |x: f64, y: f64| {
+        let (x, y) = (x - b.base.x, y - b.base.y);
+        Vec2 {
+            x: m[0] * x + m[2] * y + m[4],
+            y: m[1] * x + m[3] * y + m[5],
+        }
+    };
+    [at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]
 }

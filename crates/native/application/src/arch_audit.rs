@@ -36,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 16] = [
+const CODES: [(ArchAuditCheck, &[&str]); 17] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -95,6 +95,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 16] = [
         &[codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW],
     ),
     (ArchAuditCheck::Program, &crate::program_check::CODES),
+    (ArchAuditCheck::Fixtures, &[codes::ARCH_FIXTURE_ZONE_BLOCKED, codes::ARCH_FIXTURE_ZONE_DOOR]),
 ];
 
 /// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
@@ -1849,9 +1850,11 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
-    // The doors (docs/adr/0772 §5) only when asked by name: an older call's findings stay as they were.
+    // The doors (docs/adr/0772 §5) and the fixtures (docs/adr/3025) only when asked by name: an older call's findings
+    // stay as they were.
     let asked = |c: ArchAuditCheck| {
-        input.checks.contains(&c) || (input.checks.is_empty() && c != ArchAuditCheck::Doors)
+        input.checks.contains(&c)
+            || (input.checks.is_empty() && !matches!(c, ArchAuditCheck::Doors | ArchAuditCheck::Fixtures))
     };
     let mut findings = Vec::new();
     let mut run: HashSet<&'static str> = HashSet::new();
@@ -1911,6 +1914,30 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                 },
             ),
             ArchAuditCheck::Program => crate::program_check::findings(doc),
+            ArchAuditCheck::Fixtures => crate::fixture_audit::findings(doc, |code, message, repair, slots, at, turn| {
+                // A door's fix: the door turned (docs/adr/0787 §1), not on a locked layer.
+                let fix = turn.zip(slots.get(1)).and_then(|((label, what), door)| {
+                    let e = doc.get(*door)?;
+                    (!audit.locked(e)).then(|| {
+                        fix(
+                            label,
+                            "cad.openings.edit",
+                            json!({"uids": [audit.uid(*door)], "operation": {"kind": "flip", "what": what}}),
+                        )
+                    })
+                });
+                let mut f = finding(
+                    ArchAuditCheck::Fixtures,
+                    code,
+                    message,
+                    repair,
+                    slots.iter().map(|s| audit.uid(*s)).collect(),
+                    at,
+                    fix,
+                );
+                f.nature = Some(kentos_commands::ArchAuditNature::Passage);
+                f
+            }),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.

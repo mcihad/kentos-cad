@@ -235,6 +235,7 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Casework => "casework",
         ArchAuditCheck::Doors => "door",
         ArchAuditCheck::Program => "archProgram",
+        ArchAuditCheck::Fixtures => "blockLibrary",
     }
 }
 

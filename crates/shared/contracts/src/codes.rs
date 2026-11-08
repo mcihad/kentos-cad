@@ -2696,6 +2696,11 @@ codes! {
     ARCH_DOOR_FRONT_BLOCKED = "arch_door_front_blocked", Warning, false, "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş).";
     /// A door narrower in clear than the project rule the audit was given (docs/adr/0772 §5): a rule.
     ARCH_DOOR_CLEAR_NARROW = "arch_door_clear_narrow", Warning, false, "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı).";
+    /// A fixture's use zone (its block's “Boşluk zarfı”, or KentOS's for its older sanitary blocks) taken by a wall, a
+    /// column or another fixture (docs/adr/3025): passage.
+    ARCH_FIXTURE_ZONE_BLOCKED = "arch_fixture_zone_blocked", Warning, false, "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş).";
+    /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
+    ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
     RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";
     /// A sloped run longer than the profile's long run and steeper than it allows there.

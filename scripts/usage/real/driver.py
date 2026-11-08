@@ -122,9 +122,13 @@ def fit(title):
                 return name
         return name
 
+    seen = []
     for w in root.query_tree().children:
         try:
-            if named(w) == title:
+            name = named(w)
+            if name:
+                seen.append(name)
+            if name == title:
                 w.configure(x=0, y=0, width=g.width, height=g.height)
                 # No window manager gives the keyboard to the window: give it as one would.
                 w.set_input_focus(X.RevertToParent, X.CurrentTime)
@@ -132,7 +136,8 @@ def fit(title):
                 return
         except Exception:
             pass
-    raise SystemExit(f"no window: {title}")
+    # The windows there are said: a drawing's title is its own name, not its file's.
+    raise SystemExit(f"no window: {title} (there: {', '.join(seen) or 'none'})")
 
 for raw in open(sys.argv[1], encoding="utf-8"):
     if raw.lstrip().startswith("#"):
