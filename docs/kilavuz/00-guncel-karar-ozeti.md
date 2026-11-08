@@ -227,6 +227,9 @@
 - **İmar planı denetiminde yola giren parsel (8 Kasım 2026; MAP-09, [ADR 2640](../../docs/adr/2640-zoning-parcel-inside-road-width.md)).**
   `cad.zoning.check`'in `roadParcel`'i: yolun planda yazılan genişliğine giren parsel katmanı parseli, alanı ve
   Ada/Parsel'iyle; yasal sonuç iddia edilmez. Harita + CBS.
+- **Senaryo ölçülerinde altyapıya yakınlık (8 Kasım 2026; MAP-10, [ADR 2660](../../docs/adr/2660-scenario-infrastructure-proximity.md)).**
+  `cad.scenarios.impact`'in `infrastructure`'ı: altyapı katmanındaki en yakın nesneye kullanıcının uzaklığında olan
+  alan ve payı; senaryonun değiştirdiği katmanda her taraf kendi hattıyla. Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

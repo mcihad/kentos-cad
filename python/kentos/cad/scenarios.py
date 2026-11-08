@@ -12,6 +12,7 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     ImpactAccess,
+    ImpactInfrastructure,
     ScenarioOperation,
     ScenarioOperationName,
     ScenariosEdit,
@@ -234,6 +235,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         impervious: Mapping[str, float] | None | Unset = UNSET,
+        infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -263,6 +265,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             access:
             field:
             impervious: Unit: 1.
+            infrastructure:
             key:
             since:
             request_id: Names this write: sent again with the same call it is answered as
@@ -282,6 +285,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             access=access,
             field=field,
             impervious=_opt(impervious, lambda x: dict(x)),
+            infrastructure=infrastructure,
             key=key,
             since=since,
         ), request_id=request_id, expected=expected)
@@ -295,6 +299,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         impervious: Mapping[str, float] | None | Unset = UNSET,
+        infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
     ) -> ScenariosImpacted:
@@ -306,6 +311,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             access=access,
             field=field,
             impervious=_opt(impervious, lambda x: dict(x)),
+            infrastructure=infrastructure,
             key=key,
             since=since,
         ))
@@ -319,6 +325,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         impervious: Mapping[str, float] | None | Unset = UNSET,
+        infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -330,6 +337,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             access=access,
             field=field,
             impervious=_opt(impervious, lambda x: dict(x)),
+            infrastructure=infrastructure,
             key=key,
             since=since,
         ))
@@ -343,6 +351,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         access: ImpactAccess | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         impervious: Mapping[str, float] | None | Unset = UNSET,
+        infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
         op: str = "execute",
@@ -359,6 +368,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             access=access,
             field=field,
             impervious=_opt(impervious, lambda x: dict(x)),
+            infrastructure=infrastructure,
             key=key,
             since=since,
         ), op=op, request_id=request_id, expected=expected)

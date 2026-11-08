@@ -40,7 +40,7 @@ sırayla alır.
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
@@ -960,6 +960,14 @@ erişim sorulunca `reach` ile erişen, erişmeyen ve hedef alanları iki tarafta
 durumlar, MCP); Senaryo ölçüleri'nde Erişimi çizimde göster senaryonun erişimini yeşil, kırmızı ve kesikli çerçeveyle
 çizimde bırakır, çizim değiştikçe yeniden, İşareti kaldır'a dek. Açık: mevcut durumun gösterimi, ağ üzerinden erişim
 (ağ oluşturucusu işlem katmanında), eğim, altyapıya yakınlık, damganın çizimde saklanması.
+
+**8 Kasım 2026, dördüncü tur — altyapıya yakınlık ([ADR 2660](../docs/adr/2660-scenario-infrastructure-proximity.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Pro'nun Near aracı (en yakın nesneye düzlemsel uzaklık), ArcGIS Urban'ın tek
+puansız ölçüleri; uzaklığın kurum kararı olduğu (KentOS değer vermez). Kanıtlanan: `cad.scenarios.impact`'in
+`infrastructure`'ı: ölçülen alanların ağırlık merkezi altyapı katmanındaki en yakın nesneye verilen uzaklıktaysa
+alanı ve payı; senaryonun yerine geçtiği katmanda her taraf kendi hattıyla; boş katman eksik; “hattın kapasitesi ya da
+bağlantı hakkı değildir”. 7 yeni ortak durum (37), MCP, masaüstü (Altyapı katmanı / uzaklığı, ölçülen kullanımlar) ve
+resimler. Açık: eğim, ağ üzerinden erişim, damganın çizimde saklanması, altyapıya yakınlığın çizimde gösterimi.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

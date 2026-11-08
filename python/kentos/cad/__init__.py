@@ -1508,6 +1508,7 @@ __all__ = [
     "ImpactChange",
     "ImpactCorridor",
     "ImpactDerived",
+    "ImpactInfrastructure",
     "ImpactLayer",
     "ImpactMeasure",
     "ImpactOwn",

@@ -6,7 +6,9 @@
 //! comparison's stamp says whether the field state has changed since. Asked for, two measures more with the user's
 //! values (docs/adr/2040): the impervious area (each use's area × its share) and the area reached (a `from` area whose
 //! centroid, the core's `shape_centroid`, lies within the distance of a `to` area by the core's exact distance,
-//! arcs included) with its share, and which areas it reached on each side (docs/adr/2260). The shared cases are
+//! arcs included) with its share, and which areas it reached on each side (docs/adr/2260); the area near an
+//! infrastructure layer (an area whose centroid lies within the distance of an object of the layer, the side's own
+//! layer when the scenario stands in for it) with its share (docs/adr/2660). The shared cases are
 //! `fixtures/commands/v1/cad.scenarios.impact.json`.
 
 use std::collections::BTreeMap;
@@ -178,6 +180,35 @@ fn reached(s: &Side<'_>, access: &kentos_commands::ImpactAccess) -> Reached {
     r
 }
 
+/// What the infrastructure measure found on a side (docs/adr/2660): the area near, the measured areas' whole, and how
+/// many objects the side's infrastructure layer has.
+struct Near {
+    got: f64,
+    whole: f64,
+    objects: usize,
+}
+
+/// The area of a side's measured areas (`from`'s uses, or all) whose centroid lies within `d` of an object of `layer`.
+fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::ImpactInfrastructure) -> Near {
+    let lines: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .filter_map(|e| geometry_of(&shape(e)))
+        .collect();
+    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len() };
+    let measured = |u: &String| infra.from.iter().all(|f| f.trim().is_empty()) || infra.from.contains(u);
+    for (sh, _, area, _) in s.areas.iter().filter(|(_, u, _, _)| measured(u)) {
+        r.whole += area;
+        let close = shape_centroid(sh)
+            .and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }))
+            .is_some_and(|point| lines.iter().map(|t| distance(&point, t)).any(|d| d <= infra.distance));
+        if close {
+            r.got += area;
+        }
+    }
+    r
+}
+
 /// The asked measures' own checks.
 fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
     for (code, k) in input.impervious.iter().flatten() {
@@ -202,6 +233,15 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
                 return Err(fail(codes::INVALID_INPUT, format!("{words} kullanım verilmemiş; en az bir kullanım kodu yazın."), path));
             }
         }
+    }
+    if let Some(i) = &input.infrastructure
+        && !(i.distance.is_finite() && i.distance > 0.0)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Altyapı uzaklığı 0'dan büyük olmalı (yazılan {}).", i.distance),
+            "infrastructure.distance",
+        ));
     }
     Ok(())
 }
@@ -308,6 +348,54 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         for (has_from, has_to, side) in [(xw > 0.0, xt, "mevcut durumda"), (yw > 0.0, yt, "senaryoda")] {
             if has_from && !has_to {
                 asked_gaps.push(format!("Erişilecek kullanım ({to}) {side} yok; erişen alan 0."));
+            }
+        }
+    }
+    // Altyapıya yakınlık (docs/adr/2660): the layer the scenario stands in for is each side's own.
+    if let Some(infra) = &input.infrastructure {
+        let id = infra.layer.trim();
+        let Some(node) = doc.layers().get(id).filter(|n| n.kind != LayerNodeType::Group) else {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{id}” kimlikli altyapı katmanı çizimde yok; bir katmanın kimliğini verin."),
+                "infrastructure.layer",
+            ));
+        };
+        let theirs = pairs.iter().find(|(base, _)| base == id).map_or(id, |(_, l)| l.as_str());
+        let (x, y) = (near(doc, &b, id, infra), near(doc, &a, theirs, infra));
+        let name = &node.name;
+        let uses: Vec<&str> = infra.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
+        let (label, which) = if uses.is_empty() {
+            (format!("Altyapıya yakın alan ({name}, {} m)", infra.distance), "Alanların".to_owned())
+        } else {
+            (
+                format!("Altyapıya yakın alan ({} → {name}, {} m)", uses.join(", "), infra.distance),
+                format!("Kullanımı {} olan alanların", uses.join(", ")),
+            )
+        };
+        measures.push(measure(
+            "infrastructure",
+            &label,
+            "m2",
+            x.got,
+            y.got,
+            &format!(
+                "{which} ağırlık merkezinden {name} katmanındaki en yakın nesneye düz uzaklık en çok {} m ise alanı sayılır; hattın kapasitesi ya da bağlantı hakkı değildir.",
+                infra.distance
+            ),
+        ));
+        let share = |got: f64, whole: f64| if whole > 0.0 { got / whole * 100.0 } else { 0.0 };
+        measures.push(measure(
+            "infrastructureShare",
+            "Altyapıya yakın alanın payı",
+            "%",
+            share(x.got, x.whole),
+            share(y.got, y.whole),
+            "Altyapıya yakın alanın ölçülen alanların toplamına oranı; ölçülen alanı olmayan tarafta 0.",
+        ));
+        for (n, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
+            if n.whole > 0.0 && n.objects == 0 {
+                asked_gaps.push(format!("Altyapı katmanında ({name}) {side} nesne yok; yakın alan 0."));
             }
         }
     }

@@ -18,10 +18,12 @@ pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
 /// `Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an
 /// earlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,
 /// their values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's
-/// area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses.
+/// area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;
+/// `infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer.
 ///
-/// Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`: not above zero;
-/// `access.from`, `access.to`: no use given), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
+/// Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
+/// `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `infrastructure.layer`: no
+/// such layer), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
 /// `nothing_to_compare` (`scenario`: none of its layers stands for a base layer).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -46,6 +48,27 @@ pub struct ScenariosImpact {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub access: Option<ImpactAccess>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub infrastructure: Option<ImpactInfrastructure>,
+}
+
+/// Altyapıya yakınlık (docs/adr/2660): an infrastructure layer (a water or sewer line's, by id), the straight distance,
+/// metres, from an area's centroid to the nearest object of that layer, and the uses measured (none or empty: every
+/// area). A layer the scenario stands in for is each side's own (the base's on the field state's side, the scenario's
+/// on the alternative's); any other is the same on both. Nearness is not a line's capacity nor a right to connect.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactInfrastructure {
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub distance: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub from: Vec<String>,
 }
 
 /// Erişim (docs/adr/2040): the uses reached from (`from`, e.g. `konut`), the uses reached (`to`, e.g. `park`, `yesil`)

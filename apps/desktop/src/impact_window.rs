@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::container;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, ImpactAccess, ScenariosImpact, ScenariosImpacted};
+use kentos_commands::{CommandResult, ImpactAccess, ImpactInfrastructure, LayerNode, LayerNodeType, ScenariosImpact, ScenariosImpacted};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, scenarios_impact};
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
@@ -58,6 +58,12 @@ pub struct State {
     pub from: String,
     pub to: String,
     pub distance: String,
+    /// docs/adr/2660, the user's values: the infrastructure layer (its id; empty: not asked), the distance and the uses.
+    pub infra_layer: String,
+    pub infra_distance: String,
+    pub infra_from: String,
+    /// The layers to choose from: id and name (“—” first, none).
+    pub layers: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
@@ -68,6 +74,10 @@ pub enum Event {
     From(String),
     To(String),
     Distance(String),
+    /// Altyapıya yakınlık (docs/adr/2660).
+    InfraLayer(String),
+    InfraDistance(String),
+    InfraFrom(String),
     Save,
     Saved(Option<PathBuf>),
     /// Erişimi çizimde göster (docs/adr/2260).
@@ -111,6 +121,23 @@ pub fn shares_of(text: &str) -> Result<Option<BTreeMap<String, f64>>, String> {
         out.insert(code.trim().to_owned(), v);
     }
     Ok((!out.is_empty()).then_some(out))
+}
+
+/// The drawing's layers as a choice: “—” (none) first, then every layer by its path, groups left out.
+pub fn layer_choices(nodes: &[LayerNode]) -> Vec<(String, String)> {
+    fn walk(nodes: &[LayerNode], path: &str, out: &mut Vec<(String, String)>) {
+        for n in nodes {
+            let name = if path.is_empty() { n.name.clone() } else { format!("{path} › {}", n.name) };
+            if n.kind == LayerNodeType::Group {
+                walk(&n.children, &name, out);
+            } else {
+                out.push((n.id.clone(), name));
+            }
+        }
+    }
+    let mut out = vec![(String::new(), "—".to_owned())];
+    walk(nodes, "", &mut out);
+    out
 }
 
 /// The uses as typed, “park, yesil”.
@@ -169,7 +196,25 @@ impl App {
                 Err(_) => return Err(format!("Erişim uzaklığı “{}” bir sayı değil.", s.distance.trim())),
             }
         };
-        Ok(ScenariosImpact { scenario: s.scenario.clone(), since, impervious, access, ..ScenariosImpact::default() })
+        // docs/adr/2660: asked once a layer and a distance are given.
+        let infrastructure = if s.infra_layer.is_empty() || s.infra_distance.trim().is_empty() {
+            None
+        } else {
+            match s.infra_distance.trim().replace(',', ".").parse::<f64>() {
+                Ok(distance) => {
+                    Some(ImpactInfrastructure { layer: s.infra_layer.clone(), distance, from: uses_of(&s.infra_from) })
+                }
+                Err(_) => return Err(format!("Altyapı uzaklığı “{}” bir sayı değil.", s.infra_distance.trim())),
+            }
+        };
+        Ok(ScenariosImpact {
+            scenario: s.scenario.clone(),
+            since,
+            impervious,
+            access,
+            infrastructure,
+            ..ScenariosImpact::default()
+        })
     }
 
     fn impact_run(&mut self) {
@@ -204,7 +249,8 @@ impl App {
             self.warn("Projede senaryo yok; önce Senaryo oluştur ile tasarım katmanlarından bir senaryo kurun.");
             return Task::none();
         };
-        self.impact = State { scenarios, scenario: first, ..State::default() };
+        let layers = layer_choices(doc.model.layers().nodes());
+        self.impact = State { scenarios, scenario: first, layers, ..State::default() };
         self.impact_run();
         self.dialog = Some(Dialog::Impact);
         Task::none()
@@ -246,6 +292,18 @@ impl App {
             }
             Event::Distance(v) => {
                 self.impact.distance = v;
+                self.impact_run();
+            }
+            Event::InfraLayer(v) => {
+                self.impact.infra_layer = v;
+                self.impact_run();
+            }
+            Event::InfraDistance(v) => {
+                self.impact.infra_distance = v;
+                self.impact_run();
+            }
+            Event::InfraFrom(v) => {
+                self.impact.infra_from = v;
                 self.impact_run();
             }
             Event::Save => {
@@ -313,7 +371,17 @@ impl App {
                     .spacing(10),
             )
             .field("Erişim uzaklığı (m)", text(&s.distance, "—", Event::Distance, 120.0))
-            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık.");
+            .field(
+                "Altyapı katmanı / uzaklığı",
+                iced::widget::row![
+                    container(crate::style::fields::select_owned(s.layers.clone(), &s.infra_layer, |id| msg(Event::InfraLayer(id))))
+                        .width(290),
+                    text(&s.infra_distance, "m", Event::InfraDistance, 120.0)
+                ]
+                .spacing(10),
+            )
+            .field("Altyapıda ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
+            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir.");
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");
         match &s.answer {

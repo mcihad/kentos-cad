@@ -126,6 +126,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ortak durum); web'in Sınır grafiği penceresinde Fark sütunu.
 - MAP-09 / ADR 2640: web'in `cad.zoning.check` işleyicisinde `roadParcel` (46 ortak durum); web'in İmar planı denetimi
   penceresinde Yola giren parsel ve parselin Ada/Parsel adı.
+- MAP-10 / ADR 2660: web'in `cad.scenarios.impact` işleyicisinde `infrastructure` (37 ortak durum); web'in Senaryo
+  ölçüleri penceresinde Altyapı katmanı, uzaklığı ve ölçülen kullanımlar.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

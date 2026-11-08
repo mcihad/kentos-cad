@@ -57,6 +57,41 @@ fn the_alternative_is_measured_saved_and_found_stale_when_the_base_moves() {
     assert_eq!(app.impact.answer.clone().expect("an answer").expect("compared").stale, Some(true));
 }
 
+/// docs/adr/2660: the sewer line's layer chosen and 40 m typed give the shared case's infrastructure measures.
+#[test]
+fn the_area_near_the_infrastructure_is_the_case_s() {
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "altyapıya yakınlık: kanalizasyon hattına 40 m")
+        .expect("the case")
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    let _ = app.update(Message::Run("scenario.impact"));
+    assert!(app.impact.layers.iter().any(|(id, name)| id == "altyapi" && name == "Kanalizasyon hattı"), "{:?}", app.impact.layers);
+    let _ = app.update(Message::Impact(I::InfraLayer("altyapi".into())));
+    let _ = app.update(Message::Impact(I::InfraDistance("40".into())));
+    let r = app.impact.answer.clone().expect("an answer").expect("compared");
+    let want = case["steps"][0]["result"]["output"]["measures"].as_array().expect("measures").clone();
+    for id in ["infrastructure", "infrastructureShare"] {
+        let got = r.measures.iter().find(|m| m.id == id).expect(id);
+        let w = want.iter().find(|m| m["id"] == id).expect(id);
+        assert_eq!(got.label, w["label"].as_str().expect("label"));
+        assert!((got.base - w["base"].as_f64().expect("base")).abs() < 1e-9, "{got:?}");
+        assert!((got.alternative - w["alternative"].as_f64().expect("alt")).abs() < 1e-9, "{got:?}");
+    }
+    // A distance that does not read is said.
+    let _ = app.update(Message::Impact(I::InfraDistance("kırk".into())));
+    assert_eq!(app.impact.answer.clone().expect("an answer"), Err("Altyapı uzaklığı “kırk” bir sayı değil.".to_owned()));
+}
+
 /// docs/adr/2040: the user's impervious shares and access typed in the form give the shared case's measures.
 #[test]
 fn the_impervious_shares_and_the_access_typed_give_the_case_s_measures() {
@@ -213,5 +248,51 @@ fn screens() {
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
             println!("{}", file.display());
         }
+    }
+}
+
+/// `.run/gui-evidence/senaryo-altyapi-2660/`: the measures with the area near the sewer line, 40 m.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib impact_window_tests::infra_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn infra_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
+    let setup = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "altyapıya yakınlık: kanalizasyon hattına 40 m")
+        .expect("the case")["setup"]
+        .clone();
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/senaryo-altyapi-2660");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup.clone()).expect("reads");
+        let (mut app, _) = App::boot(None);
+        app.program = Some(Module::Map);
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("scenario.impact"));
+        for e in [I::InfraLayer("altyapi".into()), I::InfraDistance("40".into())] {
+            let _ = app.update(Message::Impact(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-olculer-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
     }
 }

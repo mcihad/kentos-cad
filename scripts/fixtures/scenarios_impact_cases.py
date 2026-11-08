@@ -19,7 +19,11 @@ The rules, by hand:
   no share a gap), and the area reached, a `from` area whose centroid (a rectangle's middle) lies within the distance
   of a `to` area (the distance to a rectangle: 0 inside, else to its box), with its share of the `from` areas (0 with
   none); a side with `from` areas and no `to` area a gap; and on each side, by persistent id in the drawing's order,
-  the `from` areas reached, those not and the `to` areas (`reach`, docs/adr/2260).
+  the `from` areas reached, those not and the `to` areas (`reach`, docs/adr/2260);
+- asked for (docs/adr/2660), the area near an infrastructure layer: a measured area (of the `from` uses, or every
+  area) whose centroid lies within the distance of an object of the layer (lines here: the distance to their
+  segments), with its share; the layer the scenario stands in for is each side's own; a side with measured areas and
+  no object on its layer a gap.
 """
 
 import copy
@@ -47,8 +51,9 @@ def node(id_, name, kind="layer", children=None, **more):
             "children": children or []}
 
 
-def tree():
-    return [node("0", "0"),
+def tree(infra=False):
+    extra = [node("altyapi", "Kanalizasyon hattı")] if infra else []
+    return extra + [node("0", "0"),
             node("imar", "İmar planı", "group", [node("karar", "Karar alanları"), node("yol", "Yollar")]),
             node("alt-a", "Alternatif A", "group", [node("alt-a-karar", "Karar alanları", replaces="karar"),
                                                      node("alt-a-yol", "Yollar", replaces="yol")],
@@ -88,8 +93,9 @@ ALT = [
 ]
 
 
-def setup(base=None, alt=None, layers=None):
-    ents = [copy.deepcopy(e) for e in (base if base is not None else BASE) + (alt if alt is not None else ALT)]
+def setup(base=None, alt=None, layers=None, extra=()):
+    ents = [copy.deepcopy(e) for e in (base if base is not None else BASE) + (alt if alt is not None else ALT)
+            + list(extra)]
     for i, e in enumerate(ents, start=1):
         e["id"] = i
     return {"format": "kentos.document", "version": 2, "name": "Senaryo ölçüleri",
@@ -228,12 +234,35 @@ def reached(sd, access):
     return got, whole, bool(targets), yes, no, [uid(e["id"]) for e in to]
 
 
+def to_segment(p, a, b):
+    (px, py), (ax, ay), (bx, by) = p, a, b
+    dx, dy = bx - ax, by - ay
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+    return ((px - ax - t * dx) ** 2 + (py - ay - t * dy) ** 2) ** 0.5
+
+
+def near(s, sd, layer, infra):
+    """The area near the layer's objects (docs/adr/2660), the measured areas' whole, the layer's objects."""
+    lines = [verts(e) for e in s["entities"] if e["layerId"] == layer]
+    uses = [u for u in infra.get("from", []) if u.strip()]
+    got = whole = 0.0
+    for e, u, a in sd["areas"]:
+        if uses and u not in uses:
+            continue
+        whole += a
+        x0, y0, x1, y1 = box(e)
+        c = ((x0 + x1) / 2, (y0 + y1) / 2)
+        if any(to_segment(c, p, q) <= infra["distance"] for pts in lines for p, q in zip(pts, pts[1:])):
+            got += a
+    return got, whole, len(lines)
+
+
 def rs(v):
     """A number as Rust writes an f64 (40.0 as 40)."""
     return str(int(v)) if float(v).is_integer() else repr(float(v))
 
 
-def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None, access=None):
+def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None, access=None, infrastructure=None):
     ps = pairs(s)
     bases, alts = [b for b, _ in ps], [l for _, l in ps]
     b, a = side(s, bases, field, key), side(s, alts, field, key)
@@ -275,6 +304,26 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
         for has_from, has_to, where in ((xw > 0, xt, "mevcut durumda"), (yw > 0, yt, "senaryoda")):
             if has_from and not has_to:
                 asked_gaps.append(f"Erişilecek kullanım ({to}) {where} yok; erişen alan 0.")
+    if infrastructure is not None:
+        lid = infrastructure["layer"]
+        theirs = next((l for b_, l in ps if b_ == lid), lid)
+        (xg, xw, xn), (yg, yw, yn) = near(s, b, lid, infrastructure), near(s, a, theirs, infrastructure)
+        name = {"altyapi": "Kanalizasyon hattı", "yol": "Yollar", "karar": "Karar alanları"}[lid]
+        d = rs(infrastructure["distance"])
+        uses_ = [u for u in infrastructure.get("from", []) if u.strip()]
+        if uses_:
+            label, which = f"Altyapıya yakın alan ({', '.join(uses_)} → {name}, {d} m)", f"Kullanımı {', '.join(uses_)} olan alanların"
+        else:
+            label, which = f"Altyapıya yakın alan ({name}, {d} m)", "Alanların"
+        measures.append(m("infrastructure", label, "m2", xg, yg,
+                          f"{which} ağırlık merkezinden {name} katmanındaki en yakın nesneye düz uzaklık en çok {d} m ise "
+                          "alanı sayılır; hattın kapasitesi ya da bağlantı hakkı değildir."))
+        share = lambda g_, w_: g_ / w_ * 100 if w_ > 0 else 0.0  # noqa: E731
+        measures.append(m("infrastructureShare", "Altyapıya yakın alanın payı", "%", share(xg, xw), share(yg, yw),
+                          "Altyapıya yakın alanın ölçülen alanların toplamına oranı; ölçülen alanı olmayan tarafta 0."))
+        for whole_, objects, where in ((xw, xn, "mevcut durumda"), (yw, yn, "senaryoda")):
+            if whole_ > 0 and objects == 0:
+                asked_gaps.append(f"Altyapı katmanında ({name}) {where} nesne yok; yakın alan 0.")
     uses = [{"code": c, "base": b["uses"].get(c, 0.0), "alternative": a["uses"].get(c, 0.0),
              "difference": a["uses"].get(c, 0.0) - b["uses"].get(c, 0.0)}
             for c in sorted(set(b["uses"]) | set(a["uses"]))]
@@ -367,6 +416,12 @@ SHARES = {"konut": 0.6, "ticaret-konut": 0.8, "park": 0.1, "egitim": 0.5, "sanay
 ACCESS = {"distance": 40.0, "from": ["konut"], "to": ["park", "yesil"]}
 
 
+# docs/adr/2660: a sewer line along y = 60 north of the blocks, on its own layer (not the scenario's).
+SEWER = line("altyapi", (0, 60), (130, 60), HatKimlik="K-1")
+INFRA_SETUP = setup(layers=tree(infra=True), extra=[SEWER])
+EMPTY_INFRA = setup(layers=tree(infra=True))
+
+
 def moved_base():
     """The field state changed after the comparison: K1's corner moved."""
     base = copy.deepcopy(BASE)
@@ -418,6 +473,24 @@ def cases():
         ok("erişilecek kullanım hiçbir tarafta yok: iki eksik", BASE_SETUP,
            access={"distance": 40.0, "from": ["konut"], "to": ["meydan"]}),
         ok("geçirimsizlik ve erişim birlikte", BASE_SETUP, impervious=SHARES, access=ACCESS),
+        # docs/adr/2660: the area near an infrastructure layer, the user's distance.
+        ok("altyapıya yakınlık: kanalizasyon hattına 40 m", INFRA_SETUP, infrastructure={"layer": "altyapi", "distance": 40.0}),
+        ok("altyapıya yakınlık yalnız konut alanlarında", INFRA_SETUP,
+           infrastructure={"layer": "altyapi", "distance": 40.0, "from": ["konut"]}),
+        ok("senaryonun yerine geçtiği katman altyapı: her taraf kendi yollarıyla", BASE_SETUP,
+           infrastructure={"layer": "yol", "distance": 30.0}),
+        ok("altyapı katmanı boş: yakın alan 0, iki tarafta da eksik", EMPTY_INFRA,
+           infrastructure={"layer": "altyapi", "distance": 40.0}),
+        refused("altyapı uzaklığı 0", {"scenario": "alt-a", "infrastructure": {"layer": "altyapi", "distance": 0.0}},
+                "invalid_input", "Altyapı uzaklığı 0'dan büyük olmalı (yazılan 0).", s=INFRA_SETUP,
+                path="infrastructure.distance"),
+        refused("altyapı katmanı çizimde yok", {"scenario": "alt-a", "infrastructure": {"layer": "su", "distance": 40.0}},
+                "invalid_input", "“su” kimlikli altyapı katmanı çizimde yok; bir katmanın kimliğini verin.", s=INFRA_SETUP,
+                path="infrastructure.layer"),
+        refused("altyapı katmanı yerine grup verilmiş", {"scenario": "alt-a", "infrastructure": {"layer": "imar",
+                                                                                                "distance": 40.0}},
+                "invalid_input", "“imar” kimlikli altyapı katmanı çizimde yok; bir katmanın kimliğini verin.",
+                path="infrastructure.layer"),
         refused("geçirimsizlik payı 1'den büyük", {"scenario": "alt-a", "impervious": {"konut": 1.5}}, "invalid_input",
                 "“konut” kullanımının geçirimsizlik payı 0 ile 1 arasında olmalı (yazılan 1.5).", path="impervious.konut"),
         refused("erişim uzaklığı 0", {"scenario": "alt-a", "access": {"distance": 0.0, "from": ["konut"], "to": ["park"]}},

@@ -58204,7 +58204,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses.\n\nRefusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`: not above zero;\n`access.from`, `access.to`: no use given), `scenario_not_found` (`scenario`: no such node, or not a scenario group),\n`nothing_to_compare` (`scenario`: none of its layers stands for a base layer).",
+        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer.\n\nRefusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `infrastructure.layer`: no\nsuch layer), `scenario_not_found` (`scenario`: no such node, or not a scenario group),\n`nothing_to_compare` (`scenario`: none of its layers stands for a base layer).",
         "properties": {
           "access": {
             "anyOf": [
@@ -58232,6 +58232,16 @@
               "null"
             ],
             "x-unit": "1"
+          },
+          "infrastructure": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactInfrastructure"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "key": {
             "type": [
@@ -142708,6 +142718,31 @@
         "id",
         "name",
         "approved"
+      ],
+      "type": "object"
+    },
+    "ImpactInfrastructure": {
+      "additionalProperties": false,
+      "description": "Altyapıya yakınlık (docs/adr/2660): an infrastructure layer (a water or sewer line's, by id), the straight distance,\nmetres, from an area's centroid to the nearest object of that layer, and the uses measured (none or empty: every\narea). A layer the scenario stands in for is each side's own (the base's on the field state's side, the scenario's\non the alternative's); any other is the same on both. Nearness is not a line's capacity nor a right to connect.",
+      "properties": {
+        "distance": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "from": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "layer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer",
+        "distance"
       ],
       "type": "object"
     },
