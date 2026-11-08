@@ -77,6 +77,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-03 / ADR 2120: `map.survey.network`'ün web işleyicisinde ölçme epoku, `epochFrom`, `moved`; kabulde `epoch`.
 - MAP-04 / ADR 2140: `map.features.reconcile`'ün web işleyicisinde alan adayları, `overlap` ve Örtüşme.
 - MAP-05 / ADR 2160: `map.survey.network`'ün web işleyicisinde `similarity` ve `rules.similarity`; çekirdeğin Student t'si WASM'da.
+- MAP-06 / ADR 2180: web'in Eğimle kot ver penceresinde Sahneden seç (iki tıkla aralık).
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

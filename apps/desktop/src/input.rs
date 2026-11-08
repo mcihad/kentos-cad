@@ -325,6 +325,7 @@ impl App {
                         && !self.blocks_picked(p)
                         && !self.xrefs_picked(p)
                         && !self.terrain_picked(p)
+                        && !self.grade_picked(p)
                         && !self.pdf_import_picked(p)
                         && !self.service_info_picked(p)
                     {

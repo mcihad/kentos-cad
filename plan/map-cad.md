@@ -36,7 +36,7 @@ sırayla alır.
 | MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960 | kalıcı ilişki; çok parçalı nesne; köşeyi sahneden seçmek | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
 | MAP-07 Topoloji | 1261, 1262, 1980 | hata katmanı; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000 | kalıcı parsel kaydı ve sınır kimliği; sahnede gösterim; yaylı sınırda eksik köşe | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020 | plan değişikliği taslağı; sembolün karardan seçilmesi | resmî şema ve eşleme |
@@ -609,6 +609,12 @@ söyler (`neighbours`), iki alanın toplamı korunur; kilitli komşu ayrılır v
 hiçbir şey yazılmaz; harita koordinatında yaylı ortak kenar dahil (50 basamaklı yay başvurusu). Bulunan çekirdek kusuru
 (uçları kayan yayın kabarıklığı komşuya gitmiyordu) düzeltildi. Araç önizlemede komşuları ve komşu alanın yeni boyunu
 gösterir. Açık: kalıcı ilişki, çok parçalı nesne, köşeyi sahneden seçmek.
+
+**8 Kasım 2026, üçüncü tur — Eğimle kot ver'de aralığın sahneden seçilmesi ([ADR 2180](../docs/adr/2180-grade-range-picked-on-the-drawing.md)).**
+Kapsam işareti: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Set Grade/Slope Between Points'i noktaları çizimde ister.
+Kanıtlanan: Sahneden seç iki tıkla başlangıç ve bitiş köşesini alır (seçim açıklığında en yakın köşe), pencere aralıkla
+ve önizlemeyle döner, köşelerin yeri yardım satırında; uzak tıklama söylenir, Esc pencereye döner; komut aynı
+(`cad.entities.grade`, numarayla). Açık: seçilen köşelerin sahnede işareti, kalıcı ilişki, çok parçalı nesne.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 
