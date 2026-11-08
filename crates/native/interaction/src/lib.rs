@@ -215,6 +215,7 @@ pub mod rectangle;
 pub mod regular;
 pub mod reshape;
 pub mod reshape_by;
+pub mod plan_dimensions;
 pub mod revcloud;
 pub mod room_grip;
 pub mod symbols;

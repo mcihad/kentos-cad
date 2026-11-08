@@ -2149,6 +2149,11 @@
         "size": "small",
         "split": [
          {
+          "command": "tool.planDimensions",
+          "title": "Ölçü",
+          "label": "Planı ölçülendir"
+         },
+         {
           "command": "tool.wallDimensions",
           "title": "Ölçü",
           "label": "Duvar ölçüleri"

@@ -1,0 +1,27 @@
+# M26 (docs/adr/3026): Planı ölçülendir in the real window, on the 2+1 apartment the acceptance test keeps
+# (`KENTOS_ACCEPTANCE_OUT`, acceptance_flat_tests.rs) opened on Mimari at 1440 × 900, 13 px text. The scenario's one
+# south chain is taken away (a crossing box and Delete), the plan brought near; Ölçü ▾ › Planı ölçülendir draws the
+# four sides' chains and the interior chains before anything is written; Enter writes them, one undo step.
+fit KentOS Mimari — Daire
+wait 3000
+drag 350 805 115 768   # güneydeki ölçü dizisi, kesişen kutu
+wait 800
+key Delete
+wait 800
+click 600 450 middle   # orta tuşa çift tık: tümünü göster
+click 600 450 middle
+wait 1500
+shot m26-10-olcusuz
+click 990 57   # Ölçü ▾
+wait 800
+shot m26-11-olcu-menusu
+click 1060 90   # Planı ölçülendir
+wait 2500
+move 900 300
+wait 800
+shot m26-12-onizleme
+key Return
+wait 2500
+move 900 300
+wait 600
+shot m26-13-olculendi

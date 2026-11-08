@@ -125,6 +125,10 @@
     - `ArchAuditCheck::Fixtures` (yalnız adıyla): `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (düzeltme: kapıyı
       çevir). Alan `Document::fixture_zone` ("Boşluk zarfı") ya da eski bloklarda `fixture_audit::OLDER`; izdüşüm görünüş
       durumunun gizlediğini saymaz (`hidden_by`). Panel seçili bulgunun alanını kesik kırmızı çizer.
+  - **Planı tek komutla ölçülendirmek (M26, [ADR 3026](../adr/3026-dimension-the-plan-in-one-command.md)):**
+    - `tool.planDimensions`: dış duvarlar duvar gövdelerinin birleşik dış çizgisinden; `around` cephe tarifi, Ön proje
+      [Duvarlar, Akslar, Toplam], Uygulama + Açıklıklar (1:50'de kendiliğinden); iç kesenler `cuts_for` (her mahal %70 ve
+      %30'undan, paylaşılan, ≥ 6 mm); hepsi tek adım, MM-XXXX-OLCU.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

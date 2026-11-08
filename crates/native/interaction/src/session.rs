@@ -86,6 +86,7 @@ pub const TOOLS: &[&str] = &[
     // Duvarı kaydır (docs/adr/0790 §1).
     crate::wall_shift::ID,
     crate::wall_dimensions::ID,
+    crate::plan_dimensions::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
@@ -496,6 +497,7 @@ impl Session {
             crate::interior_dims::ID => {
                 Box::new(crate::interior_dims::InteriorDimensions::default())
             }
+            crate::plan_dimensions::ID => Box::new(crate::plan_dimensions::PlanDimensions::new()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }

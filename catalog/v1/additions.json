@@ -2258,6 +2258,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.planDimensions",
+      "title": "Planı ölçülendir",
+      "icon": "planDimensions",
+      "description": "Etkin katın planını tek komutla ölçülendirir (Mimarlar Odası çizim ve sunuş standartları): dış duvarları kendisi bulur, dört cepheye ön projede 3 (cephe hareketleri, taşıyıcı akslar, blok), uygulamada 4 (doluluk ve boşluklar da) ölçü zinciri koyar; her mahali enine ve boyuna ikişer kez kesen, binayı baştan başa geçen iç ölçü zincirleri ekler. Önizlemeye bakın, Enter ya da tıkla tek geri alma adımında yazın. Boş zincir üretilmez.",
+      "aliases": [
+        "PLANOLCU",
+        "PLANÖLÇÜ",
+        "PLANDIMENSIONS"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.interiorDimensions",
       "title": "İç ölçü zinciri",
       "icon": "interiorDimensions",
@@ -5034,6 +5048,7 @@
     "spaceGross": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"2\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/>",
     "column": "<path d=\"M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3\" stroke-dasharray=\"1.6 1\" stroke-width=\"1\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\"/><path d=\"M5.5 5.5l9 9M14.5 5.5l-9 9\" stroke-width=\"0.9\"/>",
     "stair": "<rect x=\"5\" y=\"2.5\" width=\"10\" height=\"15\"/><path d=\"M5 6.2h10M5 9.4h10M5 12.6h10\" stroke-width=\"0.9\"/><path d=\"M10 16V4.6M8.4 6.2 10 4.6l1.6 1.6\" stroke-width=\"1.2\"/>",
+    "planDimensions": "<path d=\"M3 3h10v10H3z\" stroke-width=\"1.6\"/><path d=\"M8 3v10\" stroke-width=\"1\"/><path d=\"M3 16.5h10M16.5 3v10\" stroke-width=\"1\"/><path d=\"M2.3 17.2 3.7 15.8M7.3 17.2 8.7 15.8M12.3 17.2 13.7 15.8M15.8 3.7 17.2 2.3M15.8 13.7 17.2 12.3\" stroke-width=\"1.3\"/>",
     "interiorDimensions": "<path d=\"M4 3.5v13M16 3.5v13\" stroke-width=\"3\"/><path d=\"M1.5 12.5h17\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"0.9\"/><path d=\"M1.5 7h17\" stroke-width=\"1\"/><path d=\"M2.6 8.1l1.8-2.2M4.6 8.1l1.8-2.2M14.6 8.1l1.8-2.2M16.6 8.1l1.8-2.2\" stroke-width=\"1.4\"/>",
     "stairCurved": "<path d=\"M10 1.5A8.5 8.5 0 1 1 1.5 10M10 6.5A3.5 3.5 0 1 1 6.5 10M10 1.5L10 6.5M1.5 10L6.5 10\"/><path d=\"M12.47 7.53L16.01 3.99M13.5 10L18.5 10M12.47 12.47L16.01 16.01M10 13.5L10 18.5M7.53 12.47L3.99 16.01\" stroke-width=\"0.9\"/><path d=\"M12.05 4.36A6 6 0 1 1 4.36 12.05M4.03 14.23L4.36 12.05L6.01 13.51\" stroke-width=\"1.2\"/>",
     "ramp": "<path d=\"M2.5 15.5 17.5 6.5v9h-15z\"/><path d=\"M5 13.3 14 8M12.3 7.9 14 8l-.6 1.6\" stroke-width=\"1.1\"/>",

@@ -671,3 +671,47 @@ fn a_room_s_edge_grips_need_an_unlocked_wall_and_a_room_that_follows_it() {
         .expect("the drawn room");
     assert_eq!(grips(&app, drawn), 0, "a drawn boundary");
 }
+
+/// Planı ölçülendir (M26, docs/adr/3026) on the 5 × 4 m room of Dış duvar 25: Enter writes the four sides' chains (an ön
+/// proje's three rows each; with no grid, two) and two interior chains each way, all in one undo step.
+#[test]
+fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
+    let (mut app, _) = building();
+    let dims = |app: &App| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities().filter(|e| e.kind() == "dimension").count()
+    };
+    assert_eq!(dims(&app), 0);
+    let _ = app.update(Message::Run("tool.planDimensions"));
+    assert_eq!(app.session.tool_id(), "planDimensions");
+    let format = app.format();
+    let tag = app
+        .session
+        .preview(&format)
+        .and_then(|p| p.tag)
+        .map(|t| t.lines)
+        .unwrap_or_default();
+    assert!(
+        tag.iter()
+            .any(|l| l.starts_with("Ön proje: dört cephe, 3 zincir")),
+        "{tag:?}"
+    );
+    assert!(
+        tag.iter()
+            .any(|l| l.starts_with("İç: 4 zincir") && l.contains("1 mahal")),
+        "{tag:?}"
+    );
+    let _ = app.submit_line("");
+    let written = dims(&app);
+    assert!(written > 0, "dimensions written");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let sets = doc.dimension_sets().len();
+    assert_eq!(sets, 4, "a chain set on each side");
+    assert!(
+        crate::files_testing::last_said(&app).starts_with("Plan ölçülendi"),
+        "{}",
+        crate::files_testing::last_said(&app)
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(dims(&app), 0, "one undo takes them all");
+}

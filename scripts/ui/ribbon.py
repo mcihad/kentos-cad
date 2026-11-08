@@ -423,6 +423,8 @@ CAD = [
         # Ölçü ▾ small since Oda took the sixth large place (docs/adr/3021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
         # Donatı).
         P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "small", "split": [
+                # Planı ölçülendir first (docs/adr/3026): the whole plan in one command.
+                {"command": "tool.planDimensions", "title": "Ölçü", "label": "Planı ölçülendir"},
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
             ]}, {"key": "archTags", "size": "small", "split": [

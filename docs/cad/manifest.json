@@ -13022,6 +13022,23 @@
    "tests": 2
   },
   {
+   "id": "tool.planDimensions",
+   "kind": "command",
+   "title": "Planı ölçülendir",
+   "level": "semantic",
+   "via": [
+    "cad.dimensionsets.create",
+    "cad.dimensions.interior"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensionsets.create, kentos.cad.dimensions.interior",
+   "mcp": "cad.dimensionsets.create, cad.dimensions.interior",
+   "note": "Dış duvarlar, doğrultu, dört yan, aşamanın sıraları ve açıklık uç/merkez seçimi dizi komutuna; mahalleri ikişer kez kesen iç kesen çizgiler iç ölçü komutuna gider; hepsi tek geri alma adımıdır, önizleme aynı planları okur (ADR 3026).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.planRoad",
    "kind": "tool",
    "title": "Plan yolu",
