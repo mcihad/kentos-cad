@@ -76957,7 +76957,9 @@ class ReadjustmentScopeParcel(_Model):
     metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
     `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
     `noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their
-    boundaries and coordinates (Article 13(2), docs/adr/2280).
+    boundaries and coordinates (Article 13(2), docs/adr/2280), and `points` the sheet's points numbered from 1
+    (docs/adr/2680): the parts' corners in their order (each part's rings in order, each ring's corners in order), a
+    corner met again (the same coordinates exactly) keeping its number; each ring's `numbers` name its corners by them.
     Attributes:
         calculated: Unit: area.
         limit: Unit: area.
@@ -76966,6 +76968,7 @@ class ReadjustmentScopeParcel(_Model):
         pieces: Unit: count.
         slivers: Unit: count.
         difference: Unit: area.
+        points: Unit: length.
     """
     uid: str
     parcel: str
@@ -76988,6 +76991,7 @@ class ReadjustmentScopeParcel(_Model):
     no_identity: bool | Unset = UNSET
     outside_recorded: str | None | Unset = UNSET
     parts: list[ScopePart] | Unset = UNSET
+    points: list[list[float]] | Unset = UNSET
     recorded_text: str | None | Unset = UNSET
     within: bool | None | Unset = UNSET
 
@@ -77020,6 +77024,8 @@ class ReadjustmentScopeParcel(_Model):
             out["outsideRecorded"] = self.outside_recorded
         if self.parts is not UNSET:
             out["parts"] = [e0.to_json() for e0 in self.parts]
+        if self.points is not UNSET:
+            out["points"] = [[float(e1) for e1 in e0] for e0 in self.points]
         if self.recorded_text is not UNSET:
             out["recordedText"] = self.recorded_text
         if self.within is not UNSET:
@@ -77050,6 +77056,7 @@ class ReadjustmentScopeParcel(_Model):
             no_identity=data.get("noIdentity", UNSET),
             outside_recorded=data.get("outsideRecorded", UNSET),
             parts=[ScopePart.from_json(e0) for e0 in data["parts"]] if "parts" in data else UNSET,
+            points=[[float(e1) for e1 in e0] for e0 in data["points"]] if "points" in data else UNSET,
             recorded_text=data.get("recordedText", UNSET),
             within=data.get("within", UNSET),
         )
@@ -77123,6 +77130,78 @@ class ReadjustmentScoped(_Model):
             ready=data["ready"],
             review=data["review"],
             parcels=[ReadjustmentScopeParcel.from_json(e0) for e0 in data["parcels"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentSheets(_Model):
+    """Input of `cad.readjustment.sheets` v1: the scope (`cad.readjustment.scope`'s input: the boundary, the parcels, the
+    registered area's attribute, the places, rounding and piece tolerance), the template (KentOS's separation sheet,
+    `sys:ayirma-capi`, without one; a template of one's own needs a fixed map with the id `harita`, and may have a
+    coordinate list `koordinatlar` and fixed tables `yuzolcumleri` and `kisimlar`), and the template's options: its
+    paper, a scale (without one, each map takes the standard scale its parcel fits at with a 5% margin) and answers to
+    its questions. Each sheet is named “Ayırma çapı ‹Ada/Parsel›”; the template's `il`, `ilce`, `mahalle`, `ada` and
+    `parsel` are answered from the parcel's own attributes.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, the scope's own at `scope.…`, `no_partial_parcels`
+    (no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with
+    another's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a
+    parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
+    (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own.
+    Attributes:
+        options: The template's paper, scale and answers (cad.sheets.create's options but the name and the centre).
+    """
+    scope: ReadjustmentScope
+    expected_revision: str | None | Unset = UNSET
+    options: PaperInstanceOptions | Mapping[str, Any] = field(default_factory=dict)
+    source: SheetTemplateSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scope"] = self.scope.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        out["options"] = (dict(self.options) if isinstance(self.options, Mapping) else self.options.to_json())
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentSheets:
+        return cls(
+            scope=ReadjustmentScope.from_json(data["scope"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            options=data["options"] if "options" in data else dict(),
+            source=UNSET if "source" not in data else None if data["source"] is None else SheetTemplateSource.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReadjustmentSheetsMade(_Model):
+    """Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the
+    scope's order, the points written (none in a plan) and the drawing's revision.
+    """
+    sheets: list[SeparationSheet]
+    uids: list[str]
+    revision: str
+    group: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheets"] = [e0.to_json() for e0 in self.sheets]
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReadjustmentSheetsMade:
+        return cls(
+            sheets=[SeparationSheet.from_json(e0) for e0 in data["sheets"]],
+            uids=list(data["uids"]),
+            revision=data["revision"],
+            group=data.get("group", UNSET),
         )
 
 
@@ -82721,19 +82800,24 @@ class ScopePart(_Model):
 class ScopeRing(_Model):
     """A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The
     outer ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at
-    its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.
+    its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out. `numbers`
+    are the corners' point numbers on the separation sheet (the parcel's `points`, from 1; docs/adr/2680).
     Attributes:
         pts: Unit: length.
         bulges: Unit: 1.
+        numbers: Unit: count.
     """
     pts: list[list[float]]
     bulges: list[float] | None | Unset = UNSET
+    numbers: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["pts"] = [[float(e1) for e1 in e0] for e0 in self.pts]
         if self.bulges is not UNSET:
             out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.numbers is not UNSET:
+            out["numbers"] = list(self.numbers)
         return out
 
     @classmethod
@@ -82741,6 +82825,7 @@ class ScopeRing(_Model):
         return cls(
             pts=[[float(e1) for e1 in e0] for e0 in data["pts"]],
             bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            numbers=list(data["numbers"]) if "numbers" in data else UNSET,
         )
 
 
@@ -83964,6 +84049,58 @@ class SensorsLatestAnswer(_Model):
             unreadable=data["unreadable"],
             revision=data["revision"],
             known_at=data.get("knownAt", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SeparationSheet(_Model):
+    """A separation sheet: its id and name, its parcel (uid and `Ada/Parsel`), the layer its points are on (none in a plan),
+    its map's scale (1:N) and centre (east, north; m), how many points it numbers, and the rows written in its tables of
+    areas (the item, square metres) and parts (the part, its boundary as point numbers, square metres).
+    Attributes:
+        scale: Unit: scale.
+        center: Unit: m.
+        points: Unit: count.
+    """
+    sheet: str
+    name: str
+    uid: str
+    parcel: str
+    scale: int
+    center: list[float]
+    points: int
+    areas: list[list[str]]
+    parts: list[list[str]]
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sheet"] = self.sheet
+        out["name"] = self.name
+        out["uid"] = self.uid
+        out["parcel"] = self.parcel
+        out["scale"] = self.scale
+        out["center"] = [float(e0) for e0 in self.center]
+        out["points"] = self.points
+        out["areas"] = [list(e0) for e0 in self.areas]
+        out["parts"] = [list(e0) for e0 in self.parts]
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SeparationSheet:
+        return cls(
+            sheet=data["sheet"],
+            name=data["name"],
+            uid=data["uid"],
+            parcel=data["parcel"],
+            scale=data["scale"],
+            center=[float(e0) for e0 in data["center"]],
+            points=data["points"],
+            areas=[list(e0) for e0 in data["areas"]],
+            parts=[list(e0) for e0 in data["parts"]],
+            layer=data.get("layer", UNSET),
         )
 
 
@@ -131473,6 +131610,8 @@ __all__ = [
     "ReadjustmentScope",
     "ReadjustmentScopeParcel",
     "ReadjustmentScoped",
+    "ReadjustmentSheets",
+    "ReadjustmentSheetsMade",
     "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",
@@ -131826,6 +131965,7 @@ __all__ = [
     "SensorsIngested",
     "SensorsLatest",
     "SensorsLatestAnswer",
+    "SeparationSheet",
     "SequencePaperPointNaming",
     "SeriesSide",
     "SeriesSideName",

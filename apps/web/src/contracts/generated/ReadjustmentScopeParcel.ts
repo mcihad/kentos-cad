@@ -10,6 +10,8 @@ import type { ScopePart } from "./ScopePart";
  * metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
  * `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
  * `noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their
- * boundaries and coordinates (Article 13(2), docs/adr/2280).
+ * boundaries and coordinates (Article 13(2), docs/adr/2280), and `points` the sheet's points numbered from 1
+ * (docs/adr/2680): the parts' corners in their order (each part's rings in order, each ring's corners in order), a
+ * corner met again (the same coordinates exactly) keeping its number; each ring's `numbers` name its corners by them.
  */
-export type ReadjustmentScopeParcel = { uid: string, parcel: string, il: string, ilce: string, mahalle: string, ada: string, parsel: string, kind: string, recordedText?: string, calculated: number, difference?: number, limit: number, within?: boolean, inside: number, outside: number, pieces: number, slivers: number, basis?: string, outsideRecorded?: string, status: string, duplicate?: boolean, noIdentity?: boolean, parts?: Array<ScopePart>, };
+export type ReadjustmentScopeParcel = { uid: string, parcel: string, il: string, ilce: string, mahalle: string, ada: string, parsel: string, kind: string, recordedText?: string, calculated: number, difference?: number, limit: number, within?: boolean, inside: number, outside: number, pieces: number, slivers: number, basis?: string, outsideRecorded?: string, status: string, duplicate?: boolean, noIdentity?: boolean, parts?: Array<ScopePart>, points?: Array<[number, number]>, };

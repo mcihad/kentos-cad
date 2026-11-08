@@ -2023,6 +2023,14 @@ codes! {
     DUPLICATE_HOLDER = "duplicate_holder", Failed, false, "Hak sahibi aynı parselde iki kez var.";
     /// A parcel whose shares do not add up to exactly 1 (docs/adr/1460).
     SHARES_NOT_WHOLE = "shares_not_whole", Failed, false, "Parselin payları toplamı tam 1 değil.";
+    /// Ayırma çapı paftaları (docs/adr/2680): no parcel partly inside the boundary.
+    NO_PARTIAL_PARCELS = "no_partial_parcels", Failed, false, "Düzenleme sınırına kısmen giren parsel yok; ayırma çapı yalnız kısmen giren parsel için düzenlenir.";
+    /// A partial parcel without Ada or Parsel: its separation sheet is named by them (docs/adr/2680).
+    NO_IDENTITY = "no_identity", Failed, false, "Parselin Ada'sı ya da Parsel'i yok; ayırma çapı paftası parselin kimliğiyle adlandırılır.";
+    /// Two partial parcels with one Ada/Parsel (docs/adr/2680).
+    DUPLICATE_PARCEL = "duplicate_parcel", Failed, false, "Aynı Ada/Parsel iki parselde; ayırma çapı paftası parselin kimliğiyle adlandırılır.";
+    /// A separation sheet, or a parcel's point layer, made before (docs/adr/2680).
+    SEPARATION_SHEET_EXISTS = "separation_sheet_exists", Failed, false, "Parselin ayırma çapı paftası ya da nokta katmanı zaten var; yeniden yapmak için önce onları silin.";
     /// GNSS baz ağı (docs/adr/1380): no baseline given.
     NO_BASELINES = "no_baselines", Failed, false, "Baz vektörü yok; en az bir baz verin.";
     /// GNSS baz ağı: a station named twice.

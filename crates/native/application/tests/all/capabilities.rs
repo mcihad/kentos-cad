@@ -1098,6 +1098,10 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.create'inkiler gibi; çekirdeğin testleri); kat retleri ve levels_have_sheets, not_fixed_map, bad_drawing_info ortak durumlarda (ADR 0718).",
     ),
     (
+        "cad.readjustment.sheets", "*",
+        "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.levels'inkiler gibi; çekirdeğin testleri) ve cad.readjustment.scope'un kendi retleri (onun ortak durumlarında); kısmen giren parsel, kimlik, şablon, seçenek ve var olan pafta retleri ortak durumlarda (ADR 2680).",
+    ),
+    (
         "cad.sheets.details", "*",
         "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.levels'inkiler gibi; çekirdeğin testleri); detay, tablo parçası ve yerleşim retleri ortak durumlarda (ADR 1090).",
     ),

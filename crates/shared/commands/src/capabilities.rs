@@ -2489,6 +2489,20 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Ayırma çapı paftaları (plan/map-cad.md MAP-11, docs/adr/2680).
+    Entry {
+        id: "cad.readjustment.sheets",
+        refusals: &[
+            SHEET_CORE,
+            REVISION,
+            &["invalid_input", "invalid_uid", "entity_not_found", "not_an_area", "not_a_parcel"],
+            &["no_partial_parcels", "no_identity", "duplicate_parcel", "layer_not_found", "invalid_group_name"],
+            &["unknown_template", "unknown_variable", "invalid_options", "not_fixed_map", "separation_sheet_exists"],
+            &["book_unreadable", "bad_asset"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
     Entry {
         id: "cad.scenarios.impact",

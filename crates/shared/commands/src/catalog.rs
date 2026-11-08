@@ -9600,6 +9600,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Ayırma çapı paftaları (plan/map-cad.md MAP-11, docs/adr/2680).
+        CommandDescriptor {
+            id: crate::CAD_READJUSTMENT_SHEETS.into(),
+            version: crate::CAD_READJUSTMENT_SHEETS_VERSION,
+            title: "Ayırma çapı paftaları".into(),
+            summary: "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). \
+                      Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. \
+                      Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. \
+                      Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var)."
+                .into(),
+            aliases: vec!["ayirmacapipaftalari".into(), "capinpaftalari".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ReadjustmentSheets>(),
+            output: schema::<crate::ReadjustmentSheetsMade>(),
+            plan: Some(schema::<crate::ReadjustmentSheetsMade>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kısmen giren parsellerin ayırma çapı paftaları, iki basamak, yarımda çifte".into(),
+                input: json!({ "scope": { "boundary": "0192f800-2060-7000-8000-000000000001", "scale": 2, "rounding": "half_even" } }),
+                output: None,
+            }],
+        },
         // Senaryo ölçüleri (plan/map-cad.md MAP-10, docs/adr/1440; “Alternatif etkisi” until 2026-11-07).
         CommandDescriptor {
             id: crate::CAD_SCENARIOS_IMPACT.into(),
@@ -16503,6 +16531,7 @@ mod tests {
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScope>(e.input.clone()).map(|_| ()),
+                    crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheets>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
@@ -17475,6 +17504,7 @@ mod tests {
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),
+                        crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),

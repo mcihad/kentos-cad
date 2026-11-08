@@ -63,7 +63,9 @@ pub struct ReadjustmentScope {
 /// metres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,
 /// `outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,
 /// `noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their
-/// boundaries and coordinates (Article 13(2), docs/adr/2280).
+/// boundaries and coordinates (Article 13(2), docs/adr/2280), and `points` the sheet's points numbered from 1
+/// (docs/adr/2680): the parts' corners in their order (each part's rings in order, each ring's corners in order), a
+/// corner met again (the same coordinates exactly) keeping its number; each ring's `numbers` name its corners by them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -116,6 +118,10 @@ pub struct ReadjustmentScopeParcel {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ScopePart>>", optional))]
     pub parts: Vec<ScopePart>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<[f64; 2]>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub points: Vec<[f64; 2]>,
 }
 
 /// A part of a partial parcel as its separation sheet shows it (Article 13(2), docs/adr/2280): `inside` or `outside`
@@ -135,7 +141,8 @@ pub struct ScopePart {
 
 /// A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The
 /// outer ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at
-/// its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.
+/// its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out. `numbers`
+/// are the corners' point numbers on the separation sheet (the parcel's `points`, from 1; docs/adr/2680).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -148,6 +155,10 @@ pub struct ScopeRing {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub bulges: Option<Vec<f64>>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub numbers: Vec<u32>,
 }
 
 /// Output of `cad.readjustment.scope` v1: the tolerance's rule (`cad.parcels.check`'s), the registered area's

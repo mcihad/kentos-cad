@@ -5,7 +5,8 @@
 //! Esas alanları kayıtlara yaz writes the bases into the records and says what did not match, the rule package's
 //! places and the piece tolerance run it again; without a selected area there is no scope. Ayırma çapı (docs/adr/2280)
 //! lists the partial parcels' parts corner by corner as the case gives them, and Çapı çizime yaz writes them on their
-//! own layer in one undo step. And its pictures.
+//! own layer in one undo step. Çapın paftaları (docs/adr/2680) makes a separation sheet for each parcel partly inside,
+//! its points on the parcel's own layer, in one undo step. And its pictures.
 
 use kentos_launch::Module;
 
@@ -76,7 +77,22 @@ fn scope_cases() -> serde_json::Value {
 
 /// The scope cases' drawing in Harita, its boundary selected or nothing.
 fn bounded(select: bool) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(scope_cases()["setup"].clone()).expect("reads");
+    bounded_on(scope_cases()["setup"].clone(), select)
+}
+
+/// The scope cases' drawing with parcel 11 given Ada 101: every parcel partly inside has an identity (docs/adr/2680).
+fn named() -> App {
+    let mut setup = scope_cases()["setup"].clone();
+    for e in setup["entities"].as_array_mut().expect("entities") {
+        if e["attrs"]["Parsel"] == "11" && e["attrs"].get("Ada").is_none() {
+            e["attrs"]["Ada"] = "101".into();
+        }
+    }
+    bounded_on(setup, true)
+}
+
+fn bounded_on(setup: serde_json::Value, select: bool) -> App {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -155,8 +171,12 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
     assert_eq!(rows.len(), corners);
     assert_eq!(parts.len(), 9, "101/3, 101/6, 11 two each, 101/10 three");
     assert_eq!((rows[0][0].as_str(), rows[0][1].as_str(), rows[0][2].as_str()), ("101/3", "Giren", "1"));
-    let ten: Vec<&str> = rows.iter().filter(|r| r[0] == "101/10" && r[2] == "1").map(|r| r[1].as_str()).collect();
+    // A part's first row carries its area; the corners are the sheet's point numbers (docs/adr/2680).
+    let ten: Vec<&str> = rows.iter().filter(|r| r[0] == "101/10" && !r[5].is_empty()).map(|r| r[1].as_str()).collect();
     assert_eq!(ten, ["Giren", "Girmeyen 1", "Girmeyen 2"]);
+    let girmeyen: Vec<&str> =
+        rows.iter().filter(|r| r[0] == "101/3" && r[1] == "Girmeyen").map(|r| r[2].as_str()).collect();
+    assert_eq!(girmeyen, ["3", "2", "5", "6"], "the corners shared with Giren keep its numbers");
     let _ = app.update(Message::Readjustment(R::WriteSheet));
     let doc = &mut app.document.as_mut().expect("open").model;
     let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Ayırma çapı").map(|l| l.id.clone()).expect("the layer");
@@ -166,6 +186,114 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
     assert_eq!((attrs["Parsel"].as_str(), attrs["Kısım"].as_str()), ("101/3", "Giren"));
     assert_eq!(doc.undo().as_deref(), Some("Ayırma çapı"));
     assert!(doc.layers().leaves().iter().all(|l| l.name != "Ayırma çapı"), "one step");
+}
+
+/// docs/adr/2680: Çapın paftaları over a drawing where a parcel partly inside has no Ada says so and writes nothing;
+/// with every such parcel named, one sheet each in the scope's order, the points numbered on the parcel's own layer
+/// under “Ayırma çapı noktaları”, each map freezing the other parcels' point layers and its coordinate list reading its
+/// own; the book goes to PDF (the tables' — and − are in the drawing font); one undo step takes it all.
+#[test]
+fn a_separation_sheet_is_made_for_each_partial_parcel() {
+    use kentos_sheet::{CoordSource, ItemKind};
+    let mut app = bounded(true);
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    let said = app.log.last().expect("said");
+    assert_eq!(said.level, kentos_interaction::Level::Warn);
+    assert!(said.text.contains("parselinin Ada'sı ya da Parsel'i yok"), "{}", said.text);
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(app.dialog, Some(Dialog::Readjustment), "the window stays");
+
+    let mut app = named();
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert_eq!(app.dialog, None, "the window closes on the sheets");
+    let doc = &app.document.as_ref().expect("open").model;
+    let book = kentos_sheet::project::read_project_sheets(doc.sheets().expect("a book")).expect("reads").0;
+    let names: Vec<&str> = book.sheets.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(names, ["Ayırma çapı 101/3", "Ayırma çapı 101/6", "Ayırma çapı 101/10", "Ayırma çapı 101/11"]);
+    let group = doc.layers().nodes().iter().find(|n| n.name == "Ayırma çapı noktaları").expect("the group");
+    let layers: Vec<(String, String)> = group.children.iter().map(|c| (c.name.clone(), c.id.clone())).collect();
+    assert_eq!(layers.iter().map(|l| l.0.as_str()).collect::<Vec<_>>(), ["101/3", "101/6", "101/10", "101/11"]);
+    let labels = |layer: &str| -> Vec<String> {
+        doc.by_layer(layer).map(|e| e.base().label.clone().unwrap_or_default()).collect()
+    };
+    assert_eq!(labels(&layers[0].1), ["1", "2", "3", "4", "5", "6"]);
+    assert_eq!(labels(&layers[2].1).len(), 8, "101/10: two pieces outside, eight points");
+    let first = &book.sheets[0];
+    let map = first.items.iter().find_map(|i| match &i.kind {
+        ItemKind::Map(m) => Some(m),
+        _ => None,
+    });
+    let frozen: Vec<&str> =
+        map.expect("a map").layer_overrides.iter().filter(|o| o.frozen).map(|o| o.layer.as_str()).collect();
+    assert_eq!(frozen, [layers[1].1.as_str(), layers[2].1.as_str(), layers[3].1.as_str()]);
+    let list = first.items.iter().find_map(|i| match &i.kind {
+        ItemKind::CoordinateList(c) => Some(c),
+        _ => None,
+    });
+    assert!(matches!(&list.expect("a list").source, CoordSource::Layer(l) if l.layer == layers[0].1));
+    let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-08");
+    assert!(pdf.is_ok(), "{:?}", pdf.err());
+    let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
+    let _ = app.update(Message::Run("edit.undo"));
+    let doc = &app.document.as_ref().expect("open").model;
+    assert!(doc.layers().nodes().iter().all(|n| n.name != "Ayırma çapı noktaları"), "one step: the layers");
+    let left = doc.sheets().map(|s| kentos_sheet::project::read_project_sheets(s).expect("reads").0.sheets.len());
+    assert_eq!(left.unwrap_or(0), 0, "one step: the sheets");
+}
+
+/// `.run/gui-evidence/ayirma-capi-paftasi-2680/`: the Ayırma çapı view with its two buttons, and the sheets made
+/// (101/3's and 101/10's, two pieces outside), light and wide, dark and narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::sheets_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sheets_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ayirma-capi-paftasi-2680");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = named();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("readjustment.distribute"));
+        let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, stem: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-pencere");
+        let _ = app.update(Message::Readjustment(R::MakeSheets));
+        shot(&mut app, "2-pafta-101-3");
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
+        shot(&mut app, "3-on-denetim");
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
+        shot(&mut app, "4-pafta-101-10");
+        if name == "acik-genis" {
+            // The book as it prints, to read the tables at full size.
+            let doc = &app.document.as_ref().expect("open").model;
+            let pdf = kentos_plot::book::book_pdf(doc, &[], "KentOS", "2026-11-08").expect("a PDF");
+            std::fs::write(out.join("paftalar.pdf"), &pdf.bytes).expect("writes");
+            for (sheet, f) in &pdf.sheet_findings {
+                println!("ön denetim {sheet}: {:?} {} {}", f.severity, f.code, f.message);
+            }
+        }
+    }
 }
 
 #[test]

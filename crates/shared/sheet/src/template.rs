@@ -753,6 +753,7 @@ const SYSTEM: &[&str] = &[
     include_str!("../templates/cad-mimari.json"),
     include_str!("../templates/aplikasyon-krokisi.json"),
     include_str!("../templates/ifraz-paftasi.json"),
+    include_str!("../templates/ayirma-capi.json"),
     include_str!("../templates/imar-plani.json"),
     include_str!("../templates/gis-tematik.json"),
     include_str!("../templates/gis-atlas.json"),

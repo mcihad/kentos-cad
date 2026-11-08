@@ -1,0 +1,201 @@
+{
+  "schema": "kentos.sheet.template/1",
+  "meta": {
+    "id": "sys:ayirma-capi",
+    "revision": 1,
+    "name": "Ayırma çapı",
+    "description": "A4 dikey ayırma çapı (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13): üstte il, ilçe, mahalle, ada, parsel ve pafta; karelajlı harita, kuzey oku ve ölçek; tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım tablosu; kısımların sınırları nokta numaralarıyla; koordinat listesi; açıklama ve imzalar. cad.readjustment.sheets doldurur.",
+    "category": "kadastro",
+    "tags": ["kadastro", "arazi düzenlemesi", "ayırma çapı", "koordinat listesi"],
+    "papers": [{ "paper": "a4", "orientation": "portrait" }, { "paper": "a3", "orientation": "portrait" }],
+    "workspaces": ["cad"],
+    "projectTypes": ["landReadjustment"],
+    "created": "2026-11-08T00:00:00Z",
+    "updated": "2026-11-08T00:00:00Z",
+    "author": "KentOS"
+  },
+  "sheet": {
+    "id": "t",
+    "name": "Ayırma çapı",
+    "page": {
+      "paper": "a4",
+      "orientation": "portrait",
+      "size": { "width": 210000, "height": 297000 },
+      "margins": { "top": 10000, "right": 10000, "bottom": 10000, "left": 20000 }
+    },
+    "items": [
+      {
+        "id": "cerceve",
+        "name": "Pafta çerçevesi",
+        "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 277000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "locked": true,
+        "kind": { "type": "border", "style": "single", "stroke": { "width": 500 } }
+      },
+      {
+        "id": "ust",
+        "name": "Başlık ve yer",
+        "frame": { "left": 20000, "top": 10000, "width": 180000, "height": 24000 },
+        "constraints": { "h": "leftRight", "v": "top", "relativeTo": "margins" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1000,
+          "valueStyle": { "size": 2700, "weight": 500 },
+          "rows": [
+            {
+              "height": 10,
+              "cells": [{ "value": "AYIRMA ÇAPI", "align": "center", "style": { "size": 5000, "weight": 600 } }]
+            },
+            {
+              "height": 14,
+              "cells": [
+                { "width": 3, "label": "İL", "value": "[% @il %]" },
+                { "width": 3, "label": "İLÇE", "value": "[% @ilce %]" },
+                { "width": 4, "label": "MAHALLE / KÖY", "value": "[% @mahalle %]" },
+                { "width": 2, "label": "ADA", "value": "[% @ada %]", "align": "center", "style": { "size": 3000, "weight": 600 } },
+                { "width": 2, "label": "PARSEL", "value": "[% @parsel %]", "align": "center", "style": { "size": 3000, "weight": 600 } },
+                { "width": 4, "label": "PAFTA", "value": "[% @pafta_no %]", "align": "center" }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "id": "harita",
+        "name": "Çap",
+        "frame": { "left": 24000, "top": 38000, "width": 172000, "height": 104000 },
+        "constraints": { "h": "leftRight", "v": "topBottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "map",
+          "view": { "type": "fixed", "scale": 500 },
+          "labelBand": 7000,
+          "grids": [
+            {
+              "name": "Karelaj",
+              "kind": "cross",
+              "frame": "line",
+              "labels": { "style": { "size": 1800, "weight": 500 }, "gap": 1200 }
+            }
+          ]
+        }
+      },
+      {
+        "id": "kuzey",
+        "name": "Kuzey oku",
+        "frame": { "left": 170000, "top": 143000, "width": 26000, "height": 18000 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "kind": { "type": "northArrow", "map": "harita", "text": { "size": 2800, "weight": 600 } }
+      },
+      {
+        "id": "olcek",
+        "name": "Ölçek çubuğu",
+        "frame": { "left": 24000, "top": 148000, "width": 60000, "height": 10000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "scaleBar",
+          "map": "harita",
+          "segments": 4,
+          "height": 1200,
+          "text": { "size": 1800, "weight": 500 }
+        }
+      },
+      {
+        "id": "yuzolcumleri",
+        "name": "Yüzölçümleri",
+        "frame": { "left": 24000, "top": 163000, "width": 84000, "height": 44000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "table",
+          "title": "YÜZÖLÇÜMLERİ",
+          "titleStyle": { "size": 2600, "weight": 600 },
+          "source": { "type": "fixed", "rows": [] },
+          "columns": [
+            { "heading": "", "align": "left" },
+            { "heading": "m²", "width": 22000, "align": "right" }
+          ],
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2200, "weight": 400 }, "padding": 800 }
+        }
+      },
+      {
+        "id": "kisimlar",
+        "name": "Kısımlar",
+        "frame": { "left": 24000, "top": 209000, "width": 84000, "height": 37000 },
+        "constraints": { "h": "left", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "table",
+          "title": "KISIMLAR",
+          "titleStyle": { "size": 2600, "weight": 600 },
+          "source": { "type": "fixed", "rows": [] },
+          "columns": [
+            { "heading": "Kısım", "width": 19000, "align": "left" },
+            { "heading": "Sınır (noktalar)", "align": "left" },
+            { "heading": "m²", "width": 22000, "align": "right" }
+          ],
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2100, "weight": 400 }, "padding": 800 }
+        }
+      },
+      {
+        "id": "koordinatlar",
+        "name": "Koordinat listesi",
+        "frame": { "left": 112000, "top": 163000, "width": 84000, "height": 83000 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "coordinateList",
+          "title": "KOORDİNATLAR",
+          "titleStyle": { "size": 2600, "weight": 600 },
+          "decimals": 2,
+          "headerStyle": { "text": { "size": 2000, "weight": 600 }, "fill": "#ededed", "padding": 800 },
+          "cellStyle": { "text": { "size": 2200, "weight": 400 }, "padding": 800 }
+        }
+      },
+      {
+        "id": "alt",
+        "name": "Açıklama ve imzalar",
+        "frame": { "left": 20000, "top": 250000, "width": 180000, "height": 37000 },
+        "constraints": { "h": "right", "v": "bottom", "relativeTo": "margins" },
+        "kind": {
+          "type": "titleBlock",
+          "outer": { "width": 500 },
+          "inner": { "width": 180 },
+          "cellPadding": 1000,
+          "valueStyle": { "size": 2400, "weight": 400 },
+          "rows": [
+            {
+              "height": 13,
+              "cells": [
+                { "label": "AÇIKLAMA", "value": "[% @aciklama %]", "valign": "top", "style": { "size": 2100, "weight": 400 } }
+              ]
+            },
+            {
+              "height": 24,
+              "cells": [
+                { "width": 5, "label": "DÜZENLEYEN", "value": "[% @kullanici %]", "signature": true, "style": { "size": 2300, "weight": 400 } },
+                { "width": 5, "label": "KONTROL EDEN", "value": "[% @kontrol_eden %]", "signature": true, "style": { "size": 2300, "weight": 400 } },
+                { "width": 4, "label": "TARİH", "value": "[% @tarih %]", "align": "center" },
+                { "width": 4, "label": "ÖLÇEK", "value": "[% @olcek %]", "align": "center", "style": { "size": 2800, "weight": 600 } }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "variables": [
+    { "name": "il", "label": "İl" },
+    { "name": "ilce", "label": "İlçe" },
+    { "name": "mahalle", "label": "Mahalle / köy" },
+    { "name": "ada", "label": "Ada" },
+    { "name": "parsel", "label": "Parsel" },
+    { "name": "pafta_no", "label": "Pafta" },
+    { "name": "kontrol_eden", "label": "Kontrol eden" },
+    {
+      "name": "aciklama",
+      "label": "Açıklama",
+      "value": "Taslaktır: ayırma çapı parselasyon planıyla birlikte onaylanır (Yönetmelik m. 13/2). Noktaların numaraları bu çapındır; kısımlar sınırlarını bu numaralarla verir."
+    }
+  ]
+}

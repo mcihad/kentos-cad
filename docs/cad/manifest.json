@@ -8338,12 +8338,13 @@
    "level": "query",
    "via": [
     "cad.readjustment.distribute",
-    "cad.readjustment.scope"
+    "cad.readjustment.scope",
+    "cad.readjustment.sheets"
    ],
    "operation": null,
-   "python": "kentos.cad.readjustment.distribute, kentos.cad.readjustment.scope",
-   "mcp": "cad.readjustment.distribute, cad.readjustment.scope",
-   "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460). Açılırken seçili alan düzenleme sınırıdır: Kapsam cad.readjustment.scope'un ayırma çapı sayılarını ve esas alanları gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar (ADR 2060).",
+   "python": "kentos.cad.readjustment.distribute, kentos.cad.readjustment.scope, kentos.cad.readjustment.sheets",
+   "mcp": "cad.readjustment.distribute, cad.readjustment.scope, cad.readjustment.sheets",
+   "note": "Pencere kural paketini ve CSV kayıtlarını cad.readjustment.distribute'e verir, sonucu gösterir (salt okunur, her zaman taslak); Sonucu kaydet CSV yazar (ADR 1460). Açılırken seçili alan düzenleme sınırıdır: Kapsam cad.readjustment.scope'un ayırma çapı sayılarını ve esas alanları gösterir, Esas alanları kayıtlara yaz esasları kayıtlara koyar (ADR 2060). Ayırma çapı görünümünde Çapı çizime yaz parçaları cad.entities.create ile yazar (ADR 2280), Çapın paftaları her kısmen giren parsel için cad.readjustment.sheets ile bir pafta yapar (ADR 2680).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

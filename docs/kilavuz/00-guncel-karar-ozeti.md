@@ -166,6 +166,9 @@
 - **Ayırma çapının parçaları ve koordinatları (8 Kasım 2026; MAP-11, [ADR 2280](../../docs/adr/2280-separation-sheet-parts-and-coordinates.md)).**
   `cad.readjustment.scope` kısmen giren parselin parçalarını kanonik halkalarla verir (m. 13(2)); Ayırma çapı görünümü
   köşeleri Y, X ile listeler, Çapı çizime yaz parçaları “Ayırma çapı” katmanına tek adımda yazar. Harita + CBS.
+- **Ayırma çapı paftaları (8 Kasım 2026; MAP-11, [ADR 2680](../../docs/adr/2680-separation-sheets.md)).**
+  `cad.readjustment.sheets`: kısmen giren her parsel için `sys:ayirma-capi` paftası; noktalar parsel başına numaralı,
+  “Ayırma çapı noktaları › Ada/Parsel” katmanında; fark kesin, girmeyen kısma kalan m. 31(2); tek adım. Harita + CBS.
 - **Tarama kaydında kaba hatayı atan ağırlıklar (8 Kasım 2026; MAP-13, [ADR 2300](../../docs/adr/2300-scan-registration-robust-weights.md)).**
   `cad.pointclouds.register`'ın `robust`'u: Huber (k 1,345, ölçek 1,4826 × ortanca |artık|) ya da kırpılmış ICP
   (kullanıcının payı); cevapta ağırlık raporu; Tarama kaydı'nda Ağırlık satırı. Harita + CBS.

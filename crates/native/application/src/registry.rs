@@ -67,6 +67,7 @@ use crate::zoning_check;
 use crate::scenarios_impact;
 use crate::readjustment;
 use crate::readjustment_scope;
+use crate::readjustment_sheets;
 use crate::orthophoto_check;
 use crate::orthophoto_compare;
 use crate::pointcloud_overlap;
@@ -584,6 +585,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_READJUSTMENT_SCOPE => {
                 $then!(readjustment_scope, kentos_commands::ReadjustmentScope)
+            }
+            kentos_commands::CAD_READJUSTMENT_SHEETS => {
+                $then!(readjustment_sheets, kentos_commands::ReadjustmentSheets)
             }
             kentos_commands::CAD_ORTHOPHOTO_CHECK => {
                 $then!(orthophoto_check, kentos_commands::OrthophotoCheck)

@@ -128,6 +128,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Yola giren parsel ve parselin Ada/Parsel adı.
 - MAP-10 / ADR 2660: web'in `cad.scenarios.impact` işleyicisinde `infrastructure` (37 ortak durum); web'in Senaryo
   ölçüleri penceresinde Altyapı katmanı, uzaklığı ve ölçülen kullanımlar.
+- MAP-11 / ADR 2680: web'in `cad.readjustment.scope` işleyicisinde `points` ve halkaların `numbers`'ı (33 ortak durum);
+  `cad.readjustment.sheets`'in web işleyicisi (29 ortak durum) ve `sys:ayirma-capi` şablonu; web'in Düzenleme dağıtım
+  taslağında Çapın paftaları ve Nokta sütunu.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

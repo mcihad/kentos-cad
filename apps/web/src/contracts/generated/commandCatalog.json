@@ -58181,6 +58181,225 @@
       ]
     },
     {
+      "id": "cad.readjustment.sheets",
+      "version": 1,
+      "title": "Ayırma çapı paftaları",
+      "summary": "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).",
+      "aliases": [
+        "ayirmacapipaftalari",
+        "capinpaftalari"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.readjustment.sheets` v1: the scope (`cad.readjustment.scope`'s input: the boundary, the parcels, the\nregistered area's attribute, the places, rounding and piece tolerance), the template (KentOS's separation sheet,\n`sys:ayirma-capi`, without one; a template of one's own needs a fixed map with the id `harita`, and may have a\ncoordinate list `koordinatlar` and fixed tables `yuzolcumleri` and `kisimlar`), and the template's options: its\npaper, a scale (without one, each map takes the standard scale its parcel fits at with a 5% margin) and answers to\nits questions. Each sheet is named “Ayırma çapı ‹Ada/Parsel›”; the template's `il`, `ilce`, `mahalle`, `ada` and\n`parsel` are answered from the parcel's own attributes.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, the scope's own at `scope.…`, `no_partial_parcels`\n(no parcel is partly inside), `no_identity` and `duplicate_parcel` (a partial parcel without Ada or Parsel, or with\nanother's), `unknown_template`, `invalid_options` (options that do not read; a name, a centre or an answer to a\nparcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`\n(a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "options": {
+            "$ref": "#/$defs/PaperInstanceOptions",
+            "default": {},
+            "description": "The template's paper, scale and answers (cad.sheets.create's options but the name and the centre).",
+            "x-raw-record": true
+          },
+          "scope": {
+            "$ref": "#/$defs/ReadjustmentScope"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetTemplateSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "scope"
+        ],
+        "title": "ReadjustmentSheets",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the\nscope's order, the points written (none in a plan) and the drawing's revision.",
+        "properties": {
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/SeparationSheet"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "ReadjustmentSheetsMade",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the\nscope's order, the points written (none in a plan) and the drawing's revision.",
+        "properties": {
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revision": {
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/$defs/SeparationSheet"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sheets",
+          "uids",
+          "revision"
+        ],
+        "title": "ReadjustmentSheetsMade",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "bad_drawing_info",
+          "duplicate_sheet_number",
+          "bad_drawing_index",
+          "not_fixed_map",
+          "ambiguous_source",
+          "invalid_extent",
+          "bad_curve",
+          "curve_too_complex",
+          "asset_in_use",
+          "asset_too_large",
+          "bad_asset",
+          "bad_atlas",
+          "bad_binding",
+          "bad_color",
+          "bad_constraint",
+          "bad_continuation",
+          "bad_font",
+          "bad_group",
+          "bad_id",
+          "bad_layout",
+          "bad_level",
+          "bad_link",
+          "bad_name",
+          "bad_order",
+          "bad_patch",
+          "bad_template",
+          "bad_value",
+          "bad_variable",
+          "bad_variable_value",
+          "duplicate_id",
+          "duplicate_name",
+          "duplicate_variable",
+          "empty_group",
+          "group_cycle",
+          "ids_missing",
+          "invalid_column_name",
+          "item_in_use",
+          "item_locked",
+          "kind_change",
+          "margins_too_large",
+          "master_in_use",
+          "missing_asset",
+          "mixed_owners",
+          "newer_schema",
+          "no_items",
+          "no_master",
+          "out_of_range",
+          "page_orientation",
+          "page_size_mismatch",
+          "reserved_id",
+          "template_has_place",
+          "template_too_large",
+          "unknown_guide",
+          "unknown_item",
+          "unknown_master",
+          "unknown_paper",
+          "unknown_schema",
+          "unknown_sheet",
+          "unknown_variant",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
+          "not_an_area",
+          "not_a_parcel",
+          "no_partial_parcels",
+          "no_identity",
+          "duplicate_parcel",
+          "layer_not_found",
+          "invalid_group_name",
+          "unknown_template",
+          "unknown_variable",
+          "invalid_options",
+          "separation_sheet_exists",
+          "book_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kısmen giren parsellerin ayırma çapı paftaları, iki basamak, yarımda çifte",
+          "input": {
+            "scope": {
+              "boundary": "0192f800-2060-7000-8000-000000000001",
+              "rounding": "half_even",
+              "scale": 2
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.scenarios.impact",
       "version": 1,
       "title": "Senaryo ölçüleri",
@@ -105829,6 +106048,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Parselin payları toplamı tam 1 değil."
+    },
+    {
+      "code": "no_partial_parcels",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Düzenleme sınırına kısmen giren parsel yok; ayırma çapı yalnız kısmen giren parsel için düzenlenir."
+    },
+    {
+      "code": "no_identity",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parselin Ada'sı ya da Parsel'i yok; ayırma çapı paftası parselin kimliğiyle adlandırılır."
+    },
+    {
+      "code": "duplicate_parcel",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aynı Ada/Parsel iki parselde; ayırma çapı paftası parselin kimliğiyle adlandırılır."
+    },
+    {
+      "code": "separation_sheet_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parselin ayırma çapı paftası ya da nokta katmanı zaten var; yeniden yapmak için önce onları silin."
     },
     {
       "code": "no_baselines",
@@ -177701,8 +177944,55 @@
       ],
       "type": "object"
     },
+    "ReadjustmentScope": {
+      "additionalProperties": false,
+      "description": "Input of `cad.readjustment.scope` v1: the boundary (a closed area's uid), the parcels (none: every area on the\nparcel layer `parsel` that has a part inside it), the attribute that holds the registered area (none:\n`Tapu alanı (m²)`), the places and rounding of a computed basis (the rule package's numeric policy: `half_even`,\n`half_away_from_zero`, `half_toward_zero`, `away_from_zero`, `toward_zero`, `toward_positive`, `toward_negative`),\nand the narrowest piece counted (metres, mean width 2A/P; none: 0.01).\n\nRefusals, in this order: `invalid_input` (`scale` over 6, `rounding` unknown, `tolerance` not finite or under\n1e-6), `invalid_uid`, `entity_not_found` and `not_an_area` (`boundary`), then `invalid_uid`, `entity_not_found` and\n`not_a_parcel` (`uids[i]`).",
+      "properties": {
+        "boundary": {
+          "type": "string"
+        },
+        "field": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rounding": {
+          "type": "string"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "tolerance": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "boundary",
+        "scale",
+        "rounding"
+      ],
+      "type": "object"
+    },
     "ReadjustmentScopeParcel": {
-      "description": "A parcel in the scope: its uid and its records' name (`Ada/Parsel`), its identity's parts as written, how the\nboundary takes it (`whole`, `partial`, `outside`), its registered area's text as written, its computed area, the\ndifference (computed − registered) and the tolerance (from the computed area) and whether it is within; the parts\ninside and outside (square metres), the outside pieces counted (each gets its own parcel number, Article 13(3)) and\nthe pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square\nmetres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,\n`outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,\n`noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their\nboundaries and coordinates (Article 13(2), docs/adr/2280).",
+      "description": "A parcel in the scope: its uid and its records' name (`Ada/Parsel`), its identity's parts as written, how the\nboundary takes it (`whole`, `partial`, `outside`), its registered area's text as written, its computed area, the\ndifference (computed − registered) and the tolerance (from the computed area) and whether it is within; the parts\ninside and outside (square metres), the outside pieces counted (each gets its own parcel number, Article 13(3)) and\nthe pieces narrower than the tolerance; the basis and the area the part outside keeps (decimal text, square\nmetres); the status: `registered`, `computed`, `needsCorrection`, `noRecord`, `invalidRecord`, `finerThanPolicy`,\n`outsideTooSmall`, `sliver` or `outside`. `duplicate` when another parcel in the answer has the same `Ada/Parsel`,\n`noIdentity` when Ada or Parsel is missing. A partial parcel's `parts` are its separation sheet's parts with their\nboundaries and coordinates (Article 13(2), docs/adr/2280), and `points` the sheet's points numbered from 1\n(docs/adr/2680): the parts' corners in their order (each part's rings in order, each ring's corners in order), a\ncorner met again (the same coordinates exactly) keeping its number; each ring's `numbers` name its corners by them.",
       "properties": {
         "ada": {
           "type": "string"
@@ -177782,6 +178072,19 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "points": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "length"
         },
         "recordedText": {
           "type": [
@@ -182660,7 +182963,7 @@
       "type": "object"
     },
     "ScopeRing": {
-      "description": "A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The\nouter ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at\nits westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.",
+      "description": "A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The\nouter ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at\nits westmost, then southmost corner; a corner where two straight edges go on in one direction is left out. `numbers`\nare the corners' point numbers on the separation sheet (the parcel's `points`, from 1; docs/adr/2680).",
       "properties": {
         "bulges": {
           "items": {
@@ -182672,6 +182975,15 @@
             "null"
           ],
           "x-unit": "1"
+        },
+        "numbers": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "count"
         },
         "pts": {
           "items": {
@@ -183927,6 +184239,81 @@
         "at",
         "code",
         "message"
+      ],
+      "type": "object"
+    },
+    "SeparationSheet": {
+      "description": "A separation sheet: its id and name, its parcel (uid and `Ada/Parsel`), the layer its points are on (none in a plan),\nits map's scale (1:N) and centre (east, north; m), how many points it numbers, and the rows written in its tables of\nareas (the item, square metres) and parts (the part, its boundary as point numbers, square metres).",
+      "properties": {
+        "areas": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "center": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "layer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "parcel": {
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "points": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "scale": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "scale"
+        },
+        "sheet": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sheet",
+        "name",
+        "uid",
+        "parcel",
+        "scale",
+        "center",
+        "points",
+        "areas",
+        "parts"
       ],
       "type": "object"
     },

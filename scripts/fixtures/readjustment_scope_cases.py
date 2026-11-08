@@ -30,7 +30,9 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, 31
   (east, then north); a piece outside is the union of its cells (each made counter-clockwise, its edges cut at every
   other corner lying on them, the stretches that run both ways dropped, the rest joined into rings); every ring
   counter-clockwise (holes clockwise, after the outer ring in the order of their first corner), a corner where two
-  edges go on in one direction left out, from its westmost, then southmost corner.
+  edges go on in one direction left out, from its westmost, then southmost corner;
+- the separation sheet's points (docs/adr/2680): the parts' corners in order (each part's rings, each ring's corners)
+  numbered from 1, a corner met again (the same exact coordinates) keeping its number; each ring's numbers.
 """
 
 import json
@@ -306,6 +308,23 @@ def sheet_part(piece, where):
     return {"side": where, "area": float(a), "rings": [sheet_ring(outer[0], True)] + hs}
 
 
+def numbered(parts):
+    """docs/adr/2680: the parts' corners numbered from 1 in order, a corner met again keeping its number (the corners
+    are exact fractions here, written as floats: equal fractions, equal floats); each ring gets its corners' numbers."""
+    points, seen = [], {}
+    for part in parts:
+        for ring in part["rings"]:
+            nums = []
+            for c in ring["pts"]:
+                key = (c[0], c[1])
+                if key not in seen:
+                    points.append([c[0], c[1]])
+                    seen[key] = len(points)
+                nums.append(seen[key])
+            ring["numbers"] = nums
+    return points
+
+
 # ── Numbers ────────────────────────────────────────────────────────────────────────────────────────────────────────
 SLICES = [(0, 0, F(0), F("0.05")), (11, 10, F("0.5"), F("0.02")), (101, 100, F("2.3"), F("0.01")),
           (501, 500, F("6.3"), F("0.005")), (1001, 1000, F("8.8"), F("0.004")), (5001, 5000, F("24.8"), F("0.003")),
@@ -448,6 +467,7 @@ def scope(entities, boundary_index, chosen, scale=2, mode="half_even", tolerance
                 these = [sheet_part(q, where) for q in pieces_ if width(q) > tolerance]
                 parts += sorted(these, key=lambda s: tuple(s["rings"][0]["pts"][0]))
             p["parts"] = parts
+            p["points"] = numbered(parts)
         p["_noIdentity"] = not ada or not parsel
         parcels.append(p)
     names = [p["parcel"] for p in parcels if not p["_noIdentity"]]
@@ -458,6 +478,7 @@ def scope(entities, boundary_index, chosen, scale=2, mode="half_even", tolerance
             p["noIdentity"] = True
         if "parts" in p:
             p["parts"] = p.pop("parts")
+            p["points"] = p.pop("points")
     bases = [p["basis"] for p in parcels if "basis" in p]
     total = sum((F(b) for b in bases), F(0))
     most = max((places(b) for b in bases), default=0)

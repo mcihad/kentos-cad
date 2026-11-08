@@ -41,7 +41,7 @@ sırayla alır.
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
@@ -1028,6 +1028,15 @@ verir (kanonik halkalar: dış saat yönünün tersine, delik saat yönünde, en
 bağımsız başvuru dışarıdaki parçayı hücrelerin birleşimiyle kurar (L ve delikli parça durumları); MCP; masaüstünde
 Ayırma çapı görünümü (köşe köşe Y, X) ve Çapı çizime yaz (yeni katmana tek adım). Açık: çapın paftası, değer esaslı
 dağıtım; m. 8(5)'in tablosu resim olarak duruyor, ikinci kabul uzman ister.
+
+**8 Kasım 2026, dördüncü tur — ayırma çapı paftaları ([ADR 2680](../docs/adr/2680-separation-sheets.md)).** Kapsam:
+**Harita + CBS**. Dayanak: Yönetmelik m. 4(1)(c), 13(1)–(4), 22(1)(ğ), 31(2) (Resmî Gazete PDF'i, 8 Kasım 2026); Civil 3D
+Map Check raporu. Kanıtlanan: kapsam parçaların köşelerini parsel başına numaralar (ortak köşe tek numara, tolerans
+yok); `cad.readjustment.sheets` kısmen giren her parsel için bir pafta yapar (`sys:ayirma-capi`, A4 dikey): noktalar
+parselin kendi katmanında etiketli, harita standart ölçekte sığar ve öbür parsellerin noktalarını dondurur, koordinat
+listesi parselin katmanını okur, Yüzölçümleri tablosu fark kesin ve girmeyen kısma kalan (m. 31/2) ile, Kısımlar
+sınırları nokta numaralarıyla; tek geri alma; 29 ortak durum, Python korunum testi, MCP; masaüstünde Çapın paftaları.
+Açık: tescil bildirimi, dış parçaların numarası, değer esaslı dağıtım, m. 8(5), ikinci kabul.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

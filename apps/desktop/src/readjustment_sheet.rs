@@ -1,59 +1,57 @@
 //! Ayırma çapı (docs/adr/2280; Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13(2)): the parts of the parcels
 //! partly inside the boundary, with their boundaries and coordinates, from `cad.readjustment.scope`'s answer. The
-//! window's Ayırma çapı view lists each part's corners (Y, X) beside its area. Çapı çizime yaz writes the parts as
+//! window's Ayırma çapı view lists each part's corners (their point numbers, Y, X) beside its area. Çapı çizime yaz writes the parts as
 //! areas on the layer “Ayırma çapı” (made when the drawing has none): their attributes are the parcel, the part and its
-//! area. The write is one undo step “Ayırma çapı” through `cad.entities.create`.
+//! area. The write is one undo step “Ayırma çapı” through `cad.entities.create`. Çapın paftaları makes a separation sheet
+//! for each parcel through `cad.readjustment.sheets` (docs/adr/2680).
 
 use std::collections::BTreeMap;
 
+use iced::Task;
 use kentos_commands::{
-    CommandResult, EntitiesCreate, EntityGeometry, NewObject, ReadjustmentScoped, RingGeometry, ScopePart, ScopeRing,
+    CommandResult, EntitiesCreate, EntityGeometry, NewObject, ReadjustmentScoped, ReadjustmentSheets, RingGeometry,
+    ScopePart, ScopeRing,
 };
 use kentos_commands::Vec2;
 use kentos_domain::NewLayer;
 use kentos_interaction::{Format, Level};
-use kentos_native_application::{ExecutionContext, create};
+use kentos_native_application::{ExecutionContext, create, readjustment_sheets};
 
-use crate::app::App;
+use crate::app::{App, Message};
 
 /// The layer the parts are written on, and the step's name.
 pub const LAYER: &str = "Ayırma çapı";
 /// The window's button.
 pub const WRITE: &str = "Çapı çizime yaz";
+/// The window's button that makes a separation sheet for each parcel (docs/adr/2680).
+pub const MAKE: &str = "Çapın paftaları";
 
-/// A part's name: Giren, or Girmeyen with its number when the parcel has more than one part outside (each takes a
-/// parcel number of its own, Article 13(3)).
+/// A part's name: Giren and Girmeyen, numbered on a side with more than one (each piece outside takes a parcel number of
+/// its own, Article 13(3)); the separation sheets name them alike (docs/adr/2680).
 pub fn part_name(parts: &[ScopePart], k: usize) -> String {
-    let side = &parts[k].side;
-    if side == "inside" {
-        return "Giren".to_owned();
-    }
-    let outside: Vec<usize> = (0..parts.len()).filter(|&i| parts[i].side == "outside").collect();
-    match outside.iter().position(|&i| i == k) {
-        Some(n) if outside.len() > 1 => format!("Girmeyen {}", n + 1),
-        _ => "Girmeyen".to_owned(),
-    }
+    readjustment_sheets::part_names(parts).swap_remove(k)
 }
 
-/// The view's rows: every corner of every part of every partial parcel, numbered within the part (its holes' corners
-/// after its outer ring's, the part's name saying “delik”), the part's area on its first row.
+/// The view's rows: every corner of every part of every partial parcel (its holes' corners after its outer ring's, the
+/// part's name saying “delik”) with its point number on the separation sheet (the scope's, docs/adr/2680: a corner the
+/// parts share has one number), the part's area on its first row.
 pub fn rows(scope: &ReadjustmentScoped, f: &Format) -> Vec<Vec<String>> {
     let mut out = Vec::new();
     for p in &scope.parcels {
         for (k, part) in p.parts.iter().enumerate() {
             let name = part_name(&p.parts, k);
-            let mut n = 0;
+            let mut first = true;
             for (r, ring) in part.rings.iter().enumerate() {
-                for c in &ring.pts {
-                    n += 1;
+                for (i, c) in ring.pts.iter().enumerate() {
                     out.push(vec![
                         p.parcel.clone(),
                         if r == 0 { name.clone() } else { format!("{name} (delik)") },
-                        n.to_string(),
+                        ring.numbers.get(i).map_or_else(String::new, u32::to_string),
                         f.coord(c[0]),
                         f.coord(c[1]),
-                        if n == 1 { f.area_bare(part.area) } else { String::new() },
+                        if first { f.area_bare(part.area) } else { String::new() },
                     ]);
+                    first = false;
                 }
             }
         }
@@ -104,6 +102,30 @@ fn new_object(parcel: &str, name: String, part: &ScopePart, f: &Format) -> Optio
 }
 
 impl App {
+    /// Çapın paftaları (docs/adr/2680): `cad.readjustment.sheets` over the window's boundary, places, rounding and piece
+    /// tolerance with KentOS's separation sheet; one undo step. The window closes and the sheets are shown.
+    pub(crate) fn readjustment_sheets_make(&mut self) -> Task<Message> {
+        let Some(scope) = self.readjustment_scope_input() else { return Task::none() };
+        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), expected_revision: None };
+        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let result = readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else { return Task::none() };
+        let names: Vec<&str> = out.sheets.iter().map(|s| s.name.as_str()).collect();
+        self.say(
+            Level::Success,
+            format!(
+                "{MAKE}: {} pafta ({}); noktalar “{}” katmanlarında. Tek geri alma adımı.",
+                out.sheets.len(),
+                names.join(", "),
+                readjustment_sheets::GROUP
+            ),
+        );
+        self.readjustment = crate::readjustment_window::State::default();
+        self.dialog = None;
+        self.follow_sheet_book();
+        self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
+    }
+
     /// Çapı çizime yaz: the scope's parts as areas on “Ayırma çapı”, one undo step; the layer made when missing.
     pub(crate) fn readjustment_sheet_write(&mut self) {
         let f = self.format();

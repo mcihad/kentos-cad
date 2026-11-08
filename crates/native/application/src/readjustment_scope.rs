@@ -7,8 +7,10 @@
 //! table); the basis: the registered area of a whole parcel within the tolerance, the computed area of a partial
 //! parcel's part inside rounded once by the given policy from the area's own shortest decimal form, the error left to
 //! the part outside. Where the rule needs a person, no basis. A partial parcel's parts carry their rings, so the
-//! separation sheet's boundaries and coordinates come from here too (docs/adr/2280). The shared cases are
-//! `fixtures/commands/v1/cad.readjustment.scope.json`.
+//! separation sheet's boundaries and coordinates come from here too (docs/adr/2280), with its numbered points
+//! (docs/adr/2680). The shared cases are `fixtures/commands/v1/cad.readjustment.scope.json`.
+
+use std::collections::HashMap;
 
 use kentos_commands::{
     CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ReadjustmentScope, ReadjustmentScopeParcel,
@@ -45,12 +47,12 @@ fn count(n: usize) -> u32 {
 }
 
 /// Places after the point in plain decimal text.
-fn places(text: &str) -> u32 {
+pub(crate) fn places(text: &str) -> u32 {
     text.split_once('.').map_or(0, |(_, f)| f.len() as u32)
 }
 
 /// Exact decimal text written with `scale` places (it has at most that many: padding only).
-fn padded(text: &str, scale: u32) -> Option<String> {
+pub(crate) fn padded(text: &str, scale: u32) -> Option<String> {
     round_decimal(text, scale, RoundingMode::HalfEven).ok()
 }
 
@@ -98,7 +100,35 @@ fn sheet_ring(r: &Ring, outer: bool) -> ScopeRing {
     ScopeRing {
         pts: order.iter().map(|&i| [pts[i].x, pts[i].y]).collect(),
         bulges: bulges.iter().any(|b| *b != 0.0).then(|| order.iter().map(|&i| bulges[i]).collect()),
+        numbers: Vec::new(),
     }
+}
+
+/// The separation sheet's points (docs/adr/2680): the parts' corners in order (each part's rings, each ring's corners),
+/// numbered from 1, a corner met again keeping its number. “Again” is the same coordinates exactly: the parts of one
+/// parcel come from one overlay of the parcel and the boundary, which gives a corner they share once, so no tolerance
+/// joins two corners that differ.
+fn number(parts: &mut [ScopePart]) -> Vec<[f64; 2]> {
+    let mut points: Vec<[f64; 2]> = Vec::new();
+    let mut seen: HashMap<(u64, u64), u32> = HashMap::new();
+    for part in parts.iter_mut() {
+        for ring in part.rings.iter_mut() {
+            let numbers: Vec<u32> = ring
+                .pts
+                .iter()
+                .map(|p| {
+                    // −0 and +0 are one coordinate.
+                    let key = ((p[0] + 0.0).to_bits(), (p[1] + 0.0).to_bits());
+                    *seen.entry(key).or_insert_with(|| {
+                        points.push(*p);
+                        count(points.len())
+                    })
+                })
+                .collect();
+            ring.numbers = numbers;
+        }
+    }
+    points
 }
 
 /// A piece as a part of the separation sheet: its side, area and rings (the holes in the order of their first corner).
@@ -120,7 +150,7 @@ fn total(list: &[Area]) -> f64 {
 
 /// A computed area as decimal text at `scale` places by `mode`: the value's shortest decimal form (Rust writes floats
 /// without an exponent), rounded once.
-fn computed(v: f64, scale: u32, mode: RoundingMode) -> Option<String> {
+pub(crate) fn computed(v: f64, scale: u32, mode: RoundingMode) -> Option<String> {
     round_decimal(&format!("{v}"), scale, mode).ok()
 }
 
@@ -173,7 +203,8 @@ fn basis_of(
     }
 }
 
-fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, Stop> {
+/// The scope's answer, or why there is none (the refusal's path is the input's).
+pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, Stop> {
     if input.scale > MOST_PLACES {
         return Err(fail(codes::INVALID_INPUT, format!("Basamak {} en çok {MOST_PLACES} olabilir.", input.scale), "scale"));
     }
@@ -256,6 +287,7 @@ fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, 
                 parts.extend(these);
             }
         }
+        let points = number(&mut parts);
         let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
         let (ada, parsel) = (attr("Ada"), attr("Parsel"));
         let parcel = match (ada.is_empty(), parsel.is_empty()) {
@@ -287,6 +319,7 @@ fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, 
             status: status.to_owned(),
             duplicate: false,
             parts,
+            points,
         });
     }
     // The records name a parcel by Ada/Parsel: two in the answer with one name cannot both take a record.

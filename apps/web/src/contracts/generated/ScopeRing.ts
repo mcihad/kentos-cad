@@ -3,6 +3,7 @@
 /**
  * A part's ring: its corners (east, north) and each edge's bulge after its corner (none: every edge straight). The
  * outer ring runs counter-clockwise, its holes clockwise after it in the order of their first corner; each starts at
- * its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out.
+ * its westmost, then southmost corner; a corner where two straight edges go on in one direction is left out. `numbers`
+ * are the corners' point numbers on the separation sheet (the parcel's `points`, from 1; docs/adr/2680).
  */
-export type ScopeRing = { pts: Array<[number, number]>, bulges?: Array<number>, };
+export type ScopeRing = { pts: Array<[number, number]>, bulges?: Array<number>, numbers?: Array<number>, };

@@ -69,6 +69,7 @@ sonraya kalır.
 
 ## Sonra
 
-- Ayırma çapının paftası: parsel, sınır, parçalar, alan ve koordinat tablosu tek sayfada (pafta modülüyle).
+- Ayırma çapının paftası: parsel, sınır, parçalar, alan ve koordinat tablosu tek sayfada (pafta modülüyle). Yapıldı:
+  [ADR 2680](2680-separation-sheets.md).
 - m. 8(5)'in geçici koordinatlı parsel yanılma sınırı (tablosu resim olarak duruyor; ADR 2060).
 - Birden çok dış parça arasında hatanın paylaşımı (yönetmelik kural vermiyor; KentOS uydurmaz).

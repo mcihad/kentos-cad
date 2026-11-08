@@ -125,6 +125,8 @@ pub enum Event {
     Apply,
     /// Çapı çizime yaz (docs/adr/2280).
     WriteSheet,
+    /// Çapın paftaları (docs/adr/2680).
+    MakeSheets,
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -284,20 +286,24 @@ fn chosen_boundary(app: &App) -> Option<String> {
 }
 
 impl App {
-    /// The scope of the boundary with the rule package's places and rounding.
-    pub(crate) fn readjustment_scope_run(&mut self) {
+    /// The scope's input: the boundary with the rule package's places and rounding and the piece tolerance.
+    pub(crate) fn readjustment_scope_input(&self) -> Option<ReadjustmentScope> {
         let s = &self.readjustment;
-        let Some(boundary) = s.boundary.clone() else {
-            self.readjustment.scope = None;
-            return;
-        };
-        let input = ReadjustmentScope {
-            boundary,
+        Some(ReadjustmentScope {
+            boundary: s.boundary.clone()?,
             uids: None,
             field: None,
             scale: s.rules.scale,
             rounding: s.rules.rounding.clone(),
             tolerance: Some(s.tolerance),
+        })
+    }
+
+    /// The scope of the boundary with the rule package's places and rounding.
+    pub(crate) fn readjustment_scope_run(&mut self) {
+        let Some(input) = self.readjustment_scope_input() else {
+            self.readjustment.scope = None;
+            return;
         };
         let Some(doc) = self.document.as_ref() else { return };
         self.readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
@@ -370,6 +376,7 @@ impl App {
                 return Task::none();
             }
             Event::WriteSheet => self.readjustment_sheet_write(),
+            Event::MakeSheets => return self.readjustment_sheets_make(),
             Event::Apply => {
                 if let Some(Ok(scope)) = &self.readjustment.scope {
                     let scope = scope.clone();
@@ -596,7 +603,7 @@ impl App {
         if s.view == View::Sheet {
             table = match &s.scope {
                 Some(Ok(k)) => sheet(
-                    vec![col("Parsel", 70.0), col("Kısım", 150.0), num("Köşe", 55.0), num("Y", 130.0), num("X", 130.0), num("Alan (m²)", 100.0)],
+                    vec![col("Parsel", 70.0), col("Kısım", 150.0), num("Nokta", 55.0), num("Y", 130.0), num("X", 130.0), num("Alan (m²)", 100.0)],
                     crate::readjustment_sheet::rows(k, &f),
                     "Kısmen giren parsel yok: ayırma çapı gerekmez.",
                     240.0,
@@ -661,13 +668,14 @@ impl App {
             .push_fit(table, kentos_ui::theme::typography::scaled(200.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         let parts = matches!(&s.scope, Some(Ok(k)) if crate::readjustment_sheet::has_parts(k));
-        let sheet_button = (s.view == View::Sheet).then(|| {
-            words::secondary(crate::readjustment_sheet::WRITE, parts.then(|| msg(Event::WriteSheet)))
-        });
         let frame = Frame::new(TITLE).scroll(body).aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))));
-        let frame = match sheet_button {
-            Some(b) => frame.aside(b),
-            None => frame,
+        // The separation sheet's view: its parts written on the drawing, or a sheet for each parcel (docs/adr/2680).
+        let frame = if s.view == View::Sheet {
+            frame
+                .aside(words::secondary(crate::readjustment_sheet::WRITE, parts.then(|| msg(Event::WriteSheet))))
+                .aside(words::secondary(crate::readjustment_sheet::MAKE, parts.then(|| msg(Event::MakeSheets))))
+        } else {
+            frame
         };
         frame
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
@@ -682,6 +690,7 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(crate::readjustment_sheet::WRITE) => Some(msg(Event::WriteSheet)),
+            Control::Press(crate::readjustment_sheet::MAKE) => Some(msg(Event::MakeSheets)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
