@@ -67,7 +67,9 @@ koordinat sistemi, kuzey türü, ölçek çubuğu, datum/epok ve kalite notları
 
 ## Sonra
 
-- Notun haritanın kapsadığı noktalarla sınırlanması (bağlı haritanın çerçevesi).
+- Notun haritanın kapsadığı noktalarla sınırlanması (bağlı haritanın çerçevesi). Yapıldı:
+  [ADR 2800](2800-map-scoped-survey-quality.md). Orada düzeltildi: boş değer “boş” değil `‹ad?›` olarak basılır,
+  ön denetimin iletisi bunu söyler.
 - Total station ve nivelman ölçmelerinin kalitesi (bugün yalnız GNSS arşivi).
 - Kurum eksen adları ve resmî profil kapısı (sahibin ve kurumun kararı).
 - Atlas sayfalarının kaynak dökümü (ADR 1320 Kalan).

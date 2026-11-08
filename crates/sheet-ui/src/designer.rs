@@ -874,6 +874,7 @@ pub fn empty_inputs() -> RenderInputs {
         legends: Vec::new(),
         tables: Vec::new(),
         coordinates: Vec::new(),
+        map_surveys: Vec::new(),
         atlas: None,
         page: None,
         fonts: None,

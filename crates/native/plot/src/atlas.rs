@@ -975,6 +975,7 @@ impl AtlasPlanned {
                     tables: data.tables,
                     coordinates: data.coordinates,
                     legends: data.legends,
+                    surveys: data.surveys,
                 });
             }
             said(drawer, &mut notes)?;
@@ -1038,6 +1039,7 @@ impl AtlasPlanned {
                     tables: data.tables,
                     coordinates: data.coordinates,
                     legends: data.legends,
+                    surveys: data.surveys,
                 });
             }
             for (link, rows) in parts.iter().zip(rows_read) {

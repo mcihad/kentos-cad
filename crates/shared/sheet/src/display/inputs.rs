@@ -113,6 +113,26 @@ pub struct MapInput {
     pub convergence: Option<f64>,
 }
 
+/// A map's survey quality in words (docs/adr/2800): what the host worked out of the accepted GNSS points the map's
+/// frame shows on the ground, read by the texts tied to it (and by every text, for the sheet's first map) in place of
+/// the project's (`@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi`). An empty value
+/// prints nothing, as the project's does.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct MapSurveyInput {
+    pub item: ItemId,
+    #[serde(default)]
+    pub position: String,
+    #[serde(default)]
+    pub height: String,
+    #[serde(default)]
+    pub network: String,
+    #[serde(default)]
+    pub note: String,
+}
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase")]
@@ -402,6 +422,11 @@ pub struct RenderInputs {
     pub tables: Vec<TableInput>,
     #[serde(default)]
     pub coordinates: Vec<CoordinateInput>,
+    /// Each map's own survey quality (docs/adr/2800), from the ground its frame covers; a map without one reads the
+    /// project's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<MapSurveyInput>>"))]
+    pub map_surveys: Vec<MapSurveyInput>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub atlas: Option<AtlasPageInput>,

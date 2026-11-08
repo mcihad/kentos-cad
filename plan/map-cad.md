@@ -48,7 +48,7 @@ sırayla alır.
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420 | iş türleri ve zaman serisi; yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440 | işlem sürümü ve çıktı revizyonu (şema 207); tariften başka projede üretim; bütçe | — |
 
@@ -1564,6 +1564,15 @@ CBS** (pafta; arşiv Harita projesinde). Kanıtlanan: pafta yazıları `@konum_d
 baskı denetimi arşivsiz projede bu değerleri okuyan yazıyı `survey_quality_missing` ile söyler; PDF'i pdftotext okur;
 MCP. Açık: notun haritanın kapsamıyla sınırlanması, total station ve nivelman kalitesi, atlas sayfalarının kaynak
 dökümü, kurum eksen adları, resmî profil kapısı.
+
+**8 Kasım 2026, dördüncü tur — haritanın gösterdiği noktaların kalitesi ([ADR 2800](../docs/adr/2800-map-scoped-survey-quality.md)).**
+Kapsam: **CAD + CBS** (pafta). Araştırma: ISO 19157/19115'in kalite kapsamı (uzamsal yayılımla belirlenen alt küme).
+Kanıtlanan: kalite notu ve değerleri haritanın çerçevesinin yerdeki dört köşesi içinde kalan kabul noktalarından
+(noktanın yeri çizimdeki nesnesi, kenar içeride, kesin yönelim yüklemi; dönük haritada çevre kutusunun köşesi dışarıda);
+ağ dengelemesi yalnız o noktalarınki; nokta göstermeyen harita bunu söyler; bağlı yazı haritasınınkini, bağsız yazı ilk
+haritanınkini okur; atlas sayfası kendi yerininkini; ön denetim boş değeri ve basılacak `‹ad?›`'yı söyler; bağımsız
+başvuru (üç harita, biri 45° dönük), PDF, MCP, masaüstü önizlemesi. Açık: kırpma şekliyle sınırlama, total station ve
+nivelman kalitesi, atlas sayfalarının kaynak dökümü, kurum eksen adları, resmî profil kapısı.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

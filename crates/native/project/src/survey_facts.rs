@@ -13,8 +13,12 @@
 //!
 //! The words are what a sheet shows: the archive keeps the values themselves. A project without accepted points says
 //! none of them; nothing is guessed.
+//!
+//! A map on a sheet says its own points' (docs/adr/2800, [`survey_facts_where`]): the host asks which accepted points
+//! its frame shows on the ground; the network part names only the adjustments those points were made by. A map that
+//! shows none says so in the note; its values are empty.
 
-use kentos_contracts::{MapSurvey, ProjectSettings};
+use kentos_contracts::{MapSurvey, ProjectSettings, SurveyPoint};
 
 /// The facts' variable names and what each holds. Not reserved: a project's or a sheet's own variable of a name comes
 /// first.
@@ -47,28 +51,41 @@ fn comma(v: f64, decimals: usize) -> String {
     format!("{v:.decimals$}").replace('.', ",")
 }
 
-/// The project's survey facts.
+/// The note of a map that shows none of the accepted points (docs/adr/2800).
+pub const NONE_SHOWN: &str = "Haritanın içinde GNSS ile kabul edilmiş nokta yok.";
+
+/// The project's survey facts: every accepted point's.
 pub fn survey_facts(settings: &ProjectSettings) -> SurveyFacts {
+    survey_facts_where(settings, |_| true)
+}
+
+/// The survey facts of the accepted points `shown` takes (docs/adr/2800: those a map's frame shows). With accepted
+/// points but none taken, the note is [`NONE_SHOWN`] and the values are empty; without accepted points, nothing.
+pub fn survey_facts_where(settings: &ProjectSettings, shown: impl Fn(&SurveyPoint) -> bool) -> SurveyFacts {
     let Some(survey) = settings.map_survey.as_ref().filter(|s| !s.points.is_empty()) else {
         return SurveyFacts::default();
     };
-    let sigmas: Vec<[f64; 3]> = survey.points.iter().filter_map(|p| p.result.sigma).collect();
+    let points: Vec<&SurveyPoint> = survey.points.iter().filter(|p| shown(p)).collect();
+    if points.is_empty() {
+        return SurveyFacts { note: NONE_SHOWN.to_owned(), ..SurveyFacts::default() };
+    }
+    let sigmas: Vec<[f64; 3]> = points.iter().filter_map(|p| p.result.sigma).collect();
     let position = sigmas.iter().map(|s| s[0].hypot(s[1])).reduce(f64::max);
     let height = sigmas.iter().map(|s| s[2]).reduce(f64::max);
-    let network = networks(survey);
-    let mut note = format!("GNSS ile {} nokta", survey.points.len());
+    let network = networks(survey, &points);
+    let mut note = format!("GNSS ile {} nokta", points.len());
     match (position, height) {
         (Some(p), Some(h)) => {
             note.push_str(&format!(": en büyük nokta konum hatası {}, yükseklik hatası {} (ortalama hata)", centimetres(p), centimetres(h)));
         }
         _ => note.push_str(": doğrulukları kayıtlı değil"),
     }
-    let short = short_networks(survey);
+    let short = short_networks(survey, &points);
     if !short.is_empty() {
         note.push_str(&format!("; ağ dengelemesi {short}"));
     }
     note.push('.');
-    let without = survey.points.len() - sigmas.len();
+    let without = points.len() - sigmas.len();
     if without > 0 && !sigmas.is_empty() {
         note.push_str(&format!(" {without} noktanın doğruluğu kayıtlı değil."));
     }
@@ -80,12 +97,12 @@ pub fn survey_facts(settings: &ProjectSettings) -> SurveyFacts {
     }
 }
 
-/// The adjustments the accepted points name, in the archive's order.
-fn used(survey: &MapSurvey) -> impl Iterator<Item = &kentos_contracts::SurveyAdjustment> {
+/// The adjustments the points name, in the archive's order.
+fn used<'a>(survey: &'a MapSurvey, points: &'a [&SurveyPoint]) -> impl Iterator<Item = &'a kentos_contracts::SurveyAdjustment> {
     survey
         .adjustments
         .iter()
-        .filter(|a| survey.points.iter().any(|p| p.result.adjustment.as_deref() == Some(a.id.as_str())))
+        .filter(move |a| points.iter().any(|p| p.result.adjustment.as_deref() == Some(a.id.as_str())))
 }
 
 fn rules_word(passed: Option<bool>) -> Option<&'static str> {
@@ -93,8 +110,8 @@ fn rules_word(passed: Option<bool>) -> Option<&'static str> {
 }
 
 /// “da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3; da-2, …”.
-fn networks(survey: &MapSurvey) -> String {
-    used(survey)
+fn networks(survey: &MapSurvey, points: &[&SurveyPoint]) -> String {
+    used(survey, points)
         .map(|a| {
             let mut words = vec![a.id.clone()];
             if let Some(c) = &a.class {
@@ -117,8 +134,8 @@ fn networks(survey: &MapSurvey) -> String {
 }
 
 /// The note's short form: “da-1 (C3, kurallar sağlandı)”.
-fn short_networks(survey: &MapSurvey) -> String {
-    used(survey)
+fn short_networks(survey: &MapSurvey, points: &[&SurveyPoint]) -> String {
+    used(survey, points)
         .map(|a| {
             let more: Vec<String> =
                 a.class.iter().cloned().chain(rules_word(a.rules_passed).map(str::to_owned)).collect();
@@ -165,5 +182,22 @@ mod tests {
         assert_eq!(f.note, "GNSS ile 1 nokta: doğrulukları kayıtlı değil.");
         s.map_survey = None;
         assert_eq!(survey_facts(&s), SurveyFacts::default());
+    }
+
+    /// docs/adr/2800: a map's own points. kn-2 alone carries da-1 and its σ; kn-1 alone has none and names no
+    /// adjustment; none shown says so.
+    #[test]
+    fn a_map_says_only_the_points_it_shows() {
+        let s = settings();
+        let only = |id: &'static str| move |p: &SurveyPoint| p.id == id;
+        let f = survey_facts_where(&s, only("kn-2"));
+        assert_eq!((f.position.as_str(), f.height.as_str()), ("±0,5 cm", "±0,9 cm"));
+        assert_eq!(f.note, "GNSS ile 1 nokta: en büyük nokta konum hatası ±0,5 cm, yükseklik hatası ±0,9 cm (ortalama hata); \
+                            ağ dengelemesi da-1 (C3, kurallar sağlandı).");
+        let f = survey_facts_where(&s, only("kn-1"));
+        assert_eq!((f.position.as_str(), f.network.as_str()), ("", ""), "no σ, no adjustment");
+        assert_eq!(f.note, "GNSS ile 1 nokta: doğrulukları kayıtlı değil.");
+        let f = survey_facts_where(&s, |_| false);
+        assert_eq!(f, SurveyFacts { note: NONE_SHOWN.to_owned(), ..SurveyFacts::default() });
     }
 }

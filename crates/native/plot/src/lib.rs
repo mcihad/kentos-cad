@@ -28,6 +28,8 @@ mod svg_source;
 pub mod fonts;
 mod images;
 pub mod inputs;
+/// Each map's own survey quality (docs/adr/2800).
+pub mod survey_scope;
 pub mod labels;
 pub mod layers;
 pub mod maps;

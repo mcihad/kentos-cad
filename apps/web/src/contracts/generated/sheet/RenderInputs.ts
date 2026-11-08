@@ -6,6 +6,7 @@ import type { CoordinateInput } from "./CoordinateInput";
 import type { CrsInfo } from "./CrsInfo";
 import type { LegendInput } from "./LegendInput";
 import type { MapInput } from "./MapInput";
+import type { MapSurveyInput } from "./MapSurveyInput";
 import type { PageNumber } from "./PageNumber";
 import type { ProjectInfo } from "./ProjectInfo";
 import type { RenderMode } from "./RenderMode";
@@ -15,7 +16,12 @@ export type RenderInputs = {
 /**
  * Current model view registry; live links resolve by stable id, never by the capture's name.
  */
-namedViews?: Array<NamedView>, mode: RenderMode, project: ProjectInfo, capabilities: Capabilities, crs?: CrsInfo, maps: Array<MapInput>, legends: Array<LegendInput>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, atlas?: AtlasPageInput, 
+namedViews?: Array<NamedView>, mode: RenderMode, project: ProjectInfo, capabilities: Capabilities, crs?: CrsInfo, maps: Array<MapInput>, legends: Array<LegendInput>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, 
+/**
+ * Each map's own survey quality (docs/adr/2800), from the ground its frame covers; a map without one reads the
+ * project's.
+ */
+mapSurveys?: Array<MapSurveyInput>, atlas?: AtlasPageInput, 
 /**
  * `@sayfa` and `@sayfa_sayisi`; none: the sheet's place in the book.
  */

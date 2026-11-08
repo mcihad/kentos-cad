@@ -138,22 +138,27 @@ pub(crate) fn crs_texts(settings: &kentos_contracts::ProjectSettings, scene: &ke
     out
 }
 
-/// A sheet's texts that read the survey quality while the project has none (docs/adr/2400; plan/map-cad.md MAP-18): the
-/// `@` value would print empty, so the check says it before the delivery. A sheet's, the book's or the project's own
-/// variable of the name comes first and is not said.
+/// A sheet's texts that read the survey quality while what they print has none (docs/adr/2400; plan/map-cad.md MAP-18):
+/// the `@` value would print empty, so the check says it before the delivery. What a text prints is its map's own
+/// quality, else the sheet's first map's, else the project's (docs/adr/2800). A sheet's, the book's or the project's
+/// own variable of the name comes first and is not said.
 pub(crate) fn quality_texts(
     book: &SheetBook,
     sheet: &str,
     render: &RenderInputs,
+    surveys: &[kentos_sheet::display::MapSurveyInput],
     scene: &kentos_sheet::scene::Scene,
 ) -> Vec<Finding> {
     let p = &render.project;
-    let values = [
-        ("konum_dogrulugu", &p.position_accuracy),
-        ("yukseklik_dogrulugu", &p.height_accuracy),
-        ("ag_dengelemesi", &p.network_adjustment),
-        ("olcme_kalitesi", &p.survey_quality),
-    ];
+    const NAMES: [&str; 4] = ["konum_dogrulugu", "yukseklik_dogrulugu", "ag_dengelemesi", "olcme_kalitesi"];
+    let (primary, framed) = kentos_sheet::display::survey_maps(book, sheet, render).unwrap_or_default();
+    // A map's own words, and whether they are a map's.
+    let words_of = |map: Option<&String>| -> ([&str; 4], bool) {
+        match map.and_then(|id| surveys.iter().find(|m| &m.item == id)) {
+            Some(m) => ([&m.position, &m.height, &m.network, &m.note], true),
+            None => ([&p.position_accuracy, &p.height_accuracy, &p.network_adjustment, &p.survey_quality], false),
+        }
+    };
     let own = |name: &str| {
         let named = |vars: &[kentos_sheet::model::Variable]| vars.iter().any(|v| v.name.eq_ignore_ascii_case(name));
         named(&book.variables)
@@ -163,23 +168,40 @@ pub(crate) fn quality_texts(
     let mut out = Vec::new();
     for (item, _) in scene.all() {
         let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else { continue };
-        let empty: Vec<&str> = values
+        let map = t.map.as_ref().filter(|id| framed.contains(id)).or(primary.as_ref());
+        let (words, of_map) = words_of(map);
+        let empty: Vec<&str> = NAMES
             .iter()
+            .zip(words)
             .filter(|(name, value)| value.is_empty() && t.content.contains(&format!("@{name}")) && !own(name))
             .map(|(name, _)| *name)
             .collect();
         if empty.is_empty() {
             continue;
         }
+        let (why, fix) = if of_map {
+            (
+                "haritanın içinde GNSS ile kabul edilmiş nokta yok",
+                "Haritayı kabul edilmiş noktaları gösterecek yere getirin ya da kalite notunu pafta değişkeni olarak yazın.",
+            )
+        } else {
+            (
+                "projenin GNSS arşivinde kabul edilmiş nokta yok",
+                "Noktaları GNSS arşivinden kabul edin (Ölçme › GNSS arşivi) ya da kalite notunu pafta değişkeni olarak yazın.",
+            )
+        };
+        // A value that is none prints as its name in angle quotes (design §7), so the words say that.
+        let printed: Vec<String> = empty.iter().map(|n| format!("‹{n}?›")).collect();
         out.push(finding(
             &item.id,
             "survey_quality_missing",
             format!(
-                "“{}” yazısı ölçme kalitesini okuyor (@{}) ama projenin GNSS arşivinde kabul edilmiş nokta yok; değer boş basılır.",
+                "“{}” yazısı ölçme kalitesini okuyor (@{}) ama {why}; yerine {} basılır.",
                 item.name,
-                empty.join(", @")
+                empty.join(", @"),
+                printed.join(", ")
             ),
-            "Noktaları GNSS arşivinden kabul edin (Ölçme › GNSS arşivi) ya da kalite notunu pafta değişkeni olarak yazın.",
+            fix,
             Severity::Warning,
         ));
     }
@@ -214,7 +236,10 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     let scene = kentos_sheet::scene::Scene::new(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.extend(crs_texts(doc.settings(), &scene));
-    out.extend(quality_texts(book, sheet, render, &scene));
+    // Each map's own survey quality (docs/adr/2800): the caller's, else worked out from this list's maps.
+    let surveys = if render.map_surveys.is_empty() { crate::survey_scope::map_surveys(doc, Some(&list)) } else { Vec::new() };
+    let surveys = if render.map_surveys.is_empty() { &surveys } else { &render.map_surveys };
+    out.extend(quality_texts(book, sheet, render, surveys, &scene));
     out.extend(outdated_on_maps(doc, &scene));
     let library = crate::book::library_of(doc);
     let mut line_type_drawer = crate::book::MapDrawer::new(doc, &spatial, &library, None);
@@ -542,6 +567,7 @@ pub fn page_inputs(
         display::display_list(book, id, &render).map_err(|e| PlotError::new(&e.code, e.message))?;
     let data = crate::inputs::sheet_data(doc, &spatial, &library, &[], book, sheet, Some(&list));
     render.tables.extend(data.tables);
+    render.map_surveys.extend(data.surveys);
     render.coordinates.extend(data.coordinates);
     render.legends.extend(data.legends);
     Ok(render)

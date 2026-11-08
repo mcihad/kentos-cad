@@ -3,7 +3,8 @@
 //! network adjustment da-1 (σ north 4.0 mm, east 3.5 mm, up 9.0 mm; class C3, the rule package bohhbuy-2018-gnss@1
 //! held, m0 0.98, 3 degrees of freedom). Its sheet's texts read `@konum_dogrulugu`, `@yukseklik_dogrulugu`,
 //! `@ag_dengelemesi` and `@olcme_kalitesi`. By hand: √(4.0² + 3.5²) = 5.315 mm, shown to the millimetre as ±0,5 cm;
-//! the greatest σ up ±0,9 cm. A project's own variable of a name comes first.
+//! the greatest σ up ±0,9 cm. A project's own variable of a name comes first. Each map's own points (docs/adr/2800):
+//! fixtures/sheet/v1/survey-scope.json, the reference's words for three maps.
 
 use kentos_contracts::DocumentSnapshotV2;
 use kentos_domain::Document;
@@ -55,6 +56,11 @@ fn drawing_of(own: bool, archive: bool) -> Document {
 fn texts(doc: &Document) -> Vec<(String, String)> {
     let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
     let list = display_list(&book, "pafta", &base_inputs(doc, "Ayşe", "2026-11-08")).expect("drawn");
+    texts_of(&list)
+}
+
+/// A list's texts' words, each text's lines joined.
+fn texts_of(list: &kentos_sheet::display::DisplayList) -> Vec<(String, String)> {
     let mut out: Vec<(String, String)> = Vec::new();
     for p in &list.prims {
         if let Prim::Text(t) = p {
@@ -113,6 +119,68 @@ fn the_print_check_says_a_quality_the_project_lacks() {
     assert_eq!(found(&drawing_of(true, false)), ["ag", "not", "yukseklik"], "the project's own konum_dogrulugu");
 }
 
+/// The scope's drawing with its sheet: fixtures/sheet/v1/survey-scope.json (scripts/fixtures/sheet_survey_scope_cases.py,
+/// no KentOS code).
+fn scope_case() -> (Value, Document) {
+    let case: Value =
+        serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/survey-scope.json")).expect("the cases");
+    let snapshot: DocumentSnapshotV2 = serde_json::from_value(case["drawing"].clone()).expect("a snapshot");
+    let mut doc = Document::from_snapshot_v2(snapshot).expect("opens");
+    let ops: Vec<kentos_sheet::ops::Op> =
+        serde_json::from_value(json!([{"op": "addSheet", "sheet": case["sheet"]}])).expect("ops");
+    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops).expect("the sheet").book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    (case, doc)
+}
+
+/// docs/adr/2800: each map says its own points. Three maps, B turned 45° (kn-4 is in its box, out of its diamond),
+/// C over no point. As the export does: the sheet drawn once, its data worked out of the maps' ground (each map's words
+/// the reference's), drawn again; every text's words the reference's (tied texts their map's, the untied one the first
+/// map's). The print check says the text that reads C's empty value, and no other.
+#[test]
+fn each_map_says_its_own_points() {
+    let (case, doc) = scope_case();
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
+    let mut render = base_inputs(&doc, "Ayşe", "2026-11-08");
+    let first = display_list(&book, "pafta", &render).expect("drawn");
+    let mut spatial = kentos_interaction::Spatial::new();
+    spatial.reload(&doc);
+    let library = kentos_plot::book::library_of(&doc);
+    let sheet = book.sheet("pafta").expect("the sheet");
+    let data = kentos_plot::inputs::sheet_data(&doc, &spatial, &library, &[], &book, sheet, Some(&first));
+    let maps = case["maps"].as_object().expect("maps");
+    assert_eq!(data.surveys.len(), maps.len());
+    for m in &data.surveys {
+        let want = &maps[&m.item];
+        assert_eq!(
+            (m.position.as_str(), m.height.as_str(), m.network.as_str(), m.note.as_str()),
+            (
+                want["position"].as_str().unwrap_or(""),
+                want["height"].as_str().unwrap_or(""),
+                want["network"].as_str().unwrap_or(""),
+                want["note"].as_str().unwrap_or("")
+            ),
+            "map {}",
+            m.item
+        );
+    }
+    render.map_surveys = data.surveys;
+    let all = texts_of(&display_list(&book, "pafta", &render).expect("drawn again"));
+    for (id, want) in case["texts"].as_object().expect("texts") {
+        assert_eq!(said(&all, id), want.as_str().unwrap_or(""), "{id}");
+    }
+    let inputs = base_inputs(&doc, "Ayşe", "2026-11-08");
+    let found = kentos_plot::preflight::inspect(&doc, &book, "pafta", &inputs, None).expect("checked");
+    let missing: Vec<(&str, &str)> = found
+        .iter()
+        .filter(|f| f.code == "survey_quality_missing")
+        .map(|f| (f.item.as_deref().unwrap_or(""), f.message.as_str()))
+        .collect();
+    let want: Vec<&str> = case["findings"].as_array().into_iter().flatten().filter_map(|f| f["item"].as_str()).collect();
+    assert_eq!(missing.iter().map(|(i, _)| *i).collect::<Vec<_>>(), want);
+    assert!(missing[0].1.contains("haritanın içinde GNSS ile kabul edilmiş nokta yok"), "{}", missing[0].1);
+}
+
 /// `.run/gui-evidence/olcme-kalitesi-2400/pafta.pdf`, the sheet as printed:
 ///
 /// ```text
@@ -124,6 +192,22 @@ fn picture() {
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/olcme-kalitesi-2400");
     std::fs::create_dir_all(&out).expect("a folder");
     let made = kentos_plot::book::book_pdf(&drawing(false), &[], "Ayşe", "2026-11-08").expect("a PDF");
+    std::fs::write(out.join("pafta.pdf"), &made.bytes).expect("writes");
+    println!("{}", out.join("pafta.pdf").display());
+}
+
+/// `.run/gui-evidence/harita-kalitesi-2800/pafta.pdf`, the three maps' sheet as printed (pdftotext reads its words):
+///
+/// ```text
+/// cargo test -p kentos-plot --test all survey_facts::scope_picture -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn scope_picture() {
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/harita-kalitesi-2800");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let (_, doc) = scope_case();
+    let made = kentos_plot::book::book_pdf(&doc, &[], "Ayşe", "2026-11-08").expect("a PDF");
     std::fs::write(out.join("pafta.pdf"), &made.bytes).expect("writes");
     println!("{}", out.join("pafta.pdf").display());
 }

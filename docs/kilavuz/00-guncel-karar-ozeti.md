@@ -204,6 +204,10 @@
 - **Paftada ölçme kalite notu (8 Kasım 2026; MAP-18, [ADR 2400](../../docs/adr/2400-sheet-survey-quality-note.md)).**
   `@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi` projenin GNSS arşivinden
   (`kentos_project::survey_facts`); arşivsiz projede baskı denetimi `survey_quality_missing` der. CAD + CBS.
+- **Haritanın gösterdiği noktaların kalitesi (8 Kasım 2026; MAP-18, [ADR 2800](../../docs/adr/2800-map-scoped-survey-quality.md)).**
+  Not ve değerler haritanın çerçevesinin yerdeki köşeleri içindeki kabul noktalarından (`survey_facts_where`,
+  `kentos_plot::survey_scope`, `RenderInputs.map_surveys`); bağlı yazı haritasınınkini, bağsız yazı ilk haritanınkini
+  okur; nokta göstermeyen harita bunu söyler. CAD + CBS.
 - **Dönen kaydın kendi saha paketiyle denetlenmesi (8 Kasım 2026; MAP-19, [ADR 2420](../../docs/adr/2420-field-record-checked-with-its-package.md)).**
   `cad.asbuilt.check`'in `package`'ı: özet beklenen olur, boş sınırlar paketten, sistem/epok/kot farkı söylenir
   (dönüştürülmez). Harita + Yol + CBS.

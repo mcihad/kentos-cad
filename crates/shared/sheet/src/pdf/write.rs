@@ -76,6 +76,7 @@ pub(super) fn lists(
                     r.tables = page.tables.clone();
                     r.coordinates = page.coordinates.clone();
                     r.legends = page.legends.clone();
+                    r.map_surveys = page.surveys.clone();
                     let (list, _) = display::build(book, id, &r)?;
                     out.push(Listed {
                         list,

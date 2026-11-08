@@ -2,6 +2,7 @@
 import type { AtlasPageInput } from "./AtlasPageInput";
 import type { CoordinateInput } from "./CoordinateInput";
 import type { LegendInput } from "./LegendInput";
+import type { MapSurveyInput } from "./MapSurveyInput";
 import type { PdfMap } from "./PdfMap";
 import type { TableInput } from "./TableInput";
 
@@ -18,4 +19,8 @@ atlas: AtlasPageInput,
 /**
  * The page's maps' content, by item; an item it lacks falls back to `PdfInputs.maps`.
  */
-maps: Array<PdfMap>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, legends: Array<LegendInput>, };
+maps: Array<PdfMap>, tables: Array<TableInput>, coordinates: Array<CoordinateInput>, legends: Array<LegendInput>, 
+/**
+ * The page's maps' own survey quality (docs/adr/2800): each page's ground is its own.
+ */
+surveys?: Array<MapSurveyInput>, };

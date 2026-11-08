@@ -223,6 +223,16 @@ pub struct MapPrim {
     pub clip_feature: Option<String>,
 }
 
+impl MapPrim {
+    /// The content's corners on the ground (east, north, metres), clockwise from its top left; none for a map with no
+    /// place. The frame's own turn on the paper turns what it shows with it: only the view's turn counts. The host asks
+    /// which accepted points a map shows with them (docs/adr/2800).
+    pub fn ground_corners(&self) -> Option<[[f64; 2]; 4]> {
+        let center = self.view.center?;
+        Some(crate::projection::Transform::paper(&self.clip, center, self.view.scale, self.view.rotation).ground_corners(&self.clip))
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -533,6 +543,7 @@ impl Ctx<'_> {
             s.builtin("olcek", VarValue::Text(format!("1/{}", m.scale)));
             s.builtin("olcek_payda", VarValue::Number(m.scale));
             north_builtins(&mut s, self.inputs, id, m);
+            survey_builtins(&mut s, self.inputs, id);
         }
         s
     }
@@ -548,6 +559,41 @@ impl Ctx<'_> {
         }
         r.text
     }
+}
+
+/// The survey quality's built-in names (docs/adr/2400), folded.
+const SURVEY_NAMES: [&str; 4] = ["KONUM_DOGRULUGU", "YUKSEKLIK_DOGRULUGU", "AG_DENGELEMESI", "OLCME_KALITESI"];
+
+/// A map's own survey quality into a scope (docs/adr/2800), in place of the project's; a map the host gave none keeps
+/// the project's. An empty value is none, as the project's.
+fn survey_builtins(s: &mut Scope, inputs: &RenderInputs, id: &str) {
+    let Some(m) = inputs.map_surveys.iter().find(|m| m.item == id) else {
+        return;
+    };
+    s.builtins.retain(|(n, _)| !SURVEY_NAMES.contains(&n.as_str()));
+    let text = |t: &str| if t.trim().is_empty() { VarValue::Null } else { VarValue::Text(t.to_owned()) };
+    s.builtin("konum_dogrulugu", text(&m.position));
+    s.builtin("yukseklik_dogrulugu", text(&m.height));
+    s.builtin("ag_dengelemesi", text(&m.network));
+    s.builtin("olcme_kalitesi", text(&m.note));
+}
+
+/// The maps a sheet's texts read their survey quality from (docs/adr/2800): the sheet's first map (a text tied to no
+/// map reads it, as its scale and north) and every map drawn with a frame (a text tied to one reads that one). The
+/// preflight asks with it which words a text will print.
+pub fn survey_maps(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Result<(Option<ItemId>, Vec<ItemId>)> {
+    let scene = Scene::new(book, sheet_id)?;
+    let mut notes = Vec::new();
+    let (_, drawn, maps) = sheet_scope(book, &scene, inputs, &mut notes);
+    Ok((primary_of(&drawn, &maps), maps.keys().cloned().collect()))
+}
+
+/// The sheet's first map: the first drawn that shows a map of its own (not an overview) with a frame.
+fn primary_of(drawn: &[(Item, bool)], maps: &BTreeMap<ItemId, map::MapFrame>) -> Option<ItemId> {
+    drawn.iter().find_map(|(it, _)| match &it.kind {
+        ItemKind::Map(m) if m.overview_of.is_none() && maps.contains_key(&it.id) => Some(it.id.clone()),
+        _ => None,
+    })
 }
 
 /// A map's north facts into a scope (docs/adr/1900): the date is the scope's `@tarih` (a sheet's or the project's
@@ -912,15 +958,14 @@ fn sheet_scope(
             f.center = Some(c);
         }
     }
-    let primary = drawn.iter().find_map(|(it, _)| match &it.kind {
-        ItemKind::Map(m) if m.overview_of.is_none() => maps.get(&it.id).map(|f| (it.id.clone(), f.clone())),
-        _ => None,
-    });
+    let primary = primary_of(&drawn, &maps).and_then(|id| maps.get(&id).map(|f| (id, f.clone())));
     match primary {
         Some((id, f)) => {
             scope.builtin("olcek", VarValue::Text(format!("1/{}", f.scale)));
             scope.builtin("olcek_payda", VarValue::Number(f.scale));
             north_builtins(&mut scope, inputs, &id, &f);
+            // The first map's own survey quality for every text (docs/adr/2800).
+            survey_builtins(&mut scope, inputs, &id);
         }
         None => {
             scope.builtin("olcek", VarValue::Null);

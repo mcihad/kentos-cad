@@ -394,6 +394,9 @@ pub struct PdfAtlasPage {
     pub coordinates: Vec<CoordinateInput>,
     #[serde(default)]
     pub legends: Vec<LegendInput>,
+    /// The page's maps' own survey quality (docs/adr/2800): each page's ground is its own.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub surveys: Vec<crate::display::MapSurveyInput>,
 }
 
 /// A sheet that is written as one page for each of the atlas's objects (docs/adr/0534).

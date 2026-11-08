@@ -610,6 +610,7 @@ fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
             tables: Vec::new(),
             coordinates: Vec::new(),
             legends: Vec::new(),
+            surveys: Vec::new(),
         })
         .collect();
     let inputs = PdfInputs {

@@ -63,6 +63,7 @@ impl App {
                 render.tables.extend(data.tables);
                 render.coordinates.extend(data.coordinates);
                 render.legends.extend(data.legends);
+                render.map_surveys.extend(data.surveys);
             }
         }
         PdfHost {

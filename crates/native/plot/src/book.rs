@@ -601,6 +601,7 @@ pub(crate) fn prepare_captured(
         render.tables.extend(data.tables);
         render.coordinates.extend(data.coordinates);
         render.legends.extend(data.legends);
+        render.map_surveys.extend(data.surveys);
     }
     if chosen.is_empty() {
         return Err(PlotError::new("no_sheets", "Pafta kitabında pafta yok."));

@@ -1717,6 +1717,8 @@ impl App {
             tables: data.tables,
             coordinates: data.coordinates,
             legends: data.legends,
+            // Each map's own survey quality (docs/adr/2800).
+            map_surveys: data.surveys,
             ..kentos_sheet_ui::empty_inputs()
         };
         self.sheets.set_data(inputs);
@@ -3994,3 +3996,8 @@ mod tests {
         );
     }
 }
+
+/// Each map's own survey quality in the sheet mode (docs/adr/2800).
+#[cfg(test)]
+#[path = "map_survey_scope_tests.rs"]
+mod map_survey_scope_tests;

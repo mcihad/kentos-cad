@@ -36,6 +36,8 @@ pub struct SheetData {
     pub tables: Vec<TableInput>,
     pub coordinates: Vec<CoordinateInput>,
     pub legends: Vec<LegendInput>,
+    /// Each map's own survey quality, from the ground its frame covers (docs/adr/2800).
+    pub surveys: Vec<kentos_sheet::display::MapSurveyInput>,
 }
 
 /// A coordinate system with its transverse Mercator parameters, from the
@@ -610,7 +612,7 @@ pub fn sheet_data_in(
             .collect()
     });
     let extents = extents_of(list);
-    let mut out = SheetData::default();
+    let mut out = SheetData { surveys: crate::survey_scope::map_surveys(doc, list), ..SheetData::default() };
     for it in &items {
         match &it.kind {
             ItemKind::Table(t) => {
