@@ -2642,8 +2642,9 @@ def document(d):
         # (docs/adr/3028).
         schema = max(schema, 208)
     if any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
-           and any(isinstance(c, dict) and c.get("field") in ("paiyNet", "paiyGross", "paiyShare", "generalGross")
-                   for c in e["source"].get("columns", []))
+           and (e["source"].get("byLevel")
+                or any(isinstance(c, dict) and c.get("field") in ("paiyNet", "paiyGross", "paiyShare", "generalGross")
+                       for c in e["source"].get("columns", [])))
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
         # A units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (docs/adr/3029).
         schema = max(schema, 209)

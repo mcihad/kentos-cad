@@ -150,6 +150,8 @@ impl App {
                 sort: Some(w.sort.clone()),
                 group: Some(w.group),
                 total: Some(w.total),
+                // The window does not show it: a metrekare cetveli stays storey by storey (docs/adr/3029).
+                by_level: None,
             })),
             expected_revision: None,
         }

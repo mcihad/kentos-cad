@@ -270,10 +270,19 @@ impl Document {
             sort,
             group,
             total,
+            by_level,
             ..
         }) = &t.source
         {
-            let written = self.schedule_rows(*of, columns, filter.as_ref(), sort, *group, *total);
+            let written = self.schedule_rows_by(
+                *of,
+                columns,
+                filter.as_ref(),
+                sort,
+                *group,
+                *total,
+                *by_level,
+            );
             self.take_rows(&mut out, written.rows);
             out.aligns = Some(written.aligns);
             out.header = true;

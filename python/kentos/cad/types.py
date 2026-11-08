@@ -79703,6 +79703,7 @@ class SchedulesCreate(_Model):
     the desktop also `slots_exhausted`. Warning: `layer_hidden`.
     Attributes:
         at: Unit: length.
+        by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
         columns: Absent: the kind's columns.
         height: Its words' height, metres; absent: the project's table height at its plot scale. Unit: length.
         line_weight: Unit: paper-mm.
@@ -79710,6 +79711,7 @@ class SchedulesCreate(_Model):
     layer_id: str
     at: Vec2
     of: ScheduleOf | ScheduleOfName
+    by_level: bool | None | Unset = UNSET
     color: str | None | Unset = UNSET
     columns: list[ScheduleColumn] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -79725,6 +79727,8 @@ class SchedulesCreate(_Model):
         out["layerId"] = self.layer_id
         out["at"] = _vec2_out(self.at)
         out["of"] = _enum_out(self.of)
+        if self.by_level is not UNSET:
+            out["byLevel"] = self.by_level
         if self.color is not UNSET:
             out["color"] = self.color
         if self.columns is not UNSET:
@@ -79751,6 +79755,7 @@ class SchedulesCreate(_Model):
             layer_id=data["layerId"],
             at=Vec2.from_json(data["at"]),
             of=_enum_in(ScheduleOf, data["of"]),
+            by_level=data.get("byLevel", UNSET),
             color=data.get("color", UNSET),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else [ScheduleColumn.from_json(e0) for e0 in data["columns"]],
             expected_revision=data.get("expectedRevision", UNSET),
@@ -120624,8 +120629,12 @@ class CellScheduleOperation(ScheduleOperation):
 
 @dataclass(kw_only=True, slots=True)
 class SetScheduleOperation(ScheduleOperation):
-    """Its columns, filter, sort, grouping or total changed; its rows written again."""
+    """Its columns, filter, sort, grouping or total changed; its rows written again.
+    Attributes:
+        by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey.
+    """
     TAG_VALUE: ClassVar[str] = "set"
+    by_level: bool | None | Unset = UNSET
     columns: list[ScheduleColumn] | None | Unset = UNSET
     filter: ScheduleFilter | None | Unset = UNSET
     group: bool | None | Unset = UNSET
@@ -120634,6 +120643,8 @@ class SetScheduleOperation(ScheduleOperation):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.by_level is not UNSET:
+            out["byLevel"] = self.by_level
         if self.columns is not UNSET:
             out["columns"] = None if self.columns is None else [e0.to_json() for e0 in self.columns]
         if self.filter is not UNSET:
@@ -120649,6 +120660,7 @@ class SetScheduleOperation(ScheduleOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetScheduleOperation:
         return cls(
+            by_level=data.get("byLevel", UNSET),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else [ScheduleColumn.from_json(e0) for e0 in data["columns"]],
             filter=UNSET if "filter" not in data else None if data["filter"] is None else ScheduleFilter.from_json(data["filter"]),
             group=data.get("group", UNSET),
@@ -123189,12 +123201,15 @@ class ScheduleTableSource(TableSource):
     takes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again
     by the document at every step, which writes `members` too: each data row's objects by their persistent ids.
     Attributes:
+        by_level: Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+            rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
         units: A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
             spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
     """
     TAG_VALUE: ClassVar[str] = "schedule"
     of: ScheduleOf | ScheduleOfName
     columns: list[ScheduleColumn]
+    by_level: bool | Unset = UNSET
     filter: ScheduleFilter | None | Unset = UNSET
     group: bool | Unset = UNSET
     members: list[list[str]] | Unset = UNSET
@@ -123206,6 +123221,8 @@ class ScheduleTableSource(TableSource):
         out: dict[str, Any] = {"kind": "schedule"}
         out["of"] = _enum_out(self.of)
         out["columns"] = [e0.to_json() for e0 in self.columns]
+        if self.by_level is not UNSET:
+            out["byLevel"] = self.by_level
         if self.filter is not UNSET:
             out["filter"] = None if self.filter is None else self.filter.to_json()
         if self.group is not UNSET:
@@ -123225,6 +123242,7 @@ class ScheduleTableSource(TableSource):
         return cls(
             of=_enum_in(ScheduleOf, data["of"]),
             columns=[ScheduleColumn.from_json(e0) for e0 in data["columns"]],
+            by_level=data.get("byLevel", UNSET),
             filter=UNSET if "filter" not in data else None if data["filter"] is None else ScheduleFilter.from_json(data["filter"]),
             group=data.get("group", UNSET),
             members=[list(e0) for e0 in data["members"]] if "members" in data else UNSET,

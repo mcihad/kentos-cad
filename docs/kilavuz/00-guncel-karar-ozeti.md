@@ -146,6 +146,8 @@
       (kat kat; ortak duvar-cephe köşesinin örtüşmesi yarı yarıya); net = iç yüz alanları (boşluk ve dış mahal hariç,
       sıva stilde); pay `kentos_contracts::shares` brütler üstünden. Sütunlar `PaiyNet`, `PaiyGross`, `PaiyShare`,
       `GeneralGross` (bölüm çizelgesi, KCAD 209); `Gross`'un başlığı "Net + pay".
+    - Kat kat bölüm çizelgesi `TableSource::Schedule.by_level` (`unit_level_rows`, `PaiyGroup::levels`); hazır
+      `SchedulePreset::AreaTable` = `tool.scheduleAreas` "Metrekare cetveli".
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

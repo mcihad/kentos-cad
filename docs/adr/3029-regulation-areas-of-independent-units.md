@@ -1,6 +1,6 @@
 # 3029 — Bağımsız bölümün yönetmelik alanları (PAİY Madde 4)
 
-Tarih: 2026-11-08. Durum: kabul (M29 birinci bölüm, ADV-22; plan S22).
+Tarih: 2026-11-08. Durum: kabul (M29, ADV-22; plan S22).
 
 ## Sorun
 
@@ -58,7 +58,26 @@ Tarih: 2026-11-08. Durum: kabul (M29 birinci bölüm, ADV-22; plan S22).
   yeni başlıkla yazıldı (`unit_schedule_cases.py`, `program_share_cases.py`).
 - **Çizelge aracının bölüm hazırı:** No, Ad, Bölüm türü, Kat, BB net, BB brüt, Ortak alan payı, BB genel brüt.
   Gruplu hâli: Bölüm türü, Bina, Mahal sayısı ve dört alan. Komutun (Python, ajan) varsayılan sütunları değişmedi.
-- **KCAD şema 209:** Bu sütunlardan birini taşıyan çizelge şema 209 ister; eski sürüm `UnknownField` ile reddeder.
+- **Metrekare cetveli** (PAİY 57/2-a: "bağımsız bölümler ile ortak alanların brüt inşaat alanı … toplam yapı inşaat
+  alanı"):
+  - Bölüm çizelgesine **kat kat** satırlar geldi (`byLevel`; `cad.schedules.create`, `cad.schedules.edit`'in `set`'i ve
+    çizelgenin kaynağı).
+    - Projenin her katı, sırasıyla; her katta odası olan gruplar programın sırasıyla.
+    - Satırın katı kendisinindir; mahalleri o kattakilerdir. Yönetmelik brüt ve net alanı o katın payıdır
+      (`PaiyGroup::levels`).
+  - Birden çok kattaki ortak alan, örneğin merdiven evi, her katta ayrı satırdır. Bölümün bütününe ait değerler (pay,
+    genel brüt, kayıtlı alan, hedef) kat satırında boştur; onlar bölüm çizelgesindedir.
+  - Çizelge aracının yeni hazırı **Metrekare cetveli** (`tool.scheduleAreas`; Mimari › Belgele › Metraj ▾; METREKARE,
+    ALANCETVELI): Kat, No, Ad, Bölüm türü, BB brüt alanı, BB net alanı ve toplam. Toplam binanın brüt alanıdır; bütün
+    mahaller bir gruptaysa yapı inşaat alanına eşittir.
+  - Yeni ikon `scheduleAreas`: üç katlı bir blok, tablo satırları ve kalın bir toplam çizgisi.
+  - **Metraj ▾:** Metraj düğmesi Metraj ile Metrekare cetvelini tutan bir aileye dönüştü. Çizelge ▾ altı satırla doluydu
+    (DESIGN.md §7.3.1, `mimari_s_tab_shows_at_most_thirty_buttons_and_its_main_tools_large` yedinciyi reddetti). Alan
+    cetveli metrajın yanında aranır.
+  - Kat ara toplamı yok: çizelgenin ara toplamı ilk sütunun sıralanmasını ister, kat adının yazı sırası ("1. kat" <
+    "Zemin kat") ise katların sırası değildir.
+- **KCAD şema 209:** Bu sütunlardan birini taşıyan ya da kat kat (`byLevel`) bir çizelge şema 209 ister; eski sürüm
+  `UnknownField` ile reddeder.
   Python okuyucusu da sonraki şemanın sütununu "bilinmeyen alan" sayar (Rust'la aynı kod); 208'in Kod sütunu da böyle.
 - Bir yönetmeliğe uyulduğu söylenmez; çizelge ölçülen alanları yazar.
 
@@ -75,12 +94,19 @@ Tarih: 2026-11-08. Durum: kabul (M29 birinci bölüm, ADV-22; plan S22).
   - Toplam satırı: net 78.10, brüt 90.00, pay 30.00, genel brüt 90.00. Genel brüt toplamı 15 × 6'ya eşit; alanın hepsi
     paylaştırılmış.
   - Resim: `.run/gui-evidence/mimari-m29/m29-once-sonra.png`.
-- **KCAD:** `paiy-areas.kcad`, kırık `paiy-areas-in-schema-208`. 240 geçerli dosya.
+- **Test** (`paiy_area_tests::a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas`): iki katlı aynı plan;
+  merdiven evi iki katta tek ortak alan. Kat kat cetvel:
+  - Zemin kat 1, 2, O; 1. kat 3, 4, O.
+  - Her biri 30.00; toplam 180.00.
+- **Gerçek pencere** (`fixtures/interaction/real/metrekare-cetveli.txt`; testin sakladığı iki katlı bina):
+  - Metraj ▾'de yeni satır ve ikon.
+  - Cetvel: Kat, No, Ad, Bölüm türü, BB brüt, BB net; altı satır; toplam 180.00 brüt, 156.20 net.
+- **KCAD:** `paiy-areas.kcad` (yönetmelik sütunları ve kat kat), kırık `paiy-areas-in-schema-208`. 240 geçerli dosya.
 
 ## Sonraki adımlar
 
-- Metrekare cetveli (M29 ikinci bölüm): kat kat bağımsız bölümler ve ortak alanların brüt alanı, toplam yapı inşaat
-  alanı (PAİY 4/oooo, 57/2-a).
+- Metrekare cetvelinde kat ara toplamları (katın sırasıyla) ve gruba alınmamış mahallerin yapı inşaat alanına
+  katılması (PAİY 4/oooo).
 - Merdiven altında 1,80 m'den alçak yerin net alandan düşülmesi (merdivenin kesitinden).
 - Sıvasız duvar stilli projelerde 2,5 cm sıva payının düşülmesi (proje seçeneği).
 - Eklentiler ve toplam brüt (M31); emsal ve TAKS (M30).

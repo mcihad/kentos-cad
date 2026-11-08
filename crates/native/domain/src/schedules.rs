@@ -204,6 +204,141 @@ impl Document {
         }
     }
 
+    /// A units schedule's rows storey by storey (docs/adr/3029; the metrekare cetveli's, PAİY 57/2-a): each of the
+    /// project's storeys in its order, then the rooms on none; on each, the program's groups with rooms there, in the
+    /// program's order. A row's storey is its own, its rooms those on it, its regulation gross and net the storey's
+    /// part; the areas a unit has as a whole (its share, general gross, recorded area, target) are left to the whole
+    /// unit's schedule.
+    fn unit_level_rows(
+        &self,
+        columns: &[ScheduleColumn],
+        filter: Option<&ScheduleFilter>,
+    ) -> Vec<Row> {
+        let program = self.program();
+        let mut storeys: Vec<(Option<String>, String)> = self
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (Some(l.id.clone()), l.name.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        storeys.push((None, String::new()));
+        let paiy = columns
+            .iter()
+            .any(|c| c.field.is_paiy())
+            .then(|| self.paiy_areas());
+        // Each group's rooms on each storey: their uids and their own areas (voids and outdoor rooms out of the area).
+        let mut on: Vec<(String, Option<String>, Vec<String>, f64)> = Vec::new();
+        for e in self.entities() {
+            let Entity::Space(s) = e else { continue };
+            let x = &s.space;
+            let Some(unit) = x.unit.as_deref().filter(|u| program.unit(u).is_some()) else {
+                continue;
+            };
+            let level = x.arch.level.clone();
+            let uid = self
+                .uid(Slot(s.base.id))
+                .map(|u| u.to_string())
+                .unwrap_or_default();
+            let outdoor = x
+                .usage
+                .as_deref()
+                .and_then(|u| program.brief(u))
+                .is_some_and(|b| b.outdoor);
+            let area = if x.void || outdoor {
+                0.0
+            } else {
+                kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(&x.parts))
+            };
+            match on.iter_mut().find(|(u, l, ..)| u == unit && *l == level) {
+                Some((.., uids, a)) => {
+                    uids.push(uid);
+                    *a += area;
+                }
+                None => on.push((unit.to_owned(), level, vec![uid], area)),
+            }
+        }
+        let mut rows = Vec::new();
+        for (level, name) in &storeys {
+            if let Some(f) = filter
+                && f.levels
+                    .as_ref()
+                    .is_some_and(|ls| !level.as_ref().is_some_and(|l| ls.contains(l)))
+            {
+                continue;
+            }
+            for u in &program.units {
+                if let Some(f) = filter {
+                    let bd = f
+                        .buildings
+                        .as_ref()
+                        .is_none_or(|bs| u.building.as_ref().is_some_and(|b| bs.contains(b)));
+                    let wg = f
+                        .wings
+                        .as_ref()
+                        .is_none_or(|ws| u.wing.as_ref().is_some_and(|w| ws.contains(w)));
+                    let kd = f.kinds.as_ref().is_none_or(|ks| ks.contains(&u.kind));
+                    if !(bd && wg && kd) {
+                        continue;
+                    }
+                }
+                let Some((.., uids, area)) =
+                    on.iter().find(|(id, l, ..)| *id == u.id && l == level)
+                else {
+                    continue;
+                };
+                let part = paiy
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|(id, _)| *id == u.id))
+                    .and_then(|(_, g)| g.levels.iter().find(|(l, ..)| l == level));
+                let building = u.building.as_deref().and_then(|b| program.building(b));
+                let values: Vec<Option<ArchValue>> = columns
+                    .iter()
+                    .map(|c| match c.field {
+                        ScheduleField::Level => {
+                            (!name.is_empty()).then(|| ArchValue::Text(name.clone()))
+                        }
+                        ScheduleField::Number => Some(ArchValue::Text(u.number.clone())),
+                        ScheduleField::Name => u.name.clone().map(ArchValue::Text),
+                        ScheduleField::UnitKind => Some(ArchValue::Text(u.kind.label().to_owned())),
+                        ScheduleField::Building => {
+                            building.map(|b| ArchValue::Text(b.name.clone()))
+                        }
+                        ScheduleField::Wing => u
+                            .wing
+                            .as_deref()
+                            .and_then(|w| building.and_then(|b| b.wings.iter().find(|x| x.id == w)))
+                            .map(|w| ArchValue::Text(w.name.clone())),
+                        ScheduleField::Area => Some(ArchValue::Area(*area)),
+                        ScheduleField::PaiyGross => part.map(|(_, g, _)| ArchValue::Area(*g)),
+                        ScheduleField::PaiyNet => part.map(|(_, _, n)| ArchValue::Area(*n)),
+                        ScheduleField::Count => Some(ArchValue::Count(uids.len() as u64)),
+                        _ => None,
+                    })
+                    .collect();
+                let texts = values
+                    .iter()
+                    .map(|v| {
+                        v.as_ref()
+                            .map(|v| self.arch_value_text(v, false))
+                            .unwrap_or_default()
+                    })
+                    .collect();
+                rows.push(Row {
+                    values,
+                    texts,
+                    uids: uids.clone(),
+                    units: vec![u.id.clone()],
+                });
+            }
+        }
+        rows
+    }
+
     /// A units schedule's rows (docs/adr/0795): the program's groups its filter takes, in the program's order.
     fn unit_rows(&self, columns: &[ScheduleColumn], filter: Option<&ScheduleFilter>) -> Vec<Row> {
         use kentos_contracts::UnitKind;
@@ -383,6 +518,21 @@ impl Document {
         group: bool,
         total: bool,
     ) -> ScheduleRows {
+        self.schedule_rows_by(of, columns, filter, sort, group, total, false)
+    }
+
+    /// [`Self::schedule_rows`], a units schedule's storey by storey when `by_level` (docs/adr/3029).
+    #[allow(clippy::too_many_arguments)]
+    pub fn schedule_rows_by(
+        &self,
+        of: ScheduleOf,
+        columns: &[ScheduleColumn],
+        filter: Option<&ScheduleFilter>,
+        sort: &[ScheduleSort],
+        group: bool,
+        total: bool,
+        by_level: bool,
+    ) -> ScheduleRows {
         let mut rows: Vec<Row> = Vec::new();
         // The shares are the whole program's: worked out once for the schedule (docs/adr/0784 §3).
         let shares = (of != ScheduleOf::Units && columns.iter().any(|c| c.field.is_share()))
@@ -399,7 +549,11 @@ impl Document {
         let out = self.option_out();
         // A units schedule's rows read the whole program, as its shares do (docs/adr/0795 §1; 0784 §2).
         if of == ScheduleOf::Units {
-            rows = self.unit_rows(columns, filter);
+            rows = if by_level {
+                self.unit_level_rows(columns, filter)
+            } else {
+                self.unit_rows(columns, filter)
+            };
         }
         for e in self.entities() {
             if of == ScheduleOf::Units {

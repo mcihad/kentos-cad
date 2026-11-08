@@ -2187,8 +2187,20 @@
         ]
        },
        {
-        "command": "arch.quantities",
-        "size": "small"
+        "key": "archQuantities",
+        "size": "small",
+        "split": [
+         {
+          "command": "arch.quantities",
+          "title": "Metraj",
+          "label": "Metraj"
+         },
+         {
+          "command": "tool.scheduleAreas",
+          "title": "Metraj",
+          "label": "Metrekare cetveli"
+         }
+        ]
        },
        {
         "key": "archSchedules",

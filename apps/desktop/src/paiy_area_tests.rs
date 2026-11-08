@@ -131,3 +131,109 @@ fn a_units_schedule_writes_the_regulation_s_net_gross_share_and_general_gross() 
         std::fs::write(std::path::Path::new(&out).join("alan.kcad"), bytes).expect("written");
     }
 }
+
+/// Metrekare cetveli (M29, docs/adr/3029; PAİY 57/2-a): two storeys of the same plan, the stair hall one common area on
+/// both; the units schedule storey by storey: each storey's units and its part of the hall, 30 m² each, the total the
+/// building's 180 m².
+#[test]
+fn a_metrekare_cetveli_lists_each_storey_s_units_and_common_areas() {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    command(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": [
+            { "id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0 },
+            { "id": "k1", "name": "1. kat", "elevation": 3.0, "height": 3.0 } ] } }),
+    );
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    for level in ["zemin", "k1"] {
+        let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": level}});
+        command(
+            &mut app,
+            "cad.walls.create",
+            json!({"layerId": layer, "walls": [
+                wall((0.125, 0.125), (14.875, 0.125), 0.25), wall((14.875, 0.125), (14.875, 5.875), 0.25),
+                wall((14.875, 5.875), (0.125, 5.875), 0.25), wall((0.125, 5.875), (0.125, 0.125), 0.25),
+                wall((5.0, 0.125), (5.0, 5.875), 0.15), wall((10.0, 0.125), (10.0, 5.875), 0.15)
+            ]}),
+        );
+    }
+    command(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "kind": "unit"}, {"id": "d2", "number": "2", "kind": "unit"},
+            {"id": "d3", "number": "3", "kind": "unit"}, {"id": "d4", "number": "4", "kind": "unit"},
+            {"id": "ortak", "number": "O", "name": "Merdiven evi", "kind": "common"}
+        ], "shareRule": "equal"}}),
+    );
+    let room = |x: f64, level: &str, unit: &str| json!({"seed": p(x, 3.0), "arch": {"level": level}, "unit": unit});
+    command(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            room(2.5, "zemin", "d1"), room(7.5, "zemin", "ortak"), room(12.5, "zemin", "d2"),
+            room(2.5, "k1", "d3"), room(7.5, "k1", "ortak"), room(12.5, "k1", "d4")
+        ]}),
+    );
+    command(
+        &mut app,
+        "cad.schedules.create",
+        json!({"layerId": layer, "at": p(20.0, 0.0), "of": "units", "byLevel": true, "total": true, "columns": [
+            {"field": "level"}, {"field": "number"}, {"field": "unitKind"}, {"field": "paiyGross"}
+        ]}),
+    );
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let cells = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Table(t) => Some(t.cells.clone()),
+            _ => None,
+        })
+        .expect("the schedule");
+    let rows: Vec<Vec<&str>> = cells
+        .iter()
+        .map(|r| r.iter().map(String::as_str).collect())
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            vec!["Kat", "No", "Bölüm türü", "BB brüt alanı (m²)"],
+            vec!["Zemin kat", "1", "Bağımsız bölüm", "30.00"],
+            vec!["Zemin kat", "2", "Bağımsız bölüm", "30.00"],
+            vec!["Zemin kat", "O", "Ortak alan", "30.00"],
+            vec!["1. kat", "3", "Bağımsız bölüm", "30.00"],
+            vec!["1. kat", "4", "Bağımsız bölüm", "30.00"],
+            vec!["1. kat", "O", "Ortak alan", "30.00"],
+            vec!["Toplam", "", "", "180.00"],
+        ],
+        "{cells:?}"
+    );
+    // The real window's drawing (fixtures/interaction/real/metrekare-cetveli.txt): the building without its schedule.
+    if let Some(out) = std::env::var_os("KENTOS_PAIY_OUT") {
+        let _ = app.update(Message::Run("edit.undo"));
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
+        std::fs::write(std::path::Path::new(&out).join("kat.kcad"), bytes).expect("written");
+    }
+}

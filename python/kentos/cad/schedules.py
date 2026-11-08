@@ -63,6 +63,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -93,6 +94,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id:
             at: Unit: length.
             of:
+            by_level: Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
             color:
             columns: Absent: the kind's columns.
             expected_revision:
@@ -118,6 +120,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -137,6 +140,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -154,6 +158,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -173,6 +178,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -190,6 +196,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -209,6 +216,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -231,6 +239,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,

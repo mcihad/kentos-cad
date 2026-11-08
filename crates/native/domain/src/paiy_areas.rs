@@ -28,6 +28,8 @@ pub struct PaiyGroup {
     pub net: f64,
     /// Its part of the common areas' gross (an independent unit's; none: the program shares nothing).
     pub share: Option<f64>,
+    /// Each storey's part of its gross and net, in the order the rooms first stand on them (the metrekare cetveli's).
+    pub levels: Vec<(Option<String>, f64, f64)>,
 }
 
 impl PaiyGroup {
@@ -116,6 +118,7 @@ impl Document {
                         gross: 0.0,
                         net,
                         share: None,
+                        levels: Vec::new(),
                     },
                 )
             })
@@ -169,7 +172,16 @@ impl Document {
                 }
             }
             for ((k, _, _), g) in contours.iter().zip(gross) {
+                let id = out[*k].0.clone();
+                let net: f64 = rooms
+                    .iter()
+                    .filter(|r| {
+                        r.counts && r.level == *level && r.group.as_deref() == Some(id.as_str())
+                    })
+                    .map(|r| r.net)
+                    .sum();
                 out[*k].1.gross += g;
+                out[*k].1.levels.push((level.clone(), g, net));
             }
         }
         // The common areas' gross shared out by the program's rule, over the gross areas.

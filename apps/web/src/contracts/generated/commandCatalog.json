@@ -21851,6 +21851,13 @@
             "$ref": "#/$defs/Vec2",
             "x-unit": "length"
           },
+          "byLevel": {
+            "description": "Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "color": {
             "type": [
               "string",
@@ -177268,6 +177275,13 @@
           "additionalProperties": false,
           "description": "Its columns, filter, sort, grouping or total changed; its rows written again.",
           "properties": {
+            "byLevel": {
+              "description": "Kat kat (docs/adr/3029): a units schedule's rows storey by storey.",
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
             "columns": {
               "items": {
                 "$ref": "#/$defs/ScheduleColumn"
@@ -191378,6 +191392,10 @@
         {
           "description": "Kapı ve pencere, mahal, kolon ya da duvar çizelgesi (docs/adr/0344 §3): the objects of `of` that the filter\ntakes, a row each (alike ones one row when grouped), in the columns' order, sorted, with a total; written again\nby the document at every step, which writes `members` too: each data row's objects by their persistent ids.",
           "properties": {
+            "byLevel": {
+              "description": "Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has\nrooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).",
+              "type": "boolean"
+            },
             "columns": {
               "items": {
                 "$ref": "#/$defs/ScheduleColumn"

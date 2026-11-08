@@ -140,7 +140,8 @@ pub fn needs_opening_codes(e: &crate::Entity) -> bool {
 /// 209.
 pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Table(t) if matches!(&t.source,
-        Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_paiy())))
+        Some(crate::TableSource::Schedule { columns, by_level, .. })
+            if *by_level || columns.iter().any(|c| c.field.is_paiy())))
 }
 
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.

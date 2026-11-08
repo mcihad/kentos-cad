@@ -8967,7 +8967,9 @@ class _Schema:
                          "columns": (self.array(column), True), "filter": (flt, False), "sort": (self.array(sort), False),
                          "group": (true_only, False), "total": (true_only, False),
                          "members": (self.array(self.array(self.text)), False),
-                         **({"units": (self.array(self.array(self.text)), False)} if self.unit_schedules else {})})(v)
+                         **({"units": (self.array(self.array(self.text)), False)} if self.unit_schedules else {}),
+                         # Schema 209 (docs/adr/3029): a units schedule storey by storey.
+                         **({"byLevel": (true_only, False)} if self.paiy_areas else {})})(v)
         if not 1 <= len(d["columns"]) <= 30:
             self.path.append("columns")
             self.fail("bad_value", "çizelgenin 1 ile 30 arası sütunu olur")
@@ -8985,6 +8987,8 @@ class _Schema:
         flt_keys = set(d.get("filter", {}))
         if d["of"] == "units" and flt_keys & {"phases", "forms", "layers", "types"}:
             self.fail("bad_value", "bölüm çizelgesi evre, biçim, katman ve tür adıyla süzülmez")
+        if d.get("byLevel") and d["of"] != "units":
+            self.fail("bad_value", "kat kat satırlar yalnız bölüm çizelgesindedir")
         if d["of"] != "units" and flt_keys & {"buildings", "wings", "kinds"}:
             self.fail("bad_value", "bina, kanat ve bölüm türü süzgeci yalnız bölüm çizelgesindedir")
         if "units" in d and (d["of"] != "units" or len(d["units"]) != len(d.get("members", []))

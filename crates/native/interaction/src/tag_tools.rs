@@ -43,6 +43,8 @@ pub const SCHEDULE_FINISHES_ID: &str = "scheduleFinishes";
 pub const SCHEDULE_FIXTURES_ID: &str = "scheduleFixtures";
 /// Bölüm çizelgesi (docs/adr/0795): the building program's units.
 pub const SCHEDULE_UNITS_ID: &str = "scheduleUnits";
+/// Metrekare cetveli (docs/adr/3029): a units schedule storey by storey with the regulation's gross.
+pub const SCHEDULE_AREAS_ID: &str = "scheduleAreas";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -857,10 +859,13 @@ pub enum SchedulePreset {
     Fixtures,
     /// The building program's units (docs/adr/0795).
     Units,
+    /// Metrekare cetveli (docs/adr/3029; PAİY 57/2-a): the units storey by storey, each with the storey's part of its
+    /// regulation gross and net, the total the building's.
+    AreaTable,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 7] = [
+    pub const ALL: [SchedulePreset; 8] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
@@ -868,6 +873,7 @@ impl SchedulePreset {
         SchedulePreset::Walls,
         SchedulePreset::Fixtures,
         SchedulePreset::Units,
+        SchedulePreset::AreaTable,
     ];
 
     pub fn of(self) -> ScheduleOf {
@@ -877,13 +883,14 @@ impl SchedulePreset {
             SchedulePreset::Columns => ScheduleOf::Columns,
             SchedulePreset::Walls => ScheduleOf::Walls,
             SchedulePreset::Fixtures => ScheduleOf::Fixtures,
-            SchedulePreset::Units => ScheduleOf::Units,
+            SchedulePreset::Units | SchedulePreset::AreaTable => ScheduleOf::Units,
         }
     }
 
     pub fn label(self) -> &'static str {
         match self {
             SchedulePreset::Finishes => "Mahal kaplama çizelgesi",
+            SchedulePreset::AreaTable => "Metrekare cetveli",
             other => other.of().label(),
         }
     }
@@ -897,6 +904,7 @@ impl SchedulePreset {
             SchedulePreset::Walls => "walls",
             SchedulePreset::Fixtures => "fixtures",
             SchedulePreset::Units => "units",
+            SchedulePreset::AreaTable => "areas",
         }
     }
 
@@ -907,6 +915,8 @@ impl SchedulePreset {
             (SchedulePreset::Finishes, _) => {
                 &[Number, Name, FloorFinish, BaseFinish, WallFinish, CeilingFinish, Area, Baseboard]
             }
+            // The metrekare cetveli: storey, unit, its kind, the storey's part of its gross and net.
+            (SchedulePreset::AreaTable, _) => &[Level, Number, Name, UnitKind, PaiyGross, PaiyNet],
             // A door and window schedule starts with its number and its type's joinery code (docs/adr/3028);
             // grouped, by code: the joinery list.
             (SchedulePreset::Openings, false) => {
@@ -994,8 +1004,8 @@ impl ScheduleTool {
             // A fixtures schedule counts alike ones on one row.
             group: preset == SchedulePreset::Fixtures,
             total: preset != SchedulePreset::Openings,
-            // A units schedule keeps the program's order (docs/adr/0795).
-            sorted: preset != SchedulePreset::Units,
+            // A units schedule keeps the program's order (docs/adr/0795), a metrekare cetveli the storeys'.
+            sorted: !matches!(preset, SchedulePreset::Units | SchedulePreset::AreaTable),
             subtotals: false,
             active_level: false,
             table: None,
@@ -1030,6 +1040,7 @@ impl ScheduleTool {
             },
             group: self.group.then_some(true),
             total: self.total.then_some(true),
+            by_level: (self.preset == SchedulePreset::AreaTable).then_some(true),
             height: None,
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
@@ -1143,6 +1154,7 @@ impl Tool for ScheduleTool {
             SchedulePreset::Finishes => SCHEDULE_FINISHES_ID,
             SchedulePreset::Fixtures => SCHEDULE_FIXTURES_ID,
             SchedulePreset::Units => SCHEDULE_UNITS_ID,
+            SchedulePreset::AreaTable => SCHEDULE_AREAS_ID,
             _ => SCHEDULE_ID,
         }
     }

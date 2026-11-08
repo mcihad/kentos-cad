@@ -13617,6 +13617,22 @@
    "tests": 2
   },
   {
+   "id": "tool.scheduleAreas",
+   "kind": "command",
+   "title": "Metrekare cetveli",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Bölüm çizelgesi kat kat (byLevel): kat, numara, ad, bölüm türü, BB brüt ve net alanı sütunları; yer imleçten, toplam satırıyla (ADR 3029).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.scheduleFinishes",
    "kind": "command",
    "title": "Mahal kaplama çizelgesi",

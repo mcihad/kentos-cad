@@ -106,6 +106,13 @@ fn create_check(
     input: &SchedulesCreate,
 ) -> Result<(Vec<CommandWarning>, TableEntity), Stop> {
     checks::point(input.at, "Çizelgenin köşesinin", "at")?;
+    if input.by_level == Some(true) && input.of != ScheduleOf::Units {
+        return Err(fail(
+            codes::INVALID_SCHEDULE,
+            "Kat kat satırlar yalnız bölüm çizelgesindedir (of: units).".into(),
+            "byLevel",
+        ));
+    }
     let columns = input
         .columns
         .clone()
@@ -169,6 +176,7 @@ fn create_check(
             total: input.total.unwrap_or(false),
             members: Vec::new(),
             units: Vec::new(),
+            by_level: input.by_level.unwrap_or(false),
         }),
         styles: Vec::new(),
         formulas: Vec::new(),
@@ -461,6 +469,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
         total,
         members,
         units,
+        by_level,
     }) = t.source.clone()
     else {
         return Err(fail(
@@ -555,6 +564,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 sort: s2,
                 group: g2,
                 total: t2,
+                by_level: b2,
             } = &**change;
             let columns = c2.clone().unwrap_or(columns);
             let filter = match f2 {
@@ -572,6 +582,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 total: t2.unwrap_or(total),
                 members: Vec::new(),
                 units: Vec::new(),
+                by_level: b2.unwrap_or(by_level),
             });
             next = doc.table_worked_out(&next);
         }

@@ -19,6 +19,10 @@ export type SchedulesCreate = { layerId: string, at: Vec2, of: ScheduleOf,
  */
 columns?: Array<ScheduleColumn>, filter?: ScheduleFilter, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, 
 /**
+ * Kat kat (docs/adr/3029): a units schedule's rows storey by storey, each group's areas the storey's part.
+ */
+byLevel?: boolean, 
+/**
  * Its words' height, metres; absent: the project's table height at its plot scale.
  */
 height?: number, color?: string, lineWeight?: number, expectedRevision?: string, };

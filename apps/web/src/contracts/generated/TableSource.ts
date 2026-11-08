@@ -19,4 +19,9 @@ keyColumn?: number, } | { "kind": "blocks", names?: Array<string>, by?: string, 
  * A units schedule's (docs/adr/0795): each row's program groups by their ids, beside `members` (a unit without
  * spaces is still a data row); a heading's and a subtotal's none. Written by the document; absent elsewhere.
  */
-units?: Array<Array<string>>, } | { "kind": "extraction" } & ExtractionSource;
+units?: Array<Array<string>>, 
+/**
+ * Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+ * rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
+ */
+byLevel?: boolean, } | { "kind": "extraction" } & ExtractionSource;

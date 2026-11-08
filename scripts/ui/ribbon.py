@@ -432,7 +432,13 @@ CAD = [
                 {"command": "tool.tagAll", "title": "Etiket", "label": "Hepsini etiketle"},
                 # Doğrama kodları (docs/adr/3028): the openings' joinery codes and their tags, code over 90/210.
                 {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
-            ]}, S("arch.quantities"),
+            ]},
+            # Metraj ▾ (docs/adr/3029): the quantities and the metrekare cetveli, the regulation's areas storey by
+            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1).
+            {"key": "archQuantities", "size": "small", "split": [
+                {"command": "arch.quantities", "title": "Metraj", "label": "Metraj"},
+                {"command": "tool.scheduleAreas", "title": "Metraj", "label": "Metrekare cetveli"},
+            ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},

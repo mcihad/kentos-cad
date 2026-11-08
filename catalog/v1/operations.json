@@ -2280,6 +2280,13 @@
       ],
       "note": "Donatı çizelgesi: blok yerleştirmeleri, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §2, §5)."
     },
+    "tool.scheduleAreas": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Bölüm çizelgesi kat kat (byLevel): kat, numara, ad, bölüm türü, BB brüt ve net alanı sütunları; yer imleçten, toplam satırıyla (ADR 3029)."
+    },
     "tool.scheduleUnits": {
       "level": "semantic",
       "via": [

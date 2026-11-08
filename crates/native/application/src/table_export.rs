@@ -91,8 +91,25 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
             notes.push("Blok adetleri çizimden yeniden sayıldı; kaynak çizim değişmedi.".into());
             ("Blok çizelgesi".to_owned(), columns, rest.to_vec())
         }
-        Some(TableSource::Schedule { of, columns, filter, sort, group, total, .. }) => {
-            let written = doc.schedule_rows(*of, columns, filter.as_ref(), sort, *group, *total);
+        Some(TableSource::Schedule {
+            of,
+            columns,
+            filter,
+            sort,
+            group,
+            total,
+            by_level,
+            ..
+        }) => {
+            let written = doc.schedule_rows_by(
+                *of,
+                columns,
+                filter.as_ref(),
+                sort,
+                *group,
+                *total,
+                *by_level,
+            );
             let last = written.rows.len().saturating_sub(1);
             let mut rows: Vec<Vec<String>> = Vec::new();
             for (i, cells) in written.rows.iter().enumerate().skip(1) {

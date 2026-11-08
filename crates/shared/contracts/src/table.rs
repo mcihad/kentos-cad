@@ -315,6 +315,11 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
         units: Vec<Vec<String>>,
+        /// Kat kat (docs/adr/3029; `.kcad` schema 209): a units schedule's row for each group on each storey it has
+        /// rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        by_level: bool,
     },
     /// Veri çıkarımı (docs/adr/1030): a recipe's rows from the open drawing and other drawings read only, with what
     /// they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
@@ -584,9 +589,18 @@ impl TableShape<'_> {
                 sort,
                 members,
                 units,
+                by_level,
                 ..
             }) => {
-                if let Some((_, words)) = crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref()) {
+                if *by_level && *of != crate::ScheduleOf::Units {
+                    return Some((
+                        "source",
+                        "Kat kat satırlar yalnız bölüm çizelgesindedir.".into(),
+                    ));
+                }
+                if let Some((_, words)) =
+                    crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref())
+                {
                     return Some(("source", words));
                 }
                 // The rows' units (docs/adr/0795): a units schedule's alone, one list a row, no empty id.
