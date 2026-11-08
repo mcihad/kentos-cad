@@ -33,7 +33,7 @@ sırayla alır.
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880 | tipli katman profili; değişen nesnenin neyinin değiştiği; silinenin onaylı hâli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
@@ -464,6 +464,13 @@ Kanıtlanan:
 
 Açık: GVX oturum korelasyonları (korelasyonlu gözlemde baz testinin kararı), yeni noktaların hızı, doğu/kuzey/yukarı
 hız ve PSD, arşiv panelinde bazlar, resmî hız alanı. Madde `[ ]` kalır.
+
+**9 Kasım 2026, beşinci tur — arşiv panelinde bazlar, bilinen noktalar ve dengelemeler ([ADR 2920](../docs/adr/2920-archive-panel-baselines-and-adjustments.md)).**
+Kapsam: **Harita**. Araştırma: TBC'de GNSS vektörleri Project Explorer'da seçilen öğelerdir. Kanıtlanan: GNSS arşivi
+panelinde Bazlar (uzunluk, σ, dosya, dengelemede/dışlandı), Bilinen noktalar (sabit/ağırlıklı, epok, hız) ve
+Dengelemeler (sonradan dışlanan baz ya da bilinen nokta varsa güncel değil); satırlar ilgili noktaları seçer, düğmeler
+nedenle dışlar ya da geri alır, dengelemeninki Ağ dengelemesi'ni açar; masaüstü testi ve resimler. Sözleşme değişmedi.
+Açık: GVX oturum korelasyonları ve korelasyonlu baz testi, yeni noktaların hızı, bazın haritada çizilmesi.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

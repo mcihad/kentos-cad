@@ -102,5 +102,5 @@ oturumdaki öbür bazları da taşır, testin hangi bazı işaretleyeceği deği
 - Yeni noktaların hızı: istasyon hızlarından enterpolasyon (idarenin yöntemi) ya da resmî hız alanı. Akademik bir
   çalışmaya göre HGM 2022'de ulusal bir hız alanı yayımladı; okunmadı, sahibin kaynağı bekleniyor (ADR 1230 §7).
 - Doğu, kuzey, yukarı olarak verilen hızlar; deprem sonrası deformasyon (PSD) işlevleri.
-- Arşiv panelinde bazlar ve dengelemeler.
+- Arşiv panelinde bazlar ve dengelemeler. Yapıldı: [ADR 2920](2920-archive-panel-baselines-and-adjustments.md).
 - Web (TODOS §0.2).

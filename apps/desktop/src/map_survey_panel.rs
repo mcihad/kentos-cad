@@ -5,7 +5,9 @@
 //! from accepted points. One toolbar row of icon buttons (their words in their tips): a new arazi ölçümü, a session
 //! from a RINEX, NMEA or GPX file, reading the files' SHA-256, and one text box for the mark a file does not say or the
 //! reason a solution is excluded. A row's button excludes or takes back a solution, solves a recorded log, accepts a
-//! mark's point or makes it again (`map.survey.edit`). Harita only: GIS reads the accepted point in Öznitelikler.
+//! mark's point or makes it again (`map.survey.edit`). Under the marks, the baselines, the known points and the accepted
+//! network adjustments (map_survey_network_rows.rs, docs/adr/2920). Harita only: GIS reads the accepted point in
+//! Öznitelikler.
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -48,11 +50,13 @@ pub enum Event {
     Regenerate(String),
     /// An accepted point's or a use's row: its objects selected and shown.
     Objects(Vec<String>),
+    /// Ağ dengelemesi, from an adjustment's row (docs/adr/2920).
+    Network,
     Fold(String),
     Filter(Option<Status>),
 }
 
-fn msg(e: Event) -> Message {
+pub(crate) fn msg(e: Event) -> Message {
     Message::MapSurvey(e)
 }
 
@@ -75,7 +79,7 @@ impl std::fmt::Debug for PanelState {
 }
 
 /// The icons of the archive (catalog/v1/additions.json).
-fn glyph(name: &str) -> Icon {
+pub(crate) fn glyph(name: &str) -> Icon {
     crate::icons::from_web(Some(name))
 }
 
@@ -326,6 +330,7 @@ impl App {
                 }
             }
             Event::Objects(uids) => self.select_uids(&uids),
+            Event::Network => return self.open_survey_network(),
             Event::Fold(key) => {
                 if !self.map_survey.toggled.remove(&key) {
                     self.map_survey.toggled.insert(key);
@@ -392,6 +397,8 @@ impl App {
             }
             items.push(group);
         }
+        // The baselines, the known points and the adjustments (docs/adr/2920).
+        items.extend(crate::map_survey_network_rows::groups(&tree));
         if !tree.uses.is_empty() {
             let mut group = StatusItem::new("uses", "Dayananlar")
                 .icon(icon(Icon::Layers).size(14.0))

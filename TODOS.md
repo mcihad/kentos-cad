@@ -120,6 +120,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-02 / ADR 2900: `cad.crs.factors`'ın web işleyicisinde `heights`, `elevations`, `lines` (43 ortak durum); çekirdeğin
   `surveyPolar`'ının `undulations`'ı ve noktanın `height`'ı (WASM'la gelir); web'in Kutupsal alımında kotlardan ayrımlar
   (geoit ızgarası) ve h sütunu.
+- MAP-03 / ADR 2920: web'in GNSS arşivi panelinde Bazlar, Bilinen noktalar ve Dengelemeler grupları (`map.survey.query`'nin
+  cevabı değişmedi).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

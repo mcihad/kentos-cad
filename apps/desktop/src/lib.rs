@@ -158,6 +158,7 @@ mod navigator;
 mod road_project_panel;
 mod map_work_panel;
 mod map_survey_panel;
+mod map_survey_network_rows;
 mod bottom;
 mod calc;
 mod catalog;
@@ -409,6 +410,8 @@ mod sheet_contours_window_tests;
 mod map_menus_tests;
 #[cfg(test)]
 mod map_survey_panel_tests;
+#[cfg(test)]
+mod map_survey_network_rows_tests;
 #[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]

@@ -228,6 +228,9 @@
   `cad.crs.factors`'ta `heights`, `elevations` (kotlar projenin kotlarıyla ve geoit modeliyle elipsoit yüksekliğine;
   tahmin yok) ve `lines`. Kutupsal alım ve `cad.survey.points` her alımı uçlarının ortalama elipsoit yüksekliğinde
   indirir; pencerede h sütunu. CAD + CBS.
+- **GNSS arşivi panelinde bazlar ve dengelemeler (9 Kasım 2026; MAP-03, [ADR 2920](../../docs/adr/2920-archive-panel-baselines-and-adjustments.md)).**
+  Bazlar, Bilinen noktalar ve Dengelemeler grupları; satırlar noktaları seçer, düğmeler nedenle dışlar ya da geri alır;
+  sonradan dışlanan bazı olan dengeleme güncel değil. Sözleşme değişmedi. Yalnız Harita.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.
