@@ -126,7 +126,8 @@ MCP: `{"tool": "map.features.reconcile", ...}` yazar; planı salt okunurdur.
 - **Pencere:** eksik zorunlu alanın pencerede girilmesi.
 - **Kapsam:** alan sınıflarının (bina izi) örtüşmeyle uzlaştırılması: yapıldı,
   [ADR 2140](2140-area-candidates-by-overlap.md); yaylı adayların yay uzaklığı.
-- **Ölçek:** büyük aday kümesinde ızgara dizini (bugün tüm çiftler karşılaştırılır).
+- **Ölçek:** büyük aday kümesinde ızgara dizini (bugün tüm çiftler karşılaştırılır). Yapıldı:
+  [ADR 2940](2940-reconcile-grid-index.md).
 - **İnceleme kaydı:** kararların ayrı bir inceleme kaydı olarak (öznitelik değil) tutulması ve katalog değişikliğinin
   geçiş raporu.
 - **Çıkarım:** AI/çıkarım modelinin indirilip çalıştırılması (MAP-04'ün kalanı).

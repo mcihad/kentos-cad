@@ -82,5 +82,5 @@ takma adıdır.
 
 - İnceleme kaydının özniteliğe değil ayrı kayda yazılması (MAP-04'ün kalanı).
 - Kurala uymayan aday değerinin kaynağında düzeltilmesi (bugün karar onu ezer, aday olduğu gibi kalır).
-- Büyük aday kümesinde ızgara dizini; yaylı aday; AI çıkarımı.
+- Büyük aday kümesinde ızgara dizini (yapıldı: [ADR 2940](2940-reconcile-grid-index.md)); yaylı aday; AI çıkarımı.
 - Web (TODOS §0.2).

@@ -122,6 +122,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (geoit ızgarası) ve h sütunu.
 - MAP-03 / ADR 2920: web'in GNSS arşivi panelinde Bazlar, Bilinen noktalar ve Dengelemeler grupları (`map.survey.query`'nin
   cevabı değişmedi).
+- MAP-04 / ADR 2940: web'in `map.features.reconcile` işleyicisinde aynı ızgara dizini (bütün çiftler yerine kutuları
+  buluşanlar; var olan varlık ızgaradan).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

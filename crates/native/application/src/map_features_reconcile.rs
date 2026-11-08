@@ -17,6 +17,11 @@
 //! Field rules (docs/adr/2540): the asset's values, its candidates' and the decisions', pass its class layer's fields as
 //! any write to that layer (`check_value`): the canonical text is written; one that does not fit is said in the group's
 //! `invalid` and keeps it from being written.
+//!
+//! Large sets (docs/adr/2940): only the pairs whose boxes meet are tested (a point's or a polyline's widened by the
+//! radius, an area's own), through a grid (`box_grid`), and a group's assets there already are looked for among its
+//! class layer's objects whose boxes meet its representatives'; the answer is the all-pairs one, the work no longer
+//! grows with the square of the candidates.
 
 use std::collections::BTreeMap;
 
@@ -32,6 +37,7 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot, Uuid};
 
 use crate::ExecutionContext;
+use crate::box_grid::{BoxGrid, Bx};
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::profile_files::Shelf;
@@ -154,6 +160,31 @@ fn bounds(pts: &[Vec2]) -> [f64; 4] {
     pts.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
         [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
     })
+}
+
+/// The box a candidate meets the others it may be near within (docs/adr/2940): a point's or a polyline's vertices
+/// widened by the radius on every side (two within the radius have meeting boxes, with room to spare), an area's own
+/// (two whose overlap ratio is above any number have a common area, so meeting boxes).
+fn reach(c: &Candidate, radius: f64) -> Bx {
+    let b = bounds(&c.pts);
+    let r = if c.kind == Kind::Area { 0.0 } else { radius };
+    [b[0] - r, b[1] - r, b[2] + r, b[3] + r]
+}
+
+/// The pairs of eligible candidates to test, by their indices into the candidates: those whose reaches meet.
+fn pairs_to_test(candidates: &[Candidate], eligible: &[usize], radius: f64) -> Vec<(usize, usize)> {
+    let grid = BoxGrid::new(eligible.iter().map(|&i| reach(&candidates[i], radius)).collect());
+    grid.pairs().into_iter().map(|(a, b)| (eligible[a], eligible[b])).collect()
+}
+
+/// An object's box, when it may be an asset there already (a point, a polyline, a polygon).
+fn asset_box(e: &Entity) -> Option<Bx> {
+    match e {
+        Entity::Point(pt) => Some([pt.p.x, pt.p.y, pt.p.x, pt.p.y]),
+        Entity::Polyline(pl) if pl.pts.len() >= 2 => Some(bounds(&pl.pts)),
+        Entity::Polygon(pg) if pg.pts.len() >= 3 => Some(bounds(&pg.pts)),
+        _ => None,
+    }
 }
 
 /// The overlap ratio of two areas (docs/adr/2140): their intersection's area over their union's, 0 when their boxes
@@ -346,14 +377,13 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         Kind::Area => overlap(a, b) > overlap_min,
         _ => apart(a, b) <= input.radius,
     };
-    for (a, &i) in eligible.iter().enumerate() {
-        for &j in &eligible[a + 1..] {
-            if candidates[i].kind == candidates[j].kind && near(&candidates[i], &candidates[j]) {
-                let (ri, rj) = (root(&mut parent, i), root(&mut parent, j));
-                if ri != rj {
-                    let (lo, hi) = if ri < rj { (ri, rj) } else { (rj, ri) };
-                    parent[hi] = lo;
-                }
+    // Only the pairs whose boxes meet (docs/adr/2940); a set's root is its smallest index whatever the pairs' order.
+    for (i, j) in pairs_to_test(&candidates, &eligible, input.radius) {
+        if candidates[i].kind == candidates[j].kind && near(&candidates[i], &candidates[j]) {
+            let (ri, rj) = (root(&mut parent, i), root(&mut parent, j));
+            if ri != rj {
+                let (lo, hi) = if ri < rj { (ri, rj) } else { (rj, ri) };
+                parent[hi] = lo;
             }
         }
     }
@@ -376,6 +406,9 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
     };
     let names: Vec<String> = input.sources.iter().map(|s| s.name.clone()).collect();
     let candidate_uids: std::collections::HashSet<String> = candidates.iter().map(|c| c.uid.clone()).collect();
+    // Each class layer's objects that may be assets there already, in the drawing's order, and their grid, made once
+    // (docs/adr/2940).
+    let mut assets: BTreeMap<String, (Vec<(String, &Entity)>, BoxGrid)> = BTreeMap::new();
     let mut groups: Vec<Group> = Vec::new();
     for r in order {
         let members = members_of.remove(&r).unwrap_or_default();
@@ -452,10 +485,22 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         if classes.len() == 1
             && let Some(layer) = layer_of(classes[0])
         {
-            for (uid, e) in doc.entities_with_uids() {
-                if e.base().layer_id != layer || candidate_uids.contains(&uid.to_string()) {
-                    continue;
-                }
+            let (list, grid) = assets.entry(layer.clone()).or_insert_with(|| {
+                let list: Vec<(String, &Entity, Bx)> = doc
+                    .entities_with_uids()
+                    .filter(|(uid, e)| e.base().layer_id == layer && !candidate_uids.contains(&uid.to_string()))
+                    .filter_map(|(uid, e)| asset_box(e).map(|b| (uid.to_string(), e, b)))
+                    .collect();
+                let grid = BoxGrid::new(list.iter().map(|x| x.2).collect());
+                (list.into_iter().map(|(u, e, _)| (u, e)).collect(), grid)
+            });
+            // Its representatives' reach: an asset near one of them has a box that meets it.
+            let q = reps.iter().map(|&k| reach(&candidates[k], input.radius)).fold(
+                [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY],
+                |a, b| [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])],
+            );
+            for at in grid.meeting(&q) {
+                let (uid, e) = (&list[at].0, list[at].1);
                 let near = match (e, kind) {
                     (Entity::Point(pt), Kind::Point) => reps.iter().any(|&k| distance(candidates[k].p, pt.p) <= input.radius),
                     (Entity::Polyline(pl), Kind::Line) if pl.pts.len() >= 2 => {
@@ -474,7 +519,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                     _ => false,
                 };
                 if near {
-                    existing = Some(uid.to_string());
+                    existing = Some(uid.clone());
                     break;
                 }
             }

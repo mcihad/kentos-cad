@@ -34,7 +34,7 @@ sırayla alır.
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880 | tipli katman profili; değişen nesnenin neyinin değiştiği; silinenin onaylı hâli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
@@ -560,6 +560,12 @@ Kanıtlanan:
 - 35 ortak durum (5 yeni; alanlı sınıf katmanları, profilin uygulanması gibi), Python, MCP.
 
 Açık: inceleme kaydının ayrı tutulması, büyük aday kümesinde dizin, yay uzaklığı, AI çıkarımı. Madde `[ ]` kalır.
+
+**9 Kasım 2026, beşinci tur — büyük aday kümesinde ızgara dizini ([ADR 2940](../docs/adr/2940-reconcile-grid-index.md)).**
+Kapsam: **Harita**. Dayanak: CLAUDE.md §6.2; bir çiftin yakınlığı kutularının buluşmasını gerektirir. Kanıtlanan: kutu
+ızgarası (her çift bir kez, sol alt köşe kuralı), eşleştirmede yalnız uzanımları buluşan çiftler ve var olan varlığın
+ızgaradan aranması; cevap bütün çiftlerinkiyle aynı (35 ortak durum, 3000 kümelik test). Ölçüm (debug, M5): 10 000
+kümede 38,2 s'den 0,246 s'ye, 40 000 kümede 1,02 s. Açık: ayrı inceleme kaydı, yaylı aday, sürüm derlemesinde ölçüm.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 
