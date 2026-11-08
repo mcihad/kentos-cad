@@ -15,6 +15,7 @@
 //! │ Yüzey          [▾]            (Fark: Taban yüzeyi [▾] / Karşılaştırma [▾])          │
 //! │ …the mode's rows, one label column (Ölçü, Yöntem, Kazı / dolgu katsayısı …)         │
 //! │ Çizime yaz ─── Katman [▾] [Sıfır hattını çiz] · Bant aralığı [ ] [Kazı ve dolgu …]  │
+//! │                Bölgelere ☐ Yazı ☐ Miktar tablosu (docs/adr/2340)                      │
 //! │ ┌ the picture ┐  the figures and tables                                            │
 //! │ └─────────────┘                                                [Önizle] [Kapat]    │
 //! └────────────────────────────────────────────────────────────────────────────────────┘
@@ -127,6 +128,9 @@ pub struct Window {
     pub(crate) roughness: bool,
     /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
     pub(crate) volume_grid: bool,
+    /// The cut and fill zones' labels and quantity table (docs/adr/2340).
+    pub(crate) zone_labels: bool,
+    pub(crate) zone_table: bool,
     pub(crate) checks: Option<String>,
     /// Kapsam's boundary: a closed object's uid; none, the surface itself.
     pub(crate) boundary: Option<String>,
@@ -157,6 +161,9 @@ pub enum Event {
     DrawZero,
     /// Fark: the cut and fill zones written as areas (`road.terrains.cutfill`).
     DrawZones,
+    /// Fark: the zones' labels and their quantity table with them (docs/adr/2340).
+    ZoneLabels(bool),
+    ZoneTable(bool),
     DrawSparse,
     Field(usize, String),
     Preview,
@@ -307,6 +314,8 @@ impl App {
             measure: 1,
             roughness: false,
             volume_grid: false,
+            zone_labels: false,
+            zone_table: false,
             checks: None,
             boundary: None,
             layer: self.relation_layers().into_iter().next().map(|(id, _)| id),
@@ -356,6 +365,14 @@ impl App {
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
             Event::VolumeGrid(on) => w.volume_grid = on,
+            Event::ZoneLabels(on) => {
+                w.zone_labels = on;
+                return Task::none();
+            }
+            Event::ZoneTable(on) => {
+                w.zone_table = on;
+                return Task::none();
+            }
             Event::Checks(l) => w.checks = l,
             Event::Boundary(b) => w.boundary = b,
             Event::Layer(l) => {
@@ -412,7 +429,15 @@ impl App {
                         return Task::none();
                     }
                 };
-                let input = kentos_commands::TerrainsCutFill { base, comparison, layer_id: layer, interval, expected_revision: None };
+                let input = kentos_commands::TerrainsCutFill {
+                    base,
+                    comparison,
+                    layer_id: layer,
+                    interval,
+                    labels: w.zone_labels.then_some(true),
+                    table: w.zone_table.then_some(true),
+                    expected_revision: None,
+                };
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 let result = kentos_native_application::road_terrains_cutfill::execute(
                     &mut ExecutionContext::new(&mut doc.model),
@@ -641,6 +666,13 @@ impl App {
                         pair(vec![
                             input("boş: kazı, dolgu", 16, 130.0).into(),
                             words::secondary(DRAW_ZONES, can.then(|| msg(Event::DrawZones))).into(),
+                        ]),
+                    )
+                    .field(
+                        "Bölgelere",
+                        pair(vec![
+                            words::check(w.zone_labels, "Yazı (tür, hacim)", Some(msg(Event::ZoneLabels(!w.zone_labels)))).into(),
+                            words::check(w.zone_table, "Miktar tablosu", Some(msg(Event::ZoneTable(!w.zone_table)))).into(),
                         ]),
                     );
             }

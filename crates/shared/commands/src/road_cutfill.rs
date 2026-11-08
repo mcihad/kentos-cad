@@ -22,6 +22,8 @@ pub const MOST_CUTFILL_BANDS: u64 = 1000;
 /// Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the
 /// part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
 /// `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
+/// `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
+/// docs/adr/2340).
 ///
 /// Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
 /// `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
@@ -43,8 +45,27 @@ pub struct TerrainsCutFill {
     pub interval: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    pub labels: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub table: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// A zone's label (docs/adr/2340): its place inside the zone (the core's interior point, GEOS's rule: the middle of
+/// the widest stretch inside on the scan line through the box's middle away from every corner) and its words.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CutFillLabel {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    pub text: String,
 }
 
 /// Whether a zone is cut (the comparison below the base) or fill.
@@ -127,6 +148,14 @@ pub struct TerrainsCutFilled {
     pub least: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub largest: f64,
+    /// The zones' labels, in the zones' order (asked for, docs/adr/2340).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
+    pub labels: Vec<CutFillLabel>,
+    /// The quantity table's cells, heading first (asked for, docs/adr/2340).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
+    pub table: Vec<Vec<String>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

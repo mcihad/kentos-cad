@@ -172,6 +172,9 @@
 - **Pafta eğrilerinde tepe ve çukur kotları (8 Kasım 2026; MAP-14, [ADR 2320](../../docs/adr/2320-sheet-summit-and-pit-heights.md)).**
   `road.terrains.sheetcontours`'un `spots`'u (m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak
   köşe, detay içindeki sayılmadan, kotu dm'ye kadar (Ek-3 0004, paket sürüm 2). Şev üstü ve dibi yok. Harita.
+- **Kazı ve dolgu bölgelerinin yazısı ve miktar tablosu (8 Kasım 2026; MAP-15, [ADR 2340](../../docs/adr/2340-cut-fill-zone-labels-and-quantity-table.md)).**
+  `road.terrains.cutfill`'in `labels`'ı (tür ve hacim, iç noktada) ve `table`'ı (bölgeler, kazı, dolgu, net); tutulan
+  çizimle birlikte yeniden çizilir. Harita + Yol.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

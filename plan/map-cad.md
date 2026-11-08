@@ -45,7 +45,7 @@ sırayla alır.
 | MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840 | bölge yazısı ve miktar tablosu; malzeme bölgesi; stok sahası; kesit yöntemi | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860 | disiplinler arası açıklık; profilin canlı güncellenmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880 | blok, ilişki ve tablo örnekleri; teslim paketinin matrisi taşıması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900 | ölçme kalite notu; atlas sayfalarının kaynak dökümü | kurum eksen adları; resmî profil kapısı |
@@ -1197,6 +1197,13 @@ kazı/dolgu ya da `interval` bantları), alan ve hacim öznitelikte, bölgelerin
 hacmi; çakışık alan bölge olmaz; çizim iki yüzeyin damgasıyla tutulur (yüzey değişince eskir, yeniden üretilir),
 `.kcad` şema 205; 33 bağımsız durum (shapely ile birleştirme, proje koordinatlarında da); Fark'ta Kazı ve dolgu
 bölgelerini çiz. Açık: malzeme bölgesi, stok sahası, bölge yazısı ve miktar tablosu, kesit yöntemi.
+
+**8 Kasım 2026, üçüncü tur — bölge yazısı ve miktar tablosu ([ADR 2340](../docs/adr/2340-cut-fill-zone-labels-and-quantity-table.md)).**
+Kapsam: **Harita + Yol**. Araştırma: Civil 3D Volumes Dashboard'un “Insert Cut/Fill Summary”si (güncellenmeyen blok
+tablo), GEOS'un InteriorPointArea'sı. Kanıtlanan: `road.terrains.cutfill`'e `labels` (bölgenin içine tür ve hacim,
+çekirdeğin iç noktasında) ve `table` (bölgeler, kazı, dolgu, net; iki ondalık; Tablo aracının sütun sığdırmasıyla);
+ikisi de tutulan çizimin parçası, yüzey değişince yeniden çizilir; 38 ortak durum (GEOS'la aynı yer), MCP; Fark'ta
+Bölgelere satırı. Açık: bölgenin derinlik yazısı, malzeme bölgesi, stok sahası, kesit yöntemi.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

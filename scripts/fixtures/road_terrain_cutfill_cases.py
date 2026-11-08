@@ -14,6 +14,10 @@ the sums of the pieces whose corners' mean it holds. A ring's vertex within 1 µ
 (and between them) is dropped; outer rings run counterclockwise and holes clockwise, each from its smallest place
 (x, then y); zones go by band and then by their ring's first place.
 
+Asked for (docs/adr/2340): each zone's label at shapely's (GEOS's) representative point of its polygon, its words the
+kind and the volume to two decimals; the quantity table's cells: the heading, each zone (number, kind, its band when
+banded, area, volume), then the cut's, the fill's and the net totals, numbers to two decimals.
+
 No KentOS code.
 
     uv run --no-project --python 3.11 --with shapely python3 scripts/fixtures/road_terrain_cutfill_cases.py [--check]
@@ -244,6 +248,36 @@ def find(name):
     return next(i for i, n in NAMES.items() if name == i or name.lower() == n.lower())
 
 
+def kind_word(z):
+    return "Kazı" if z["kind"] == "cut" else "Dolgu"
+
+
+def labels_of(zones):
+    """Each zone's label (docs/adr/2340): GEOS's representative point, the kind and the volume."""
+    out = []
+    for z in zones:
+        p = Polygon(z["ring"], z.get("holes", [])).representative_point()
+        out.append({"at": [p.x, p.y], "text": f"{kind_word(z)} {z['volume']:.2f} m³"})
+    return out
+
+
+def table_of(o):
+    """The quantity table's cells (docs/adr/2340)."""
+    banded = "interval" in o
+    rows = [["Bölge", "Tür", "Alt (m)", "Üst (m)", "Alan (m²)", "Hacim (m³)"] if banded
+            else ["Bölge", "Tür", "Alan (m²)", "Hacim (m³)"]]
+    for k, z in enumerate(o["zones"]):
+        row = [str(k + 1), kind_word(z)]
+        if banded:
+            row += [f"{z['from']:.2f}", f"{z['to']:.2f}"]
+        rows.append(row + [f"{z['area']:.2f}", f"{z['volume']:.2f}"])
+    blank = [""] * (3 if banded else 1)
+    rows.append(["Kazı"] + blank + [f"{o['cutArea']:.2f}", f"{o['cut']:.2f}"])
+    rows.append(["Dolgu"] + blank + [f"{o['fillArea']:.2f}", f"{o['fill']:.2f}"])
+    rows.append(["Net (dolgu − kazı)"] + blank + ["", f"{o['net']:.2f}"])
+    return rows
+
+
 def answer(inp):
     bid, cid = find(inp["base"]), find(inp["comparison"])
     zones, t = zones_of(bid, cid, inp.get("interval"))
@@ -253,6 +287,10 @@ def answer(inp):
     out.update({"zones": zones, "cut": t["cut"], "fill": t["fill"], "net": t["fill"] - t["cut"],
                 "cutArea": t["cutArea"], "fillArea": t["fillArea"], "coincident": t["coincident"],
                 "covered": t["covered"], "uncovered": t["uncovered"], "least": t["least"], "largest": t["largest"]})
+    if inp.get("labels"):
+        out["labels"] = labels_of(zones)
+    if inp.get("table"):
+        out["table"] = table_of(out)
     return out
 
 
@@ -268,13 +306,14 @@ def cases():
         o = answer(inp)
         written = op == "execute"
         o["revision"] = "$current"
+        added = 2 * len(o["zones"]) + len(o.get("labels", [])) + (1 if o.get("table") else 0)
         if written:
-            # Each zone a hatch (its fill) and a closed area (its data).
-            o["uids"] = [ANY] * (2 * len(o["zones"]))
+            # Each zone a hatch (its fill) and a closed area (its data); its label; the table.
+            o["uids"] = [ANY] * added
         result = ({"status": "completed", "output": o, "warnings": list(warns)} if op != "validate"
                   else {"status": "completed", "output": None, "warnings": list(warns)})
         count = entities if entities is not None else n
-        expect = ({**STEPPED, "ids": list(range(1, count + 2 * len(o["zones"]) + 1))} if written
+        expect = ({**STEPPED, "ids": list(range(1, count + added + 1))} if written
                   else {**UNCHANGED, "ids": list(range(1, count + 1))})
         c = {"name": name, **({"note": note} if note else {}),
              "steps": [{"op": op, "input": {"layerId": "kazi-dolgu", **inp} if "layerId" not in inp else inp,
@@ -315,6 +354,15 @@ def cases():
              note="x 512 000, y 4 512 000; kafesin köşeleri halkadan atılır, dört köşe kalır")
     assert len(far["zones"][1]["ring"]) == 4
     ok("Proje koordinatlarında 0,2 m'lik bantlar", {"base": "Uzak düz", "comparison": "Uzak tümsek", "interval": 0.2})
+    # docs/adr/2340: the zones' labels and the quantity table.
+    lab = ok("Bölge yazıları: her bölgenin türü ve hacmi içinde", {"base": "Düz", "comparison": "Tümsek", "labels": True})
+    assert [l_["text"][:4] for l_ in lab["labels"]] == ["Kazı", "Dolg"], lab["labels"]
+    ok("Miktar tablosu: bölgeler, kazı, dolgu ve net", {"base": "Düz", "comparison": "Tümsek", "table": True})
+    ok("Bantlı miktar tablosu: alt ve üst sınırlarıyla", {"base": "Düz", "comparison": "Tümsek", "interval": 0.2,
+                                                         "table": True})
+    ok("Yazı ve tablo birlikte, plan yazmaz", {"base": "Teras", "comparison": "Set", "labels": True, "table": True},
+       op="plan")
+    ok("Proje koordinatlarında yazılar", {"base": "Uzak düz", "comparison": "Uzak tümsek", "labels": True})
     ok("Kimliklerle", {"base": "t-5", "comparison": "t-10"})
     ok("Adlar küçük harfle", {"base": "düz", "comparison": "tümsek"})
     ok("Plan yazmaz", {"base": "Düz", "comparison": "Tümsek", "interval": 0.2}, op="plan")

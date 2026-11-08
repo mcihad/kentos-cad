@@ -1193,10 +1193,13 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
     ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın
     taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz,
     söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir,
-    road.project.rebuild yeniden çizer. Harita ve Yol projelerinde. Tek geri alma adımı
-    “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer,
-    layer_locked, invalid_revision, revision_conflict, invalid_analysis,
-    unknown_terrain, terrain_unbuildable, no_cut_fill.
+    road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde
+    (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table:
+    bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki
+    ondalık), projenin tablo yüksekliğiyle (ADR 2340). Harita ve Yol projelerinde. Tek
+    geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project,
+    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
+    invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.
     """
     __slots__ = ()
     id = "road.terrains.cutfill"
@@ -1217,6 +1220,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         layer_id: str,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        labels: bool | None | Unset = UNSET,
+        table: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TerrainsCutFilled:
@@ -1233,8 +1238,11 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması
         daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim
         iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden
-        çizer. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”.
-        Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
+        çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un
+        kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu
+        (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle
+        (ADR 2340). Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu
+        bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
         invalid_revision, revision_conflict, invalid_analysis, unknown_terrain,
         terrain_unbuildable, no_cut_fill.
 
@@ -1245,6 +1253,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             layer_id: The layer the zones go on.
             expected_revision:
             interval: Unit: m.
+            labels:
+            table:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -1263,6 +1273,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             layer_id=layer_id,
             expected_revision=expected_revision,
             interval=interval,
+            labels=labels,
+            table=table,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -1275,6 +1287,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         layer_id: str,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        labels: bool | None | Unset = UNSET,
+        table: bool | None | Unset = UNSET,
     ) -> TerrainsCutFilled:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -1285,6 +1299,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             layer_id=layer_id,
             expected_revision=expected_revision,
             interval=interval,
+            labels=labels,
+            table=table,
         ))
 
     def validate(
@@ -1297,6 +1313,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         layer_id: str,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        labels: bool | None | Unset = UNSET,
+        table: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -1307,6 +1325,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             layer_id=layer_id,
             expected_revision=expected_revision,
             interval=interval,
+            labels=labels,
+            table=table,
         ))
 
     def answer(
@@ -1319,6 +1339,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         layer_id: str,
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        labels: bool | None | Unset = UNSET,
+        table: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1334,6 +1356,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             layer_id=layer_id,
             expected_revision=expected_revision,
             interval=interval,
+            labels=labels,
+            table=table,
         ), op=op, request_id=request_id, expected=expected)
 
 

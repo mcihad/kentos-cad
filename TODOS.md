@@ -92,6 +92,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Ağırlık satırı.
 - MAP-14 / ADR 2320: `road.terrains.sheetcontours`'un web işleyicisinde `spots` (32 ortak durum); web'in Pafta eğrileri
   penceresinde Tepe ve çukur kotları kutusu.
+- MAP-15 / ADR 2340: `road.terrains.cutfill`'in web işleyicisinde `labels` ve `table` (38 ortak durum); web'in Yüzey
+  analizi › Fark'ında Bölgelere satırı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

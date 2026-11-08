@@ -767,6 +767,7 @@ __all__ = [
     "CustomSheetTemplateSource",
     "CutFillKind",
     "CutFillKindName",
+    "CutFillLabel",
     "DataProfile",
     "DatasetDescription",
     "DatasetDim",

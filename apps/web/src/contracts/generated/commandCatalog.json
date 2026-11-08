@@ -37992,7 +37992,7 @@
       "id": "road.terrains.cutfill",
       "version": 1,
       "title": "Kazı ve dolgu bölgeleri",
-      "summary": "İki arazi yüzeyinin kazı ve dolgu bölgelerini (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) yazar: karşılaştırmanın tabanın altında kaldığı yer kazı, üstünde kaldığı yer dolgu; her bölge aynı halkalarla bir düz tarama (dolgusu) ve bir delikli kapalı alandır (verisi). Örtüşmenin her parçasında fark (karşılaştırma − taban) doğrusaldır; parça sıfırda ve interval verilirse onun katlarında kesilir (bant k: [k·interval, (k+1)·interval); bantsız: bir kazı, bir dolgu bandı), bir bandın parçaları çekirdeğin alan cebiriyle (1 µm) bölgelere birleşir. Her bölgenin alanı ve hacmi parçalarının toplamıdır; kazı ve dolgu hacimleri road.terrains.compare'in kesin TIN–TIN hacimleridir. İkisi de öznitelikleriyle (Tür, Alan, Hacim, bantta alt ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden çizer. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.",
+      "summary": "İki arazi yüzeyinin kazı ve dolgu bölgelerini (base: taban, comparison: karşılaştırma; kimlik ya da ad) bir katmana (layerId) yazar: karşılaştırmanın tabanın altında kaldığı yer kazı, üstünde kaldığı yer dolgu; her bölge aynı halkalarla bir düz tarama (dolgusu) ve bir delikli kapalı alandır (verisi). Örtüşmenin her parçasında fark (karşılaştırma − taban) doğrusaldır; parça sıfırda ve interval verilirse onun katlarında kesilir (bant k: [k·interval, (k+1)·interval); bantsız: bir kazı, bir dolgu bandı), bir bandın parçaları çekirdeğin alan cebiriyle (1 µm) bölgelere birleşir. Her bölgenin alanı ve hacmi parçalarının toplamıdır; kazı ve dolgu hacimleri road.terrains.compare'in kesin TIN–TIN hacimleridir. İkisi de öznitelikleriyle (Tür, Alan, Hacim, bantta alt ve üst sınır, yüzeylerin adları) yazılır; kazı kırmızı, dolgu mavi, derin bandın taraması daha az saydam. İki yüzeyin çakıştığı alan (coincident) bölge olmaz, söylenir. Çizim iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle (ADR 2340). Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis, unknown_terrain, terrain_unbuildable, no_cut_fill.",
       "aliases": [
         "kazidolgu",
         "kazidolguharitasi",
@@ -38011,7 +38011,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the\npart of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference\n`comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.\n\nRefusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,\n`revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,\n`invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),\n`no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.",
+        "description": "Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the\npart of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference\n`comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.\n`labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;\ndocs/adr/2340).\n\nRefusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,\n`revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,\n`invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),\n`no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.",
         "properties": {
           "base": {
             "type": "string"
@@ -38034,9 +38034,21 @@
             ],
             "x-unit": "m"
           },
+          "labels": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
           "layerId": {
             "description": "The layer the zones go on.",
             "type": "string"
+          },
+          "table": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "required": [
@@ -38095,6 +38107,13 @@
             ],
             "x-unit": "m"
           },
+          "labels": {
+            "description": "The zones' labels, in the zones' order (asked for, docs/adr/2340).",
+            "items": {
+              "$ref": "#/$defs/CutFillLabel"
+            },
+            "type": "array"
+          },
           "largest": {
             "format": "double",
             "type": "number",
@@ -38113,6 +38132,16 @@
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "table": {
+            "description": "The quantity table's cells, heading first (asked for, docs/adr/2340).",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
           },
           "uids": {
             "items": {
@@ -38199,6 +38228,13 @@
             ],
             "x-unit": "m"
           },
+          "labels": {
+            "description": "The zones' labels, in the zones' order (asked for, docs/adr/2340).",
+            "items": {
+              "$ref": "#/$defs/CutFillLabel"
+            },
+            "type": "array"
+          },
           "largest": {
             "format": "double",
             "type": "number",
@@ -38217,6 +38253,16 @@
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": "string"
+          },
+          "table": {
+            "description": "The quantity table's cells, heading first (asked for, docs/adr/2340).",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": "array"
           },
           "uids": {
             "items": {
@@ -124967,6 +125013,29 @@
         "fill"
       ],
       "type": "string"
+    },
+    "CutFillLabel": {
+      "description": "A zone's label (docs/adr/2340): its place inside the zone (the core's interior point, GEOS's rule: the middle of\nthe widest stretch inside on the scan line through the box's middle away from every corner) and its words.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "text"
+      ],
+      "type": "object"
     },
     "DataProfile": {
       "additionalProperties": false,

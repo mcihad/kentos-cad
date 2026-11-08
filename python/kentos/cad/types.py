@@ -26422,6 +26422,30 @@ class CustomDatum(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CutFillLabel(_Model):
+    """A zone's label (docs/adr/2340): its place inside the zone (the core's interior point, GEOS's rule: the middle of
+    the widest stretch inside on the scan line through the box's middle away from every corner) and its words.
+    Attributes:
+        at: Unit: length.
+    """
+    at: list[float]
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillLabel:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DataProfile(_Model):
     """A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
     Attributes:
@@ -98447,6 +98471,8 @@ class TerrainsCutFill(_Model):
     """Input of `road.terrains.cutfill` v1: the zones of `comparison` over `base` (each a surface's id or name), over the
     part of the comparison's plan the base covers, written on `layerId`. `interval` (m, above 0) bands the difference
     `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
+    `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
+    docs/adr/2340).
 
     Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
     `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
@@ -98461,6 +98487,8 @@ class TerrainsCutFill(_Model):
     layer_id: str
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
+    labels: bool | None | Unset = UNSET
+    table: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -98471,6 +98499,10 @@ class TerrainsCutFill(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.interval is not UNSET:
             out["interval"] = None if self.interval is None else float(self.interval)
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
+        if self.table is not UNSET:
+            out["table"] = self.table
         return out
 
     @classmethod
@@ -98481,6 +98513,8 @@ class TerrainsCutFill(_Model):
             layer_id=data["layerId"],
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            labels=data.get("labels", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -98504,6 +98538,8 @@ class TerrainsCutFilled(_Model):
         least: Unit: m.
         largest: Unit: m.
         interval: Unit: m.
+        labels: The zones' labels, in the zones' order (asked for, docs/adr/2340).
+        table: The quantity table's cells, heading first (asked for, docs/adr/2340).
     """
     base: str
     comparison: str
@@ -98520,6 +98556,8 @@ class TerrainsCutFilled(_Model):
     largest: float
     revision: str
     interval: float | None | Unset = UNSET
+    labels: list[CutFillLabel] | Unset = UNSET
+    table: list[list[str]] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -98540,6 +98578,10 @@ class TerrainsCutFilled(_Model):
         out["revision"] = self.revision
         if self.interval is not UNSET:
             out["interval"] = None if self.interval is None else float(self.interval)
+        if self.labels is not UNSET:
+            out["labels"] = [e0.to_json() for e0 in self.labels]
+        if self.table is not UNSET:
+            out["table"] = [list(e0) for e0 in self.table]
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -98562,6 +98604,8 @@ class TerrainsCutFilled(_Model):
             largest=float(data["largest"]),
             revision=data["revision"],
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            labels=[CutFillLabel.from_json(e0) for e0 in data["labels"]] if "labels" in data else UNSET,
+            table=[list(e0) for e0 in data["table"]] if "table" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -128621,6 +128665,7 @@ __all__ = [
     "CustomSheetTemplateSource",
     "CutFillKind",
     "CutFillKindName",
+    "CutFillLabel",
     "DataProfile",
     "DatasetDescription",
     "DatasetDim",
