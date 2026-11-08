@@ -10,11 +10,11 @@ export type WorkDerivation = {
  */
 id: string, 
 /**
- * The item they came from: one with a file.
+ * The item they came from: one with a file or, from schema 206 (docs/adr/2080 §2), one without (a design).
  */
 source: string, 
 /**
- * The item's revision when they were made (64 lower-case hex digits).
+ * The item's revision when they were made (64 lower-case hex digits): its file's, or its content revision.
  */
 revision: string, 
 /**

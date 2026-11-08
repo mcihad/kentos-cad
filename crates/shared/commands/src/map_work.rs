@@ -2,7 +2,8 @@
 //! items (survey campaigns, reference sources, working data, designs, check results, delivery packages) and what the
 //! objects were derived from, each with how it stands now and why, and for one object whether it is a source, derived
 //! from one or the user's own drawing; `map.work.edit` adds, changes, relinks and removes items and records
-//! derivations. The desktop's handlers are `crates/native/application/src/map_work*.rs`; they and the Python SDK pass
+//! derivations. An item without a file has a content revision and an approval stamps the revision it approved
+//! (docs/adr/2080). The desktop's handlers are `crates/native/application/src/map_work*.rs`; they and the Python SDK pass
 //! the shared cases in `fixtures/commands/v1/map.work.*.json`.
 
 use serde::{Deserialize, Serialize};
@@ -19,7 +20,9 @@ pub const MAP_WORK_EDIT: &str = "map.work.edit";
 pub const MAP_WORK_EDIT_VERSION: u32 = 1;
 
 /// Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
-/// and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
+/// and the derivations of a changed file out of date) and works out every item's content revision; without it a file
+/// is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
+/// derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
 /// `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
 /// paths and the search paths (docs/adr/1201 §1).
 ///
@@ -58,8 +61,9 @@ pub enum WorkFileState {
 }
 
 /// How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it
-/// (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A
-/// derivation: up to date, out of date (its source moved on), some of its objects gone.
+/// (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date; an
+/// approved item whose own revision moved on since its approval stamped it (docs/adr/2080 §3). A derivation: up to
+/// date, out of date (its source moved on), some of its objects gone.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -71,6 +75,7 @@ pub enum WorkState {
     Changed,
     Incomplete,
     Stale,
+    Revised,
 }
 
 /// An item's file: where, the revision the project accepted, how it stands.
@@ -96,8 +101,9 @@ pub struct WorkFileRow {
     pub relative: Option<String>,
 }
 
-/// An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
-/// and why in sentences.
+/// An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its
+/// content revision when it has no file and it was worked out, the revision its approval stamped, its state and why
+/// in sentences.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -116,6 +122,15 @@ pub struct WorkRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<WorkFileRow>,
+    /// Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
+    /// read worked it out (deep, a source of a derivation, an approved item with a stamp).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub content: Option<String>,
+    /// The revision its approval stamped (docs/adr/2080 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<String>,
     pub state: WorkState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -161,7 +176,7 @@ pub enum WorkObjectRole {
 
 /// Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the
 /// item it came from, the revision it was made from, the operation and whether it is up to date; a source object's
-/// source is its own item and its revision that item's.
+/// source is its own item and its revision that item's (its file's, or its content revision).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -231,8 +246,10 @@ pub enum MapWorkOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         file: Option<String>,
     },
-    /// An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the
-    /// status is the office's record, never an institution's approval.
+    /// An item's name, status or layers. Approving stamps the item's revision then (its file's, or without a file its
+    /// content revision; docs/adr/2080 §3); approving an approved item that moved on since stamps it again; leaving
+    /// the approved status takes the stamp away. Approving an item that holds out-of-date derived objects is refused;
+    /// the status is the office's record, never an institution's approval.
     Set {
         item: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -256,7 +273,8 @@ pub enum MapWorkOperation {
     Relink { item: String, file: String },
     /// The item's file as it is now accepted as its revision; its derivations made from before are out of date.
     Refresh { item: String },
-    /// Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now.
+    /// Objects recorded as made from `source` by `operation`, at its revision now: its file's, or without a file its
+    /// content revision (docs/adr/2080 §2); an object its own layers hold is not made from an item without a file.
     Derive { source: String, uids: Vec<String>, operation: String },
     /// A derivation's record taken away; its objects stay, the user's own drawing.
     Forget { derivation: String },
@@ -272,9 +290,10 @@ pub enum MapWorkOperation {
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
 /// `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
 /// space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
-/// `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
-/// or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
-/// object another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,
+/// `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
+/// refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
+/// another derivation names), `own_content` (an object of the source's own layers, the source without a file),
+/// `not_derived` (release of an object no derivation names), `approval_stale`,
 /// `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
 /// `work_full`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -291,7 +310,8 @@ pub struct MapWorkEdit {
 }
 
 /// Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
-/// (its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,
+/// (its file's SHA-256, or without a file its content revision a derive recorded or an approval stamped), the stamp an
+/// approval wrote, how many rasters and images a relink pointed at the new file and how many external references,
 /// how many derivations were taken away with an item (or emptied by a release), how many objects a
 /// release let go of, how many derivations are out of date after, and the drawing's revision.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -309,6 +329,14 @@ pub struct MapWorkEdited {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file_revision: Option<String>,
+    /// Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub content: Option<String>,
+    /// The stamp an approval wrote (docs/adr/2080 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<String>,
     #[serde(default, skip_serializing_if = "is_zero")]
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]

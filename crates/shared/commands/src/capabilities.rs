@@ -2764,6 +2764,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_uid",
                 "entity_not_found",
                 "already_derived",
+                "own_content",
                 "not_derived",
                 "approval_stale",
                 "layer_locked",

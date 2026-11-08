@@ -632,10 +632,12 @@ codes! {
     INVALID_WORK_TEXT = "invalid_work_text", Failed, false, "Öğenin adı ya da üretim işlemi boşlukla başlamayan ve bitmeyen 1–200 karakter olmalı.";
     /// A layer another item of the map's work holds, or one given twice.
     LAYER_IN_WORK_ITEM = "layer_in_work_item", Failed, false, "Katman harita işinin başka bir öğesinde ya da iki kez verilmiş; bir katman tek öğenin olur.";
-    /// Relink, refresh or derive from an item that is not a file.
-    WORK_ITEM_NO_FILE = "work_item_no_file", Failed, false, "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur.";
+    /// Relink or refresh of an item that is not a file.
+    WORK_ITEM_NO_FILE = "work_item_no_file", Failed, false, "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır ya da yenilenir.";
     /// An object another derivation already names.
     ALREADY_DERIVED = "already_derived", Failed, false, "Nesne başka bir türetme kaydında; önce o kaydı silin.";
+    /// An object recorded as made from the item without a file whose layers hold it (docs/adr/2080 §2).
+    OWN_CONTENT = "own_content", Failed, false, "Nesne kaynağın kendi katmanında: dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz.";
     /// Approving an item that holds derived objects whose source moved on.
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
     /// The map's work would pass its most items or derivations.

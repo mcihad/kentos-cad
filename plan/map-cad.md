@@ -31,7 +31,7 @@ sırayla alır.
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201 | dosyasız öğenin revizyonu ve onay damgası; nesne türüne göre bağlamsal araçlar; tipli katman profili | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080 | nesne türüne göre bağlamsal araçlar; tipli katman profili; onaydan sonra değişen nesneler | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231 | içe aktarmada birimin kotta ve iç içe blokta bir kez uygulanması; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740 | GVX oturum korelasyonları; bilinen noktanın hız ızgarasıyla ölçme epokuna taşınması; arşiv panelinde bazlar | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760 | alan sınıfları; ayrı inceleme kaydı ve katalog geçiş raporu; pencerede eksik alan girişi | AI çıkarımı; büyük veri |
@@ -228,6 +228,22 @@ Python koşucusundaki `$tmp:` hatası düzeltildi, 21 eski Python düşüşü ka
 içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı), bağlı GeoPackage'ın geri alınabilir yeniden bağlanması,
 nesne türüne göre (yüzey, plan alanı, altyapı) ayrı bağlamsal araçlar, tipli katman kuralları, dosyasız öğe revizyonu.
 Madde `[ ]` kalır.
+
+**8 Kasım 2026, üçüncü tur — Dosyasız öğenin içerik revizyonu ve onay damgası ([ADR 2080](../docs/adr/2080-map-work-content-revision-and-approval-stamp.md)).**
+Kapsam işareti: **yalnız Harita (CAD)**; nesne özeti Harita + CBS ortak. Araştırma: W3C PROV (revizyon ve türetme),
+Git'in içerik adlandırması (aynı içerik aynı özet; ağaç girdileri), Civil 3D veri kısayollarının güncel değil işareti ve
+Synchronize'ı, ISO 19650 ortak veri ortamında kapıların ve revizyon değişikliklerinin kaydı (Hong Kong DEVB).
+Kanıtlanan:
+- dosyası olmayan öğenin (tasarım, teslim) içerik revizyonu `kentos.work-content/1`: tuttuğu nesnelerin özetlerinden,
+  okunurken;
+- tasarımdan türetme: içerik değişince kayıt güncel değil; tasarımın kendi nesnesi ondan türetilmez (`own_content`);
+- onay revizyonu damgalar (`approved`, `.kcad` şema 206); sonra değişen öğe “Onay eskidi”, Yeniden onayla bugünkü
+  revizyonu damgalar; onaydan çıkınca damga kalkar; kaydet–aç aynı damgayı korur;
+- `map.work.query` 30, `map.work.edit` 54 ortak durum (bağımsız `map_work_cases.py`), Python ve MCP; Harita işi
+  panelinde ipucu, hap ve Seçimi türet'te tasarım.
+
+Açık: nesne türüne göre bağlamsal araçlar, tipli katman profili, onaydan sonra hangi nesnelerin değiştiği, içe
+aktarmanın kendi kaydı (sahip kararı), güncel olmayan türevin yeniden üretimi. Madde `[ ]` kalır.
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

@@ -9,9 +9,10 @@ import type { MapWorkOperation } from "./MapWorkOperation";
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
  * `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
  * space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
- * `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
- * or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
- * object another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,
+ * `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
+ * refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
+ * another derivation names), `own_content` (an object of the source's own layers, the source without a file),
+ * `not_derived` (release of an object no derivation names), `approval_stale`,
  * `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
  * `work_full`.
  */

@@ -4,6 +4,6 @@ import type { WorkObjectRole } from "./WorkObjectRole";
 /**
  * Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the
  * item it came from, the revision it was made from, the operation and whether it is up to date; a source object's
- * source is its own item and its revision that item's.
+ * source is its own item and its revision that item's (its file's, or its content revision).
  */
 export type WorkObjectSource = { uid: string, role: WorkObjectRole, item?: string, derivation?: string, source?: string, revision?: string, operation?: string, current?: boolean, };

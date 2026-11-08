@@ -5,7 +5,17 @@ import type { WorkState } from "./WorkState";
 import type { WorkStatus } from "./WorkStatus";
 
 /**
- * An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
- * and why in sentences.
+ * An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its
+ * content revision when it has no file and it was worked out, the revision its approval stamped, its state and why
+ * in sentences.
  */
-export type WorkRow = { id: string, kind: WorkKind, name: string, status: WorkStatus, layers?: Array<string>, objects: number, file?: WorkFileRow, state: WorkState, why?: Array<string>, };
+export type WorkRow = { id: string, kind: WorkKind, name: string, status: WorkStatus, layers?: Array<string>, objects: number, file?: WorkFileRow, 
+/**
+ * Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
+ * read worked it out (deep, a source of a derivation, an approved item with a stamp).
+ */
+content?: string, 
+/**
+ * The revision its approval stamped (docs/adr/2080 §3).
+ */
+approved?: string, state: WorkState, why?: Array<string>, };

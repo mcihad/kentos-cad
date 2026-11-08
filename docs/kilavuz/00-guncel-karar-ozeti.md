@@ -134,6 +134,9 @@
 - **Düzenleme kapsamı (7 Kasım 2026; MAP-11, [ADR 2060](../../docs/adr/2060-readjustment-scope-and-separation-sheet.md)).**
   `cad.readjustment.scope` (Harita + CBS, salt okunur): seçili düzenleme sınırına giren parseller, ayırma çapının
   sayıları ve Yönetmelik m. 31'e göre esas alan; belirsizde esas yok. Pencere esasları kayıtlara yazar.
+- **Harita işinde içerik revizyonu ve onay damgası (8 Kasım 2026; MAP-01, [ADR 2080](../../docs/adr/2080-map-work-content-revision-and-approval-stamp.md)).**
+  Dosyası olmayan öğenin revizyonu tuttuğu nesnelerin özetidir (`kentos.work-content/1`): tasarımdan türetilir, değişince
+  kayıt güncel değil. Onay revizyonu damgalar (`.kcad` şema 206); sonra değişen öğe “Onay eskidi”. Yalnız Harita.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

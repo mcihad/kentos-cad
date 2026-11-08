@@ -2,11 +2,20 @@
 
 /**
  * Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
- * (its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,
+ * (its file's SHA-256, or without a file its content revision a derive recorded or an approval stamped), the stamp an
+ * approval wrote, how many rasters and images a relink pointed at the new file and how many external references,
  * how many derivations were taken away with an item (or emptied by a release), how many objects a
  * release let go of, how many derivations are out of date after, and the drawing's revision.
  */
-export type MapWorkEdited = { item?: string, derivation?: string, fileRevision?: string, relinked?: number, released?: number, 
+export type MapWorkEdited = { item?: string, derivation?: string, fileRevision?: string, 
+/**
+ * Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
+ */
+content?: string, 
+/**
+ * The stamp an approval wrote (docs/adr/2080 §3).
+ */
+approved?: string, relinked?: number, released?: number, 
 /**
  * How many external references a relink pointed at the new file (docs/adr/1201 §2).
  */

@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 206 (docs/adr/2080): a map work item's approval stamp, a derivation from an item without a file.
+    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_stamps) {
+        return crate::SCHEMA_WITH_WORK_STAMPS;
+    }
     // Schema 205 (docs/adr/1840): two surfaces' cut and fill zones kept as a drawing.
     if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.command == "road.terrains.cutfill")) {
         return crate::SCHEMA_WITH_CUTFILL_DRAWINGS;

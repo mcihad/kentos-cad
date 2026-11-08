@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `205`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-206.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `206`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-207.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -882,6 +882,16 @@ harita projesinin `road.drawings`'inde sıfır hattınınki gibi kaynaklarının
 komutu yenidir. Yazıcı 205'i böyle bir çizim varken seçer; 204 ve öncesi komutu tanımaz, `bad_value` sayar
 (`broken/cutfill-drawing-in-schema-204.kcad`). Örnek `map-cutfill.json/.kcad`.
 
+**Şema 206** (ADR 2080; MAP-01): harita işinin onay damgası ve dosyası olmayan öğeden türetme. `mapWork` öğesinde
+isteğe bağlı `approved`: onayın damgaladığı revizyon (64 küçük onaltılık haneli SHA-256; dosyası olanın dosya
+revizyonu, olmayanın içerik revizyonu `kentos.work-content/1`), yalnız `approved` durumundaki öğede. Bir türetmenin
+`source`'u dosyası olmayan öğe de olabilir; `revision` o zaman öğenin içerik revizyonudur. İçerik revizyonu dosyada
+saklanmaz, okunurken nesnelerden hesaplanır. Yazıcı 206'yı bir damga ya da dosyasız kaynaktan türetme varken seçer;
+205 ve öncesi `approved`'u `unknown_field` (`broken/map-work-stamps-in-schema-205.kcad`), dosyası olmayan öğeden
+türetmeyi `bad_value` sayar (`broken/map-work-no-file-source.kcad`). Damga onaylı olmayan öğede ya da SHA-256 değilse
+`bad_value` (`broken/map-work-stamp-not-approved.kcad`, `broken/map-work-stamp-not-sha.kcad`). Örnek
+`map-work-stamps.json/.kcad`.
+
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,
 kurbun `rate`'i, satırın `left`/`right`'ı, menfezin `slope`'u, platformun `grade`'i, kübajın diş kazısının
@@ -966,7 +976,7 @@ bilinmeyen karar (`broken/topology-review-decision-unknown.kcad`), hepsi `bad_va
 sıfırsız, tek), `kind` (`campaign`, `reference`, `working`, `design`, `check`, `delivery`), 1–200 karakterlik kenarı
 boşluksuz `name`, `draft` değilse `status` (`review`, `approved`), varsa `layers` (bir katman tek öğede), varsa `file`
 (`path` boş olmayan, `revision` 64 küçük onaltılık haneli SHA-256); `derivations`: kimlik `tr-N`, dosyası olan bir
-öğe `source`, SHA-256 `revision`, 1–200 karakterlik `operation`, 1–1 000 000 küçük harfli UUID `uids` (bir nesne tek
+öğe `source` (şema 206'dan dosyası olmayan da), SHA-256 `revision`, 1–200 karakterlik `operation`, 1–1 000 000 küçük harfli UUID `uids` (bir nesne tek
 kayıtta). Boş yapı, `draft` durumu ve boş liste yazılmaz; yalnız `cadWork: map` projesinin olur; kurala uymayan
 `bad_value`. Yazıcı 188'i yalnız `mapWork` varken seçer; 187 ve öncesi alanı `unknown_field` sayar
 (`broken/map-work-in-schema-187.kcad`). Örnek `map-work.json/.kcad`; bozuklar

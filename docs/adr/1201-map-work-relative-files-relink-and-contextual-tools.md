@@ -138,5 +138,5 @@ cevabında `links` (yeni dosyaya geçen dış başvuru sayısı) ve gerekiyorsa 
 - İçe aktarma (GNSS, nokta dosyası, raster, dış başvuru) komutlarının türetme kaydını kendisinin yazması (sahibin
   kararı bekliyor: kendiliğinden mi, pencerede seçimle mi).
 - Bağlı GeoPackage katmanının bağını geri alınabilir yapıp yeniden bağlamaya katmak (ADR 0506'nın sınırı).
-- Dosyasız öğelerin revizyonu ve teslim damgası (MAP-18), tipli katman kuralları (MAP-01 dördüncü alt madde: katmanın
+- Dosyasız öğelerin revizyonu ve teslim damgası ([ADR 2080](2080-map-work-content-revision-and-approval-stamp.md)'de yapıldı), tipli katman kuralları (MAP-01 dördüncü alt madde: katmanın
   türü ve alan kuralları; katman türü ADR 0622 §5'te var, öğe türüne göre profil yok).

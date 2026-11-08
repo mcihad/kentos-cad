@@ -70,6 +70,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 1460: `cad.readjustment.distribute`'in web işleyicisi ve Düzenleme dağıtım taslağı penceresi.
 - MAP-11 / ADR 2060: `cad.readjustment.scope`'un web işleyicisi; web'in dağıtım penceresinde Kapsam görünümü ve Esas
   alanları kayıtlara yaz.
+- MAP-01 / ADR 2080: web'in harita işi işleyicilerinde içerik revizyonu, onay damgası, `revised` ve `own_content`;
+  `.kcad` şema 206'nın web okuyucusu ve yazıcısı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

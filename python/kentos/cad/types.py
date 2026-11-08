@@ -8369,17 +8369,19 @@ WorkObjectRoleName = Literal["source", "derived", "free"]
 
 class WorkState(_StrEnum):
     """How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it
-    (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A
-    derivation: up to date, out of date (its source moved on), some of its objects gone.
+    (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date; an
+    approved item whose own revision moved on since its approval stamped it (docs/adr/2080 §3). A derivation: up to
+    date, out of date (its source moved on), some of its objects gone.
     """
     CURRENT = "current"
     MISSING = "missing"
     CHANGED = "changed"
     INCOMPLETE = "incomplete"
     STALE = "stale"
+    REVISED = "revised"
 
 
-WorkStateName = Literal["current", "missing", "changed", "incomplete", "stale"]
+WorkStateName = Literal["current", "missing", "changed", "incomplete", "stale", "revised"]
 """The names of :class:`WorkState`, for a plain string."""
 
 
@@ -53411,9 +53413,10 @@ class MapWorkEdit(_Model):
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:
     `unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without
     space at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),
-    `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh
-    or derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an
-    object another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,
+    `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
+    refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
+    another derivation names), `own_content` (an object of the source's own layers, the source without a file),
+    `not_derived` (release of an object no derivation names), `approval_stale`,
     `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
     `work_full`.
     """
@@ -53438,11 +53441,14 @@ class MapWorkEdit(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapWorkEdited(_Model):
     """Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after
-    (its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,
+    (its file's SHA-256, or without a file its content revision a derive recorded or an approval stamped), the stamp an
+    approval wrote, how many rasters and images a relink pointed at the new file and how many external references,
     how many derivations were taken away with an item (or emptied by a release), how many objects a
     release let go of, how many derivations are out of date after, and the drawing's revision.
     Attributes:
         stale: Unit: count.
+        approved: The stamp an approval wrote (docs/adr/2080 §3).
+        content: Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
         freed: How many objects a release let go of. Unit: count.
         links: How many external references a relink pointed at the new file (docs/adr/1201 §2). Unit: count.
         released: Unit: count.
@@ -53450,6 +53456,8 @@ class MapWorkEdited(_Model):
     """
     stale: int
     revision: str
+    approved: str | None | Unset = UNSET
+    content: str | None | Unset = UNSET
     derivation: str | None | Unset = UNSET
     file_revision: str | None | Unset = UNSET
     freed: int | Unset = UNSET
@@ -53462,6 +53470,10 @@ class MapWorkEdited(_Model):
         out: dict[str, Any] = {}
         out["stale"] = self.stale
         out["revision"] = self.revision
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
+        if self.content is not UNSET:
+            out["content"] = self.content
         if self.derivation is not UNSET:
             out["derivation"] = self.derivation
         if self.file_revision is not UNSET:
@@ -53483,6 +53495,8 @@ class MapWorkEdited(_Model):
         return cls(
             stale=data["stale"],
             revision=data["revision"],
+            approved=data.get("approved", UNSET),
+            content=data.get("content", UNSET),
             derivation=data.get("derivation", UNSET),
             file_revision=data.get("fileRevision", UNSET),
             freed=data.get("freed", UNSET),
@@ -53496,7 +53510,9 @@ class MapWorkEdited(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapWorkQuery(_Model):
     """Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
-    and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
+    and the derivations of a changed file out of date) and works out every item's content revision; without it a file
+    is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
+    derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
     `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
     paths and the search paths (docs/adr/1201 §1).
 
@@ -105896,8 +105912,8 @@ class WorkDerivation(_Model):
     """Objects made from an item: the item, its revision then, the operation that made them and the objects.
     Attributes:
         id: `tr-N`.
-        source: The item they came from: one with a file.
-        revision: The item's revision when they were made (64 lower-case hex digits).
+        source: The item they came from: one with a file or, from schema 206 (docs/adr/2080 §2), one without (a design).
+        revision: The item's revision when they were made (64 lower-case hex digits): its file's, or its content revision.
         operation: What made them: a command's id or a step's name, 1–200 characters.
         uids: The objects, each in one derivation at most.
     """
@@ -106047,11 +106063,14 @@ class WorkItem(_Model):
     Attributes:
         id: `is-N`.
         name: 1–200 characters, no space at either end.
+        approved: The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision
+            or, without a file, its content revision then; only on an approved item. None on an item approved before 206.
         layers: Layer or group ids; a layer is in one item at most.
     """
     id: str
     kind: WorkKind | WorkKindName
     name: str
+    approved: str | None | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
@@ -106061,6 +106080,8 @@ class WorkItem(_Model):
         out["id"] = self.id
         out["kind"] = _enum_out(self.kind)
         out["name"] = self.name
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
@@ -106075,6 +106096,7 @@ class WorkItem(_Model):
             id=data["id"],
             kind=_enum_in(WorkKind, data["kind"]),
             name=data["name"],
+            approved=data.get("approved", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
@@ -106085,7 +106107,7 @@ class WorkItem(_Model):
 class WorkObjectSource(_Model):
     """Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the
     item it came from, the revision it was made from, the operation and whether it is up to date; a source object's
-    source is its own item and its revision that item's.
+    source is its own item and its revision that item's (its file's, or its content revision).
     """
     uid: str
     role: WorkObjectRole | WorkObjectRoleName
@@ -106130,10 +106152,14 @@ class WorkObjectSource(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class WorkRow(_Model):
-    """An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state
-    and why in sentences.
+    """An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its
+    content revision when it has no file and it was worked out, the revision its approval stamped, its state and why
+    in sentences.
     Attributes:
         objects: Unit: count.
+        approved: The revision its approval stamped (docs/adr/2080 §3).
+        content: Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
+            read worked it out (deep, a source of a derivation, an approved item with a stamp).
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -106141,6 +106167,8 @@ class WorkRow(_Model):
     status: WorkStatus | WorkStatusName
     objects: int
     state: WorkState | WorkStateName
+    approved: str | None | Unset = UNSET
+    content: str | None | Unset = UNSET
     file: WorkFileRow | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     why: list[str] | Unset = UNSET
@@ -106153,6 +106181,10 @@ class WorkRow(_Model):
         out["status"] = _enum_out(self.status)
         out["objects"] = self.objects
         out["state"] = _enum_out(self.state)
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
+        if self.content is not UNSET:
+            out["content"] = self.content
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
@@ -106170,6 +106202,8 @@ class WorkRow(_Model):
             status=_enum_in(WorkStatus, data["status"]),
             objects=data["objects"],
             state=_enum_in(WorkState, data["state"]),
+            approved=data.get("approved", UNSET),
+            content=data.get("content", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             why=list(data["why"]) if "why" in data else UNSET,
@@ -116195,8 +116229,10 @@ class AddMapWorkOperation(MapWorkOperation):
 
 @dataclass(kw_only=True, slots=True)
 class SetMapWorkOperation(MapWorkOperation):
-    """An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the
-    status is the office's record, never an institution's approval.
+    """An item's name, status or layers. Approving stamps the item's revision then (its file's, or without a file its
+    content revision; docs/adr/2080 §3); approving an approved item that moved on since stamps it again; leaving
+    the approved status takes the stamp away. Approving an item that holds out-of-date derived objects is refused;
+    the status is the office's record, never an institution's approval.
     """
     TAG_VALUE: ClassVar[str] = "set"
     item: str
@@ -116290,7 +116326,9 @@ class RefreshMapWorkOperation(MapWorkOperation):
 
 @dataclass(kw_only=True, slots=True)
 class DeriveMapWorkOperation(MapWorkOperation):
-    """Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now."""
+    """Objects recorded as made from `source` by `operation`, at its revision now: its file's, or without a file its
+    content revision (docs/adr/2080 §2); an object its own layers hold is not made from an item without a file.
+    """
     TAG_VALUE: ClassVar[str] = "derive"
     source: str
     uids: list[str]

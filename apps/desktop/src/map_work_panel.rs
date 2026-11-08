@@ -133,6 +133,8 @@ pub(crate) fn state_words(s: S) -> &'static str {
         S::Changed => "Dosyası değişti",
         S::Incomplete => "Katmanı yok",
         S::Stale => "Onaydan sonra kaynağı değişti",
+        // Short: the row's name keeps its room in the dock; the tip says what changed (docs/adr/2080 §3).
+        S::Revised => "Onay eskidi",
     }
 }
 
@@ -262,10 +264,11 @@ impl App {
         self.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect()
     }
 
-    /// Where each selected object comes from in the map's work (read quickly: the items' revisions).
+    /// Where each selected object comes from in the map's work (read quickly: the items' revisions, a design's content
+    /// revision worked out once).
     fn selected_sources(&self) -> Vec<kentos_commands::WorkObjectSource> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        self.selected_uids().iter().filter_map(|u| map_work::source_of(&doc.model, u)).collect()
+        map_work::sources_of(&doc.model, &self.selected_uids())
     }
 
     /// `map.workSource` (docs/adr/1201 §3): one selected object's source said, its item's layer chosen in Katmanlar
@@ -333,7 +336,7 @@ impl App {
 
     /// Seçimi türet: the selected objects recorded as made from the item chosen, at its revision now.
     fn map_work_derive(&mut self) {
-        let Some(source) = self.map_work.derive_from.clone().or_else(|| self.file_items().first().map(|i| i.0.clone()))
+        let Some(source) = self.map_work.derive_from.clone().or_else(|| self.source_items().first().map(|i| i.0.clone()))
         else {
             return;
         };
@@ -364,24 +367,37 @@ impl App {
         left
     }
 
-    /// The items with a file, by id and name: what a derivation can come from.
-    fn file_items(&self) -> Vec<(String, String)> {
-        self.document
-            .as_ref()
-            .and_then(|d| d.model.map_work())
-            .map(|w| w.items.iter().filter(|i| i.file.is_some()).map(|i| (i.id.clone(), i.name.clone())).collect())
-            .unwrap_or_default()
+    /// The items the selection can be recorded as made from, by id and name: those with a file, and those without
+    /// one (a design, by its content revision; docs/adr/2080 §2) that hold none of the selected objects.
+    pub(crate) fn source_items(&self) -> Vec<(String, String)> {
+        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(work) = doc.model.map_work() else { return Vec::new() };
+        let mut holding: HashSet<&str> = HashSet::new();
+        for slot in self.selection.ids() {
+            if let Some(e) = doc.model.get(*slot)
+                && let Some(i) = map_work::item_of_layer(&doc.model, work, &e.base().layer_id)
+            {
+                holding.insert(i.id.as_str());
+            }
+        }
+        work.items
+            .iter()
+            .filter(|i| i.file.is_some() || !holding.contains(i.id.as_str()))
+            .map(|i| (i.id.clone(), i.name.clone()))
+            .collect()
     }
 
-    /// Whether `map.workSource` and `map.workRelease` have something to work on (`App::available`).
+    /// Whether `map.workSource` and `map.workRelease` have something to work on (`App::available`): roles only, nothing
+    /// worked out (the ribbon asks every frame).
     pub(crate) fn map_work_available(&self, id: &str) -> bool {
         if self.selection.is_empty() || self.selection.len() > 10_000 {
             return false;
         }
-        let sources = self.selected_sources();
+        let Some(doc) = self.document.as_ref() else { return false };
+        let mut roles = self.selected_uids().into_iter().filter_map(|u| map_work::role_of(&doc.model, &u));
         match id {
-            "map.workSource" => sources.iter().any(|s| s.item.is_some() || s.source.is_some()),
-            _ => sources.iter().any(|s| s.role == kentos_commands::WorkObjectRole::Derived),
+            "map.workSource" => roles.any(|(role, item)| item.is_some() || role != kentos_commands::WorkObjectRole::Free),
+            _ => roles.any(|(role, _)| role == kentos_commands::WorkObjectRole::Derived),
         }
     }
 
@@ -451,8 +467,9 @@ impl App {
         .spacing(4)
         .align_y(Center);
         let mut head = column![tools].spacing(6).padding([4, 12]).width(Fill);
-        // Seçimi türet (docs/adr/1201 §3): the selection recorded as made from an item with a file.
-        let sources = self.file_items();
+        // Seçimi türet (docs/adr/1201 §3): the selection recorded as made from an item with a file or a design
+        // (docs/adr/2080 §2).
+        let sources = self.source_items();
         let free = if sources.is_empty() || self.selection.len() > 10_000 { 0 } else { self.underived_uids().len() };
         if free > 0 {
             let chosen = self
@@ -508,7 +525,13 @@ impl App {
 fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     let mut detail: Vec<String> = r.why.clone();
     if let Some(f) = &r.file {
-        detail.push(format!("Dosyası: {} (revizyon {}).", f.path, &f.revision[..12.min(f.revision.len())]));
+        detail.push(format!("Dosyası: {} (revizyon {}).", f.path, short(&f.revision)));
+    }
+    if let Some(c) = &r.content {
+        detail.push(format!("İçerik revizyonu {}.", short(c)));
+    }
+    if let Some(a) = &r.approved {
+        detail.push(format!("Onaylanan revizyon {}.", short(a)));
     }
     if r.status == W::Approved {
         detail.push("Onay ofisin teslim kaydıdır; kurum onayı değildir.".into());
@@ -522,7 +545,7 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
             },
             status_words(r.status),
         ),
-        S::Incomplete | S::Changed => (Status::Warning, state_words(r.state)),
+        S::Incomplete | S::Changed | S::Revised => (Status::Warning, state_words(r.state)),
         S::Missing | S::Stale => (Status::Danger, state_words(r.state)),
     };
     let meta = if r.layers.is_empty() { "katmansız".to_owned() } else { format!("{} nesne", r.objects) };
@@ -533,6 +556,12 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
         .on_press(msg(Event::Item(r.id.clone())));
     let file = r.file.as_ref().map(|f| f.state);
     item = match (file, r.status) {
+        // Moved on since its approval (docs/adr/2080 §3): approving again stamps today's revision.
+        (_, W::Approved) if r.state == S::Revised => item.action(
+            icon(Icon::Check).size(13.0),
+            "Yeniden onayla: bugünkü revizyonu damgala (kurum onayı değildir)",
+            msg(Event::Status(r.id.clone(), W::Approved)),
+        ),
         (Some(F::Missing), _) => {
             item.action(icon(Icon::Folder).size(13.0), "Yeniden bağla…", msg(Event::Relink(r.id.clone())))
         }
@@ -556,6 +585,11 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     item
 }
 
+/// A revision's first 12 hex digits.
+fn short(revision: &str) -> &str {
+    revision.get(..12).unwrap_or(revision)
+}
+
 /// A derivation's row: its operation, its object count, its state; why in the tip.
 fn derivation_item<'a>(d: &WorkDerivationRow) -> StatusItem<'a, Message> {
     let tone = match d.state {
@@ -569,7 +603,7 @@ fn derivation_item<'a>(d: &WorkDerivationRow) -> StatusItem<'a, Message> {
         format!("{}/{} nesne", d.objects, d.recorded)
     };
     let mut detail = d.why.clone();
-    detail.push(format!("Kaynağın revizyonu {}.", &d.revision[..12.min(d.revision.len())]));
+    detail.push(format!("Kaynağın revizyonu {}.", short(&d.revision)));
     StatusItem::new(format!("tr:{}", d.id), d.operation.clone())
         .icon(icon(Icon::Layers).size(14.0))
         .meta(meta)

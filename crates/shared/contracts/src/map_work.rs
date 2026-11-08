@@ -6,8 +6,13 @@
 //! revision when they were made and the operation that made them: the derivation is out of date when the item's
 //! revision moved on. A project setting (`.kcad` schema 188, `mapWork`), a map project's only.
 //!
+//! An item without a file has a content revision (schema 206, docs/adr/2080 §1): the digest of the objects its layers
+//! hold, worked out when read (`kentos-native-application`'s `map_work::content_revision`), so objects can be derived
+//! from a design and an approval can stamp what it approved.
+//!
 //! An item's status is the office's own record: “onaylı” is an approved delivery revision, never an institution's
-//! approval, and a passed check does not set it.
+//! approval, and a passed check does not set it. An approval keeps the revision it approved (`approved`, schema 206):
+//! an item that moved on since shows it.
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -126,6 +131,11 @@ pub struct WorkItem {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub file: Option<WorkFile>,
+    /// The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision
+    /// or, without a file, its content revision then; only on an approved item. None on an item approved before 206.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub approved: Option<String>,
 }
 
 /// Objects made from an item: the item, its revision then, the operation that made them and the objects.
@@ -137,9 +147,9 @@ pub struct WorkItem {
 pub struct WorkDerivation {
     /// `tr-N`.
     pub id: String,
-    /// The item they came from: one with a file.
+    /// The item they came from: one with a file or, from schema 206 (docs/adr/2080 §2), one without (a design).
     pub source: String,
-    /// The item's revision when they were made (64 lower-case hex digits).
+    /// The item's revision when they were made (64 lower-case hex digits): its file's, or its content revision.
     pub revision: String,
     /// What made them: a command's id or a step's name, 1–200 characters.
     pub operation: String,
@@ -175,6 +185,13 @@ impl MapWork {
     /// Whether an item's file keeps its relative path (schema 193, docs/adr/1201 §1).
     pub fn has_relative(&self) -> bool {
         self.items.iter().any(|i| i.file.as_ref().is_some_and(|f| f.relative.is_some()))
+    }
+
+    /// Whether it says what schema 206 added (docs/adr/2080): an approval's stamp, or a derivation from an item without
+    /// a file.
+    pub fn has_stamps(&self) -> bool {
+        self.items.iter().any(|i| i.approved.is_some())
+            || self.derivations.iter().any(|d| self.item(&d.source).is_some_and(|i| i.file.is_none()))
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -248,6 +265,14 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(at("file.relative"), &format!("dosyanın göreli yolu {why}"));
             }
         }
+        if let Some(stamp) = &item.approved {
+            if item.status != WorkStatus::Approved {
+                return fail(at("approved"), "onay damgası yalnız onaylı öğede olur");
+            }
+            if !is_sha256_text(stamp) {
+                return fail(at("approved"), "onay damgası 64 küçük onaltılık haneli SHA-256 olmalı");
+            }
+        }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
         return fail("derivations".into(), &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"));
@@ -262,12 +287,8 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
         if !dids.insert(d.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir türetme var");
         }
-        match work.item(&d.source) {
-            None => return fail(at("source"), "türetmenin kaynağı projenin bir öğesi olmalı"),
-            Some(item) if item.file.is_none() => {
-                return fail(at("source"), "türetmenin kaynağı dosyası olan bir öğe olmalı");
-            }
-            Some(_) => {}
+        if work.item(&d.source).is_none() {
+            return fail(at("source"), "türetmenin kaynağı projenin bir öğesi olmalı");
         }
         if !is_sha256_text(&d.revision) {
             return fail(at("revision"), "kaynağın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı");
@@ -313,6 +334,7 @@ mod tests {
                     status: WorkStatus::Draft,
                     layers: vec!["gnss".into()],
                     file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64), relative: None }),
+                    approved: None,
                 },
                 WorkItem {
                     id: "is-2".into(),
@@ -321,6 +343,7 @@ mod tests {
                     status: WorkStatus::Review,
                     layers: vec!["tasarim".into()],
                     file: None,
+                    approved: None,
                 },
             ],
             derivations: vec![WorkDerivation {
@@ -342,9 +365,23 @@ mod tests {
         let mut w = work();
         w.items[1].id = "is-01".into();
         assert_eq!(w.problem().map(|p| p.0), Some("items[1].id".into()));
+        // From schema 206 an item without a file is a source too (docs/adr/2080 §2); an item that is none is not.
         let mut w = work();
         w.derivations[0].source = "is-2".into();
+        assert_eq!(w.problem(), None);
+        assert!(w.has_stamps());
+        w.derivations[0].source = "is-3".into();
         assert_eq!(w.problem().map(|p| p.0), Some("derivations[0].source".into()));
+        // An approval's stamp: only on an approved item, a SHA-256 (docs/adr/2080 §3).
+        let mut w = work();
+        assert!(!w.has_stamps());
+        w.items[1].approved = Some("b".repeat(64));
+        assert_eq!(w.problem().map(|p| p.0), Some("items[1].approved".into()));
+        w.items[1].status = WorkStatus::Approved;
+        assert_eq!(w.problem(), None);
+        assert!(w.has_stamps());
+        w.items[1].approved = Some("B".repeat(64));
+        assert_eq!(w.problem().map(|p| p.0), Some("items[1].approved".into()));
         let mut w = work();
         w.derivations[0].uids.push(uid(1));
         assert_eq!(w.problem().map(|p| p.0), Some("derivations[0].uids".into()));

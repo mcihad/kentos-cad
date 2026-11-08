@@ -1,0 +1,197 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Harita işi",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "cad",
+    "cadWork": "map",
+    "mapWork": {
+      "items": [
+        {
+          "id": "is-1",
+          "kind": "campaign",
+          "name": "GNSS ölçümü 2026-10",
+          "layers": [
+            "gnss"
+          ],
+          "file": {
+            "path": "/veri/kampanya.nmea",
+            "revision": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a"
+          }
+        },
+        {
+          "id": "is-2",
+          "kind": "reference",
+          "name": "Ortofoto 2025",
+          "status": "review",
+          "layers": [
+            "ortofoto"
+          ],
+          "file": {
+            "path": "/veri/ortofoto.tif",
+            "revision": "ef2d127de37b942baad06145e54b0c619a1f22327b2ebbcfbec78f5564afe39d"
+          }
+        },
+        {
+          "id": "is-3",
+          "kind": "design",
+          "name": "Tasarım yüzeyi",
+          "status": "approved",
+          "layers": [
+            "tasarim"
+          ],
+          "approved": "c64952da9e67d8ee55b808363b66093b1e8627828267fff396f3d140cddb86b1"
+        },
+        {
+          "id": "is-4",
+          "kind": "delivery",
+          "name": "Teslim paketi A",
+          "status": "approved",
+          "approved": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+        }
+      ],
+      "derivations": [
+        {
+          "id": "tr-1",
+          "source": "is-1",
+          "revision": "4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a",
+          "operation": "file.import.gnss",
+          "uids": [
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          ]
+        },
+        {
+          "id": "tr-2",
+          "source": "is-3",
+          "revision": "c64952da9e67d8ee55b808363b66093b1e8627828267fff396f3d140cddb86b1",
+          "operation": "Aplikasyon",
+          "uids": [
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+          ]
+        }
+      ]
+    }
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "gnss",
+      "name": "GNSS",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "ortofoto",
+      "name": "Ortofoto",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "tasarim",
+      "name": "Tasarım",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+        "Ad": "G1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    },
+    {
+      "kind": "line",
+      "id": 2,
+      "layerId": "tasarim",
+      "attrs": {},
+      "a": {
+        "x": 500000.0,
+        "y": 4400000.0
+      },
+      "b": {
+        "x": 500010.0,
+        "y": 4400000.0
+      }
+    },
+    {
+      "kind": "line",
+      "id": 3,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "A1"
+      },
+      "a": {
+        "x": 500000.0,
+        "y": 4400001.0
+      },
+      "b": {
+        "x": 500010.0,
+        "y": 4400001.0
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

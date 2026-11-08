@@ -2500,6 +2500,12 @@ def document(d):
     if any("relative" in (i.get("file") or {}) for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's file with its path from the project file's folder (docs/adr/1201 §1).
         schema = max(schema, 193)
+    worked = d["settings"].get("mapWork", {})
+    fileless = {i["id"] for i in worked.get("items", []) if "file" not in i}
+    if any("approved" in i for i in worked.get("items", [])) or any(
+            x["source"] in fileless for x in worked.get("derivations", [])):
+        # A map work item's approval stamp, a derivation from an item without a file (docs/adr/2080).
+        schema = max(schema, 206)
     if "mapSurvey" in d["settings"]:
         # A map project's GNSS archive (docs/adr/1340 §5).
         schema = max(schema, 194)
@@ -3501,7 +3507,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-206.kcad"] = container(root(cmap(parts), version=uint(206)))
+    files["schema-version-207.kcad"] = container(root(cmap(parts), version=uint(207)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5934,7 +5940,27 @@ def build():
             ("draft-written", lambda d: d["settings"]["mapWork"]["items"][0].update({"status": "draft"}))):
         broken_work = copy.deepcopy(mapped)
         change(broken_work)
-        out[f"broken/map-work-{name}.kcad"] = container(document(broken_work))
+        data = document(broken_work)
+        if name == "no-file-source":
+            # A derivation from an item without a file is schema 206's (docs/adr/2080 §2): written in 205, refused.
+            assert data.count(b"\x67version\x18\xce") == 1, "a derivation from an item without a file is schema 206"
+            data = data.replace(b"\x67version\x18\xce", b"\x67version\x18\xcd")
+        out[f"broken/map-work-{name}.kcad"] = container(data)
+    # Schema 206 (docs/adr/2080): an approved design and an approved delivery with their stamps, a line derived from
+    # the design (an item without a file); schema 205 refuses the stamp, and a stamp on an item not approved and one
+    # that is no SHA-256 are refused.
+    stamped = load("map-work-stamps.json")
+    stamped_data = document(stamped)
+    assert stamped_data.count(b"\x67version\x18\xce") == 1, "a map work's stamps are schema 206"
+    out["map-work-stamps.kcad"] = container(stamped_data)
+    out["broken/map-work-stamps-in-schema-205.kcad"] = container(
+        stamped_data.replace(b"\x67version\x18\xce", b"\x67version\x18\xcd"))
+    for name, change in (
+            ("stamp-not-approved", lambda d: d["settings"]["mapWork"]["items"][3].update({"status": "review"})),
+            ("stamp-not-sha", lambda d: d["settings"]["mapWork"]["items"][2].update({"approved": "A" * 64}))):
+        broken_stamp = copy.deepcopy(stamped)
+        change(broken_stamp)
+        out[f"broken/map-work-{name}.kcad"] = container(document(broken_stamp))
     # Schema 193 (docs/adr/1201 §1): the items' files with their paths from the project file's folder (one inside it,
     # one beside it); schema 192 refuses the field, an absolute, a climbing and an empty relative path are refused.
     rel = load("map-work-relative.json")

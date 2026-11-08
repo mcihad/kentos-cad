@@ -2,7 +2,9 @@
 
 /**
  * Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
- * and the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).
+ * and the derivations of a changed file out of date) and works out every item's content revision; without it a file
+ * is only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a
+ * derivation comes from, an approved item with a stamp; docs/adr/2080 §1).
  * `uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative
  * paths and the search paths (docs/adr/1201 §1).
  *

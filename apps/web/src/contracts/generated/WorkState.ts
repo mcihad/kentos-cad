@@ -2,7 +2,8 @@
 
 /**
  * How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it
- * (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A
- * derivation: up to date, out of date (its source moved on), some of its objects gone.
+ * (deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date; an
+ * approved item whose own revision moved on since its approval stamped it (docs/adr/2080 §3). A derivation: up to
+ * date, out of date (its source moved on), some of its objects gone.
  */
-export type WorkState = "current" | "missing" | "changed" | "incomplete" | "stale";
+export type WorkState = "current" | "missing" | "changed" | "incomplete" | "stale" | "revised";

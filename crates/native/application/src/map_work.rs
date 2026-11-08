@@ -1,14 +1,15 @@
 //! KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200): what an object is in the map's work (the
 //! item of its layer or of the nearest group above it that an item holds), how an item's file and a derivation stand,
-//! and `map.work.query`'s answer. Reads only; `map_work_edit.rs` writes. The shared cases are
-//! `fixtures/commands/v1/map.work.*.json`.
+//! an item's content revision and approval stamp (docs/adr/2080), and `map.work.query`'s answer. Reads only;
+//! `map_work_edit.rs` writes. The shared cases are `fixtures/commands/v1/map.work.*.json`.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::path::Path;
 
 use kentos_commands::{
     CommandResult, WorkDerivationRow, MapWork, MapWorkQuery, MapWorkTree, WorkObjectRole, WorkObjectSource, WorkDerivation,
-    WorkFileRow, WorkFileState as F, WorkItem, WorkRow, WorkState as S, WorkStatus,
+    WorkFileRow, WorkFileState as F, WorkItem, WorkRow, WorkState as S, WorkStatus, encoding::sha256_hex,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -29,7 +30,7 @@ pub(crate) fn map_project(doc: &Document) -> Result<(), Stop> {
 }
 
 /// The item that holds `layer`: the item that names it, else the one that names the nearest group above it.
-pub(crate) fn item_of_layer<'w>(doc: &Document, work: &'w MapWork, layer: &str) -> Option<&'w WorkItem> {
+pub fn item_of_layer<'w>(doc: &Document, work: &'w MapWork, layer: &str) -> Option<&'w WorkItem> {
     let mut id = Some(layer.to_owned());
     while let Some(at) = id {
         if let Some(item) = work.items.iter().find(|i| i.layers.contains(&at)) {
@@ -92,23 +93,77 @@ fn files(doc: &Document, work: &MapWork, deep: bool) -> HashMap<String, (F, Opti
     files_at(doc, work, deep, None).into_iter().map(|(id, l)| (id, (l.state, l.sha))).collect()
 }
 
-/// The source's revision a derivation is judged against: the item's, or read deep, its file's content now.
-fn source_now<'a>(work: &'a MapWork, d: &WorkDerivation, files: &'a HashMap<String, (F, Option<String>)>) -> Option<&'a str> {
-    if let Some((F::Changed, Some(sha))) = files.get(&d.source) {
-        return Some(sha.as_str());
+/// The content revision's name and version (docs/adr/2080 §1).
+pub const WORK_CONTENT: &str = "kentos.work-content/1";
+
+/// The content revision of `item` ([`WORK_CONTENT`], docs/adr/2080 §1): SHA-256 of the compact JSON list
+/// `[[uid, object digest], …]` of the objects its layers hold (the layer profile: its layers' and its groups'), by uid;
+/// the object digest is `kentos.object-digest/1` (docs/adr/1320), the object without its slot id. An item that holds no
+/// objects has the digest of `[]`. Its layers' look (colour, style) is not its content; an object's own fields are.
+pub fn content_revision(doc: &Document, work: &MapWork, item: &str) -> String {
+    let mut pairs: Vec<(String, String)> = Vec::new();
+    for leaf in doc.layers().leaves() {
+        if item_of_layer(doc, work, &leaf.id).is_none_or(|i| i.id != item) {
+            continue;
+        }
+        for (uid, entity) in doc.by_layer_with_uids(&leaf.id) {
+            pairs.push((uid.to_string(), crate::sheets_sources::object_digest(entity)));
+        }
     }
-    work.item(&d.source).and_then(|i| i.file.as_ref()).map(|f| f.revision.as_str())
+    pairs.sort_unstable();
+    sha256_hex(&serde_json::to_vec(&pairs).unwrap_or_default())
 }
 
-/// Whether a derivation's source moved on since its objects were made (quick: the item's revision; deep: its file).
-fn is_stale(work: &MapWork, d: &WorkDerivation, files: &HashMap<String, (F, Option<String>)>) -> bool {
-    source_now(work, d, files) != Some(d.revision.as_str())
+/// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
+/// file's content); one without, its content revision, worked out when first asked (docs/adr/2080 §1).
+pub(crate) struct Revisions<'a> {
+    doc: &'a Document,
+    work: &'a MapWork,
+    files: HashMap<String, (F, Option<String>)>,
+    contents: RefCell<HashMap<String, String>>,
 }
 
-/// How many derivations are out of date by the items' revisions.
-pub(crate) fn stale_count(work: &MapWork) -> u32 {
-    let none = HashMap::new();
-    count(work.derivations.iter().filter(|d| is_stale(work, d, &none)).count())
+impl<'a> Revisions<'a> {
+    pub(crate) fn new(doc: &'a Document, work: &'a MapWork, files: HashMap<String, (F, Option<String>)>) -> Self {
+        Revisions { doc, work, files, contents: RefCell::new(HashMap::new()) }
+    }
+
+    /// The content revision of an item without a file, worked out once.
+    pub(crate) fn content(&self, item: &str) -> String {
+        if let Some(c) = self.contents.borrow().get(item) {
+            return c.clone();
+        }
+        let c = content_revision(self.doc, self.work, item);
+        self.contents.borrow_mut().insert(item.to_owned(), c.clone());
+        c
+    }
+
+    /// The revision an approval stamps and is judged against: its file's kept revision, or its content revision.
+    pub(crate) fn kept(&self, item: &WorkItem) -> String {
+        match &item.file {
+            Some(f) => f.revision.clone(),
+            None => self.content(&item.id),
+        }
+    }
+
+    /// The revision a derivation from `source` is judged against: the item's, or read deep, its changed file's content.
+    fn now(&self, source: &str) -> Option<String> {
+        if let Some((F::Changed, Some(sha))) = self.files.get(source) {
+            return Some(sha.clone());
+        }
+        self.work.item(source).map(|i| self.kept(i))
+    }
+
+    /// Whether a derivation's source moved on since its objects were made.
+    fn stale(&self, d: &WorkDerivation) -> bool {
+        self.now(&d.source).as_deref() != Some(d.revision.as_str())
+    }
+}
+
+/// How many derivations are out of date by the items' revisions (their kept files' and their contents now).
+pub(crate) fn stale_count(doc: &Document, work: &MapWork) -> u32 {
+    let revisions = Revisions::new(doc, work, HashMap::new());
+    count(work.derivations.iter().filter(|d| revisions.stale(d)).count())
 }
 
 fn count(n: usize) -> u32 {
@@ -122,8 +177,13 @@ fn item_name(work: &MapWork, id: &str) -> String {
 /// The objects of out-of-date derivations whose layer `item` holds (an approved item's warning, approval's refusal).
 pub(crate) fn stale_objects_in(doc: &Document, work: &MapWork, item: &WorkItem, deep_files: bool) -> u32 {
     let files = if deep_files { files(doc, work, true) } else { HashMap::new() };
+    stale_objects_by(doc, work, item, &Revisions::new(doc, work, files))
+}
+
+/// [`stale_objects_in`] by the revisions a read already worked out.
+fn stale_objects_by(doc: &Document, work: &MapWork, item: &WorkItem, revisions: &Revisions<'_>) -> u32 {
     let mut n = 0usize;
-    for d in work.derivations.iter().filter(|d| is_stale(work, d, &files)) {
+    for d in work.derivations.iter().filter(|d| revisions.stale(d)) {
         for u in &d.uids {
             let Some(entity) = doc.slot_of(Uuid::from_bytes(u.0)).and_then(|s| doc.get(s))
             else {
@@ -150,12 +210,13 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
     let empty = MapWork::default();
     let work = doc.map_work().unwrap_or(&empty);
     let object = match uid {
-        Some(u) => Some(object_source(doc, work, u, deep)?),
+        Some(u) => Some(object_source(doc, work, u, deep, None)?),
         None => None,
     };
     let looks = files_at(doc, work, deep, drawing);
     let files: HashMap<String, (F, Option<String>)> =
         looks.iter().map(|(id, l)| (id.clone(), (l.state, l.sha.clone()))).collect();
+    let revisions = Revisions::new(doc, work, files);
     let held = layer_items(doc, work);
     let mut objects: HashMap<&str, usize> = HashMap::new();
     for (layer, item) in &held {
@@ -171,7 +232,7 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             .filter(|u| doc.slot_of(Uuid::from_bytes(u.0)).is_some())
             .count();
         let mut why = Vec::new();
-        let old = is_stale(work, d, &files);
+        let old = revisions.stale(d);
         if old {
             why.push(format!(
                 "Kaynağı “{}” bu nesneler üretildikten sonra değişti.",
@@ -246,11 +307,30 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             }
         }
         if i.status == WorkStatus::Approved {
-            let n = stale_objects_in(doc, work, i, deep);
+            let n = stale_objects_by(doc, work, i, &revisions);
             if n > 0 {
                 worse(
                     S::Stale,
                     format!("Onaylı, ama katmanlarındaki {n} türetilmiş nesnenin kaynağı onaydan sonra değişti."),
+                    &mut why,
+                );
+            }
+        }
+        // Without a file: its content revision where it is judged, or read deep (docs/adr/2080 §1).
+        let judged = i.approved.is_some() || work.derivations.iter().any(|d| d.source == i.id);
+        let content = (i.file.is_none() && (deep || judged)).then(|| revisions.content(&i.id));
+        // An approval's stamp against the item's revision now (docs/adr/2080 §3).
+        if let Some(stamp) = i.approved.as_ref().filter(|_| i.status == WorkStatus::Approved) {
+            let now = revisions.kept(i);
+            if now != *stamp {
+                let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
+                worse(
+                    S::Revised,
+                    format!(
+                        "Onaydan sonra {what} değişti (onaylanan {}, şimdi {}): değişikliği denetleyip yeniden onaylayın.",
+                        short(stamp),
+                        short(&now)
+                    ),
                     &mut why,
                 );
             }
@@ -266,6 +346,8 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             layers: i.layers.clone(),
             objects: count(objects.get(i.id.as_str()).copied().unwrap_or(0)),
             file,
+            content,
+            approved: i.approved.clone(),
             state,
             why,
         });
@@ -273,8 +355,20 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
     Ok(MapWorkTree { items, derivations, object, stale, problems, deep, revision: doc.revision().to_string() })
 }
 
-/// Where the object `uid` comes from.
-fn object_source(doc: &Document, work: &MapWork, uid: &str, deep: bool) -> Result<WorkObjectSource, Stop> {
+/// A revision's first 12 hex digits, as the panel shows it.
+fn short(revision: &str) -> &str {
+    revision.get(..12).unwrap_or(revision)
+}
+
+/// Where the object `uid` comes from; `shared` lets the objects of one selection share the content revisions worked
+/// out.
+fn object_source(
+    doc: &Document,
+    work: &MapWork,
+    uid: &str,
+    deep: bool,
+    shared: Option<&Revisions<'_>>,
+) -> Result<WorkObjectSource, Stop> {
     if !crate::checks::is_uid_text(uid) {
         return Err(Stop::failed(error(
             codes::INVALID_UID,
@@ -300,18 +394,26 @@ fn object_source(doc: &Document, work: &MapWork, uid: &str, deep: bool) -> Resul
         operation: None,
         current: None,
     };
+    let own;
+    let revisions = match shared {
+        Some(r) => r,
+        None => {
+            let files = if deep { files(doc, work, true) } else { HashMap::new() };
+            own = Revisions::new(doc, work, files);
+            &own
+        }
+    };
     if let Some(d) = work.derivations.iter().find(|d| d.uids.iter().any(|u| u.to_text() == uid)) {
-        let files = if deep { files(doc, work, true) } else { HashMap::new() };
         out.role = WorkObjectRole::Derived;
         out.derivation = Some(d.id.clone());
         out.source = Some(d.source.clone());
         out.revision = Some(d.revision.clone());
         out.operation = Some(d.operation.clone());
-        out.current = Some(!is_stale(work, d, &files));
+        out.current = Some(!revisions.stale(d));
     } else if let Some(i) = item.filter(|i| i.kind.is_source()) {
         out.role = WorkObjectRole::Source;
         out.source = Some(i.id.clone());
-        out.revision = i.file.as_ref().map(|f| f.revision.clone());
+        out.revision = Some(revisions.kept(i));
     }
     Ok(out)
 }
@@ -345,8 +447,36 @@ pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, drawing: Option<&s
 /// Where one object comes from, read quickly (the items' revisions, no file read), for the properties; none outside a
 /// map project with a work structure or for an object not in the drawing.
 pub fn source_of(doc: &Document, uid: &str) -> Option<WorkObjectSource> {
+    sources_of(doc, std::slice::from_ref(&uid.to_owned())).pop()
+}
+
+/// [`source_of`] for each of `uids` that is in the drawing, one content revision worked out per item.
+pub fn sources_of(doc: &Document, uids: &[String]) -> Vec<WorkObjectSource> {
+    if doc.settings().cad_work != Some(kentos_commands::CadWork::Map) {
+        return Vec::new();
+    }
+    let Some(work) = doc.map_work() else { return Vec::new() };
+    let revisions = Revisions::new(doc, work, HashMap::new());
+    uids.iter().filter_map(|u| object_source(doc, work, u, false, Some(&revisions)).ok()).collect()
+}
+
+/// An object's role and the item its layer belongs to, nothing worked out (the ribbon asks every frame); none outside
+/// a map project with a work structure or for an object not in the drawing.
+pub fn role_of(doc: &Document, uid: &str) -> Option<(WorkObjectRole, Option<String>)> {
     if doc.settings().cad_work != Some(kentos_commands::CadWork::Map) {
         return None;
     }
-    object_source(doc, doc.map_work()?, uid, false).ok()
+    let work = doc.map_work()?;
+    let uuid = Uuid::parse_str(uid).ok()?;
+    let entity = doc.slot_of(uuid).and_then(|s| doc.get(s))?;
+    let item = item_of_layer(doc, work, &entity.base().layer_id);
+    let id = kentos_commands::EntityId(*uuid.as_bytes());
+    let role = if work.derivations.iter().any(|d| d.uids.contains(&id)) {
+        WorkObjectRole::Derived
+    } else if item.is_some_and(|i| i.kind.is_source()) {
+        WorkObjectRole::Source
+    } else {
+        WorkObjectRole::Free
+    };
+    Some((role, item.map(|i| i.id.clone())))
 }

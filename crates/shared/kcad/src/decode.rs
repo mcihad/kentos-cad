@@ -1097,6 +1097,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.map_work_relative && v.has_relative() {
                     return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinin dosyasında relative (şema 193'ten önce yok)"));
                 }
+                // Schema 206 (docs/adr/2080): an approval's stamp; a derivation from an item without a file.
+                if !has.work_stamps && v.items.iter().any(|i| i.approved.is_some()) {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approved (şema 206'dan önce yok)"));
+                }
+                if !has.work_stamps && v.has_stamps() {
+                    return Err(r.fail_at(Code::BadValue, at, "dosyası olmayan öğeden türetme şema 206'dan önce yazılmaz"));
+                }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

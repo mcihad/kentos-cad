@@ -24,6 +24,17 @@ path from that file's folder, then in the project's search paths (`xrefPaths`: f
 file name); the file row says `via` (path, relative, searchPath, none), `at` when found elsewhere and the kept
 `relative`. `release` lets objects go of their derivations; a relink takes the external references on the old file along
 when they loaded the same content, and warns about the others.
+
+ADR 2080 adds, written here from the ADR with hashlib and json:
+
+- An item without a file has a content revision: SHA-256 of the compact JSON list `[[uid, digest], …]` of the objects
+  its layers hold, sorted by uid, where an object's digest is SHA-256 of its JSON with sorted keys and without its slot
+  id (`kentos.object-digest/1`). A derivation from such an item is judged against it. A quick read gives it on the row
+  only where it is judged (a derivation's source, an approved item with a stamp); a deep read on every such row.
+- An approval stamps the item's revision (its file's, or its content revision) in `approved`; leaving the approved
+  status takes it away; approving an approved item that moved on stamps it again. An approved item whose revision now
+  is not its stamp is `revised`, after the other states.
+- An object its own layers hold is not derived from an item without a file (`own_content`).
 """
 
 import copy
@@ -52,6 +63,12 @@ OLD_ORTHO = ROOT / "fixtures/raster/v1/files/geographic.tif"
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
+
+
+def digest(e):
+    """An object's digest (`kentos.object-digest/1`, ADR 1320): SHA-256 of its JSON with sorted keys, no slot id."""
+    v = {k: x for k, x in e.items() if k != "id"}
+    return sha(json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode())
 
 
 S_GNSS, S_LATER, S_DXF = sha(NMEA), sha(NMEA_LATER), sha(DXF)
@@ -192,6 +209,7 @@ class Drawing:
     def __init__(self, d, files=None):
         self.d = copy.deepcopy(d)
         self.objects = dict(zip(self.d["uids"], (e["layerId"] for e in self.d["entities"])))
+        self.entities = dict(zip(self.d["uids"], copy.deepcopy(self.d["entities"])))
         self.files = dict(CONTENT, **(files or {}))
         self.parents = {}
 
@@ -269,8 +287,20 @@ class Drawing:
         now = self.files[at]
         return ("current" if now == f["revision"] else "changed"), now, via, at
 
+    def content(self, item_id):
+        """ADR 2080 §1: the content revision of an item without a file."""
+        pairs = sorted([u, digest(self.entities[u])] for u, lid in self.objects.items()
+                       if (self.item_of_layer(lid) or {}).get("id") == item_id)
+        return sha(json.dumps(pairs, separators=(",", ":")).encode())
+
+    def kept(self, i):
+        """The revision an approval stamps and is judged against: its file's, or its content revision."""
+        return i["file"]["revision"] if "file" in i else self.content(i["id"])
+
     def source_now(self, d, deep, drawing=None):
         i = self.get(d["source"])
+        if "file" not in i:
+            return self.content(i["id"])
         if deep:
             state, now, _, _ = self.file_state(i, True, drawing)
             if state == "changed":
@@ -346,6 +376,16 @@ class Drawing:
                 n = self.stale_objects_in(i, deep)
                 if n:
                     worse("stale", f"Onaylı, ama katmanlarındaki {n} türetilmiş nesnenin kaynağı onaydan sonra değişti.")
+            judged = "approved" in i or any(d["source"] == i["id"] for d in self.derivations())
+            if "file" not in i and (deep or judged):
+                row["content"] = self.content(i["id"])
+            if "approved" in i:
+                row["approved"] = i["approved"]
+                now = self.kept(i)
+                if i.get("status") == "approved" and now != i["approved"]:
+                    what = "dosyası" if "file" in i else "içeriği"
+                    worse("revised", f"Onaydan sonra {what} değişti (onaylanan {i['approved'][:12]}, şimdi {now[:12]}): "
+                                     "değişikliği denetleyip yeniden onaylayın.")
             problems += state != "current"
             row["state"] = state
             if why:
@@ -367,9 +407,7 @@ class Drawing:
             out.update(role="derived", derivation=d["id"], source=d["source"], revision=d["revision"],
                        operation=d["operation"], current=not self.stale(d, deep))
         elif held and held["kind"] in ("campaign", "reference"):
-            out.update(role="source", source=held["id"])
-            if "file" in held:
-                out["revision"] = held["file"]["revision"]
+            out.update(role="source", source=held["id"], revision=self.kept(held))
         return out
 
     def stale_count(self):
@@ -531,6 +569,35 @@ def query_cases():
     out.append(case("Açık projenin dosyası mutlak yol değil", [step("execute", {"drawing": "proje/ana.kcad"}, refused(
         "invalid_file_path", "“proje/ana.kcad” mutlak bir yol değil; açık projenin dosyasının tam yolunu verin.",
         "drawing"), UNCHANGED)]))
+    # ADR 2080: a design's content revision, a derivation from it and an approval's stamp.
+    staked = setup()
+    staked["settings"]["mapWork"]["derivations"].append(
+        derivation("tr-3", "is-4", Drawing(staked).content("is-4"), "Aplikasyon", [F1]))
+    s0 = Drawing(staked)
+    s1 = Drawing(staked)
+    s1.entities[T1]["attrs"] = {"Kot": "1060"}
+    out.append(case("Tasarımdan türetilen çizgi: tasarımın içeriği değişmedikçe güncel; bir çizgisinin özniteliği değişince "
+                    "güncel değil; geri alınca yine güncel", [
+                        ask(s0), ask(s0, of=F1),
+                        step("execute", {"uids": [T1], "attrs": {"Kot": "1060"}, "operation": "attributes"}, "$any",
+                             command="cad.entities.set"),
+                        ask(s1, expect={"revision": "same"}), ask(s1, of=F1, expect={"revision": "same"}),
+                        {"op": "undo", "returns": "Değiştir"}, ask(s0, expect={"revision": "same"})], d=staked,
+                    note="Dosyası olmayan öğenin revizyonu katmanlarındaki nesnelerin özetidir (kentos.work-content/1); "
+                         "türetme onunla karşılaştırılır."))
+    approved = setup()
+    approved["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(approved).content("is-4"))
+    a0 = Drawing(approved)
+    a1 = Drawing(approved)
+    a1.entities[T2]["attrs"] = {"Kot": "1061"}
+    out.append(case("Onaylı tasarımın damgası: içeriği aynıyken güncel; onaydan sonra bir çizgisi değişince revised", [
+        ask(a0), step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
+                      command="cad.entities.set"),
+        ask(a1, expect={"revision": "same"})], d=approved))
+    ortho = setup()
+    ortho["settings"]["mapWork"]["items"][1].update(status="approved", approved=S_OLD)
+    out.append(case("Onaylı ortofotonun damgası başka bir dosya revizyonu: onaydan sonra dosyası değişti (revised)",
+                    [ask(Drawing(ortho))], d=ortho))
     out.append(case("Plan yazmaz, aynı ağacı söyler", [ask(dr, op="plan")]))
     out.append(case("Doğrulama yazmaz", [step("validate", {}, done(None), UNCHANGED)]))
     out.append(case("Doğrulama kimliği de denetler", [step("validate", {"uid": GHOST}, refused(
@@ -608,10 +675,42 @@ def edit_cases():
         op({"op": "add", "kind": "reference", "name": "Altlık", "file": "$tmp:yok/plan.dxf"}), "file_not_found",
         "“$tmp:yok/plan.dxf” dosyası yok.", "operation.file")]))
     # set
-    after = changed(lambda w: w["items"][3].update(status="approved"))
-    out.append(case("Durum: denetlenen tasarım onaylı teslim revizyonu olur (ofisin kaydı)",
-                    write_step(dr, after, op({"op": "set", "item": "is-4", "status": "approved"}), {"item": "is-4"},
+    stamp4 = dr.content("is-4")
+    after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4))
+    out.append(case("Durum: denetlenen tasarım onaylı teslim revizyonu olur (ofisin kaydı); onay içerik revizyonunu "
+                    "damgalar", write_step(dr, after, op({"op": "set", "item": "is-4", "status": "approved"}),
+                                           {"item": "is-4", "content": stamp4, "approved": stamp4},
+                                           "Harita işi öğesini değiştir")))
+    after = changed(lambda w: w["items"][1].update(status="approved", approved=S_ORTHO))
+    out.append(case("Onay: dosyası olan ortofotonun damgası dosya revizyonudur",
+                    write_step(dr, after, op({"op": "set", "item": "is-2", "status": "approved"}),
+                               {"item": "is-2", "file_revision": S_ORTHO, "approved": S_ORTHO},
                                "Harita işi öğesini değiştir")))
+    moved_on = setup()
+    moved_on["settings"]["mapWork"]["items"][3].update(status="approved", approved="0" * 64)
+    mo = Drawing(moved_on)
+    mo_after = Drawing(moved_on)
+    w = copy.deepcopy(mo_after.work)
+    w["items"][3]["approved"] = stamp4
+    mo_after.set_work(w)
+    out.append(case("Yeniden onayla: onaydan sonra değişen tasarım bugünkü içerik revizyonuyla yeniden damgalanır",
+                    write_step(mo, mo_after, op({"op": "set", "item": "is-4", "status": "approved"}),
+                               {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
+                    d=moved_on))
+    kept = setup()
+    kept["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4)
+    out.append(case("Yeniden onayla: değişmemiş onaylı öğe", [fail_step(
+        op({"op": "set", "item": "is-4", "status": "approved"}), "nothing_to_set", "Değişecek bir şey yok.",
+        "operation")], d=kept))
+    kd = Drawing(kept)
+    kd_after = Drawing(kept)
+    w = copy.deepcopy(kd_after.work)
+    w["items"][3]["status"] = "review"
+    del w["items"][3]["approved"]
+    kd_after.set_work(w)
+    out.append(case("Onaydan çıkan öğenin damgası kalkar",
+                    write_step(kd, kd_after, op({"op": "set", "item": "is-4", "status": "review"}), {"item": "is-4"},
+                               "Harita işi öğesini değiştir"), d=kept))
     after = changed(lambda w: w["items"][1].update(name="Ortofoto 2025 (30 cm)", layers=["ortofoto", "bos"]))
     out.append(case("Değiştir: ortofotonun adı ve katmanları",
                     write_step(dr, after, op({"op": "set", "item": "is-2", "name": "Ortofoto 2025 (30 cm)",
@@ -657,8 +756,12 @@ def edit_cases():
         "operation")]))
     out.append(case("Yeniden bağla: dosyası olmayan öğe", [fail_step(
         op({"op": "relink", "item": "is-4", "file": P_GNSS}), "work_item_no_file",
-        "“Tasarım yüzeyi” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da "
-        "türetmenin kaynağı olur.", "operation.item")]))
+        "“Tasarım yüzeyi” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır ya da yenilenir.",
+        "operation.item")]))
+    out.append(case("Yenile: dosyası olmayan öğe", [fail_step(
+        op({"op": "refresh", "item": "is-4"}), "work_item_no_file",
+        "“Tasarım yüzeyi” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır ya da yenilenir.",
+        "operation.item")]))
     old_moved = "$tmp:tasindi-3/geographic.tif"
     out.append(case("Yeniden bağla: rasteri kilitli katmanda", [copy_file(P_OLD, old_moved), fail_step(
         op({"op": "relink", "item": "is-5", "file": old_moved}), "layer_locked",
@@ -696,10 +799,17 @@ def edit_cases():
     out.append(case("Türet: başka kayıttaki nesne", [fail_step(
         op({"op": "derive", "source": "is-3", "uids": [F1, G1], "operation": "Altlıktan kopya"}), "already_derived",
         f"“{G1}” nesnesi “tr-1” türetme kaydında; önce o kaydı silin.", "operation.uids[1]")]))
-    out.append(case("Türet: dosyası olmayan kaynak", [fail_step(
-        op({"op": "derive", "source": "is-4", "uids": [F1], "operation": "Kopya"}), "work_item_no_file",
-        "“Tasarım yüzeyi” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da "
-        "türetmenin kaynağı olur.", "operation.source")]))
+    after = changed(lambda w: w["derivations"].append(derivation("tr-3", "is-4", stamp4, "Aplikasyon", [F1])))
+    out.append(case("Türet: aplikasyon çizgisi dosyası olmayan tasarımdan türetilir; revizyonu tasarımın içerik revizyonu",
+                    write_step(dr, after, op({"op": "derive", "source": "is-4", "uids": [F1], "operation": "Aplikasyon"}),
+                               {"item": "is-4", "derivation": "tr-3", "content": stamp4}, "Kaynaktan türet")
+                    + [{"op": "redo", "returns": "Kaynaktan türet"}, ask(after, of=F1, expect={"revision": "same"})]))
+    own = setup()
+    own["settings"]["mapWork"]["derivations"].pop(1)
+    out.append(case("Türet: dosyası olmayan öğenin kendi katmanındaki nesne", [fail_step(
+        op({"op": "derive", "source": "is-4", "uids": [F1, T1], "operation": "Kopya"}), "own_content",
+        f"“{T1}” nesnesi “Tasarım yüzeyi” öğesinin kendi katmanında; dosyası olmayan öğe kendi nesnelerinin kaynağı "
+        "olamaz.", "operation.uids[1]")], d=own))
     out.append(case("Türet: olmayan kaynak", [fail_step(
         op({"op": "derive", "source": "is-9", "uids": [F1], "operation": "Kopya"}), "unknown_work_item",
         "Harita işinde “is-9” kimlikli öğe yok.", "operation.source")]))
@@ -793,7 +903,8 @@ def edit_cases():
     return out
 
 
-def edited(dr, item=None, derivation=None, file_revision=None, relinked=0, released=0, links=0, freed=0):
+def edited(dr, item=None, derivation=None, file_revision=None, relinked=0, released=0, links=0, freed=0, content=None,
+           approved=None):
     o = {}
     if item is not None:
         o["item"] = item
@@ -801,6 +912,10 @@ def edited(dr, item=None, derivation=None, file_revision=None, relinked=0, relea
         o["derivation"] = derivation
     if file_revision is not None:
         o["fileRevision"] = file_revision
+    if content is not None:
+        o["content"] = content
+    if approved is not None:
+        o["approved"] = approved
     if relinked:
         o["relinked"] = relinked
     if released:

@@ -1,6 +1,7 @@
 //! `map.work.edit` v1 (plan/map-cad.md MAP-01, docs/adr/1200 §3): a map project's items added, changed, relinked,
-//! refreshed and removed, derivations recorded and forgotten; one undo step each, whole or not at all. The shared cases
-//! are `fixtures/commands/v1/map.work.edit.json`.
+//! refreshed and removed, derivations recorded and forgotten; one undo step each, whole or not at all. An approval
+//! stamps the item's revision and an item without a file is a source by its content revision (docs/adr/2080). The
+//! shared cases are `fixtures/commands/v1/map.work.edit.json`.
 
 use std::path::Path;
 
@@ -13,7 +14,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::map_work::{file_sha, item_of_layer, map_project, stale_count, stale_objects_in};
+use crate::map_work::{Revisions, file_sha, item_of_layer, map_project, stale_count, stale_objects_in};
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -81,7 +82,7 @@ fn with_file<'w>(item: &'w WorkItem, path: &str) -> Result<&'w WorkFile, Stop> {
     item.file.as_ref().ok_or_else(|| {
         fail(
             codes::WORK_ITEM_NO_FILE,
-            format!("“{}” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur.", item.name),
+            format!("“{}” öğesinin dosyası yok; yalnız dosyası olan bir kaynak yeniden bağlanır ya da yenilenir.", item.name),
             path,
         )
     })
@@ -107,6 +108,10 @@ struct Change {
     item: Option<String>,
     derivation: Option<String>,
     file_revision: Option<String>,
+    /// Without a file: the content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
+    content: Option<String>,
+    /// The stamp an approval wrote (docs/adr/2080 §3).
+    approved: Option<String>,
     released: u32,
     warnings: Vec<CommandWarning>,
 }
@@ -122,6 +127,8 @@ impl Change {
             item: None,
             derivation: None,
             file_revision: None,
+            content: None,
+            approved: None,
             released: 0,
             warnings: Vec::new(),
         }
@@ -153,6 +160,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 status: WorkStatus::Draft,
                 layers: layers.clone(),
                 file,
+                approved: None,
             });
             Ok(Change { item: Some(id), file_revision: revision, ..Change::new(work, "Harita işine ekle") })
         }
@@ -174,10 +182,23 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if let Some(l) = layers {
                 next.layers = l.clone();
             }
+            let mut work = now.clone();
+            if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
+                *slot = next.clone();
+            }
+            // An approval stamps the item's revision with its layers after (docs/adr/2080 §3): approving an approved
+            // item that moved on since stamps it again; leaving the approved status takes the stamp away.
+            let mut stamped = None;
+            if next.status != WorkStatus::Approved {
+                next.approved = None;
+            } else if status == &Some(WorkStatus::Approved) {
+                let stamp = Revisions::new(doc, &work, std::collections::HashMap::new()).kept(&next);
+                next.approved = Some(stamp.clone());
+                stamped = Some(stamp);
+            }
             if next == *old {
                 return Err(nothing());
             }
-            let mut work = now.clone();
             if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
                 *slot = next.clone();
             }
@@ -192,7 +213,14 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 }
             }
             let revision = next.file.as_ref().map(|f| f.revision.clone());
-            Ok(Change { item: Some(item.clone()), file_revision: revision, ..Change::new(work, "Harita işi öğesini değiştir") })
+            let content = stamped.clone().filter(|_| next.file.is_none());
+            Ok(Change {
+                item: Some(item.clone()),
+                file_revision: revision,
+                content,
+                approved: stamped,
+                ..Change::new(work, "Harita işi öğesini değiştir")
+            })
         }
         Op::Remove { item } => {
             item_at(&now, item, "operation.item")?;
@@ -324,7 +352,6 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
         }
         Op::Derive { source, uids, operation } => {
             let src = item_at(&now, source, "operation.source")?;
-            let revision = with_file(src, "operation.source")?.revision.clone();
             if !text_ok(operation) {
                 return Err(fail(
                     codes::INVALID_WORK_TEXT,
@@ -356,6 +383,20 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                         &at,
                     ));
                 }
+                // An item without a file is its objects (docs/adr/2080 §2): they are not made from it.
+                let layer = doc.slot_of(uuid).and_then(|s| doc.get(s)).map(|e| e.base().layer_id.clone());
+                if src.file.is_none()
+                    && layer.is_some_and(|l| item_of_layer(doc, &now, &l).is_some_and(|i| i.id == src.id))
+                {
+                    return Err(fail(
+                        codes::OWN_CONTENT,
+                        format!(
+                            "“{u}” nesnesi “{}” öğesinin kendi katmanında; dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz.",
+                            src.name
+                        ),
+                        &at,
+                    ));
+                }
                 if !ids.contains(&id) {
                     ids.push(id);
                 }
@@ -363,6 +404,9 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if now.derivations.len() >= kentos_commands::MAX_DERIVATIONS {
                 return Err(full());
             }
+            // Its file's revision, or without a file its content revision now (docs/adr/2080 §2).
+            let revision = Revisions::new(doc, &now, std::collections::HashMap::new()).kept(src);
+            let content = src.file.is_none().then(|| revision.clone());
             let id = next_numbered(now.derivations.iter().map(|d| d.id.as_str()), "tr-");
             let mut work = now.clone();
             work.derivations.push(WorkDerivation {
@@ -372,10 +416,12 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 operation: operation.clone(),
                 uids: ids,
             });
+            let file_revision = content.is_none().then_some(revision);
             Ok(Change {
                 item: Some(source.clone()),
                 derivation: Some(id),
-                file_revision: Some(revision),
+                file_revision,
+                content,
                 ..Change::new(work, "Kaynaktan türet")
             })
         }
@@ -436,16 +482,18 @@ fn same_file(a: &str, b: &str) -> bool {
     a == b || std::fs::canonicalize(a).ok().is_some_and(|x| std::fs::canonicalize(b).ok().is_some_and(|y| x == y))
 }
 
-fn output(c: &Change, revision: String) -> MapWorkEdited {
+fn output(doc: &Document, c: &Change, revision: String) -> MapWorkEdited {
     MapWorkEdited {
         item: c.item.clone(),
         derivation: c.derivation.clone(),
         file_revision: c.file_revision.clone(),
+        content: c.content.clone(),
+        approved: c.approved.clone(),
         relinked: u32::try_from(c.relink.len()).unwrap_or(u32::MAX),
         released: c.released,
         links: u32::try_from(c.blocks.len()).unwrap_or(u32::MAX),
         freed: c.freed,
-        stale: stale_count(&c.work),
+        stale: stale_count(doc, &c.work),
         revision,
     }
 }
@@ -472,7 +520,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<Map
         doc.set_map_work(Some(work), label);
         Ok(())
     });
-    let output = output(&change, cx.doc.revision().to_string());
+    let output = output(cx.doc, &change, cx.doc.revision().to_string());
     CommandResult::Completed { output, warnings: change.warnings }
 }
 
@@ -488,7 +536,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkEdit) -> CommandResult
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkEdit) -> CommandResult<MapWorkEdited> {
     match check(cx.doc, input) {
         Ok(c) => {
-            let output = output(&c, cx.doc.revision().to_string());
+            let output = output(cx.doc, &c, cx.doc.revision().to_string());
             CommandResult::Completed { output, warnings: c.warnings }
         }
         Err(stop) => stop.into(),

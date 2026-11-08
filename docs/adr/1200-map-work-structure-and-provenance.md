@@ -100,6 +100,7 @@ ve cümleler bu ADR'den): `map.work.query` 22, `map.work.edit` 40. `.kcad` şema
 - İçe aktarma (GNSS, nokta dosyası, raster, dış başvuru) ve çizim komutlarının türetme kaydını kendilerinin yazması;
   türetilmiş nesnenin elle değişmesinin (Yol'daki `edited` gibi nesne damgasıyla) görülmesi; yeniden üretme.
 - Dış başvuru ve bağlı kaynağın öğeyle aynı yerden yeniden bağlanması (onların komutları üzerinden, tek adımda).
-- Dosyasız öğelerin (tasarım, teslim) revizyonu ve onaylı teslim revizyonunun içerik damgası (MAP-18'in teslimiyle).
+- Dosyasız öğelerin (tasarım, teslim) revizyonu ve onaylı teslim revizyonunun içerik damgası: yapıldı,
+  [ADR 2080](2080-map-work-content-revision-and-approval-stamp.md).
 - Seçime göre bağlamsal araçlar, tipli ölçüm/plan/varlık katman kuralları (MAP-01'in üçüncü ve dördüncü alt maddeleri).
 - Göreli yol (proje klasörüyle taşınan veri).

@@ -18,4 +18,9 @@ name: string, status?: WorkStatus,
 /**
  * Layer or group ids; a layer is in one item at most.
  */
-layers?: Array<string>, file?: WorkFile, };
+layers?: Array<string>, file?: WorkFile, 
+/**
+ * The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision
+ * or, without a file, its content revision then; only on an approved item. None on an item approved before 206.
+ */
+approved?: string, };

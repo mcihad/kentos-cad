@@ -60944,7 +60944,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date); without it a file is only looked for (`found`, `missing`).\n`uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative\npaths and the search paths (docs/adr/1201 §1).\n\nRefusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,\n`entity_not_found`.",
+        "description": "Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,\nand the derivations of a changed file out of date) and works out every item's content revision; without it a file\nis only looked for (`found`, `missing`) and a content revision is worked out only where it is judged (an item a\nderivation comes from, an approved item with a stamp; docs/adr/2080 §1).\n`uid` also says where that object comes from; `drawing` lets a moved project's files be found by their relative\npaths and the search paths (docs/adr/1201 §1).\n\nRefusals, in this order: `not_a_map_project`, `invalid_file_path` (`drawing` not absolute), `invalid_uid`,\n`entity_not_found`.",
         "properties": {
           "deep": {
             "type": "boolean"
@@ -61118,7 +61118,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,\n“Bağımsız yap”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink, refresh\nor derive from an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an\nobject another derivation names), `not_derived` (release of an object no derivation names), `approval_stale`,\n`layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),\n`work_full`.",
+        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,\n“Bağımsız yap”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or\nrefresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object\nanother derivation names), `own_content` (an object of the source's own layers, the source without a file),\n`not_derived` (release of an object no derivation names), `approval_stale`,\n`layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),\n`work_full`.",
         "properties": {
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -61139,8 +61139,22 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256, or without a file its content revision a derive recorded or an approval stamped), the stamp an\napproval wrote, how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
         "properties": {
+          "approved": {
+            "description": "The stamp an approval wrote (docs/adr/2080 §3).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "content": {
+            "description": "Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "derivation": {
             "type": [
               "string",
@@ -61204,8 +61218,22 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256), how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
+        "description": "Output of `map.work.edit` v1 (and its plan): the item or derivation it made or changed, the item's revision after\n(its file's SHA-256, or without a file its content revision a derive recorded or an approval stamped), the stamp an\napproval wrote, how many rasters and images a relink pointed at the new file and how many external references,\nhow many derivations were taken away with an item (or emptied by a release), how many objects a\nrelease let go of, how many derivations are out of date after, and the drawing's revision.",
         "properties": {
+          "approved": {
+            "description": "The stamp an approval wrote (docs/adr/2080 §3).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "content": {
+            "description": "Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "derivation": {
             "type": [
               "string",
@@ -61285,6 +61313,7 @@
           "invalid_uid",
           "entity_not_found",
           "already_derived",
+          "own_content",
           "not_derived",
           "approval_stale",
           "layer_locked",
@@ -101360,13 +101389,19 @@
       "code": "work_item_no_file",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır, yenilenir ya da türetmenin kaynağı olur."
+      "meaning": "Öğenin dosyası yok: yalnız dosyası olan bir kaynak yeniden bağlanır ya da yenilenir."
     },
     {
       "code": "already_derived",
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesne başka bir türetme kaydında; önce o kaydı silin."
+    },
+    {
+      "code": "own_content",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne kaynağın kendi katmanında: dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz."
     },
     {
       "code": "approval_stale",
@@ -149185,7 +149220,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "An item's name, status or layers. Approving an item that holds out-of-date derived objects is refused; the\nstatus is the office's record, never an institution's approval.",
+          "description": "An item's name, status or layers. Approving stamps the item's revision then (its file's, or without a file its\ncontent revision; docs/adr/2080 §3); approving an approved item that moved on since stamps it again; leaving\nthe approved status takes the stamp away. Approving an item that holds out-of-date derived objects is refused;\nthe status is the office's record, never an institution's approval.",
           "properties": {
             "item": {
               "type": "string"
@@ -149286,7 +149321,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "Objects recorded as made from `source` (an item with a file) by `operation`, at its revision now.",
+          "description": "Objects recorded as made from `source` by `operation`, at its revision now: its file's, or without a file its\ncontent revision (docs/adr/2080 §2); an object its own layers hold is not made from an item without a file.",
           "properties": {
             "op": {
               "const": "derive",
@@ -205061,11 +205096,11 @@
           "type": "string"
         },
         "revision": {
-          "description": "The item's revision when they were made (64 lower-case hex digits).",
+          "description": "The item's revision when they were made (64 lower-case hex digits): its file's, or its content revision.",
           "type": "string"
         },
         "source": {
-          "description": "The item they came from: one with a file.",
+          "description": "The item they came from: one with a file or, from schema 206 (docs/adr/2080 §2), one without (a design).",
           "type": "string"
         },
         "uids": {
@@ -205212,6 +205247,13 @@
       "additionalProperties": false,
       "description": "An item of the map's work.",
       "properties": {
+        "approved": {
+          "description": "The revision its approval stamped (schema 206, docs/adr/2080 §3), 64 lower-case hex digits: its file's revision\nor, without a file, its content revision then; only on an approved item. None on an item approved before 206.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "file": {
           "anyOf": [
             {
@@ -205307,7 +205349,7 @@
       ]
     },
     "WorkObjectSource": {
-      "description": "Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the\nitem it came from, the revision it was made from, the operation and whether it is up to date; a source object's\nsource is its own item and its revision that item's.",
+      "description": "Where one object comes from: its role, the item its layer belongs to, and when it is derived, the derivation, the\nitem it came from, the revision it was made from, the operation and whether it is up to date; a source object's\nsource is its own item and its revision that item's (its file's, or its content revision).",
       "properties": {
         "current": {
           "type": [
@@ -205359,8 +205401,22 @@
       "type": "object"
     },
     "WorkRow": {
-      "description": "An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its state\nand why in sentences.",
+      "description": "An item as it stands: its id, kind, name, status and layers, how many objects its layers hold, its file, its\ncontent revision when it has no file and it was worked out, the revision its approval stamped, its state and why\nin sentences.",
       "properties": {
+        "approved": {
+          "description": "The revision its approval stamped (docs/adr/2080 §3).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "content": {
+          "description": "Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the\nread worked it out (deep, a source of a derivation, an approved item with a stamp).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "file": {
           "anyOf": [
             {
@@ -205416,13 +205472,14 @@
       "type": "object"
     },
     "WorkState": {
-      "description": "How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it\n(deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date. A\nderivation: up to date, out of date (its source moved on), some of its objects gone.",
+      "description": "How a row stands: up to date; an item whose file is not there; whose file changed since the project accepted it\n(deep); a layer it names is not in the drawing; an approved item holding derived objects that are out of date; an\napproved item whose own revision moved on since its approval stamped it (docs/adr/2080 §3). A derivation: up to\ndate, out of date (its source moved on), some of its objects gone.",
       "enum": [
         "current",
         "missing",
         "changed",
         "incomplete",
-        "stale"
+        "stale",
+        "revised"
       ],
       "type": "string"
     },
