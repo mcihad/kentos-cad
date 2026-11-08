@@ -39,7 +39,7 @@ sırayla alır.
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640 | plan değişikliği taslağı; sembolün karardan seçilmesi; yola giren parsel kısmının sahnede taranması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
@@ -899,6 +899,13 @@ ArcGIS Pro'nun “Must Not Overlap With” kuralı. Kanıtlanan: `cad.zoning.che
 şeridi (aksın iki yanında yarı genişlik, uçlar düz) yolun planının yol olmayan kararlarıyla çakışmamalı; yolun planı en
 uzun kenarının ortasını içine alan en alt kademeli plan; 40 ortak durum, MCP, masaüstü (Yola giren karar, Alan
 grubu). Açık: yolun parselle tutarlılığı, plan değişikliği taslağı, sembolün karardan seçilmesi, resmî şema ve eşleme.
+
+**8 Kasım 2026, dördüncü tur — yola giren parsel ([ADR 2640](../docs/adr/2640-zoning-parcel-inside-road-width.md)).**
+Kapsam: **Harita + CBS**. Araştırma: Planlı Alanlar İmar Yönetmeliği m. 9(1)(b), ArcGIS Pro'nun “Must Not Overlap With”ı,
+İmar Kanunu md. 18 (resmî metin okunamadı, ikincil). Kanıtlanan: `cad.zoning.check`'e `roadParcel`: genişliği yazılmış
+yolun şeridi parsel katmanındaki parsellerle (hangi planda olursa olsun) çakışmamalı; çakışan alan, yol ve Ada/Parsel;
+yasal sonuç iddia edilmez. 6 yeni ortak durum (46), MCP, masaüstü (Yola giren parsel, Alan grubu, Nesne sütununda
+Ada/Parsel) ve resimler. Açık: plan değişikliği taslağı, sembolün karardan seçilmesi, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

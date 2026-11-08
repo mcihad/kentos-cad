@@ -89,6 +89,25 @@ fn the_decisions_inside_a_road_s_width() {
     assert_eq!(app.selection.ids().len(), 5, "the road and the four decisions");
 }
 
+const ROAD_PARCEL: &str = "yol genişliği çizilenden geniş: yola giren kararlar ve parseller";
+
+/// docs/adr/2640: Y1's 12 m reach 1 m into the three parcels under and over it, 20, 25 and 45 m²: three Yola giren
+/// parsel in the Alan group after the four decisions; Seç ve göster selects the road, the decisions and the parcels.
+#[test]
+fn the_parcels_inside_a_road_s_width() {
+    let mut app = opened(Some(Module::Map), ROAD_PARCEL);
+    let _ = app.update(Message::Run("zoning.check"));
+    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    let parcels: Vec<&kentos_commands::ZoningFinding> = r.findings.iter().filter(|f| f.kind == "roadParcel").collect();
+    assert_eq!(parcels.iter().map(|f| f.area).collect::<Vec<_>>(), [Some(20.0), Some(25.0), Some(45.0)]);
+    assert_eq!(crate::zoning_window::kind_word("roadParcel"), "Yola giren parsel");
+    assert!(Group::Areas.holds("roadParcel"));
+    assert_eq!(parcels[0].message, "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor.");
+    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+    let _ = app.update(Message::Zoning(Z::Show));
+    assert_eq!(app.selection.ids().len(), 8, "the road, the four decisions and the three parcels");
+}
+
 #[test]
 fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);
@@ -195,5 +214,42 @@ fn screens() {
         let file = out.join(format!("kopuk-yol-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
+    }
+}
+
+/// `.run/gui-evidence/imar-yol-parsel-2640/`: the Alan group with the decisions and the parcels inside Y1's width, and
+/// the drawing with them Seç ve göster selected.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib zoning_window_tests::road_parcel_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn road_parcel_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-yol-parsel-2640");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        for (show, file) in [(false, "1-pencere"), (true, "2-secilenler")] {
+            let mut app = opened(Some(Module::Map), ROAD_PARCEL);
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("zoning.check"));
+            let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+            if show {
+                let _ = app.update(Message::Zoning(Z::Show));
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
     }
 }

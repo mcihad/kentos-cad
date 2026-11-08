@@ -33,10 +33,11 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
     aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020),
     roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar
     şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının
-    ortasını içine alan en alt kademeli plan; ADR 2240), noteMissing, noteUnused. Alan
-    ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz.
-    Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası
-    değildir. Ret: invalid_input (tolerance).
+    ortasını içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
+    katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
+    noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
+    parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
+    uygunluk iddiası değildir. Ret: invalid_input (tolerance).
     """
     __slots__ = ()
     id = "cad.zoning.check"
@@ -69,10 +70,11 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
         ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020), roadWidth
         (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun
         planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını
-        içine alan en alt kademeli plan; ADR 2240), noteMissing, noteUnused. Alan ölçen
-        bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt
-        okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir.
-        Ret: invalid_input (tolerance).
+        içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
+        katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
+        noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
+        parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
+        uygunluk iddiası değildir. Ret: invalid_input (tolerance).
 
         Args:
             doc: The drawing it works on.

@@ -23,7 +23,8 @@ lists are read from it, as the command reads them):
   boundary holds the middle of its longest segment (the first of equals); its corridor half the width each side of
   each segment, ends flat (the roads here are axis-parallel; no decision comes near a turn's outer corner); each
   decision of that plan whose use is not yol, the pieces of its common part with the corridor counted as below:
-  roadWidth, the road and the decision named (docs/adr/2240);
+  roadWidth, the road and the decision named (docs/adr/2240); each parcel (an area on the parcel layer `parsel`, no
+  plan's), the same: roadParcel, the road and the parcel (Ada/Parsel) named (docs/adr/2640);
 - plan by plan, over its boundary and the decisions that name it (a plan without decisions skipped): two decisions'
   common part, a boundary's part no decision covers, a decision's part outside the boundary, each piece counted when
   its mean width 2A/P passes the tolerance (docs/adr/0202 §2), the area the sum of the counted pieces. The areas here
@@ -43,7 +44,7 @@ PROFILE = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("u
 X0, Y0 = 487000.0, 4420000.0
 KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noUse", "unknownUse",
          "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "roadWidth",
-         "noteMissing", "noteUnused"]
+         "roadParcel", "noteMissing", "noteUnused"]
 OPEN = {"park", "yesil", "meydan", "yol"}
 RANK = ["msp", "cdp", "nip", "uip"]
 LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar", "yol-aksi": "yollar"}
@@ -106,6 +107,10 @@ def road(kimlik, pts, genislik=None):
     return ("yollar", pts, attrs)
 
 
+def parsel(ada, no, r):
+    return ("parsel", r, {"Ada": ada, "Parsel": no})
+
+
 def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
     ents = []
     for i, (layer, geo, attrs) in enumerate(objects, start=1):
@@ -121,7 +126,8 @@ def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
     return {"format": "kentos.document", "version": 2, "name": "İmar planı denetimi",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
-            "origin": {"x": X0, "y": Y0}, "layers": layers(classes), "activeLayer": "karar" if
+            "origin": {"x": X0, "y": Y0}, "layers": layers(classes) + ([node("parsel", "Parsel")] if any(
+                o[0] == "parsel" for o in objects) else []), "activeLayer": "karar" if
             "karar-alani" in classes else "plan", "entities": ents,
             "uids": [uid(i + 1) for i in range(len(ents))], "styles": {"items": [], "categories": []}}
 
@@ -194,6 +200,7 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
     plans = [(i, o) for i, o in items if o[0] == "plan" and "plan-siniri" in classes]
     decisions = [(i, o) for i, o in items if o[0] == "karar" and "karar-alani" in classes]
     notes = [(i, o) for i, o in items if o[0] == "notlar" and "plan-notu" in classes]
+    parcels = [(i, o) for i, o in items if o[0] == "parsel"]
     ids = [g(o, "PlanKimlik") for _, o in plans]
     for i, o in plans:
         lv = g(o, "Seviye")
@@ -348,6 +355,17 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
             if area is not None:
                 say("roadWidth", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine "
                                                f"{label('plan-kullanim', g(q, 'Kullanim'))} kararı “{g(q, 'KararKimlik')}” giriyor.")
+        # docs/adr/2640: the parcels inside the road's width, whatever their plan.
+        for j, q in parcels:
+            for tx, ty in turns:
+                x0, y0, x1, y1 = q[1]
+                near = ((max(x0 - tx, 0, tx - x1)) ** 2 + (max(y0 - ty, 0, ty - y1)) ** 2) ** 0.5
+                assert near >= h, "no parcel within the turn's round corner"
+            area = counted(pieces([c for cr in corridor for c in intersect(q[1], cr)], []), tolerance)
+            if area is not None:
+                name = "/".join(v for v in (g(q, "Ada"), g(q, "Parsel")) if v) or "kimliksiz"
+                say("roadParcel", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine “{name}” "
+                                                "parseli giriyor.")
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -412,6 +430,10 @@ def roady(w1="10", w2="10"):
     return ROADY + [road("Y1", [(0, 30), (100, 30)], w1), road("Y2", [(50, 0), (50, 60)], w2)]
 
 
+# docs/adr/2640: three parcels on the parcel layer, two in block A1 and one in A4, up to the planned roads' edges.
+PARCELS = [parsel("101", "1", (0, 0, 20, 25)), parsel("101", "2", (20, 0, 45, 25)), parsel("102", "1", (55, 35, 100, 60))]
+
+
 def with_(objects, index, **attrs):
     out = copy.deepcopy(objects)
     out[index][2].update(attrs)
@@ -430,7 +452,7 @@ SAME = {"revision": "same", "canUndo": False}
 
 
 def case(name, objects, op="plan", classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=None, expect=None):
-    kept = [o for o in objects if CLASS_OF[o[0]] in classes]
+    kept = [o for o in objects if o[0] == "parsel" or CLASS_OF[o[0]] in classes]
     out = check(kept, classes, 0.01 if tolerance is None else tolerance)
     if expect is not None:
         assert [f["kind"] for f in out["findings"]] == expect, (name, [f["kind"] for f in out["findings"]])
@@ -513,6 +535,18 @@ def cases():
              expect=["roadWidth"] * 4),
         case("aynı şerit 5 cm toleransla dar parçadır, sayılmaz", roady(w1="10.0625"), classes=ROADS, tolerance=0.05,
              expect=[]),
+        # docs/adr/2640: a parcel inside a road's planned width.
+        case("parseller yol genişliğinin kıyısında: bulgu yok", roady() + PARCELS, classes=ROADS, expect=[]),
+        case("yol genişliği çizilenden geniş: yola giren kararlar ve parseller", roady(w1="12") + PARCELS,
+             classes=ROADS, expect=["roadWidth"] * 4 + ["roadParcel"] * 3),
+        case("iki yol da geniş: bir parsel iki yola giriyor, her yolun bulgusu ayrı", roady(w1="12", w2="12") + PARCELS,
+             classes=ROADS, expect=["roadWidth"] * 8 + ["roadParcel"] * 5),
+        case("parsele giren 3,125 cm'lik şerit 1 cm toleransla sayılır", roady(w1="10.0625") + PARCELS, classes=ROADS,
+             expect=["roadWidth"] * 4 + ["roadParcel"] * 3),
+        case("aynı parsel şeridi 5 cm toleransla dar parçadır", roady(w1="10.0625") + PARCELS, classes=ROADS,
+             tolerance=0.05, expect=[]),
+        case("kimliği yazılmamış parsel kimliksiz diye söylenir",
+             roady(w1="12") + [("parsel", (0, 0, 20, 25), {})], classes=ROADS, expect=["roadWidth"] * 4 + ["roadParcel"]),
         refused("tolerans sıfır", 0.0, "0"),
         refused("tolerans eksi", -1.0, "-1"),
     ]

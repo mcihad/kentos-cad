@@ -4,7 +4,8 @@
 //! topology core's rules (Çakışmamalı, … içinde kalmalı) over those layers; a road axis whose end meets neither another
 //! road nor a plan boundary from its Sarkan uç olmamalı (docs/adr/2020; the road layer is optional: without it no road
 //! is checked); a decision inside a road's planned width from … ile çakışmamalı over the road's corridor
-//! (docs/adr/2240). Nothing is written; no legal or schema conformity is claimed. The shared cases are
+//! (docs/adr/2240), and a parcel of the parcel layer the same (docs/adr/2640). Nothing is written; no legal or schema
+//! conformity is claimed. The shared cases are
 //! `fixtures/commands/v1/cad.zoning.check.json`.
 
 use std::collections::{BTreeMap, HashSet};
@@ -28,7 +29,7 @@ use crate::geometry::shape;
 use crate::profiles::{Place, find, path_words};
 
 /// The kinds in the order the answer lists them.
-pub const KINDS: [&str; 18] = [
+pub const KINDS: [&str; 19] = [
     "missingLayer",
     "noLevel",
     "upperMissing",
@@ -45,6 +46,7 @@ pub const KINDS: [&str; 18] = [
     "outside",
     "roadGap",
     "roadWidth",
+    "roadParcel",
     "noteMissing",
     "noteUnused",
 ];
@@ -186,6 +188,13 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
         Place::Layer(id) => Some(id),
         _ => None,
     });
+    // The parcels (docs/adr/2640): the areas of the parcel layer, as Parsel alan denetimi reads them.
+    let parcels: Vec<Item<'_>> = order
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.base().layer_id == kentos_commands::PARCEL_LAYER && e.kind() == "polygon")
+        .map(|(at, e)| Item { at, uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(), e })
+        .collect();
     let roads: Vec<Item<'_>> = road_layer
         .map(|layer| {
             order
@@ -472,8 +481,13 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
         };
         let mut shapes: Vec<Shape> = Vec::new();
         let (mut on, mut uids) = (Vec::new(), Vec::new());
-        // Each object's road (and its width as written) or decision.
-        let mut whose: Vec<Result<(&Item<'_>, String), &Item<'_>>> = Vec::new();
+        // Each object's road (and its width as written), decision or parcel.
+        enum Whose<'i, 'a> {
+            Road(&'i Item<'a>, String),
+            Decision(&'i Item<'a>),
+            Parcel(&'i Item<'a>),
+        }
+        let mut whose: Vec<Whose<'_, '_>> = Vec::new();
         let mut homes: Vec<usize> = Vec::new();
         for road in &roads {
             let written = road.get("Genislik");
@@ -487,7 +501,7 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
             shapes.push(corridor);
             on.push(format!("genislik:{home}"));
             uids.push(road.uid.clone());
-            whose.push(Ok((road, written)));
+            whose.push(Whose::Road(road, written));
             if !homes.contains(&home) {
                 homes.push(home);
             }
@@ -499,7 +513,7 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
                 shapes.push(shape(d.e));
                 on.push(format!("karar:{home}"));
                 uids.push(d.uid.clone());
-                whose.push(Err(d));
+                whose.push(Whose::Decision(d));
             }
             rules.push(Rule {
                 id: format!("{}", rules.len()),
@@ -509,23 +523,64 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
                 value: None,
             });
         }
+        // The parcels of the parcel layer, whatever their plan, against every road's corridor (docs/adr/2640).
+        if !homes.is_empty() {
+            for parcel in &parcels {
+                shapes.push(shape(parcel.e));
+                on.push("parsel".to_owned());
+                uids.push(parcel.uid.clone());
+                whose.push(Whose::Parcel(parcel));
+            }
+            for &home in &homes {
+                rules.push(Rule {
+                    id: format!("{}", rules.len()),
+                    kind: Kind::MustNotOverlapWith,
+                    layer: format!("genislik:{home}"),
+                    other: Some("parsel".to_owned()),
+                    value: None,
+                });
+            }
+        }
         if !rules.is_empty() {
             let checked = check(&Objects { shapes: &shapes, layers: &on, uids: &uids }, &rules, tolerance, &[]);
             for f in checked.findings {
-                let road = f.objects.iter().find_map(|&k| whose[k].as_ref().ok());
-                let decision = f.objects.iter().find_map(|&k| whose[k].as_ref().err());
-                let (Some((road, written)), Some(decision)) = (road, decision) else { continue };
-                say(
-                    "roadWidth",
-                    &[*road, *decision],
-                    f.measure,
-                    format!(
-                        "“{}” yolunun {written} m genişliği içine {} kararı “{}” giriyor.",
-                        road.get("YolKimlik"),
-                        label(&p, "plan-kullanim", &decision.get("Kullanim")),
-                        decision.get("KararKimlik")
+                let road = f.objects.iter().find_map(|&k| match &whose[k] {
+                    Whose::Road(r, w) => Some((*r, w)),
+                    _ => None,
+                });
+                let other = f.objects.iter().find_map(|&k| match &whose[k] {
+                    Whose::Road(..) => None,
+                    w => Some(w),
+                });
+                let (Some((road, written)), Some(other)) = (road, other) else { continue };
+                match other {
+                    Whose::Decision(decision) => say(
+                        "roadWidth",
+                        &[road, *decision],
+                        f.measure,
+                        format!(
+                            "“{}” yolunun {written} m genişliği içine {} kararı “{}” giriyor.",
+                            road.get("YolKimlik"),
+                            label(&p, "plan-kullanim", &decision.get("Kullanim")),
+                            decision.get("KararKimlik")
+                        ),
                     ),
-                );
+                    Whose::Parcel(parcel) => {
+                        let name: Vec<String> =
+                            ["Ada", "Parsel"].iter().map(|k| parcel.get(k)).filter(|v| !v.is_empty()).collect();
+                        let name = if name.is_empty() { "kimliksiz".to_owned() } else { name.join("/") };
+                        say(
+                            "roadParcel",
+                            &[road, *parcel],
+                            f.measure,
+                            format!(
+                                "“{}” yolunun {written} m genişliği içine “{name}” parseli giriyor.",
+                                road.get("YolKimlik")
+                            ),
+                        );
+                    }
+                    Whose::Road(..) => {}
+                }
             }
         }
     }

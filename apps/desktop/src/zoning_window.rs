@@ -55,7 +55,9 @@ impl Group {
             Group::Decisions => {
                 matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview")
             }
-            Group::Areas => matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth"),
+            Group::Areas => {
+                matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth" | "roadParcel")
+            }
             Group::Notes => matches!(kind, "noteMissing" | "noteUnused"),
         }
     }
@@ -80,6 +82,8 @@ pub fn kind_word(kind: &str) -> &'static str {
         "outside" => "Plan dışına taşma",
         "roadGap" => "Kopuk yol",
         "roadWidth" => "Yola giren karar",
+        // docs/adr/2640.
+        "roadParcel" => "Yola giren parsel",
         "noteMissing" => "Plan notu yok",
         "noteUnused" => "Anılmayan not",
         _ => "Bulgu",
@@ -197,7 +201,7 @@ impl App {
     }
 
     /// A finding's objects as the table names them: a plan by its PlanKimlik, a decision by its KararKimlik, a note
-    /// by its number, a road axis by its YolKimlik (docs/adr/2020).
+    /// by its number, a road axis by its YolKimlik (docs/adr/2020), a parcel by its Ada/Parsel (docs/adr/2640).
     fn zoning_names(&self, f: &ZoningFinding) -> String {
         let Some(doc) = self.document.as_ref() else { return String::new() };
         let names: Vec<String> = f
@@ -206,10 +210,14 @@ impl App {
             .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s)))
             .map(|e| {
                 let a = &e.base().attrs;
+                let parcel: Vec<&str> =
+                    ["Ada", "Parsel"].iter().filter_map(|k| a.get(*k).map(|v| v.trim())).filter(|v| !v.is_empty()).collect();
                 ["PlanKimlik", "KararKimlik", "NotNo", "YolKimlik"]
                     .iter()
                     .find_map(|k| a.get(*k).filter(|v| !v.trim().is_empty()).map(|v| v.trim().to_owned()))
-                    .map_or_else(|| format!("#{}", e.base().id), |v| if a.contains_key("NotNo") { format!("Not {v}") } else { v })
+                    .map(|v| if a.contains_key("NotNo") { format!("Not {v}") } else { v })
+                    .or_else(|| (!parcel.is_empty()).then(|| parcel.join("/")))
+                    .unwrap_or_else(|| format!("#{}", e.base().id))
             })
             .collect();
         names.join(", ")

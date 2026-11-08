@@ -124,6 +124,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   köşelerin taşınması (`topology_edit::inside_segment`, `along_edge`; 21 ortak durum) ve `carried`.
 - MAP-08 / ADR 2620: web'in `cad.parcels.boundaries` işleyicisinde `arcChord` sorunu (`boundaries`, `area`, `gap`; 32
   ortak durum); web'in Sınır grafiği penceresinde Fark sütunu.
+- MAP-09 / ADR 2640: web'in `cad.zoning.check` işleyicisinde `roadParcel` (46 ortak durum); web'in İmar planı denetimi
+  penceresinde Yola giren parsel ve parselin Ada/Parsel adı.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.
