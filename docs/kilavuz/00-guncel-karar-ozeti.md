@@ -190,6 +190,9 @@
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.
+- **Dikiş ölçümü (8 Kasım 2026; MAP-12, [ADR 2460](../../docs/adr/2460-orthophoto-seam-measured-in-the-images.md)).**
+  `cad.orthophoto.compare`'in `seam`'i: örtüşmede NCC ve parabolle piksel altı kayma, yer durumları (ok, low, edge,
+  flat), m. 67(6) sınırı; pikseller aynı boyda ve dönüksüz olmalı. CAD + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

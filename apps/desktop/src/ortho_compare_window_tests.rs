@@ -2,7 +2,8 @@
 //! `cad.orthophoto.compare`: with nothing selected the drawing's two rasters in order, the layers guessed (GNSS, each
 //! image's reading layer by the year in its file's name); the answer is the shared case's with the ground's points and
 //! without, and Yer değiştir turns the shifts over as the case does; a selected raster comes first; one raster in the
-//! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. And its pictures.
+//! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Dikiş ölçümü gives the shared seam case's
+//! places (docs/adr/2460). And its pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -170,4 +171,68 @@ fn screens() {
     let file = out.join("3-serit-raster-sekmesi.png");
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
+}
+
+use crate::ortho_compare_window::Show;
+
+/// A case's setup with its `$fixture:` paths made absolute (the shared runners do it the same way).
+fn with_fixtures(setup: &Value) -> Value {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/");
+    let text = setup.to_string().replace("$fixture:", &root.display().to_string());
+    serde_json::from_str(&text).expect("the setup")
+}
+
+/// docs/adr/2460: on the seam cases' two synthetic images, Dikiş ölçümü with the case's step, window, search and least
+/// correlation gives the case's places, counts and shift; its table is the seam's; nothing written.
+#[test]
+fn dikis_olcumu_gives_the_shared_case_s_places() {
+    let c = case("dikiş: örtüşmede ölçülen kayma");
+    let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("raster.compare"));
+    assert_eq!(app.dialog, Some(Dialog::OrthoCompare));
+    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+        let _ = app.update(Message::OrthoCompare(e));
+    }
+    assert_eq!(app.ortho_compare.show, Show::Seam);
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+/// `.run/gui-evidence/dikis-olcumu-2460/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ortho_compare_window_tests::seam_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn seam_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-olcumu-2460");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name, case_name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis", "dikiş: örtüşmede ölçülen kayma"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar", "dikiş: 2,7 piksellik kayma"),
+    ] {
+        let c = case(case_name);
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-dikis-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }

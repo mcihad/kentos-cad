@@ -60913,6 +60913,55 @@ class OrthoPair(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OrthoPatch(_Model):
+    """A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the
+    second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
+    `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
+    patch has no texture), and whether an `ok` place is over the limit.
+    Attributes:
+        at: Unit: system.
+        correlation: Unit: 1.
+        d: Unit: length.
+        dx: Unit: length.
+        dy: Unit: length.
+    """
+    at: list[float]
+    state: str
+    over: bool
+    correlation: float | None | Unset = UNSET
+    d: float | None | Unset = UNSET
+    dx: float | None | Unset = UNSET
+    dy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["state"] = self.state
+        out["over"] = self.over
+        if self.correlation is not UNSET:
+            out["correlation"] = None if self.correlation is None else float(self.correlation)
+        if self.d is not UNSET:
+            out["d"] = None if self.d is None else float(self.d)
+        if self.dx is not UNSET:
+            out["dx"] = None if self.dx is None else float(self.dx)
+        if self.dy is not UNSET:
+            out["dy"] = None if self.dy is None else float(self.dy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoPatch:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            state=data["state"],
+            over=data["over"],
+            correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
+            d=UNSET if "d" not in data else None if data["d"] is None else float(data["d"]),
+            dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
+            dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class OrthoPoint(_Model):
     """A point: its name, its role (`check`: independent; `fit`: one the image's georeference was fitted to), its error
     image − ground in east, north and (when both have one) height, and its horizontal error (metres).
@@ -61005,6 +61054,92 @@ class OrthoRules(_Model):
             gsd=[OrthoGsd.from_json(e0) for e0 in data["gsd"]],
             gsd_tolerance=float(data["gsdTolerance"]),
             mosaic=UNSET if "mosaic" not in data else None if data["mosaic"] is None else float(data["mosaic"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeam(_Model):
+    """The overlap's measurement (docs/adr/2460): every place in order (north to south, west to east), the counts by state,
+    the shift's statistics over the `ok` places (their means are the systematic shift; none without one) and whether
+    every `ok` place holds to the limit (none without one).
+    Attributes:
+        ok: Unit: count.
+        low: Unit: count.
+        edge: Unit: count.
+        flat: Unit: count.
+    """
+    patches: list[OrthoPatch]
+    ok: int
+    low: int
+    edge: int
+    flat: int
+    passed: bool | None | Unset = UNSET
+    shift: OrthoStats | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["patches"] = [e0.to_json() for e0 in self.patches]
+        out["ok"] = self.ok
+        out["low"] = self.low
+        out["edge"] = self.edge
+        out["flat"] = self.flat
+        if self.passed is not UNSET:
+            out["passed"] = self.passed
+        if self.shift is not UNSET:
+            out["shift"] = None if self.shift is None else self.shift.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeam:
+        return cls(
+            patches=[OrthoPatch.from_json(e0) for e0 in data["patches"]],
+            ok=data["ok"],
+            low=data["low"],
+            edge=data["edge"],
+            flat=data["flat"],
+            passed=data.get("passed", UNSET),
+            shift=UNSET if "shift" not in data else None if data["shift"] is None else OrthoStats.from_json(data["shift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamAsk(_Model):
+    """How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,
+    the first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by
+    normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
+    whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
+    a raster's relative file is looked for (the drawing's folder).
+    Attributes:
+        step: Unit: length.
+        window: Unit: count.
+        search: Unit: count.
+        correlation: Unit: 1.
+    """
+    step: float
+    window: int
+    search: int
+    correlation: float | None | Unset = UNSET
+    folder: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["step"] = float(self.step)
+        out["window"] = self.window
+        out["search"] = self.search
+        if self.correlation is not UNSET:
+            out["correlation"] = None if self.correlation is None else float(self.correlation)
+        if self.folder is not UNSET:
+            out["folder"] = self.folder
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamAsk:
+        return cls(
+            step=float(data["step"]),
+            window=data["window"],
+            search=data["search"],
+            correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
+            folder=data.get("folder", UNSET),
         )
 
 
@@ -61199,9 +61334,13 @@ class OrthophotoCompare(_Model):
 
     Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's
     coordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,
-    no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`).
+    no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`); the seam's (docs/adr/2460):
+    `invalid_input` (`seam.step` not above zero, `seam.window` even or outside 5..=255, `seam.search` outside 1..=64,
+    `seam.correlation` outside (0, 1]; `seam`: the images' pixels not the same size and unturned, no overlap), the file's
+    (`invalid_file_path`, `file_not_found`, `import_unreadable`; at `first` or `second`).
     Attributes:
         scale: Unit: count.
+        seam: The shift measured in the images themselves where they overlap (docs/adr/2460): no points read by hand.
     """
     first: str
     second: str
@@ -61211,6 +61350,7 @@ class OrthophotoCompare(_Model):
     known: str | None | Unset = UNSET
     rules: OrthoRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
+    seam: OrthoSeamAsk | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -61226,6 +61366,8 @@ class OrthophotoCompare(_Model):
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
             out["scale"] = self.scale
+        if self.seam is not UNSET:
+            out["seam"] = None if self.seam is None else self.seam.to_json()
         return out
 
     @classmethod
@@ -61239,6 +61381,7 @@ class OrthophotoCompare(_Model):
             known=data.get("known", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else OrthoRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
+            seam=UNSET if "seam" not in data else None if data["seam"] is None else OrthoSeamAsk.from_json(data["seam"]),
         )
 
 
@@ -61253,6 +61396,7 @@ class OrthophotoCompared(_Model):
     Attributes:
         gsd: Unit: length.
         limit: Unit: length.
+        seam: The overlap measured in the images themselves (docs/adr/2460).
     """
     rules: str
     source: str
@@ -61264,6 +61408,7 @@ class OrthophotoCompared(_Model):
     notes: list[str]
     first_check: OrthophotoChecked | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
+    seam: OrthoSeam | None | Unset = UNSET
     second_check: OrthophotoChecked | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -61280,6 +61425,8 @@ class OrthophotoCompared(_Model):
             out["firstCheck"] = None if self.first_check is None else self.first_check.to_json()
         if self.passed is not UNSET:
             out["passed"] = self.passed
+        if self.seam is not UNSET:
+            out["seam"] = None if self.seam is None else self.seam.to_json()
         if self.second_check is not UNSET:
             out["secondCheck"] = None if self.second_check is None else self.second_check.to_json()
         return out
@@ -61297,6 +61444,7 @@ class OrthophotoCompared(_Model):
             notes=list(data["notes"]),
             first_check=UNSET if "firstCheck" not in data else None if data["firstCheck"] is None else OrthophotoChecked.from_json(data["firstCheck"]),
             passed=data.get("passed", UNSET),
+            seam=UNSET if "seam" not in data else None if data["seam"] is None else OrthoSeam.from_json(data["seam"]),
             second_check=UNSET if "secondCheck" not in data else None if data["secondCheck"] is None else OrthophotoChecked.from_json(data["secondCheck"]),
         )
 
@@ -130339,8 +130487,11 @@ __all__ = [
     "OriginUcsTo",
     "OrthoGsd",
     "OrthoPair",
+    "OrthoPatch",
     "OrthoPoint",
     "OrthoRules",
+    "OrthoSeam",
+    "OrthoSeamAsk",
     "OrthoStats",
     "OrthophotoCheck",
     "OrthophotoChecked",

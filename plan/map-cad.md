@@ -42,7 +42,7 @@ sırayla alır.
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780 | dikiş hattının kendiliğinden ölçülmesi; türeyen nesnenin kaynağa izi | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
@@ -982,6 +982,15 @@ Kanıtlanan alt maddeler:
 
 **Açık:** düşey veri (DSM/DTM) ve erişilemeyen kaynak durumları, görüntüden türeyen nesnenin kaynağa izi, otomatik
 eşleme, dikiş hattının kendiliğinden ölçülmesi, kalite raporu aktarımı. Madde `[ ]` kalır.
+
+**8 Kasım 2026, üçüncü tur — dikiş ölçümü ([ADR 2460](../docs/adr/2460-orthophoto-seam-measured-in-the-images.md)).**
+Kapsam: **CAD + CBS**. Araştırma: Debella-Gilo ve Kääb 2011 (normalize çapraz korelasyon, piksel altı yollar: görüntü
+ara değeri en iyi, parabol daha az doğru), BÖHHBÜY m. 67(6). Kanıtlanan: `cad.orthophoto.compare`'e `seam`: örtüşmede
+adım adım yerler, birinci görüntünün parçası ikincide sıfır ortalamalı NCC ile aranır, tepe parabolle piksel altına
+inceltilir; yer durumu ok, low, edge, flat; ok yerlerin kayması ve m. 67(6) sınırı. Üç sentetik GeoTIFF bağımsız
+başvuruda bayt bayt yazılır; bilinen kayma 0,05 piksel içinde bulunur (en büyük hata 0,027 piksel); 40 ortak durum,
+MCP; Ortofoto karşılaştırması'nda Dikiş ölçümü satırı ve Dikiş tablosu. Açık: çift kübik piksel altı, yeniden
+örnekleme, çizilmiş dikiş hattı boyunca ölçüm, görüntüden türeyen nesnenin izi, DSM/DTM, kalite raporu aktarımı.
 
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 

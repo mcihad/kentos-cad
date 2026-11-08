@@ -201,7 +201,10 @@ pub const CAD_ORTHOPHOTO_COMPARE_VERSION: u32 = 1;
 ///
 /// Refusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's
 /// coordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,
-/// no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`).
+/// no positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`); the seam's (docs/adr/2460):
+/// `invalid_input` (`seam.step` not above zero, `seam.window` even or outside 5..=255, `seam.search` outside 1..=64,
+/// `seam.correlation` outside (0, 1]; `seam`: the images' pixels not the same size and unturned, no overlap), the file's
+/// (`invalid_file_path`, `file_not_found`, `import_unreadable`; at `first` or `second`).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -225,6 +228,94 @@ pub struct OrthophotoCompare {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<OrthoRules>,
+    /// The shift measured in the images themselves where they overlap (docs/adr/2460): no points read by hand.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub seam: Option<OrthoSeamAsk>,
+}
+
+/// How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,
+/// the first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by
+/// normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
+/// whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
+/// a raster's relative file is looked for (the drawing's folder).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthoSeamAsk {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub step: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub window: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub search: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub correlation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub folder: Option<String>,
+}
+
+/// A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the
+/// second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
+/// `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
+/// patch has no texture), and whether an `ok` place is over the limit.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthoPatch {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub at: [f64; 2],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dx: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dy: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub d: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub correlation: Option<f64>,
+    pub state: String,
+    pub over: bool,
+}
+
+/// The overlap's measurement (docs/adr/2460): every place in order (north to south, west to east), the counts by state,
+/// the shift's statistics over the `ok` places (their means are the systematic shift; none without one) and whether
+/// every `ok` place holds to the limit (none without one).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct OrthoSeam {
+    pub patches: Vec<OrthoPatch>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub ok: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub low: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub edge: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub flat: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shift: Option<OrthoStats>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub passed: Option<bool>,
 }
 
 /// A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,
@@ -275,5 +366,9 @@ pub struct OrthophotoCompared {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub second_check: Option<OrthophotoChecked>,
+    /// The overlap measured in the images themselves (docs/adr/2460).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub seam: Option<OrthoSeam>,
     pub notes: Vec<String>,
 }

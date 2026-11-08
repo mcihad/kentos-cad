@@ -14,11 +14,20 @@ orthophotos is at most ±2·GSD; Articles 54, 91(2) for each image's own check, 
 - a point's limit is the package's `mosaic` × the larger of the two ground sampling distances (the square root of a
   pixel's area); a point over it is flagged, `passed` is every point within it (none without points);
 - with the ground's points each image is checked on its own, the check's rules (fit points from its georeference).
+
+The seam (docs/adr/2460): three synthetic 8-bit GeoTIFFs written here byte by byte (uncompressed, one strip), the
+scene an analytic texture f(x, y), a sum of sines, sampled at the pixels' centres; the second image shows the scene
+displaced by a known shift s (B(x, y) = f(x − sx, y − sy)), so the place P of the first is found at P + s. A flat
+patch in the first and a changed patch in the second. The measurement is the ADR's, written here again: places every
+step metres inside the overlap by half the window and the search, the first image's patch sought in the second by
+zero-mean normalized cross-correlation (sums in row order, as written), the peak refined by a parabola. Each ok
+place's shift is asserted within 0.05 pixel of s: the known shift is the independent truth.
 """
 
 import copy
 import json
 import math
+import struct
 import sys
 from pathlib import Path
 
@@ -275,6 +284,241 @@ def refused(name, inp, code, message, path_, s=None):
     return case
 
 
+# ── The seam (docs/adr/2460) ──────────────────────────────────────────────────────────────────────────────────────
+FILES = ROOT / "fixtures" / "orthophoto" / "v1" / "files"
+PIX = 0.1
+W_A, H_A = 200, 120
+A0 = (X0 + 500.0, Y0 + 120.0)         # the first image's top-left corner
+B0 = (X0 + 510.0, Y0 + 120.0)         # the second's: 10 m east, a 10 m wide overlap
+S_B = (0.034, -0.021)                 # the second's scene shift (0.34, −0.21 pixel)
+S_C = (0.27, 0.0)                     # the third's (2.7 pixels east)
+FLAT = (511.0, 514.0, 113.0, 117.0)   # a flat patch in the first (local x0, x1, y0, y1)
+CHANGED = (515.0, 518.0, 110.0, 113.0)  # a changed patch in the second
+WAVES = [(0.61, 0.17, 0.3, 40.0), (-0.23, 0.83, 1.1, 30.0), (1.37, -0.59, 2.3, 22.0), (0.41, 1.21, 0.7, 18.0),
+         (1.93, 0.71, 1.9, 12.0)]
+
+
+def scene(x, y):
+    """The analytic texture at local (x, y) in metres."""
+    return sum(a * math.sin(2 * math.pi * (u * x + v * y) + phi) for u, v, phi, a in WAVES)
+
+
+def changed(x, y):
+    return 60.0 * math.sin(2 * math.pi * (3.1 * x - 2.7 * y)) + 40.0 * math.cos(2 * math.pi * (2.3 * y))
+
+
+def image(origin, shift, flat=None, change=None):
+    """Rows of 8-bit values: each pixel's centre (local), the scene at it less the shift, 128 + value, rounded."""
+    rows = []
+    for j in range(H_A):
+        row = []
+        for i in range(W_A):
+            x = origin[0] - X0 + (i + 0.5) * PIX
+            y = origin[1] - Y0 - (j + 0.5) * PIX
+            if flat and flat[0] <= x <= flat[1] and flat[2] <= y <= flat[3]:
+                v = 128.0
+            elif change and change[0] <= x <= change[1] and change[2] <= y <= change[3]:
+                v = 128.0 + changed(x, y)
+            else:
+                v = 128.0 + scene(x - shift[0], y - shift[1])
+            row.append(max(0, min(255, int(math.floor(v + 0.5)))))
+        rows.append(row)
+    return rows
+
+
+def geotiff(rows, origin, srid=5254):
+    """A baseline little-endian TIFF: 8-bit grey, one strip, uncompressed; GeoTIFF's pixel scale, tie point (the
+    top-left corner) and keys (projected, pixel is area, the EPSG code)."""
+    h, w = len(rows), len(rows[0])
+    data = bytes(v for row in rows for v in row)
+    keys = [1, 1, 0, 3, 1024, 0, 1, 1, 1025, 0, 1, 1, 3072, 0, 1, srid]
+    scale = struct.pack("<3d", PIX, PIX, 0.0)
+    tie = struct.pack("<6d", 0.0, 0.0, 0.0, origin[0], origin[1], 0.0)
+    geokeys = struct.pack(f"<{len(keys)}H", *keys)
+    entries = [(256, 4, 1, w), (257, 4, 1, h), (258, 3, 1, 8), (259, 3, 1, 1), (262, 3, 1, 1), (273, 4, 1, None),
+               (277, 3, 1, 1), (278, 4, 1, h), (279, 4, 1, len(data)), (284, 3, 1, 1),
+               (33550, 12, 3, scale), (33922, 12, 6, tie), (34735, 3, len(keys), geokeys)]
+    ifd_at = 8
+    ifd_size = 2 + 12 * len(entries) + 4
+    extra_at = ifd_at + ifd_size
+    blobs = b""
+    packed = []
+    for tag, kind, count, value in entries:
+        if isinstance(value, bytes):
+            packed.append((tag, kind, count, struct.pack("<I", extra_at + len(blobs))))
+            blobs += value
+        else:
+            packed.append((tag, kind, count, value))
+    data_at = extra_at + len(blobs)
+    out = b"II*\x00" + struct.pack("<I", ifd_at) + struct.pack("<H", len(packed))
+    for tag, kind, count, value in packed:
+        if tag == 273:
+            value = data_at
+        field = value if isinstance(value, bytes) else (struct.pack("<HH", value, 0) if kind == 3 else
+                                                        struct.pack("<I", value))
+        out += struct.pack("<HHI", tag, kind, count) + field
+    out += struct.pack("<I", 0) + blobs + data
+    return out
+
+
+IMAGES = {"dikis-a.tif": (A0, (0.0, 0.0), FLAT, None), "dikis-b.tif": (B0, S_B, None, CHANGED),
+          "dikis-c.tif": (B0, S_C, None, None)}
+
+
+def seam_raster(name, origin, pixel=PIX):
+    return {"kind": "raster", "layerId": "altlik", "attrs": {}, "affine": [origin[0], pixel, 0.0, origin[1], 0.0, -pixel],
+            "width": W_A, "height": H_A, "bands": 1, "sample": "u8", "srid": 5254,
+            "style": {"render": "gray", "bands": [1]}, "file": f"$fixture:orthophoto/v1/files/{name}"}
+
+
+def seam_setup(second="dikis-b.tif", second_origin=B0, pixel=PIX):
+    return setup(points=[], first=seam_raster("dikis-a.tif", A0), second=seam_raster(second, second_origin, pixel))
+
+
+def ncc(a, b):
+    n = len(a)
+    ma, mb = sum(a) / n, sum(b) / n
+    sab = saa = sbb = 0.0
+    for x, y in zip(a, b):
+        p, q = x - ma, y - mb
+        sab += p * q
+        saa += p * p
+        sbb += q * q
+    return sab / math.sqrt(saa * sbb) if saa > 0 and sbb > 0 else None
+
+
+def vertex(l, c, r):
+    den = l - 2 * c + r
+    return (l - r) / (2 * den) if den < 0 else 0.0
+
+
+def seam(pixels, ask, limit, truth):
+    """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift."""
+    (ra, oa), (rb, ob) = pixels
+    w, r, step = ask["window"], ask["search"], ask["step"]
+    half = w // 2
+    reach = half + r + 1
+    ox0, ox1 = max(oa[0], ob[0]) + reach * PIX, min(oa[0], ob[0]) + W_A * PIX - reach * PIX
+    ox1 = min(oa[0] + W_A * PIX, ob[0] + W_A * PIX) - reach * PIX
+    oy0 = max(oa[1] - H_A * PIX, ob[1] - H_A * PIX) + reach * PIX
+    oy1 = min(oa[1], ob[1]) - reach * PIX
+    patches = []
+    y = oy1
+    while y >= oy0:
+        x = ox0
+        while x <= ox1:
+            ci, cj = math.floor((x - oa[0]) / PIX), math.floor((y - oa[1]) / -PIX)
+            at = [oa[0] + (ci + 0.5) * PIX, oa[1] + (cj + 0.5) * -PIX]
+            bi = math.floor((at[0] - ob[0]) / PIX - 0.5 + 0.5)
+            bj = math.floor((at[1] - ob[1]) / -PIX - 0.5 + 0.5)
+            first = [float(ra[cj - half + j][ci - half + i]) for j in range(w) for i in range(w)]
+            scores = {}
+            for v in range(-r, r + 1):
+                for u in range(-r, r + 1):
+                    second = [float(rb[bj + v - half + j][bi + u - half + i]) for j in range(w) for i in range(w)]
+                    scores[(u, v)] = ncc(first, second)
+            best = None
+            for v in range(-r, r + 1):
+                for u in range(-r, r + 1):
+                    c = scores[(u, v)]
+                    if c is not None and (best is None or c > best[2]):
+                        best = (u, v, c)
+            if best is None:
+                patches.append({"at": at, "state": "flat", "over": False})
+            else:
+                u, v, c = best
+                if abs(u) == r or abs(v) == r:
+                    patches.append({"at": at, "correlation": c, "state": "edge", "over": False})
+                else:
+                    sc = lambda du, dv: scores[(u + du, v + dv)] if scores[(u + du, v + dv)] is not None else c
+                    fu, fv = vertex(sc(-1, 0), c, sc(1, 0)), vertex(sc(0, -1), c, sc(0, 1))
+                    xb = ob[0] + (bi + u + fu + 0.5) * PIX
+                    yb = ob[1] + (bj + v + fv + 0.5) * -PIX
+                    dx, dy = xb - at[0], yb - at[1]
+                    d = math.hypot(dx, dy)
+                    ok_ = ask.get("correlation") is None or c >= ask["correlation"]
+                    patches.append({"at": at, "dx": dx, "dy": dy, "d": d, "correlation": c,
+                                    "state": "ok" if ok_ else "low", "over": ok_ and d > limit})
+            x += step
+        y -= step
+    good = [p for p in patches if p["state"] == "ok"]
+    out = {"patches": patches, **{k: sum(1 for p in patches if p["state"] == k) for k in ("ok", "low", "edge", "flat")}}
+    if good:
+        out["shift"] = stats([{"name": str(k), "role": "check", "dx": p["dx"], "dy": p["dy"], "d": p["d"]}
+                              for k, p in enumerate(good)])
+        out["passed"] = all(not p["over"] for p in patches)
+    return out, good
+
+
+def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True):
+    s = seam_setup(second)
+    inp = dict(DEFAULT, seam=ask)
+    out = compare(s, uid(1), uid(2), "okuma-2024", "okuma-2026")
+    limit = out["limit"]
+    pa = (ROWS["dikis-a.tif"], A0)
+    pb = (ROWS[second], B0)
+    measured, good = seam((pa, pb), ask, limit, truth)
+    if expect_true:
+        # Places whose window and search stay in the clean texture (off the flat and the changed patches).
+        reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
+        def clean(at):
+            x, y = at[0] - X0, at[1] - Y0
+            return all(not (r[0] - reach <= x <= r[1] + reach and r[2] - reach <= y <= r[3] + reach) for r in (FLAT, CHANGED))
+        errs = [max(abs(p["dx"] - truth[0]), abs(p["dy"] - truth[1])) / PIX for p in good if clean(p["at"])]
+        assert errs and max(errs) < 0.05, (name, len(errs), max(errs))
+        ERRORS[name] = (len(errs), max(errs))
+    out["seam"] = measured
+    out["notes"].append(
+        f"Dikiş ölçümü: örtüşmede {len(measured['patches'])} yer; {measured['ok']} sayıldı, {measured['low']} "
+        f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
+        f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).")
+    case = {"name": name, "setup": s, "steps": [{"op": "plan", "input": inp, "result": {
+        "status": "completed", "output": out, "warnings": []}, "expect": SAME, "within": 1e-9}]}
+    return case, measured
+
+
+ROWS = {}
+ERRORS = {}
+
+
+def seam_cases():
+    for name, (origin, shift, flat, change) in IMAGES.items():
+        ROWS[name] = image(origin, shift, flat, change)
+    ask = {"step": 1.0, "window": 21, "search": 5, "correlation": 0.8}
+    c1, m1 = seam_case("dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı", ask)
+    assert m1["ok"] > 20 and m1["flat"] > 0 and m1["low"] > 0 and m1["passed"], (m1["ok"], m1["flat"], m1["low"])
+    c2, m2 = seam_case("dikiş: korelasyon sınırı olmadan değişen yerler de sayılır", {k: v for k, v in ask.items()
+                                                                                        if k != "correlation"},
+                       expect_true=False)
+    assert m2["low"] == 0 and m2["ok"] == m1["ok"] + m1["low"]
+    c3, m3 = seam_case("dikiş: 2,7 piksellik kayma sınırı aşar", dict(ask, search=5), "dikis-c.tif", S_C)
+    assert m3["passed"] is False and m3["ok"] > 0
+    c4, m4 = seam_case("dikiş: arama dar, tepe sınırda kalır", dict(ask, search=2), "dikis-c.tif", S_C, False)
+    assert m4["edge"] > 0 and m4["ok"] == 0
+    seam_in = lambda **kw: {"seam": dict(ask, **kw)}
+    bad = "invalid_input"
+    ss = seam_setup()
+    return [c1, c2, c3, c4,
+            refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
+                    "seam.step", ss),
+            refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
+                    "seam.window", ss),
+            refused("dikiş: sıfır arama", seam_in(search=0), bad, "Arama 1 ile 64 piksel arasında olmalı.", "seam.search",
+                    ss),
+            refused("dikiş: birden büyük korelasyon", seam_in(correlation=1.5), bad,
+                    "En az korelasyon 0'dan büyük, en çok 1 olmalı; her yer sayılacaksa boş bırakın.", "seam.correlation",
+                    ss),
+            refused("dikiş: pikseller farklı boyda", seam_in(), bad,
+                    "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; birini "
+                    "öbürünün ızgarasına yeniden örnekleyin.", "seam", seam_setup(pixel=0.08)),
+            refused("dikiş: örtüşme yok", seam_in(), bad,
+                    "Görüntüler örtüşmüyor ya da örtüşmeleri pencere ve arama için dar; pencereyi ya da aramayı "
+                    "küçültün.", "seam", seam_setup(second_origin=(X0 + 900.0, Y0 + 120.0))),
+            refused("dikiş: dosyası olmayan görüntü", seam_in(), "file_not_found", "$any", "second",
+                    seam_setup(second="yok.tif")),
+            ]
+
+
 def cases():
     first = compare(BASE, uid(1), uid(2), "okuma-2024", "okuma-2026", "gnss")
     assert first["passed"] and len(first["pairs"]) == 10 and first["firstCheck"]["fit"]["n"] == 2, first
@@ -337,20 +581,26 @@ def cases():
         refused("mozaik katsayısı 0", {"rules": dict(copy.deepcopy(RULES), mosaic=0.0)}, "invalid_input",
                 "Kural paketi iki görüntü arasındaki kaymanın sınırını (mosaic: YÖA'nın pozitif katı) vermiyor; "
                 "dayanağı yazılmadan karşılaştırma yapılmaz.", "rules"),
-    ]
+    ] + seam_cases()
 
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.orthophoto.compare", "commandVersion": 1,
            "title": "Ortofoto karşılaştırması",
            "note": "ADR 1780. Bağımsız başvuru scripts/fixtures/orthophoto_compare_cases.py: BÖHHBÜY m. 67(6) "
-                   "(±2·YÖA) ve her görüntünün m. 54, 91(2) denetimi elle; KentOS kodu yok. Noktalar sentetiktir.",
+                   "(±2·YÖA) ve her görüntünün m. 54, 91(2) denetimi elle; KentOS kodu yok. Noktalar sentetiktir. "
+                   "ADR 2460: dikiş ölçümünün görüntüleri burada bayt bayt yazılır, bilinen kayma bağımsız doğrudur.",
            "setup": BASE, "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+    files = {name: geotiff(ROWS[name], IMAGES[name][0]) for name in IMAGES}
     if "--check" in sys.argv[1:]:
-        ok_ = OUT.exists() and OUT.read_text("utf-8") == text
+        ok_ = OUT.exists() and OUT.read_text("utf-8") == text and all(
+            (FILES / n).exists() and (FILES / n).read_bytes() == b for n, b in files.items())
         print("Ortofoto karşılaştırması ortak durumları güncel." if ok_ else f"{OUT.relative_to(ROOT)} güncel değil.")
         return 0 if ok_ else 1
+    FILES.mkdir(parents=True, exist_ok=True)
+    for n, b in files.items():
+        (FILES / n).write_bytes(b)
     OUT.write_text(text, "utf-8")
     print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(doc['cases'])} durum)")
     return 0

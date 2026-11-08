@@ -12,6 +12,7 @@ from ._runtime import CommandNote, LocalCommand, Outcome, UNSET, Unset, _opt  # 
 from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     OrthoRules,
+    OrthoSeamAsk,
     OrthophotoCheck,
     OrthophotoChecked,
     OrthophotoCompare,
@@ -199,9 +200,17 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
     passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse
     her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir
     (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir.
-    Salt okunur. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch
-    (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki
-    kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz).
+    Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür:
+    örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası
+    ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır,
+    tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük),
+    edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır.
+    Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı; dosya göreliyse seam.folder.
+    Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin
+    sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0,
+    kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search,
+    correlation'ı; farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası
+    yok).
     """
     __slots__ = ()
     id = "cad.orthophoto.compare"
@@ -225,6 +234,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         known: str | None | Unset = UNSET,
         rules: OrthoRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        seam: OrthoSeamAsk | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> OrthophotoCompared:
@@ -239,10 +249,17 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup
         olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca
         cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck).
-        İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. Retler:
-        invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin
-        sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0,
-        kural paketi kimliksiz, kaynaksız ya da mosaic'siz).
+        İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam;
+        ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer,
+        birinci görüntünün window × window piksellik parçası ikincide search piksel içinde
+        sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına
+        inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında),
+        flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı
+        boyda ve dönüksüz olmalı; dosya göreliyse seam.folder. Retler: invalid_uid,
+        entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
+        layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
+        kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı;
+        farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası yok).
 
         Args:
             doc: The drawing it works on.
@@ -254,6 +271,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
             known:
             rules:
             scale: Unit: count.
+            seam: The shift measured in the images themselves where they overlap (docs/adr/2460): no points read by hand.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -275,6 +293,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
             known=known,
             rules=rules,
             scale=scale,
+            seam=seam,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -290,6 +309,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         known: str | None | Unset = UNSET,
         rules: OrthoRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        seam: OrthoSeamAsk | None | Unset = UNSET,
     ) -> OrthophotoCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -303,6 +323,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
             known=known,
             rules=rules,
             scale=scale,
+            seam=seam,
         ))
 
     def validate(
@@ -318,6 +339,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         known: str | None | Unset = UNSET,
         rules: OrthoRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        seam: OrthoSeamAsk | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -331,6 +353,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
             known=known,
             rules=rules,
             scale=scale,
+            seam=seam,
         ))
 
     def answer(
@@ -346,6 +369,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         known: str | None | Unset = UNSET,
         rules: OrthoRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
+        seam: OrthoSeamAsk | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -364,6 +388,7 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
             known=known,
             rules=rules,
             scale=scale,
+            seam=seam,
         ), op=op, request_id=request_id, expected=expected)
 
 

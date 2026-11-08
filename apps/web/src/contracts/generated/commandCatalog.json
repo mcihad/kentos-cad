@@ -57369,10 +57369,11 @@
       "id": "cad.orthophoto.compare",
       "version": 1,
       "title": "Ortofoto karşılaştırması",
-      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz).",
+      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı; dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası yok).",
       "aliases": [
         "ortofotokarsilastir",
-        "mozaikkayiklik"
+        "mozaikkayiklik",
+        "dikishatti"
       ],
       "effect": "query",
       "hosts": [
@@ -57388,7 +57389,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.orthophoto.compare` v1 (plan/map-cad.md MAP-12, docs/adr/1780): two orthophotos (rasters' persistent\nids; the first the older, or the one the mosaic's neighbour is set against), the layers of the same points read on\neach, and the layer of those points measured on the ground (none: the images are compared with each other only);\nthe attribute that names a point (none: `Ad`), the scale's denominator (none: the project's plot scale) and the rule\npackage (none: KentOS's BÖHHBÜY 2018).\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's\ncoordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,\nno positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`).",
+        "description": "Input of `cad.orthophoto.compare` v1 (plan/map-cad.md MAP-12, docs/adr/1780): two orthophotos (rasters' persistent\nids; the first the older, or the one the mosaic's neighbour is set against), the layers of the same points read on\neach, and the layer of those points measured on the ground (none: the images are compared with each other only);\nthe attribute that names a point (none: `Ad`), the scale's denominator (none: the project's plot scale) and the rule\npackage (none: KentOS's BÖHHBÜY 2018).\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_raster` (`first`, `second`), `crs_mismatch` (a raster's\ncoordinate system is not the project's), `invalid_input` (one raster twice; `scale` 0; `rules`: empty id or source,\nno positive `mosaic`), `layer_not_found` (`firstPoints`, `secondPoints`, `known`); the seam's (docs/adr/2460):\n`invalid_input` (`seam.step` not above zero, `seam.window` even or outside 5..=255, `seam.search` outside 1..=64,\n`seam.correlation` outside (0, 1]; `seam`: the images' pixels not the same size and unturned, no overlap), the file's\n(`invalid_file_path`, `file_not_found`, `import_unreadable`; at `first` or `second`).",
         "properties": {
           "field": {
             "type": [
@@ -57426,6 +57427,17 @@
               "null"
             ],
             "x-unit": "count"
+          },
+          "seam": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeamAsk"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The shift measured in the images themselves where they overlap (docs/adr/2460): no points read by hand."
           },
           "second": {
             "type": "string"
@@ -57492,6 +57504,17 @@
           },
           "rules": {
             "type": "string"
+          },
+          "seam": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeam"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The overlap measured in the images themselves (docs/adr/2460)."
           },
           "secondCheck": {
             "anyOf": [
@@ -57579,6 +57602,17 @@
           "rules": {
             "type": "string"
           },
+          "seam": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeam"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The overlap measured in the images themselves (docs/adr/2460)."
+          },
           "secondCheck": {
             "anyOf": [
               {
@@ -57622,7 +57656,8 @@
           "not_a_raster",
           "crs_mismatch",
           "layer_not_found",
-          "invalid_input"
+          "invalid_input",
+          "file_not_found"
         ]
       },
       "examples": [
@@ -159730,6 +159765,65 @@
       ],
       "type": "object"
     },
+    "OrthoPatch": {
+      "description": "A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the\nsecond's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;\n`low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the\npatch has no texture), and whether an `ok` place is over the limit.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "correlation": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "d": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dx": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "over": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "state",
+        "over"
+      ],
+      "type": "object"
+    },
     "OrthoPoint": {
       "description": "A point: its name, its role (`check`: independent; `fit`: one the image's georeference was fitted to), its error\nimage − ground in east, north and (when both have one) height, and its horizontal error (metres).",
       "properties": {
@@ -159839,6 +159933,108 @@
         "zFactor",
         "gsd",
         "gsdTolerance"
+      ],
+      "type": "object"
+    },
+    "OrthoSeam": {
+      "description": "The overlap's measurement (docs/adr/2460): every place in order (north to south, west to east), the counts by state,\nthe shift's statistics over the `ok` places (their means are the systematic shift; none without one) and whether\nevery `ok` place holds to the limit (none without one).",
+      "properties": {
+        "edge": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "flat": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "low": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "ok": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "passed": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "patches": {
+          "items": {
+            "$ref": "#/$defs/OrthoPatch"
+          },
+          "type": "array"
+        },
+        "shift": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OrthoStats"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "patches",
+        "ok",
+        "low",
+        "edge",
+        "flat"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamAsk": {
+      "additionalProperties": false,
+      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder).",
+      "properties": {
+        "correlation": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "folder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "search": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "step": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "window": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "step",
+        "window",
+        "search"
       ],
       "type": "object"
     },

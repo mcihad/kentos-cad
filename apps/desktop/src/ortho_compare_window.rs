@@ -4,17 +4,22 @@
 //! (none: the images against each other only) and the scale on the third, the name attribute on the fourth. The
 //! summary says the largest shift against the limit (2·GSD of the coarser image, BÖHHBÜY 67(6)), the systematic shift
 //! and each image's own check; the table lists every point's shift and, with the ground's points, each image's error
-//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts.
+//! (centimetres). Yer değiştir swaps the two; CSV kaydet writes the shifts. Dikiş ölçümü (docs/adr/2460) measures the
+//! shift in the images themselves where they overlap: its step, window, search and least correlation on one line, its
+//! places in their own table (Noktalar | Dikiş).
 
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, Entity, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared, RasterFields};
+use kentos_commands::{
+    CommandResult, Entity, OrthoSeamAsk, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared, RasterFields,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, orthophoto_compare};
 use kentos_ui::label;
-use kentos_ui::widget::{Dialog as Frame, Form, NumberInput};
+use kentos_ui::widget::tree_view::Check;
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -28,6 +33,23 @@ const SAVE: &str = "CSV kaydet…";
 const SWAP: &str = "Yer değiştir";
 /// The ground's layer left out: the images are compared with each other only.
 const NONE: &str = "— yok —";
+
+/// Which table shows: the points read by hand, or the seam's places (docs/adr/2460).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Show {
+    #[default]
+    Points,
+    Seam,
+}
+
+impl std::fmt::Display for Show {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Show::Points => "Noktalar",
+            Show::Seam => "Dikiş",
+        })
+    }
+}
 
 #[derive(Clone, Debug, Default)]
 pub struct State {
@@ -44,6 +66,14 @@ pub struct State {
     pub field: String,
     pub scale: f64,
     pub answer: Option<Result<OrthophotoCompared, String>>,
+    /// Dikiş ölçümü (docs/adr/2460): on, its step (metres), window and search (pixels), least correlation (empty:
+    /// every place counts), and which table shows.
+    pub seam: bool,
+    pub step: f64,
+    pub window: f64,
+    pub search: f64,
+    pub correlation: String,
+    pub show: Show,
 }
 
 #[derive(Clone, Debug)]
@@ -55,6 +85,12 @@ pub enum Event {
     Known(String),
     Field(String),
     Scale(f64),
+    Seam(bool),
+    Step(f64),
+    Window(f64),
+    Search(f64),
+    Correlation(String),
+    Show(Show),
     Swap,
     Save,
     Saved(Option<PathBuf>),
@@ -113,6 +149,26 @@ pub fn csv(r: &OrthophotoCompared) -> String {
 impl App {
     fn ortho_compare_run(&mut self) {
         let s = &self.ortho_compare;
+        let correlation = s.correlation.trim().replace(',', ".");
+        let correlation = match correlation.as_str() {
+            "" => None,
+            t => match t.parse::<f64>() {
+                Ok(v) => Some(v),
+                Err(_) => {
+                    let why = format!("En az korelasyon “{}” bir sayı değil.", s.correlation);
+                    self.ortho_compare.answer = Some(Err(why));
+                    return;
+                }
+            },
+        };
+        let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent()).map(|p| p.display().to_string());
+        let seam = s.seam.then(|| OrthoSeamAsk {
+            step: s.step,
+            window: s.window.max(0.0) as u32,
+            search: s.search.max(0.0) as u32,
+            correlation,
+            folder,
+        });
         let input = OrthophotoCompare {
             first: s.first.clone(),
             second: s.second.clone(),
@@ -122,6 +178,7 @@ impl App {
             field: Some(s.field.clone()),
             scale: Some(s.scale.max(1.0) as u32),
             rules: None,
+            seam,
         };
         let Some(doc) = self.document.as_mut() else { return };
         self.ortho_compare.answer = Some(match orthophoto_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
@@ -175,7 +232,17 @@ impl App {
             .find(|(_, n)| ["gnss", "arazi", "denetim"].iter().any(|w| n.to_lowercase().contains(w)))
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
-        let readings: Vec<&String> = with_points.iter().map(|(id, _)| id).filter(|id| **id != known).collect();
+        // The layers with points, else (a seam measured alone, docs/adr/2460) every layer but the rasters'.
+        let raster_layers: Vec<String> = doc
+            .model
+            .entities()
+            .filter(|e| matches!(e, Entity::Raster(_)))
+            .map(|e| e.base().layer_id.clone())
+            .collect();
+        let mut readings: Vec<&String> = with_points.iter().map(|(id, _)| id).filter(|id| **id != known).collect();
+        if readings.is_empty() {
+            readings = layers.iter().map(|(id, _)| id).filter(|id| **id != known && !raster_layers.contains(id) && id.as_str() != "0").collect();
+        }
         let name_of = |uid: &str| rasters.iter().find(|(u, _)| u == uid).map(|(_, n)| n.clone()).unwrap_or_default();
         let reading_for = |raster: &str, taken: &str| -> String {
             let free: Vec<&String> = readings.iter().copied().filter(|id| id.as_str() != taken).collect();
@@ -199,6 +266,12 @@ impl App {
             field: "Ad".into(),
             scale: doc.model.settings().plot_scale.round().max(1.0),
             answer: None,
+            seam: false,
+            step: 10.0,
+            window: 21.0,
+            search: 5.0,
+            correlation: String::new(),
+            show: Show::Points,
         };
         self.ortho_compare_run();
         self.dialog = Some(Dialog::OrthoCompare);
@@ -224,6 +297,18 @@ impl App {
             Event::Known(v) => s.known = if v == NONE { String::new() } else { v },
             Event::Field(v) => s.field = v,
             Event::Scale(v) => s.scale = v,
+            Event::Seam(on) => {
+                s.seam = on;
+                s.show = if on { Show::Seam } else { Show::Points };
+            }
+            Event::Step(v) => s.step = v,
+            Event::Window(v) => s.window = v,
+            Event::Search(v) => s.search = v,
+            Event::Correlation(v) => s.correlation = v,
+            Event::Show(v) => {
+                s.show = v;
+                return Task::none();
+            }
             Event::Swap => {
                 std::mem::swap(&mut s.first, &mut s.second);
                 std::mem::swap(&mut s.first_points, &mut s.second_points);
@@ -330,10 +415,57 @@ impl App {
         if !r.unmatched.is_empty() {
             lines.push(words::text_line(Kind::Warn, format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", "))));
         }
+        if let Some(m) = &r.seam {
+            let counted = format!(
+                "Dikiş ölçümü: {} yer; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
+                m.patches.len(),
+                m.ok,
+                m.low,
+                m.edge,
+                m.flat
+            );
+            lines.push(match (&m.shift, m.passed) {
+                (Some(st), Some(ok)) => words::text_line(
+                    if ok { Kind::Ok } else { Kind::Error },
+                    format!(
+                        "{counted} Ortalama kayma doğu {} cm, kuzey {} cm; en büyük {} cm, sınır {} cm: {}.",
+                        cm(st.mean_x),
+                        cm(st.mean_y),
+                        cm(st.max_d),
+                        cm(r.limit),
+                        if ok { "sınırın içinde" } else { "sınırı aşan yer var" }
+                    ),
+                ),
+                _ => words::text_line(Kind::Warn, format!("{counted} Sayılan yer yok: pencereyi, aramayı ya da korelasyon sınırını değiştirin.")),
+            });
+        }
         lines.push(words::text_line(
             Kind::Info,
             "İki zamanın farkı kendiliğinden deformasyon değildir; görüntülerin kendi doğruluğuyla birlikte okunur.",
         ));
+        if self.ortho_compare.show == Show::Seam {
+            let f = self.format();
+            for p in r.seam.iter().flat_map(|m| &m.patches) {
+                let o = |v: Option<f64>| v.map(cm).unwrap_or_default();
+                rows.push(vec![
+                    f.coord(p.at[0]),
+                    f.coord(p.at[1]),
+                    o(p.dx),
+                    o(p.dy),
+                    o(p.d),
+                    p.correlation.map(|c| format!("{c:.3}")).unwrap_or_default(),
+                    match (p.state.as_str(), p.over) {
+                        ("ok", true) => "Sınırı aşar",
+                        ("ok", false) => "İçinde",
+                        ("low", _) => "Korelasyon düşük",
+                        ("edge", _) => "Tepe sınırda",
+                        _ => "Dokusuz",
+                    }
+                    .to_owned(),
+                ]);
+            }
+            return (lines, rows);
+        }
         for p in &r.pairs {
             rows.push(vec![
                 p.name.clone(),
@@ -389,23 +521,64 @@ impl App {
             .field(
                 "Nokta adı alanı",
                 container(fields::input(None, "Ad", &s.field, false, false).on_input(|v| msg(Event::Field(v)))).width(260),
+            )
+            .field(
+                "Dikiş ölçümü",
+                row![
+                    fields::check(
+                        if s.seam { Check::Checked } else { Check::Unchecked },
+                        "Görüntülerden ölç".to_owned(),
+                        Some(msg(Event::Seam(!s.seam))),
+                    ),
+                    label::caption("adım (m)"),
+                    container(NumberInput::new(s.step, |v| msg(Event::Step(v))).step(1.0).decimals(1)).width(80),
+                    label::caption("pencere / arama (px)"),
+                    container(NumberInput::new(s.window, |v| msg(Event::Window(v))).step(2.0).decimals(0)).width(70),
+                    container(NumberInput::new(s.search, |v| msg(Event::Search(v))).step(1.0).decimals(0)).width(70),
+                    label::caption("en az korelasyon"),
+                    container(fields::input(None, "—", &s.correlation, false, false).on_input(|v| msg(Event::Correlation(v)))).width(70)
+                ]
+                .spacing(8)
+                .align_y(Center),
             );
         let (lines, rows) = self.ortho_compare_lines();
-        let table = sheet(
-            vec![
-                col("Nokta", 90.0),
-                num("dx (cm)", 80.0),
-                num("dy (cm)", 80.0),
-                num("Kayma (cm)", 95.0),
-                num("1. hata (cm)", 95.0),
-                num("2. hata (cm)", 95.0),
-                col("Durum", 110.0),
-            ],
-            rows,
-            "Eşleşen nokta yok.",
-            240.0,
-        );
-        let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+        let f = self.format();
+        let table = if s.show == Show::Seam {
+            sheet(
+                vec![
+                    num(f.east_label(), 110.0),
+                    num(f.north_label(), 110.0),
+                    num("dx (cm)", 70.0),
+                    num("dy (cm)", 70.0),
+                    num("Kayma (cm)", 85.0),
+                    num("Korelasyon", 85.0),
+                    col("Durum", 130.0),
+                ],
+                rows,
+                "Dikiş ölçümü yok.",
+                240.0,
+            )
+        } else {
+            sheet(
+                vec![
+                    col("Nokta", 90.0),
+                    num("dx (cm)", 80.0),
+                    num("dy (cm)", 80.0),
+                    num("Kayma (cm)", 95.0),
+                    num("1. hata (cm)", 95.0),
+                    num("2. hata (cm)", 95.0),
+                    col("Durum", 110.0),
+                ],
+                rows,
+                "Eşleşen nokta yok.",
+                240.0,
+            )
+        };
+        let mut body = Column::new().spacing(12).push(form).push(words::summary(lines));
+        if s.seam {
+            body = body.push(Segmented::new([Show::Points, Show::Seam], s.show, |v| msg(Event::Show(v))));
+        }
+        let body = body.push(table);
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.pairs.is_empty());
         Frame::new(TITLE)
             .push(body)

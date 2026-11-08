@@ -325,6 +325,7 @@ pub mod readjustment;
 pub mod readjustment_scope;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
+mod orthophoto_seams;
 pub mod pointcloud_overlap;
 pub mod pointcloud_register;
 pub mod map_work_edit;

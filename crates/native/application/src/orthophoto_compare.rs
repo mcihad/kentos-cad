@@ -2,7 +2,8 @@
 //! read on each image are matched by name; a point's shift is the second's place − the first's. The shift's statistics
 //! are those of `cad.orthophoto.check` (its means are the systematic shift); a point over the limit, the package's
 //! `mosaic` × GSD (BÖHHBÜY Article 67(6): ±2·GSD; the coarser image's, KentOS's reading for two pixels), is flagged.
-//! With the ground's points each image is also checked on its own (`cad.orthophoto.check`'s answer). Nothing is written.
+//! With the ground's points each image is also checked on its own (`cad.orthophoto.check`'s answer). Asked, the shift is
+//! also measured in the images themselves where they overlap (`orthophoto_seams`, docs/adr/2460). Nothing is written.
 //! The shared cases are `fixtures/commands/v1/cad.orthophoto.compare.json`.
 
 use kentos_commands::{
@@ -70,6 +71,9 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
     if input.scale == Some(0) {
         return Err(fail(codes::INVALID_INPUT, "Ölçek paydası 0 olamaz.".into(), "scale"));
     }
+    if let Some(seam) = &input.seam {
+        crate::orthophoto_seams::asked(seam)?;
+    }
     let rules: OrthoRules = match &input.rules {
         Some(r) => r.clone(),
         None => ortho_rules_default().ok_or_else(|| fail(codes::INVALID_INPUT, "Yerleşik kural paketi okunamadı.".into(), "rules"))?,
@@ -124,6 +128,18 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
     };
     let first_check = each(&input.first, &input.first_points)?;
     let second_check = each(&input.second, &input.second_points)?;
+    // The overlap measured in the images themselves (docs/adr/2460).
+    let seam = match &input.seam {
+        Some(ask) => {
+            let entity = |u: Uuid| match doc.slot_of(u).and_then(|s| doc.get(s)) {
+                Some(Entity::Raster(r)) => Some(r.clone()),
+                _ => None,
+            };
+            let (Some(r1), Some(r2)) = (entity(u1), entity(u2)) else { return Err(Stop::Cancelled) };
+            Some(crate::orthophoto_seams::measure(doc, &r1, &r2, ask, limit)?)
+        }
+        None => None,
+    };
     let mut notes = vec![
         format!(
             "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır {}·YÖA = {limit:.3} m ({}), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
@@ -138,6 +154,16 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
     if input.known.is_none() {
         notes.push("Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.".into());
     }
+    if let Some(s) = &seam {
+        notes.push(format!(
+            "Dikiş ölçümü: örtüşmede {} yer; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
+            s.patches.len(),
+            s.ok,
+            s.low,
+            s.edge,
+            s.flat
+        ));
+    }
     Ok(OrthophotoCompared {
         rules: rules.id.clone(),
         source: rules.source.clone(),
@@ -149,6 +175,7 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
         shift,
         first_check,
         second_check,
+        seam,
         notes,
     })
 }

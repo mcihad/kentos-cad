@@ -2467,7 +2467,8 @@ const ENTRIES: &[Entry] = &[
     // İki ortofotonun karşılaştırılması (plan/map-cad.md MAP-12, docs/adr/1780).
     Entry {
         id: "cad.orthophoto.compare",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input"]],
+        // The seam's image file (docs/adr/2460): file_not_found.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input", "file_not_found"]],
         warnings: &[],
         targets: none,
     },
