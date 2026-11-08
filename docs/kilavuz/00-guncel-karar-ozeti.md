@@ -181,6 +181,9 @@
 - **Dışa aktarma denetiminde bloklar, tablolar ve ilişkiler (8 Kasım 2026; MAP-17, [ADR 2380](../../docs/adr/2380-exchange-blocks-tables-relations.md)).**
   `file.exchange.check` blok tanımı ve ilişki olmadan kurulan kopyaya okur; blockChanged, tableChanged, relationLost;
   matriste Bloklar, Tablolar, İlişkiler. DXF tabloyu KentOS XDATA'sıyla taşır, başka program çizgi ve yazı görür.
+- **Paftada ölçme kalite notu (8 Kasım 2026; MAP-18, [ADR 2400](../../docs/adr/2400-sheet-survey-quality-note.md)).**
+  `@konum_dogrulugu`, `@yukseklik_dogrulugu`, `@ag_dengelemesi`, `@olcme_kalitesi` projenin GNSS arşivinden
+  (`kentos_project::survey_facts`); arşivsiz projede baskı denetimi `survey_quality_missing` der. CAD + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

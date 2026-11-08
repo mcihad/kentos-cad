@@ -27,8 +27,9 @@ use serde_json::json;
 use crate::designer::{Designer, Dialog as Window, Effect};
 use crate::message::Message;
 
-/// The ready names every expression of a sheet may read; the coordinate facts last (docs/adr/1680).
-pub const READY: [&str; 20] = [
+/// The ready names every expression of a sheet may read; the coordinate facts (docs/adr/1680), the map's north
+/// (docs/adr/1900) and the survey quality (docs/adr/2400) last.
+pub const READY: [&str; 24] = [
     "@proje_adi",
     "@pafta_adi",
     "@sayfa",
@@ -49,6 +50,10 @@ pub const READY: [&str; 20] = [
     "@yakinsama",
     "@manyetik_sapma",
     "@grid_manyetik",
+    "@konum_dogrulugu",
+    "@yukseklik_dogrulugu",
+    "@ag_dengelemesi",
+    "@olcme_kalitesi",
 ];
 
 #[derive(Clone, Debug, PartialEq)]

@@ -138,6 +138,54 @@ pub(crate) fn crs_texts(settings: &kentos_contracts::ProjectSettings, scene: &ke
     out
 }
 
+/// A sheet's texts that read the survey quality while the project has none (docs/adr/2400; plan/map-cad.md MAP-18): the
+/// `@` value would print empty, so the check says it before the delivery. A sheet's, the book's or the project's own
+/// variable of the name comes first and is not said.
+pub(crate) fn quality_texts(
+    book: &SheetBook,
+    sheet: &str,
+    render: &RenderInputs,
+    scene: &kentos_sheet::scene::Scene,
+) -> Vec<Finding> {
+    let p = &render.project;
+    let values = [
+        ("konum_dogrulugu", &p.position_accuracy),
+        ("yukseklik_dogrulugu", &p.height_accuracy),
+        ("ag_dengelemesi", &p.network_adjustment),
+        ("olcme_kalitesi", &p.survey_quality),
+    ];
+    let own = |name: &str| {
+        let named = |vars: &[kentos_sheet::model::Variable]| vars.iter().any(|v| v.name.eq_ignore_ascii_case(name));
+        named(&book.variables)
+            || book.sheet(sheet).is_some_and(|s| named(&s.variables))
+            || p.variables.iter().any(|v| v.name.eq_ignore_ascii_case(name))
+    };
+    let mut out = Vec::new();
+    for (item, _) in scene.all() {
+        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else { continue };
+        let empty: Vec<&str> = values
+            .iter()
+            .filter(|(name, value)| value.is_empty() && t.content.contains(&format!("@{name}")) && !own(name))
+            .map(|(name, _)| *name)
+            .collect();
+        if empty.is_empty() {
+            continue;
+        }
+        out.push(finding(
+            &item.id,
+            "survey_quality_missing",
+            format!(
+                "“{}” yazısı ölçme kalitesini okuyor (@{}) ama projenin GNSS arşivinde kabul edilmiş nokta yok; değer boş basılır.",
+                item.name,
+                empty.join(", @")
+            ),
+            "Noktaları GNSS arşivinden kabul edin (Ölçme › GNSS arşivi) ya da kalite notunu pafta değişkeni olarak yazın.",
+            Severity::Warning,
+        ));
+    }
+    out
+}
+
 /// Native additions to shared layout checks. All source reads happen in the host's background job.
 pub fn inspect(
     doc: &Document,
@@ -166,6 +214,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     let scene = kentos_sheet::scene::Scene::new(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.extend(crs_texts(doc.settings(), &scene));
+    out.extend(quality_texts(book, sheet, render, &scene));
     out.extend(outdated_on_maps(doc, &scene));
     let library = crate::book::library_of(doc);
     let mut line_type_drawer = crate::book::MapDrawer::new(doc, &spatial, &library, None);

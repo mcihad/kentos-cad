@@ -24,6 +24,11 @@ crsName: string,
  */
 datum?: string, ellipsoid?: string, projection?: string, heights?: string, secondCrs?: string, epsg?: string, epoch?: number, 
 /**
+ * The project's survey quality (docs/adr/2400), each `@` value none when empty: `@konum_dogrulugu`,
+ * `@yukseklik_dogrulugu`, `@ag_dengelemesi` and `@olcme_kalitesi`.
+ */
+positionAccuracy?: string, heightAccuracy?: string, networkAdjustment?: string, surveyQuality?: string, 
+/**
  * The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
  * §2.3): `@name` answered after the book's variables of the same name.
  */

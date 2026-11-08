@@ -20,6 +20,7 @@ pub mod choice_form;
 pub mod crs;
 pub mod definition_form;
 pub mod facts;
+pub mod survey_facts;
 /// Numbers as the user reads them: the document's own, so that a dimension recipe places its values by the text a
 /// reader sees (docs/adr/0730 §2).
 pub use kentos_domain::format;

@@ -98,6 +98,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   penceresinde Diğer ağ satırları, Kesişim ve Yakın geçiş tabloları.
 - MAP-17 / ADR 2380: web'in Dışa aktarma kaybı denetimi matrisinde Bloklar, Tablolar ve İlişkiler satırları ile
   blockChanged, tableChanged, relationLost sözleri (denetim headless, web yazıcıları ayrı).
+- MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,
+  `surveyQuality` (projenin GNSS arşivinden) ve baskı denetiminde `survey_quality_missing`.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

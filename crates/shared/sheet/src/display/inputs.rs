@@ -65,6 +65,20 @@ pub struct ProjectInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub epoch: Option<f64>,
+    /// The project's survey quality (docs/adr/2400), each `@` value none when empty: `@konum_dogrulugu`,
+    /// `@yukseklik_dogrulugu`, `@ag_dengelemesi` and `@olcme_kalitesi`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub position_accuracy: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub height_accuracy: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub network_adjustment: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<String>"))]
+    pub survey_quality: String,
     /// The drawing's own variables (Proje ayarları › Değişkenler, docs/adr/0214
     /// §2.3): `@name` answered after the book's variables of the same name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

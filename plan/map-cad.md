@@ -48,7 +48,7 @@ sırayla alır.
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
-| MAP-18 Pafta | 1320, 1680, 1900 | ölçme kalite notu; atlas sayfalarının kaynak dökümü | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400 | atlas sayfalarının kaynak dökümü; kalite notunun haritanın kapsamıyla sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920 | iş türleri ve zaman serisi; dönen kaydın pakete eşlenmesi | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940 | işlem sürümü ve çıktı revizyonu; tariften başka projede üretim; iptal | — |
 
@@ -1391,6 +1391,14 @@ CBS** (pafta). Kanıtlanan: pafta yazıları `@yakinsama` (GK–CK), `@manyetik_
 ve `@grid_manyetik` (GK–MK) okur; bağlı haritanın ya da ilk haritanın merkezinde, kuzey okunun hesabıyla; değerler
 PROJ (pyproj) ve pygeomag'ın WMM2025'iyle bağımsız sınandı. Açık: kurum eksen adları, ölçme kalite notu, resmî profil
 kapısı.
+
+**8 Kasım 2026, üçüncü tur — ölçme kalite notu ([ADR 2400](../docs/adr/2400-sheet-survey-quality-note.md)).** Kapsam: **CAD +
+CBS** (pafta; arşiv Harita projesinde). Kanıtlanan: pafta yazıları `@konum_dogrulugu` (kabul noktalarının en büyük
+√(σK² + σD²)'si), `@yukseklik_dogrulugu`, `@ag_dengelemesi` (da-N, sınıf, kural paketi, m0, serbestlik) ve
+`@olcme_kalitesi`'ni projenin GNSS arşivinden okur; σ paftanın yazı tipinde olmadığı için not “ortalama hata” der;
+baskı denetimi arşivsiz projede bu değerleri okuyan yazıyı `survey_quality_missing` ile söyler; PDF'i pdftotext okur;
+MCP. Açık: notun haritanın kapsamıyla sınırlanması, total station ve nivelman kalitesi, atlas sayfalarının kaynak
+dökümü, kurum eksen adları, resmî profil kapısı.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

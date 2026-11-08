@@ -1495,9 +1495,11 @@ impl App {
                         .map(kentos_plot::inputs::sheet_variable)
                         .collect()
                 }),
-                // The coordinate facts (docs/adr/1680), as the printed sheet has them.
+                // The coordinate facts (docs/adr/1680) and the survey quality (docs/adr/2400), as the printed sheet
+                // has them.
                 ..settings.map_or_else(ProjectInfo::default, |s| {
                     let f = kentos_project::facts::coordinate_facts(s);
+                    let q = kentos_project::survey_facts::survey_facts(s);
                     ProjectInfo {
                         datum: f.datum,
                         ellipsoid: f.ellipsoid,
@@ -1506,6 +1508,10 @@ impl App {
                         second_crs: f.second,
                         epsg: f.epsg,
                         epoch: f.epoch,
+                        position_accuracy: q.position,
+                        height_accuracy: q.height,
+                        network_adjustment: q.network,
+                        survey_quality: q.note,
                         ..ProjectInfo::default()
                     }
                 })

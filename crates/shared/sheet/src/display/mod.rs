@@ -612,6 +612,11 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
     scope.builtin("ikinci_sistem", text(&project.second_crs));
     scope.builtin("epsg_kodu", text(&project.epsg));
     scope.builtin("epok", project.epoch.map_or(VarValue::Null, VarValue::Number));
+    // The survey quality (docs/adr/2400): the archive's, never typed on the sheet.
+    scope.builtin("konum_dogrulugu", text(&project.position_accuracy));
+    scope.builtin("yukseklik_dogrulugu", text(&project.height_accuracy));
+    scope.builtin("ag_dengelemesi", text(&project.network_adjustment));
+    scope.builtin("olcme_kalitesi", text(&project.survey_quality));
     let (index, count) = match &inputs.page {
         Some(p) => (p.index, p.count),
         None => (

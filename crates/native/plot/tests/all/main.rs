@@ -31,6 +31,7 @@ mod preview;
 
 mod calibration;
 mod coordinate_facts;
+mod survey_facts;
 mod outdated_drawings;
 
 mod drawing_set;
