@@ -1,8 +1,8 @@
 //! Tarama kaydı (register_window.rs, docs/adr/1800) on the shared cases' drawing of `cad.pointclouds.register`: the
 //! drawing's first two scans, the GNSS layer guessed; the moved scan fitted as the shared case says, its control
 //! points' KOH_Z down from 5 cm; the flat pair's plan shift loose; the CSV with the matrix; nothing written; Harita
-//! and GIS offer it; the weights row's Huber and trimmed fits as the shared cases give them (docs/adr/2300). And its
-//! pictures.
+//! and GIS offer it; the weights row's Huber and trimmed fits as the shared cases give them (docs/adr/2300); the
+//! rejections row's angle and edges as the shared cases give them (docs/adr/2700). And its pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -66,6 +66,84 @@ fn the_weights_hold_the_fit_against_gross_mismatches() {
     let _ = app.update(Message::Register(R::Weights(Weights::Trimmed)));
     let _ = app.update(Message::Register(R::Ratio(0.9)));
     same(&app, "kırpılmış ICP: eşleşmelerin en iyi %90'ı");
+}
+
+/// docs/adr/2700: the wall only the second scan saw, fitted plainly and with the normals' angle (30° at first); the
+/// curb's shadow, plainly and with the pairs at the fixed scan's edge left out: the shared cases' transforms and counts.
+#[test]
+fn the_rejections_leave_out_what_one_scan_did_not_see() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let clouds: Vec<String> = app.register.clouds.iter().map(|c| c.0.clone()).collect();
+    assert_eq!(clouds.len(), 8, "a, b, c, d, e, f, h, i");
+    let same = |app: &App, name: &str| {
+        let r = app.register.answer.clone().expect("an answer").expect("registered");
+        let want = case_output(name);
+        for (i, t) in r.translation.iter().enumerate() {
+            assert!((t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7, "{name} {i}: {t}");
+        }
+        assert_eq!(Value::from(r.pairs), want["pairs"], "{name}");
+        let got = r.rejected.as_ref().map(|x| serde_json::json!({"edges": x.edges, "angle": x.angle}));
+        assert_eq!(got.unwrap_or(Value::Null), want.get("rejected").cloned().unwrap_or(Value::Null), "{name}");
+    };
+    let _ = app.update(Message::Register(R::Fixed(clouds[0].clone())));
+    let _ = app.update(Message::Register(R::Moving(clouds[5].clone())));
+    same(&app, "yalnız ikinci taramada duvar: ayağı zeminle eşleşir, düz ICP kayar");
+    let _ = app.update(Message::Register(R::ByAngle(true)));
+    same(&app, "normal açısı 30°: duvarın eşleşmeleri ayıklanır");
+    let _ = app.update(Message::Register(R::Angle(60.0)));
+    same(&app, "normal açısı 60°");
+    let _ = app.update(Message::Register(R::ByAngle(false)));
+    let _ = app.update(Message::Register(R::Fixed(clouds[6].clone())));
+    let _ = app.update(Message::Register(R::Moving(clouds[7].clone())));
+    same(&app, "bordürün arkası sabit taramada gölge: kaldırım yolun kenarıyla eşleşir, düz ICP kayar");
+    let _ = app.update(Message::Register(R::Edges(true)));
+    same(&app, "kenardaki eşleşmeler ayıklanınca bordür kaydırmaz");
+}
+
+/// `.run/gui-evidence/tarama-ayiklama-2700/`: the wall with the normals' angle, and the curb with the edges left out.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib register_window_tests::rejection_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn rejection_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-ayiklama-2700");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (pair, stem) in [((0, 5), "1-duvar-normal-acisi"), ((6, 7), "2-bordur-kenar")] {
+            let mut app = opened(Some(Module::Map));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("pointcloud.register"));
+            let (a, b) = (app.register.clouds[pair.0].0.clone(), app.register.clouds[pair.1].0.clone());
+            let _ = app.update(Message::Register(R::Fixed(a)));
+            let _ = app.update(Message::Register(R::Moving(b)));
+            let _ = app.update(Message::Register(if pair.0 == 0 { R::ByAngle(true) } else { R::Edges(true) }));
+            if pair.0 != 0 {
+                // The synthetic sidewalk stands 15 cm over the control points set on the plain ground.
+                let _ = app.update(Message::Register(R::Control(String::new())));
+            }
+            // The clouds' indexes are made in the background; their cards would cover the window.
+            let until = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
+    }
 }
 
 /// `.run/gui-evidence/tarama-agirlik-2300/`: the scan with the raised patch, plain and with Huber's weights.

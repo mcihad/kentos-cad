@@ -9,15 +9,16 @@
 //! (eigenvalues under 10⁻¹² of the largest left out); the step's rotation Rz(κ)·Ry(φ)·Rx(ω) about the centre c (the
 //! fixed points' mean) is put before the transform so far. It ends when a step moves no point more than the
 //! tolerance (its translation, and its angles times the moving points' RMS radius) or after `iterations` steps. The
-//! nearest searches are exact, over a grid of twice the voxel. The shared cases are
-//! `fixtures/commands/v1/cad.pointclouds.register.json`.
+//! nearest searches are exact, over a grid of twice the voxel. Asked, each step leaves out the pairs whose fixed point
+//! is on its cloud's edge and those whose two normals lie further apart than an angle (docs/adr/2700). The shared cases
+//! are `fixtures/commands/v1/cad.pointclouds.register.json`.
 
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
     CloudRules, CommandResult, CommandWarning, Entity, LayerNodeType, OverlapControlStats, PointCloudsRegister,
     PointCloudsRegistered, REGISTER_MOST_ITERATIONS, REGISTER_MOST_POINTS, RegisterCell, RegisterControl,
-    RegisterRobustReport, cloud_rules_default,
+    RegisterRejectReport, RegisterRobustReport, cloud_rules_default,
 };
 use kentos_domain::Document;
 
@@ -171,6 +172,21 @@ impl<'a> Grid<'a> {
         best
     }
 
+    /// Every point within `radius` of `q` (the boundary included), with its squared distance, in no set order.
+    fn within(&self, q: P, radius: f64) -> Vec<(f64, u32)> {
+        let c = key(q, self.g);
+        let rings = ((radius / self.g).ceil() as i64).min(self.last_ring(c));
+        let mut out = Vec::new();
+        for r in 0..=rings {
+            self.ring(c, r, q, &mut |d, i| {
+                if d <= radius * radius {
+                    out.push((d, i));
+                }
+            });
+        }
+        out
+    }
+
     /// The nearest point to `q` within `reach`, ties by index.
     fn nearest(&self, q: P, reach: f64) -> Option<(f64, u32)> {
         let c = key(q, self.g);
@@ -255,15 +271,110 @@ struct Pair {
     r: f64,
 }
 
-fn pairs(moving: &[P], now: &Rigid, c: P, grid: &Grid<'_>, normals: &[Option<P>], fixed: &[P], reach: f64) -> Vec<Pair> {
+/// The rejections asked (docs/adr/2700): the fixed points on their cloud's edge, and the moving points' own normals
+/// with the cosine their angle to the fixed normal must reach.
+#[derive(Clone, Copy, Default)]
+struct Rule<'a> {
+    edge: Option<&'a [bool]>,
+    moving: Option<(&'a [Option<P>], f64)>,
+}
+
+/// The pairs now, and how many the rejections left out: at an edge, by the normals' angle.
+fn pairs(
+    moving: &[P],
+    now: &Rigid,
+    c: P,
+    grid: &Grid<'_>,
+    normals: &[Option<P>],
+    fixed: &[P],
+    reach: f64,
+    rule: Rule<'_>,
+) -> (Vec<Pair>, u32, u32) {
     let mut out = Vec::new();
-    for m in moving {
+    let (mut edges, mut angle) = (0u32, 0u32);
+    for (j, m) in moving.iter().enumerate() {
         let at = now.apply(*m, c);
         let Some((_, i)) = grid.nearest(at, reach) else { continue };
         let Some(n) = normals[i as usize] else { continue };
+        if rule.edge.is_some_and(|e| e[i as usize]) {
+            edges += 1;
+            continue;
+        }
+        if let Some((own, cos)) = rule.moving {
+            // The moving normal turns with the cloud; the lines' angle, whichever way each normal points.
+            let keep = own[j].is_some_and(|o| {
+                let r = &now.r;
+                let turned = [dot(r[0], o), dot(r[1], o), dot(r[2], o)];
+                dot(n, turned).abs() >= cos
+            });
+            if !keep {
+                angle += 1;
+                continue;
+            }
+        }
         out.push(Pair { at, fixed: i as usize, r: dot(sub(at, fixed[i as usize]), n) });
     }
-    out
+    (out, edges, angle)
+}
+
+/// A point's normal from its `k` nearest points of its cloud: the eigenvector of the smallest eigenvalue of their
+/// covariance (each term over k), turned upward, else north, else east (the signed residual is the moving cloud above
+/// the fixed one); none unless the middle eigenvalue is at least four times the smallest.
+fn normal_of(points: &[P], grid: &Grid<'_>, p: P, k: usize) -> Option<P> {
+    if k < 3 {
+        return None;
+    }
+    let near = grid.nearest_k(p, k);
+    let kk = near.len() as f64;
+    let mut mean = [0.0; 3];
+    for (_, i) in &near {
+        let q = points[*i as usize];
+        mean = [mean[0] + q[0], mean[1] + q[1], mean[2] + q[2]];
+    }
+    mean = [mean[0] / kk, mean[1] / kk, mean[2] / kk];
+    let mut cov = [[0.0; 3]; 3];
+    for (_, i) in &near {
+        let d = sub(points[*i as usize], mean);
+        for a in 0..3 {
+            for b in 0..3 {
+                cov[a][b] += d[a] * d[b] / kk;
+            }
+        }
+    }
+    let (values, vectors) = eigen(cov);
+    let n = [vectors[0][0], vectors[1][0], vectors[2][0]];
+    let flip = n[2] < 0.0 || (n[2] == 0.0 && (n[1] < 0.0 || (n[1] == 0.0 && n[0] < 0.0)));
+    let n = if flip { [-n[0], -n[1], -n[2]] } else { n };
+    (values[1] > 0.0 && values[1] >= 4.0 * values[0].max(0.0)).then_some(n)
+}
+
+/// Whether a point is on its cloud's edge (docs/adr/2700; PCL BoundaryEstimation's angle criterion, its radius search):
+/// the directions of its neighbours (the points within the reach) in its tangent plane (u ⟂ n, v = n × u; the point
+/// itself and a neighbour straight above it left out) leave a gap over 90°; fewer than two directions is an edge too.
+fn on_edge(points: &[P], p: P, n: P, near: &[(f64, u32)]) -> bool {
+    let e = if n[2].abs() < 0.9 { [0.0, 0.0, 1.0] } else { [1.0, 0.0, 0.0] };
+    let u = cross(n, e);
+    let len = dot(u, u).sqrt();
+    let u = [u[0] / len, u[1] / len, u[2] / len];
+    let v = cross(n, u);
+    let mut angles: Vec<f64> = near
+        .iter()
+        .filter(|(d, _)| *d > 0.0)
+        .filter_map(|(_, i)| {
+            let q = sub(points[*i as usize], p);
+            let (a, b) = (dot(q, u), dot(q, v));
+            (a != 0.0 || b != 0.0).then(|| b.atan2(a))
+        })
+        .collect();
+    if angles.len() < 2 {
+        return true;
+    }
+    angles.sort_by(f64::total_cmp);
+    let mut gap = 2.0 * std::f64::consts::PI - (angles[angles.len() - 1] - angles[0]);
+    for w in angles.windows(2) {
+        gap = gap.max(w[1] - w[0]);
+    }
+    gap > std::f64::consts::FRAC_PI_2
 }
 
 /// The normal matrix Σ w a aᵀ and Σ w a r of the pairs, each pair's weight `weights[k]` (none: 1).
@@ -418,6 +529,25 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
             }
         },
     };
+    // The pairs left out (docs/adr/2700): at the fixed cloud's edge, or by the normals' angle (the user's degrees).
+    let reject = match &input.reject {
+        None => None,
+        Some(r) => {
+            if !r.edges && r.angle.is_none() {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Ayıklama için kenardaki eşleşmeleri (edges) ya da normal açısını (angle) verin.".into(),
+                    "reject",
+                ));
+            }
+            if let Some(a) = r.angle
+                && !(a.is_finite() && a > 0.0 && a < 90.0)
+            {
+                return Err(fail(codes::INVALID_INPUT, format!("Normal açısı 0° ile 90° arasında olmalı (yazılan {a})."), "reject.angle"));
+            }
+            Some(r.clone())
+        }
+    };
     let rules: CloudRules = match &input.rules {
         Some(r) => r.clone(),
         None => cloud_rules_default().ok_or_else(|| fail(codes::INVALID_INPUT, "Yerleşik kural paketi okunamadı.".into(), "rules"))?,
@@ -491,37 +621,31 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
     ];
     let grid = Grid::new(&fixed, 2.0 * spacing);
     let k = (neighbours as usize).min(fixed.len());
-    let normals: Vec<Option<P>> = fixed
-        .iter()
-        .map(|p| {
-            if k < 3 {
-                return None;
-            }
-            let near = grid.nearest_k(*p, k);
-            let kk = near.len() as f64;
-            let mut mean = [0.0; 3];
-            for (_, i) in &near {
-                let q = fixed[*i as usize];
-                mean = [mean[0] + q[0], mean[1] + q[1], mean[2] + q[2]];
-            }
-            mean = [mean[0] / kk, mean[1] / kk, mean[2] / kk];
-            let mut cov = [[0.0; 3]; 3];
-            for (_, i) in &near {
-                let d = sub(fixed[*i as usize], mean);
-                for a in 0..3 {
-                    for b in 0..3 {
-                        cov[a][b] += d[a] * d[b] / kk;
-                    }
-                }
-            }
-            let (values, vectors) = eigen(cov);
-            let n = [vectors[0][0], vectors[1][0], vectors[2][0]];
-            // Upward (else north, else east): the signed residual is the moving cloud above the fixed one.
-            let flip = n[2] < 0.0 || (n[2] == 0.0 && (n[1] < 0.0 || (n[1] == 0.0 && n[0] < 0.0)));
-            let n = if flip { [-n[0], -n[1], -n[2]] } else { n };
-            (values[1] > 0.0 && values[1] >= 4.0 * values[0].max(0.0)).then_some(n)
-        })
-        .collect();
+    let normals: Vec<Option<P>> = fixed.iter().map(|p| normal_of(&fixed, &grid, *p, k)).collect();
+    // docs/adr/2700: the fixed points on their cloud's edge, judged from the fixed points within the reach (as far as a
+    // pair can be): a moving point beyond the edge pairs with it though the fixed scan saw nothing there.
+    let edges: Vec<bool> = if reject.as_ref().is_some_and(|r| r.edges) {
+        fixed
+            .iter()
+            .zip(&normals)
+            .map(|(p, n)| n.is_some_and(|n| on_edge(&fixed, *p, n, &grid.within(*p, reach))))
+            .collect()
+    } else {
+        Vec::new()
+    };
+    // The moving points' own normals, from their own neighbours, for the angle.
+    let own: Vec<Option<P>> = match reject.as_ref().and_then(|r| r.angle) {
+        Some(_) => {
+            let moving_grid = Grid::new(&moving, 2.0 * spacing);
+            let km = (neighbours as usize).min(moving.len());
+            moving.iter().map(|p| normal_of(&moving, &moving_grid, *p, km)).collect()
+        }
+        None => Vec::new(),
+    };
+    let rule = Rule {
+        edge: (!edges.is_empty()).then_some(edges.as_slice()),
+        moving: reject.as_ref().and_then(|r| r.angle).map(|a| (own.as_slice(), a.to_radians().cos())),
+    };
     let radius_rms = if moving.is_empty() {
         1.0
     } else {
@@ -533,7 +657,7 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
     let mut converged = false;
     let mut rms_before = 0.0;
     for it in 0..iterations {
-        let ps = pairs(&moving, &now, c, &grid, &normals, &fixed, reach);
+        let (ps, _, _) = pairs(&moving, &now, c, &grid, &normals, &fixed, reach, rule);
         if ps.len() < 6 {
             break;
         }
@@ -551,7 +675,7 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
             break;
         }
     }
-    let last = pairs(&moving, &now, c, &grid, &normals, &fixed, reach);
+    let (last, at_edges, by_angle) = pairs(&moving, &now, c, &grid, &normals, &fixed, reach, rule);
     let np = last.len() as f64;
     let (rms_after, mean_after) = if last.is_empty() {
         (0.0, 0.0)
@@ -662,6 +786,9 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
     if controls.is_empty() {
         notes.push("Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz.".to_owned());
     }
+    if reject.is_some() {
+        notes.push("Ayıklanan eşleşmeler (kenarda ya da normal açısıyla) hiçbir adıma girmedi; RMS ve örtüşme payı kalan eşleşmelerden.".to_owned());
+    }
     Ok((
         PointCloudsRegistered {
             rules: rules.id.clone(),
@@ -692,6 +819,7 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
             control_after,
             limit_z,
             robust: robust_report,
+            rejected: reject.as_ref().map(|_| RegisterRejectReport { edges: at_edges, angle: by_angle }),
             notes,
         },
         warnings,

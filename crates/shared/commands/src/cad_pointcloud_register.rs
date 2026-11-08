@@ -28,11 +28,11 @@ pub const REGISTER_MOST_ITERATIONS: u32 = 200;
 /// of the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control
 /// points' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the
 /// scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open
-/// drawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs
-/// one; docs/adr/2300).
+/// drawing's file (the host gives it), robust weights against gross mismatches (`robust`, none: every pair weighs
+/// one; docs/adr/2300) and the pairs left out at an edge or by their normals (`reject`, none: none; docs/adr/2700).
 ///
 /// Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,
-/// `robust.k`, `robust.ratio`),
+/// `robust.k`, `robust.ratio`; `reject` asking nothing, `reject.angle`),
 /// `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more
 /// voxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -97,6 +97,45 @@ pub struct PointCloudsRegister {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub robust: Option<RegisterRobust>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub reject: Option<RegisterReject>,
+}
+
+/// The pairs left out of each ICP step (docs/adr/2700; PCL's correspondence rejectors): `edges`, a pair whose fixed point
+/// is on its cloud's edge — its k nearest points' directions in its tangent plane leave a gap over 90° (PCL
+/// BoundaryEstimation's angle criterion and default π/2), as at a scan's border or around its shadow; `angle`, a pair
+/// whose fixed normal and the moving point's own normal (from its k nearest moving points, turned with the moving
+/// cloud) lie more than this many degrees apart (above 0, under 90; the user's, as PCL's surface-normal rejector takes
+/// its threshold), or whose moving point has no normal: what one scan saw and the other did not, a wall or a vehicle's
+/// side over the ground.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RegisterReject {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub edges: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub angle: Option<f64>,
+}
+
+/// What the rejections left out at the last step (docs/adr/2700): the pairs at an edge, and those by their normals'
+/// angle (or the moving point's having none).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RegisterRejectReport {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub edges: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub angle: u32,
 }
 
 /// Robust weights of each ICP step (docs/adr/2300): `huber`, a pair's weight 1 within `k` times the residuals' scale
@@ -200,6 +239,7 @@ pub struct RegisterControl {
 /// - the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the
 ///   package's swath-to-swath value), the worst cells (at most 20, RMS down);
 /// - the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;
+/// - what the robust weights and the rejections did at the last step (docs/adr/2300, 2700);
 /// - notes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -262,5 +302,8 @@ pub struct PointCloudsRegistered {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub robust: Option<RegisterRobustReport>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rejected: Option<RegisterRejectReport>,
     pub notes: Vec<String>,
 }

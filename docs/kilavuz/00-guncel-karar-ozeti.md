@@ -172,6 +172,9 @@
 - **Tarama kaydında kaba hatayı atan ağırlıklar (8 Kasım 2026; MAP-13, [ADR 2300](../../docs/adr/2300-scan-registration-robust-weights.md)).**
   `cad.pointclouds.register`'ın `robust`'u: Huber (k 1,345, ölçek 1,4826 × ortanca |artık|) ya da kırpılmış ICP
   (kullanıcının payı); cevapta ağırlık raporu; Tarama kaydı'nda Ağırlık satırı. Harita + CBS.
+- **Tarama kaydında kenar ve örtülme ayıklaması (8 Kasım 2026; MAP-13, [ADR 2700](../../docs/adr/2700-scan-registration-rejections.md)).**
+  `cad.pointclouds.register`'ın `reject`'i: sabit taramanın kenarındaki (PCL açı ölçütü, erişim yarıçapı) ve normalleri
+  kullanıcının açısından çok ayrılan eşleşmeler her adımın dışında; cevapta sayılar; Ayıkla satırı. Harita + CBS.
 - **Pafta eğrilerinde tepe ve çukur kotları (8 Kasım 2026; MAP-14, [ADR 2320](../../docs/adr/2320-sheet-summit-and-pit-heights.md)).**
   `road.terrains.sheetcontours`'un `spots`'u (m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak
   köşe, detay içindeki sayılmadan, kotu dm'ye kadar (Ek-3 0004, paket sürüm 2). Şev üstü ve dibi yok. Harita.

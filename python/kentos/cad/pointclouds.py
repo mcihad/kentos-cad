@@ -24,6 +24,7 @@ from .types import (  # noqa: F401
     PointCloudsRegioned,
     PointCloudsRegister,
     PointCloudsRegistered,
+    RegisterReject,
     RegisterRobust,
     Vec2,
     Vec2Like,
@@ -839,8 +840,15 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
     sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer
     1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı
     eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini
-    ve ağırlığı birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found,
-    not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.
+    ve ağırlığı birden küçük eşleşmeleri verir. reject (ADR 2700, PCL'in eşleşme
+    ayıklayıcıları): edges, sabit noktası bulutunun kenarında olan eşleşmeyi (erişim
+    içindeki komşularının teğet düzlemdeki yönleri 90°'den büyük boşluk bırakıyor:
+    tarama sınırı, gölge) her adımın dışında bırakır; angle, sabit normali ile hareketli
+    noktanın kendi normali bu kadar dereceden çok ayrılan (ya da hareketli normali
+    olmayan) eşleşmeyi bırakır: bir taramanın görüp öbürünün görmediği duvar, araç yanı;
+    cevap son adımda bırakılanları sayar. Retler: invalid_uid, entity_not_found,
+    not_a_pointcloud, invalid_input (reject boş, reject.angle 0–90 dışı),
+    layer_not_found, too_many_cloud_points.
     """
     __slots__ = ()
     id = "cad.pointclouds.register"
@@ -867,6 +875,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
@@ -892,8 +901,15 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345;
         ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin
         tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı
-        birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found,
-        not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.
+        birden küçük eşleşmeleri verir. reject (ADR 2700, PCL'in eşleşme ayıklayıcıları):
+        edges, sabit noktası bulutunun kenarında olan eşleşmeyi (erişim içindeki
+        komşularının teğet düzlemdeki yönleri 90°'den büyük boşluk bırakıyor: tarama sınırı,
+        gölge) her adımın dışında bırakır; angle, sabit normali ile hareketli noktanın kendi
+        normali bu kadar dereceden çok ayrılan (ya da hareketli normali olmayan) eşleşmeyi
+        bırakır: bir taramanın görüp öbürünün görmediği duvar, araç yanı; cevap son adımda
+        bırakılanları sayar. Retler: invalid_uid, entity_not_found, not_a_pointcloud,
+        invalid_input (reject boş, reject.angle 0–90 dışı), layer_not_found,
+        too_many_cloud_points.
 
         Args:
             doc: The drawing it works on.
@@ -908,6 +924,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours: Unit: count.
             radius: Unit: length.
             reach: Unit: length.
+            reject:
             robust:
             rules:
             scale: Unit: scale.
@@ -937,6 +954,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            reject=reject,
             robust=robust,
             rules=rules,
             scale=scale,
@@ -960,6 +978,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
@@ -981,6 +1000,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            reject=reject,
             robust=robust,
             rules=rules,
             scale=scale,
@@ -1004,6 +1024,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
@@ -1025,6 +1046,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            reject=reject,
             robust=robust,
             rules=rules,
             scale=scale,
@@ -1048,6 +1070,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         neighbours: int | None | Unset = UNSET,
         radius: float | None | Unset = UNSET,
         reach: float | None | Unset = UNSET,
+        reject: RegisterReject | None | Unset = UNSET,
         robust: RegisterRobust | None | Unset = UNSET,
         rules: CloudRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
@@ -1074,6 +1097,7 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
             neighbours=neighbours,
             radius=radius,
             reach=reach,
+            reject=reject,
             robust=robust,
             rules=rules,
             scale=scale,

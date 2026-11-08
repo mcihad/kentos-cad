@@ -5,16 +5,19 @@
 //! geometry holds it (a flat ground: the plan shift unknown), the reliable coverage and each set's KOH_Z at the
 //! control points; a choice shows the worst cells or the control points. CSV kaydet writes the answer and the matrix.
 //! The weights row (docs/adr/2300) asks for Huber's weights (its k, 1.345 at first) or the trimmed ICP (the share of
-//! pairs kept, 1 at first: nothing trimmed until the user says how much of the scans overlap).
+//! pairs kept, 1 at first: nothing trimmed until the user says how much of the scans overlap). The rejections row
+//! (docs/adr/2700) leaves out the pairs at the fixed scan's edge and those whose normals lie further apart than an
+//! angle (off at first; the angle's box is the user's, 30° until changed), and the summary counts what it left out.
 
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered, RegisterRobust};
+use kentos_commands::{CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered, RegisterReject, RegisterRobust};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, pointcloud_register};
 use kentos_ui::label;
+use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
@@ -84,6 +87,10 @@ pub struct State {
     pub weights: Weights,
     pub k: f64,
     pub ratio: f64,
+    /// docs/adr/2700: the pairs left out at the fixed scan's edge, and by the normals' angle (degrees).
+    pub edges: bool,
+    pub by_angle: bool,
+    pub angle: f64,
     pub view: View,
     pub answer: Option<Result<PointCloudsRegistered, String>>,
 }
@@ -101,6 +108,9 @@ pub enum Event {
     Weights(Weights),
     K(f64),
     Ratio(f64),
+    Edges(bool),
+    ByAngle(bool),
+    Angle(f64),
     View(View),
     Save,
     Saved(Option<PathBuf>),
@@ -169,6 +179,7 @@ impl App {
                 Weights::Huber => Some(RegisterRobust { kind: "huber".into(), k: Some(s.k), ratio: None }),
                 Weights::Trimmed => Some(RegisterRobust { kind: "trimmed".into(), k: None, ratio: Some(s.ratio) }),
             },
+            reject: (s.edges || s.by_angle).then(|| RegisterReject { edges: s.edges, angle: s.by_angle.then_some(s.angle) }),
             ..Default::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -245,6 +256,9 @@ impl App {
             weights: Weights::Plain,
             k: pointcloud_register::HUBER_K,
             ratio: 1.0,
+            edges: false,
+            by_angle: false,
+            angle: 30.0,
             view: View::Worst,
             answer: None,
         };
@@ -276,6 +290,9 @@ impl App {
             Event::Weights(v) => s.weights = v,
             Event::K(v) => s.k = v,
             Event::Ratio(v) => s.ratio = v,
+            Event::Edges(v) => s.edges = v,
+            Event::ByAngle(v) => s.by_angle = v,
+            Event::Angle(v) => s.angle = v,
             Event::View(v) => {
                 s.view = v;
                 return Task::none();
@@ -396,8 +413,19 @@ impl App {
             };
             lines.push(words::text_line(Kind::Info, said));
         }
+        // docs/adr/2700: what the rejections left out at the last step.
+        if let Some(x) = &r.rejected {
+            lines.push(words::text_line(
+                Kind::Info,
+                format!(
+                    "Ayıklama: son adımda {} eşleşme sabit taramanın kenarında, {} eşleşme normal açısıyla dışarıda kaldı; RMS ve örtüşme kalanlardan.",
+                    x.edges, x.angle
+                ),
+            ));
+        }
         lines.push(words::text_line(Kind::Info, r.notes[0].clone()));
-        for n in r.notes.iter().skip(3) {
+        // The rejections' own note is said by the line above.
+        for n in r.notes.iter().skip(3).filter(|n| !(r.rejected.is_some() && n.starts_with("Ayıklanan eşleşmeler"))) {
             lines.push(words::text_line(Kind::Info, n.clone()));
         }
         lines
@@ -449,6 +477,21 @@ impl App {
                     ],
                 }
                 .spacing(10)
+                .align_y(Center)
+            })
+            .field("Ayıkla", {
+                let mark = |on: bool| if on { Check::Checked } else { Check::Unchecked };
+                let angle: Element<'_, Message> = if s.by_angle {
+                    NumberInput::new(s.angle, |v| msg(Event::Angle(v))).step(5.0).decimals(1).point().width(90).into()
+                } else {
+                    label::caption("").into()
+                };
+                row![
+                    fields::check(mark(s.edges), "Kenardaki eşleşmeler", Some(msg(Event::Edges(!s.edges)))),
+                    fields::check(mark(s.by_angle), "Normal açısı (°)", Some(msg(Event::ByAngle(!s.by_angle)))),
+                    angle
+                ]
+                .spacing(14)
                 .align_y(Center)
             });
         let mut lines = Vec::new();

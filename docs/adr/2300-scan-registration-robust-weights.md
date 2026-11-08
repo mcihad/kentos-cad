@@ -77,4 +77,4 @@ artık, güvenilir kapsam ve dönüşüm tarifi raporlansın.”
 
 - Dönüşümün buluta uygulanması (yerleşim dönüşümü; `.kcad`, çizici ve bulut araçları birlikte).
 - Çoklu tarama demeti, kalıcı kayıt kimliği, gerçek veriyle süre ve bellek (ADR 1800 Sonra).
-- Kenar ve örtülme ayıklaması.
+- Kenar ve örtülme ayıklaması. Yapıldı: [ADR 2700](2700-scan-registration-rejections.md).

@@ -43,7 +43,7 @@ sırayla alır.
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300 | dönüşümün buluta uygulanması; çoklu tarama demeti; kenar ve örtülme ayıklaması | gerçek veri ölçümü |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
@@ -1180,6 +1180,15 @@ Kapsam: **Harita + CBS**. Araştırma: MathWorks `robustfit` (Huber k 1,345, %95
 hafifletilen eşleşmeler; 0,5 m yüksek yamalı yeni taramada düz ICP 2,4 cm kayarken Huber 0,9 mm, kırpılmış 0,1 mm
 (40 ortak durum, eski 31'i aynı); MCP; Tarama kaydı'nda Ağırlık satırı. Açık: dönüşümün buluta uygulanması, çoklu
 tarama demeti, kenar ve örtülme ayıklaması, gerçek veriyle ölçüm.
+
+**8 Kasım 2026, dördüncü tur — kenar ve örtülme ayıklaması ([ADR 2700](../docs/adr/2700-scan-registration-rejections.md)).**
+Kapsam: **Harita + CBS**. Araştırma: PCL `CorrespondenceRejectorSurfaceNormal` (iki bulutun normalleri, eşik
+kullanıcının) ve `BoundaryEstimation` (teğet düzlemde açı ölçütü, öntanımlı π/2, yarıçapla arama). Kanıtlanan:
+`cad.pointclouds.register`'a `reject`: sabit noktası kenarda olan (erişim içindeki komşuların yönlerinde 90°'den büyük
+boşluk) ve normalleri kullanıcının açısından çok ayrılan eşleşmeler her adımın dışında; cevapta sayılar. Yalnız ikinci
+taramada duvar: düz ICP 5 cm kayar, 30° düzeltir; bordür arkası gölge (m²'de 24 nokta): düz ICP 2 cm kayar, kenar
+düzeltir (52 ortak durum, eski 40'ı aynı); MCP; Tarama kaydı'nda Ayıkla satırı. Seyrek taramada kenar ölçütü çok eşleşme
+atar (voksel yoğunluğa göre seçilmeli). Açık: dönüşümün buluta uygulanması, çoklu tarama demeti, gerçek veriyle ölçüm.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

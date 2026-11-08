@@ -34,6 +34,15 @@ The rules, by hand (numpy for the eigenvalues; every nearest search a full one):
   equals), 0 for the rest; the report: the last pairs' scale and the pairs under 1; the strength unweighted.
   A fifth cloud, kayit-e, is kayit-b's ground sampled again and moved the same way with an 8 m × 6 m patch of points
   0.5 m above the ground (a parked vehicle, low vegetation): pairs within the reach that are gross mismatches.
+- rejections (docs/adr/2700), each step before the weights: `edges` leaves out a pair whose fixed point is on its
+  cloud's edge: the fixed points within the reach of it (itself left out), in its tangent plane (u = n × e normalised,
+  e the up axis unless |n_z| ≥ 0.9, then east; v = n × u), give directions atan2 whose largest gap (the wrap-around
+  one included) is over 90°, or fewer than two; `angle` leaves out a pair whose fixed normal and the moving point's own
+  normal (by the same rule from the moving voxel points, turned by R) have |cos| under cos(angle), or whose moving
+  point has none; the report counts both at the last pairs. kayit-f is kayit-b's ground sampled again with a wall only
+  it saw (20 m at y = 19 m, 3 m high): its foot pairs with the ground. kayit-h and kayit-i are the ground's north
+  strip with a 15 cm curb at y = 20 m, sampled densely, the fixed one with a shadow on the sidewalk behind the curb
+  (20–21.5 m), the moving one whole and moved as kayit-b: sidewalk points pair with the road's edge.
 """
 
 import copy
@@ -114,11 +123,46 @@ def raised(seed):
     return rows
 
 
+def walled(seed):
+    """A moved sampling of the ground with a wall only it saw (docs/adr/2700): 20 m long at y = 19 m, 3 m high."""
+    rows = scan(seed, True)
+    rnd = random.Random(seed + 1)
+    r = rot(MIS_W)
+    for _ in range(20 * 3 * 6):
+        x, h = rnd.uniform(2.0, 22.0), rnd.uniform(0.0, 3.0)
+        p = [X0 + x, Y0 + 19.0 + rnd.uniform(-0.01, 0.01), ground(x, 19.0) + h]
+        d = [p[i] - MID[i] for i in range(3)]
+        p = [sum(r[i][j] * d[j] for j in range(3)) + MID[i] + MIS_T[i] for i in range(3)]
+        rows.append((round(p[0], 3), round(p[1], 3), round(p[2], 3)))
+    return rows
+
+
+def curbed(seed, moved):
+    """The ground's north strip (x 0–30 m, y 12–24 m) with a sidewalk 15 cm above it north of y = 20 m, sampled densely
+    (24 points a square metre, as a mobile scanner's): the fixed sampling with a shadow behind the curb (20–21.5 m), the
+    moving one whole and moved as kayit-b (docs/adr/2700)."""
+    rnd = random.Random(seed)
+    r = rot(MIS_W)
+    rows = []
+    for _ in range(30 * 12 * 24):
+        x, y = rnd.uniform(0.0, 30.0), rnd.uniform(12.0, 24.0)
+        if not moved and 20.0 < y < 21.5:
+            continue
+        p = [X0 + x, Y0 + y, ground(x, y) + (0.15 if y > 20.0 else 0.0) + rnd.uniform(-0.01, 0.01)]
+        if moved:
+            d = [p[i] - MID[i] for i in range(3)]
+            p = [sum(r[i][j] * d[j] for j in range(3)) + MID[i] + MIS_T[i] for i in range(3)]
+        rows.append((round(p[0], 3), round(p[1], 3), round(p[2], 3)))
+    return rows
+
+
 CLOUDS = {"kayit-a.xyz": scan(1800, False), "kayit-b.xyz": scan(1801, True),
           "kayit-c.xyz": scan(1802, False, flat=True), "kayit-d.xyz": scan(1803, True, flat=True),
-          "kayit-e.xyz": raised(1804)}
-# kayit-e came after the control points (5–9): its id is 10.
-IDS = {"kayit-a.xyz": 1, "kayit-b.xyz": 2, "kayit-c.xyz": 3, "kayit-d.xyz": 4, "kayit-e.xyz": 10}
+          "kayit-e.xyz": raised(1804), "kayit-f.xyz": walled(1805), "kayit-h.xyz": curbed(1806, False),
+          "kayit-i.xyz": curbed(1807, True)}
+# kayit-e came after the control points (5–9): its id is 10; the rejections' clouds after it (docs/adr/2700).
+IDS = {"kayit-a.xyz": 1, "kayit-b.xyz": 2, "kayit-c.xyz": 3, "kayit-d.xyz": 4, "kayit-e.xyz": 10, "kayit-f.xyz": 11,
+       "kayit-h.xyz": 12, "kayit-i.xyz": 13}
 # On the plain slope, away from the mound, the ridge and the roof: a plane over 2 m is the ground there.
 CONTROL = [("K1", 27.2, 3.1), ("K2", 3.4, 21.7), ("K3", 28.1, 21.6), ("K4", 17.3, 2.2), ("K5", 2.3, 11.8)]
 
@@ -155,7 +199,8 @@ def setup():
     ents = [cloud(IDS[n], n) for n in CLOUDS if IDS[n] <= 4]
     for k, (n, x, y) in enumerate(CONTROL):
         ents.append(control_point(5 + k, n, x, y, round(ground(x, y), 3)))
-    ents.append(cloud(IDS["kayit-e.xyz"], "kayit-e.xyz"))
+    for n in ("kayit-e.xyz", "kayit-f.xyz", "kayit-h.xyz", "kayit-i.xyz"):
+        ents.append(cloud(IDS[n], n))
     return {"format": "kentos.document", "version": 2, "name": "Tarama kaydı",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
@@ -236,17 +281,83 @@ def nearest(fixed_np, q):
     return float(d2[i]), i
 
 
-def pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach):
+def pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach, edge=None, own=None, cos=None):
+    """The pairs now and the rejections' counts (at an edge, by the normals' angle; docs/adr/2700)."""
     out = []
-    for m in moving:
+    at_edges = by_angle = 0
+    for j, m in enumerate(moving):
         at = apply(r, t, m, c)
         if not len(fixed):
             continue
         d2, i = nearest(fixed_np, at)
         if d2 > reach * reach or normals[i] is None:
             continue
+        if edge is not None and edge[i]:
+            at_edges += 1
+            continue
+        if own is not None:
+            o = own[j]
+            turned = None if o is None else [dot(r[0], o), dot(r[1], o), dot(r[2], o)]
+            if turned is None or abs(dot(normals[i], turned)) < cos:
+                by_angle += 1
+                continue
         out.append((at, i, dot(sub(at, fixed[i]), normals[i])))
-    return out
+    return out, at_edges, by_angle
+
+
+def normal_of(points, points_np, p, k):
+    """A point's normal from its k nearest points (squared distance, then index) and those points with their squared
+    distances; none unless the middle eigenvalue is at least four times the smallest."""
+    if k < 3:
+        return None, []
+    d = points_np - np.asarray(p)
+    d2 = d[:, 0] * d[:, 0] + d[:, 1] * d[:, 1] + d[:, 2] * d[:, 2]
+    near = [int(i) for i in np.lexsort((np.arange(len(points)), d2))[:k]]
+    kk = float(len(near))
+    mean = [0.0, 0.0, 0.0]
+    for i in near:
+        q = points[i]
+        mean = [mean[0] + q[0], mean[1] + q[1], mean[2] + q[2]]
+    mean = [mean[0] / kk, mean[1] / kk, mean[2] / kk]
+    cov = [[0.0] * 3 for _ in range(3)]
+    for i in near:
+        dd = sub(points[i], mean)
+        for a in range(3):
+            for bb in range(3):
+                cov[a][bb] += dd[a] * dd[bb] / kk
+    values, vectors = np.linalg.eigh(np.array(cov))
+    found = [(float(d2[i]), i) for i in near]
+    if values[1] > 0.0 and values[1] >= 4.0 * max(values[0], 0.0):
+        n = [float(vectors[0, 0]), float(vectors[1, 0]), float(vectors[2, 0])]
+        if n[2] < 0.0 or (n[2] == 0.0 and (n[1] < 0.0 or (n[1] == 0.0 and n[0] < 0.0))):
+            n = [-n[0], -n[1], -n[2]]
+        return n, found
+    return None, found
+
+
+def on_edge(points, p, n, near):
+    """docs/adr/2700: the neighbours' (the points within the reach) directions in the tangent plane leave a gap over
+    90° (or fewer than two)."""
+    e = [0.0, 0.0, 1.0] if abs(n[2]) < 0.9 else [1.0, 0.0, 0.0]
+    u = cross(n, e)
+    ln = math.sqrt(dot(u, u))
+    u = [u[0] / ln, u[1] / ln, u[2] / ln]
+    v = cross(n, u)
+    angles = []
+    for d2, i in near:
+        if not d2 > 0.0:
+            continue
+        q = sub(points[i], p)
+        a, b = dot(q, u), dot(q, v)
+        if a != 0.0 or b != 0.0:
+            angles.append(math.atan2(b, a))
+    if len(angles) < 2:
+        return True
+    angles.sort()
+    gap = 2.0 * math.pi - (angles[-1] - angles[0])
+    for x, y in zip(angles, angles[1:]):
+        gap = max(gap, y - x)
+    return gap > math.pi / 2.0
 
 
 def normal_matrix(ps, normals, c, weights=None):
@@ -306,7 +417,7 @@ def step(m, v):
 
 
 def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, neighbours=8, cell=2.0, least=4,
-             classes=None, control=None, radius=None, scale=1000, rules=None, robust=None):
+             classes=None, control=None, radius=None, scale=1000, rules=None, robust=None, reject=None):
     rules = rules or RULES
     radius = radius if radius is not None else cell
     rows = [CLOUDS[n] for n in names]
@@ -337,34 +448,24 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
     c = [seq_sum(p[0] for p in fixed) / nf, seq_sum(p[1] for p in fixed) / nf, seq_sum(p[2] for p in fixed) / nf]
     fixed_np = np.array(fixed) if fixed else np.zeros((0, 3))
     k = min(neighbours, len(fixed))
-    normals = []
-    for p in fixed:
-        if k < 3:
-            normals.append(None)
-            continue
-        d = fixed_np - np.asarray(p)
-        d2 = d[:, 0] * d[:, 0] + d[:, 1] * d[:, 1] + d[:, 2] * d[:, 2]
-        near = np.lexsort((np.arange(len(fixed)), d2))[:k]
-        kk = float(len(near))
-        mean = [0.0, 0.0, 0.0]
-        for i in near:
-            q = fixed[i]
-            mean = [mean[0] + q[0], mean[1] + q[1], mean[2] + q[2]]
-        mean = [mean[0] / kk, mean[1] / kk, mean[2] / kk]
-        cov = [[0.0] * 3 for _ in range(3)]
-        for i in near:
-            dd = sub(fixed[i], mean)
-            for a in range(3):
-                for bb in range(3):
-                    cov[a][bb] += dd[a] * dd[bb] / kk
-        values, vectors = np.linalg.eigh(np.array(cov))
-        if values[1] > 0.0 and values[1] >= 4.0 * max(values[0], 0.0):
-            n = [float(vectors[0, 0]), float(vectors[1, 0]), float(vectors[2, 0])]
-            if n[2] < 0.0 or (n[2] == 0.0 and (n[1] < 0.0 or (n[1] == 0.0 and n[0] < 0.0))):
-                n = [-n[0], -n[1], -n[2]]
-            normals.append(n)
-        else:
-            normals.append(None)
+    normed = [normal_of(fixed, fixed_np, p, k) for p in fixed]
+    normals = [n for n, _ in normed]
+    edge = own = cos = None
+    if reject and reject.get("edges"):
+        edge = []
+        for p, n in zip(fixed, normals):
+            if n is None:
+                edge.append(False)
+                continue
+            d = fixed_np - np.asarray(p)
+            d2 = d[:, 0] * d[:, 0] + d[:, 1] * d[:, 1] + d[:, 2] * d[:, 2]
+            near = [(float(d2[i]), int(i)) for i in np.nonzero(d2 <= reach * reach)[0]]
+            edge.append(on_edge(fixed, p, n, near))
+    if reject and "angle" in reject:
+        moving_np = np.array(moving) if moving else np.zeros((0, 3))
+        km = min(neighbours, len(moving))
+        own = [normal_of(moving, moving_np, p, km)[0] for p in moving]
+        cos = math.cos(math.radians(reject["angle"]))
     if moving:
         rr = math.sqrt(seq_sum(dot(sub(m, c), sub(m, c)) for m in moving) / len(moving))
         L = rr if rr > 0.0 else 1.0
@@ -374,7 +475,7 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
     t = [0.0, 0.0, 0.0]
     done, converged, rms_before = 0, False, 0.0
     for it in range(iterations):
-        ps = pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach)
+        ps, _, _ = pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach, edge, own, cos)
         if len(ps) < 6:
             break
         if it == 0:
@@ -390,7 +491,7 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
         if moved < tolerance:
             converged = True
             break
-    last = pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach)
+    last, at_edges, by_angle = pairs_of(moving, r, t, c, fixed, fixed_np, normals, reach, edge, own, cos)
     np_ = float(len(last))
     if last:
         rms_after = math.sqrt(seq_sum(p[2] * p[2] for p in last) / np_)
@@ -468,6 +569,9 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
         notes.append("Yineleme sınırına varıldı; son adım toleransın üstünde kaldı.")
     if not controls:
         notes.append("Kontrol noktası yok: kaydın mutlak doğruluğu bilinmiyor; bulut ölçüye kesin hazır sayılmaz.")
+    if reject:
+        notes.append("Ayıklanan eşleşmeler (kenarda ya da normal açısıyla) hiçbir adıma girmedi; RMS ve örtüşme payı "
+                     "kalan eşleşmelerden.")
     out = {"rules": rules["id"], "source": rules["source"], "read": read, "used": [len(fixed), len(moving)],
            "iterations": done, "converged": converged, "centre": c, "rotation": rotation, "translation": t,
            "matrix": matrix, "pairs": len(last), "overlap": (np_ / len(moving)) if moving else 0.0,
@@ -492,13 +596,15 @@ def register(names, spacing=0.5, reach=1.0, iterations=30, tolerance=0.0001, nei
             rep["scale"] = s_
         rep["lighter"] = sum(1 for x_ in w_ if x_ < 1.0)
         out["robust"] = rep
+    if reject:
+        out["rejected"] = {"edges": at_edges, "angle": by_angle}
     out["notes"] = notes
     return out
 
 
 SAME = {"revision": "same", "canUndo": False}
 ARGS = ("spacing", "reach", "iterations", "tolerance", "neighbours", "cell", "least", "classes", "control", "radius",
-        "scale", "rules", "robust")
+        "scale", "rules", "robust", "reject")
 
 
 def ok(name, clouds=("kayit-a.xyz", "kayit-b.xyz"), op="plan", within=1e-7, **kw):
@@ -533,6 +639,16 @@ def cases():
     trimmed = register(list(gross), robust={"kind": "trimmed", "ratio": 0.9})
     off = [abs(x["translation"][2] - true_z) for x in (plain, huber, trimmed)]
     assert off[0] > 0.01 and off[1] < off[0] / 3 and off[2] < 0.005, off
+    # docs/adr/2700: the wall's foot pulls a plain fit off, the normals' angle leaves it out; the curb's sidewalk pairs
+    # with the road's edge across the shadow, the edges leave them out.
+    def gone(x):
+        return math.sqrt(sum((x["translation"][i] - base["translation"][i]) ** 2 for i in range(3)))
+    walled_ = ("kayit-a.xyz", "kayit-f.xyz")
+    w_plain, w_angle = register(list(walled_)), register(list(walled_), reject={"angle": 30.0})
+    assert gone(w_plain) > 0.03 and gone(w_angle) < gone(w_plain) / 10, (gone(w_plain), gone(w_angle))
+    curb = ("kayit-h.xyz", "kayit-i.xyz")
+    c_plain, c_edges = register(list(curb)), register(list(curb), reject={"edges": True})
+    assert gone(c_plain) > 0.015 and gone(c_edges) < gone(c_plain) / 3, (gone(c_plain), gone(c_edges))
     two = [uid(1), uid(2)]
     return [
         ok("A'ya B: kaydırılmış tarama sabitine oturur; GNSS kontrolü önce ve sonra", control="gnss"),
@@ -557,6 +673,16 @@ def cases():
         ok("Huber k = 3", gross, robust={"kind": "huber", "k": 3.0}),
         ok("kırpılmış ICP: eşleşmelerin en iyi %90'ı", gross, robust={"kind": "trimmed", "ratio": 0.9}),
         ok("temiz taramada Huber düz ICP'ye yakın kalır", robust={"kind": "huber"}),
+        # docs/adr/2700: what one scan saw and the other did not.
+        ok("yalnız ikinci taramada duvar: ayağı zeminle eşleşir, düz ICP kayar", walled_),
+        ok("normal açısı 30°: duvarın eşleşmeleri ayıklanır", walled_, reject={"angle": 30.0}),
+        ok("normal açısı 60°", walled_, reject={"angle": 60.0}),
+        ok("normal açısı Huber ağırlıklarıyla birlikte", walled_, robust={"kind": "huber"}, reject={"angle": 30.0}),
+        ok("bordürün arkası sabit taramada gölge: kaldırım yolun kenarıyla eşleşir, düz ICP kayar", curb),
+        ok("kenardaki eşleşmeler ayıklanınca bordür kaydırmaz", curb, reject={"edges": True}),
+        ok("kenar ve normal açısı birlikte", curb, reject={"edges": True, "angle": 30.0}),
+        ok("seyrek taramada kenar ölçütü çok eşleşme atar, sonuç yine oturur", reject={"edges": True}),
+        ok("temiz taramada normal açısı az eşleşme atar", reject={"angle": 30.0}),
         refused("tek bulut", {"uids": [uid(1)]}, "invalid_input",
                 "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.", "uids"),
         refused("aynı bulut iki kez", {"uids": [uid(1), uid(1)]}, "invalid_input",
@@ -603,6 +729,12 @@ def cases():
                 "tahmin etmez.", "robust.ratio"),
         refused("kırpılmış ICP payı 1,5", {"uids": two, "robust": {"kind": "trimmed", "ratio": 1.5}}, "invalid_input",
                 f"Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan {num(1.5)}).", "robust.ratio"),
+        refused("ayıklama bir şey istemiyor", {"uids": two, "reject": {}}, "invalid_input",
+                "Ayıklama için kenardaki eşleşmeleri (edges) ya da normal açısını (angle) verin.", "reject"),
+        refused("normal açısı 0", {"uids": two, "reject": {"angle": 0.0}}, "invalid_input",
+                f"Normal açısı 0° ile 90° arasında olmalı (yazılan {num(0.0)}).", "reject.angle"),
+        refused("normal açısı 90", {"uids": two, "reject": {"angle": 90.0}}, "invalid_input",
+                f"Normal açısı 0° ile 90° arasında olmalı (yazılan {num(90.0)}).", "reject.angle"),
     ]
 
 
@@ -619,7 +751,7 @@ def main():
             path.write_text(t, "utf-8")
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.pointclouds.register", "commandVersion": 1,
            "title": "Tarama kaydı denetimi",
-           "note": "ADR 1800, 2300. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem "
+           "note": "ADR 1800, 2300, 2700. Bağımsız başvuru scripts/fixtures/pointcloud_register_cases.py: voksel, normal, nokta-düzlem "
                    "ICP (Low 2004), güç, kapsam ve kontrol elle (numpy yalnız öz değerler için); bulutlar sentetik metin "
                    "bulutlarıdır; KentOS kodu yok.",
            "setup": setup(), "cases": cases()}

@@ -56410,7 +56410,7 @@
       "id": "cad.pointclouds.register",
       "version": 1,
       "title": "Tarama kaydı denetimi",
-      "summary": "İkinci nokta bulutunu (hareketli) birinciye (sabit) örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler, salt okunur: iki bulut tam çözünürlükte okunup voksel başına bir noktaya (noktalarının ortalaması, spacing, ilk değer 0,5 m) indirilir; sabit bulutun normali en yakın komşularından (neighbours, ilk değer 8), her hareketli nokta erişim içindeki (reach, ilk değer 1 m) en yakın sabit noktayla eşlenir; adım Low'un (2004) doğrusal en küçük kareleriyle, adım toleransın (ilk değer 0,1 mm) altına inince ya da yineleme sınırında (ilk değer 30) durur. Cevap: dönüşüm tarifi (merkez, dönüklük ω φ κ, öteleme ve projenin koordinatlarında 4×4 matris), önce ve sonra nokta-düzlem RMS'i, eşleşen pay (örtüşme), geometrinin altı parametreyi tutma gücü ve yatay öteleme gücü (düz zeminde yatay bilinmez), kapsam hücrelerinin güvenilir alanı (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı birden küçük eşleşmeleri verir. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input, layer_not_found, too_many_cloud_points.",
+      "summary": "İkinci nokta bulutunu (hareketli) birinciye (sabit) örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler, salt okunur: iki bulut tam çözünürlükte okunup voksel başına bir noktaya (noktalarının ortalaması, spacing, ilk değer 0,5 m) indirilir; sabit bulutun normali en yakın komşularından (neighbours, ilk değer 8), her hareketli nokta erişim içindeki (reach, ilk değer 1 m) en yakın sabit noktayla eşlenir; adım Low'un (2004) doğrusal en küçük kareleriyle, adım toleransın (ilk değer 0,1 mm) altına inince ya da yineleme sınırında (ilk değer 30) durur. Cevap: dönüşüm tarifi (merkez, dönüklük ω φ κ, öteleme ve projenin koordinatlarında 4×4 matris), önce ve sonra nokta-düzlem RMS'i, eşleşen pay (örtüşme), geometrinin altı parametreyi tutma gücü ve yatay öteleme gücü (düz zeminde yatay bilinmez), kapsam hücrelerinin güvenilir alanı (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı birden küçük eşleşmeleri verir. reject (ADR 2700, PCL'in eşleşme ayıklayıcıları): edges, sabit noktası bulutunun kenarında olan eşleşmeyi (erişim içindeki komşularının teğet düzlemdeki yönleri 90°'den büyük boşluk bırakıyor: tarama sınırı, gölge) her adımın dışında bırakır; angle, sabit normali ile hareketli noktanın kendi normali bu kadar dereceden çok ayrılan (ya da hareketli normali olmayan) eşleşmeyi bırakır: bir taramanın görüp öbürünün görmediği duvar, araç yanı; cevap son adımda bırakılanları sayar. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input (reject boş, reject.angle 0–90 dışı), layer_not_found, too_many_cloud_points.",
       "aliases": [
         "taramakaydi",
         "icp"
@@ -56429,7 +56429,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pointclouds.register` v1: the two clouds (persistent ids: the fixed first, the moving second); the\nvoxel's side (`spacing`, none: 0.5 m), the farthest pair (`reach`, none: 1 m), the most iterations (none: 30) and\nthe step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell\nof the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control\npoints' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the\nscale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open\ndrawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs\none; docs/adr/2300).\n\nRefusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,\n`robust.k`, `robust.ratio`),\n`invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more\nvoxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.",
+        "description": "Input of `cad.pointclouds.register` v1: the two clouds (persistent ids: the fixed first, the moving second); the\nvoxel's side (`spacing`, none: 0.5 m), the farthest pair (`reach`, none: 1 m), the most iterations (none: 30) and\nthe step that ends them (`tolerance`, none: 0.1 mm), the neighbours a normal is fitted to (none: 8), the plan cell\nof the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control\npoints' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the\nscale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open\ndrawing's file (the host gives it), robust weights against gross mismatches (`robust`, none: every pair weighs\none; docs/adr/2300) and the pairs left out at an edge or by their normals (`reject`, none: none; docs/adr/2700).\n\nRefusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,\n`robust.k`, `robust.ratio`; `reject` asking nothing, `reject.angle`),\n`invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more\nvoxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.",
         "properties": {
           "cell": {
             "format": "double",
@@ -56513,6 +56513,16 @@
             ],
             "x-unit": "length"
           },
+          "reject": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterReject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "robust": {
             "anyOf": [
               {
@@ -56573,7 +56583,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pointclouds.register` v1:\n- the package; the points read and the voxel points used per cloud;\n- the iterations done and whether the last step was under the tolerance;\n- the transform from the moving cloud to the fixed one: p ↦ R(p − centre) + centre + translation, R = Rz(κ)·Ry(φ)·\n  Rx(ω) with `rotation` = [ω, φ, κ] (radians), and the same as a row-major 4×4 matrix in the project's coordinates;\n- the pairs at the end and the share of the moving voxel points they are (`overlap`); the point-to-plane RMS\n  before the first step and after the last, the mean after;\n- `strength`: √(λmin/λmax) of the six parameters' normal matrix (the angles times the moving points' RMS radius,\n  so all are metres): near 0 a direction the geometry does not fix; `horizontal`: √ of the plan translations'\n  smaller eigenvalue over the height translation's (near 0: a flat ground, the plan shift unknown);\n- the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the\n  package's swath-to-swath value), the worst cells (at most 20, RMS down);\n- the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;\n- notes.",
+        "description": "Output of `cad.pointclouds.register` v1:\n- the package; the points read and the voxel points used per cloud;\n- the iterations done and whether the last step was under the tolerance;\n- the transform from the moving cloud to the fixed one: p ↦ R(p − centre) + centre + translation, R = Rz(κ)·Ry(φ)·\n  Rx(ω) with `rotation` = [ω, φ, κ] (radians), and the same as a row-major 4×4 matrix in the project's coordinates;\n- the pairs at the end and the share of the moving voxel points they are (`overlap`); the point-to-plane RMS\n  before the first step and after the last, the mean after;\n- `strength`: √(λmin/λmax) of the six parameters' normal matrix (the angles times the moving points' RMS radius,\n  so all are metres): near 0 a direction the geometry does not fix; `horizontal`: √ of the plan translations'\n  smaller eigenvalue over the height translation's (near 0: a flat ground, the plan shift unknown);\n- the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the\n  package's swath-to-swath value), the worst cells (at most 20, RMS down);\n- the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;\n- what the robust weights and the rejections did at the last step (docs/adr/2300, 2700);\n- notes.",
         "properties": {
           "cell": {
             "format": "double",
@@ -56697,6 +56707,16 @@
             "minItems": 2,
             "type": "array",
             "x-unit": "count"
+          },
+          "rejected": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRejectReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reliable": {
             "format": "double",
@@ -56804,7 +56824,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pointclouds.register` v1:\n- the package; the points read and the voxel points used per cloud;\n- the iterations done and whether the last step was under the tolerance;\n- the transform from the moving cloud to the fixed one: p ↦ R(p − centre) + centre + translation, R = Rz(κ)·Ry(φ)·\n  Rx(ω) with `rotation` = [ω, φ, κ] (radians), and the same as a row-major 4×4 matrix in the project's coordinates;\n- the pairs at the end and the share of the moving voxel points they are (`overlap`); the point-to-plane RMS\n  before the first step and after the last, the mean after;\n- `strength`: √(λmin/λmax) of the six parameters' normal matrix (the angles times the moving points' RMS radius,\n  so all are metres): near 0 a direction the geometry does not fix; `horizontal`: √ of the plan translations'\n  smaller eigenvalue over the height translation's (near 0: a flat ground, the plan shift unknown);\n- the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the\n  package's swath-to-swath value), the worst cells (at most 20, RMS down);\n- the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;\n- notes.",
+        "description": "Output of `cad.pointclouds.register` v1:\n- the package; the points read and the voxel points used per cloud;\n- the iterations done and whether the last step was under the tolerance;\n- the transform from the moving cloud to the fixed one: p ↦ R(p − centre) + centre + translation, R = Rz(κ)·Ry(φ)·\n  Rx(ω) with `rotation` = [ω, φ, κ] (radians), and the same as a row-major 4×4 matrix in the project's coordinates;\n- the pairs at the end and the share of the moving voxel points they are (`overlap`); the point-to-plane RMS\n  before the first step and after the last, the mean after;\n- `strength`: √(λmin/λmax) of the six parameters' normal matrix (the angles times the moving points' RMS radius,\n  so all are metres): near 0 a direction the geometry does not fix; `horizontal`: √ of the plan translations'\n  smaller eigenvalue over the height translation's (near 0: a flat ground, the plan shift unknown);\n- the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the\n  package's swath-to-swath value), the worst cells (at most 20, RMS down);\n- the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;\n- what the robust weights and the rejections did at the last step (docs/adr/2300, 2700);\n- notes.",
         "properties": {
           "cell": {
             "format": "double",
@@ -56928,6 +56948,16 @@
             "minItems": 2,
             "type": "array",
             "x-unit": "count"
+          },
+          "rejected": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRejectReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "reliable": {
             "format": "double",
@@ -179292,6 +179322,46 @@
       "required": [
         "name",
         "z"
+      ],
+      "type": "object"
+    },
+    "RegisterReject": {
+      "additionalProperties": false,
+      "description": "The pairs left out of each ICP step (docs/adr/2700; PCL's correspondence rejectors): `edges`, a pair whose fixed point\nis on its cloud's edge — its k nearest points' directions in its tangent plane leave a gap over 90° (PCL\nBoundaryEstimation's angle criterion and default π/2), as at a scan's border or around its shadow; `angle`, a pair\nwhose fixed normal and the moving point's own normal (from its k nearest moving points, turned with the moving\ncloud) lie more than this many degrees apart (above 0, under 90; the user's, as PCL's surface-normal rejector takes\nits threshold), or whose moving point has no normal: what one scan saw and the other did not, a wall or a vehicle's\nside over the ground.",
+      "properties": {
+        "angle": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "deg"
+        },
+        "edges": {
+          "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "RegisterRejectReport": {
+      "description": "What the rejections left out at the last step (docs/adr/2700): the pairs at an edge, and those by their normals'\nangle (or the moving point's having none).",
+      "properties": {
+        "angle": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "edges": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "edges",
+        "angle"
       ],
       "type": "object"
     },

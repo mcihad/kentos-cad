@@ -154,7 +154,7 @@
       "via": [
         "cad.pointclouds.register"
       ],
-      "note": "Pencere ikinci bulutu birinciye cad.pointclouds.register ile oturtur ve kaydı denetler (salt okunur); CSV kaydet dönüşüm matrisini, en kötü hücreleri ve kontrol noktalarını yazar (ADR 1800)."
+      "note": "Pencere ikinci bulutu birinciye cad.pointclouds.register ile oturtur ve kaydı denetler (salt okunur); CSV kaydet dönüşüm matrisini, en kötü hücreleri ve kontrol noktalarını yazar (ADR 1800). Ağırlık satırı Huber ya da kırpılmış ICP ister (ADR 2300); Ayıkla satırı sabit taramanın kenarındaki ve normalleri açıdan çok ayrılan eşleşmeleri dışarıda bırakır (ADR 2700)."
     },
     "raster.accuracy": {
       "level": "query",

@@ -68331,11 +68331,11 @@ class PointCloudsRegister(_Model):
     of the coverage (none: 2 m) and the pairs it needs (`least`, none: 4), the classes taken (none: all), the control
     points' layer, the attribute naming them (none: `Ad`) and the reach around one (`radius`, none: the cell), the
     scale's denominator (none: the project's plot scale), the rule package (none: KentOS's `lidar-uyum`), the open
-    drawing's file (the host gives it) and robust weights against gross mismatches (`robust`, none: every pair weighs
-    one; docs/adr/2300).
+    drawing's file (the host gives it), robust weights against gross mismatches (`robust`, none: every pair weighs
+    one; docs/adr/2300) and the pairs left out at an edge or by their normals (`reject`, none: none; docs/adr/2700).
 
     Refusals: `invalid_input` (not two different clouds; a number out of its range; `scale` 0; `rules`; `robust.kind`,
-    `robust.k`, `robust.ratio`),
+    `robust.k`, `robust.ratio`; `reject` asking nothing, `reject.angle`),
     `invalid_uid`, `entity_not_found`, `not_a_pointcloud`, `layer_not_found` (`control`), `too_many_cloud_points` (more
     voxel points than `REGISTER_MOST_POINTS` in a cloud). Warnings: `cloud_source_unreadable`.
     Attributes:
@@ -68361,6 +68361,7 @@ class PointCloudsRegister(_Model):
     neighbours: int | None | Unset = UNSET
     radius: float | None | Unset = UNSET
     reach: float | None | Unset = UNSET
+    reject: RegisterReject | None | Unset = UNSET
     robust: RegisterRobust | None | Unset = UNSET
     rules: CloudRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
@@ -68390,6 +68391,8 @@ class PointCloudsRegister(_Model):
             out["radius"] = None if self.radius is None else float(self.radius)
         if self.reach is not UNSET:
             out["reach"] = None if self.reach is None else float(self.reach)
+        if self.reject is not UNSET:
+            out["reject"] = None if self.reject is None else self.reject.to_json()
         if self.robust is not UNSET:
             out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.rules is not UNSET:
@@ -68416,6 +68419,7 @@ class PointCloudsRegister(_Model):
             neighbours=data.get("neighbours", UNSET),
             radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
             reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            reject=UNSET if "reject" not in data else None if data["reject"] is None else RegisterReject.from_json(data["reject"]),
             robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else CloudRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
@@ -68439,6 +68443,7 @@ class PointCloudsRegistered(_Model):
     - the coverage's cell, the area of the cells with `least` pairs and of those whose RMS holds to `limit` (the
       package's swath-to-swath value), the worst cells (at most 20, RMS down);
     - the control points and the statistics of the fixed cloud and of the moving cloud before and after, KOH_Z's limit;
+    - what the robust weights and the rejections did at the last step (docs/adr/2300, 2700);
     - notes.
     Attributes:
         read: Unit: count.
@@ -68489,6 +68494,7 @@ class PointCloudsRegistered(_Model):
     control_after: OverlapControlStats | None | Unset = UNSET
     control_before: OverlapControlStats | None | Unset = UNSET
     control_fixed: OverlapControlStats | None | Unset = UNSET
+    rejected: RegisterRejectReport | None | Unset = UNSET
     robust: RegisterRobustReport | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -68524,6 +68530,8 @@ class PointCloudsRegistered(_Model):
             out["controlBefore"] = None if self.control_before is None else self.control_before.to_json()
         if self.control_fixed is not UNSET:
             out["controlFixed"] = None if self.control_fixed is None else self.control_fixed.to_json()
+        if self.rejected is not UNSET:
+            out["rejected"] = None if self.rejected is None else self.rejected.to_json()
         if self.robust is not UNSET:
             out["robust"] = None if self.robust is None else self.robust.to_json()
         return out
@@ -68559,6 +68567,7 @@ class PointCloudsRegistered(_Model):
             control_after=UNSET if "controlAfter" not in data else None if data["controlAfter"] is None else OverlapControlStats.from_json(data["controlAfter"]),
             control_before=UNSET if "controlBefore" not in data else None if data["controlBefore"] is None else OverlapControlStats.from_json(data["controlBefore"]),
             control_fixed=UNSET if "controlFixed" not in data else None if data["controlFixed"] is None else OverlapControlStats.from_json(data["controlFixed"]),
+            rejected=UNSET if "rejected" not in data else None if data["rejected"] is None else RegisterRejectReport.from_json(data["rejected"]),
             robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobustReport.from_json(data["robust"]),
         )
 
@@ -78472,6 +78481,62 @@ class RegisterControl(_Model):
             dz_after=UNSET if "dzAfter" not in data else None if data["dzAfter"] is None else float(data["dzAfter"]),
             dz_before=UNSET if "dzBefore" not in data else None if data["dzBefore"] is None else float(data["dzBefore"]),
             dz_fixed=UNSET if "dzFixed" not in data else None if data["dzFixed"] is None else float(data["dzFixed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterReject(_Model):
+    """The pairs left out of each ICP step (docs/adr/2700; PCL's correspondence rejectors): `edges`, a pair whose fixed point
+    is on its cloud's edge — its k nearest points' directions in its tangent plane leave a gap over 90° (PCL
+    BoundaryEstimation's angle criterion and default π/2), as at a scan's border or around its shadow; `angle`, a pair
+    whose fixed normal and the moving point's own normal (from its k nearest moving points, turned with the moving
+    cloud) lie more than this many degrees apart (above 0, under 90; the user's, as PCL's surface-normal rejector takes
+    its threshold), or whose moving point has no normal: what one scan saw and the other did not, a wall or a vehicle's
+    side over the ground.
+    Attributes:
+        angle: Unit: deg.
+    """
+    angle: float | None | Unset = UNSET
+    edges: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.edges is not UNSET:
+            out["edges"] = self.edges
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterReject:
+        return cls(
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            edges=data.get("edges", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisterRejectReport(_Model):
+    """What the rejections left out at the last step (docs/adr/2700): the pairs at an edge, and those by their normals'
+    angle (or the moving point's having none).
+    Attributes:
+        edges: Unit: count.
+        angle: Unit: count.
+    """
+    edges: int
+    angle: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edges"] = self.edges
+        out["angle"] = self.angle
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisterRejectReport:
+        return cls(
+            edges=data["edges"],
+            angle=data["angle"],
         )
 
 
@@ -131665,6 +131730,8 @@ __all__ = [
     "RegionsLedgerBy",
     "RegisterCell",
     "RegisterControl",
+    "RegisterReject",
+    "RegisterRejectReport",
     "RegisterRobust",
     "RegisterRobustReport",
     "RegisteredArea",

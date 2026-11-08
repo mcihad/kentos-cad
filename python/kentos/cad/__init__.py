@@ -2920,6 +2920,8 @@ __all__ = [
     "RegionsLedgerBy",
     "RegisterCell",
     "RegisterControl",
+    "RegisterReject",
+    "RegisterRejectReport",
     "RegisterRobust",
     "RegisterRobustReport",
     "RegisteredArea",
