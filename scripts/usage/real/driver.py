@@ -112,9 +112,19 @@ def fit(title):
     # No window manager on the screen: the app's window put over the whole screen, as a maximized window is.
     root = d.screen().root
     g = root.get_geometry()
+    def named(w):
+        # WM_NAME comes as bytes python-xlib reads as Latin-1; the app writes UTF-8 ("KentOS Mimari — Konut").
+        name = w.get_wm_name()
+        if isinstance(name, str):
+            try:
+                return name.encode("latin-1").decode("utf-8")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                return name
+        return name
+
     for w in root.query_tree().children:
         try:
-            if w.get_wm_name() == title:
+            if named(w) == title:
                 w.configure(x=0, y=0, width=g.width, height=g.height)
                 # No window manager gives the keyboard to the window: give it as one would.
                 w.set_input_focus(X.RevertToParent, X.CurrentTime)

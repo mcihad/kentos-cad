@@ -292,14 +292,8 @@ mod tests {
     /// keeps the whole.
     #[test]
     fn dxf_writes_a_column_and_a_stair_at_the_files_scale() {
-        let simple = View {
-            detail: Detail::Schematic,
-            scale: 200.0,
-        };
-        let standard = View {
-            detail: Detail::Standard,
-            scale: 50.0,
-        };
+        let simple = View::new(Detail::Schematic, 200.0);
+        let standard = View::new(Detail::Standard, 50.0);
         let column = entity(
             serde_json::json!({ "kind": "column", "id": 1, "layerId": "kolon", "attrs": {},
             "at": { "x": 3.0, "y": 3.0 }, "width": 0.3, "depth": 0.5, "tag": "S1" }),

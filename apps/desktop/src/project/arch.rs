@@ -157,8 +157,10 @@ pub fn read(
     rows: &[Row],
     detail: Option<WallDetail>,
     space_method: Option<kentos_commands::SpaceMethod>,
+    cut: &str,
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
+    let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
         let elevation = match number(&r.elevation) {
@@ -177,6 +179,8 @@ pub fn read(
     let arch = ArchSettings {
         levels,
         detail,
+        // The plan's cut height (docs/adr/3012); empty: 1.10.
+        cut_height,
         space_method,
         phase_view: None,
         // The level and view the drawing opens with are not this form's (docs/adr/0720 §1).
@@ -246,6 +250,8 @@ pub(super) fn view<'a>(
     on_detail: impl Fn(Option<WallDetail>) -> Message + 'a,
     method: Option<kentos_commands::SpaceMethod>,
     on_method: impl Fn(Option<kentos_commands::SpaceMethod>) -> Message + 'a,
+    cut: &'a str,
+    on_cut: impl Fn(String) -> Message + 'a,
 ) -> Element<'a, Message> {
     let methods = Select::new(
         METHODS.iter().map(|(_, l)| Choice::new(*l)),
@@ -277,7 +283,23 @@ pub(super) fn view<'a>(
                 "Ölçeğe göre: modelde yaklaştıkça ayrıntı artar. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek uygulama, daha küçükte şematik çizilir; 1:150'den küçük paftada kapı kanadıyla, merdiven korkuluksuz, mobilya dış çizgisiyle en sade hâlini alır. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
             )),
     );
-    let read_now = read(rows, detail, method, None);
+    let (low, high) = kentos_commands::CUT_HEIGHT_RANGE;
+    let cut_wrong = !matches!(number(cut), Ok(None))
+        && !matches!(number(cut), Ok(Some(h)) if (low..=high).contains(&h));
+    let cut_box = super::group::<Message>(
+        "Planın kesme yüksekliği",
+        Column::new()
+            .spacing(6)
+            .push(container(field("1.10", cut, cut_wrong, on_cut)).width(typography::scaled(200.0)))
+            .push(label::caption(format!(
+                "Kat döşemesinden metre; boş: 1,10. Bu yüksekliği geçen pencere, boşluk ve niş planda kesilir; bütünüyle \
+                 üstünde kalan yüksek pencere duvarı kesmez, kesikli çizilir. İTÜ'nün teknik çizim notu 1,20–1,50 m \
+                 der; yeni Mimari projesi 1,20 ile açılır. {}–{} m arası.",
+                format!("{low:.2}").replace('.', ","),
+                format!("{high:.2}").replace('.', ",")
+            ))),
+    );
+    let read_now = read(rows, detail, method, cut, None);
     let head = kentos_ui::widget::table::band(
         row![
             container(kentos_ui::widget::table::title("Kat"))
@@ -378,6 +400,7 @@ pub(super) fn view<'a>(
     Column::new()
         .spacing(14)
         .push(detail_box)
+        .push(cut_box)
         .push(method_box)
         .push(super::group::<Message>(
             "Katlar",
@@ -515,24 +538,45 @@ mod tests {
         .unwrap()
     }
 
+    /// Planın kesme yüksekliği as typed (docs/adr/3012): a comma or a point, empty the default, outside 0.30–3.00 m or
+    /// not a number Kaydet waits.
+    #[test]
+    fn the_cut_height_is_read_as_typed_and_held_to_its_range() {
+        let a = project();
+        let form = rows(Some(&a));
+        assert_eq!(
+            read(&form, None, None, "1,25", Some(&a))
+                .unwrap()
+                .cut_height,
+            Some(1.25)
+        );
+        assert_eq!(
+            read(&form, None, None, " ", Some(&a)).unwrap().cut_height,
+            None
+        );
+        for bad in ["5", "0.1", "bir"] {
+            assert!(read(&form, None, None, bad, Some(&a)).is_err(), "{bad}");
+        }
+    }
+
     #[test]
     fn project_form_preserves_exact_choices_and_only_an_explicit_prefix_edit_changes_the_start() {
         let a = project();
         let mut form = rows(Some(&a));
-        assert_eq!(read(&form, None, None, Some(&a)).unwrap(), a);
+        assert_eq!(read(&form, None, None, "", Some(&a)).unwrap(), a);
         edit(&mut form, 0, Edit::Name("Giriş katı".into()));
-        let before = read(&form, None, None, Some(&a)).unwrap();
+        let before = read(&form, None, None, "", Some(&a)).unwrap();
         assert_eq!(before.space_first_number("zemin").as_deref(), Some("Z-001"));
         assert_eq!(before.space_names, a.space_names);
         edit(&mut form, 0, Edit::Prefix(" G- ".into()));
-        let changed = read(&form, None, None, Some(&a)).unwrap();
+        let changed = read(&form, None, None, "", Some(&a)).unwrap();
         assert_eq!(
             changed.space_first_number("zemin").as_deref(),
             Some("G-001")
         );
         assert_eq!(changed.space_usages, a.space_usages);
         edit(&mut form, 0, Edit::Delete);
-        let cleared = read(&form, None, None, Some(&a)).unwrap();
+        let cleared = read(&form, None, None, "", Some(&a)).unwrap();
         assert!(cleared.space_number_prefixes.is_empty());
         assert_eq!(cleared.space_names, a.space_names);
     }
@@ -559,12 +603,12 @@ mod tests {
             assert_eq!(a, project());
         }
         change(&mut a, ChoiceEdit::Add);
-        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        assert!(read(&rows(Some(&a)), None, None, "", Some(&a)).is_err());
         change(&mut a, ChoiceEdit::Value(2, "Çalışma".into()));
         change(&mut a, ChoiceEdit::Up(2));
         assert_eq!(a.space_names, ["Mutfak", "Çalışma", "mutfak"]);
         change(&mut a, ChoiceEdit::Value(1, " Mutfak ".into()));
-        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        assert!(read(&rows(Some(&a)), None, None, "", Some(&a)).is_err());
         change(&mut a, ChoiceEdit::Delete(1));
         assert_eq!(a, project());
     }

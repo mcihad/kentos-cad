@@ -89,6 +89,11 @@ pub fn holes(o: &OpeningFields) -> Vec<opening::Hole> {
     opening::holes(o.at, o.width, &spec(o))
 }
 
+/// [`holes`] with the plan cut at `cut` (docs/adr/3012).
+pub fn holes_at(o: &OpeningFields, cut: f64) -> Vec<opening::Hole> {
+    opening::holes_at(o.at, o.width, &spec(o), cut)
+}
+
 /// Its place along its wall, from its start to its end.
 pub fn span(o: &OpeningFields) -> (f64, f64) {
     opening::span(o.at, anchor(o.anchor), o.width)
@@ -179,6 +184,7 @@ pub fn spans_by_wall(
     entities: &[Entity],
     walls: &[usize],
     uid_of: impl Fn(u32) -> Option<String>,
+    cut: f64,
 ) -> Vec<Vec<opening::Hole>> {
     let mut out = vec![Vec::new(); walls.len()];
     let place: std::collections::HashMap<String, usize> = walls
@@ -191,7 +197,7 @@ pub fn spans_by_wall(
             && o.opening.broken.is_none()
             && let Some(&k) = place.get(o.opening.host.as_str())
         {
-            out[k].extend(holes(&o.opening));
+            out[k].extend(holes_at(&o.opening, cut));
         }
     }
     out

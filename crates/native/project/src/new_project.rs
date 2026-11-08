@@ -175,6 +175,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
             // A building's project starts on its ground floor (docs/adr/3007): the first wall has a level.
             arch: (cad && o.cad_work == Some(CadWork::Architecture)).then(|| ArchSettings {
                 levels: vec![ground_floor()],
+                // Plan cut 1.20 m over the floor (docs/adr/3012; İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
+                cut_height: Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT),
                 ..ArchSettings::default()
             }),
             ..default_settings(crs.srid)
@@ -618,6 +620,11 @@ mod tests {
         };
         let arch = made(Some(CadWork::Architecture)).expect("a building's settings");
         assert_eq!(arch.levels, vec![ground_floor()]);
+        // Its plan cut 1.20 m over the floor (docs/adr/3012).
+        assert_eq!(
+            arch.cut_height,
+            Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT)
+        );
         assert_eq!(
             (
                 arch.levels[0].name.as_str(),

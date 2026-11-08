@@ -1044,6 +1044,8 @@ pub struct FlightTool {
     risers: u32,
     tread: f64,
     cut: Option<f64>,
+    /// Whether Kesme yüksekliği was given (K): else the tool takes the project's plan cut height (docs/adr/3012).
+    cut_given: bool,
     numbering: bool,
     /// The last flight ends at the last riser, a ramp's where its slope says (else where it was clicked).
     fit: bool,
@@ -1133,7 +1135,8 @@ impl FlightTool {
             max_riser: kentos_commands::DEFAULT_MAX_RISER,
             risers: 0,
             tread: 0.28,
-            cut: Some(1.1),
+            cut: Some(kentos_commands::PLAN_CUT_HEIGHT),
+            cut_given: false,
             numbering: false,
             fit: true,
             railings: None,
@@ -1627,9 +1630,15 @@ impl FlightTool {
             "D" => length(cx).map(|v| self.tread = v).is_some(),
             "K" if words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0) => {
                 self.cut = None;
+                self.cut_given = true;
                 true
             }
-            "K" => length(cx).map(|v| self.cut = Some(v)).is_some(),
+            "K" => length(cx)
+                .map(|v| {
+                    self.cut = Some(v);
+                    self.cut_given = true;
+                })
+                .is_some(),
             // Merkez direği (docs/adr/0724 §3): empty, Yok or 0 none.
             "M" if !self.ramp && (words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0)) => {
                 self.post = None;
@@ -1735,6 +1744,10 @@ impl Tool for FlightTool {
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        // A stair's cut line where the project's plan is cut (docs/adr/3012), unless one was given.
+        if !self.ramp && !self.cut_given {
+            self.cut = Some(cx.doc.settings().plan_cut());
+        }
         self.see_level(cx);
         Flow::Stay
     }

@@ -688,9 +688,20 @@ impl Store {
         if view == self.wall_view {
             return;
         }
+        // Another cut height cuts other openings: every wall is joined again with its holes (docs/adr/3012).
+        if view.cut != self.wall_view.cut {
+            self.wall_dirty.push(Bounds {
+                min_x: f64::NEG_INFINITY,
+                min_y: f64::NEG_INFINITY,
+                max_x: f64::INFINITY,
+                max_y: f64::INFINITY,
+            });
+        }
         self.wall_view = view;
         let walls: Vec<u32> = (0..self.slots.len() as u32)
-            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if self.follows_view(&it.shape)))
+            .filter(
+                |&s| matches!(&self.slots[s as usize], Some(it) if self.follows_view(&it.shape)),
+            )
             .collect();
         for s in &walls {
             let fresh = self.slots[*s as usize]

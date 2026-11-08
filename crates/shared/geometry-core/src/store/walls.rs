@@ -52,16 +52,10 @@ fn the_view_decides_its_pieces() {
     let count = |s: &Store| s.get(1.0).unwrap().shapes().count();
     // Standard: the brick's hatch, two faces, two caps.
     assert_eq!(count(&s), 5);
-    s.set_wall_view(View {
-        detail: Detail::Detailed,
-        scale: 20.0,
-    });
+    s.set_wall_view(View::new(Detail::Detailed, 20.0));
     // The two lines between brick and plaster too.
     assert_eq!(count(&s), 7);
-    s.set_wall_view(View {
-        detail: Detail::Schematic,
-        scale: 100.0,
-    });
+    s.set_wall_view(View::new(Detail::Schematic, 100.0));
     let it = s.get(1.0).unwrap();
     assert_eq!(it.shapes().count(), 5);
     assert!(
@@ -158,7 +152,7 @@ fn another_views_pieces_are_those_of_a_store_at_that_view() {
         .collect();
     for detail in [Detail::Schematic, Detail::Standard, Detail::Detailed] {
         for scale in [50.0, 200.0] {
-            let view = View { detail, scale };
+            let view = View::new(detail, scale);
             let mut b = Store::new();
             b.put_json(json).unwrap();
             b.set_hosts([(3.0, Some(1.0))]);
@@ -174,10 +168,7 @@ fn another_views_pieces_are_those_of_a_store_at_that_view() {
         }
     }
     // Detailed draws more of the wall than the store's own view, and the store itself was not touched.
-    let detailed = View {
-        detail: Detail::Detailed,
-        scale: 50.0,
-    };
+    let detailed = View::new(Detail::Detailed, 50.0);
     assert!(
         a.expanded_at(1.0, detailed).unwrap().shapes.len()
             > before[0].as_ref().unwrap().shapes.len()
@@ -213,38 +204,64 @@ fn a_door_and_a_window_follow_the_stores_view() {
             .as_ref()
             .map_or(0, |x| x.shapes.len())
     };
-    let standard = View {
-        detail: Detail::Standard,
-        scale: 50.0,
-    };
+    let standard = View::new(Detail::Standard, 50.0);
     for (view, door, window) in [
-        (
-            View {
-                detail: Detail::Schematic,
-                scale: 200.0,
-            },
-            1,
-            1,
-        ),
-        (
-            View {
-                detail: Detail::Schematic,
-                scale: 100.0,
-            },
-            2,
-            3,
-        ),
+        (View::new(Detail::Schematic, 200.0), 1, 1),
+        (View::new(Detail::Schematic, 100.0), 2, 3),
         (standard, 4, 5),
     ] {
         s.set_wall_view(view);
         assert_eq!((count(&s, 2.0), count(&s, 3.0)), (door, window), "{view:?}");
     }
     // The store at 1:50 gives another view its own pieces: the schematic window without its frame's sides.
-    let schematic = View {
-        detail: Detail::Schematic,
-        scale: 100.0,
-    };
+    let schematic = View::new(Detail::Schematic, 100.0);
     assert_eq!(s.wall_view(), standard);
     assert_eq!(s.expanded_at(3.0, schematic).unwrap().shapes.len(), 3);
     assert_eq!(count(&s, 3.0), 5, "its own pieces untouched");
+}
+
+/// The plan's cut height is the view's (docs/adr/3012): a window with its sill at 1.6 m leaves its wall whole and is
+/// drawn dashed while the plan is cut at 1.10 or 1.20; cut at 1.70 it takes its hole out of its wall, every wall
+/// joined again, and is drawn solid.
+#[test]
+fn a_higher_cut_cuts_a_high_window() {
+    let json = r##"[
+        {"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":6,"y":0}],"width":0.25,"justify":"center"},
+        {"id":2,"layerId":"a","kind":"opening","at":3,"width":1.0,"form":"window","sill":1.6,"head":2.2,
+         "place":[{"x":2.5,"y":0.125},{"x":2.5,"y":-0.125},{"x":3.5,"y":0.125},{"x":3.5,"y":-0.125}],"frame":0.06}
+    ]"##;
+    let mut s = Store::new();
+    s.put_json(json).unwrap();
+    s.set_hosts([(2.0, Some(1.0))]);
+    let faces = |s: &Store| {
+        s.get(1.0)
+            .unwrap()
+            .expanded
+            .as_ref()
+            .map_or(0, |x| x.shapes.len())
+    };
+    let dashed = |s: &Store| {
+        let x = s.get(2.0).unwrap().expanded.clone().expect("its pieces");
+        x.strokes
+            .iter()
+            .filter(|k| k.line_type.as_deref() == Some("dashed"))
+            .count()
+            == x.shapes.len()
+    };
+    let at = |cut: f64| View {
+        cut,
+        ..View::new(Detail::Standard, 50.0)
+    };
+    s.set_wall_view(at(1.2));
+    let whole = faces(&s);
+    assert!(dashed(&s), "over the cut: dashed");
+    s.set_wall_view(at(1.7));
+    assert!(
+        faces(&s) > whole,
+        "cut at 1.70 its hole splits its wall: {} > {whole}",
+        faces(&s)
+    );
+    assert!(!dashed(&s), "cut: solid");
+    s.set_wall_view(at(1.1));
+    assert_eq!(faces(&s), whole, "back over the cut");
 }

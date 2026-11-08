@@ -294,6 +294,8 @@ pub fn view_at(
     kentos_geometry_core::geom::wall::View {
         detail: kentos_formats::walls::detail(detail),
         scale,
+        // The project's plan cut height (docs/adr/3012).
+        cut: settings.plan_cut(),
     }
 }
 
@@ -465,7 +467,7 @@ pub(crate) fn joined_pieces(
                     doc.openings_of(&u.to_string())
                         .into_iter()
                         .filter(|(_, o)| o.broken.is_none())
-                        .flat_map(|(_, o)| kentos_formats::openings::holes(&o))
+                        .flat_map(|(_, o)| kentos_formats::openings::holes_at(&o, doc.settings().plan_cut()))
                         .collect()
                 })
                 .unwrap_or_default()

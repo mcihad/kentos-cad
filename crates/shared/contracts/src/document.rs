@@ -815,6 +815,13 @@ impl SurveySettings {
 }
 
 impl ProjectSettings {
+    /// The plan's cut height, metres (docs/adr/3012): the project's Mimari setting, else [`crate::PLAN_CUT_HEIGHT`].
+    pub fn plan_cut(&self) -> f64 {
+        self.arch
+            .as_ref()
+            .map_or(crate::PLAN_CUT_HEIGHT, crate::ArchSettings::plan_cut)
+    }
+
     /// The project's type; none while it is not asked: no value, or the
     /// former Hibrit mode's (docs/adr/0165 §1).
     pub fn project_type(&self) -> Option<Workspace> {

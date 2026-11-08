@@ -145,11 +145,11 @@ impl Store {
                 at, width, opening, ..
             } = &it.shape
             {
-                // Its hole and a pocket door's cavities (docs/adr/0777 §2).
+                // Its hole and a pocket door's cavities (docs/adr/0777 §2), cut at the view's height (docs/adr/3012).
                 by_wall
                     .entry(w.to_bits())
                     .or_default()
-                    .extend(opening::holes(*at, *width, opening));
+                    .extend(opening::holes_at(*at, *width, opening, self.wall_view.cut));
             }
         }
         keys.iter()

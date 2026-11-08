@@ -144,7 +144,7 @@ fn a_door_and_a_window_show_their_parts_by_the_scale() {
     use kentos_geometry_core::geom::wall::{Detail, View};
     use opening::Part::*;
     let parts = |json: &str, detail: Detail, scale: f64| -> Vec<opening::Part> {
-        opening::pieces_at(&place(), &spec(json), View { detail, scale })
+        opening::pieces_at(&place(), &spec(json), View::new(detail, scale))
             .into_iter()
             .map(|m| m.part)
             .collect()
@@ -197,7 +197,7 @@ fn a_door_and_a_window_show_their_parts_by_the_scale() {
     // Without its frame's sides the window's faces and glass span the hole, jamb to jamb (x = 1 to 2); with them they
     // stand between the frame's sides (x = 1.05 to 1.95).
     let span = |detail: Detail, scale: f64| -> Vec<(opening::Part, f64, f64)> {
-        opening::pieces_at(&place(), &spec(window), View { detail, scale })
+        opening::pieces_at(&place(), &spec(window), View::new(detail, scale))
             .into_iter()
             .filter_map(|m| match m.shape {
                 kentos_geometry_core::entity::Shape::Line { a, b }

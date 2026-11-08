@@ -757,6 +757,7 @@ fn plain_walls(
     let view = kentos_geometry_core::geom::wall::View {
         detail: crate::walls::detail(detail),
         scale,
+        cut: input.cut_height.unwrap_or(kentos_contracts::PLAN_CUT_HEIGHT),
     };
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);

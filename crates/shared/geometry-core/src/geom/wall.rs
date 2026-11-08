@@ -386,11 +386,13 @@ impl crate::api::json::Flat for Spec {
     }
 }
 
-/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper.
+/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper; and the
+/// plan's cut height above the floor, metres (docs/adr/3012), which decides what of its openings is cut.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct View {
     pub detail: Detail,
     pub scale: f64,
+    pub cut: f64,
 }
 
 /// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/3010, 3011): a door its leaf, a window its
@@ -399,6 +401,15 @@ pub struct View {
 pub const SIMPLE_BEYOND: f64 = 150.0;
 
 impl View {
+    /// The view at `detail` and 1:`scale`, cut at the plan's usual height ([`crate::geom::opening::PLAN_CUT`]).
+    pub const fn new(detail: Detail, scale: f64) -> View {
+        View {
+            detail,
+            scale,
+            cut: crate::geom::opening::PLAN_CUT,
+        }
+    }
+
     /// Whether it draws the simplest: schematic beyond 1:[`SIMPLE_BEYOND`].
     pub fn simple(self) -> bool {
         self.detail == Detail::Schematic && self.scale > SIMPLE_BEYOND
@@ -407,10 +418,7 @@ impl View {
 
 impl Default for View {
     fn default() -> Self {
-        Self {
-            detail: Detail::Standard,
-            scale: 100.0,
-        }
+        View::new(Detail::Standard, 100.0)
     }
 }
 
@@ -946,10 +954,7 @@ mod tests {
             &p,
             None,
             &layered(),
-            View {
-                detail: Detail::Detailed,
-                scale: 20.0,
-            },
+            View::new(Detail::Detailed, 20.0),
         )
         .unwrap();
         let lines: Vec<&Piece> = got
@@ -979,10 +984,7 @@ mod tests {
             &p,
             None,
             &own,
-            View {
-                detail: Detail::Detailed,
-                scale: 20.0,
-            },
+            View::new(Detail::Detailed, 20.0),
         )
         .unwrap();
         assert!(
@@ -1007,10 +1009,7 @@ mod tests {
                 &p,
                 None,
                 &layered(),
-                View {
-                    detail,
-                    scale: 50.0,
-                },
+                View::new(detail, 50.0),
             )
             .unwrap();
             let hatches = got
@@ -1039,10 +1038,7 @@ mod tests {
             &p,
             None,
             &s,
-            View {
-                detail: Detail::Schematic,
-                scale: 100.0,
-            },
+            View::new(Detail::Schematic, 100.0),
         )
         .unwrap();
         assert_eq!(got.len(), 3);

@@ -514,26 +514,11 @@ fn furniture_is_its_outline_in_the_simplest_view() {
             .as_ref()
             .map_or(0, |x| x.shapes.len())
     };
-    let simple = View {
-        detail: Detail::Schematic,
-        scale: 200.0,
-    };
+    let simple = View::new(Detail::Schematic, 200.0);
     for (view, bed) in [
         (simple, 1),
-        (
-            View {
-                detail: Detail::Schematic,
-                scale: 100.0,
-            },
-            3,
-        ),
-        (
-            View {
-                detail: Detail::Standard,
-                scale: 50.0,
-            },
-            3,
-        ),
+        (View::new(Detail::Schematic, 100.0), 3),
+        (View::new(Detail::Standard, 50.0), 3),
     ] {
         s.set_wall_view(view);
         assert_eq!((count(&s, 1.0), count(&s, 2.0)), (bed, 2), "{view:?}");

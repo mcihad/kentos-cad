@@ -73,17 +73,11 @@ fn a_layer_at_a_views_own_detail_is_what_a_store_at_it_draws() {
         wall(2, (4.0, 0.0), (4.0, 3.0)),
     ];
     let list: Vec<&Entity> = walls.iter().collect();
-    let own = View {
-        detail: Detail::Schematic,
-        scale: 100.0,
-    };
+    let own = View::new(Detail::Schematic, 100.0);
     let store = store_at(&list, own);
     let plain = built(&store, &list, None);
     for detail in [Detail::Schematic, Detail::Standard, Detail::Detailed] {
-        let view = View {
-            detail,
-            scale: 100.0,
-        };
+        let view = View::new(detail, 100.0);
         assert_eq!(
             built(&store, &list, Some(view)),
             built(&store_at(&list, view), &list, None),
@@ -96,10 +90,7 @@ fn a_layer_at_a_views_own_detail_is_what_a_store_at_it_draws() {
     let detailed = built(
         &store,
         &list,
-        Some(View {
-            detail: Detail::Detailed,
-            scale: 100.0,
-        }),
+        Some(View::new(Detail::Detailed, 100.0)),
     );
     assert!(detailed.1.len() > plain.1.len());
     assert_eq!(store.wall_view(), own);

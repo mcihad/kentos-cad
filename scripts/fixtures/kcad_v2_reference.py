@@ -2623,6 +2623,9 @@ def document(d):
            for a in ([v["approved"]] if "approved" in v else []) + v.get("history", [])):
         # A volume approval's sources and algorithm (docs/adr/1041).
         schema = max(schema, 204)
+    if (d.get("settings", {}).get("arch") or {}).get("cutHeight") is not None:
+        # The project's plan cut height (docs/adr/3012).
+        schema = max(schema, 205)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3498,7 +3501,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-205.kcad"] = container(root(cmap(parts), version=uint(205)))
+    files["schema-version-206.kcad"] = container(root(cmap(parts), version=uint(206)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6216,6 +6219,15 @@ def build():
     assert ad.count(b"\x67version\x18\xcc") == 1, "an approval's sources are schema 204"
     out["road-approval-sources.kcad"] = container(ad)
     out["broken/road-approval-sources-in-schema-203.kcad"] = container(ad.replace(b"\x67version\x18\xcc", b"\x67version\x18\xcb"))
+    # Schema 205 (docs/adr/3012): the project's plan cut height; schema 204 refuses it as unknown.
+    cut = document(load("plan-cut.json"))
+    assert cut.count(b"\x67version\x18\xcd") == 1, "a plan cut height is schema 205"
+    out["plan-cut.kcad"] = container(cut)
+    out["broken/plan-cut-in-schema-204.kcad"] = container(cut.replace(b"\x67version\x18\xcd", b"\x67version\x18\xcc"))
+    # A height outside 0,3–3 m is refused (a typo of centimetres for metres, 120 for 1,2).
+    far = copy.deepcopy(load("plan-cut.json"))
+    far["settings"]["arch"]["cutHeight"] = 120.0
+    out["broken/plan-cut-out-of-range.kcad"] = container(document(far))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

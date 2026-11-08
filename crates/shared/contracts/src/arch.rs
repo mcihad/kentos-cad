@@ -1271,6 +1271,13 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub detail: Option<WallDetail>,
+    /// The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+    /// window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
+    /// writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub cut_height: Option<f64>,
     /// The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -1338,7 +1345,23 @@ pub struct ArchSettings {
     pub option_combos: Vec<crate::OptionCombo>,
 }
 
+/// The plan's cut height a new Mimari project starts with, metres (docs/adr/3012).
+pub const NEW_PROJECT_CUT_HEIGHT: f64 = 1.2;
+
+/// The lowest and highest plan cut height, metres: under a window's sill and over a door's head.
+pub const CUT_HEIGHT_RANGE: (f64, f64) = (0.3, 3.0);
+
 impl ArchSettings {
+    /// The plan's cut height, metres (docs/adr/3012): its own, else [`crate::PLAN_CUT_HEIGHT`].
+    pub fn plan_cut(&self) -> f64 {
+        self.cut_height.unwrap_or(crate::PLAN_CUT_HEIGHT)
+    }
+
+    /// Whether it says its own plan cut height (KCAD 205, docs/adr/3012).
+    pub fn has_plan_cut(&self) -> bool {
+        self.cut_height.is_some()
+    }
+
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
     pub fn has_materials(&self) -> bool {
         !self.materials.is_empty()
@@ -1462,6 +1485,20 @@ impl ArchSettings {
 
     /// What is wrong with it; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(h) = self.cut_height {
+            let (low, high) = CUT_HEIGHT_RANGE;
+            if !(h.is_finite() && (low..=high).contains(&h)) {
+                return Some((
+                    "cutHeight".into(),
+                    format!(
+                        "Planın kesme yüksekliği {} ile {} m arasında olmalı; {} verildi.",
+                        format!("{low:.2}").replace('.', ","),
+                        format!("{high:.2}").replace('.', ","),
+                        h.to_string().replace('.', ",")
+                    ),
+                ));
+            }
+        }
         if let Some(problem) = audit_exceptions_problem(&self.audit_exceptions) {
             return Some(problem);
         }
@@ -1882,5 +1919,35 @@ mod tests {
         many.space_number_prefixes
             .insert("missing".into(), "X-".into());
         assert_eq!(many.problem().unwrap().0, "spaceNumberPrefixes.missing");
+    }
+}
+
+#[cfg(test)]
+mod plan_cut_tests {
+    use super::*;
+
+    /// The plan's cut height (docs/adr/3012): its own, else 1.10; outside 0.30–3.00 m it does not hold.
+    #[test]
+    fn the_plan_cut_is_its_own_else_one_ten_and_held_to_its_range() {
+        let mut a = ArchSettings::default();
+        assert_eq!(a.plan_cut(), crate::PLAN_CUT_HEIGHT);
+        assert!(!a.has_plan_cut());
+        a.cut_height = Some(1.2);
+        assert_eq!(a.plan_cut(), 1.2);
+        assert!(a.has_plan_cut() && a.problem().is_none());
+        for bad in [0.1, 3.5, f64::NAN] {
+            a.cut_height = Some(bad);
+            assert_eq!(
+                a.problem().map(|(at, _)| at),
+                Some("cutHeight".to_owned()),
+                "{bad}"
+            );
+        }
+        let json = serde_json::to_value(ArchSettings {
+            cut_height: Some(1.2),
+            ..Default::default()
+        })
+        .unwrap();
+        assert_eq!(json, serde_json::json!({ "cutHeight": 1.2 }));
     }
 }

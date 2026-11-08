@@ -18,6 +18,12 @@ import type { WallDetail } from "./WallDetail";
  */
 export type ArchSettings = { levels?: Array<ArchLevel>, detail?: WallDetail, 
 /**
+ * The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+ * window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
+ * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
+ */
+cutHeight?: number, 
+/**
  * The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
  */
 spaceMethod?: SpaceMethod, 

@@ -64,6 +64,11 @@
       `block::outline_pieces` ona göre çizer. `arch::pieces` (önizleme, fikstür) bütündür.
     - 1:50'de kolonun ölçüsü (30/50) ve merdivenin rıht/basamağı (11 × 17.5/28) yazılır.
     - Mobilya: kütüphane kartının kategorisi "Mobilya/"; en sade düzeyde bütünü saran kapalı parçalar kalır.
+  - **Kesme yüksekliği (M13, [ADR 3012](../adr/3012-plan-cut-and-overhead.md)):**
+    - Pencere de yüksekliğine göre kesilir (`OpeningForm::cut_by_height`); bütünüyle kesmenin üstündeki pencere duvarı
+      kesmez, kesikli çizilir. Kapı her zaman kesilir.
+    - Kesme yüksekliği projenin Mimari ayarıdır (`arch.cutHeight`, `.kcad` 205; 0,30–3,00 m). Yoksa 1,10; yeni Mimari
+      projesi 1,20 yazar. Okuyan her yer `ProjectSettings::plan_cut()`'ı sorar.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

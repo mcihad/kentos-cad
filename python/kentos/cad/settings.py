@@ -51,6 +51,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
     coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
     sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre,
+    planın kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa 1,10),
     isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı
     spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç
     içe yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez,
@@ -109,7 +110,8 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name,
         sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
         (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). arch
-        bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre, isteğe bağlı
+        bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre, planın kesme yüksekliği
+        (cutHeight, katın döşemesinden metre, 0,3–3; yoksa 1,10), isteğe bağlı
         spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
         Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
         Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık

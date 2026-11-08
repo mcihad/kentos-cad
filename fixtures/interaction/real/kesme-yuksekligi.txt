@@ -1,0 +1,26 @@
+# M13 step 2 (docs/adr/3012): the plan's cut height in Proje ayarları › Mimari, as a hand sets it. The drawing is the
+# one headless scales.rs keeps with KENTOS_SCALE_PDF_DIR (kesme.kcad: a 5 × 4 m ring of 25 cm walls, two 1 m windows
+# with their sills at 0.90 and 1.60, a new Mimari project's 1.20 cut), opened with the file: the window's title is
+# "KentOS Mimari — Kesme". At 1.20 the high window is drawn dashed and leaves its wall whole; typed 1,8 and saved, it
+# is cut as the low one is. The clicks were measured on 8 November 2026 (KentOS menu, Proje ayarları, Mimari).
+fit KentOS Mimari — Kesme
+wait 2500
+key Home
+wait 800
+shot m13-01-kesme-120
+click 30 20   # KentOS menüsü
+wait 1200
+click 130 575   # Proje ayarları
+wait 1500
+click 305 241   # Mimari bölümü
+wait 1200
+click 565 329   # Planın kesme yüksekliği
+key ctrl+a
+type 1,8
+wait 400
+shot m13-02-ayar-180
+click 1155 829   # Kaydet
+wait 1500
+key Home
+wait 800
+shot m13-03-kesme-180

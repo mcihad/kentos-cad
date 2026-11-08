@@ -99,10 +99,7 @@ fn each_view_draws_the_walls_at_its_own_cameras_detail() {
     assert_eq!(app.spatial.store().wall_view().detail, Detail::Schematic);
     assert_eq!(
         other(&mut app).wall_view,
-        Some(View {
-            detail: Detail::Detailed,
-            scale: 100.0
-        }),
+        Some(View::new(Detail::Detailed, 100.0)),
         "the close view's own detail, the project's paper scale for the patterns"
     );
     // The far view fills the bodies, the close one hatches the brick: each as a store at its detail draws.

@@ -728,6 +728,8 @@ struct Input {
     #[serde(default)]
     wall_detail: Option<kentos_contracts::WallDetail>,
     #[serde(default)]
+    cut_height: Option<f64>,
+    #[serde(default)]
     layouts: Vec<kentos_contracts::CadLayout>,
     entities: Objects,
     layers: Vec<DxfWriteLayer>,
@@ -768,6 +770,7 @@ impl<'de> Deserialize<'de> for WriteInput {
             layouts: i.layouts,
             uids: i.uids,
             wall_detail: i.wall_detail,
+            cut_height: i.cut_height,
             annotations: i.annotations,
             notes: i.notes,
             entities: i.entities.0,

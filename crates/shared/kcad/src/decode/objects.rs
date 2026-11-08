@@ -397,6 +397,8 @@ pub(super) struct Features {
     pub(super) road_cloud_conversions: bool,
     /// Schema 197: a volume approval's sources and algorithm (docs/adr/1041).
     pub(super) road_approval_sources: bool,
+    /// Schema 205 (docs/adr/3012): the project's plan cut height.
+    pub(super) plan_cut: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
     /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
@@ -682,6 +684,7 @@ impl Features {
             road_cloud_heights: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS,
             road_cloud_conversions: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
             road_approval_sources: schema >= crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
+            plan_cut: schema >= crate::SCHEMA_WITH_PLAN_CUT,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,

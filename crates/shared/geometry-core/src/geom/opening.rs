@@ -379,10 +379,15 @@ pub fn span(at: f64, anchor: Anchor, width: f64) -> (f64, f64) {
 /// niche or a flue only when it crosses [`PLAN_CUT`] (its sill none: the floor; its head none: full height). One that
 /// does not leaves its wall whole: a high window over the cut is drawn dashed.
 pub fn cut_in_plan(spec: &Spec) -> bool {
+    cut_in_plan_at(spec, PLAN_CUT)
+}
+
+/// [`cut_in_plan`] at the plan's cut height `cut` above the floor (docs/adr/3012: the project's, a view's).
+pub fn cut_in_plan_at(spec: &Spec, cut: f64) -> bool {
     match spec.form {
         Form::Door => true,
         Form::Window | Form::Opening | Form::Niche | Form::Flue => {
-            spec.sill.unwrap_or(0.0) < PLAN_CUT && spec.head.is_none_or(|h| h > PLAN_CUT)
+            spec.sill.unwrap_or(0.0) < cut && spec.head.is_none_or(|h| h > cut)
         }
     }
 }
@@ -502,7 +507,12 @@ pub fn pockets(width: f64, spec: &Spec) -> Vec<Pocket> {
 /// What the opening at `at` of `width` takes out of its wall in plan with its pockets (docs/adr/0777 §2): its hole, then
 /// each pocket's cavity, centred in the wall, open at the jamb it meets; none when plan does not cut it.
 pub fn holes(at: f64, width: f64, spec: &Spec) -> Vec<Hole> {
-    let Some(mut main) = hole(at, width, spec) else {
+    holes_at(at, width, spec, PLAN_CUT)
+}
+
+/// [`holes`] with the plan cut at `cut` (docs/adr/3012).
+pub fn holes_at(at: f64, width: f64, spec: &Spec, cut: f64) -> Vec<Hole> {
+    let Some(mut main) = hole_at(at, width, spec, cut) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -535,7 +545,12 @@ pub fn holes(at: f64, width: f64, spec: &Spec) -> Vec<Hole> {
 /// What the opening at `at` of `width` takes out of its wall in plan; none when plan does not cut it (or a niche or
 /// flue without its depth).
 pub fn hole(at: f64, width: f64, spec: &Spec) -> Option<Hole> {
-    if !cut_in_plan(spec) {
+    hole_at(at, width, spec, PLAN_CUT)
+}
+
+/// [`hole`] with the plan cut at `cut` (docs/adr/3012).
+pub fn hole_at(at: f64, width: f64, spec: &Spec, cut: f64) -> Option<Hole> {
+    if !cut_in_plan_at(spec, cut) {
         return None;
     }
     let (s0, s1) = span(at, spec.anchor, width);
@@ -802,9 +817,14 @@ fn across_jambs(place: &[Vec2], right: bool, near: f64, far: f64, thickness: f64
 /// dashed (an opening its jambs and a cross, a niche its sides and back, a flue its cavity and a cross); a cut bare
 /// opening or niche nothing (its wall shows it).
 pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
+    pieces_cut(place, spec, PLAN_CUT)
+}
+
+/// [`pieces`] with the plan cut at `cut` (docs/adr/3012).
+fn pieces_cut(place: &[Vec2], spec: &Spec, cut_at: f64) -> Vec<Mark> {
     if matches!(spec.form, Form::Door | Form::Window) {
         // A window over the plan's cut is seen from above, dashed, its wall whole (docs/adr/3012).
-        let over = !cut_in_plan(spec);
+        let over = !cut_in_plan_at(spec, cut_at);
         let mut out: Vec<Mark> = symbol_parts(place, spec)
             .into_iter()
             .map(|(part, shape)| Mark {
@@ -826,9 +846,17 @@ pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
     let Some(f) = frame_of(place) else {
         return Vec::new();
     };
-    let cut = cut_in_plan(spec);
-    let mark = |shape: Shape| Mark { shape, dashed: !cut, part: Part::Outline };
-    let cross = |shape: Shape| Mark { shape, dashed: !cut, part: Part::Cross };
+    let cut = cut_in_plan_at(spec, cut_at);
+    let mark = |shape: Shape| Mark {
+        shape,
+        dashed: !cut,
+        part: Part::Outline,
+    };
+    let cross = |shape: Shape| Mark {
+        shape,
+        dashed: !cut,
+        part: Part::Cross,
+    };
     let t = f.thickness;
     let centre = jambs_centre(place);
     match spec.form {
@@ -1009,13 +1037,13 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
 }
 
 /// [`pieces`] as a drawing at `view` shows them (docs/adr/3010): a door's and a window's parts by the view's detail and
-/// scale ([`Part::shown_at`]), the other forms' all. [`pieces`] is every part, as the 1:20 detail shows them.
+/// scale ([`Part::shown_at`]), the other forms' all; what is cut by the view's cut height (docs/adr/3012). [`pieces`] is every part, as the 1:20 detail shows them.
 ///
 /// Drawn without its frame's sides, a window's faces, glass and leaves span the whole hole, jamb to jamb: else the frame
 /// it no longer draws leaves a gap its width at each end (6 cm, 0.6 mm at 1:100). Its use zone stays the light's. A
 /// door keeps its leaf's width and its hinge.
 pub fn pieces_at(place: &[Vec2], spec: &Spec, view: wall::View) -> Vec<Mark> {
-    let mut out = pieces(place, spec);
+    let mut out = pieces_cut(place, spec, view.cut);
     if spec.form == Form::Window
         && !Part::Frame.shown_at(view)
         && (spec.frame > 0.0 || spec.build.fit > 0.0)
@@ -1024,7 +1052,7 @@ pub fn pieces_at(place: &[Vec2], spec: &Spec, view: wall::View) -> Vec<Mark> {
         bare.frame = 0.0;
         bare.build.fit = 0.0;
         let zone: Vec<Mark> = out.into_iter().filter(|m| m.part == Part::Zone).collect();
-        out = pieces(place, &bare)
+        out = pieces_cut(place, &bare, view.cut)
             .into_iter()
             .filter(|m| m.part != Part::Zone)
             .chain(zone)

@@ -317,6 +317,9 @@ fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
     s.export_pdf(&pdf, &[]).expect("the PDF");
     if let Ok(keep) = std::env::var("KENTOS_SCALE_PDF_DIR") {
         std::fs::copy(&pdf, std::path::Path::new(&keep).join("kesme-1-50.pdf")).expect("kept");
+        // The drawing too, for the real window (fixtures/interaction/real/kesme-yuksekligi.txt).
+        s.save(Some(&std::path::Path::new(&keep).join("kesme.kcad")))
+            .expect("kept");
     }
     let page = kentos_formats::pdf::read_page(&std::fs::read(&pdf).expect("written"), 1)
         .expect("its first page");
@@ -348,6 +351,54 @@ fn a_window_over_the_cut_leaves_its_wall_whole_on_paper() {
     assert!(
         count(0.25, false) >= 2 && count(0.125, false) >= 1,
         "{strokes:?}"
+    );
+    let low_cut = (count(0.5, false), count(0.25, false), count(0.25, true));
+    // The project's cut raised to 1.80 m (docs/adr/3012, step 2): the 1.60 sill is under it, both windows are cut.
+    let mut arch = s
+        .document()
+        .settings()
+        .arch
+        .clone()
+        .expect("a Mimari project");
+    assert_eq!(
+        arch.cut_height,
+        Some(1.2),
+        "a new Mimari project cuts at 1.20"
+    );
+    arch.cut_height = Some(1.8);
+    done(
+        s.call(json!({ "command": "cad.settings.set", "input": { "arch": arch } }))
+            .expect("answers"),
+    );
+    let high = dir.join("kesme-1-80.pdf");
+    s.export_pdf(&high, &[]).expect("the PDF");
+    if let Ok(keep) = std::env::var("KENTOS_SCALE_PDF_DIR") {
+        std::fs::copy(&high, std::path::Path::new(&keep).join("kesme-1-80.pdf")).expect("kept");
+    }
+    let page = kentos_formats::pdf::read_page(&std::fs::read(&high).expect("written"), 1)
+        .expect("its first page");
+    let strokes: Vec<(f64, bool)> = page
+        .paths
+        .iter()
+        .filter_map(|p| p.stroke.as_ref())
+        .map(|s| ((s.width / PT_PER_MM * 1000.0).round() / 1000.0, s.dashed))
+        .collect();
+    let count = |mm: f64, dashed: bool| {
+        strokes
+            .iter()
+            .filter(|(w, d)| (w - mm).abs() < 0.01 && *d == dashed)
+            .count()
+    };
+    eprintln!(
+        "cut 1.80: walls 0.5 mm: {} solid; windows 0.25 mm: {} solid, {} dashed (cut 1.20: {low_cut:?})",
+        count(0.5, false),
+        count(0.25, false),
+        count(0.25, true)
+    );
+    assert_eq!(count(0.25, true) + count(0.125, true), 0, "{strokes:?}");
+    assert!(
+        count(0.5, false) > low_cut.0,
+        "the wall is cut twice: {strokes:?}"
     );
     let _ = std::fs::remove_dir_all(&dir);
 }

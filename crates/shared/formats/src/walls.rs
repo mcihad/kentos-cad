@@ -242,7 +242,7 @@ pub fn plain_joined(
         })
         .collect();
     let at: Vec<usize> = walls.iter().map(|(i, _)| *i).collect();
-    let spans = crate::openings::spans_by_wall(entities, &at, uid_of);
+    let spans = crate::openings::spans_by_wall(entities, &at, uid_of, view.cut);
     let solved = solve_with(&ins, &spans, None);
     let mut out = vec![None; entities.len()];
     for (i, e) in entities.iter().enumerate() {
@@ -552,7 +552,7 @@ mod tests {
             opening(3, 4.0, 1.2, OpeningForm::Window),
         ];
         let at = |detail: Detail, scale: f64| {
-            let plain = plain_joined(&entities, View { detail, scale }, |id| {
+            let plain = plain_joined(&entities, View::new(detail, scale), |id| {
                 (id == 1).then(|| uid.clone())
             });
             (

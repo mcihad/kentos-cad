@@ -12,22 +12,10 @@ use kentos_geometry_core::geom::wall::{Detail, View};
 use kentos_geometry_core::text::{Font, TextAlign};
 use kentos_geometry_core::vec2::Vec2;
 
-const SIMPLE: View = View {
-    detail: Detail::Schematic,
-    scale: 200.0,
-};
-const SCHEMATIC: View = View {
-    detail: Detail::Schematic,
-    scale: 100.0,
-};
-const STANDARD: View = View {
-    detail: Detail::Standard,
-    scale: 50.0,
-};
-const DETAILED: View = View {
-    detail: Detail::Detailed,
-    scale: 20.0,
-};
+const SIMPLE: View = View::new(Detail::Schematic, 200.0);
+const SCHEMATIC: View = View::new(Detail::Schematic, 100.0);
+const STANDARD: View = View::new(Detail::Standard, 50.0);
+const DETAILED: View = View::new(Detail::Detailed, 20.0);
 
 fn texts(pieces: &[Piece]) -> Vec<String> {
     pieces

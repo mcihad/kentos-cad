@@ -42,7 +42,7 @@ Her satır bir el hareketidir; `#` ile başlayan satır ve ` #`'ten sonrası aç
 
 | Satır | Ne yapar |
 |---|---|
-| `fit KentOS Mimari` | O başlıklı pencereyi ekranı kaplayacak biçimde büyütür ve klavyeyi ona verir (pencere yöneticisi yok) |
+| `fit KentOS Mimari` | O başlıklı pencereyi ekranı kaplayacak biçimde büyütür ve klavyeyi ona verir (pencere yöneticisi yok). Dosyayla açılan pencerenin başlığı dosyanın adını da taşır: `fit KentOS Mimari — Kesme` |
 | `wait MS` | Bekler |
 | `move X Y` | İmleci aradaki noktalardan geçirerek götürür |
 | `click X Y [right\|middle]`, `dclick X Y`, `drag X1 Y1 X2 Y2` | Tık, çift tık, sürükleme |

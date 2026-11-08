@@ -1055,10 +1055,7 @@ impl canvas::Program<Message> for Sample {
             &pts,
             bulges.as_deref(),
             &spec,
-            View {
-                detail: Detail::Detailed,
-                scale: 20.0,
-            },
+            View::new(Detail::Detailed, 20.0),
         ) else {
             return vec![frame.into_geometry()];
         };

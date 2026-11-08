@@ -16007,6 +16007,9 @@ class ArchSettings(_Model):
         active_level: Etkin kat when the drawing was saved (docs/adr/0720 §1): the level it opens on, by its id; null: Katsız (no
             level). Absent: its ground level (the one at elevation 0, else its first). Revit's last viewed view.
         audit_exceptions: Mimari denetim's findings left on purpose (docs/adr/0732 §3, KCAD 130), in the order they were marked.
+        cut_height: The plan's cut height above each level's floor, metres (docs/adr/3012, KCAD 205): what crosses it is cut, a
+            window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
+            writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm). Unit: length.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
@@ -16022,6 +16025,7 @@ class ArchSettings(_Model):
     """
     active_level: str | None | Unset = UNSET
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
+    cut_height: float | None | Unset = UNSET
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
@@ -16043,6 +16047,8 @@ class ArchSettings(_Model):
             out["activeLevel"] = self.active_level
         if self.audit_exceptions is not UNSET:
             out["auditExceptions"] = [e0.to_json() for e0 in self.audit_exceptions]
+        if self.cut_height is not UNSET:
+            out["cutHeight"] = None if self.cut_height is None else float(self.cut_height)
         if self.detail is not UNSET:
             out["detail"] = None if self.detail is None else _enum_out(self.detail)
         if self.level_view is not UNSET:
@@ -16078,6 +16084,7 @@ class ArchSettings(_Model):
         return cls(
             active_level=data.get("activeLevel", UNSET),
             audit_exceptions=[ArchAuditException.from_json(e0) for e0 in data["auditExceptions"]] if "auditExceptions" in data else UNSET,
+            cut_height=UNSET if "cutHeight" not in data else None if data["cutHeight"] is None else float(data["cutHeight"]),
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
@@ -81578,7 +81585,8 @@ class SettingsSet(_Model):
       (docs/adr/0339 §3), whole: the given settings take the place of the
       old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
       `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
-      (docs/adr/0720 §1);
+      (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans
+      are cut at (docs/adr/3012);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;

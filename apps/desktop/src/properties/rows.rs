@@ -2159,9 +2159,9 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             } else {
                 geo.push(optional("Lento", x.head, Field::OpeningHead(slot)));
             }
-            // Whether plan cuts it, at the plan's cut height (docs/adr/0719 §2).
+            // Whether plan cuts it, at the project's cut height (docs/adr/0719 §2, 3012).
             if x.form.cut_by_height() {
-                let cut = kentos_commands::PLAN_CUT_HEIGHT;
+                let cut = doc.settings().plan_cut();
                 let words = if x.cut_in_plan(cut) {
                     format!("Kesilir ({} kesme)", f.length(cut))
                 } else {

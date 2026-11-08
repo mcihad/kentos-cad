@@ -273,6 +273,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         layouts,
         // The project's own detail for its walls (docs/adr/0339 §4); absent: by the scale.
         wall_detail: settings.arch.as_ref().and_then(|a| a.detail),
+        // The project's plan cut height (docs/adr/3012); absent: 1.10.
+        cut_height: settings.arch.as_ref().and_then(|a| a.cut_height),
         uids,
         annotations: Default::default(),
         notes,

@@ -1636,6 +1636,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin mahal listeleri ve kat önekleri şema 112'den beri yazılır",
                     ));
                 }
+                if !has.plan_cut && a.has_plan_cut() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin kesme yüksekliği şema 205'ten beri yazılır",
+                    ));
+                }
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

@@ -41,6 +41,7 @@ mod networks;
 mod nurbs;
 mod parts;
 mod patterns;
+mod plan_cut;
 mod pointclouds;
 mod polyline_extras;
 mod rasters;

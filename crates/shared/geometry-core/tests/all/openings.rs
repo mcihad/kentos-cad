@@ -490,22 +490,10 @@ fn a_larger_scale_draws_every_piece_a_smaller_one_does_and_more() {
     use kentos_geometry_core::geom::wall::{Detail, View};
     use opening::Part;
     let views = [
-        View {
-            detail: Detail::Schematic,
-            scale: 200.0,
-        },
-        View {
-            detail: Detail::Schematic,
-            scale: 100.0,
-        },
-        View {
-            detail: Detail::Standard,
-            scale: 50.0,
-        },
-        View {
-            detail: Detail::Detailed,
-            scale: 20.0,
-        },
+        View::new(Detail::Schematic, 200.0),
+        View::new(Detail::Schematic, 100.0),
+        View::new(Detail::Standard, 50.0),
+        View::new(Detail::Detailed, 20.0),
     ];
     let (mut doors, mut fewer) = (0, 0);
     for (j, spec) in reference_openings() {

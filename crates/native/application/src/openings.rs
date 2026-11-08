@@ -398,7 +398,8 @@ pub(crate) fn clear_of_others(
                 .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
         }
     }
-    let cut = kentos_commands::PLAN_CUT_HEIGHT;
+    // At the project's plan cut height (docs/adr/3012).
+    let cut = doc.settings().plan_cut();
     for (host, list) in by_host.iter_mut() {
         for (slot, o) in doc.openings_of(host) {
             if !changed_slots.contains(&slot) && o.broken.is_none() {
