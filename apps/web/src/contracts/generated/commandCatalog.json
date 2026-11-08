@@ -62200,7 +62200,7 @@
       "id": "map.survey.edit",
       "version": 1,
       "title": "GNSS arşivini düzenle",
-      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed. Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
+      "summary": "Harita projesinin GNSS ölçüm arşivini değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. campaign / setCampaign: arazi ölçümü kp-N (adı, harita işinin arazi ölçümü öğesi is-N, operatör, epok kararı, hız ızgarası). session: oturum os-N; file RINEX gözlem dosyasıysa başlığından işaret, alıcı, anten (DELTA H ARP'ye düşey), zamanlar ve zaman sistemi; NMEA ya da GPX ise ham ölçümler ve ilk/son zaman (UTC); verilen alan dosyanınkini yener (uyarı rinex_differs), okunmayan satırlar uyarıdır (gnss_lines_skipped). setSession: işaret, zamanlar, alıcı, anten (arp ya da slant: √(S²−R²)−offset), operatör; anten değişince o anteni kullanan kabul noktası güncel değildir. solve: alıcı çözümü cz-N, from..to aralığında ve fixes içindeki ham ölçümlerin soldan sağa ortalaması; çerçeve (srid, kayıttaki coğrafi sistem) ve uygulanmış anten yüksekliği kullanıcının söylediğidir. solution: işlenmiş baz/PPK, PPP ya da elle çözüm (σ, tam kovaryans KK KD KY DD DY YY pozitif tanımlı, düzeltme kaynağı ve yaşı, rapor dosyası, yeniden işleme tarifi). exclude (nedenle, kayıt silinmez), include, adjust (dengelemeye girer). accept: işaretin noktası; single, mean ya da weighted (1/σ²); işaret yüksekliği h + uygulanmış − düşey anten; projeye koordinat zinciriyle (cad.crs.transform: çözümün çerçevesi ve epoku → projenin sistemi, arazi ölçümünün epok kararı, hız ızgarası) taşınır; nokta nesnesi ve kn-N aynı adımda. regenerate: bugünkü anten ve epok kararıyla (istenirse başka çözüm ya da yöntemle) yeniden; eski sonuç geçmişte kalır, nesne yeni yerine gider, revizyon artar, dayananlar güncel değildir. use: nesneler kabul noktalarının bugünkü revizyonlarından yapıldı diye kaydedilir. remove: kayıt çıkar; kabul noktasının ya da dayananın dayandığı kayıt çıkmaz, ağ dengelemesindeki baz ve bilinen nokta da. baselines: bir dosyanın baz vektörleri bz-N (GVX 1.0: işaretten işarete ECEF ΔX ΔY ΔZ, SDX/SDY/SDZ ve PXY/PXZ/PYZ'den kovaryans, GPS zamanı, çözüm türü, yazılım; oturumların çapraz korelasyonları okunmaz, uyarı gvx_correlations_ignored; ya da B; satırlı baz metni, K/N satırları alınmaz, uyarı baseline_text_stations). baseline: elle tek baz. known: bilinen nokta bn-N (işaret, enlem, boylam, elipsoit yüksekliği, coğrafi çerçeve, epok; σ kuzey/doğu/yukarı verilirse ağırlıklı, yoksa sabit; kaynak); bir işaretin dışlanmamış tek bilinen noktası olur. exclude/include/adjust bz- ve bn- kimliklerini de alır. network: map.survey.network'ün ağı; serbest ya da dayalı dengelemede uyuşumsuz ölçü varsa network_blunder, model testi geçmezse network_test_failed ile reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan kaydıyla (ADR 2960). Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing, known_differ, unknown_rule_class, duplicate_station, invalid_covariance, network_too_large, network_disconnected, network_blunder, network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing, geoid_missing, no_system).",
       "aliases": [
         "gnssarsividuzenle"
       ],
@@ -62241,6 +62241,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
         "properties": {
+          "ellipses": {
+            "description": "The error ellipses a network drew (docs/adr/2960).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "id": {
             "type": [
               "string",
@@ -62302,6 +62309,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
         "properties": {
+          "ellipses": {
+            "description": "The error ellipses a network drew (docs/adr/2960).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "id": {
             "type": [
               "string",
@@ -150419,6 +150433,17 @@
                 "null"
               ]
             },
+            "ellipses": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/NetworkEllipses"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Each point's error ellipse drawn in the same step (docs/adr/2960)."
+            },
             "epoch": {
               "description": "The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it.",
               "format": "double",
@@ -154809,6 +154834,25 @@
           "type": "object"
         }
       ]
+    },
+    "NetworkEllipses": {
+      "additionalProperties": false,
+      "description": "The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence\nregion magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the\nmap's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.",
+      "properties": {
+        "layer": {
+          "type": "string"
+        },
+        "scale": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "scale"
+        }
+      },
+      "required": [
+        "layer",
+        "scale"
+      ],
+      "type": "object"
     },
     "NetworkEpochFrom": {
       "description": "Where the network's epoch comes from (docs/adr/2120): given, the baselines' observation times, the known points'.",

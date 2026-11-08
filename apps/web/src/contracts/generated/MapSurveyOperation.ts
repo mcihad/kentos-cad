@@ -2,6 +2,7 @@
 import type { AcceptMethod } from "./AcceptMethod";
 import type { BaselineSolution } from "./BaselineSolution";
 import type { GnssRules } from "./GnssRules";
+import type { NetworkEllipses } from "./NetworkEllipses";
 import type { SolutionKind } from "./SolutionKind";
 import type { SurveyAntenna } from "./SurveyAntenna";
 import type { SurveyGrid } from "./SurveyGrid";
@@ -15,4 +16,8 @@ export type MapSurveyOperation = { "op": "campaign", name: string, work?: string
 /**
  * The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it.
  */
-epoch?: number, layer?: string, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "remove", id: string, };
+epoch?: number, layer?: string, 
+/**
+ * Each point's error ellipse drawn in the same step (docs/adr/2960).
+ */
+ellipses?: NetworkEllipses, } | { "op": "accept", mark: string, solutions: Array<string>, method?: AcceptMethod, layer?: string, } | { "op": "regenerate", point: string, solutions?: Array<string>, method?: AcceptMethod, } | { "op": "use", uids: Array<string>, points: Array<string>, operation: string, } | { "op": "remove", id: string, };

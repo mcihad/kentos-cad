@@ -234,6 +234,9 @@
 - **Detay eşleştirmede ızgara dizini (9 Kasım 2026; MAP-04, [ADR 2940](../../docs/adr/2940-reconcile-grid-index.md)).**
   `map.features.reconcile` yalnız kutuları buluşan çiftleri dener ve var olan varlığı ızgaradan arar; cevap bütün
   çiftlerinkiyle aynı, süre doğrusal (debug, 10 000 kümede 38 s'den 0,25 s'ye). Harita.
+- **Hata elipsleri çizimde (9 Kasım 2026; MAP-05, [ADR 2960](../../docs/adr/2960-network-error-ellipses-drawn.md)).**
+  `map.survey.edit network`'ün `ellipses`'i: kabulde her noktanın elipsi büyütülerek, büyük ekseni meridyen
+  yakınsaması çıkarılmış yönde, aynı adımda ve dayanan kaydıyla çizilir; Ağ dengelemesi'nde Hata elipsleri. Harita.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

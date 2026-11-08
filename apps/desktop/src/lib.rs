@@ -413,6 +413,8 @@ mod map_survey_panel_tests;
 #[cfg(test)]
 mod map_survey_network_rows_tests;
 #[cfg(test)]
+mod network_ellipses_tests;
+#[cfg(test)]
 mod route_window_tests;
 #[cfg(test)]
 mod pay_window_tests;

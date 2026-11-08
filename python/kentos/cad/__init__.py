@@ -2051,6 +2051,7 @@ __all__ = [
     "NetworkDefineOperationName",
     "NetworkDefined",
     "NetworkDirection",
+    "NetworkEllipses",
     "NetworkEpochFrom",
     "NetworkEpochFromName",
     "NetworkKind",

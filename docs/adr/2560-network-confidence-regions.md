@@ -73,7 +73,7 @@ Güven bölgesi planın açık bir isteğidir ve istasyon kovaryansından doğru
 
 ## Sonra
 
-- Elipslerin çizimde gösterimi (ölçekli, katmanda).
+- Elipslerin çizimde gösterimi (ölçekli, katmanda). Yapıldı: [ADR 2960](2960-network-error-ellipses-drawn.md).
 - Robust kestirim (aykırı gözlem silinmeden, ağırlık değişimi raporda).
 - Ağırlıklı benzerlik (S-dönüşümüyle serbest ağ kovaryansı).
 - Seyrek çözüm ve büyük ağ.

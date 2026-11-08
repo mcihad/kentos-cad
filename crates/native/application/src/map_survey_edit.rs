@@ -151,6 +151,9 @@ struct Change {
     /// The records a file brought or the points a network made.
     records: Vec<String>,
     warnings: Vec<CommandWarning>,
+    /// A network's error ellipses and the use they are recorded in, its place in the archive (docs/adr/2960).
+    drawn: Vec<Entity>,
+    drawn_use: Option<usize>,
 }
 
 impl Change {
@@ -166,6 +169,8 @@ impl Change {
             updates: Vec::new(),
             records: Vec::new(),
             warnings: Vec::new(),
+            drawn: Vec::new(),
+            drawn_use: None,
         }
     }
 }
@@ -488,6 +493,7 @@ fn network(
     mut next: MapSurvey,
     input: &MapSurveyNetwork,
     layer: Option<&str>,
+    ellipses: Option<&kentos_commands::NetworkEllipses>,
 ) -> Result<Change, Stop> {
     let a = crate::map_survey_network::analyse(doc, input, "operation.")?;
     if let Some(id) = &a.out.current {
@@ -537,6 +543,9 @@ fn network(
         ));
     }
     let layer = layer.map_or_else(|| doc.layers().active().to_owned(), str::to_owned);
+    if let Some(with) = ellipses {
+        crate::network_ellipses::check(doc, with)?;
+    }
     if now.adjustments.len() >= kentos_commands::MAX_SURVEY_ADJUSTMENTS {
         return Err(full("1000 ağ dengelemesi"));
     }
@@ -642,6 +651,30 @@ fn network(
         srid: a.out.srid,
         epoch: a.out.epoch,
     });
+    // Each point's error ellipse, recorded as made from the points at their revisions now (docs/adr/2960).
+    if let Some(with) = ellipses {
+        let mut points = Vec::new();
+        for n in &a.new {
+            let Ok(placed) = &n.placed else { continue };
+            let Some(e) = a.out.stations.iter().find(|s| s.mark == n.mark).and_then(|s| s.ellipse.as_ref()) else {
+                continue;
+            };
+            let at = Vec2 { x: placed.x, y: placed.y };
+            let turn = crate::network_ellipses::convergence(doc, at, &n.mark)?;
+            change.drawn.push(crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn));
+            if let Some(p) = next.points.iter().find(|p| p.mark == n.mark) {
+                points.push(PointRevision { point: p.id.clone(), revision: p.result.revision });
+            }
+        }
+        if !change.drawn.is_empty() {
+            if next.uses.len() >= kentos_commands::MAX_SURVEY_USES {
+                return Err(full("10 000 dayanan kaydı"));
+            }
+            let id = next_survey_id(next.uses.iter().map(|u| u.id.as_str()), "kb-");
+            next.uses.push(SurveyUse { id, operation: format!("Hata elipsleri ({da})"), uids: Vec::new(), points });
+            change.drawn_use = Some(next.uses.len() - 1);
+        }
+    }
     // The new points' objects, drawn once the archive after knows their records' places and campaign.
     for (at, p) in next.points.iter().enumerate() {
         if p.uid == EntityId([0; 16]) {
@@ -1132,7 +1165,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             next.known.push(k);
             Ok(Change { id: Some(id), ..Change::new(next, "Bilinen nokta ekle") })
         }
-        Op::Network { campaign, scale, class, rules, hold, epoch, layer } => network(
+        Op::Network { campaign, scale, class, rules, hold, epoch, layer, ellipses } => network(
             doc,
             &now,
             next,
@@ -1145,6 +1178,7 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 epoch: *epoch,
             },
             layer.as_deref(),
+            ellipses.as_ref(),
         ),
         Op::Exclude { solution, reason } => {
             let Some(old) = now.solution(solution) else {
@@ -1469,6 +1503,7 @@ fn output(doc: &Document, c: &Change, uid: Option<String>, revision: String) -> 
         point_revision: c.point_revision,
         observations: c.observations,
         removed: c.removed,
+        ellipses: c.drawn.len() as u32,
         stale: stale_count(doc, &c.survey),
         records: c.records.clone(),
         revision,
@@ -1483,6 +1518,8 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapSurveyEdit) -> CommandResult<M
     let label = change.label;
     let adds = std::mem::take(&mut change.adds);
     let updates = std::mem::take(&mut change.updates);
+    let drawn = change.drawn.clone();
+    let drawn_use = change.drawn_use;
     let single = adds.len() + updates.len() == 1;
     let mut survey = change.survey.clone();
     let written = cx.doc.transact(label, |doc| -> Result<Option<String>, Stop> {
@@ -1498,6 +1535,14 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapSurveyEdit) -> CommandResult<M
         for (slot, entity) in updates {
             uid = doc.uid(slot).map(|u| u.to_string());
             doc.update(slot, entity);
+        }
+        // The error ellipses after the points, their ids in the use that records them (docs/adr/2960).
+        for entity in drawn {
+            let (_, text, _) = checks::add(doc, entity)?;
+            let id = Uuid::parse_str(&text).map(|u| EntityId(*u.as_bytes())).unwrap_or(EntityId([0; 16]));
+            if let Some(u) = drawn_use.and_then(|k| survey.uses.get_mut(k)) {
+                u.uids.push(id);
+            }
         }
         doc.set_map_survey(Some(survey.clone()), label);
         Ok(uid.filter(|_| single))

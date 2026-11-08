@@ -25,6 +25,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_survey_network};
 use kentos_ui::label;
 use kentos_ui::widget::grow::Grows;
+use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
@@ -144,6 +145,9 @@ pub struct State {
     pub epoch: String,
     pub known: KnownForm,
     pub answer: Option<Result<MapSurveyNetworked, String>>,
+    /// Kabul et draws each point's error ellipse, magnified this many times (docs/adr/2960).
+    pub ellipses: bool,
+    pub magnify: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -158,6 +162,9 @@ pub enum Event {
     Include(String),
     Known(Field, String),
     AddKnown,
+    /// The error ellipses drawn by Kabul et, and their magnification (docs/adr/2960).
+    Ellipses(bool),
+    Magnify(f64),
     Accept,
     Close,
 }
@@ -316,7 +323,7 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         }
-        self.survey_network = State { scale: 1.0, ..State::default() };
+        self.survey_network = State { scale: 1.0, magnify: 1000.0, ..State::default() };
         self.survey_network_run();
         self.dialog = Some(Dialog::SurveyNetwork);
         Task::none()
@@ -377,11 +384,22 @@ impl App {
             hold: None,
             epoch: number(&self.survey_network.epoch, "Ölçme epoku").ok().flatten(),
             layer: None,
+            // On the layer chosen in Katmanlar, else the active one (docs/adr/2960).
+            ellipses: self.survey_network.ellipses.then(|| kentos_commands::NetworkEllipses {
+                layer: self.selected_layer.clone().unwrap_or_else(|| {
+                    self.document.as_ref().map(|d| d.model.layers().active().to_owned()).unwrap_or_default()
+                }),
+                scale: self.survey_network.magnify,
+            }),
         };
         if let Some(out) = self.map_survey_edit(op) {
+            let drawn = match out.ellipses {
+                0 => String::new(),
+                n => format!(", {n} hata elipsi {} kat büyütülerek çizildi", self.survey_network.magnify),
+            };
             self.say(
                 Level::Success,
-                format!("Ağ dengelemesi kabul edildi ({}): {} nokta yazıldı.", out.id.unwrap_or_default(), out.records.len()),
+                format!("Ağ dengelemesi kabul edildi ({}): {} nokta yazıldı{drawn}.", out.id.unwrap_or_default(), out.records.len()),
             );
         }
         self.survey_network_run();
@@ -393,6 +411,12 @@ impl App {
             Event::Class(c) => {
                 self.survey_network.class = c;
                 self.survey_network_run();
+            }
+            Event::Ellipses(on) => self.survey_network.ellipses = on,
+            Event::Magnify(v) => {
+                if v > 0.0 {
+                    self.survey_network.magnify = v;
+                }
             }
             Event::Scale(v) => {
                 if v > 0.0 {
@@ -495,6 +519,20 @@ impl App {
                     )
                     .width(140),
                     label::caption("Boşsa bazların gözlem zamanlarının ortası; bilinen noktalar oraya kendi hızıyla ya da hız ızgarasıyla taşınır.")
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
+                "Hata elipsleri",
+                row![
+                    fields::check(
+                        if s.ellipses { Check::Checked } else { Check::Unchecked },
+                        "Kabul et çizsin",
+                        Some(msg(Event::Ellipses(!s.ellipses)))
+                    ),
+                    NumberInput::new(s.magnify, |v| msg(Event::Magnify(v))).step(100.0).decimals(0).width(110),
+                    label::caption("kat büyütülmüş; Katmanlar'da seçili katmana, yoksa etkin katmana. 1000 kat: 1 cm, 10 m çizilir.")
                 ]
                 .spacing(10)
                 .align_y(Center),

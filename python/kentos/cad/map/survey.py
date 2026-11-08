@@ -61,19 +61,22 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
     reddedilir; yoksa da-N dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan,
     sınıf, m0 ve serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin
     noktası (yeni nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne
-    yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed.
-    Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir.
-    Retler: invalid_revision, revision_conflict, not_a_map_project,
-    unknown_survey_record, unknown_work_item, invalid_survey_text, invalid_survey_value,
-    invalid_file_path, file_not_found, unreadable_gnss_file, nothing_to_set,
-    survey_in_use, unknown_frame, no_observations, no_ellipsoidal_height,
-    solution_excluded, mark_mismatch, method_count, sigma_missing, solutions_differ,
-    antenna_unknown, antenna_eccentric, already_accepted, layer_not_found, layer_locked,
-    no_entities, invalid_uid, entity_not_found, survey_full, ağın retleri (no_baselines,
-    datum_missing, known_differ, unknown_rule_class, duplicate_station,
-    invalid_covariance, network_too_large, network_disconnected, network_blunder,
-    network_test_failed) ve koordinat zincirinin kendi retleri (epoch_unsupported,
-    velocity_missing, geoid_missing, no_system).
+    yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed;
+    ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda
+    büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde,
+    kb-N dayanan kaydıyla (ADR 2960). Bazı dışlanan ya da bilinen noktası dışlanan
+    dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict,
+    not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text,
+    invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file,
+    nothing_to_set, survey_in_use, unknown_frame, no_observations,
+    no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count,
+    sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
+    already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
+    entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing,
+    known_differ, unknown_rule_class, duplicate_station, invalid_covariance,
+    network_too_large, network_disconnected, network_blunder, network_test_failed) ve
+    koordinat zincirinin kendi retleri (epoch_unsupported, velocity_missing,
+    geoid_missing, no_system).
     """
     __slots__ = ()
     id = "map.survey.edit"
@@ -129,13 +132,16 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
         dengeleme kaydı (bazlar, bilinen noktalar, tutulan, çarpan, sınıf, m0 ve
         serbestlikler, çerçeve, epok) ve bilinen nokta olmayan her işaretin noktası (yeni
         nesnesi layer'a) ya da yeniden üretimi (eski sonuç geçmişte, nesne yeni yerine),
-        method network, tek adım; sınıf tutmazsa uyarı network_rules_failed. Bazı dışlanan
-        ya da bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler:
-        invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record,
-        unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path,
-        file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame,
-        no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch,
-        method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
+        method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses
+        verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek
+        çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan
+        kaydıyla (ADR 2960). Bazı dışlanan ya da bilinen noktası dışlanan dengelemenin
+        noktası güncel değildir. Retler: invalid_revision, revision_conflict,
+        not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text,
+        invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file,
+        nothing_to_set, survey_in_use, unknown_frame, no_observations,
+        no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count,
+        sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
         already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
         entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing,
         known_differ, unknown_rule_class, duplicate_station, invalid_covariance,

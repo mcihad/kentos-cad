@@ -1152,8 +1152,37 @@ def refusal(operation, code, message, path, after_write=False):
     return edit({"operation": operation}, {"status": "failed", "error": err}, {"revision": "same"} if after_write else SAME)
 
 
-def accept(m, inp, layer="gnss"):
-    """map.survey.edit network: the archive after (da-N, the points), the new and moved objects, the records."""
+def rust_number(v):
+    """A number as Rust's `{}` writes it: the shortest that reads back, no `.0` on a whole number."""
+    return str(int(v)) if float(v).is_integer() else repr(float(v))
+
+
+def convergence(x, y):
+    """ADR 2960: the angle (radians, counter-clockwise) from TM30's up to the meridian through (x, y): the meridian's
+    direction on the map from two points 0.0001° of latitude either side, PROJ projecting them."""
+    to_geo = pyproj.Transformer.from_crs(5254, 5252, always_xy=True)
+    to_map = pyproj.Transformer.from_crs(5252, 5254, always_xy=True)
+    lon, lat = to_geo.transform(x, y)
+    (x1, y1), (x2, y2) = to_map.transform(lon, lat - 1e-4), to_map.transform(lon, lat + 1e-4)
+    return math.atan2(-(x2 - x1), y2 - y1)
+
+
+def ellipse_entity(mark, da, at, e, with_):
+    """ADR 2960: the error ellipse of a mark's region `e` at its object's place, magnified, its major axis turned from
+    its azimuth (true north) to the map (the convergence taken off); a circle's drawn up the map."""
+    bearing = math.radians(e["azimuth"]) - convergence(*at) if "azimuth" in e else 0.0
+    a = e["major"] * with_["scale"]
+    attrs = {"İşaret": mark, "Dengeleme": da, "Güven": rust_number(e["confidence"]),
+             "Büyük yarı eksen (m)": f"{e['major']:.4f}", "Küçük yarı eksen (m)": f"{e['minor']:.4f}",
+             "Yön (°)": f"{e['azimuth']:.4f}" if "azimuth" in e else "", "Büyütme": rust_number(with_["scale"])}
+    return {"kind": "ellipse", "layerId": with_["layer"], "attrs": attrs, "c": {"x": at[0], "y": at[1]},
+            "major": {"x": a * math.sin(bearing), "y": a * math.cos(bearing)},
+            "ratio": e["minor"] / e["major"] if e["major"] > 0 else 1.0, "t0": 0.0, "t1": 2 * math.pi}
+
+
+def accept(m, inp, layer="gnss", ellipses=None):
+    """map.survey.edit network: the archive after (da-N, the points), the new and moved objects, the records; with
+    `ellipses` ({layer, scale}) each point's error ellipse and the use that records them (ADR 2960)."""
     out, facts = analyse(m, inp, "operation.")
     after = m.clone()
     sv = after.survey
@@ -1212,6 +1241,24 @@ def accept(m, inp, layer="gnss"):
             # The object's id is the drawing's; the archive names it by the same placeholder, so the model finds it.
             after.uids[at] = p["uid"]
             fields[str(at)] = {"layerId": layer, "p": e["p"], "attrs": e["attrs"], **({"z": e["z"]} if "z" in e else {})}
+    if ellipses:
+        rows = {r["mark"]: r for r in out["stations"]}
+        uids, points = [], []
+        for n in facts["new"]:
+            e = rows[n["mark"]].get("ellipse")
+            if e is None:
+                continue
+            at = max(after.entities) + 1
+            ent = ellipse_entity(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses)
+            ent["id"] = at
+            after.entities[at] = ent
+            after.uids[at] = f"$uidOf:{at}"
+            uids.append(f"$uidOf:{at}")
+            fields[str(at)] = {k: ent[k] for k in ("layerId", "attrs", "c", "major", "ratio", "t0", "t1")}
+            p = next(p for p in sv["points"] if p["mark"] == n["mark"])
+            points.append({"point": p["id"], "revision": p["result"]["revision"]})
+        kb = f"kb-{1 + max([int(u['id'][3:]) for u in sv['uses']] or [0])}"
+        sv["uses"].append({"id": kb, "operation": f"Hata elipsleri ({da})", "uids": uids, "points": points})
     return after, out, da, records, fields
 
 
@@ -1349,6 +1396,31 @@ def edit_cases():
                        write(moving, after_t, {"op": "network"}, {"id": da, "records": records},
                              "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after_t.entities), "fields": fields}), d=moving))
+    # ADR 2960: the error ellipses drawn with the points, magnified, on the map's directions, recorded as a use.
+    with_e = {"layer": "gnss", "scale": 1000.0}
+    after_e, _, da, records, fields = accept(with_known, {}, ellipses=with_e)
+    out.append(ms.case("Ağı kabul et, hata elipsleriyle: N1, N4 ve N5'in elipsleri 1000 kat büyütülmüş, büyük eksen "
+                       "meridyen yakınsaması çıkarılmış yönde; dayanan kaydı; tek adımda geri alınır",
+                       write(with_known, after_e, {"op": "network", "ellipses": with_e},
+                             {"id": da, "records": records, "ellipses": 3}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_e.entities), "fields": fields}), d=with_known))
+    # The oblong network's ellipses have directions: the major axis turned by the convergence (ADR 2960).
+    oblong = networked(baselines=[record(k + 1, vector(f, t, ERRS[(f, t)], sig=(0.0015, 0.004, 0.005), turn=30.0))
+                                  for k, (f, t) in enumerate(PAIRS)])
+    with_o = {"layer": "gnss", "scale": 2000.0}
+    after_o, _, da, records, fields = accept(oblong, {}, ellipses=with_o)
+    out.append(ms.case("Ağı kabul et, hata elipsleriyle, sapmalar 30° dönük: elipslerin büyük ekseni semtinden meridyen "
+                       "yakınsaması çıkarılarak haritanın yönüne çevrilir, 2000 kat",
+                       write(oblong, after_o, {"op": "network", "ellipses": with_o},
+                             {"id": da, "records": records, "ellipses": 3}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_o.entities), "fields": fields}, then_undo=False), d=oblong))
+    out.append(ms.case("Ağı kabul et, hata elipsleri: büyütme 1'den küçük", [refusal(
+        {"op": "network", "ellipses": {"layer": "gnss", "scale": 0.5}}, "invalid_survey_value",
+        "Elipslerin büyütmesi 1 ile 100 000 arasında olmalı; 0.5 verildi.", "operation.ellipses.scale")],
+        d=with_known))
+    out.append(ms.case("Ağı kabul et, hata elipsleri: katman yok", [refusal(
+        {"op": "network", "ellipses": {"layer": "elips", "scale": 1000.0}}, "layer_not_found",
+        "“elips” kimlikli katman çizimde yok.", "operation.ellipses.layer")], d=with_known))
     after_c2, res_c2, da, records, fields = accept(with_known, {"class": "C2"})
     out.append(ms.case("Ağı C2 sınıfıyla kabul et: dengeleme kaydı sınıfı, paketi ve sonucunu tutar",
                        write(with_known, after_c2, {"op": "network", "class": "C2"}, {"id": da, "records": records},

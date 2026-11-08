@@ -204,6 +204,7 @@ pub mod survey_adjust;
 pub mod survey_points;
 pub mod survey_heights;
 pub mod box_grid;
+pub mod network_ellipses;
 pub mod shape_edits;
 pub mod shx_text;
 mod shape_split;

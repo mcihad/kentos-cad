@@ -53632,6 +53632,7 @@ class MapSurveyEdited(_Model):
     and uses are out of date after, and the drawing's revision.
     Attributes:
         stale: Unit: count.
+        ellipses: The error ellipses a network drew (docs/adr/2960). Unit: count.
         observations: Unit: count.
         point_revision: Unit: version.
         records: The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -53639,6 +53640,7 @@ class MapSurveyEdited(_Model):
     """
     stale: int
     revision: str
+    ellipses: int | Unset = UNSET
     id: str | None | Unset = UNSET
     observations: int | Unset = UNSET
     point_revision: int | None | Unset = UNSET
@@ -53650,6 +53652,8 @@ class MapSurveyEdited(_Model):
         out: dict[str, Any] = {}
         out["stale"] = self.stale
         out["revision"] = self.revision
+        if self.ellipses is not UNSET:
+            out["ellipses"] = self.ellipses
         if self.id is not UNSET:
             out["id"] = self.id
         if self.observations is not UNSET:
@@ -53669,6 +53673,7 @@ class MapSurveyEdited(_Model):
         return cls(
             stale=data["stale"],
             revision=data["revision"],
+            ellipses=data.get("ellipses", UNSET),
             id=data.get("id", UNSET),
             observations=data.get("observations", UNSET),
             point_revision=data.get("pointRevision", UNSET),
@@ -57016,6 +57021,31 @@ class NetworkDefined(_Model):
         return cls(
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkEllipses(_Model):
+    """The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
+    region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
+    map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.
+    Attributes:
+        scale: Unit: scale.
+    """
+    layer: str
+    scale: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["scale"] = float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkEllipses:
+        return cls(
+            layer=data["layer"],
+            scale=float(data["scale"]),
         )
 
 
@@ -117798,12 +117828,14 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
     is not a known point accepted (its object on `layer`, the active layer when not given) or made again, in one
     step. Refused while a baseline is a blunder or the model test fails.
     Attributes:
+        ellipses: Each point's error ellipse drawn in the same step (docs/adr/2960).
         epoch: The measurement epoch the known points are moved to (docs/adr/2120), as `map.survey.network` takes it. Unit: year.
         scale: Unit: 1.
     """
     TAG_VALUE: ClassVar[str] = "network"
     campaign: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    ellipses: NetworkEllipses | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
     hold: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
@@ -117816,6 +117848,8 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
             out["campaign"] = self.campaign
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.ellipses is not UNSET:
+            out["ellipses"] = None if self.ellipses is None else self.ellipses.to_json()
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
         if self.hold is not UNSET:
@@ -117833,6 +117867,7 @@ class NetworkMapSurveyOperation(MapSurveyOperation):
         return cls(
             campaign=data.get("campaign", UNSET),
             class_=data.get("class", UNSET),
+            ellipses=UNSET if "ellipses" not in data else None if data["ellipses"] is None else NetworkEllipses.from_json(data["ellipses"]),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
             hold=data.get("hold", UNSET),
             layer=data.get("layer", UNSET),
@@ -131221,6 +131256,7 @@ __all__ = [
     "NetworkDefineOperationName",
     "NetworkDefined",
     "NetworkDirection",
+    "NetworkEllipses",
     "NetworkEpochFrom",
     "NetworkEpochFromName",
     "NetworkKind",

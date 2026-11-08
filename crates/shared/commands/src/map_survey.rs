@@ -638,6 +638,10 @@ pub enum MapSurveyOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         layer: Option<String>,
+        /// Each point's error ellipse drawn in the same step (docs/adr/2960).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        ellipses: Option<NetworkEllipses>,
     },
     /// A mark's point accepted: its object on `layer` (the active layer when not given) and `kn-N`, in one step.
     Accept {
@@ -722,6 +726,11 @@ pub struct MapSurveyEdited {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
+    /// The error ellipses a network drew (docs/adr/2960).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub ellipses: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
     /// The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -1028,6 +1037,23 @@ pub struct NetworkStation {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ellipse: Option<ErrorEllipse>,
 }
+
+/// The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
+/// region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
+/// map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkEllipses {
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub scale: f64,
+}
+
+/// The magnifications an ellipse may be drawn at.
+pub const ELLIPSE_SCALES: (f64, f64) = (1.0, 100_000.0);
 
 /// A mark's confidence region (docs/adr/2560) from its east, north, up covariance as the stage held by the known points
 /// gives it (by m0²), at a confidence (the class's, else Madde 15(1)(d)'s 0.95): the horizontal error ellipse's semi-

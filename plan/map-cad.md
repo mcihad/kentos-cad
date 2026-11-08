@@ -35,7 +35,7 @@ sırayla alır.
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
@@ -645,6 +645,13 @@ değeri √χ²₂ = 2,4477), BÖHHBÜY 15(1)(d). Kanıtlanan:
 - 42 ortak durum (1 yeni, 30° dönük sapmalarla), numpy'nin özdeğerleriyle bağımsız; Python, MCP.
 
 Açık: elipslerin çizimde gösterimi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik. Madde `[ ]` kalır.
+
+**9 Kasım 2026, beşinci tur — hata elipsleri çizimde ([ADR 2960](../docs/adr/2960-network-error-ellipses-drawn.md)).**
+Kapsam: **Harita**. Dayanak: ADR 2560'ın semti coğrafi kuzeyden, haritanın yukarısı ızgara kuzeyi; aradaki meridyen
+yakınsaması `System::true_north`'tan. Kanıtlanan: `map.survey.edit network`'ün `ellipses`'i (katman, büyütme 1–100 000):
+ağ kabul edilirken her noktanın hata elipsi aynı adımda, büyük ekseni semt − yakınsama yönünde çizilir, kb-N dayanan
+kaydıyla; Ağ dengelemesi'nde Hata elipsleri satırı; 117 ortak durum (4 yeni, yakınsama betikte PROJ'la), MCP, masaüstü
+testi ve resimler. Açık: kotun aralığı ve elips etiketi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 
