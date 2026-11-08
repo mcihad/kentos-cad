@@ -221,6 +221,9 @@
 - **Ortak kenarın ortasındaki köşeler (8 Kasım 2026; MAP-07, [ADR 2600](../../docs/adr/2600-shared-edge-junctions-and-inner-vertices.md)).**
   Paralel kaydır'ın Topolojik düzenlemesi kenarın içindeki komşu köşeleri (üçlü birleşim, ara köşe, delik, çizgi ucu)
   kenarla taşır (`carried`); kısalan kenarın dışına düşen ve yayın ortasındaki köşe açıklamayla reddedilir.
+- **Sınır grafiğinde yay ile kiriş uyuşmazlığı (8 Kasım 2026; MAP-08, [ADR 2620](../../docs/adr/2620-boundary-arc-chord-mismatch.md)).**
+  `cad.parcels.boundaries`'in `arcChord` sorunu: aynı iki köşe arasında yay ile kiriş (ya da iki farklı yay); iki sınır,
+  şeridin alanı ve ortadaki ayrılış. Pencerede Fark sütunu. Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

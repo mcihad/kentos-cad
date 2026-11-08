@@ -30,6 +30,35 @@ fn opened(name: Option<&str>) -> App {
 }
 
 const PROBLEMS: &str = "sorunlu ada: T birleşimi, 0,4 µm ayrık köşeler, bir yanda iki parsel";
+const MISMATCH: &str = "uyuşmayan üç sınır bir arada: her biri kendi sorunu";
+
+/// docs/adr/2620: an arc against its chord, two arcs the same way and two arcs opposite ways, each a problem with its
+/// boundaries, sliver and gap as the case says, in the table's Fark column.
+#[test]
+fn an_arc_against_its_chord_is_listed_with_its_sliver() {
+    let mut app = opened(Some(MISMATCH));
+    let _ = app.update(Message::Run("parcels.check"));
+    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let c = cases();
+    let want = c["cases"].as_array().expect("cases").iter().find(|x| x["name"] == MISMATCH).expect("the case")["steps"][0]
+        ["result"]["output"]["problems"]
+        .clone();
+    let want = want.as_array().expect("problems");
+    assert_eq!(g.problems.len(), want.len());
+    for (got, w) in g.problems.iter().zip(want) {
+        assert_eq!(got.kind, w["kind"].as_str().expect("kind"));
+        assert_eq!(serde_json::to_value(&got.boundaries).expect("json"), w["boundaries"]);
+        assert_eq!(serde_json::to_value(&got.parcels).expect("json"), w["parcels"]);
+        // The case's numbers within its own 1e-9 (the reference's arcs are mpmath's).
+        let close = |a: Option<f64>, key: &str| (a.expect(key) - w[key].as_f64().expect(key)).abs() < 1e-9;
+        assert!(close(got.area, "area") && close(got.gap, "gap"), "{got:?}");
+    }
+    let shown = rows(&g, Show::Problems, &app.format());
+    assert_eq!(shown[0][0], "Yay ile kiriş uyuşmuyor");
+    let f = app.format();
+    assert_eq!(shown[0][4], format!("{} · {}, ortada {}", g.problems[0].boundaries.join(" ile "), f.area(6.719699229259696), f.length(1.0)));
+}
 
 #[test]
 fn the_clean_block_s_graph_from_the_parcel_check() {
@@ -161,6 +190,44 @@ fn screens() {
             let _ = app.update(Message::Run("parcels.check"));
             let _ = app.update(Message::ParcelBoundaries(B::Open));
             let _ = app.update(Message::ParcelBoundaries(B::Show(show)));
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
+}
+
+/// `.run/gui-evidence/yay-kiris-2620/`: the three mismatches in the window's problems with their Fark, and on the drawing.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib parcel_boundaries_window_tests::mismatch_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn mismatch_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yay-kiris-2620");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (draw, file) in [(false, "1-pencere"), (true, "2-cizimde")] {
+            let mut app = opened(Some(MISMATCH));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("parcels.check"));
+            let _ = app.update(Message::ParcelBoundaries(B::Open));
+            let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+            if draw {
+                let _ = app.update(Message::ParcelBoundaries(B::Draw));
+                app.selection.clear();
+            }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);

@@ -21,8 +21,11 @@ The rules, by hand (the ADR's):
 - missingVertex: a corner that is no end of a straight boundary, the foot of its perpendicular strictly inside it and
   within 1 µm; or no end of an arc boundary, within 1 µm of the arc's circle (the circle through its ends and its
   middle, its centre where the chords' perpendicular bisectors meet, in mpmath at 50 digits) and strictly on its
-  middle's side of the chord (docs/adr/2220); splitCorner: two corners within 1 µm; problems by kind (missingVertex,
-  splitCorner, overlap), then by their corner, then by the boundary;
+  middle's side of the chord (docs/adr/2220); splitCorner: two corners within 1 µm; arcChord (docs/adr/2620): two
+  boundaries between the same corners with different bulges, each pair in order, the area between the curves (each
+  segment's area from the circle through the chord's ends and the curve's middle, in mpmath, signed as the bulge; their
+  difference) and the distance between their middles, at the middle of the two middles; problems by kind
+  (missingVertex, splitCorner, overlap, arcChord), then by their corner or first boundary, then by the boundary;
 - a parcel: its identity's parts written (İl/İlçe/Mahalle/Ada/Parsel), its net area (outer rings less their holes),
   its boundaries in ring order, its neighbours across them in the drawing's order.
 """
@@ -113,6 +116,39 @@ ARCS = [
     parcel([(110, 12 + 0.0000004), (115, 20), (105, 20)], ident(35)),
     parcel([(110, 12 + 0.000003), (115, 20), (105, 20)], ident(36)),
 ]
+
+
+# Mismatches (docs/adr/2620): M1's east side an arc bowing 1 m into M2, whose west side is the chord; M3 bowing 1 m and
+# M4 0.5 m the same way; M5 bowing 1 m east and M6 0.5 m west into M5.
+MISMATCH = [
+    parcel([(200, 0), (210, 0), (210, 10), (200, 10)], ident(41), bulges=[0, 0.2, 0, 0]),
+    parcel([(210, 0), (220, 0), (220, 10), (210, 10)], ident(42)),
+    parcel([(230, 0), (240, 0), (240, 10), (230, 10)], ident(43), bulges=[0, 0.2, 0, 0]),
+    parcel([(240, 0), (250, 0), (250, 10), (240, 10)], ident(44), bulges=[0, 0, 0, -0.1]),
+    parcel([(260, 0), (270, 0), (270, 10), (260, 10)], ident(45), bulges=[0, 0.2, 0, 0]),
+    parcel([(270, 0), (280, 0), (280, 10), (270, 10)], ident(46), bulges=[0, 0, 0, 0.1]),
+]
+
+
+def segment_mp(a, b, bulge):
+    """The area between the chord from `a` to `b` and its curve through the middle `middle(a, b, bulge)`, signed as the
+    bulge: the circle through the ends and the middle (mpmath), r²/2 (θ − sin θ) with θ the angle the chord subtends."""
+    if bulge == 0:
+        return mp.mpf(0)
+    A, B = [mp.mpf(v) for v in a], [mp.mpf(v) for v in b]
+    M = [mp.mpf(v) for v in middle(a, b, bulge)]
+    bx, by, mx, my = B[0] - A[0], B[1] - A[1], M[0] - A[0], M[1] - A[1]
+    d = 2 * (bx * my - by * mx)
+    ox = (my * (bx * bx + by * by) - by * (mx * mx + my * my)) / d
+    oy = (bx * (mx * mx + my * my) - mx * (bx * bx + by * by)) / d
+    r = mp.sqrt(ox * ox + oy * oy)
+    c = mp.sqrt(bx * bx + by * by)
+    half = mp.asin(c / (2 * r))
+    # The arc runs the long way round when the middle is on the far side of the centre from the chord.
+    rise = mp.sqrt((M[0] - A[0] - bx / 2) ** 2 + (M[1] - A[1] - by / 2) ** 2)
+    theta = 2 * half if rise <= r else 2 * (mp.pi - half)
+    area = r * r / 2 * (theta - mp.sin(theta))
+    return area if bulge > 0 else -area
 
 
 def arc_near(p, a, b, bulge):
@@ -278,6 +314,22 @@ def graph(entities, chosen):
                 on = sorted(set(at_corner[i]) | set(at_corner[j]))
                 problems.append((1, i, {"kind": "splitCorner", "at": [places[i][0], places[i][1]],
                                         "parcels": [uids[k] for k in on]}))
+    # docs/adr/2620: the same corners, different bulges.
+    by_ends = {}
+    for j in order:
+        by_ends.setdefault((edges[j][0], edges[j][1]), []).append(j)
+    for (lo, hi), js in by_ends.items():
+        for j1, j2 in zip(js, js[1:]):
+            a, b = places[lo], places[hi]
+            b1, b2 = edges[j1][2], edges[j2][2]
+            m1, m2 = middle(a, b, b1), middle(a, b, b2)
+            on = sorted({k for k, _ in edges[j1][3]} | {k for k, _ in edges[j2][3]})
+            c = math.hypot(b[0] - a[0], b[1] - a[1])
+            problems.append((3, bid[j1], {"kind": "arcChord", "at": [(m1[0] + m2[0]) / 2, (m1[1] + m2[1]) / 2],
+                                          "parcels": [uids[k] for k in on],
+                                          "boundaries": [f"S{bid[j1] + 1}", f"S{bid[j2] + 1}"],
+                                          "area": float(abs(segment_mp(a, b, b1) - segment_mp(a, b, b2))),
+                                          "gap": abs(b1 - b2) * c / 2}))
     problems.sort(key=lambda t: (t[0], t[1]))
     parcels = []
     for k, e in enumerate(ents):
@@ -323,6 +375,7 @@ def cases():
     with_line = CLEAN + [line]
     sp = setup(PROBLEMS)
     sa = setup(ARCS)
+    sm = setup(MISMATCH)
     return [
         ok("temiz ada: ortak sınırlar, köşede birleşen üç parsel, yaylı dış sınır, delik, saat yönü, iki parça, yaylı ortak sınır",
            CLEAN),
@@ -348,6 +401,12 @@ def cases():
         ok("yayın çemberinde ama kirişin öbür yanındaki köşe yayın üstünde değildir", ARCS, [0, 3], setup_=sa),
         ok("yaydan 0,4 µm uzaktaki köşe eksik köşedir", ARCS, [0, 4], setup_=sa),
         ok("yaydan 3 µm uzaktaki köşe eksik köşe değildir", ARCS, [0, 5], setup_=sa),
+        # docs/adr/2620: one side an arc, the other its chord or another arc.
+        ok("yay ile kiriş uyuşmuyor: bir yanda 1 m kabaran yay, öbür yanda kiriş; şeridin alanı ve ortadaki ayrılış",
+           MISMATCH, [0, 1], setup_=sm),
+        ok("iki yay uyuşmuyor: aynı yana 1 m ve 0,5 m kabaran yaylar arasındaki şerit", MISMATCH, [2, 3], setup_=sm),
+        ok("iki yay karşı yanlara kabarıyor: şerit iki parçanın toplamı, ortada 1,5 m", MISMATCH, [4, 5], setup_=sm),
+        ok("uyuşmayan üç sınır bir arada: her biri kendi sorunu", MISMATCH, setup_=sm),
         ok("plan aynı grafiği verir", CLEAN, op="plan"),
         ok("doğrulama", CLEAN, op="validate"),
         ok("CBS projesinde de", CLEAN, [0, 1, 2], setup_=setup(CLEAN, "gis")),

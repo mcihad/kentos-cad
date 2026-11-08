@@ -19829,19 +19829,32 @@ class BlocksReplaced(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BoundaryProblem(_Model):
-    """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner` or `overlap`; where; the parcels.
+    """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap` or `arcChord`; where; the
+    parcels.
     Attributes:
         at: Unit: length.
+        area: `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim. Unit: m2.
+        boundaries: `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order.
+        gap: `arcChord`: how far apart the two curves are at their middles. Unit: m.
     """
     kind: str
     at: list[float]
     parcels: list[str]
+    area: float | None | Unset = UNSET
+    boundaries: list[str] | Unset = UNSET
+    gap: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["kind"] = self.kind
         out["at"] = [float(e0) for e0 in self.at]
         out["parcels"] = list(self.parcels)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.boundaries is not UNSET:
+            out["boundaries"] = list(self.boundaries)
+        if self.gap is not UNSET:
+            out["gap"] = None if self.gap is None else float(self.gap)
         return out
 
     @classmethod
@@ -19850,6 +19863,9 @@ class BoundaryProblem(_Model):
             kind=data["kind"],
             at=[float(e0) for e0 in data["at"]],
             parcels=list(data["parcels"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            boundaries=list(data["boundaries"]) if "boundaries" in data else UNSET,
+            gap=UNSET if "gap" not in data else None if data["gap"] is None else float(data["gap"]),
         )
 
 

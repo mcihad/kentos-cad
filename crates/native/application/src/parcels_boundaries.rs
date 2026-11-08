@@ -13,8 +13,11 @@
 //! - `missingVertex`: a corner that is no end of a straight boundary yet within 1 µm of its inside (the foot of its
 //!   perpendicular strictly between the ends), or no end of an arc boundary yet within 1 µm of its arc (of the arc's
 //!   circle, strictly on the arc's side of its chord: the chord parts the circle into the arc and the rest,
-//!   docs/adr/2220); `splitCorner`: two corners within 1 µm; problems in order of kind, then of their first corner or
-//!   boundary, then of the boundary;
+//!   docs/adr/2220); `splitCorner`: two corners within 1 µm; `arcChord`: two boundaries between the same corners whose
+//!   bulges differ (docs/adr/2620), each pair in their order, with the area between the curves (the difference of their
+//!   segments r²/2 (θ − sin θ), each signed as its bulge) and the distance between their middles (|b₁ − b₂|·c/2), at the
+//!   middle of the two middles; problems in order of kind, then of their first corner or boundary, then of the
+//!   boundary;
 //! - a parcel's neighbours: the parcels across its boundaries, in the drawing's order.
 
 use std::collections::BTreeMap;
@@ -96,6 +99,16 @@ fn length(a: Vec2, b: Vec2, bulge: f64) -> f64 {
 fn middle(a: Vec2, b: Vec2, bulge: f64) -> [f64; 2] {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     [(a.x + b.x) / 2.0 + dy * bulge / 2.0, (a.y + b.y) / 2.0 - dx * bulge / 2.0]
+}
+
+/// The area between a chord `c` long and its arc with `bulge`, signed as the bulge (0 for a straight edge).
+fn segment(c: f64, bulge: f64) -> f64 {
+    if bulge == 0.0 {
+        return 0.0;
+    }
+    let theta = 4.0 * bulge.abs().atan();
+    let r = c / (2.0 * (theta / 2.0).sin());
+    (r * r / 2.0 * (theta - theta.sin())).copysign(bulge)
 }
 
 /// An arc's circle, relative to its start `a`: the centre and the radius of the arc from `a` to `b` with `bulge`
@@ -268,6 +281,7 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                     kind: "overlap".into(),
                     at: middle(corners[edge.lo], corners[edge.hi], edge.bulge),
                     parcels: on.iter().map(|&k| uids[k].clone()).collect(),
+                    ..BoundaryProblem::default()
                 },
             ));
         }
@@ -326,6 +340,7 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                         kind: "missingVertex".into(),
                         at: [p.x, p.y],
                         parcels: on.iter().map(|&k| uids[k].clone()).collect(),
+                        ..BoundaryProblem::default()
                     },
                 ));
             }
@@ -348,9 +363,37 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                         kind: "splitCorner".into(),
                         at: [corners[i].x, corners[i].y],
                         parcels: on.iter().map(|&k| uids[k].clone()).collect(),
+                        ..BoundaryProblem::default()
                     },
                 ));
             }
+        }
+    }
+    // The same two corners joined by an arc and its chord, or by two different arcs (docs/adr/2620): the parcels
+    // disagree on the boundary's shape; a sliver lies between the curves.
+    for list in by_ends.values().filter(|l| l.len() > 1) {
+        let mut list = list.clone();
+        list.sort_by_key(|&e| boundary_id[e]);
+        for pair in list.windows(2) {
+            let (e1, e2) = (&edges[pair[0]], &edges[pair[1]]);
+            let (a, b) = (corners[e1.lo], corners[e1.hi]);
+            let c = (b.x - a.x).hypot(b.y - a.y);
+            let (m1, m2) = (middle(a, b, e1.bulge), middle(a, b, e2.bulge));
+            let mut on: Vec<usize> = e1.sides.iter().chain(&e2.sides).map(|s| s.parcel).collect();
+            on.sort_unstable();
+            on.dedup();
+            problems.push((
+                3,
+                boundary_id[pair[0]],
+                BoundaryProblem {
+                    kind: "arcChord".into(),
+                    at: [(m1[0] + m2[0]) / 2.0, (m1[1] + m2[1]) / 2.0],
+                    parcels: on.iter().map(|&k| uids[k].clone()).collect(),
+                    boundaries: vec![sid(pair[0]), sid(pair[1])],
+                    area: Some((segment(c, e1.bulge) - segment(c, e2.bulge)).abs()),
+                    gap: Some((e1.bulge - e2.bulge).abs() * c / 2.0),
+                },
+            ));
         }
     }
     problems.sort_by_key(|(kind, first, _)| (*kind, *first));

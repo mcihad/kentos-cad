@@ -38,7 +38,7 @@ sırayla alır.
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560 | elipslerin çizimde gösterimi; robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580 | çok parçalı nesne; seçilen köşelerin sahnede işareti; dönen ve yaylı referansın bağı | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600 | veri formu yolu; taşınmaların sahnede işaretlenmesi; tutamaç ve Esnet'te kenar içindeki köşe | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yay ile kiriş uyuşmazlığı | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620 | kalıcı parsel kaydı ve sınır kimliği; tablodaki satırın çizimde vurgulanması; yayı kirişlerle yaklaşık çizen komşu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240 | plan değişikliği taslağı; sembolün karardan seçilmesi; yolun parselle tutarlılığı | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260 | eğim; altyapıya yakınlık; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280 | ayırma çapının paftası; değer esaslı dağıtım | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -834,6 +834,14 @@ göstermesi, ArcGIS Pro parsel ağının öntanımlı topoloji kuralları, AutoC
 mpmath'le bulur), 28 ortak durum, MCP; Sınır grafiği'nde Çizimde göster: sorun halkaları ve adları, K ve S numaraları
 ekranda seyreltilerek, çizim değiştikçe yeniden, İşareti kaldır'a dek. Açık: kalıcı parsel kaydı ve sınır kimliği,
 tablodaki satırın çizimde vurgulanması, yay ile kiriş uyuşmazlığı, erişim denetimli hak/pay, resmî kapsam.
+
+**8 Kasım 2026, dördüncü tur — yay ile kiriş uyuşmazlığı ([ADR 2620](../docs/adr/2620-boundary-arc-chord-mismatch.md)).**
+Kapsam: ADR 2000'deki gibi. Araştırma: ArcGIS Pro parsel ağının örtme, bindirmeme ve boşluksuzluk kuralları, AutoCAD'in
+kabarıklık tanımı, dairesel segment. Bulunan açık: aynı iki köşe arasında bir yanda yay, öbür yanda kiriş iki ayrı tek
+yanlı sınır sayılıyor, aradaki şerit söylenmiyordu. Kanıtlanan: `arcChord` sorunu (kabarıklıkları farklı iki sınır),
+iki sınırın adı, şeridin alanı (segmentlerin işaretli farkı) ve ortadaki ayrılış; pencerede Fark sütunu, çizimde
+halka. 4 yeni ortak durum (yayın çemberi mpmath'le), MCP, masaüstü ve resimler. Açık: kalıcı parsel kaydı ve sınır
+kimliği, tablodaki satırın çizimde vurgulanması, yayı kirişlerle yaklaşık çizen komşu, erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

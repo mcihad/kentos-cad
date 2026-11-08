@@ -116827,8 +116827,17 @@
       ]
     },
     "BoundaryProblem": {
-      "description": "What keeps the geometry from a clean graph: `missingVertex`, `splitCorner` or `overlap`; where; the parcels.",
+      "description": "What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap` or `arcChord`; where; the\nparcels.",
       "properties": {
+        "area": {
+          "description": "`arcChord`: the area between the two curves, the sliver one parcel lacks or both claim.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m2"
+        },
         "at": {
           "items": {
             "format": "double",
@@ -116838,6 +116847,22 @@
           "minItems": 2,
           "type": "array",
           "x-unit": "length"
+        },
+        "boundaries": {
+          "description": "`arcChord` (docs/adr/2620): the two boundaries between the same corners, in order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "gap": {
+          "description": "`arcChord`: how far apart the two curves are at their middles.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         },
         "kind": {
           "type": "string"

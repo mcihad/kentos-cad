@@ -71,6 +71,8 @@ pub fn problem_word(kind: &str) -> &'static str {
         "missingVertex" => "Komşuda eksik köşe",
         "splitCorner" => "Ayrık köşe (1 µm'den yakın)",
         "overlap" => "Çakışan kenar",
+        // docs/adr/2620: one side an arc, the other its chord (or another arc).
+        "arcChord" => "Yay ile kiriş uyuşmuyor",
         _ => "Sorun",
     }
 }
@@ -81,7 +83,17 @@ pub fn problem_short(kind: &str) -> &'static str {
         "missingVertex" => "Komşuda eksik köşe",
         "splitCorner" => "Ayrık köşe",
         "overlap" => "Çakışan kenar",
+        "arcChord" => "Yay ile kiriş",
         _ => "Sorun",
+    }
+}
+
+/// A problem's size (docs/adr/2620): an arc and chord mismatch's boundaries, its sliver's area and how far apart the
+/// two curves are at their middles; none for the others.
+pub fn problem_size(p: &kentos_commands::BoundaryProblem, f: &kentos_interaction::Format) -> String {
+    match (p.area, p.gap) {
+        (Some(area), Some(gap)) => format!("{} · {}, ortada {}", p.boundaries.join(" ile "), f.area(area), f.length(gap)),
+        _ => "—".into(),
     }
 }
 
@@ -119,7 +131,15 @@ pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> V
         Show::Problems => g
             .problems
             .iter()
-            .map(|p| vec![problem_word(&p.kind).to_owned(), f.coord(p.at[0]), f.coord(p.at[1]), names(&p.parcels)])
+            .map(|p| {
+                vec![
+                    problem_word(&p.kind).to_owned(),
+                    f.coord(p.at[0]),
+                    f.coord(p.at[1]),
+                    names(&p.parcels),
+                    problem_size(p, f),
+                ]
+            })
             .collect(),
     }
 }
@@ -222,10 +242,11 @@ impl App {
                     lines.push(words::text_line(
                         Kind::Error,
                         format!(
-                            "{problems} sorun: {} komşuda eksik köşe, {} ayrık köşe, {} çakışan kenar. Ortak sınır yalnız koordinatların çakışmasıyla değil, iki parselin aynı sınırıyla kurulur.",
+                            "{problems} sorun: {} komşuda eksik köşe, {} ayrık köşe, {} çakışan kenar, {} yay ile kiriş uyuşmazlığı. Ortak sınır yalnız koordinatların çakışmasıyla değil, iki parselin aynı sınırıyla kurulur.",
                             by("missingVertex"),
                             by("splitCorner"),
-                            by("overlap")
+                            by("overlap"),
+                            by("arcChord")
                         ),
                     ));
                 }
@@ -249,7 +270,13 @@ impl App {
                 col("Sağda", 220.0),
             ],
             Show::Corners => vec![col("Köşe", 60.0), num("Y", 130.0), num("X", 130.0), col("Parseller", 420.0)],
-            Show::Problems => vec![col("Sorun", 220.0), num("Y", 130.0), num("X", 130.0), col("Parseller", 300.0)],
+            Show::Problems => vec![
+                col("Sorun", 200.0),
+                num("Y", 120.0),
+                num("X", 120.0),
+                col("Parseller", 230.0),
+                col("Fark", 230.0),
+            ],
         };
         let table = sheet(cols, table_rows, "Gösterilecek satır yok.", 300.0);
         let body = Grows::new()
