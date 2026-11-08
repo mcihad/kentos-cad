@@ -715,3 +715,52 @@ fn plan_dimensions_writes_four_sides_and_two_chains_each_way_in_one_step() {
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(dims(&app), 0, "one undo takes them all");
 }
+
+/// EK-3 numbering (M27, docs/adr/3027): four rooms in the four quarters of Zemin kat; EK-3 on and the section D01;
+/// Enter with none clicked numbers the storey Kat_Bölüm_Sıra, clockwise from north: KD, GD, GB, KB.
+#[test]
+fn ek3_numbers_the_storey_s_rooms_kat_bolum_sira_clockwise_from_north() {
+    let mut app = fresh_mimari();
+    let (layer, level) = {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let level = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.levels.first())
+            .map(|l| l.id.clone())
+            .expect("a storey");
+        (doc.layers().active().to_owned(), level)
+    };
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let room = |name: &str, x: f64, y: f64| json!({"name": name, "arch": {"level": level}, "parts": [{"outer": {"pts": [p(x, y), p(x + 4.0, y), p(x + 4.0, y + 3.0), p(x, y + 3.0)]}, "holes": []}]});
+    command(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [room("KB", 0.0, 3.0), room("KD", 4.0, 3.0), room("GD", 4.0, 0.0), room("GB", 0.0, 0.0)]}),
+    );
+    let _ = app.update(Message::Run("tool.spaceNumber"));
+    assert_eq!(app.session.tool_id(), "spaceNumber");
+    app.with_tool(|s, cx| s.configure("E", "yes", cx));
+    app.with_tool(|s, cx| s.configure("B", "D01", cx));
+    let format = app.format();
+    let rows = app.session.settings(&format);
+    let first = rows.iter().find(|s| s.key == "N").map(|s| s.value.clone());
+    assert_eq!(first.as_deref(), Some("K00_D01_001"));
+    let _ = app.submit_line("");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let numbers: std::collections::BTreeMap<String, String> = doc
+        .entities()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Space(s) => Some((
+                s.space.name.clone().unwrap_or_default(),
+                s.space.number.clone().unwrap_or_default(),
+            )),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(numbers["KD"], "K00_D01_001", "{numbers:?}");
+    assert_eq!(numbers["GD"], "K00_D01_002", "{numbers:?}");
+    assert_eq!(numbers["GB"], "K00_D01_003", "{numbers:?}");
+    assert_eq!(numbers["KB"], "K00_D01_004", "{numbers:?}");
+}
