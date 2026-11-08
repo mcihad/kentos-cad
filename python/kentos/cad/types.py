@@ -23557,9 +23557,10 @@ class ContourInterval(_Model):
 class ContourRules(_Model):
     """A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,
     every how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major
-    lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot
-    heights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,
-    docs/adr/2320).
+    lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
+    text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
+    the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
+    the built-in dashed type, docs/adr/2720).
     Attributes:
         release: Unit: count.
         major_every: Unit: count.
@@ -23570,6 +23571,7 @@ class ContourRules(_Model):
         auxiliary_above: Unit: paper-mm.
         label_every: Unit: paper-mm.
         label_height: Unit: paper-mm.
+        auxiliary_pattern: Unit: paper-mm.
         spot_height: Unit: paper-mm.
     """
     id: str
@@ -23586,6 +23588,7 @@ class ContourRules(_Model):
     auxiliary_above: float
     label_every: float
     label_height: float
+    auxiliary_pattern: list[float] | Unset = UNSET
     spot_height: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -23604,6 +23607,8 @@ class ContourRules(_Model):
         out["auxiliaryAbove"] = float(self.auxiliary_above)
         out["labelEvery"] = float(self.label_every)
         out["labelHeight"] = float(self.label_height)
+        if self.auxiliary_pattern is not UNSET:
+            out["auxiliaryPattern"] = [float(e0) for e0 in self.auxiliary_pattern]
         if self.spot_height is not UNSET:
             out["spotHeight"] = None if self.spot_height is None else float(self.spot_height)
         return out
@@ -23625,6 +23630,7 @@ class ContourRules(_Model):
             auxiliary_above=float(data["auxiliaryAbove"]),
             label_every=float(data["labelEvery"]),
             label_height=float(data["labelHeight"]),
+            auxiliary_pattern=[float(e0) for e0 in data["auxiliaryPattern"]] if "auxiliaryPattern" in data else UNSET,
             spot_height=UNSET if "spotHeight" not in data else None if data["spotHeight"] is None else float(data["spotHeight"]),
         )
 
@@ -57599,6 +57605,8 @@ class NewObject(_Model):
             (`TextEntity.label_of`). Absent: a text of its own.
         label_scale: The scale's denominator (1:N) the linked label is written at:
             finite, over 0 (`TextEntity.label_scale`). Given with `labelOf`. Unit: scale.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its
+            nearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).
         line_type: Its own line type (docs/adr/0260 §2): what the tools give a new object
             from the current line type. Absent: its layer's (katmana göre).
         line_weight: Its own line weight, paper mm (`EntityBase.line_weight`, 0 the
@@ -57619,6 +57627,7 @@ class NewObject(_Model):
     label: str | None | Unset = UNSET
     label_of: str | None | Unset = UNSET
     label_scale: float | None | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
     order: int | None | Unset = UNSET
@@ -57638,6 +57647,8 @@ class NewObject(_Model):
             out["labelOf"] = self.label_of
         if self.label_scale is not UNSET:
             out["labelScale"] = None if self.label_scale is None else float(self.label_scale)
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
             out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
         if self.line_weight is not UNSET:
@@ -57659,6 +57670,7 @@ class NewObject(_Model):
             label=data.get("label", UNSET),
             label_of=data.get("labelOf", UNSET),
             label_scale=UNSET if "labelScale" not in data else None if data["labelScale"] is None else float(data["labelScale"]),
+            line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             order=data.get("order", UNSET),
@@ -100098,7 +100110,10 @@ class TerrainsSheetContoured(_Model):
     """Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
     the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
     its order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left
-    out inside the details (metres), the objects written (a plan: none), the revision after it and notes.
+    out inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as
+    “Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo
+    leaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:
+    none), the revision after it and notes.
     Attributes:
         scale: Unit: scale.
         interval: Unit: length.
@@ -100117,6 +100132,7 @@ class TerrainsSheetContoured(_Model):
     cut: float
     revision: str
     notes: list[str]
+    pattern: str | None | Unset = UNSET
     spots: list[SheetSpot] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
@@ -100133,6 +100149,8 @@ class TerrainsSheetContoured(_Model):
         out["cut"] = float(self.cut)
         out["revision"] = self.revision
         out["notes"] = list(self.notes)
+        if self.pattern is not UNSET:
+            out["pattern"] = self.pattern
         if self.spots is not UNSET:
             out["spots"] = [e0.to_json() for e0 in self.spots]
         if self.uids is not UNSET:
@@ -100153,6 +100171,7 @@ class TerrainsSheetContoured(_Model):
             cut=float(data["cut"]),
             revision=data["revision"],
             notes=list(data["notes"]),
+            pattern=data.get("pattern", UNSET),
             spots=[SheetSpot.from_json(e0) for e0 in data["spots"]] if "spots" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )

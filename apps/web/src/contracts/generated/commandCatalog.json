@@ -32685,7 +32685,7 @@
       "id": "cad.entities.create",
       "version": 1,
       "title": "Nesneleri ekle",
-      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde tanımlı bir blok, ölçeği pozitif); renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
+      "summary": "Verilen nesneleri bir katmana yazar; hepsi tek geri alma adımındadır, adı “Ekle” ya da aracın ya da hesabın adı (Paralel çizgi, Dik in, Dik çık, Böl, Tarama, Alan oluştur, Poligon hesabı, Kutupsal alım, Önden kestirme, Geriden kestirme). Her nesne geometrisiyle verilir, cad.entities.edit'teki gibi: nokta, çizgi, çoklu çizgi, kapalı alan, daire, yay, elips, eğri, yardımcı çizgi, ışın, yazı, ölçü, tarama, blok yerleştirmesi (çizimde tanımlı bir blok, ölçeği pozitif); renk, öznitelik ve etiket isteğe bağlıdır. Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. Nesnenin kendi çizgi tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR 0313, 2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede olmayan ad line_type_not_found (objects[i].linePattern). expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -32830,6 +32830,7 @@
           "unknown_block",
           "invalid_link",
           "link_not_found",
+          "line_type_not_found",
           "invalid_attribute",
           "attribute_required",
           "entity_not_found",
@@ -37498,7 +37499,7 @@
       "id": "road.terrains.sheetcontours",
       "version": 1,
       "title": "Pafta eş yükselti eğrileri",
-      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
+      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
       "aliases": [
         "paftaegrileri",
         "esyukseltipafta"
@@ -37606,7 +37607,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the objects written (a plan: none), the revision after it and notes.",
+        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as\n“Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo\nleaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:\nnone), the revision after it and notes.",
         "properties": {
           "cut": {
             "format": "double",
@@ -37641,6 +37642,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "pattern": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -37695,7 +37702,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the objects written (a plan: none), the revision after it and notes.",
+        "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as\n“Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo\nleaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:\nnone), the revision after it and notes.",
         "properties": {
           "cut": {
             "format": "double",
@@ -37730,6 +37737,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "pattern": {
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "revision": {
             "pattern": "^(0|[1-9][0-9]*)$",
@@ -122303,11 +122316,19 @@
     },
     "ContourRules": {
       "additionalProperties": false,
-      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot\nheights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,\ndocs/adr/2320).",
+      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'\ntext height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and\nthe auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:\nthe built-in dashed type, docs/adr/2720).",
       "properties": {
         "auxiliaryAbove": {
           "format": "double",
           "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "auxiliaryPattern": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
           "x-unit": "paper-mm"
         },
         "auxiliaryWeight": {
@@ -155401,6 +155422,13 @@
             "null"
           ],
           "x-unit": "scale"
+        },
+        "linePattern": {
+          "description": "Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its\nnearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "lineType": {
           "anyOf": [

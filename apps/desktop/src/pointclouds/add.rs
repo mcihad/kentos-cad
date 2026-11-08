@@ -763,6 +763,7 @@ impl App {
                 .into_iter()
                 .map(|c| NewObject {
                     line_type: None,
+                    line_pattern: None,
                     geometry: EntityGeometry::PointCloud(c),
                     color: None,
                     line_weight: None,

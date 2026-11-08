@@ -2268,10 +2268,13 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
     İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin
     içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye
     kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu
-    çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler:
-    not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked,
-    invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable,
-    no_contours.
+    çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Yardımcı
+    eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm
+    boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede
+    yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır;
+    cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours,
+    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
+    unknown_terrain, terrain_unbuildable, no_contours.
     """
     __slots__ = ()
     id = "road.terrains.sheetcontours"
@@ -2315,9 +2318,13 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi,
         detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin
         spotHeight'ı, Ek-3 0004; ADR 2320). 3B çoklu çizgi ve yazı olarak tek geri alma
-        adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours,
-        layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-        unknown_terrain, terrain_unbuildable, no_contours.
+        adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini
+        (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı
+        eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje
+        ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını
+        söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer,
+        layer_locked, invalid_revision, revision_conflict, unknown_terrain,
+        terrain_unbuildable, no_contours.
 
         Args:
             doc: The drawing it works on.

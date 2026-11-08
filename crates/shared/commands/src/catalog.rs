@@ -6091,6 +6091,7 @@ pub fn catalog() -> CommandCatalog {
                       Elips, Eğri, Yardımcı çizgi, Işın, Halka, Paralel çizgi, Dik in, Dik çık ve Böl araçları geometriyi ortak geometri çekirdeğiyle bulur, önizlemede gösterdiklerini bu komutla yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. \
                       Hesap menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. \
                       Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. \
+                      Nesnenin kendi çizgi tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR 0313, 2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede olmayan ad line_type_not_found (objects[i].linePattern). \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
                       Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider."
                 .into(),
@@ -7025,7 +7026,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Pafta eş yükselti eğrileri".into(),
             summary: "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). \
                       (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320). \
-                      3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
+                      3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
                 .into(),
             aliases: vec!["paftaegrileri".into(), "esyukseltipafta".into()],
             effect: CommandEffect::Document,

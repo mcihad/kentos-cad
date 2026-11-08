@@ -150,6 +150,7 @@ pub fn write_results(
                 .iter()
                 .map(|(geometry, attrs)| kentos_commands::NewObject {
                     line_type: None,
+                    line_pattern: None,
                     geometry: geometry.clone(),
                     color: None,
                     line_weight: None,

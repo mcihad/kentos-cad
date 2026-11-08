@@ -321,6 +321,7 @@ pub(crate) fn write_objects_each(
                     .draws_lines()
                     .then_some(cx.draft.line_type)
                     .flatten(),
+                line_pattern: None,
                 // The current weight goes to what is drawn with lines (docs/adr/0139).
                 line_weight: geometry
                     .draws_lines()

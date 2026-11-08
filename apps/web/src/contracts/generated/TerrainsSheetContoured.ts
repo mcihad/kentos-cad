@@ -7,6 +7,9 @@ import type { SheetSpot } from "./SheetSpot";
  * Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
  * the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
  * its order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left
- * out inside the details (metres), the objects written (a plan: none), the revision after it and notes.
+ * out inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as
+ * “Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo
+ * leaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:
+ * none), the revision after it and notes.
  */
-export type TerrainsSheetContoured = { rules: string, source: string, scale: number, interval: number, lines: Array<SheetContourLine>, labels: Array<SheetContourLabel>, steep: number, gentle: number, cut: number, spots?: Array<SheetSpot>, uids?: Array<string>, revision: string, notes: Array<string>, };
+export type TerrainsSheetContoured = { rules: string, source: string, scale: number, interval: number, lines: Array<SheetContourLine>, labels: Array<SheetContourLabel>, steep: number, gentle: number, cut: number, spots?: Array<SheetSpot>, pattern?: string, uids?: Array<string>, revision: string, notes: Array<string>, };

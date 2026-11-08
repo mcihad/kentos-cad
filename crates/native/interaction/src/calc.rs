@@ -47,6 +47,7 @@ pub fn add_points(
             }
             NewObject {
                 line_type: None,
+                line_pattern: None,
                 geometry: EntityGeometry::Point {
                     p: Wire {
                         x: pt.p.x,

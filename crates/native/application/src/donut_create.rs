@@ -67,6 +67,7 @@ fn made(input: &DonutCreate) -> Result<EntitiesCreate, Stop> {
             color: input.color.clone(),
             line_weight: input.line_weight,
             line_type: input.line_type,
+            line_pattern: None,
             attrs: input.attrs.clone(),
             label: input.label.clone(),
             symbol: input.symbol.clone(),

@@ -44,7 +44,7 @@ sırayla alır.
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460 | çift kübik piksel altı; yeniden örnekleme; çizilmiş dikiş hattı boyunca ölçüm; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720 | şev üstü ve dibi kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
@@ -1264,6 +1264,14 @@ Kanıtlanan: `road.terrains.sheetcontours`'a `spots`: en içteki kapalı kalın 
 (çukurda en alçak) yüzey köşesi, detayın içindeki köşe sayılmadan, kotu dm'ye kadar; paket sürüm 2 `spotHeight` 1,2 mm;
 yeni çanak yüzeyiyle çukur durumu; 32 ortak durum, MCP; Pafta eğrileri'nde kutu. Açık: şev üstü ve dibi kotları,
 yardımcı eğrinin 5/1 mm deseni (komutun nesne biçimi önce `linePattern` almalı), yüzey birleştirme.
+
+**8 Kasım 2026, dördüncü tur — yardımcı eğrinin 5/1 mm deseni ([ADR 2720](../docs/adr/2720-auxiliary-contour-pattern.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY Ek-3 0003 (5 mm çizgi, 1 mm boşluk), ADR 0313'ün proje çizgi tipleri.
+Kanıtlanan: `cad.entities.create`'in nesnesi `linePattern` alır (ADR 0313'ün kuralı; olmayan ad `line_type_not_found`);
+kural paketine `auxiliaryPattern` (sürüm 3); `road.terrains.sheetcontours` yardımcı eğrileri “Yardımcı eğri (paket)”
+proje çizgi tipiyle çizer, tip yoksa ekler (proje ayarı, geri almada kalır), varsa projedekini kullanır; create 86,
+pafta eğrileri 36 ortak durum, MCP (`.kcad` geri okuması), masaüstü testi ve resim (1:1000'de 5 m / 1 m). Açık: şev
+üstü ve dibi kotları, yüzey birleştirme, bölgesel yeniden kurma.
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

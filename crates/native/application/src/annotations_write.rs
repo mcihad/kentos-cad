@@ -693,6 +693,7 @@ fn create_input(laid: &Laid, input: &AnnotationsWrite) -> EntitiesCreate {
             .enumerate()
             .map(|(i, (geometry, attrs))| NewObject {
                 line_type: None,
+                line_pattern: None,
                 line_weight: None,
                 geometry: geometry.clone(),
                 color: input.color.clone(),

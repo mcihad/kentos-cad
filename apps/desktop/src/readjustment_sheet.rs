@@ -91,6 +91,7 @@ fn new_object(parcel: &str, name: String, part: &ScopePart, f: &Format) -> Optio
         color: None,
         line_weight: None,
         line_type: None,
+        line_pattern: None,
         attrs: Some(attrs),
         label: None,
         symbol: None,

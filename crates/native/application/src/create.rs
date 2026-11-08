@@ -62,7 +62,7 @@ pub fn plan_in(doc: &Document, input: &EntitiesCreate) -> CommandResult<Entities
     match check(doc, input) {
         Ok(checked) => CommandResult::Completed {
             output: EntitiesCreatePlan {
-                entities: entities(input, &checked.attrs, &checked.placed),
+                entities: entities(doc, input, &checked.attrs, &checked.placed),
                 revision: doc.revision().to_string(),
             },
             warnings: checked.warnings,
@@ -107,10 +107,8 @@ fn write_execute(
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let slots = match cx
-        .doc
-        .add_many(entities(&input, &attrs, &placed), label(input.operation))
-    {
+    let made = entities(cx.doc, &input, &attrs, &placed);
+    let slots = match cx.doc.add_many(made, label(input.operation)) {
         Ok(slots) => slots,
         Err(full) => {
             return CommandResult::Failed {
@@ -262,6 +260,20 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
             .map(|(i, o)| (i, &o.geometry)),
         "objects",
     )?;
+    // A project line type by its name (docs/adr/0313 §1, 2720).
+    for (i, object) in input.objects.iter().enumerate() {
+        if let Some(name) = &object.line_pattern
+            && !doc.settings().line_types.iter().any(|t| kentos_commands::same_line_type_name(&t.name, name))
+        {
+            return Err(Stop::failed(error(
+                codes::LINE_TYPE_NOT_FOUND,
+                format!(
+                    "“{name}” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin."
+                ),
+                Some(format!("objects[{i}].linePattern")),
+            )));
+        }
+    }
     // A text's and a dimension's style is the project's (docs/adr/0183 §9).
     check_styles(
         doc,
@@ -459,6 +471,7 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
 /// when written), its own copies of every field, the attributes `attrs`
 /// (each object's, as the checks gave them).
 fn entities(
+    doc: &Document,
     input: &EntitiesCreate,
     attrs: &[BTreeMap<String, String>],
     placed: &[Vec<(&'static str, kentos_commands::Vec2)>],
@@ -469,11 +482,16 @@ fn entities(
         .zip(attrs)
         .zip(placed)
         .map(|((object, attrs), placed)| {
+            // A pattern given alone takes its nearest built-in as the object's type (docs/adr/0313 §1).
+            let pattern = object.line_pattern.as_deref().and_then(|name| {
+                doc.settings().line_types.iter().find(|t| kentos_commands::same_line_type_name(&t.name, name))
+            });
             let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
                     look: kentos_commands::ObjectLook {
-                        line_type: object.line_type,
+                        line_type: object.line_type.or_else(|| pattern.map(|t| t.nearest())),
+                        line_pattern: pattern.map(|t| t.name.clone()),
                         transparency: object.transparency,
                         order: object.order.filter(|o| *o != 0),
                         ..Default::default()

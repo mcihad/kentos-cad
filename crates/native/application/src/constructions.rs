@@ -582,6 +582,7 @@ fn create_input(input: &ConstructionsCreate) -> Result<EntitiesCreate, Stop> {
                 // 0260 §2).
                 line_weight: geometry.draws_lines().then_some(input.line_weight).flatten(),
                 line_type: geometry.draws_lines().then_some(input.line_type).flatten(),
+                line_pattern: None,
                 geometry,
                 color: input.color.clone(),
                 attrs: input.attrs.clone(),

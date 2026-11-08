@@ -1324,10 +1324,12 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
     yazar; Yazı, Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap
     menüsünün pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme)
     bulduğu noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler.
-    Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur. Yerel çizim izin istemez; bulut projesine değişiklik project.changes
-    ile gider.
+    Kilitli katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. Nesnenin kendi
+    çizgi tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR
+    0313, 2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur;
+    projede olmayan ad line_type_not_found (objects[i].linePattern). expectedRevision
+    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
     """
     __slots__ = ()
     id = "cad.entities.create"
@@ -1362,9 +1364,12 @@ class _EntitiesCreate(LocalCommand[EntitiesCreate, EntitiesCreated, EntitiesCrea
         Ölçülendirme, Tarama, Parsel oluştur ve İçine tıklayarak alan da. Hesap menüsünün
         pencereleri (Poligon hesabı, Kutupsal alım, Önden ve Geriden kestirme) bulduğu
         noktaları adları, etiketleri ve öznitelikleriyle bu komutla çizime ekler. Kilitli
-        katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
-        Yerel çizim izin istemez; bulut projesine değişiklik project.changes ile gider.
+        katmana hiçbir şey yazılmaz; gizli katmana uyarıyla yazılır. Nesnenin kendi çizgi
+        tipi lineType, projenin çizgi tiplerinden biri adıyla linePattern'dır (ADR 0313,
+        2720): tek başına verilen desenin en yakın yerleşik tipi nesnenin tipi olur; projede
+        olmayan ad line_type_not_found (objects[i].linePattern). expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. Yerel çizim
+        izin istemez; bulut projesine değişiklik project.changes ile gider.
 
         Args:
             doc: The drawing it works on.

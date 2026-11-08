@@ -406,11 +406,31 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
         notes.append(f"Tepe ve çukurlarda {len(found)} karakteristik nokta kotu dm'ye kadar yazıldı "
                      f"({num(rules['spotHeight'])} mm, m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da "
                      "en alçak köşe; şev üstü ve dibi işaretlenmedi.")
+    # docs/adr/2720: the auxiliary lines take the package's pattern (Ek-3 0003) as a project line type of its name.
+    pattern = None
+    if rules.get("auxiliaryPattern") and any(l["kind"] == "auxiliary" for l in lines):
+        pattern = pattern_name(rules)
+        parts = [f"{num(v)} mm çizgi" if v > 0 else f"{num(-v)} mm boşluk" if v < 0 else "nokta"
+                 for v in rules["auxiliaryPattern"]]
+        notes.append(f"Yardımcı eğriler “{pattern}” çizgi tipiyle çizilir (kâğıtta {', '.join(parts)}); tip projede "
+                     "yoksa eklenir, varsa projedeki kullanılır; tip proje ayarıdır, geri almada kalır.")
     out = {"rules": rules["id"], "source": rules["source"], "scale": scale, "interval": interval, "lines": lines,
            "labels": labs, "steep": n_steep, "gentle": n_gentle, "cut": cut, "revision": "$current", "notes": notes}
     if found:
         out["spots"] = found
+    if pattern:
+        out["pattern"] = pattern
     return out
+
+
+def pattern_name(rules):
+    return f"Yardımcı eğri ({rules['id']})"
+
+
+def pattern_type(rules):
+    """The package's pattern as the project line type the command adds (docs/adr/2720)."""
+    return {"name": pattern_name(rules), "description": f"{rules['id']} paketinin yardımcı eğrisi",
+            "elements": [{"length": v} for v in rules["auxiliaryPattern"]], "unit": "paper", "source": rules["id"]}
 
 
 N = len(ENTS)
@@ -471,6 +491,30 @@ def cases():
     walled = drawn(out, "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz", {"spots": True, "details": all3},
                    spots=True, details=all3)
     assert walled["spots"] and walled["spots"][0]["z"] < top["spots"][0]["z"], walled.get("spots")
+    # docs/adr/2720: the auxiliary pattern added as a project line type in the same step; the project's own kept.
+    plain_out = sheet()
+    assert plain_out.get("pattern"), "the default package draws auxiliary lines with its pattern"
+    count = len(plain_out["lines"]) + len(plain_out["labels"])
+    written = {**plain_out, "uids": "$any"}
+    out.append({"name": "Yardımcı eğrinin 5/1 mm deseni (Ek-3 0003) projeye çizgi tipi olarak eklenir; geri alınınca eğriler "
+                        "gider, tip proje ayarı olarak kalır (ADR 0313)",
+                "steps": [rt.step("execute", {"surface": "t-1", "layerId": "esyukselti"}, rt.completed(written),
+                                  {"canUndo": True, "revision": "changed", "ids": list(range(1, N + count + 1)),
+                                   "settings": {"lineTypes": [pattern_type(RULES)]}}, rt.W),
+                          {"op": "undo", "returns": "Pafta eş yükselti eğrileri",
+                           "expect": {"ids": list(range(1, N + 1)), "settings": {"lineTypes": [pattern_type(RULES)]}}}]})
+    own = [{"name": pattern_name(RULES), "elements": [{"length": 3.0}, {"length": -1.5}], "unit": "paper"}]
+    owned = setup()
+    owned["settings"]["lineTypes"] = own
+    out.append({"name": "Projede aynı adlı tip varsa projedeki kullanılır, değiştirilmez",
+                "setup": owned,
+                "steps": [rt.step("execute", {"surface": "t-1", "layerId": "esyukselti"}, rt.completed(written),
+                                  {"canUndo": True, "revision": "changed", "settings": {"lineTypes": own}}, rt.W)]})
+    no_pattern = {k: v for k, v in copy.deepcopy(RULES).items() if k != "auxiliaryPattern"}
+    drawn(out, "Deseni olmayan paket: yardımcı eğri yerleşik kesikli tiple", {"rules": no_pattern}, rules=no_pattern)
+    refused(out, "Deseni bozuk paket", {"rules": dict(copy.deepcopy(RULES), auxiliaryPattern=[-1.0])},
+            rt.failed("invalid_contours", "Eğri kural paketi eksik: kimliği ve kaynağı yazılı, her değeri sonlu ve "
+                      "sıfırdan büyük olmalı.", "rules"))
     drawn(out, "Gizli katmana uyarıyla", {}, layer="gizli",
           warns=[{"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
                   "path": "layerId"}])
@@ -519,7 +563,7 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.sheetcontours",
            "commandVersion": 1, "title": "Pafta eş yükselti eğrileri (BÖHHBÜY m. 78)",
-           "note": "ADR 1820. Bağımsız başvuru scripts/fixtures/road_sheet_contour_cases.py: yüzey Triangle'ın, eğri arası "
+           "note": "ADR 1820, 2320, 2720. Bağımsız başvuru scripts/fixtures/road_sheet_contour_cases.py: yüzey Triangle'ın, eğri arası "
                    "kuralı, kırpma ve yazılar elle; KentOS kodu yok. Yazma tek geri alma adımıdır.",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"

@@ -101,6 +101,7 @@ fn objects(lines: &[TerrainContour]) -> Vec<NewObject> {
             color: None,
             line_weight: l.major.then_some(MAJOR_WEIGHT),
             line_type: None,
+            line_pattern: None,
             attrs: None,
             label: None,
             label_of: None,

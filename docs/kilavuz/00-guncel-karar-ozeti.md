@@ -178,6 +178,9 @@
 - **Pafta eğrilerinde tepe ve çukur kotları (8 Kasım 2026; MAP-14, [ADR 2320](../../docs/adr/2320-sheet-summit-and-pit-heights.md)).**
   `road.terrains.sheetcontours`'un `spots`'u (m. 78(1)(ğ)): en içteki kapalı eğrinin içindeki en yüksek ya da en alçak
   köşe, detay içindeki sayılmadan, kotu dm'ye kadar (Ek-3 0004, paket sürüm 2). Şev üstü ve dibi yok. Harita.
+- **Yardımcı eğrinin 5/1 mm deseni (8 Kasım 2026; MAP-14, [ADR 2720](../../docs/adr/2720-auxiliary-contour-pattern.md)).**
+  `cad.entities.create`'e `linePattern` (proje çizgi tipi adıyla); kural paketinde `auxiliaryPattern` (Ek-3 0003);
+  pafta eğrileri yardımcı eğriyi “Yardımcı eğri (paket)” tipiyle çizer, tip yoksa ekler. Harita + Yol.
 - **Kazı ve dolgu bölgelerinin yazısı ve miktar tablosu (8 Kasım 2026; MAP-15, [ADR 2340](../../docs/adr/2340-cut-fill-zone-labels-and-quantity-table.md)).**
   `road.terrains.cutfill`'in `labels`'ı (tür ve hacim, iç noktada) ve `table`'ı (bölgeler, kazı, dolgu, net); tutulan
   çizimle birlikte yeniden çizilir. Harita + Yol.

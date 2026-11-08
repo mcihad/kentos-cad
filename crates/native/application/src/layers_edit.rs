@@ -53,6 +53,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 pub fn new_object(e: &Entity) -> Option<NewObject> {
     Some(NewObject {
         line_type: None,
+        line_pattern: None,
         geometry: edit_geometry(shape(e))?,
         color: e.base().color.clone(),
         line_weight: e.base().line_weight,

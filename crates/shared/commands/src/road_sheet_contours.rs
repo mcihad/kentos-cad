@@ -37,9 +37,10 @@ pub struct ContourInterval {
 
 /// A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,
 /// every how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major
-/// lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot
-/// heights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,
-/// docs/adr/2320).
+/// lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
+/// text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
+/// the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
+/// the built-in dashed type, docs/adr/2720).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -73,6 +74,10 @@ pub struct ContourRules {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub spot_height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub auxiliary_pattern: Vec<f64>,
 }
 
 /// KentOS's default package: BÖHHBÜY 2018's Article 78(1)(c)–(g) and Ek-3 0001–0005.
@@ -187,7 +192,10 @@ pub struct SheetSpot {
 /// Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,
 /// the lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in
 /// its order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left
-/// out inside the details (metres), the objects written (a plan: none), the revision after it and notes.
+/// out inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as
+/// “Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo
+/// leaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:
+/// none), the revision after it and notes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -211,6 +219,9 @@ pub struct TerrainsSheetContoured {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SheetSpot>>", optional))]
     pub spots: Vec<SheetSpot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pattern: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

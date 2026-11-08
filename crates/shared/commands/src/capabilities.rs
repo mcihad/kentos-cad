@@ -1313,6 +1313,7 @@ const ENTRIES: &[Entry] = &[
                 "unknown_block",
                 "invalid_link",
                 "link_not_found",
+                "line_type_not_found",
                 "invalid_attribute",
                 "attribute_required",
                 "entity_not_found",

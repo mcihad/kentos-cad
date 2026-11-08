@@ -112,6 +112,7 @@ fn object(
         color: color.map(str::to_owned),
         line_weight: weight,
         line_type,
+        line_pattern: None,
         attrs: None,
         label: None,
         label_of: None,

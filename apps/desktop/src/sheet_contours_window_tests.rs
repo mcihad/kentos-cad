@@ -1,7 +1,8 @@
 //! Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820) on the shared cases' drawing of
 //! `road.terrains.sheetcontours`: the window guesses the contour layer and the detail layers, its plan is the shared
 //! case's; a rule unticked changes the plan; Çiz writes the lines and heights in one undo step; Harita offers it; the
-//! summit's height ticked is the shared case's, the building's vertices left out (docs/adr/2320). And its pictures.
+//! summit's height ticked is the shared case's, the building's vertices left out (docs/adr/2320); the auxiliary lines
+//! take the package's 5/1 mm pattern as a project line type (docs/adr/2720). And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -47,6 +48,72 @@ fn the_plan_is_the_shared_case_s_and_draw_writes_in_one_step() {
     assert_eq!(app.dialog, None);
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Pafta eş yükselti eğrileri"));
+}
+
+/// docs/adr/2720: the auxiliary lines drawn by Çiz take the package's 5/1 mm pattern (Ek-3 0003) as the project line
+/// type the plan names, added to the project's types; undo takes the lines and leaves the type (a project setting).
+#[test]
+fn the_auxiliary_lines_take_the_package_s_pattern() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let name = r.pattern.clone().expect("a pattern");
+    assert_eq!(name, "Yardımcı eğri (bohhbuy-2018-m78)");
+    let _ = app.update(Message::SheetContours(E::Draw));
+    let doc = &app.document.as_ref().expect("open").model;
+    let t = doc.settings().line_types.iter().find(|t| t.name == name).expect("the type");
+    let lengths: Vec<f64> = t.elements.iter().map(|e| e.length).collect();
+    assert_eq!((lengths, t.unit), (vec![5.0, -1.0], kentos_commands::PatternUnit::Paper));
+    let auxiliary = r.lines.iter().filter(|l| l.kind == "auxiliary").count();
+    let patterned: Vec<_> =
+        doc.entities().filter(|e| e.base().look.line_pattern.as_deref() == Some(name.as_str())).collect();
+    assert_eq!(patterned.len(), auxiliary);
+    assert!(patterned.iter().all(|e| e.base().look.line_type == Some(kentos_commands::LineType::Dashed)));
+    let doc = &mut app.document.as_mut().expect("open").model;
+    assert_eq!(doc.undo().as_deref(), Some("Pafta eş yükselti eğrileri"));
+    assert!(doc.entities().all(|e| e.base().look.line_pattern.is_none()), "the lines gone");
+    assert!(doc.settings().line_types.iter().any(|t| t.name == name), "the type stays");
+}
+
+/// `.run/gui-evidence/yardimci-egri-deseni-2720/`: the drawn contours near an auxiliary line at the plot scale, its
+/// 5 mm dashes and 1 mm gaps, light and dark.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib sheet_contours_window_tests::pattern_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn pattern_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yardimci-egri-deseni-2720");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("terrain.sheetContours"));
+        let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+        let _ = app.update(Message::SheetContours(E::Draw));
+        // Around the longest auxiliary line, 60 m wide: at 1:1000 its 5 mm dashes are 5 m.
+        let aux = r.lines.iter().filter(|l| l.kind == "auxiliary").max_by_key(|l| l.points.len()).expect("an auxiliary line");
+        let mid = aux.points[aux.points.len() / 2];
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        // The viewport's size is known after a first frame; the camera is fitted then.
+        snapshot.settle(&mut app, App::view, &mut update);
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: mid[0] - 30.0, min_y: mid[1] - 18.0, max_x: mid[0] + 30.0, max_y: mid[1] + 18.0 },
+            12.0,
+        );
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-yardimci-egri-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// docs/adr/2320: Tepe ve çukur kotları ticked gives the shared case's summit (the details ticked: the building's

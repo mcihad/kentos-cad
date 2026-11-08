@@ -104,6 +104,7 @@ fn objects(lines: &[TerrainZeroLine]) -> Vec<NewObject> {
                 color: None,
                 line_weight: None,
                 line_type: None,
+                line_pattern: None,
                 attrs: None,
                 label: None,
                 label_of: None,

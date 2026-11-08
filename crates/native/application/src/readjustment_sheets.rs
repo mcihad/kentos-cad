@@ -146,6 +146,7 @@ fn point_objects(p: &ReadjustmentScopeParcel) -> Vec<NewObject> {
             color: None,
             line_weight: None,
             line_type: None,
+            line_pattern: None,
             attrs: Some(BTreeMap::from([
                 ("Parsel".to_owned(), p.parcel.clone()),
                 ("Nokta".to_owned(), (i + 1).to_string()),

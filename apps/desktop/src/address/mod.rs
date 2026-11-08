@@ -781,6 +781,7 @@ impl App {
             layer_id: layer,
             objects: vec![NewObject {
                 line_type: None,
+                line_pattern: None,
                 geometry: EntityGeometry::Point {
                     p: Wire {
                         x: m.at.x,

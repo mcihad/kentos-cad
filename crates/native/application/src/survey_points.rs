@@ -77,6 +77,7 @@ pub fn new_objects(points: &[NewPoint], kind: &str) -> Vec<NewObject> {
             }
             NewObject {
                 line_type: None,
+                line_pattern: None,
                 geometry: EntityGeometry::Point {
                     p: Wire {
                         x: pt.p.x,

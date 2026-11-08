@@ -114,7 +114,17 @@ def made(obj, slot, layer_id="yapi"):
     if out["kind"] == "text" and "labelOf" in obj:
         out["labelOf"] = obj["labelOf"]
         out["labelScale"] = obj["labelScale"]
+    # Its own line type and project pattern (docs/adr/0313 §1, 2720): a pattern given alone takes its nearest built-in.
+    if "linePattern" in obj:
+        out["lineType"] = obj.get("lineType", NEAREST[obj["linePattern"]])
+        out["linePattern"] = obj["linePattern"]
+    elif "lineType" in obj:
+        out["lineType"] = obj["lineType"]
     return out
+
+
+# The cases' project line types and their nearest built-ins by ADR 0313 §1's rule (a dash among gaps: dashed).
+NEAREST = {"Yardımcı eğri": "dashed"}
 
 
 def O(geometry, **fields):
@@ -1836,6 +1846,35 @@ cases.append({
          "result": failed("entity_not_found", f"“{ABSENT}” kimlikli nesne çizimde yok: ölçünün noktası onun yerine bağlanamaz. Çizimdeki bir nesnenin kimliğini verin.",
                           "objects[0].geometry.refs.a.uid"),
          "expect": {"ids": IDS, "revision": "same"}},
+    ],
+})
+
+# ── A project line type by its name (docs/adr/0313 §1, 2720) ──
+
+PATTERNED = json.loads(json.dumps(SETUP))
+PATTERNED["settings"]["lineTypes"] = [{"name": "Yardımcı eğri", "elements": [{"length": 5.0}, {"length": -1.0}], "unit": "paper"}]
+DASHED_LINE = {"kind": "line", "a": P(487000, 4420010), "b": P(487030, 4420010)}
+cases.append({
+    "name": "Desen: projenin çizgi tipi adıyla; tek başına verilince nesnenin çizgi tipi desenin en yakın yerleşik tipi, birlikte verilen tip kalır",
+    "note": "ADR 0313 §1, 2720: cad.entities.set'in kuralı oluşturmada da. Projenin tipi 5 mm çizgi, 1 mm boşluk (kâğıtta).",
+    "setup": PATTERNED,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(DASHED_LINE, linePattern="Yardımcı eğri")]}, "result": done([3]),
+         "expect": {"ids": IDS + [3], "entities": {"3": made(O(DASHED_LINE, linePattern="Yardımcı eğri"), 3)}, "revision": "changed"}},
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(DASHED_LINE, lineType="dotted", linePattern="Yardımcı eğri")]},
+         "result": done([4]), "expect": {"entities": {"4": made(O(DASHED_LINE, lineType="dotted", linePattern="Yardımcı eğri"), 4)}}},
+        {"op": "undo", "returns": "Ekle", "expect": {"ids": IDS + [3]}},
+    ],
+})
+cases.append({
+    "name": "Desen projede yoksa line_type_not_found, yeriyle; hiçbir şey yazılmaz",
+    "note": "ADR 2720. cad.entities.set'in iletisi; yol objects[i].linePattern.",
+    "setup": PATTERNED,
+    "steps": [
+        {"op": "execute", "input": {"layerId": "yapi", "objects": [O(DASHED_LINE), O(DASHED_LINE, linePattern="Kesik 2")]},
+         "result": failed("line_type_not_found", "“Kesik 2” adlı çizgi tipi projede yok. Çizgi tipleri penceresinden yükleyin ya da var olan bir adı verin.",
+                          "objects[1].linePattern"),
+         "expect": {"ids": IDS, "revision": "same", "canUndo": False}},
     ],
 })
 

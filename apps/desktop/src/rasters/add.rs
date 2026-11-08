@@ -655,6 +655,7 @@ impl App {
             layer_id: layer,
             objects: vec![NewObject {
                 line_type: None,
+                line_pattern: None,
                 geometry: EntityGeometry::Raster(fields),
                 color: None,
                 line_weight: None,

@@ -72,5 +72,5 @@ pafta çıktısı mevzuatın çizim kurallarıyla üretilsin.”
 
 - Şev üstü ve dibi kotları (şev sınırı çizgisinden), ölçmecinin seçtiği noktalar.
 - Yardımcı eğrinin 5/1 mm deseni: `cad.entities.create` nesneye proje çizgi tipini (`linePattern`) veremiyor. Önce
-  komutun nesne biçimine eklenmeli.
+  komutun nesne biçimine eklenmeli. Yapıldı: [ADR 2720](2720-auxiliary-contour-pattern.md).
 - Yüzey birleştirme, eğrilerin yeniden kurulan çizimlere girmesi (ADR 1820 Sonra).

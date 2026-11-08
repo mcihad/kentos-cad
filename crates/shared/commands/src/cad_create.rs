@@ -182,6 +182,11 @@ pub struct NewObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type: Option<crate::layer::LineType>,
+    /// Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its
+    /// nearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_pattern: Option<String>,
     /// GIS attributes, text in v1. Absent: none.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

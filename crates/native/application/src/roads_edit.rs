@@ -376,6 +376,7 @@ fn create_input(
             .iter()
             .map(|(geometry, attrs)| NewObject {
                 line_type: None,
+                line_pattern: None,
                 line_weight: None,
                 geometry: geometry.clone(),
                 color: input.color.clone(),

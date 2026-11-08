@@ -4,8 +4,9 @@ import type { ContourInterval } from "./ContourInterval";
 /**
  * A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,
  * every how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major
- * lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), and the spot
- * heights' text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused,
- * docs/adr/2320).
+ * lines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'
+ * text height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and
+ * the auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:
+ * the built-in dashed type, docs/adr/2720).
  */
-export type ContourRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, intervals: Array<ContourInterval>, majorEvery: number, majorWeight: number, minorWeight: number, auxiliaryWeight: number, steepBelow: number, auxiliaryAbove: number, labelEvery: number, labelHeight: number, spotHeight?: number, };
+export type ContourRules = { id: string, release: number, jurisdiction: string, source: string, effective: string, intervals: Array<ContourInterval>, majorEvery: number, majorWeight: number, minorWeight: number, auxiliaryWeight: number, steepBelow: number, auxiliaryAbove: number, labelEvery: number, labelHeight: number, spotHeight?: number, auxiliaryPattern?: Array<number>, };

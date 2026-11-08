@@ -95,6 +95,7 @@ impl Found {
 fn object(geometry: EntityGeometry, input: &ObjectsDerive) -> NewObject {
     NewObject {
         line_type: None,
+        line_pattern: None,
         line_weight: geometry
             .draws_lines()
             .then_some(input.line_weight)

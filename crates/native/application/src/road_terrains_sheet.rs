@@ -17,11 +17,15 @@
 //!   lowest below it (an earlier vertex among equals; a vertex at the level is on the line; a vertex inside a detail is
 //!   no ground shown), its height written to the decimetre (half up) with the package's spot height (Ek-3 0004)
 //!   beside a point.
+//! - The auxiliary lines take the package's pattern (Ek-3 0003, docs/adr/2720) as the project line type “Yardımcı eğri
+//!   (‹package›)”, added to the project's types when it has none of the name (the project's own kept when it has); the
+//!   objects name it, their built-in type dashed. The types are a project setting, no undo step (docs/adr/0313): undo
+//!   takes the lines and leaves the type.
 
 use kentos_commands::{
-    CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, NewObject,
-    SheetContourLabel, SheetContourLine, SheetSpot, TerrainsSheetContoured, TerrainsSheetContours, TextAlign, Vec2,
-    contour_rules_default,
+    CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, LineTypeDef, NewObject,
+    PatternElement, PatternUnit, SheetContourLabel, SheetContourLine, SheetSpot, TerrainsSheetContoured,
+    TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
 };
 use kentos_road::surface::Surface;
 use kentos_road::surface::MAX_LEVELS;
@@ -250,6 +254,10 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             .into_iter()
             .all(positive)
         || !rules.intervals.iter().all(|i| positive(i.interval))
+        // The auxiliary pattern (docs/adr/2720): a line type's elements, at most 12, finite, a dash among them.
+        || rules.auxiliary_pattern.len() > 12
+        || !rules.auxiliary_pattern.iter().all(|l| l.is_finite())
+        || (!rules.auxiliary_pattern.is_empty() && !rules.auxiliary_pattern.iter().any(|l| *l > 0.0))
     {
         return Err(fail(
             codes::INVALID_CONTOURS,
@@ -409,6 +417,20 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             spots.len()
         ));
     }
+    // docs/adr/2720: the auxiliary lines drawn with the package's pattern as a project line type of its own name.
+    let pattern = (!rules.auxiliary_pattern.is_empty() && lines.iter().any(|l| l.kind == "auxiliary"))
+        .then(|| pattern_name(&rules));
+    if let Some(name) = &pattern {
+        let parts: Vec<String> = rules
+            .auxiliary_pattern
+            .iter()
+            .map(|l| if *l > 0.0 { format!("{l} mm çizgi") } else if *l < 0.0 { format!("{} mm boşluk", -l) } else { "nokta".to_owned() })
+            .collect();
+        notes.push(format!(
+            "Yardımcı eğriler “{name}” çizgi tipiyle çizilir (kâğıtta {}); tip projede yoksa eklenir, varsa projedeki kullanılır; tip proje ayarıdır, geri almada kalır.",
+            parts.join(", ")
+        ));
+    }
     Ok(Checked {
         out: TerrainsSheetContoured {
             rules: rules.id.clone(),
@@ -421,6 +443,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             gentle: n_gentle,
             cut,
             spots,
+            pattern,
             uids: Vec::new(),
             revision: doc.revision().to_string(),
             notes,
@@ -428,6 +451,22 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         rules,
         warnings,
     })
+}
+
+/// The project line type the auxiliary lines take: the package's pattern under the package's name (docs/adr/2720).
+pub fn pattern_name(rules: &ContourRules) -> String {
+    format!("Yardımcı eğri ({})", rules.id)
+}
+
+/// The package's pattern as a project line type: paper millimetres, the package its source.
+fn pattern_type(rules: &ContourRules) -> LineTypeDef {
+    LineTypeDef {
+        name: pattern_name(rules),
+        description: format!("{} paketinin yardımcı eğrisi", rules.id),
+        elements: rules.auxiliary_pattern.iter().map(|l| PatternElement { length: *l, text: None, shape: None }).collect(),
+        unit: PatternUnit::Paper,
+        source: Some(rules.id.clone()),
+    }
 }
 
 fn no_contours() -> Stop {
@@ -440,6 +479,7 @@ fn objects(c: &Checked) -> Vec<NewObject> {
         color: None,
         line_weight: weight,
         line_type: dashed.then_some(LineType::Dashed),
+        line_pattern: if dashed { c.out.pattern.clone() } else { None },
         attrs: None,
         label: None,
         label_of: None,
@@ -557,6 +597,16 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> Command
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
+    // The auxiliary pattern's line type, when the project has none of its name (a project setting, kept by undo as every
+    // line type is, docs/adr/0313), and the objects as one step.
+    let step = cx.doc.begin_group(crate::create::label(Some(CreateOperation::SheetContours)));
+    if let Some(name) = &c.out.pattern
+        && !cx.doc.settings().line_types.iter().any(|t| kentos_commands::same_line_type_name(&t.name, name))
+    {
+        let mut settings = cx.doc.settings().clone();
+        settings.line_types.push(pattern_type(&c.rules));
+        cx.doc.set_settings(settings);
+    }
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: objects(&c),
@@ -564,10 +614,16 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> Command
         expected_revision: None,
     };
     match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, warnings } => CommandResult::Completed {
-            output: TerrainsSheetContoured { uids: output.created, revision: output.revision, ..c.out },
-            warnings,
-        },
-        other => crate::trim::relay(other),
+        CommandResult::Completed { output, warnings } => {
+            cx.doc.end_group(step);
+            CommandResult::Completed {
+                output: TerrainsSheetContoured { uids: output.created, revision: cx.doc.revision().to_string(), ..c.out },
+                warnings,
+            }
+        }
+        other => {
+            cx.doc.cancel_group(step);
+            crate::trim::relay(other)
+        }
     }
 }

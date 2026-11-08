@@ -308,6 +308,7 @@ fn polyline(pts: &[[f64; 2]], closed: bool, color: Option<&str>, weight: f64) ->
         color: color.map(str::to_owned),
         line_weight: Some(weight),
         line_type: None,
+        line_pattern: None,
         attrs: None,
         label: None,
         label_of: None,

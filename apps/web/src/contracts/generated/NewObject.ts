@@ -27,6 +27,11 @@ lineWeight?: number,
  */
 lineType?: LineType, 
 /**
+ * Its own project line type by its name (docs/adr/0313 §1, 2720): a type of the project's line types, its
+ * nearest built-in the object's `lineType` unless one is given. Absent: none (its `lineType`, or its layer's).
+ */
+linePattern?: string, 
+/**
  * GIS attributes, text in v1. Absent: none.
  */
 attrs?: { [key in string]: string }, 
