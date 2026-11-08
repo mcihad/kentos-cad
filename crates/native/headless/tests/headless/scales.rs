@@ -44,6 +44,8 @@ fn a_door_and_a_window_print_by_their_maps_scale() {
         heights: None,
     })
     .expect("a new building");
+    // Its pieces by the scale, every object at its own pen (the line groups are their own test, docs/adr/3013).
+    own_pens(&mut s);
     let layer = s.summary()["activeLayer"]
         .as_str()
         .expect("a layer")
@@ -120,6 +122,184 @@ fn a_door_and_a_window_print_by_their_maps_scale() {
         (half[1], half[0] + 1),
         "0.125 mm: {half:?}"
     );
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+/// Every object at its own pen whatever the scale (docs/adr/3013): the project's line groups set to nothing.
+fn own_pens(s: &mut Session) {
+    set_line_groups(s, None);
+}
+
+/// The project's line groups (docs/adr/3013) through `cad.settings.set`.
+fn set_line_groups(s: &mut Session, groups: Option<kentos_commands::LineGroups>) {
+    let mut arch = s
+        .document()
+        .settings()
+        .arch
+        .clone()
+        .expect("a Mimari project");
+    arch.line_groups = groups;
+    done(
+        s.call(json!({ "command": "cad.settings.set", "input": { "arch": arch } }))
+            .expect("answers"),
+    );
+}
+
+/// The stroked paths of `pdf`'s first page by their width, in thousandths of a mm.
+fn widths(pdf: &[u8]) -> std::collections::BTreeMap<u32, usize> {
+    let page = kentos_formats::pdf::read_page(pdf, 1).expect("its first page");
+    let mut out = std::collections::BTreeMap::new();
+    for s in page.paths.iter().filter_map(|p| p.stroke.as_ref()) {
+        *out.entry((s.width / PT_PER_MM * 1000.0).round() as u32)
+            .or_insert(0) += 1;
+    }
+    out
+}
+
+/// docs/adr/3013: the same storey on 1:200, 1:100, 1:50 and 1:20 sheets of a new Mimari project, each printed with
+/// its line groups and with every object at its own pen. The walls' 0.5 mm goes to the group's wide line (0.25, 0.35,
+/// 0.5, 0.7: TS 88-23 / ISO 128-23 Tablo 2), the openings' 0.25 to its narrow one; the sheet's frame and title block
+/// stay as they are. `KENTOS_SCALE_PDF_DIR=dir` keeps the PDFs there (`grup-1-<scale>.pdf`, `kendi-1-<scale>.pdf`).
+#[test]
+fn the_lines_print_by_the_line_group_of_their_maps_scale() {
+    let mut s = Session::new(&NewDrawing {
+        name: "Çizgi grubu".into(),
+        srid: 0,
+        plot_scale: 100.0,
+        workspace: Workspace::Cad,
+        drawing_font: DrawingFont::Barlow,
+        province: None,
+        drawing_unit: Some(DrawingUnit::M),
+        annotation: None,
+        cad_work: Some(CadWork::Architecture),
+        heights: None,
+    })
+    .expect("a new building");
+    assert_eq!(
+        s.document()
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.line_groups),
+        Some(kentos_commands::LineGroups::ByScale),
+        "a new Mimari project weighs its lines by the scale"
+    );
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
+    let walls = done(
+        s.call(json!({ "command": "cad.walls.rectangle", "input": {
+            "layerId": layer,
+            "frame": { "kind": "corners", "a": { "x": 0.0, "y": 0.0 }, "b": { "x": 5.0, "y": 4.0 } },
+            "width": 0.25, "lineWeight": 0.5,
+            "arch": { "level": "zemin" }
+        } }))
+        .expect("answers"),
+    );
+    let host = walls["uids"][0].as_str().expect("a wall").to_owned();
+    let mut objects = vec![host.clone()];
+    for (form, at) in [("door", 1.5), ("window", 3.5)] {
+        let made = done(
+            s.call(json!({ "command": "cad.openings.create", "input": {
+                "layerId": layer,
+                "openings": [{ "host": host, "at": at, "form": form }],
+                "lineWeight": 0.25
+            } }))
+            .expect("answers"),
+        );
+        objects.push(made["uids"][0].as_str().expect("an opening").to_owned());
+    }
+    let dir = std::env::temp_dir().join(format!("kentos-grup-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let keep = std::env::var("KENTOS_SCALE_PDF_DIR").ok();
+    let mut sheets = Vec::new();
+    for (scale, first) in [(200, "A-101"), (100, "A-102"), (50, "A-103"), (20, "A-104")] {
+        let made = done(
+            s.call(json!({ "command": "cad.sheets.levels", "input": {
+                "options": { "scale": scale }, "first": first, "again": true
+            } }))
+            .expect("answers"),
+        );
+        let id = made["sheets"]
+            .as_array()
+            .and_then(|all| {
+                all.iter()
+                    .find(|sheet| sheet["name"].as_str().is_some_and(|n| n.starts_with(first)))
+            })
+            .and_then(|sheet| sheet["id"].as_str())
+            .expect("its sheet")
+            .to_owned();
+        sheets.push((scale, id));
+    }
+    if let Some(keep) = &keep {
+        // The drawing with its four sheets, for the real window (fixtures/interaction/real/cizgi-grubu.txt).
+        s.save(Some(&std::path::Path::new(keep).join("cizgi-grubu.kcad")))
+            .expect("kept");
+    }
+    let print = |s: &mut Session, name: &str, scale: u32, id: &str| {
+        let pdf = dir.join(format!("{name}-1-{scale}.pdf"));
+        s.export_pdf(&pdf, &[id.to_owned()]).expect("the PDF");
+        if let Some(keep) = &keep {
+            std::fs::copy(
+                &pdf,
+                std::path::Path::new(keep).join(format!("{name}-1-{scale}.pdf")),
+            )
+            .expect("kept");
+        }
+        widths(&std::fs::read(&pdf).expect("written"))
+    };
+    let grouped: Vec<_> = sheets
+        .iter()
+        .map(|(scale, id)| print(&mut s, "grup", *scale, id))
+        .collect();
+    own_pens(&mut s);
+    let own: Vec<_> = sheets
+        .iter()
+        .map(|(scale, id)| print(&mut s, "kendi", *scale, id))
+        .collect();
+    // The sheets without the building: their frames and title blocks alone, taken from both.
+    done(
+        s.call(json!({ "command": "cad.entities.delete", "input": { "uids": objects } }))
+            .expect("answers"),
+    );
+    let frames: Vec<_> = sheets
+        .iter()
+        .map(|(scale, id)| print(&mut s, "cerceve", *scale, id))
+        .collect();
+    let objects_of = |all: &std::collections::BTreeMap<u32, usize>,
+                      frame: &std::collections::BTreeMap<u32, usize>| {
+        let mut out = Vec::new();
+        for (w, k) in all {
+            let left = k.saturating_sub(frame.get(w).copied().unwrap_or(0));
+            out.extend(std::iter::repeat_n(*w, left));
+        }
+        out
+    };
+    for (i, (scale, _)) in sheets.iter().enumerate() {
+        let (g, o) = (
+            objects_of(&grouped[i], &frames[i]),
+            objects_of(&own[i], &frames[i]),
+        );
+        eprintln!(
+            "1:{scale}: the building's strokes, thousandths of a mm: with line groups {g:?}; each its own {o:?}"
+        );
+        // Each stroke at the group's share of its own width: the walls' 0.5 mm the wide line, the openings' 0.25 and
+        // 0.125 mm the narrow line and its half (a PDF's widths are rounded: ±1 µm).
+        let share =
+            kentos_commands::line_group(f64::from(*scale)) / kentos_commands::LINE_GROUP_BASE;
+        let mut want: Vec<u32> = o
+            .iter()
+            .map(|w| (f64::from(*w) * share).round() as u32)
+            .collect();
+        want.sort_unstable();
+        assert_eq!(g.len(), want.len(), "1:{scale}: {g:?} against {want:?}");
+        for (got, w) in g.iter().zip(&want) {
+            assert!(got.abs_diff(*w) <= 1, "1:{scale}: {g:?} against {want:?}");
+        }
+        let wide = (kentos_commands::line_group(f64::from(*scale)) * 1000.0).round() as u32;
+        assert!(g.contains(&wide), "1:{scale}: the walls at {wide}: {g:?}");
+    }
     let _ = std::fs::remove_dir_all(&dir);
 }
 

@@ -850,11 +850,13 @@ pub const SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS: u32 = 203;
 pub const SCHEMA_WITH_ROAD_APPROVAL_SOURCES: u32 = 204;
 /// Schema 205 (docs/adr/3012): the project's plan cut height (`settings.arch.cutHeight`).
 pub const SCHEMA_WITH_PLAN_CUT: u32 = 205;
+/// Schema 206 (docs/adr/3013): how the project's plan lines are weighted (`settings.arch.lineGroups`).
+pub const SCHEMA_WITH_LINE_GROUPS: u32 = 206;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 203] = [
+pub const SCHEMAS: [u32; 204] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1058,6 +1060,7 @@ pub const SCHEMAS: [u32; 203] = [
     SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
     SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
     SCHEMA_WITH_PLAN_CUT,
+    SCHEMA_WITH_LINE_GROUPS,
 ];
 
 /// The file a drawing is saved as.

@@ -265,3 +265,53 @@ fn a_higher_cut_cuts_a_high_window() {
     s.set_wall_view(at(1.1));
     assert_eq!(faces(&s), whole, "back over the cut");
 }
+
+/// docs/adr/3013: at a line group's share (0.5: a 1:200 plan) a wall's and an opening's pieces take it on their own
+/// share of their pen, a window's glass half of half; a line keeps its own. At a share of 1 nothing is written.
+#[test]
+fn a_line_group_weighs_the_models_lines_only() {
+    let json = r##"[
+        {"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":6,"y":0}],"width":0.25,"justify":"center"},
+        {"id":2,"layerId":"a","kind":"opening","at":3,"width":1.0,"form":"window",
+         "place":[{"x":2.5,"y":0.125},{"x":2.5,"y":-0.125},{"x":3.5,"y":0.125},{"x":3.5,"y":-0.125}],"frame":0.06},
+        {"id":3,"layerId":"a","kind":"line","a":{"x":0,"y":5},"b":{"x":6,"y":5}}
+    ]"##;
+    let mut s = Store::new();
+    s.put_json(json).unwrap();
+    s.set_hosts([(2.0, Some(1.0))]);
+    let shares = |s: &Store, id: f64| -> Vec<Option<f64>> {
+        s.get(id)
+            .and_then(|it| it.expanded.clone())
+            .map(|x| x.strokes.iter().map(|k| k.weight_scale).collect())
+            .unwrap_or_default()
+    };
+    let standard = View::new(Detail::Standard, 50.0);
+    s.set_wall_view(standard);
+    let (wall, window) = (shares(&s, 1.0), shares(&s, 2.0));
+    assert!(!wall.is_empty() && !window.is_empty());
+    s.set_wall_view(View {
+        pens: 0.5,
+        ..standard
+    });
+    let halved = |own: &[Option<f64>]| -> Vec<Option<f64>> {
+        own.iter().map(|w| Some(w.unwrap_or(1.0) * 0.5)).collect()
+    };
+    assert_eq!(shares(&s, 1.0), halved(&wall), "the wall's pieces");
+    assert_eq!(
+        shares(&s, 2.0),
+        halved(&window),
+        "the window's pieces, its glass a quarter"
+    );
+    assert!(
+        shares(&s, 2.0).contains(&Some(0.25)),
+        "{:?}",
+        shares(&s, 2.0)
+    );
+    assert!(
+        s.get(3.0).unwrap().expanded.is_none(),
+        "a line has no pieces to weigh"
+    );
+    // Back to each object's own pen.
+    s.set_wall_view(standard);
+    assert_eq!((shares(&s, 1.0), shares(&s, 2.0)), (wall, window));
+}

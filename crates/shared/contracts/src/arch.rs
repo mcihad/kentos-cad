@@ -1278,6 +1278,13 @@ pub struct ArchSettings {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub cut_height: Option<f64>,
+    /// How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+    /// plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
+    /// line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
+    /// own pen whatever the scale. A new Mimari project writes `byScale`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_groups: Option<LineGroups>,
     /// The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -1348,6 +1355,43 @@ pub struct ArchSettings {
 /// The plan's cut height a new Mimari project starts with, metres (docs/adr/3012).
 pub const NEW_PROJECT_CUT_HEIGHT: f64 = 1.2;
 
+/// How the plan's lines are weighted (docs/adr/3013).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LineGroups {
+    /// Every object at its own pen, whatever the scale (absent: the same).
+    #[default]
+    Own,
+    /// The line group of the scale the plan is drawn at ([`line_group`]).
+    ByScale,
+}
+
+/// TS 88-23 / ISO 128-23's line groups (Tablo 2) by the scale a plan is drawn at, as the owner chose them
+/// (docs/adr/3013): up to 1:`scale`, the group's wide line, mm; its narrow line is half. A scale between two takes
+/// the group of the next smaller one up to it, as Revit's model line weights do ("applied to the associated scale and
+/// larger scales until the next range"): 1:75 draws as 1:100, 1:150 and 1:500 as 1:200.
+pub const LINE_GROUPS: [(f64, f64); 4] = [
+    (20.0, 0.7),
+    (50.0, 0.5),
+    (100.0, 0.35),
+    (f64::INFINITY, 0.25),
+];
+
+/// The group an object's own pen is read in (docs/adr/3013): its width on a 1:50 plan, the tools' 0.5 mm wall and
+/// 0.25 mm opening.
+pub const LINE_GROUP_BASE: f64 = 0.5;
+
+/// The wide line of 1:`scale`'s line group, mm ([`LINE_GROUPS`]).
+pub fn line_group(scale: f64) -> f64 {
+    LINE_GROUPS
+        .iter()
+        .find(|(upto, _)| scale <= *upto)
+        .map_or(LINE_GROUP_BASE, |(_, wide)| *wide)
+}
+
 /// The lowest and highest plan cut height, metres: under a window's sill and over a door's head.
 pub const CUT_HEIGHT_RANGE: (f64, f64) = (0.3, 3.0);
 
@@ -1360,6 +1404,20 @@ impl ArchSettings {
     /// Whether it says its own plan cut height (KCAD 205, docs/adr/3012).
     pub fn has_plan_cut(&self) -> bool {
         self.cut_height.is_some()
+    }
+
+    /// The share of its own pen a plan at 1:`scale` draws an object with (docs/adr/3013): its line group's against
+    /// 1:50's while the lines go by the scale ([`LineGroups::ByScale`]), else 1.
+    pub fn pens_at(&self, scale: f64) -> f64 {
+        match self.line_groups {
+            Some(LineGroups::ByScale) => line_group(scale) / LINE_GROUP_BASE,
+            _ => 1.0,
+        }
+    }
+
+    /// Whether it says how its lines are weighted (KCAD 206, docs/adr/3013).
+    pub fn has_line_groups(&self) -> bool {
+        self.line_groups.is_some()
     }
 
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
@@ -1949,5 +2007,27 @@ mod plan_cut_tests {
         })
         .unwrap();
         assert_eq!(json, serde_json::json!({ "cutHeight": 1.2 }));
+    }
+
+    /// docs/adr/3013: TS 88-23 / ISO 128-23's groups by the scale; an object's pen read as its 1:50 width.
+    #[test]
+    fn the_line_group_goes_by_the_scale_only_when_asked() {
+        let wide: Vec<f64> = [10.0, 20.0, 30.0, 50.0, 75.0, 100.0, 150.0, 200.0, 500.0]
+            .map(line_group)
+            .to_vec();
+        assert_eq!(wide, vec![0.7, 0.7, 0.5, 0.5, 0.35, 0.35, 0.25, 0.25, 0.25]);
+        let mut a = ArchSettings::default();
+        assert_eq!(a.pens_at(200.0), 1.0, "absent: every object its own pen");
+        a.line_groups = Some(LineGroups::Own);
+        assert_eq!(a.pens_at(200.0), 1.0);
+        a.line_groups = Some(LineGroups::ByScale);
+        // The wall's 0.5 and the opening's 0.25 at 1:200, 1:100, 1:50 and 1:20.
+        let at = |scale: f64| (0.5 * a.pens_at(scale), 0.25 * a.pens_at(scale));
+        assert_eq!(at(200.0), (0.25, 0.125));
+        assert_eq!(at(100.0), (0.35, 0.175));
+        assert_eq!(at(50.0), (0.5, 0.25));
+        assert_eq!(at(20.0), (0.7, 0.35));
+        let json = serde_json::to_value(&a).unwrap();
+        assert_eq!(json, serde_json::json!({ "lineGroups": "byScale" }));
     }
 }

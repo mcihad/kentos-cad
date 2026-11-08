@@ -1,0 +1,27 @@
+# Line groups by the scale (docs/adr/3013): the 1:200 sheet of the drawing headless scales.rs keeps with
+# KENTOS_SCALE_PDF_DIR (cizgi-grubu.kcad: a 5 × 4 m ring of 25 cm walls at 0.5 mm, a door and a window at 0.25 mm,
+# sheets at 1:200, 1:100, 1:50 and 1:20), opened with the file: "KentOS Mimari — Çizgi grubu". The A-101 tab opens the
+# 1:200 sheet; eight wheel turns in at its centre bring the building close. A new Mimari project weighs its lines by the
+# scale: the walls are TS 88-23's 1:200 group, 0.25 mm. Proje ayarları › Mimari › Çizgi kalınlıkları set to Nesnenin
+# kendi kalınlığı and saved, the same sheet draws them at their own 0.5 mm. Measured on 8 November 2026.
+fit KentOS Mimari — Çizgi grubu
+wait 2500
+click 170 820   # A-101 Zemin kat planı (1:200)
+wait 2500
+wheel 641 503 8   # binaya yaklaş
+wait 1500
+shot cg-01-1-200-olcege-gore
+click 30 20   # KentOS menüsü
+wait 1200
+click 130 575   # Proje ayarları
+wait 1500
+click 305 241   # Mimari bölümü
+wait 1200
+click 565 449   # Çizgi kalınlıkları
+wait 800
+click 558 513   # Nesnenin kendi kalınlığı
+wait 500
+shot cg-02-ayar
+click 1155 829   # Kaydet
+wait 2000
+shot cg-03-1-200-kendi

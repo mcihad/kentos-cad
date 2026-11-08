@@ -386,13 +386,16 @@ impl crate::api::json::Flat for Spec {
     }
 }
 
-/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper; and the
-/// plan's cut height above the floor, metres (docs/adr/3012), which decides what of its openings is cut.
+/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper; the
+/// plan's cut height above the floor, metres (docs/adr/3012), which decides what of its openings is cut; and the share
+/// of their own pen the model's lines are drawn with at that scale (docs/adr/3013: the project's line groups, 1 when
+/// each object keeps its own).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct View {
     pub detail: Detail,
     pub scale: f64,
     pub cut: f64,
+    pub pens: f64,
 }
 
 /// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/3010, 3011): a door its leaf, a window its
@@ -401,12 +404,14 @@ pub struct View {
 pub const SIMPLE_BEYOND: f64 = 150.0;
 
 impl View {
-    /// The view at `detail` and 1:`scale`, cut at the plan's usual height ([`crate::geom::opening::PLAN_CUT`]).
+    /// The view at `detail` and 1:`scale`, cut at the plan's usual height ([`crate::geom::opening::PLAN_CUT`]), every
+    /// object at its own pen.
     pub const fn new(detail: Detail, scale: f64) -> View {
         View {
             detail,
             scale,
             cut: crate::geom::opening::PLAN_CUT,
+            pens: 1.0,
         }
     }
 

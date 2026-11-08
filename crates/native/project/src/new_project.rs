@@ -177,6 +177,8 @@ pub fn new_project(o: &NewProject) -> Result<DocumentSnapshotV1, String> {
                 levels: vec![ground_floor()],
                 // Plan cut 1.20 m over the floor (docs/adr/3012; İTÜ, Teknik Çizim İlkeleri: 1.20–1.50).
                 cut_height: Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT),
+                // Its lines by the scale's line group (docs/adr/3013; TS 88-23 / ISO 128-23 Tablo 2).
+                line_groups: Some(kentos_contracts::LineGroups::ByScale),
                 ..ArchSettings::default()
             }),
             ..default_settings(crs.srid)
@@ -624,6 +626,11 @@ mod tests {
         assert_eq!(
             arch.cut_height,
             Some(kentos_contracts::NEW_PROJECT_CUT_HEIGHT)
+        );
+        // And its lines by the scale (docs/adr/3013).
+        assert_eq!(
+            arch.line_groups,
+            Some(kentos_contracts::LineGroups::ByScale)
         );
         assert_eq!(
             (

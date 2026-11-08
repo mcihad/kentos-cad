@@ -44,7 +44,8 @@ import type { Workspace } from "./Workspace";
  *   old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
  *   `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
  *   (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans
- *   are cut at (docs/adr/3012);
+ *   are cut at (docs/adr/3012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
+ *   absent: every object its own pen) how its lines are weighted (docs/adr/3013);
  * - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
  *   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
  *   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;

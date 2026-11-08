@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 206 (docs/adr/3013): how the project's plan lines are weighted.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_line_groups)
+    {
+        return crate::SCHEMA_WITH_LINE_GROUPS;
+    }
     // Schema 205 (docs/adr/3012): the project's plan cut height.
     if doc
         .settings

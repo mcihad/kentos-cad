@@ -2626,6 +2626,9 @@ def document(d):
     if (d.get("settings", {}).get("arch") or {}).get("cutHeight") is not None:
         # The project's plan cut height (docs/adr/3012).
         schema = max(schema, 205)
+    if (d.get("settings", {}).get("arch") or {}).get("lineGroups") is not None:
+        # How the project's plan lines are weighted (docs/adr/3013).
+        schema = max(schema, 206)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3501,7 +3504,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-206.kcad"] = container(root(cmap(parts), version=uint(206)))
+    files["schema-version-207.kcad"] = container(root(cmap(parts), version=uint(207)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6228,6 +6231,15 @@ def build():
     far = copy.deepcopy(load("plan-cut.json"))
     far["settings"]["arch"]["cutHeight"] = 120.0
     out["broken/plan-cut-out-of-range.kcad"] = container(document(far))
+    # Schema 206 (docs/adr/3013): how the project's plan lines are weighted; schema 205 refuses it as unknown.
+    groups = document(load("line-groups.json"))
+    assert groups.count(b"\x67version\x18\xce") == 1, "line groups are schema 206"
+    out["line-groups.kcad"] = container(groups)
+    out["broken/line-groups-in-schema-205.kcad"] = container(groups.replace(b"\x67version\x18\xce", b"\x67version\x18\xcd"))
+    # Only own and byScale are line groups.
+    odd = copy.deepcopy(load("line-groups.json"))
+    odd["settings"]["arch"]["lineGroups"] = "thick"
+    out["broken/line-groups-unknown.kcad"] = container(document(odd))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

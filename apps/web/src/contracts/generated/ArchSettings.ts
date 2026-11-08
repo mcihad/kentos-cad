@@ -5,6 +5,7 @@ import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { LevelView } from "./LevelView";
+import type { LineGroups } from "./LineGroups";
 import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
@@ -23,6 +24,13 @@ export type ArchSettings = { levels?: Array<ArchLevel>, detail?: WallDetail,
  * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
  */
 cutHeight?: number, 
+/**
+ * How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+ * plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
+ * line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
+ * own pen whatever the scale. A new Mimari project writes `byScale`.
+ */
+lineGroups?: LineGroups, 
 /**
  * The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
  */

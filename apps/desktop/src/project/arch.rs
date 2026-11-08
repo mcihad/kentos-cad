@@ -77,6 +77,12 @@ const DETAILS: [(Option<WallDetail>, &str); 4] = [
     (Some(WallDetail::Detailed), "Ayrıntılı"),
 ];
 
+/// Çizgi kalınlıkları (docs/adr/3013): the line groups by the scale, or every object its own pen (written as nothing).
+const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
+    (Some(kentos_commands::LineGroups::ByScale), "Ölçeğe göre"),
+    (None, "Nesnenin kendi kalınlığı"),
+];
+
 fn shown(n: Option<f64>) -> String {
     n.map(|v| format!("{v}")).unwrap_or_default()
 }
@@ -158,6 +164,7 @@ pub fn read(
     detail: Option<WallDetail>,
     space_method: Option<kentos_commands::SpaceMethod>,
     cut: &str,
+    lines: Option<kentos_commands::LineGroups>,
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
@@ -181,6 +188,8 @@ pub fn read(
         detail,
         // The plan's cut height (docs/adr/3012); empty: 1.10.
         cut_height,
+        // How its lines are weighted (docs/adr/3013); none: every object its own pen.
+        line_groups: lines,
         space_method,
         phase_view: None,
         // The level and view the drawing opens with are not this form's (docs/adr/0720 §1).
@@ -241,7 +250,8 @@ fn field<'a>(
         .into()
 }
 
-/// The section.
+/// The section: each of its fields with the message it sends (the other sections' views take theirs the same way).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn view<'a>(
     rows: &'a [Row],
     detail: Option<WallDetail>,
@@ -252,6 +262,8 @@ pub(super) fn view<'a>(
     on_method: impl Fn(Option<kentos_commands::SpaceMethod>) -> Message + 'a,
     cut: &'a str,
     on_cut: impl Fn(String) -> Message + 'a,
+    lines: Option<kentos_commands::LineGroups>,
+    on_lines: impl Fn(Option<kentos_commands::LineGroups>) -> Message + 'a,
 ) -> Element<'a, Message> {
     let methods = Select::new(
         METHODS.iter().map(|(_, l)| Choice::new(*l)),
@@ -299,7 +311,24 @@ pub(super) fn view<'a>(
                 format!("{high:.2}").replace('.', ",")
             ))),
     );
-    let read_now = read(rows, detail, method, cut, None);
+    let line_choice = Select::new(
+        LINES.iter().map(|(_, l)| Choice::new(*l)),
+        LINES.iter().position(|(g, _)| *g == lines),
+        move |i| on_lines(LINES.get(i).and_then(|(g, _)| *g)),
+    )
+    .searchable(false);
+    let lines_box = super::group::<Message>(
+        "Çizgi kalınlıkları",
+        Column::new()
+            .spacing(6)
+            .push(container(line_choice).width(typography::scaled(200.0)))
+            .push(label::caption(
+                "Ölçeğe göre: TS 88-23 / ISO 128-23 çizgi grupları. Duvar 1:200'de 0,25, 1:100'de 0,35, 1:50'de 0,5, \
+                 1:20'de 0,7 mm; kapı, pencere ve ince çizgiler yarısı. Nesnenin kalınlığı 1:50'deki genişliği sayılır; \
+                 ölçü, yazı ve akslar kendi kalınlığında kalır. Yeni Mimari projesi böyle açılır.",
+            )),
+    );
+    let read_now = read(rows, detail, method, cut, lines, None);
     let head = kentos_ui::widget::table::band(
         row![
             container(kentos_ui::widget::table::title("Kat"))
@@ -401,6 +430,7 @@ pub(super) fn view<'a>(
         .spacing(14)
         .push(detail_box)
         .push(cut_box)
+        .push(lines_box)
         .push(method_box)
         .push(super::group::<Message>(
             "Katlar",
@@ -545,38 +575,65 @@ mod tests {
         let a = project();
         let form = rows(Some(&a));
         assert_eq!(
-            read(&form, None, None, "1,25", Some(&a))
+            read(&form, None, None, "1,25", None, Some(&a))
                 .unwrap()
                 .cut_height,
             Some(1.25)
         );
         assert_eq!(
-            read(&form, None, None, " ", Some(&a)).unwrap().cut_height,
+            read(&form, None, None, " ", None, Some(&a))
+                .unwrap()
+                .cut_height,
             None
         );
         for bad in ["5", "0.1", "bir"] {
-            assert!(read(&form, None, None, bad, Some(&a)).is_err(), "{bad}");
+            assert!(
+                read(&form, None, None, bad, None, Some(&a)).is_err(),
+                "{bad}"
+            );
         }
+    }
+
+    /// Çizgi kalınlıkları (docs/adr/3013): Ölçeğe göre writes the line groups, Nesnenin kendi kalınlığı nothing (an old
+    /// drawing stays as it was).
+    #[test]
+    fn the_line_groups_are_written_only_by_the_scale() {
+        let a = project();
+        let form = rows(Some(&a));
+        let by_scale = Some(kentos_commands::LineGroups::ByScale);
+        assert_eq!(
+            read(&form, None, None, "", by_scale, Some(&a))
+                .unwrap()
+                .line_groups,
+            by_scale
+        );
+        assert_eq!(
+            read(&form, None, None, "", None, Some(&a))
+                .unwrap()
+                .line_groups,
+            None
+        );
+        assert_eq!(LINES.map(|(g, _)| g), [by_scale, None]);
     }
 
     #[test]
     fn project_form_preserves_exact_choices_and_only_an_explicit_prefix_edit_changes_the_start() {
         let a = project();
         let mut form = rows(Some(&a));
-        assert_eq!(read(&form, None, None, "", Some(&a)).unwrap(), a);
+        assert_eq!(read(&form, None, None, "", None, Some(&a)).unwrap(), a);
         edit(&mut form, 0, Edit::Name("Giriş katı".into()));
-        let before = read(&form, None, None, "", Some(&a)).unwrap();
+        let before = read(&form, None, None, "", None, Some(&a)).unwrap();
         assert_eq!(before.space_first_number("zemin").as_deref(), Some("Z-001"));
         assert_eq!(before.space_names, a.space_names);
         edit(&mut form, 0, Edit::Prefix(" G- ".into()));
-        let changed = read(&form, None, None, "", Some(&a)).unwrap();
+        let changed = read(&form, None, None, "", None, Some(&a)).unwrap();
         assert_eq!(
             changed.space_first_number("zemin").as_deref(),
             Some("G-001")
         );
         assert_eq!(changed.space_usages, a.space_usages);
         edit(&mut form, 0, Edit::Delete);
-        let cleared = read(&form, None, None, "", Some(&a)).unwrap();
+        let cleared = read(&form, None, None, "", None, Some(&a)).unwrap();
         assert!(cleared.space_number_prefixes.is_empty());
         assert_eq!(cleared.space_names, a.space_names);
     }
@@ -603,12 +660,12 @@ mod tests {
             assert_eq!(a, project());
         }
         change(&mut a, ChoiceEdit::Add);
-        assert!(read(&rows(Some(&a)), None, None, "", Some(&a)).is_err());
+        assert!(read(&rows(Some(&a)), None, None, "", None, Some(&a)).is_err());
         change(&mut a, ChoiceEdit::Value(2, "Çalışma".into()));
         change(&mut a, ChoiceEdit::Up(2));
         assert_eq!(a.space_names, ["Mutfak", "Çalışma", "mutfak"]);
         change(&mut a, ChoiceEdit::Value(1, " Mutfak ".into()));
-        assert!(read(&rows(Some(&a)), None, None, "", Some(&a)).is_err());
+        assert!(read(&rows(Some(&a)), None, None, "", None, Some(&a)).is_err());
         change(&mut a, ChoiceEdit::Delete(1));
         assert_eq!(a, project());
     }

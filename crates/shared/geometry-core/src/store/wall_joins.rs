@@ -177,7 +177,9 @@ impl Store {
         match (shape, self.wall_drawn.get(&id.to_bits())) {
             (Shape::Wall { pts, wall, .. }, Some(d)) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(wall::pieces_of(d, pts, wall, view), b)
+                // At the view's line group (docs/adr/3013).
+                let pieces = self.with_line_group(shape, wall::pieces_of(d, pts, wall, view), view);
+                self.expanded_of(pieces, b)
             }
             _ => self.expansion_of_in(id, shape, view),
         }

@@ -758,6 +758,8 @@ fn plain_walls(
         detail: crate::walls::detail(detail),
         scale,
         cut: input.cut_height.unwrap_or(kentos_contracts::PLAN_CUT_HEIGHT),
+        // A DXF line keeps its object's own weight (docs/adr/3013): a plot style gives AutoCAD its weight by scale.
+        pens: 1.0,
     };
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);

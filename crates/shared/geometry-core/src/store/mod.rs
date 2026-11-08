@@ -812,7 +812,40 @@ impl Store {
             }
             _ => return (None, b),
         };
-        self.expanded_of(pieces, b)
+        self.expanded_of(self.with_line_group(shape, pieces, view), b)
+    }
+
+    /// `pieces` at the view's line group (docs/adr/3013): the model's lines (a wall, an opening, a column, a stair, a
+    /// ramp, a slab, furniture) take the group's share of their pen, as Revit's model line weights go by the view's
+    /// scale; annotation (a grid, a tag, a view mark, a room's outline and label) keeps its own. Nothing changes at a
+    /// share of 1: on a 1:21–1:50 plan, or while every object keeps its own pen.
+    fn with_line_group(
+        &self,
+        shape: &Shape,
+        mut pieces: Vec<crate::block::Piece>,
+        view: crate::geom::wall::View,
+    ) -> Vec<crate::block::Piece> {
+        if view.pens == 1.0 || !self.takes_line_group(shape) {
+            return pieces;
+        }
+        for p in &mut pieces {
+            p.stroke.weight_scale = Some(p.stroke.weight_scale.unwrap_or(1.0) * view.pens);
+        }
+        pieces
+    }
+
+    /// Whether `shape` is one of the model's lines a line group weighs (docs/adr/3013).
+    fn takes_line_group(&self, shape: &Shape) -> bool {
+        match shape {
+            Shape::Wall { .. }
+            | Shape::Opening { .. }
+            | Shape::Column { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. } => true,
+            Shape::Space { space, .. } => space.slab.is_some(),
+            Shape::Insert { block, .. } => self.blocks.is_furniture(block),
+            _ => false,
+        }
     }
 
     /// Pieces as an object's expansion, its box grown around them.
@@ -866,7 +899,8 @@ impl Store {
         match shape {
             Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(self.space_pieces(parts, space, false, view), b)
+                let pieces = self.space_pieces(parts, space, false, view);
+                self.expanded_of(self.with_line_group(shape, pieces, view), b)
             }
             _ => self.expansion_in(shape, view),
         }

@@ -296,6 +296,8 @@ pub fn view_at(
         scale,
         // The project's plan cut height (docs/adr/3012).
         cut: settings.plan_cut(),
+        // The model's lines at the scale's line group (docs/adr/3013).
+        pens: settings.pens_at(scale),
     }
 }
 

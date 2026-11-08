@@ -782,9 +782,11 @@ _Durum (7 Kasım 2026):_ Kapı ve pencere ölçeğe göre çiziliyor (M11, [ADR 
   - kesmenin üstündeki pencere duvarı kesmez, kesikli çizilir; yükseklik Proje ayarları › Mimari'de verilir (yeni
     projede 1,20 m, İTÜ'nün alt ucu). 1:50 PDF'te kesme 1,20'de yüksek pencere kesikli, 1,80'de kesik;
   - bir üst katın döşemeleri (balkon, çıkma) etkin katın planında ince kesikli, seçilmez (Mimarlar Odası §14.5.3 u).
+- Ölçeğe göre çizgi grubu ([ADR 3013](../docs/adr/3013-line-groups-by-scale.md), sahibin onayı 8 Kasım):
+  TS 88-23 / ISO 128-23 grupları, duvar 1:200'de 0,25, 1:100'de 0,35, 1:50'de 0,5, 1:20'de 0,7 mm, kapı-pencere yarısı.
+  Yeni Mimari projesinde açık; Proje ayarları › Mimari › Çizgi kalınlıkları.
 - Kalanlar:
   - 1:20 kasa profili ve kolonun beton taraması (M14);
-  - ölçeğe göre çizgi grubu (sahibin kararı bekleniyor);
   - kiriş izi ve asma tavan (nesneleri yok), tarama kitaplığı (M14);
   - mobilyanın parça parça ayrıntı düzeyi, ıslak hacim ve mutfak bloklarının sade gösterimi;
   - web çiziminin düzeyi ölçeğe göre seçmesi.
@@ -1069,6 +1071,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M11 | Kapı ve pencere ölçeğe göre | ADV-15 | 1:100 ile 1:50 paftalar farklı **(M11, ADR 3010: yapıldı; kapı ve pencere çizgisi 1:200'de 2, 1:100'de 5, 1:50'de 9; 1:20 kasa profili kaldı)** |
 | M12 | Kolon, merdiven, döşeme, mobilya, tarama ölçeğe göre | ADV-15 | Aynı kat üç ölçekte **(M12, ADR 3011: yapıldı; 1:200 sade, 1:50'de kolon ölçüsü ve merdiven bilgisi; kolonun beton taraması M14'e, çizgi grubu sahibin kararına)** |
 | M13 | Kesme yüksekliği ve üstteki çizgiler | ADV-15 | Kesikli izdüşümler **(M13, ADR 3012: yapıldı; yüksek pencere kesikli, kesme yüksekliği proje ayarı (yeni projede 1,20), üst katın döşemesi alt katta kesikli; kiriş ve asma tavan nesnesi yok)** |
+| M13+ | Ölçeğe göre çizgi grubu (sahibin onayı) | ADV-15 | Paftanın ölçeğine göre kalem **(ADR 3013: yapıldı; PDF'te duvar 1:200/1:100/1:50/1:20'de 0,25/0,35/0,5/0,7 mm)** |
 | M14 | Tarama kitaplığı ve yalıtım simgesi | ADV-15 | 1:20 detayda yalıtım |
 | M15 | Mimari şeridin yeniden düzeni | ADV-09 | Büyük ana araçlar; ≤ 30 düğme (Mimari sekmesiyle açılış M8'de yapıldı) |
 | M16 | Mimari ikon seti | ADV-10 | Paylaşılan ikon yok; ikon turu; ikonlar sahibe |

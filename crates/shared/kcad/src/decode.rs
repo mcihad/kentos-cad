@@ -1643,6 +1643,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "projenin kesme yüksekliği şema 205'ten beri yazılır",
                     ));
                 }
+                if !has.line_groups && a.has_line_groups() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "projenin çizgi grupları şema 206'dan beri yazılır",
+                    ));
+                }
                 if let Some((field, words)) = a.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

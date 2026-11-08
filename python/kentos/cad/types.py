@@ -3654,6 +3654,20 @@ LineEndName = Literal["start", "end"]
 """The names of :class:`LineEnd`, for a plain string."""
 
 
+class LineGroups(_StrEnum):
+    """How the plan's lines are weighted (docs/adr/3013).
+
+    - ``own``: Every object at its own pen, whatever the scale (absent: the same).
+    - ``byScale``: The line group of the scale the plan is drawn at ([`line_group`]).
+    """
+    OWN = "own"
+    BY_SCALE = "byScale"
+
+
+LineGroupsName = Literal["own", "byScale"]
+"""The names of :class:`LineGroups`, for a plain string."""
+
+
 class LineLabelMode(_StrEnum):
     """Where a line's label goes.
 
@@ -16011,6 +16025,10 @@ class ArchSettings(_Model):
             window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
             writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm). Unit: length.
         level_view: Kat görünümü when the drawing was saved (docs/adr/0720 §1), the one it opens with; absent: Bütün katlar.
+        line_groups: How the plan's lines are weighted (docs/adr/3013, KCAD 206): `byScale` takes the line group of the scale the
+            plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
+            line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
+            own pen whatever the scale. A new Mimari project writes `byScale`.
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
@@ -16029,6 +16047,7 @@ class ArchSettings(_Model):
     detail: WallDetail | WallDetailName | None | Unset = UNSET
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
+    line_groups: LineGroups | LineGroupsName | None | Unset = UNSET
     materials: list[ArchMaterial] | Unset = UNSET
     modules: list[ArchModule] | Unset = UNSET
     opening_types: list[OpeningType] | Unset = UNSET
@@ -16055,6 +16074,8 @@ class ArchSettings(_Model):
             out["levelView"] = None if self.level_view is None else _enum_out(self.level_view)
         if self.levels is not UNSET:
             out["levels"] = [e0.to_json() for e0 in self.levels]
+        if self.line_groups is not UNSET:
+            out["lineGroups"] = None if self.line_groups is None else _enum_out(self.line_groups)
         if self.materials is not UNSET:
             out["materials"] = [e0.to_json() for e0 in self.materials]
         if self.modules is not UNSET:
@@ -16088,6 +16109,7 @@ class ArchSettings(_Model):
             detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
+            line_groups=UNSET if "lineGroups" not in data else None if data["lineGroups"] is None else _enum_in(LineGroups, data["lineGroups"]),
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             modules=[ArchModule.from_json(e0) for e0 in data["modules"]] if "modules" in data else UNSET,
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
@@ -81586,7 +81608,8 @@ class SettingsSet(_Model):
       old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and
       `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with
       (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans
-      are cut at (docs/adr/3012);
+      are cut at (docs/adr/3012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or
+      absent: every object its own pen) how its lines are weighted (docs/adr/3013);
     - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
@@ -127064,6 +127087,8 @@ __all__ = [
     "LineEndName",
     "LineEntity",
     "LineEntityGeometry",
+    "LineGroups",
+    "LineGroupsName",
     "LineLabelMode",
     "LineLabelModeName",
     "LinePaperItemKind",
