@@ -5482,7 +5482,7 @@ const ENTRIES: &[Entry] = &[
             &["crs_mismatch", "crs_unreached", "layer_refused"],
             REVISION,
         ],
-        warnings: &[],
+        warnings: &["chain_limited", "outside_area"],
         targets: none,
     },
     Entry {

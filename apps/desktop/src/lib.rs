@@ -63,6 +63,7 @@ mod xrefs_window;
 mod sheet_details_window;
 mod plot_styles_window;
 mod flatten_window;
+mod reproject_window;
 mod features_window;
 mod baselines_window;
 mod grade_window;
@@ -379,6 +380,8 @@ mod readjustment_window_tests;
 mod brand_tests;
 #[cfg(test)]
 mod ortho_compare_window_tests;
+#[cfg(test)]
+mod reproject_window_tests;
 #[cfg(test)]
 mod ortho_window_tests;
 #[cfg(test)]

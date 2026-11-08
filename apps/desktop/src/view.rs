@@ -2098,6 +2098,7 @@ impl App {
             Asking::SheetSet => self.sheet_set_view(),
             Asking::Xrefs => self.xrefs_view(),
             Asking::Flatten => self.flatten_view(),
+            Asking::Reproject => self.reproject_view(),
             Asking::FeaturesCode => self.features_code_view(),
             Asking::Baselines => self.baselines_view(),
             Asking::Grade => self.grade_view(),

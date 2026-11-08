@@ -220,6 +220,34 @@
     "children": []
    },
    {
+    "id": "uzak",
+    "name": "Uzak",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yazilar",
+    "name": "Yazılar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
     "id": "grup",
     "name": "Grup",
     "type": "group",
@@ -440,6 +468,62 @@
      "x": 757000.0,
      "y": 4425000.0
     }
+   },
+   {
+    "kind": "point",
+    "id": 15,
+    "layerId": "uzak",
+    "attrs": {},
+    "p": {
+     "x": 512200.0,
+     "y": 4420200.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 16,
+    "layerId": "uzak",
+    "attrs": {
+     "ad": "U1"
+    },
+    "p": {
+     "x": 512000.0,
+     "y": 4900000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 512000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 18,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 512010.0,
+     "y": 4420010.0
+    },
+    "text": "S2",
+    "height": 2.5,
+    "rotation": 0
+   },
+   {
+    "kind": "circle",
+    "id": 19,
+    "layerId": "yazilar",
+    "attrs": {},
+    "c": {
+     "x": 512020.0,
+     "y": 4420020.0
+    },
+    "r": 5
    }
   ],
   "styles": {

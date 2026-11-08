@@ -50997,7 +50997,10 @@ class LayersReproject(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class LayersReprojected(_Model):
-    """Output of `cad.layers.reproject` v1.
+    """Output of `cad.layers.reproject` v1: what moved and how (docs/adr/0583 §2), and the preview of the move
+    (docs/adr/2500): every point's shift summed up (the mean shift, the smallest and largest, in the project's units;
+    none when nothing moves), the objects with a note, the chain's verdict for the way as `cad.crs.transform` gives it
+    (docs/adr/1230 §3; none when nothing moves) and the objects' shifts.
     Attributes:
         from_: The system the objects came from. Unit: epsg.
         to: The project's system they are in now. Unit: epsg.
@@ -51005,6 +51008,14 @@ class LayersReprojected(_Model):
         via: The way and its accuracy (“EPSG:1311, ±1 m”), as the transforms say it.
         crs: The layer's record now.
         revision: The document's revision after the write, as decimal text.
+        points: Every point of the objects moved. Unit: count.
+        flagged: The objects with a note. Unit: count.
+        reasons: Why the chain is limited, in `cad.crs.transform`'s order.
+        shifts: At most [`REPROJECT_LISTED`] objects' shifts.
+        least: Unit: system.
+        mean_dx: Unit: system.
+        mean_dy: Unit: system.
+        most: Unit: system.
     """
     layer: str
     from_: int
@@ -51013,6 +51024,15 @@ class LayersReprojected(_Model):
     via: str
     crs: LayerSourceCrs
     revision: str
+    points: int
+    flagged: int
+    reasons: list[str]
+    shifts: list[ReprojectShift]
+    least: float | None | Unset = UNSET
+    mean_dx: float | None | Unset = UNSET
+    mean_dy: float | None | Unset = UNSET
+    most: float | None | Unset = UNSET
+    status: ChainStatus | ChainStatusName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -51023,6 +51043,20 @@ class LayersReprojected(_Model):
         out["via"] = self.via
         out["crs"] = self.crs.to_json()
         out["revision"] = self.revision
+        out["points"] = self.points
+        out["flagged"] = self.flagged
+        out["reasons"] = list(self.reasons)
+        out["shifts"] = [e0.to_json() for e0 in self.shifts]
+        if self.least is not UNSET:
+            out["least"] = None if self.least is None else float(self.least)
+        if self.mean_dx is not UNSET:
+            out["meanDx"] = None if self.mean_dx is None else float(self.mean_dx)
+        if self.mean_dy is not UNSET:
+            out["meanDy"] = None if self.mean_dy is None else float(self.mean_dy)
+        if self.most is not UNSET:
+            out["most"] = None if self.most is None else float(self.most)
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
         return out
 
     @classmethod
@@ -51035,6 +51069,15 @@ class LayersReprojected(_Model):
             via=data["via"],
             crs=LayerSourceCrs.from_json(data["crs"]),
             revision=data["revision"],
+            points=data["points"],
+            flagged=data["flagged"],
+            reasons=list(data["reasons"]),
+            shifts=[ReprojectShift.from_json(e0) for e0 in data["shifts"]],
+            least=UNSET if "least" not in data else None if data["least"] is None else float(data["least"]),
+            mean_dx=UNSET if "meanDx" not in data else None if data["meanDx"] is None else float(data["meanDx"]),
+            mean_dy=UNSET if "meanDy" not in data else None if data["meanDy"] is None else float(data["meanDy"]),
+            most=UNSET if "most" not in data else None if data["most"] is None else float(data["most"]),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ChainStatus, data["status"]),
         )
 
 
@@ -78783,6 +78826,66 @@ class ReportItem(_Model):
             lines=list(data["lines"]),
             details=[ReportDetail.from_json(e0) for e0 in data["details"]] if "details" in data else UNSET,
             severity=UNSET if "severity" not in data else None if data["severity"] is None else _enum_in(ReportSeverity, data["severity"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReprojectShift(_Model):
+    """An object's shift (docs/adr/2500 §1): its persistent id and kind, how many points it has, its first point as it is
+    and as it moves, that point's shift (moved − now) and its length, the smallest and largest shift of all its points,
+    in the project's units, and what its points fall outside of (codes of [`REPROJECT_NOTES`], in that order).
+    Attributes:
+        points: Unit: count.
+        before: Unit: system.
+        after: Unit: system.
+        dx: Unit: system.
+        dy: Unit: system.
+        shift: Unit: system.
+        least: Unit: system.
+        most: Unit: system.
+    """
+    uid: str
+    kind: str
+    points: int
+    before: Vec2
+    after: Vec2
+    dx: float
+    dy: float
+    shift: float
+    least: float
+    most: float
+    notes: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["kind"] = self.kind
+        out["points"] = self.points
+        out["before"] = _vec2_out(self.before)
+        out["after"] = _vec2_out(self.after)
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["shift"] = float(self.shift)
+        out["least"] = float(self.least)
+        out["most"] = float(self.most)
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReprojectShift:
+        return cls(
+            uid=data["uid"],
+            kind=data["kind"],
+            points=data["points"],
+            before=Vec2.from_json(data["before"]),
+            after=Vec2.from_json(data["after"]),
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            shift=float(data["shift"]),
+            least=float(data["least"]),
+            most=float(data["most"]),
+            notes=list(data["notes"]) if "notes" in data else UNSET,
         )
 
 
@@ -131283,6 +131386,7 @@ __all__ = [
     "ReportSeverityName",
     "ReprojectSample",
     "ReprojectSampleName",
+    "ReprojectShift",
     "ResectionSurveyWork",
     "ReselectHatchEdit",
     "ResetArrayEdit",

@@ -196,6 +196,10 @@
 - **Rolüne göre bağlamsal araçlar (8 Kasım 2026; MAP-01, [ADR 2480](../../docs/adr/2480-contextual-tools-by-object-role.md)).**
   Şerit panelinin `roles` alanı (surface, network, zoning): seçimin hepsi o roldeyse Yüzey, Altyapı, İmar panelleri;
   pencereler seçimin yüzeyi ya da ağıyla açılır (`selection_roles.rs`). Harita + Yol.
+- **Yeniden izdüşürün önizlemesi (8 Kasım 2026; MAP-02, [ADR 2500](../../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
+  `cad.layers.reproject`'in cevabı (plan da) nesne başına kayma, EPSG kullanım alanlarının notları, toplu kayma ve
+  zincirin kararıdır; ret her nedeni sayısıyla söyler (yazı, daire, yay artık “sistemin dışında” değil). Masaüstünde
+  Yeniden izdüşür önizleme penceresi açar, Uygula yazar. Harita + CBS.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

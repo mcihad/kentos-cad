@@ -9,17 +9,26 @@ axis order, unit and area; its WKT2 from EPSG's definition (datum, ellipsoid, me
 codes) and checked against PROJ (pyproj): the text read by PROJ moves points across Türkiye exactly as the EPSG code
 does, and has the code's axis order. The moved coordinates are PROJ's, along the EPSG path ADR 0167 names for each
 pair of datums (crs_transform_cases.py's `transformer`); the cases compare them within 1 mm.
+
+Yeniden izdüşür's preview (docs/adr/2500) is written here too: each object's first point now and moved (PROJ's), its
+points' shifts, the shifts summed up; the notes from EPSG's areas of use as PROJ's database gives them (the source
+system's and the project's, `CRS.area_of_use`; the datum transformation's, `CoordinateOperation.area_of_use` of the
+path's operations), a point read at its place on the source's datum (PROJ's inverse) and where it lands; the chain's
+verdict by docs/adr/1230 §3's rules (crs_chain_rules.py's order and texts, the ensembles from PROJ's database).
 """
 
 import copy
 import json
+import math
 import sys
 from pathlib import Path
 
 from pyproj import CRS, Transformer
+from pyproj.crs import CoordinateOperation
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import crs_chain_rules as rules  # noqa: E402
 import crs_transform_cases as ct  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -124,6 +133,8 @@ OTHERS = {"utm": (23036, (488000.0, 4420000.0)), "wgsutm": (32636, (488000.0, 44
           "geo": (5252, (32.86, 39.93)), "merc": (3857, (3657946.0, 4855000.0)), "tm33": (2321, (757000.0, 4425000.0))}
 RING = [(512000.0, 4421000.0), (512100.0, 4421000.0), (512100.0, 4421100.0), (512000.0, 4421100.0)]
 HOLE = [(512030.0, 4421030.0), (512060.0, 4421030.0), (512060.0, 4421060.0), (512030.0, 4421060.0)]
+# ED50 / TM36 numbers: a point of the old sheet's and one at 44.3° N, north of every Türkiye box (docs/adr/2500 §3).
+NEAR, FAR = (512200.0, 4420200.0), (512000.0, 4900000.0)
 
 
 def setup():
@@ -142,10 +153,20 @@ def setup():
         {"kind": "polyline", "id": 9, "layerId": "kotlu", "attrs": {},
          "pts": [{"x": x, "y": y} for x, y in ED50[:2]], "zs": [870.5, 871.25]},
     ] + [{"kind": "point", "id": 10 + i, "layerId": lid, "attrs": {}, "p": {"x": xy[0], "y": xy[1]}}
-         for i, (lid, (_, xy)) in enumerate(OTHERS.items())]
+         for i, (lid, (_, xy)) in enumerate(OTHERS.items())] + [
+        # An old sheet's point and one far north of Türkiye in its numbers (docs/adr/2500 §3).
+        {"kind": "point", "id": 15, "layerId": "uzak", "attrs": {}, "p": {"x": NEAR[0], "y": NEAR[1]}},
+        {"kind": "point", "id": 16, "layerId": "uzak", "attrs": {"ad": "U1"}, "p": {"x": FAR[0], "y": FAR[1]}},
+        # A point, a text and a circle: only points and straight paths move (docs/adr/2500 §5).
+        {"kind": "point", "id": 17, "layerId": "yazilar", "attrs": {}, "p": {"x": 512000.0, "y": 4420000.0}},
+        {"kind": "text", "id": 18, "layerId": "yazilar", "attrs": {}, "p": {"x": 512010.0, "y": 4420010.0},
+         "text": "S2", "height": 2.5, "rotation": 0},
+        {"kind": "circle", "id": 19, "layerId": "yazilar", "attrs": {}, "c": {"x": 512020.0, "y": 4420020.0}, "r": 5},
+    ]
     layers = [layer("0", "0"), layer("tum", "Tüm"), layer("eski", "Eski pafta"), layer("gps", "GPS"),
               layer("bozuk", "Bozuk"), layer("kilitli", "Kilitli"), layer("parsel", "Parsel"), layer("kotlu", "Kotlu"),
-              layer("bos", "Boş"), *[layer(lid, lid.upper()) for lid in OTHERS],
+              layer("bos", "Boş"), *[layer(lid, lid.upper()) for lid in OTHERS], layer("uzak", "Uzak"),
+              layer("yazilar", "Yazılar"),
               {"id": "grup", "name": "Grup", "type": "group", "visible": True, "locked": False, "expanded": True,
                "style": STYLE, "children": []}]
     next(n for n in layers if n["id"] == "kilitli")["locked"] = True
@@ -255,8 +276,137 @@ def ent(id_, kind, layer_id, attrs, **geom):
     return {"kind": kind, "id": id_, "layerId": layer_id, "attrs": attrs, **geom}
 
 
+
+# ── Yeniden izdüşür's preview (docs/adr/2500) ────────────────────────────────────────────────────────────────────
+
+NOTES = ["outside_source_area", "outside_operation_area", "outside_project_area"]
+NOTE_TEXT = {
+    "outside_source_area": "kaynak sistemin kullanım alanının dışında (nesneler başka bir sistemde olabilir)",
+    "outside_operation_area": "datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli değil)",
+    "outside_project_area": "projenin sisteminin kullanım alanının dışında",
+}
+LISTED = 1000
+
+
+def area(srid):
+    """EPSG's area of use of a registry system as PROJ's database gives it: (west, south, east, north)."""
+    return tuple(CRS.from_epsg(srid).area_of_use.bounds)
+
+
+def operation_area(src):
+    """The box of the datum transformation's EPSG operations from `src` into the project's system (all of the path's
+    operations', which agree); none when the datum stays."""
+    a, b = ct.datum(REGISTRY[src]), ct.datum(REGISTRY[PROJECT])
+    if a == b:
+        return None
+    codes = [int(c.strip().split(":")[1]) for c in ct.PATHS[frozenset([a, b])][2].split("+")]
+    boxes = {tuple(CoordinateOperation.from_epsg(c).area_of_use.bounds) for c in codes}
+    assert len(boxes) == 1, (src, boxes)
+    return boxes.pop()
+
+
+def lonlat(srid, x, y):
+    """The longitude and latitude of a point of `srid` on its own datum, through PROJ."""
+    crs = CRS.from_epsg(srid)
+    return Transformer.from_crs(crs, crs.geodetic_crs, always_xy=True).transform(x, y)
+
+
+def holds(box, lon, lat):
+    west, south, east, north = box
+    along = west <= lon <= east if west <= east else (lon >= west or lon <= east)
+    return along and south <= lat <= north
+
+
+def vertices(e):
+    """An object's points in the order KentOS moves them (its ring, then its holes); none for another kind."""
+    if e["kind"] == "point":
+        return [(e["p"]["x"], e["p"]["y"])]
+    if e["kind"] in ("polyline", "polygon"):
+        pts = [(p["x"], p["y"]) for p in e["pts"]]
+        for h in e.get("holes", []):
+            pts += [(p["x"], p["y"]) for p in h["pts"]]
+        return pts
+    return None
+
+
+def verdict(src):
+    """The chain's verdict for the way from `src` into the project's system (docs/adr/1230 §3 in crs_chain_rules'
+    order): the horizontal way alone (heights stay), the project states no epoch, every registry way states its
+    accuracy (ct.PATHS; 0 within a datum)."""
+    a, b = ct.datum(REGISTRY[src]), ct.datum(REGISTRY[PROJECT])
+    ensemble = any(rules._proj_side(s, REGISTRY[s])[3] is not None for s in (src, PROJECT))
+    found = {"datum_ensemble": a != b and ensemble, "unofficial_operation": a != b and "ED50" in (a, b)}
+    reasons = [r for r in rules.REASONS if found.get(r)]
+    return ("limited" if reasons else "complete"), reasons
+
+
+def reprojected(layer_id, src):
+    """`cad.layers.reproject`'s answer for a layer of the setup moved from `src`, and its warnings."""
+    ents = [e for e in setup()["entities"] if e["layerId"] == layer_id]
+    boxes = (area(src), operation_area(src), area(PROJECT))
+    noted, plain = [], []
+    total, sx, sy, least, most = 0, 0.0, 0.0, None, None
+    for e in ents:
+        before = vertices(e)
+        after = [moved(src, x, y) for x, y in before]
+        out, ds = [False, False, False], []
+        for (x, y), q in zip(before, after):
+            dx, dy = q["x"] - x, q["y"] - y
+            d = math.hypot(dx, dy)
+            sx, sy = sx + dx, sy + dy
+            ds.append(d)
+            here = lonlat(src, x, y)
+            out[0] |= not holds(boxes[0], *here)
+            out[1] |= boxes[1] is not None and not holds(boxes[1], *here)
+            out[2] |= not holds(boxes[2], *lonlat(PROJECT, q["x"], q["y"]))
+        total += len(before)
+        least = min([d for d in ds] + ([least] if least is not None else []))
+        most = max([d for d in ds] + ([most] if most is not None else []))
+        p, q = before[0], after[0]
+        row = {"uid": f"$uidOf:{e['id']}", "kind": e["kind"], "points": len(before), "before": {"x": p[0], "y": p[1]},
+               "after": q, "dx": q["x"] - p[0], "dy": q["y"] - p[1], "shift": math.hypot(q["x"] - p[0], q["y"] - p[1]),
+               "least": min(ds), "most": max(ds)}
+        notes = [n for n, o in zip(NOTES, out) if o]
+        if notes:
+            row["notes"] = notes
+            noted.append(row)
+        else:
+            plain.append(row)
+    out = {"layer": layer_id, "from": src, "to": PROJECT, "moved": len(ents), "via": "$any" if ents else "",
+           "crs": record(src), "revision": "$current", "points": total}
+    warnings = []
+    if total:
+        out.update({"meanDx": sx / total, "meanDy": sy / total, "least": least, "most": most})
+    out["flagged"] = len(noted)
+    if ents:
+        status, reasons = verdict(src)
+        out["status"] = status
+        out["reasons"] = reasons
+        if reasons:
+            warnings.append({"code": "chain_limited",
+                             "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: "
+                                        + "; ".join(rules.TEXT[r] for r in reasons) + ".",
+                             "path": "from"})
+    else:
+        out["reasons"] = []
+    out["shifts"] = (noted + plain)[:LISTED]
+    if noted:
+        counts = [(n, sum(1 for r in noted if n in r["notes"])) for n in NOTES]
+        warnings.append({"code": "outside_area",
+                         "message": f"{len(noted)} nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: "
+                                    + "; ".join(f"{k} nesne {NOTE_TEXT[n]}" for n, k in counts if k)
+                                    + ". Önizlemedeki kaymaları denetleyin.",
+                         "path": "from"})
+    return out, warnings
+
+
+def answered(layer_id, src):
+    """A completed step's result for the layer moved from `src`."""
+    out, warnings = reprojected(layer_id, src)
+    return done(out, warnings)
+
+
 def reproject_cases():
-    eski = record(2322)
     p0 = moved(2322, *ED50[0])
     line = [moved(2322, x, y) for x, y in ED50]
     g = [moved(4326, x, y) for x, y in GPS]
@@ -266,55 +416,48 @@ def reproject_cases():
                     "3": ent(3, "polyline", "eski", {}, pts=line)}
     out = [
         case("ED50 / TM36'da sanılan eski pafta projenin sistemine: noktalar EPSG yoluyla, kot kalır, kayıt ED50",
-             step({"layer": "eski", "from": 2322},
-                  done({"layer": "eski", "from": 2322, "to": PROJECT, "moved": 2, "via": "$any", "crs": eski,
-                        "revision": "$current"}),
+             step({"layer": "eski", "from": 2322}, answered("eski", 2322),
                   {"revision": "changed", "entities": new_entities}, within=WITHIN)),
         case("geri alma eski koordinatları ve kaydın yokluğunu geri getirir",
-             step({"layer": "eski", "from": 2322},
-                  done({"layer": "eski", "from": 2322, "to": PROJECT, "moved": 2, "via": "$any", "crs": eski,
-                        "revision": "$current"}), CHANGED, within=WITHIN),
+             step({"layer": "eski", "from": 2322}, answered("eski", 2322), CHANGED, within=WITHIN),
              {"op": "undo", "returns": "Yeniden izdüşür", "expect": {"entities": old_entities}}),
         case("plan hiçbir şey yazmaz",
              {"op": "plan", "input": {"layer": "eski", "from": 2322},
-              "result": done({"layer": "eski", "from": 2322, "to": PROJECT, "moved": 2, "via": "$any", "crs": eski,
-                              "revision": "$current"}), "expect": SAME, "within": WITHIN}),
+              "result": answered("eski", 2322), "expect": SAME, "within": WITHIN}),
         case("kaydı olan katman from'suz: önce Sistem ata, sonra Yeniden izdüşür",
              step({"layer": "gps", "srid": 4326}, done({"layer": "gps", "crs": record(4326), "changed": True,
                                                          "revision": "$current"}), CHANGED, command="cad.layers.crs"),
-             step({"layer": "gps"},
-                  done({"layer": "gps", "from": 4326, "to": PROJECT, "moved": 2, "via": "$any", "crs": record(4326),
-                        "revision": "$current"}),
+             step({"layer": "gps"}, answered("gps", 4326),
                   {"revision": "changed", "entities": {
                       "4": ent(4, "point", "gps", {"ad": "G1"}, p=g[0]),
                       "5": ent(5, "point", "gps", {"ad": "G2"}, p=g[1])}}, within=WITHIN)),
         *[case(f"{REGISTRY[srid]['name']} numaraları projenin sistemine (EPSG:{srid} → {PROJECT})",
-               step({"layer": lid, "from": srid},
-                    done({"layer": lid, "from": srid, "to": PROJECT, "moved": 1, "via": "$any", "crs": record(srid),
-                          "revision": "$current"}),
+               step({"layer": lid, "from": srid}, answered(lid, srid),
                     {"revision": "changed", "entities": {str(10 + i): ent(10 + i, "point", lid, {}, p=moved(srid, *xy))}},
                     within=WITHIN))
           for i, (lid, (srid, xy)) in enumerate(OTHERS.items())],
         case("delikli alan: dış halka ve delik birlikte",
-             step({"layer": "parsel", "from": 2322},
-                  done({"layer": "parsel", "from": 2322, "to": PROJECT, "moved": 1, "via": "$any", "crs": eski,
-                        "revision": "$current"}),
+             step({"layer": "parsel", "from": 2322}, answered("parsel", 2322),
                   {"revision": "changed", "entities": {"8": ent(8, "polygon", "parsel", {"ada": "101"},
                                                               pts=[moved(2322, x, y) for x, y in RING],
                                                               holes=[{"pts": [moved(2322, x, y) for x, y in HOLE]}])}},
                   within=WITHIN)),
         case("kotlu çizgi: köşelerin kotları kalır",
-             step({"layer": "kotlu", "from": 2322},
-                  done({"layer": "kotlu", "from": 2322, "to": PROJECT, "moved": 1, "via": "$any", "crs": eski,
-                        "revision": "$current"}),
+             step({"layer": "kotlu", "from": 2322}, answered("kotlu", 2322),
                   {"revision": "changed", "entities": {"9": ent(9, "polyline", "kotlu", {},
                                                               pts=[moved(2322, x, y) for x, y in ED50[:2]],
                                                               zs=[870.5, 871.25])}},
                   within=WITHIN)),
         case("boş katman: hiçbir nesne çevrilmez, kayıt yazılır",
-             step({"layer": "bos", "from": 2322},
-                  done({"layer": "bos", "from": 2322, "to": PROJECT, "moved": 0, "via": "", "crs": eski,
-                        "revision": "$current"}), CHANGED)),
+             step({"layer": "bos", "from": 2322}, answered("bos", 2322), CHANGED)),
+        case("önizleme: kullanım alanlarının dışındaki nokta notlanır, uyarı verir ve önce listelenir; öbürü çizim "
+             "sırasıyla ardından",
+             {"op": "plan", "input": {"layer": "uzak", "from": 2322}, "result": answered("uzak", 2322),
+              "expect": SAME, "within": WITHIN},
+             step({"layer": "uzak", "from": 2322}, answered("uzak", 2322),
+                  {"revision": "changed", "entities": {
+                      "15": ent(15, "point", "uzak", {}, p=moved(2322, *NEAR)),
+                      "16": ent(16, "point", "uzak", {"ad": "U1"}, p=moved(2322, *FAR))}}, within=WITHIN)),
         case("sürüm çakışması: hazırlandıktan sonra çizim değişmişse hiçbir şey yazılmaz",
              *stale({"layer": "eski", "from": 2322})),
         case("ret: sürüm metni değil",
@@ -345,6 +488,21 @@ def reproject_cases():
                   failed("not_a_layer",
                          "“Grup” bir katman grubu; kaynak sistemi yalnız katmanın olur. Grubun bir katmanını verin.",
                          "layer"))),
+        case("ret: yazı ve daire tam çevrilemez, nedeni türleriyle söylenir; nokta da yazılmaz",
+             step({"layer": "yazilar", "from": 2322},
+                  failed("crs_unreached",
+                         "“Yazılar” katmanının 2 nesnesi EPSG:2322'den projenin sistemine çevrilemiyor (yay ya da eğrili "
+                         "çizgi, daire, yazı, blok gibi tam çevrilemeyen türden); hiçbir şey yazılmadı. Yalnız noktalar "
+                         "ve düz kenarlı çizgiler çevrilir; bu nesneleri başka bir katmana alın.",
+                         "from", ["$uidOf:18", "$uidOf:19"]))),
+        case("ret: nedenler karışıkken her biri sayısıyla: biri sistemin dışında, ikisi türünden",
+             step({"layer": "yazilar", "from": 4326},
+                  failed("crs_unreached",
+                         "“Yazılar” katmanının 3 nesnesi EPSG:4326'den projenin sistemine çevrilemiyor (1 nesne sistemin "
+                         "dışında, 2 nesne yay ya da eğrili çizgi, daire, yazı, blok gibi tam çevrilemeyen türden); "
+                         "hiçbir şey yazılmadı. Doğru sistemi from ile verin; yalnız noktalar ve düz kenarlı çizgiler "
+                         "çevrilir, öbürlerini başka bir katmana alın.",
+                         "from", ["$uidOf:17", "$uidOf:18", "$uidOf:19"]))),
         case("ret: boylam olamayacak sayılar WGS 84'ten çevrilemez, hiçbir şey yazılmaz",
              step({"layer": "bozuk", "from": 4326},
                   failed("crs_unreached",
@@ -368,7 +526,11 @@ def main():
     files = {
         "cad.layers.crs.json": build("cad.layers.crs", "Sistem ata: katmanın kaynak sistemi kaydı", note, crs_cases()),
         "cad.layers.reproject.json": build("cad.layers.reproject",
-                                           "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine", note,
+                                           "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine",
+                                           note + " Önizleme (ADR 2500): nesne başına kayma PROJ'un noktalarından; "
+                                           "notlar PROJ'un veritabanındaki EPSG kullanım alanlarından (nokta kaynağın "
+                                           "datumundaki yerinde ve vardığı yerde okunur); zincirin kararı ADR 1230 "
+                                           "§3'ün kurallarıyla.",
                                            reproject_cases()),
     }
     bad = False

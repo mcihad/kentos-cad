@@ -107,6 +107,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Ortofoto karşılaştırması penceresinde Dikiş ölçümü satırı ve Dikiş tablosu.
 - MAP-01 / ADR 2480: web'in şeridinde panelin `roles` alanı (surface, network, zoning) ve seçimin rolleri; pencerelerin
   seçimin yüzeyi ya da ağıyla açılması.
+- MAP-02 / ADR 2500: `cad.layers.reproject`'in web işleyicisinde önizleme alanları (shifts, notlar, toplu kayma, zincirin
+  kararı; 24 ortak durum) ve ret nedenleri; web'in katman menüsünde Yeniden izdüşür önizlemesi; `fixtures/crs/v1/areas.json`.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

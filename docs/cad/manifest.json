@@ -10259,7 +10259,7 @@
    "python": "Connection: road.terrains.analysis, Connection: road.terrains.compare, Connection: road.terrains.quality, Connection: road.terrains.zeroline, Connection: road.terrains.cutfill",
    "mcp": "road.terrains.analysis, road.terrains.compare, road.terrains.quality, road.terrains.zeroline, road.terrains.cutfill",
    "note": "Önizle kipine göre road.terrains.analysis, road.terrains.compare ya da road.terrains.quality ile okur; Fark'ın Sıfır hattını çiz'i road.terrains.zeroline, Kazı ve dolgu bölgelerini çiz'i road.terrains.cutfill ile tek adımda yazar (plan/road.md Y18.5, ADR 0916 §5, ADR 1620, 1840).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10307,7 +10307,7 @@
    "python": "Connection: road.terrains.sheetcontours",
    "mcp": "road.terrains.sheetcontours",
    "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },
@@ -10327,7 +10327,7 @@
    "python": "Connection: road.terrains.create, Connection: road.terrains.edit, Connection: road.terrains.query, Connection: road.terrains.contours, kentos.cad.file.import_.landxml",
    "mcp": "road.terrains.create, road.terrains.edit, road.terrains.query, road.terrains.contours, file.import.landxml",
    "note": "Arazi yüzeyleri penceresi road.terrains.query ile okur; Kaydet, Kabul et, Eğrileri çiz ve LandXML al road.terrains.create, .edit, .contours ve file.import.landxml ile yazar (plan/road.md Y2.4, Y2.5).",
-   "scope": "cad",
+   "scope": "shared",
    "desktop": "implemented",
    "tests": 0
   },

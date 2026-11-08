@@ -300,6 +300,7 @@ impl App {
             Some(Dialog::Readjustment) => self.readjustment_control(control),
             Some(Dialog::Ortho) => self.ortho_control(control),
             Some(Dialog::OrthoCompare) => self.ortho_compare_control(control),
+            Some(Dialog::Reproject) => self.reproject_control(control),
             Some(Dialog::Overlap) => self.overlap_control(control),
             Some(Dialog::Register) => self.register_control(control),
             Some(Dialog::SheetContours) => self.sheet_contours_control(control),

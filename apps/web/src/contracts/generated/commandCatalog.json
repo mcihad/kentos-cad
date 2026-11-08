@@ -67696,7 +67696,7 @@
       "id": "cad.layers.reproject",
       "version": 1,
       "title": "Yeniden izdüşür",
-      "summary": "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yay ve eğriler dönüşümün kuralıyla çevrilir. Çevrilemeyen nesne varsa hiçbir şey yazılmaz (crs_unreached, uids). Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Katmanın nesnelerini verilen sistemden (from; verilmezse katmanın kaynak sistemi) projenin sistemine çevirir: projenin sisteminde sanılarak alınmış veriyi düzeltir. Kotlar ve ölçüler kalır; yalnız noktalar ve düz kenarlı çizgiler çevrilir. Çevrilemeyen nesne (sistemin ya da ızgaranın dışında; yay, daire, yazı, blok gibi türden) varsa hiçbir şey yazılmaz: crs_unreached her nedeni sayısıyla söyler, uids nesneleri verir. Katmanın kaynak sistemi from olur. Tek geri alma adımı “Yeniden izdüşür”. Cevap önizlemedir, plan da aynısını verir (ADR 2500): her nesnenin ilk noktasının şimdiki ve yeni yeri, kayması, noktalarının en küçük ve en büyük kayması; noktaları EPSG kullanım alanlarının dışına düşen nesnenin notları (outside_source_area, outside_operation_area, outside_project_area; outside_area uyarısı); bütün noktaların ortalama, en küçük ve en büyük kayması; dönüşüm zincirinin kararı (status, reasons; sınırlıysa chain_limited uyarısı). En çok 1000 nesne listelenir, notlular önce. Kilitli katman reddedilir; projenin sistemi yoksa ya da from projeninkiyse crs_mismatch. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [
         "izdusur",
         "reproject"
@@ -67748,11 +67748,18 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.layers.reproject` v1.",
+        "description": "Output of `cad.layers.reproject` v1: what moved and how (docs/adr/0583 §2), and the preview of the move\n(docs/adr/2500): every point's shift summed up (the mean shift, the smallest and largest, in the project's units;\nnone when nothing moves), the objects with a note, the chain's verdict for the way as `cad.crs.transform` gives it\n(docs/adr/1230 §3; none when nothing moves) and the objects' shifts.",
         "properties": {
           "crs": {
             "$ref": "#/$defs/LayerSourceCrs",
             "description": "The layer's record now."
+          },
+          "flagged": {
+            "description": "The objects with a note.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "from": {
             "description": "The system the objects came from.",
@@ -67764,6 +67771,38 @@
           "layer": {
             "type": "string"
           },
+          "least": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "meanDx": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "meanDy": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "most": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
           "moved": {
             "description": "The objects moved.",
             "format": "uint32",
@@ -67771,9 +67810,40 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "points": {
+            "description": "Every point of the objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "reasons": {
+            "description": "Why the chain is limited, in `cad.crs.transform`'s order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
             "type": "string"
+          },
+          "shifts": {
+            "description": "At most [`REPROJECT_LISTED`] objects' shifts.",
+            "items": {
+              "$ref": "#/$defs/ReprojectShift"
+            },
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ChainStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "to": {
             "description": "The project's system they are in now.",
@@ -67794,18 +67864,29 @@
           "moved",
           "via",
           "crs",
-          "revision"
+          "revision",
+          "points",
+          "flagged",
+          "reasons",
+          "shifts"
         ],
         "title": "LayersReprojected",
         "type": "object"
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.layers.reproject` v1.",
+        "description": "Output of `cad.layers.reproject` v1: what moved and how (docs/adr/0583 §2), and the preview of the move\n(docs/adr/2500): every point's shift summed up (the mean shift, the smallest and largest, in the project's units;\nnone when nothing moves), the objects with a note, the chain's verdict for the way as `cad.crs.transform` gives it\n(docs/adr/1230 §3; none when nothing moves) and the objects' shifts.",
         "properties": {
           "crs": {
             "$ref": "#/$defs/LayerSourceCrs",
             "description": "The layer's record now."
+          },
+          "flagged": {
+            "description": "The objects with a note.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "from": {
             "description": "The system the objects came from.",
@@ -67817,6 +67898,38 @@
           "layer": {
             "type": "string"
           },
+          "least": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "meanDx": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "meanDy": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "most": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
           "moved": {
             "description": "The objects moved.",
             "format": "uint32",
@@ -67824,9 +67937,40 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "points": {
+            "description": "Every point of the objects moved.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "reasons": {
+            "description": "Why the chain is limited, in `cad.crs.transform`'s order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "revision": {
             "description": "The document's revision after the write, as decimal text.",
             "type": "string"
+          },
+          "shifts": {
+            "description": "At most [`REPROJECT_LISTED`] objects' shifts.",
+            "items": {
+              "$ref": "#/$defs/ReprojectShift"
+            },
+            "type": "array"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ChainStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "to": {
             "description": "The project's system they are in now.",
@@ -67847,7 +67991,11 @@
           "moved",
           "via",
           "crs",
-          "revision"
+          "revision",
+          "points",
+          "flagged",
+          "reasons",
+          "shifts"
         ],
         "title": "LayersReprojected",
         "type": "object"
@@ -67864,6 +68012,10 @@
           "layer_refused",
           "invalid_revision",
           "revision_conflict"
+        ],
+        "warnings": [
+          "chain_limited",
+          "outside_area"
         ]
       },
       "examples": [
@@ -104551,6 +104703,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil."
+    },
+    {
+      "code": "outside_area",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı nesnelerin noktaları EPSG'nin kullanım alanlarından birinin dışında (kaynak sistem, datum dönüşümü ya da projenin sistemi); kaymaları denetlenmeli."
     },
     {
       "code": "no_operations",
@@ -179457,6 +179615,75 @@
           "type": "string"
         }
       ]
+    },
+    "ReprojectShift": {
+      "description": "An object's shift (docs/adr/2500 §1): its persistent id and kind, how many points it has, its first point as it is\nand as it moves, that point's shift (moved − now) and its length, the smallest and largest shift of all its points,\nin the project's units, and what its points fall outside of (codes of [`REPROJECT_NOTES`], in that order).",
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "system"
+        },
+        "before": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "system"
+        },
+        "dx": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "dy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "least": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "most": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "notes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "points": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "shift": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "system"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "kind",
+        "points",
+        "before",
+        "after",
+        "dx",
+        "dy",
+        "shift",
+        "least",
+        "most"
+      ],
+      "type": "object"
     },
     "ResourceKind": {
       "description": "A named resource's kind.",

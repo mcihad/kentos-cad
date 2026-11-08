@@ -1,19 +1,21 @@
 //! `cad.layers.crs` and `cad.layers.reproject` v1 (docs/adr/0583 §2): a layer's source system recorded, nothing moved
 //! (Sistem ata), and a layer's objects moved from a system into the project's, the record that system (Yeniden
-//! izdüşür), each as one undo step. The shared cases are `fixtures/commands/v1/cad.layers.crs.json` and
-//! `cad.layers.reproject.json` (scripts/fixtures/layer_crs_cases.py, with PROJ).
+//! izdüşür), each as one undo step. Yeniden izdüşür's answer is also its preview (docs/adr/2500): each object's shift,
+//! what its points fall outside of (EPSG's areas of use) and the chain's verdict for the way. The shared cases are
+//! `fixtures/commands/v1/cad.layers.crs.json` and `cad.layers.reproject.json` (scripts/fixtures/layer_crs_cases.py,
+//! with PROJ).
 
 use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersCrs, LayersCrsSet, LayersReproject,
     LayersReprojected,
 };
-use kentos_domain::{Document, Slot, Uuid};
-use kentos_geometry_core::crs as core;
+use kentos_domain::{Document, Slot};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::sources::{Mover, mover_in};
+use crate::layers_reproject::Preview;
+use crate::sources::mover_in;
 
 /// The undo steps' names.
 pub const ASSIGN: &str = "Sistem ata";
@@ -130,7 +132,8 @@ fn crs_write(cx: &mut ExecutionContext<'_>, input: LayersCrs) -> CommandResult<L
 
 // ── cad.layers.reproject ───────────────────────────────────────────────────
 
-/// What a reprojection writes: the objects moved, the system they came from, the way.
+/// What a reprojection writes: the objects moved, the system they came from, the way, and the move's preview
+/// (docs/adr/2500).
 struct Moved {
     layer: String,
     from: u32,
@@ -138,27 +141,7 @@ struct Moved {
     changes: Vec<(Slot, kentos_commands::Entity)>,
     via: String,
     record: kentos_commands::LayerSourceCrs,
-}
-
-/// The way a point goes, as the transforms say it (“EPSG:1311, ±1 m”).
-fn way(m: &Mover, at: kentos_geometry_core::Vec2) -> String {
-    match core::transform_in(&m.source, &m.project, at, &m.choices) {
-        Ok(t) => {
-            let mut words = if t.via.is_empty() {
-                "aynı datum".to_owned()
-            } else {
-                t.via.clone()
-            };
-            if let Some(a) = t.accuracy {
-                words.push_str(&format!(", ±{a} m"));
-            }
-            if t.unofficial {
-                words.push_str(", resmî dönüşüm değil");
-            }
-            words
-        }
-        Err(_) => String::new(),
-    }
+    preview: Preview,
 }
 
 fn reproject_check(doc: &Document, input: &LayersReproject) -> Result<Moved, Stop> {
@@ -209,44 +192,8 @@ fn reproject_check(doc: &Document, input: &LayersReproject) -> Result<Moved, Sto
             ));
         }
     };
-    let mut changes = Vec::new();
-    let mut unreached: Vec<Uuid> = Vec::new();
-    let mut first: Option<kentos_geometry_core::Vec2> = None;
-    for (uid, e) in doc.by_layer_with_uids(&node.id) {
-        let mut moved = e.clone();
-        if first.is_none() {
-            let b = kentos_geometry_core::ops::topology_rules::incremental::shape_bounds(
-                &crate::geometry::shape(e),
-            );
-            let c = kentos_geometry_core::Vec2::new(
-                (b.min_x + b.max_x) / 2.0,
-                (b.min_y + b.max_y) / 2.0,
-            );
-            first = (c.x.is_finite() && c.y.is_finite()).then_some(c);
-        }
-        match kentos_formats::reproject::move_entity(
-            &mut moved,
-            &mover.source,
-            &mover.project,
-            &mover.choices,
-        ) {
-            Ok(()) => changes.push((Slot(e.base().id), moved)),
-            Err(_) => unreached.push(uid),
-        }
-    }
-    if !unreached.is_empty() {
-        let mut err = error(
-            codes::CRS_UNREACHED,
-            format!(
-                "“{name}” katmanının {} nesnesi EPSG:{from}'den projenin sistemine çevrilemiyor (sistemin dışında); hiçbir şey yazılmadı. Doğru sistemi from ile verin.",
-                unreached.len()
-            ),
-            Some("from".to_owned()),
-        );
-        err.uids = unreached.iter().map(Uuid::to_string).collect();
-        return Err(Stop::failed(err));
-    }
-    let via = first.map(|p| way(&mover, p)).unwrap_or_default();
+    let (changes, via, preview) =
+        crate::layers_reproject::preview(doc, &node.id, &name, from, &mover)?;
     Ok(Moved {
         layer: node.id.clone(),
         from,
@@ -254,10 +201,12 @@ fn reproject_check(doc: &Document, input: &LayersReproject) -> Result<Moved, Sto
         changes,
         via,
         record,
+        preview,
     })
 }
 
 fn reprojected(m: &Moved, revision: String) -> LayersReprojected {
+    let p = &m.preview;
     LayersReprojected {
         layer: m.layer.clone(),
         from: m.from,
@@ -266,6 +215,15 @@ fn reprojected(m: &Moved, revision: String) -> LayersReprojected {
         via: m.via.clone(),
         crs: m.record.clone(),
         revision,
+        points: p.points,
+        mean_dx: p.mean.map(|(x, _)| x),
+        mean_dy: p.mean.map(|(_, y)| y),
+        least: p.least,
+        most: p.most,
+        flagged: p.flagged,
+        status: p.status,
+        reasons: p.reasons.clone(),
+        shifts: p.shifts.clone(),
     }
 }
 
@@ -286,7 +244,7 @@ pub fn reproject_plan(
     match reproject_check(cx.doc, input) {
         Ok(m) => CommandResult::Completed {
             output: reprojected(&m, cx.doc.revision().to_string()),
-            warnings: Vec::new(),
+            warnings: m.preview.warnings.clone(),
         },
         Err(stop) => stop.into(),
     }
@@ -322,7 +280,7 @@ fn reproject_write(
     match written {
         Ok(()) => CommandResult::Completed {
             output: reprojected(&m, doc.revision().to_string()),
-            warnings: Vec::new(),
+            warnings: m.preview.warnings.clone(),
         },
         Err(refusal) => fail(codes::LAYER_REFUSED, refusal.0, "layer").into(),
     }

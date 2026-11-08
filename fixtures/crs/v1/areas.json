@@ -1,0 +1,207 @@
+{
+ "format": "kentos.crs-areas",
+ "version": 1,
+ "source": "EPSG v12.029 (2025-10-02), PROJ'un veritabanından (scripts/fixtures/crs_areas.py); kutular yaklaşıktır, kayıt seçmek içindir (IOGP GN7-1 §5.7)",
+ "areas": [
+  {
+   "srid": 5253,
+   "name": "Türkiye (Turkey) - west of 28°30'E, onshore.",
+   "west": 25.62,
+   "south": 36.5,
+   "east": 28.5,
+   "north": 42.11
+  },
+  {
+   "srid": 5254,
+   "name": "Türkiye (Turkey) - between 28°30'E and 31°30'E, onshore.",
+   "west": 28.5,
+   "south": 36.06,
+   "east": 31.5,
+   "north": 41.46
+  },
+  {
+   "srid": 5255,
+   "name": "Türkiye (Turkey) - between 31°30'E and 34°30'E, onshore.",
+   "west": 31.5,
+   "south": 35.97,
+   "east": 34.5,
+   "north": 42.07
+  },
+  {
+   "srid": 5256,
+   "name": "Türkiye (Turkey) - between 34°30'E and 37°30'E, onshore.",
+   "west": 34.5,
+   "south": 35.81,
+   "east": 37.5,
+   "north": 42.15
+  },
+  {
+   "srid": 5257,
+   "name": "Türkiye (Turkey) - between 37°30'E and 40°30'E, onshore.",
+   "west": 37.5,
+   "south": 36.66,
+   "east": 40.5,
+   "north": 41.19
+  },
+  {
+   "srid": 5258,
+   "name": "Türkiye (Turkey) - between 40°30'E and 43°30'E, onshore.",
+   "west": 40.5,
+   "south": 37.02,
+   "east": 43.5,
+   "north": 41.6
+  },
+  {
+   "srid": 5259,
+   "name": "Türkiye (Turkey) - east of 43°30'E.",
+   "west": 43.5,
+   "south": 36.97,
+   "east": 44.83,
+   "north": 41.02
+  },
+  {
+   "srid": 5252,
+   "name": "Türkiye (Turkey) - onshore and offshore.",
+   "west": 25.62,
+   "south": 34.42,
+   "east": 44.83,
+   "north": 43.45
+  },
+  {
+   "srid": 2319,
+   "name": "Türkiye (Turkey) - west of 28°30'E, onshore.",
+   "west": 25.62,
+   "south": 36.5,
+   "east": 28.5,
+   "north": 42.11
+  },
+  {
+   "srid": 2320,
+   "name": "Türkiye (Turkey) - between 28°30'E and 31°30'E, onshore.",
+   "west": 28.5,
+   "south": 36.06,
+   "east": 31.5,
+   "north": 41.46
+  },
+  {
+   "srid": 2321,
+   "name": "Türkiye (Turkey) - between 31°30'E and 34°30'E, onshore.",
+   "west": 31.5,
+   "south": 35.97,
+   "east": 34.5,
+   "north": 42.07
+  },
+  {
+   "srid": 2322,
+   "name": "Türkiye (Turkey) - between 34°30'E and 37°30'E, onshore.",
+   "west": 34.5,
+   "south": 35.81,
+   "east": 37.5,
+   "north": 42.15
+  },
+  {
+   "srid": 2323,
+   "name": "Türkiye (Turkey) - between 37°30'E and 40°30'E, onshore.",
+   "west": 37.5,
+   "south": 36.66,
+   "east": 40.5,
+   "north": 41.19
+  },
+  {
+   "srid": 2324,
+   "name": "Türkiye (Turkey) - between 40°30'E and 43°30'E, onshore.",
+   "west": 40.5,
+   "south": 37.02,
+   "east": 43.5,
+   "north": 41.6
+  },
+  {
+   "srid": 2325,
+   "name": "Türkiye (Turkey) - east of 43°30'E.",
+   "west": 43.5,
+   "south": 36.97,
+   "east": 44.83,
+   "north": 41.02
+  },
+  {
+   "srid": 23035,
+   "name": "Europe - between 24°E and 30°E - Greece - offshore; Norway including Svalbard - onshore and offshore; Türkiye (Turkey) - onshore and offshore. Egypt - Western Desert.",
+   "west": 24.0,
+   "south": 25.71,
+   "east": 30.01,
+   "north": 84.73
+  },
+  {
+   "srid": 23036,
+   "name": "Europe - between 30°E and 36°E - Israel - offshore; Jordan; Norway including Svalbard - onshore and offshore; Türkiye (Turkey) - onshore and offshore.",
+   "west": 30.0,
+   "south": 29.19,
+   "east": 36.0,
+   "north": 84.7
+  },
+  {
+   "srid": 23037,
+   "name": "Europe - between 36°E and 42°E - Jordan; Norway including Svalbard - offshore; Türkiye (Turkey) - onshore and offshore.",
+   "west": 36.0,
+   "south": 29.18,
+   "east": 42.0,
+   "north": 79.07
+  },
+  {
+   "srid": 23038,
+   "name": "Europe - between 42°E and 48°E - Türkiye (Turkey).",
+   "west": 42.0,
+   "south": 36.97,
+   "east": 44.83,
+   "north": 41.6
+  },
+  {
+   "srid": 32635,
+   "name": "Between 24°E and 30°E, northern hemisphere between equator and 84°N, onshore and offshore. Belarus. Bulgaria. Central African Republic. Democratic Republic of the Congo (Zaire). Egypt. Estonia. Finland. Greece. Latvia. Lesotho. Libya. Lithuania. Moldova. Norway. Poland. Romania. Russian Federation. Sudan. Svalbard. Türkiye (Turkey). Uganda. Ukraine.",
+   "west": 24.0,
+   "south": 0.0,
+   "east": 30.0,
+   "north": 84.0
+  },
+  {
+   "srid": 32636,
+   "name": "Between 30°E and 36°E, northern hemisphere between equator and 84°N, onshore and offshore. Belarus. Cyprus. Egypt. Ethiopia. Finland. Israel. Jordan. Kenya. Lebanon. Moldova. Norway. Palestine. Russian Federation. Saudi Arabia. Sudan. Syria. Türkiye (Turkey). Uganda. Ukraine.",
+   "west": 30.0,
+   "south": 0.0,
+   "east": 36.0,
+   "north": 84.0
+  },
+  {
+   "srid": 32637,
+   "name": "Between 36°E and 42°E, northern hemisphere between equator and 84°N, onshore and offshore. Djibouti. Egypt. Eritrea. Ethiopia. Georgia. Iraq. Jordan. Kenya. Lebanon. Russian Federation. Saudi Arabia. Somalia. Sudan. Syria. Türkiye (Turkey). Ukraine.",
+   "west": 36.0,
+   "south": 0.0,
+   "east": 42.0,
+   "north": 84.0
+  },
+  {
+   "srid": 32638,
+   "name": "Between 42°E and 48°E, northern hemisphere between equator and 84°N, onshore and offshore. Armenia. Azerbaijan. Djibouti. Eritrea. Ethiopia. Georgia. Islamic Republic of Iran. Iraq. kazakhstan. Kuwait. Russian Federation. Saudi Arabia. Somalia. Türkiye (Turkey). Yemen.",
+   "west": 42.0,
+   "south": 0.0,
+   "east": 48.0,
+   "north": 84.0
+  },
+  {
+   "srid": 4326,
+   "name": "World.",
+   "west": -180.0,
+   "south": -90.0,
+   "east": 180.0,
+   "north": 90.0
+  },
+  {
+   "srid": 3857,
+   "name": "World between 85.06°S and 85.06°N.",
+   "west": -180.0,
+   "south": -85.06,
+   "east": 180.0,
+   "north": 85.06
+  }
+ ]
+}

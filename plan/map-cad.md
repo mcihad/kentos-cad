@@ -32,7 +32,7 @@ sırayla alır.
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480 | tipli katman profili; onaydan sonra değişen nesneler (şema 207) | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; nokta başına fark önizlemesi; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120 | GVX oturum korelasyonları; arşiv panelinde bazlar; bilinen noktanın kendi hızı | canlı RTK/NTRIP; gerçek alıcı kabulü |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
@@ -326,6 +326,23 @@ Kanıtlanan:
 
 Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, sorgu/düzenleme/dışa aktarmanın aynı zinciri taşıması, nokta
 başına fark önizlemesi, daire/yay/yazının kotu, farklı blok birimiyle kotlu blok, zamana bağlı Helmert. Madde `[ ]` kalır.
+
+**8 Kasım 2026, dördüncü tur — Yeniden izdüşürün önizlemesi ([ADR 2500](../docs/adr/2500-reproject-preview-shifts-and-reasons.md)).**
+Kapsam işareti: **Harita + CBS**. Araştırma: IOGP GN7-1 (kullanım alanı kutusu yaklaşık, dönüşüm seçmede alanın veriyle
+tutarlılığı), PROJ'un işlem seçimi (nokta işlemin kullanım alanıyla karşılaştırılır), QGIS'in datum dönüşümü penceresi
+(adayın doğruluğu ve kullanım alanı). Kanıtlanan:
+- `cad.layers.reproject`'in cevabı önizlemedir (plan da): nesne başına ilk noktanın şimdiki ve yeni yeri, kayması,
+  noktalarının en küçük ve en büyük kayması; EPSG kullanım alanlarının notları (kaynak sistem, datum dönüşümü, projenin
+  sistemi; kutular PROJ'un veritabanından, `fixtures/crs/v1/areas.json`); toplu kayma; Koordinat dönüştür'ün aynı iki
+  sistem için zincir kararı. PROJ'a karşı 24 ortak durum (3 yeni), Rust ve Python;
+- bulunan kusur: yazı, daire, yay ya da blok içeren katman “sistemin dışında” diye reddediliyordu ve katalog yayların
+  çevrildiğini söylüyordu. Artık ret her nedeni sayısıyla söyler, katalog düzeltildi;
+- masaüstünde Yeniden izdüşür önizleme penceresi açar (tablo, uyarılar, Uygula/Vazgeç, retteki nesneleri seç); MCP'de
+  plan ve ret.
+
+Açık: ölçme pencerelerinin çarpanı `cad.crs.factors`'tan, Koordinat dönüştür'de nokta başına karar, sorgu/düzenleme/dışa
+aktarmanın aynı zinciri taşıması, yazı ve bloğun yeniden izdüşümü, daire/yay/yazının kotu, zamana bağlı Helmert. Madde
+`[ ]` kalır.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

@@ -404,6 +404,8 @@ pub enum Dialog {
     Xrefs,
     /// 2B düzleme indir (flatten_window.rs, docs/adr/1061 §4); its state is `App::flatten`.
     Flatten,
+    /// Yeniden izdüşür's preview (reproject_window.rs, docs/adr/2500); its state is `App::reproject`.
+    Reproject,
     /// Kodla çiz (features_window.rs, docs/adr/1360); its state is `App::features_code`.
     FeaturesCode,
     /// GNSS baz ağı (baselines_window.rs, docs/adr/1380); its state is `App::baselines`.
@@ -860,6 +862,7 @@ pub enum Message {
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
     Flatten(crate::flatten_window::Event),
+    Reproject(crate::reproject_window::Event),
     FeaturesCode(crate::features_window::Event),
     Baselines(crate::baselines_window::Event),
     Grade(crate::grade_window::Event),
@@ -1534,6 +1537,8 @@ pub struct App {
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
     pub(crate) flatten: crate::flatten_window::State,
+    /// Yeniden izdüşür's preview (reproject_window.rs, docs/adr/2500).
+    pub(crate) reproject: crate::reproject_window::State,
     pub(crate) features_code: crate::features_window::State,
     pub(crate) baselines: crate::baselines_window::State,
     pub(crate) grade: crate::grade_window::State,
@@ -2004,6 +2009,7 @@ impl App {
             sheet_set: None,
             xrefs: Default::default(),
             flatten: Default::default(),
+            reproject: Default::default(),
             features_code: Default::default(),
             baselines: Default::default(),
             grade: Default::default(),
@@ -2804,6 +2810,7 @@ impl App {
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Flatten(event) => return self.flatten_event(event),
+            Message::Reproject(event) => return self.reproject_event(event),
             Message::FeaturesCode(event) => return self.features_code_event(event),
             Message::Baselines(event) => return self.baselines_event(event),
             Message::Grade(event) => return self.grade_event(event),
@@ -3036,7 +3043,7 @@ impl App {
             Message::ScreenScale(event) => return self.screen_scale_event(event),
             Message::SecondCrs(event) => self.second_crs_event(event),
             Message::MapCrs(choose) => self.choose_map(choose),
-            Message::LayerCrs(event) => self.layer_crs_event(event),
+            Message::LayerCrs(event) => return self.layer_crs_event(event),
             Message::ToastClosed(id) => {
                 self.toasts.dismiss(id);
             }
@@ -3727,8 +3734,8 @@ impl App {
             }
             "address.compare" => return self.open_address_compare(),
             // docs/adr/0583: a layer's source system and the map's.
-            "layer.crs" => self.layer_crs_run(false),
-            "layer.reproject" => self.layer_crs_run(true),
+            "layer.crs" => return self.layer_crs_run(false),
+            "layer.reproject" => return self.layer_crs_run(true),
             "view.mapCrs" => self.map_crs_run(),
             "address.providers" => return self.open_address_providers(),
             // Gevşeterek düzenle: the next write relaxes the constraints (docs/adr/0337 §1); again, it does not.

@@ -1651,6 +1651,9 @@ codes! {
     POINTS_OUTSIDE = "points_outside", Warning, false, "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında).";
     /// The coordinate chain is limited: not a precise transformation (docs/adr/1230 §3).
     CHAIN_LIMITED = "chain_limited", Warning, false, "Dönüşüm zinciri sınırlı: bir adımın doğruluğu, epok, kot ya da kapsam eksik; sonuç hassas dönüşüm değil.";
+    /// Some moved objects' points fall outside an EPSG area of use: the source system's, the datum transformation's
+    /// or the project system's (docs/adr/2500 §3).
+    OUTSIDE_AREA = "outside_area", Warning, false, "Bazı nesnelerin noktaları EPSG'nin kullanım alanlarından birinin dışında (kaynak sistem, datum dönüşümü ya da projenin sistemi); kaymaları denetlenmeli.";
 
     // ── The sheet book (docs/adr/0252 §2) and the sheet core's refusals ─
     /// No operation given.

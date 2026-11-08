@@ -84,6 +84,14 @@ fn vertices(e: &mut Entity, f: &mut dyn FnMut(&mut Vec2)) -> bool {
     }
 }
 
+/// An object's vertices in the order [`move_entity`] moves them (docs/adr/2500 §1: a preview's shifts pair them);
+/// none for a kind that is not points and straight paths.
+pub fn points_of(e: &Entity) -> Option<Vec<Vec2>> {
+    let mut points = Vec::new();
+    let mut copy = e.clone();
+    vertices(&mut copy, &mut |p: &mut Vec2| points.push(*p)).then_some(points)
+}
+
 /// One object moved from `from` into `to` in place (a bound layer's object and its table's row, docs/adr/0504 §1).
 /// `Err(None)`: a kind that is not points and straight paths (an arc does not move exactly); `Err(Some(why))`: a
 /// vertex the target does not reach. The object is unchanged when it is refused.

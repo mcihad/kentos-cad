@@ -588,6 +588,7 @@ pub mod records;
 pub mod records_page;
 pub mod sources_query;
 pub mod layers_crs;
+mod layers_reproject;
 pub mod records_duplicate;
 pub mod forms_compare;
 pub mod forms_sources;

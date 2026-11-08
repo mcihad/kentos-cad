@@ -4,7 +4,7 @@
  "command": "cad.layers.reproject",
  "commandVersion": 1,
  "title": "Yeniden izdüşür: katmanın nesneleri bir sistemden projeninkine",
- "note": "ADR 0583. Kayıt koordinat sistemleri kaydından; WKT2 EPSG'nin tanımından yazılır ve PROJ'da (pyproj) kodun kendisiyle aynı eksen sırası ve aynı noktalar olarak okunur. Çevrilen koordinatlar PROJ'un, ADR 0167'nin her datum çifti için adını verdiği EPSG yoluyla; 1 mm içinde. Bağımsız başvuru: scripts/fixtures/layer_crs_cases.py.",
+ "note": "ADR 0583. Kayıt koordinat sistemleri kaydından; WKT2 EPSG'nin tanımından yazılır ve PROJ'da (pyproj) kodun kendisiyle aynı eksen sırası ve aynı noktalar olarak okunur. Çevrilen koordinatlar PROJ'un, ADR 0167'nin her datum çifti için adını verdiği EPSG yoluyla; 1 mm içinde. Bağımsız başvuru: scripts/fixtures/layer_crs_cases.py. Önizleme (ADR 2500): nesne başına kayma PROJ'un noktalarından; notlar PROJ'un veritabanındaki EPSG kullanım alanlarından (nokta kaynağın datumundaki yerinde ve vardığı yerde okunur); zincirin kararı ADR 1230 §3'ün kurallarıyla.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -208,6 +208,34 @@
    {
     "id": "tm33",
     "name": "TM33",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "uzak",
+    "name": "Uzak",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yazilar",
+    "name": "Yazılar",
     "type": "layer",
     "visible": true,
     "locked": false,
@@ -440,6 +468,62 @@
      "x": 757000.0,
      "y": 4425000.0
     }
+   },
+   {
+    "kind": "point",
+    "id": 15,
+    "layerId": "uzak",
+    "attrs": {},
+    "p": {
+     "x": 512200.0,
+     "y": 4420200.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 16,
+    "layerId": "uzak",
+    "attrs": {
+     "ad": "U1"
+    },
+    "p": {
+     "x": 512000.0,
+     "y": 4900000.0
+    }
+   },
+   {
+    "kind": "point",
+    "id": 17,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 512000.0,
+     "y": 4420000.0
+    }
+   },
+   {
+    "kind": "text",
+    "id": 18,
+    "layerId": "yazilar",
+    "attrs": {},
+    "p": {
+     "x": 512010.0,
+     "y": 4420010.0
+    },
+    "text": "S2",
+    "height": 2.5,
+    "rotation": 0
+   },
+   {
+    "kind": "circle",
+    "id": 19,
+    "layerId": "yazilar",
+    "attrs": {},
+    "c": {
+     "x": 512020.0,
+     "y": 4420020.0
+    },
+    "r": 5
    }
   ],
   "styles": {
@@ -473,9 +557,63 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 4,
+       "meanDx": -21.483711553926696,
+       "meanDy": -182.6978734121658,
+       "least": 183.95657216166038,
+       "most": 183.9569405315886,
+       "flagged": 0,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:2",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.95657216166038
+        },
+        {
+         "uid": "$uidOf:3",
+         "kind": "polyline",
+         "points": 3,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.9569405315886
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -505,7 +643,7 @@
          },
          {
           "x": 512378.51612555474,
-          "y": 4419967.302168782
+          "y": 4419967.302168781
          },
          {
           "x": 512358.5161544983,
@@ -544,9 +682,63 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 4,
+       "meanDx": -21.483711553926696,
+       "meanDy": -182.6978734121658,
+       "least": 183.95657216166038,
+       "most": 183.9569405315886,
+       "flagged": 0,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:2",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.95657216166038
+        },
+        {
+         "uid": "$uidOf:3",
+         "kind": "polyline",
+         "points": 3,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.9569405315886
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed"
@@ -621,9 +813,63 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 4,
+       "meanDx": -21.483711553926696,
+       "meanDy": -182.6978734121658,
+       "least": 183.95657216166038,
+       "most": 183.9569405315886,
+       "flagged": 0,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:2",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.95657216166038
+        },
+        {
+         "uid": "$uidOf:3",
+         "kind": "polyline",
+         "points": 3,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.9569405315886
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "same"
@@ -684,9 +930,74 @@
         "unit": "degree",
         "area": "Dünya, coğrafi (enlem/boylam)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 2,
+       "meanDx": 231711.41482165945,
+       "meanDy": 4427012.43738899,
+       "least": 4432869.069463864,
+       "most": 4433275.37626424,
+       "flagged": 2,
+       "status": "limited",
+       "reasons": [
+        "datum_ensemble"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:4",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 32.8597,
+          "y": 39.9334
+         },
+         "after": {
+          "x": 231553.42172736314,
+          "y": 4426858.9286117945
+         },
+         "dx": 231520.56202736314,
+         "dy": 4426818.995211794,
+         "shift": 4432869.069463864,
+         "least": 4432869.069463864,
+         "most": 4432869.069463864,
+         "notes": [
+          "outside_project_area"
+         ]
+        },
+        {
+         "uid": "$uidOf:5",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 32.864,
+          "y": 39.937
+         },
+         "after": {
+          "x": 231935.1316159558,
+          "y": 4427245.816566187
+         },
+         "dx": 231902.2676159558,
+         "dy": 4427205.879566187,
+         "shift": 4433275.37626424,
+         "least": 4433275.37626424,
+         "most": 4433275.37626424,
+         "notes": [
+          "outside_project_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "2 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 2 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -699,7 +1010,7 @@
          "ad": "G1"
         },
         "p": {
-         "x": 231553.4217273632,
+         "x": 231553.42172736314,
          "y": 4426858.9286117945
         }
        },
@@ -711,7 +1022,7 @@
          "ad": "G2"
         },
         "p": {
-         "x": 231935.13161595573,
+         "x": 231935.1316159558,
          "y": 4427245.816566187
         }
        }
@@ -746,9 +1057,53 @@
         "unit": "metre",
         "area": "30°–36° D (6° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 1,
+       "meanDx": -256505.82426785893,
+       "meanDy": 6301.276714931242,
+       "least": 256583.2106190346,
+       "most": 256583.2106190346,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:10",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 488000.0,
+          "y": 4420000.0
+         },
+         "after": {
+          "x": 231494.17573214107,
+          "y": 4426301.276714931
+         },
+         "dx": -256505.82426785893,
+         "dy": 6301.276714931242,
+         "shift": 256583.2106190346,
+         "least": 256583.2106190346,
+         "most": 256583.2106190346,
+         "notes": [
+          "outside_project_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -759,8 +1114,8 @@
         "layerId": "utm",
         "attrs": {},
         "p": {
-         "x": 231494.175732141,
-         "y": 4426301.276714929
+         "x": 231494.17573214107,
+         "y": 4426301.276714931
         }
        }
       }
@@ -794,9 +1149,53 @@
         "unit": "metre",
         "area": "30°–36° D (6° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 1,
+       "meanDx": -256471.60840406438,
+       "meanDy": 6484.342706786469,
+       "least": 256553.56676083614,
+       "most": 256553.56676083614,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "datum_ensemble"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:11",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 488000.0,
+          "y": 4420000.0
+         },
+         "after": {
+          "x": 231528.39159593562,
+          "y": 4426484.3427067865
+         },
+         "dx": -256471.60840406438,
+         "dy": 6484.342706786469,
+         "shift": 256553.56676083614,
+         "least": 256553.56676083614,
+         "most": 256553.56676083614,
+         "notes": [
+          "outside_project_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -842,9 +1241,46 @@
         "unit": "degree",
         "area": "Türkiye, coğrafi (enlem/boylam)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 1,
+       "meanDx": 231532.91492192622,
+       "meanDy": 4426440.481315407,
+       "least": 4432491.717456449,
+       "most": 4432491.717456449,
+       "flagged": 1,
+       "status": "complete",
+       "reasons": [],
+       "shifts": [
+        {
+         "uid": "$uidOf:12",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 32.86,
+          "y": 39.93
+         },
+         "after": {
+          "x": 231565.7749219262,
+          "y": 4426480.411315407
+         },
+         "dx": 231532.91492192622,
+         "dy": 4426440.481315407,
+         "shift": 4432491.717456449,
+         "least": 4432491.717456449,
+         "most": 4432491.717456449,
+         "notes": [
+          "outside_project_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -890,9 +1326,53 @@
         "unit": "metre",
         "area": "Web haritaları (altlık karolar)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 1,
+       "meanDx": -3426410.686614217,
+       "meanDy": -429112.41022539884,
+       "least": 3453176.4585600835,
+       "most": 3453176.4585600835,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "datum_ensemble"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:13",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 3657946.0,
+          "y": 4855000.0
+         },
+         "after": {
+          "x": 231535.31338578305,
+          "y": 4425887.589774601
+         },
+         "dx": -3426410.686614217,
+         "dy": -429112.41022539884,
+         "shift": 3453176.4585600835,
+         "least": 3453176.4585600835,
+         "most": 3453176.4585600835,
+         "notes": [
+          "outside_project_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -903,7 +1383,7 @@
         "layerId": "merc",
         "attrs": {},
         "p": {
-         "x": 231535.313385783,
+         "x": 231535.31338578305,
          "y": 4425887.589774601
         }
        }
@@ -938,9 +1418,53 @@
         "unit": "metre",
         "area": "31.5°–34.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 1,
+       "meanDx": -256536.00346390763,
+       "meanDy": -4510.640778530389,
+       "least": 256575.6554185665,
+       "most": 256575.6554185665,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:14",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 757000.0,
+          "y": 4425000.0
+         },
+         "after": {
+          "x": 500463.99653609237,
+          "y": 4420489.35922147
+         },
+         "dx": -256536.00346390763,
+         "dy": -4510.640778530389,
+         "shift": 256575.6554185665,
+         "least": 256575.6554185665,
+         "most": 256575.6554185665,
+         "notes": [
+          "outside_source_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne kaynak sistemin kullanım alanının dışında (nesneler başka bir sistemde olabilir). Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -986,9 +1510,45 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 8,
+       "meanDx": -21.483388496628322,
+       "meanDy": -182.70287213567644,
+       "least": 183.96132385266404,
+       "most": 183.96192612149957,
+       "flagged": 0,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:8",
+         "kind": "polygon",
+         "points": 8,
+         "before": {
+          "x": 512000.0,
+          "y": 4421000.0
+         },
+         "after": {
+          "x": 511978.5169184816,
+          "y": 4420817.297299715
+         },
+         "dx": -21.48308151838137,
+         "dy": -182.702700285241,
+         "shift": 183.96140759149463,
+         "least": 183.96132385266404,
+         "most": 183.96192612149957
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -1006,12 +1566,12 @@
           "y": 4420817.297299715
          },
          {
-          "x": 512078.5164156549,
-          "y": 4420817.297443155
+          "x": 512078.51641565433,
+          "y": 4420817.297443156
          },
          {
           "x": 512078.5162722245,
-          "y": 4420917.296937925
+          "y": 4420917.296937926
          },
          {
           "x": 511978.516775026,
@@ -1023,7 +1583,7 @@
           "pts": [
            {
             "x": 512008.51672459923,
-            "y": 4420847.297191177
+            "y": 4420847.297191178
            },
            {
             "x": 512038.5165737541,
@@ -1034,8 +1594,8 @@
             "y": 4420877.297082641
            },
            {
-            "x": 512008.5166815649,
-            "y": 4420877.297039607
+            "x": 512008.5166815655,
+            "y": 4420877.297039608
            }
           ]
          }
@@ -1072,9 +1632,45 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 2,
+       "meanDx": -21.483718789822888,
+       "meanDy": -182.6978030637838,
+       "least": 183.95657216166038,
+       "most": 183.95666444390787,
+       "flagged": 0,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:9",
+         "kind": "polyline",
+         "points": 2,
+         "before": {
+          "x": 512345.678,
+          "y": 4420123.456
+         },
+         "after": {
+          "x": 512324.1944368656,
+          "y": 4419940.758225092
+         },
+         "dx": -21.483563134388532,
+         "dy": -182.69777490850538,
+         "shift": 183.95657216166038,
+         "least": 183.95657216166038,
+         "most": 183.95666444390787
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       }
+      ]
      },
      "expect": {
       "revision": "changed",
@@ -1091,7 +1687,7 @@
          },
          {
           "x": 512378.51612555474,
-          "y": 4419967.302168782
+          "y": 4419967.302168781
          }
         ],
         "zs": [
@@ -1130,13 +1726,236 @@
         "unit": "metre",
         "area": "34.5°–37.5° D (3° dilim)"
        },
-       "revision": "$current"
+       "revision": "$current",
+       "points": 0,
+       "flagged": 0,
+       "reasons": [],
+       "shifts": []
       },
       "warnings": []
      },
      "expect": {
       "revision": "changed"
      }
+    }
+   ]
+  },
+  {
+   "name": "önizleme: kullanım alanlarının dışındaki nokta notlanır, uyarı verir ve önce listelenir; öbürü çizim sırasıyla ardından",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "uzak",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "uzak",
+       "from": 2322,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current",
+       "points": 2,
+       "meanDx": -21.842926690820605,
+       "meanDy": -183.7637379206717,
+       "least": 183.95709105905524,
+       "most": 186.157910083625,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:16",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512000.0,
+          "y": 4900000.0
+         },
+         "after": {
+          "x": 511977.7970866624,
+          "y": 4899815.170894808
+         },
+         "dx": -22.202913337619975,
+         "dy": -184.82910519186407,
+         "shift": 186.157910083625,
+         "least": 186.157910083625,
+         "most": 186.157910083625,
+         "notes": [
+          "outside_source_area",
+          "outside_operation_area",
+          "outside_project_area"
+         ]
+        },
+        {
+         "uid": "$uidOf:15",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512200.0,
+          "y": 4420200.0
+         },
+         "after": {
+          "x": 512178.517059956,
+          "y": 4420017.3016293505
+         },
+         "dx": -21.482940044021234,
+         "dy": -182.69837064947933,
+         "shift": 183.95709105905524,
+         "least": 183.95709105905524,
+         "most": 183.95709105905524
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne kaynak sistemin kullanım alanının dışında (nesneler başka bir sistemde olabilir); 1 nesne datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli değil); 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 0.001
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "uzak",
+      "from": 2322
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "uzak",
+       "from": 2322,
+       "to": 5256,
+       "moved": 2,
+       "via": "$any",
+       "crs": {
+        "srid": 2322,
+        "name": "ED50 / TM36",
+        "wkt": "PROJCRS[\"ED50 / TM36\",BASEGEOGCRS[\"ED50\",DATUM[\"European Datum 1950\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]]],CONVERSION[\"TM36\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",36,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],ID[\"EPSG\",2322]]",
+        "axisOrder": "ne",
+        "unit": "metre",
+        "area": "34.5°–37.5° D (3° dilim)"
+       },
+       "revision": "$current",
+       "points": 2,
+       "meanDx": -21.842926690820605,
+       "meanDy": -183.7637379206717,
+       "least": 183.95709105905524,
+       "most": 186.157910083625,
+       "flagged": 1,
+       "status": "limited",
+       "reasons": [
+        "unofficial_operation"
+       ],
+       "shifts": [
+        {
+         "uid": "$uidOf:16",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512000.0,
+          "y": 4900000.0
+         },
+         "after": {
+          "x": 511977.7970866624,
+          "y": 4899815.170894808
+         },
+         "dx": -22.202913337619975,
+         "dy": -184.82910519186407,
+         "shift": 186.157910083625,
+         "least": 186.157910083625,
+         "most": 186.157910083625,
+         "notes": [
+          "outside_source_area",
+          "outside_operation_area",
+          "outside_project_area"
+         ]
+        },
+        {
+         "uid": "$uidOf:15",
+         "kind": "point",
+         "points": 1,
+         "before": {
+          "x": 512200.0,
+          "y": 4420200.0
+         },
+         "after": {
+          "x": 512178.517059956,
+          "y": 4420017.3016293505
+         },
+         "dx": -21.482940044021234,
+         "dy": -182.69837064947933,
+         "shift": 183.95709105905524,
+         "least": 183.95709105905524,
+         "most": 183.95709105905524
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: ED50'nin EPSG işlemi resmî dönüşüm değil.",
+        "path": "from"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nesnenin noktaları EPSG'nin kullanım alanlarından birinin dışında: 1 nesne kaynak sistemin kullanım alanının dışında (nesneler başka bir sistemde olabilir); 1 nesne datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli değil); 1 nesne projenin sisteminin kullanım alanının dışında. Önizlemedeki kaymaları denetleyin.",
+        "path": "from"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed",
+      "entities": {
+       "15": {
+        "kind": "point",
+        "id": 15,
+        "layerId": "uzak",
+        "attrs": {},
+        "p": {
+         "x": 512178.517059956,
+         "y": 4420017.3016293505
+        }
+       },
+       "16": {
+        "kind": "point",
+        "id": 16,
+        "layerId": "uzak",
+        "attrs": {
+         "ad": "U1"
+        },
+        "p": {
+         "x": 511977.7970866624,
+         "y": 4899815.170894808
+        }
+       }
+      }
+     },
+     "within": 0.001
     }
    ]
   },
@@ -1350,6 +2169,61 @@
        "code": "not_a_layer",
        "message": "“Grup” bir katman grubu; kaynak sistemi yalnız katmanın olur. Grubun bir katmanını verin.",
        "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: yazı ve daire tam çevrilemez, nedeni türleriyle söylenir; nokta da yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazilar",
+      "from": 2322
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unreached",
+       "message": "“Yazılar” katmanının 2 nesnesi EPSG:2322'den projenin sistemine çevrilemiyor (yay ya da eğrili çizgi, daire, yazı, blok gibi tam çevrilemeyen türden); hiçbir şey yazılmadı. Yalnız noktalar ve düz kenarlı çizgiler çevrilir; bu nesneleri başka bir katmana alın.",
+       "path": "from",
+       "uids": [
+        "$uidOf:18",
+        "$uidOf:19"
+       ]
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ret: nedenler karışıkken her biri sayısıyla: biri sistemin dışında, ikisi türünden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yazilar",
+      "from": 4326
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unreached",
+       "message": "“Yazılar” katmanının 3 nesnesi EPSG:4326'den projenin sistemine çevrilemiyor (1 nesne sistemin dışında, 2 nesne yay ya da eğrili çizgi, daire, yazı, blok gibi tam çevrilemeyen türden); hiçbir şey yazılmadı. Doğru sistemi from ile verin; yalnız noktalar ve düz kenarlı çizgiler çevrilir, öbürlerini başka bir katmana alın.",
+       "path": "from",
+       "uids": [
+        "$uidOf:17",
+        "$uidOf:18",
+        "$uidOf:19"
+       ]
       }
      },
      "expect": {

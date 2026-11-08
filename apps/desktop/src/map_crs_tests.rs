@@ -149,6 +149,10 @@ fn a_layer_takes_its_source_system_and_moves_out_of_it_in_one_step() {
         "yol".into(),
     )));
     let _ = app.update(Message::Run("layer.reproject"));
+    // The preview opens on the plan, nothing written yet (docs/adr/2500); Uygula moves the road.
+    assert_eq!(app.dialog, Some(crate::app::Dialog::Reproject));
+    assert_eq!(road(&app), before);
+    let _ = app.update(Message::Reproject(crate::reproject_window::Event::Apply));
     let after = road(&app);
     assert_ne!(before, after);
     assert!(crate::files_testing::last_said(&app).contains("1 nesnesi"));

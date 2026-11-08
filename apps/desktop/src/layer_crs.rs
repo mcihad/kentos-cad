@@ -1,11 +1,13 @@
 //! A layer's source system on the desktop (docs/adr/0583 §1–§2): the layer's right-click menu Koordinat sistemi ▸
 //! says where its objects came from, Sistem ata ▸ writes or clears that record (`cad.layers.crs`), Yeniden izdüşür ▸
-//! moves the objects from the system chosen into the project's (`cad.layers.reproject`).
+//! opens the preview of moving the objects from the system chosen into the project's (`cad.layers.reproject`,
+//! reproject_window.rs, docs/adr/2500); its Uygula moves them.
 
-use kentos_commands::{LayerNode, LayersCrs, LayersReproject};
+use iced::Task;
+use kentos_commands::{LayerNode, LayersCrs};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
-use kentos_native_application::layers_crs::{assign, reproject};
+use kentos_native_application::layers_crs::assign;
 use kentos_ui::widget::Menu;
 
 use crate::app::{App, Message};
@@ -15,26 +17,27 @@ use crate::app::{App, Message};
 pub enum Event {
     /// The layer's record: a system of the registry, none takes it away.
     Assign(String, Option<u32>),
-    /// The layer's objects from this system into the project's; none: from its record.
+    /// The layer's objects from this system into the project's, previewed first; none: from its record.
     Reproject(String, Option<u32>),
 }
 
 impl App {
     /// Sistem ata… and Yeniden izdüşür from the command line or a menu without a layer (docs/adr/0583 §2): the
-    /// active layer's record said, its objects moved from the recorded system; a system is chosen in the layer's menu.
-    pub(crate) fn layer_crs_run(&mut self, moving: bool) {
+    /// active layer's record said, the preview of moving its objects from the recorded system (docs/adr/2500); a
+    /// system is chosen in the layer's menu.
+    pub(crate) fn layer_crs_run(&mut self, moving: bool) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
-            return;
+            return Task::none();
         };
         let layers = doc.model.layers();
         let Some(node) = layers.get(layers.active()).cloned() else {
-            return;
+            return Task::none();
         };
         let record = node.source_crs.as_ref().map(|c| (c.name.clone(), c.srid));
         match (moving, record) {
             (true, Some((_, Some(_)))) => {
-                self.layer_crs_event(Event::Reproject(node.id.clone(), None));
+                return self.layer_crs_event(Event::Reproject(node.id.clone(), None));
             }
             (true, _) => self.warn(format!(
                 "“{}” katmanının kayıtlı kaynak sistemi yok: Katmanlar'da katmanın sağ tık menüsünde Koordinat sistemi ▸ \
@@ -51,68 +54,42 @@ impl App {
                 ),
             ),
         }
+        Task::none()
     }
 
-    pub(crate) fn layer_crs_event(&mut self, event: Event) {
+    pub(crate) fn layer_crs_event(&mut self, event: Event) -> Task<Message> {
+        let (layer, srid) = match event {
+            Event::Reproject(layer, from) => return self.open_reproject(layer, from),
+            Event::Assign(layer, srid) => (layer, srid),
+        };
         let Some(doc) = self.document.as_mut() else {
             self.output("Açık çizim yok.");
-            return;
+            return Task::none();
         };
-        let name_of = |model: &kentos_domain::Document, id: &str| {
-            model
-                .layers()
-                .get(id)
-                .map_or_else(|| id.to_owned(), |n| n.name.clone())
-        };
-        match event {
-            Event::Assign(layer, srid) => {
-                let name = name_of(&doc.model, &layer);
-                let result = assign::execute(
-                    &mut ExecutionContext::new(&mut doc.model),
-                    LayersCrs {
-                        layer,
-                        srid,
-                        expected_revision: None,
-                    },
-                );
-                if let Some(out) = self.answered(result) {
-                    let said = match (&out.crs, out.changed) {
-                        (_, false) => format!("“{name}” katmanının kaynak sistemi zaten böyle."),
-                        (Some(c), true) => format!(
-                            "“{name}” katmanının kaynak sistemi: {}. Nesneler değişmedi.",
-                            c.name
-                        ),
-                        (None, true) => {
-                            format!("“{name}” katmanının kaynak sistemi kaydı silindi.")
-                        }
-                    };
-                    self.say(Level::Success, said);
+        let name = doc
+            .model
+            .layers()
+            .get(&layer)
+            .map_or_else(|| layer.clone(), |n| n.name.clone());
+        let result = assign::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            LayersCrs {
+                layer,
+                srid,
+                expected_revision: None,
+            },
+        );
+        if let Some(out) = self.answered(result) {
+            let said = match (&out.crs, out.changed) {
+                (_, false) => format!("“{name}” katmanının kaynak sistemi zaten böyle."),
+                (Some(c), true) => {
+                    format!("“{name}” katmanının kaynak sistemi: {}. Nesneler değişmedi.", c.name)
                 }
-            }
-            Event::Reproject(layer, from) => {
-                let name = name_of(&doc.model, &layer);
-                let result = reproject::execute(
-                    &mut ExecutionContext::new(&mut doc.model),
-                    LayersReproject {
-                        layer,
-                        from,
-                        expected_revision: None,
-                    },
-                );
-                if let Some(out) = self.answered(result) {
-                    self.say(
-                        Level::Success,
-                        format!(
-                            "“{name}” katmanının {} nesnesi EPSG:{}'den projenin sistemine (EPSG:{}) çevrildi{}.",
-                            out.moved,
-                            out.from,
-                            out.to,
-                            if out.via.is_empty() { String::new() } else { format!(": {}", out.via) }
-                        ),
-                    );
-                }
-            }
+                (None, true) => format!("“{name}” katmanının kaynak sistemi kaydı silindi."),
+            };
+            self.say(Level::Success, said);
         }
+        Task::none()
     }
 
     /// Koordinat sistemi ▸ of a layer: its record, Sistem ata ▸ and Yeniden izdüşür ▸, the registry's systems by datum.

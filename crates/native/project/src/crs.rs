@@ -76,6 +76,57 @@ pub fn system(srid: u32) -> Option<&'static System> {
     systems().iter().find(|s| s.srid == srid)
 }
 
+/// EPSG's area of use of a registry system (docs/adr/2500 §3): its text and bounding box, degrees. IOGP's Guidance
+/// Note 7-1 (§5.7) gives the box as approximate, meant for selecting records, in WGS 84 terms: a point outside it is
+/// a note to look at, not an error. Written from PROJ's database (fixtures/crs/v1/areas.json,
+/// scripts/fixtures/crs_areas.py).
+#[derive(Debug, Clone, PartialEq, serde::Deserialize)]
+pub struct AreaOfUse {
+    pub srid: u32,
+    pub name: String,
+    pub west: f64,
+    pub south: f64,
+    pub east: f64,
+    pub north: f64,
+}
+
+impl AreaOfUse {
+    /// Whether the box holds a longitude and latitude (degrees), its edges included; a box whose west lies east of
+    /// its east crosses the antimeridian.
+    pub fn holds(&self, lon: f64, lat: f64) -> bool {
+        box_holds([self.west, self.south, self.east, self.north], lon, lat)
+    }
+}
+
+/// Whether a box (degrees west, south, east, north) holds a longitude and latitude, its edges included.
+pub fn box_holds([west, south, east, north]: [f64; 4], lon: f64, lat: f64) -> bool {
+    let along = if west <= east {
+        (west..=east).contains(&lon)
+    } else {
+        lon >= west || lon <= east
+    };
+    along && (south..=north).contains(&lat)
+}
+
+/// EPSG's areas of use of the registry's systems, the local one has none.
+pub fn areas() -> &'static [AreaOfUse] {
+    static AREAS: OnceLock<Vec<AreaOfUse>> = OnceLock::new();
+    AREAS.get_or_init(|| {
+        #[derive(serde::Deserialize)]
+        struct File {
+            areas: Vec<AreaOfUse>,
+        }
+        serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/areas.json"))
+            .map(|f| f.areas)
+            .unwrap_or_default()
+    })
+}
+
+/// EPSG's area of use of a registry system; none for the local system and a code the registry does not hold.
+pub fn area(srid: u32) -> Option<&'static AreaOfUse> {
+    areas().iter().find(|a| a.srid == srid)
+}
+
 /// The web's `DATUM_LABEL`.
 pub fn datum_label(datum: &str) -> &str {
     match datum {
@@ -219,6 +270,24 @@ pub fn turef_zone_for(lon: f64) -> Option<&'static System> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Every registry system but the local one has EPSG's area of use (docs/adr/2500 §3); the boxes hold their own
+    /// zone's middle and not a neighbour's, and one crossing the antimeridian holds both its ends.
+    #[test]
+    fn every_registry_system_but_the_local_one_has_its_area_of_use() {
+        for s in systems() {
+            assert_eq!(area(s.srid).is_some(), !s.is_local(), "{}", s.name);
+        }
+        assert_eq!(areas().len(), systems().len() - 1);
+        let tm36 = area(5256).expect("TUREF / TM36");
+        assert!(tm36.holds(36.0, 39.0));
+        assert!(!tm36.holds(33.0, 39.0) && !tm36.holds(36.0, 44.0));
+        assert!(tm36.holds(tm36.west, tm36.south) && tm36.holds(tm36.east, tm36.north));
+        assert!(area(4326).expect("WGS 84").holds(-179.9, -89.0));
+        assert!(box_holds([170.0, -50.0, -170.0, -30.0], 179.0, -40.0));
+        assert!(box_holds([170.0, -50.0, -170.0, -30.0], -175.0, -40.0));
+        assert!(!box_holds([170.0, -50.0, -170.0, -30.0], 0.0, -40.0));
+    }
 
     /// Every system of the transform reference is the registry's entry as
     /// the transforms read it (fixtures/geodesy/v1/transform.json; the web
