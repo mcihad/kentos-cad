@@ -62101,7 +62101,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when\nnot given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).\nCandidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two\nareas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`\n(0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with\nthem). Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not\nbetween 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),\n`layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
+        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when\nnot given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).\nCandidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two\nareas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`\n(0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with\nthem). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write\nto that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,\na decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written\nuntil a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not\nbetween 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),\n`layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
         "properties": {
           "confidence": {
             "type": [
@@ -135326,6 +135326,22 @@
         }
       ]
     },
+    "FieldTrouble": {
+      "description": "A value a field's rules refuse (docs/adr/2540): the field and why, as the field rules say it.",
+      "properties": {
+        "field": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "message"
+      ],
+      "type": "object"
+    },
     "FieldUnit": {
       "description": "The unit a field writes a number in.",
       "enum": [
@@ -177937,7 +177953,7 @@
       "type": "object"
     },
     "ReconciledGroup": {
-      "description": "A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two\nsources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset\nof its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a\nline group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its\nrepresentatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the\none there, or the one written), the required fields still missing, and whether execute writes it.",
+      "description": "A group of candidates: its class (none when they disagree) and the classes they name, what it is (`agreed`: two\nsources or more name one class; `single`: one source; `conflict`: the classes differ; `existing`: an accepted asset\nof its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a\nline group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its\nrepresentatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the\none there, or the one written), the required fields still missing, the values its class layer's field rules refuse\n(docs/adr/2540), and whether execute writes it.",
       "properties": {
         "asset": {
           "type": [
@@ -177960,6 +177976,13 @@
         "classes": {
           "items": {
             "type": "string"
+          },
+          "type": "array"
+        },
+        "invalid": {
+          "description": "The asset's values its class layer's field rules refuse (docs/adr/2540), in the layer's field order.",
+          "items": {
+            "$ref": "#/$defs/FieldTrouble"
           },
           "type": "array"
         },

@@ -34,7 +34,7 @@ sırayla alır.
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480 | tipli katman profili; onaydan sonra değişen nesneler (şema 207) | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500 | ölçme pencerelerinin çarpanı `cad.crs.factors`'tan; Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); arşiv panelinde bazlar; yeni noktaların hızı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140 | ayrı inceleme kaydı; pencerede eksik alan girişi; büyük aday kümesinde dizin | AI çıkarımı; büyük veri |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540 | ayrı inceleme kaydı; büyük aday kümesinde dizin; yaylı aday | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180 | kalıcı ilişki; çok parçalı nesne; seçilen köşelerin sahnede işareti | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200 | veri formu yolu; taşınmaların sahnede işaretlenmesi; üçlü birleşim ve çoklu köşe reddi | büyük veri ölçümü |
@@ -523,6 +523,19 @@ geçiş raporu `cad.profiles.migrate`'te (plan ile) zaten vardır. Kanıtlanan:
 
 Açık: inceleme kaydının ayrı tutulması, pencerede eksik alan girişi, büyük aday kümesinde dizin, yay uzaklığı, AI
 çıkarımı. Madde `[ ]` kalır.
+
+**8 Kasım 2026, dördüncü tur — Alan kuralları ve pencerede alan girişi ([ADR 2540](../docs/adr/2540-reconcile-field-rules-and-entry.md)).**
+Kapsam işareti: **Harita** (pencere ve yazma); komut Python ve MCP'de. Araştırma: QGIS'in öznitelik formu kısıtları (sert
+kısıt uyulmadıkça kaydettirmez, uymayan alanın yanında neden), KentOS'un alan kuralı (ADR 0199, `check_value`).
+Kanıtlanan:
+- bulunan kusur: uzlaştırma varlığı sınıf katmanının alan kurallarından geçmeden yazılıyordu (“Atıksu” şebeke
+  listesinde yokken yazılırdı, etiket kod yerine kalırdı). Artık adayların ve kararların değerleri katmanın alanlarından
+  geçer, kanonik yazılışıyla yazılır; uymayan grubun `invalid`'inde nedeniyle söylenir, grup yazılmaz;
+- pencerede Alan gir: eksik ya da kurala uymayan alanların formu, listeli alan listeden seçilir; Alan sütunu ve özet
+  nedenleri söyler;
+- 35 ortak durum (5 yeni; alanlı sınıf katmanları, profilin uygulanması gibi), Python, MCP.
+
+Açık: inceleme kaydının ayrı tutulması, büyük aday kümesinde dizin, yay uzaklığı, AI çıkarımı. Madde `[ ]` kalır.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

@@ -204,6 +204,9 @@
   `bn-N`'nin yer merkezli hızı (m/yıl, epokuyla) noktayı ölçme epokuna doğrusal taşır (IERS 2010 §4.1.2); yoksa hız
   ızgarası. `moved[].by`; `.kcad` şema 207. Ağ ızgarasız da dengelenir, yeni noktaların karara dönmesi ızgara ister.
   Harita + CBS.
+- **Uzlaştırmada alan kuralları ve alan girişi (8 Kasım 2026; MAP-04, [ADR 2540](../../docs/adr/2540-reconcile-field-rules-and-entry.md)).**
+  `map.features.reconcile` varlığın değerlerini sınıf katmanının alan kurallarından (`check_value`) geçirir, kanonik
+  yazar; uymayan `invalid`'de nedeniyle, grup yazılmaz. Pencerede Alan gir (listeden seçim). Harita.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

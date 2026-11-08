@@ -13,6 +13,10 @@
 //! Areas (docs/adr/2140): a closed polygon is a candidate of an area class; two are one group when their overlap ratio,
 //! the area of their intersection over that of their union, exceeds `overlap` (the PASCAL VOC criterion, 0.5), by the
 //! core's area algebra; an area group's footprint is its most trusted representative's, as a line group's polyline.
+//!
+//! Field rules (docs/adr/2540): the asset's values, its candidates' and the decisions', pass its class layer's fields as
+//! any write to that layer (`check_value`): the canonical text is written; one that does not fit is said in the group's
+//! `invalid` and keeps it from being written.
 
 use std::collections::BTreeMap;
 
@@ -22,7 +26,7 @@ use kentos_geometry_core::ops::areas::areas_of_entity;
 
 use kentos_commands::{
     CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
-    MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, ReconciledCandidate, ReconciledGroup, Vec2,
+    FieldTrouble, MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, ReconciledCandidate, ReconciledGroup, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -540,7 +544,28 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                     .collect()
             })
             .unwrap_or_default();
-        let writes = (status == "agreed" || (status == "single" && accepted)) && missing.is_empty();
+        // docs/adr/2540: the asset's values through its class layer's field rules (kind, length, list, range), as any
+        // write to that layer: the canonical text is written; a value that does not fit keeps the group back.
+        let mut invalid: Vec<FieldTrouble> = Vec::new();
+        if let Some(c) = class
+            && let Some(layer) = layer_of(c)
+            && let Some(node) = doc.layers().get(&layer)
+        {
+            for f in &node.fields {
+                let Some(value) = attrs.get(&f.name).cloned() else { continue };
+                if value.trim().is_empty() {
+                    continue;
+                }
+                match kentos_commands::check_value(f, &value) {
+                    Ok(canonical) => {
+                        attrs.insert(f.name.clone(), canonical);
+                    }
+                    Err(why) => invalid.push(FieldTrouble { field: f.name.clone(), message: why.message }),
+                }
+            }
+        }
+        let writes =
+            (status == "agreed" || (status == "single" && accepted)) && missing.is_empty() && invalid.is_empty();
         if writes && let Some(c) = class {
             match layer_of(c) {
                 Some(layer) => {
@@ -569,6 +594,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             overlap: smallest,
             asset: existing,
             missing,
+            invalid,
             writes,
         };
         groups.push(Group { members, reps, row, class, attrs, review });

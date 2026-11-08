@@ -38,11 +38,19 @@ line group's), its place that footprint's centroid, its spread the largest Hausd
 closed outer rings, `overlap` the smallest ratio between two representatives (none with one); an area of the class's
 layer overlapping a representative above the ratio makes it `existing`; the written asset is the footprint with
 `Örtüşme` (3 decimals) beside Yayılım.
+
+ADR 2540 adds the class layer's field rules: when the class's layer has fields (the profile applied: a field with a
+domain carries the domain's list), each value of the asset (its candidates' and the decisions') that a field names
+passes ADR 0199's rule, written here for the kinds the cases use — a list's label (Turkish case folded) gives its code,
+else the trimmed text must be one of its codes; a text no longer than its length; an integer of digits (leading zeros
+dropped); a decimal with a point or a comma, written with a point — and the canonical text is written. A value that does
+not fit is the group's `invalid` (field and the rule's sentence) and keeps the group from being written.
 """
 
 import copy
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -130,9 +138,24 @@ AREAS = [
 ]
 
 
-def setup(objects=OBJECTS, missing_layers=(), locked=()):
+def class_fields(cid):
+    """A class's fields as applying the profile puts them on its layer: a domain's list, its id kept (ADR 1360)."""
+    domains = {dm["id"]: dm for dm in PROFILE["domains"]}
+    out = []
+    for f in next(k for k in CLASSES if k["id"] == cid).get("fields", []):
+        f = copy.deepcopy(f)
+        if "domain" in f:
+            f["values"] = copy.deepcopy(domains[f["domain"]]["values"])
+        out.append(f)
+    return out
+
+
+def setup(objects=OBJECTS, missing_layers=(), locked=(), fields=False):
     kids = [layer(CLASS_LAYERS[c], next(k for k in CLASSES if k["id"] == c)["layer"][-1], locked=CLASS_LAYERS[c] in locked)
             for c in CLASS_LAYERS if c not in missing_layers]
+    if fields:
+        for k, c in zip(kids, [c for c in CLASS_LAYERS if c not in missing_layers]):
+            k["fields"] = class_fields(c)
     layers = [layer("0", "0"), layer("hv", G, "group", children=kids), layer(L, "Adaylar (LiDAR)", locked=L in locked),
               layer(O, "Adaylar (ortofoto)", locked=O in locked), layer("cizim", "Çizim")]
     gone = {CLASS_LAYERS[c] for c in missing_layers}
@@ -144,9 +167,12 @@ def setup(objects=OBJECTS, missing_layers=(), locked=()):
             # An object on a class's layer the drawing does not have stays in the drawing, on Çizim.
             x["layerId"] = "cizim"
         ents.append(x)
+    settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"}
+    if fields:
+        settings["domains"] = copy.deepcopy(PROFILE["domains"])
     return {"format": "kentos.document", "version": 2, "name": "Aday uzlaştırma",
-            "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
+            "settings": settings,
             "origin": {"x": X0, "y": Y0}, "layers": layers, "activeLayer": "cizim", "entities": ents,
             "uids": [uid(i) for i in range(1, len(ents) + 1)], "styles": {"items": [], "categories": []}}
 
@@ -244,6 +270,55 @@ def path_of(d, lid):
                 return got
         return None
     return " / ".join(walk(d["layers"], []) or [lid])
+
+
+def fold(text):
+    """Turkish case folding, a character at a time (I → ı, İ → i)."""
+    return "".join({"I": "ı", "İ": "i"}.get(c, c.lower() if len(c.lower()) == 1 else c) for c in text)
+
+
+def check(field, text):
+    """ADR 0199's rule for a value of `field`, for the kinds the cases use: (canonical, None) or (None, why)."""
+    label = field.get("alias") or field["name"]
+    s = text.strip()
+    values = field.get("values") or []
+    for v in values:
+        if fold(v["label"].strip()) == fold(s):
+            return v["code"], None
+    kind = field["kind"]
+    if kind == "integer":
+        if not re.fullmatch(r"[+-]?[0-9]+", s):
+            return None, f"“{label}” alanı tam sayı ister; “{text}” verildi. Rakamlarla, ondalıksız yazın."
+        minus, digits = s.startswith("-"), s.lstrip("+-").lstrip("0") or "0"
+        value = f"-{digits}" if minus and digits != "0" else digits
+        assert "min" not in field or int(value) >= int(field["min"]), "a range the cases do not reach"
+        assert "max" not in field or int(value) <= int(field["max"]), "a range the cases do not reach"
+    elif kind == "decimal":
+        m = re.fullmatch(r"([+-]?)([0-9]*)(?:[.,]([0-9]*))?", s)
+        if not m or not (m.group(2) or m.group(3)):
+            return None, (f"“{label}” alanı ondalık sayı ister; “{text}” verildi. Rakamlarla, ondalığı nokta ya da "
+                          "virgülle yazın.")
+        whole = m.group(2).lstrip("0") or "0"
+        fraction = m.group(3) or ""
+        assert len(fraction) <= field.get("scale", 99), "a scale the cases do not reach"
+        value = whole + (f".{fraction}" if fraction else "")
+        assert not (m.group(1) == "-") and ("min" not in field or float(value) >= float(field["min"])), "a range"
+    else:
+        length = field.get("length")
+        if length and len(text) > length:
+            return None, f"“{label}” alanı en çok {length} karakter alır; {len(text)} karakter verildi."
+        value = s if values else text
+    if values and value not in [v["code"] for v in values]:
+        return None, f"“{label}” alanı listedeki değerlerden birini ister; “{text}” listede yok."
+    return value, None
+
+
+def layer_fields(d, layer_id):
+    for n in d["layers"]:
+        for k in [n, *n.get("children", [])]:
+            if k["id"] == layer_id:
+                return k.get("fields", [])
+    return []
 
 
 def class_layer(d, ci):
@@ -470,7 +545,19 @@ def analyse(d, inp):
             for f in CLASSES[klass].get("fields", []):
                 if f.get("required") and not attrs.get(f["name"], "").strip():
                     missing.append(f["name"])
-        writes = (status == "agreed" or (status == "single" and accepted)) and not missing
+        # ADR 2540: the values through the class layer's field rules; the canonical text written.
+        invalid = []
+        if klass is not None and class_layer(d, klass) is not None:
+            for f in layer_fields(d, class_layer(d, klass)):
+                v = attrs.get(f["name"])
+                if v is None or not v.strip():
+                    continue
+                canonical, why = check(f, v)
+                if why is None:
+                    attrs[f["name"]] = canonical
+                else:
+                    invalid.append({"field": f["name"], "message": why})
+        writes = (status == "agreed" or (status == "single" and accepted)) and not missing and not invalid
         if writes and class_layer(d, klass) is None:
             c = CLASSES[klass]
             raise Refused("class_layer_missing", f"“{c['title']}” sınıfının katmanı ({' › '.join(c['layer'])}) çizimde "
@@ -488,6 +575,8 @@ def analyse(d, inp):
             row["asset"] = existing
         if missing:
             row["missing"] = missing
+        if invalid:
+            row["invalid"] = invalid
         groups.append({"members": members, "reps": reps, "row": row, "class": klass, "attrs": attrs, "review": review})
     for g in groups:
         for m in g["members"]:
@@ -699,6 +788,24 @@ def cases():
     out.append(case("Alanlar (uzlaştır): uyuşan bina izinin en güvenli izi Örtüşme ile yazılır, var olanın adayı "
                     "işaretlenir; tek adımda geri alınır", da, step(da, BASE)))
     out.append(case("Örtüşme 0,2: 0,25 örtüşen iki iz bir gruptur", da, step(da, dict(BASE, overlap=0.2), op="plan")))
+    # ADR 2540: the class layers' field rules (the profile applied: each class's fields on its layer, a domain's list).
+    df = setup(fields=True)
+    accepted = dict(BASE, decisions=[{"candidate": uid(9), "accept": True}])
+    out.append(case("Alan kuralları: direğin türü (Aydınlatma) listenin kodu olarak yazılır; kabul edilen rögarın şebekesi "
+                    "“Atıksu” listede yok, rögar yazılmaz; kapının numarası eksik", df, step(df, accepted)))
+    given = dict(BASE, reviewer="Ayşe Demir", decisions=[
+        {"candidate": uid(9), "accept": True, "fields": {"Sebeke": "Kanalizasyon"}},
+        {"candidate": uid(12), "fields": {"KapiNo": "14"}}])
+    out.append(case("Pencereden alan: rögarın şebekesi listeden verilir (Kanalizasyon → kanalizasyon), kapının numarası "
+                    "verilir; ikisi de yazılır", df, step(df, given)))
+    long_no = dict(BASE, decisions=[{"candidate": uid(12), "fields": {"KapiNo": "1234567890123456789012345"}}])
+    out.append(case("Karardaki kapı numarası 20 karakterden uzun: kapı yazılmaz, neden grupta", df,
+                    step(df, long_no, op="plan")))
+    daf = setup(objects=AREAS, fields=True)
+    out.append(case("Karardaki kat sayısı tam sayı değil (üç): bina izi yazılmaz, neden grupta", daf,
+                    step(daf, dict(BASE, decisions=[{"candidate": uid(2), "fields": {"KatSayisi": "üç"}}]), op="plan")))
+    out.append(case("Karardaki kat sayısı 04: tam sayının yazılışıyla 4 yazılır", daf,
+                    step(daf, dict(BASE, decisions=[{"candidate": uid(2), "fields": {"KatSayisi": "04"}}]))))
     out.append(case("Örtüşme 0", da, step(da, dict(BASE, overlap=0.0))))
     out.append(case("Örtüşme 1", da, step(da, dict(BASE, overlap=1.0))))
     nolayer = setup(missing_layers=("direk",))

@@ -111,6 +111,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   kararı; 24 ortak durum) ve ret nedenleri; web'in katman menüsünde Yeniden izdüşür önizlemesi; `fixtures/crs/v1/areas.json`.
 - MAP-03 / ADR 2520: web'in `map.survey.network` ve `map.survey.edit` işleyicilerinde bilinen noktanın `velocity`'si ve
   `moved[].by`; web'in `.kcad` okuyucusunda şema 207; Arşivden ağ dengelemesi penceresinde Hız satırı.
+- MAP-04 / ADR 2540: web'in `map.features.reconcile` işleyicisinde sınıf katmanının alan kuralları ve `invalid` (35 ortak
+  durum); web'in Adayları uzlaştır penceresinde Alan gir.
 - MAP-12 / ADR 1480: `cad.orthophoto.check`'in web işleyicisi ve Ortofoto doğruluğu penceresi.
 - MAP-12 / ADR 1780: `cad.orthophoto.compare`'in web işleyicisi, Ortofoto karşılaştırması penceresi ve kural paketinin
   `mosaic`'i.

@@ -6,6 +6,11 @@
 //! candidates' class to it, Reddet rejects the group's candidates with a reason; the decisions stay in the window until
 //! Uzlaştır writes them all in one undo step. Harita only. Areas (building footprints, green areas; docs/adr/2140) are
 //! grouped by their overlap ratio, the table says an area group's smallest one.
+//!
+//! Alan gir (docs/adr/2540): a group whose required field is missing or whose value its class layer's field rules refuse
+//! opens a form of those fields under the table (a field with a list chooses from it, the others are typed); Alanları
+//! ekle puts the values in the group's candidates' decisions and the plan reads them again, the rules' reasons in the
+//! table and the summary.
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
@@ -25,7 +30,7 @@ use crate::traces::Control;
 pub const TITLE: &str = "Adayları uzlaştır";
 const CLOSE: &str = "Kapat";
 const RUN: &str = "Uzlaştır";
-const PROFILE: &str = "harita-varliklari";
+pub(crate) const PROFILE: &str = "harita-varliklari";
 
 #[derive(Clone, Debug, Default)]
 pub struct State {
@@ -40,6 +45,9 @@ pub struct State {
     pub reviewer: String,
     pub decisions: Vec<CandidateDecision>,
     pub answer: Option<Result<FeaturesReconciled, String>>,
+    /// Alan gir: the group whose fields are typed, and the values typed by field (docs/adr/2540).
+    pub fill: Option<usize>,
+    pub typed: std::collections::BTreeMap<String, String>,
 }
 
 #[derive(Clone, Debug)]
@@ -55,11 +63,16 @@ pub enum Event {
     Accept(usize),
     Correct(usize, String),
     Reject(usize),
+    /// Alan gir: the group's missing and refused fields in a form; a field's value; the values into the decisions.
+    Fill(usize),
+    Typed(String, String),
+    FillApply,
+    FillCancel,
     Run,
     Close,
 }
 
-fn msg(e: Event) -> Message {
+pub(crate) fn msg(e: Event) -> Message {
     Message::FeaturesReconcile(e)
 }
 
@@ -97,7 +110,7 @@ impl App {
         }
     }
 
-    fn reconcile_run(&mut self) {
+    pub(crate) fn reconcile_run(&mut self) {
         let input = self.reconcile_input();
         let Some(doc) = self.document.as_mut() else { return };
         self.features_reconcile.answer = Some(match map_features_reconcile::plan(&ExecutionContext::new(&mut doc.model), &input) {
@@ -207,6 +220,18 @@ impl App {
                     ..CandidateDecision::default()
                 })
             }),
+            Event::Fill(g) => {
+                self.features_reconcile.fill = Some(g);
+                self.features_reconcile.typed.clear();
+            }
+            Event::Typed(field, text) => {
+                self.features_reconcile.typed.insert(field, text);
+            }
+            Event::FillApply => self.reconcile_fill_apply(),
+            Event::FillCancel => {
+                self.features_reconcile.fill = None;
+                self.features_reconcile.typed.clear();
+            }
             Event::Run => {
                 let input = self.reconcile_input();
                 if let Some(doc) = self.document.as_mut() {
@@ -294,6 +319,16 @@ impl App {
                 if missing > 0 {
                     lines.push(words::text_line(Kind::Warn, format!("{missing} grubun zorunlu alanı eksik: alan verilmeden yazılmaz.")));
                 }
+                // docs/adr/2540: the values the class layers' field rules refuse, each with the rule's sentence.
+                for g in a.groups.iter().filter(|g| !g.invalid.is_empty()) {
+                    for t in &g.invalid {
+                        let class = crate::features_reconcile_fill::class_title(g.class.as_deref().unwrap_or_default());
+                        lines.push(words::text_line(Kind::Warn, format!("{class} yazılmaz: {}", t.message)));
+                    }
+                }
+                if missing > 0 || a.groups.iter().any(|g| !g.invalid.is_empty()) {
+                    lines.push(words::text_line(Kind::Info, "Alan gir eksik ya da kurala uymayan alanları sorar; listesi olan alan listeden seçilir."));
+                }
                 lines.push(words::text_line(
                     Kind::Info,
                     "Tek kaynaklı aday kabul edilmeden, çelişen aday sınıfı düzeltilmeden kesin varlık olmaz; kararlar Uzlaştır'la yazılır.",
@@ -306,15 +341,15 @@ impl App {
                 let rows = a.groups.clone();
                 table = road_dialog::grid_table(
                     vec![
-                        col("Sınıf", 100.0),
-                        col("Durum", 100.0),
-                        col("Kaynaklar", 115.0),
+                        col("Sınıf", 90.0),
+                        col("Durum", 95.0),
+                        col("Kaynaklar", 110.0),
                         num("Aday", 45.0),
                         num("Yayılım (mm)", 85.0),
-                        num("Örtüşme", 65.0),
-                        col("Eksik", 70.0),
-                        col("Yazılır", 55.0),
-                        col("", 170.0),
+                        num("Örtüşme", 60.0),
+                        col("Alan", 140.0),
+                        col("Yazılır", 50.0),
+                        col("", 215.0),
                     ],
                     rows.len(),
                     move |i, k| {
@@ -333,7 +368,19 @@ impl App {
                             3 => kentos_ui::widget::table::number(g.candidates.len().to_string()).into(),
                             4 => kentos_ui::widget::table::number(format!("{:.0}", g.spread * 1000.0)).into(),
                             5 => kentos_ui::widget::table::number(g.overlap.map_or(String::new(), |o| format!("{o:.2}"))).into(),
-                            6 => text(g.missing.join(", ")),
+                            6 => {
+                                // The fields by their aliases (docs/adr/2540).
+                                let class = g.class.clone().unwrap_or_default();
+                                let name = |f: &str| crate::features_reconcile_fill::field_title(&class, f);
+                                text(
+                                    g.missing
+                                        .iter()
+                                        .map(|f| format!("{} eksik", name(f)))
+                                        .chain(g.invalid.iter().map(|t| format!("{} kurala uymaz", name(&t.field))))
+                                        .collect::<Vec<_>>()
+                                        .join(", "),
+                                )
+                            }
                             7 => text(if g.writes { "Evet".into() } else { "—".into() }),
                             _ => {
                                 let mut actions = row![].spacing(2);
@@ -345,6 +392,9 @@ impl App {
                                         }
                                     }
                                     _ => {}
+                                }
+                                if !g.missing.is_empty() || !g.invalid.is_empty() {
+                                    actions = actions.push(button("Alan gir".into(), Event::Fill(i)));
                                 }
                                 if g.status != "existing" {
                                     actions = actions.push(button("Reddet".into(), Event::Reject(i)));
@@ -359,12 +409,15 @@ impl App {
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
-        let body = Grows::new()
+        let mut body = Grows::new()
             .spacing(12.0)
             .width(Fill)
             .push(form)
             .push(words::summary(lines))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
+        if let Some((head, fill)) = self.reconcile_fill_view() {
+            body = body.push(head).push(fill);
+        }
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(RUN, runnable.then(|| msg(Event::Run))))
@@ -377,6 +430,8 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(RUN) => Some(msg(Event::Run)),
+            Control::Press(crate::features_reconcile_fill::FILL_APPLY) => Some(msg(Event::FillApply)),
+            Control::Press(crate::features_reconcile_fill::FILL_CANCEL) => Some(msg(Event::FillCancel)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

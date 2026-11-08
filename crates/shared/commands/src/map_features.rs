@@ -152,7 +152,10 @@ pub struct CandidateDecision {
 /// Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
 /// areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
 /// (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
-/// them). Plan says what would be written; execute writes, in one undo step.
+/// them). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
+/// to that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,
+/// a decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written
+/// until a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
 /// `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
@@ -232,7 +235,8 @@ pub struct ReconciledCandidate {
 /// of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
 /// line group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its
 /// representatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the
-/// one there, or the one written), the required fields still missing, and whether execute writes it.
+/// one there, or the one written), the required fields still missing, the values its class layer's field rules refuse
+/// (docs/adr/2540), and whether execute writes it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -267,7 +271,22 @@ pub struct ReconciledGroup {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub missing: Vec<String>,
+    /// The asset's values its class layer's field rules refuse (docs/adr/2540), in the layer's field order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<FieldTrouble>>"))]
+    pub invalid: Vec<FieldTrouble>,
     pub writes: bool,
+}
+
+/// A value a field's rules refuse (docs/adr/2540): the field and why, as the field rules say it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldTrouble {
+    pub field: String,
+    pub message: String,
 }
 
 /// Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every

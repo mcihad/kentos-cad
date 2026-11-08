@@ -1192,6 +1192,7 @@ __all__ = [
     "FieldRow",
     "FieldSource",
     "FieldTableEdit",
+    "FieldTrouble",
     "FieldUnit",
     "FieldUnitName",
     "FieldUse",

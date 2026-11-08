@@ -36582,7 +36582,10 @@ class FeaturesReconcile(_Model):
     Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
     areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
     (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
-    them). Plan says what would be written; execute writes, in one undo step.
+    them). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
+    to that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,
+    a decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written
+    until a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
     `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
@@ -37274,6 +37277,26 @@ class FieldRow(_Model):
         return cls(
             uid=data["uid"],
             values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldTrouble(_Model):
+    """A value a field's rules refuse (docs/adr/2540): the field and why, as the field rules say it."""
+    field: str
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldTrouble:
+        return cls(
+            field=data["field"],
+            message=data["message"],
         )
 
 
@@ -77307,11 +77330,13 @@ class ReconciledGroup(_Model):
     of its class is there already), its sources, its candidates, its place (a point group's representatives' mean; a
     line group's chosen polyline's first vertex; an area group's chosen footprint's centroid), how far its
     representatives lie apart (m), an area group's smallest overlap ratio between its representatives, the asset (the
-    one there, or the one written), the required fields still missing, and whether execute writes it.
+    one there, or the one written), the required fields still missing, the values its class layer's field rules refuse
+    (docs/adr/2540), and whether execute writes it.
     Attributes:
         x: Unit: length.
         y: Unit: length.
         spread: Unit: m.
+        invalid: The asset's values its class layer's field rules refuse (docs/adr/2540), in the layer's field order.
         overlap: An area group's smallest overlap ratio between two of its representatives (docs/adr/2140). Unit: 1.
         z: Unit: elevation.
     """
@@ -77325,6 +77350,7 @@ class ReconciledGroup(_Model):
     writes: bool
     asset: str | None | Unset = UNSET
     class_: str | None | Unset = UNSET
+    invalid: list[FieldTrouble] | Unset = UNSET
     missing: list[str] | Unset = UNSET
     overlap: float | None | Unset = UNSET
     z: float | None | Unset = UNSET
@@ -77343,6 +77369,8 @@ class ReconciledGroup(_Model):
             out["asset"] = self.asset
         if self.class_ is not UNSET:
             out["class"] = self.class_
+        if self.invalid is not UNSET:
+            out["invalid"] = [e0.to_json() for e0 in self.invalid]
         if self.missing is not UNSET:
             out["missing"] = list(self.missing)
         if self.overlap is not UNSET:
@@ -77364,6 +77392,7 @@ class ReconciledGroup(_Model):
             writes=data["writes"],
             asset=data.get("asset", UNSET),
             class_=data.get("class", UNSET),
+            invalid=[FieldTrouble.from_json(e0) for e0 in data["invalid"]] if "invalid" in data else UNSET,
             missing=list(data["missing"]) if "missing" in data else UNSET,
             overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
             z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
@@ -129613,6 +129642,7 @@ __all__ = [
     "FieldRow",
     "FieldSource",
     "FieldTableEdit",
+    "FieldTrouble",
     "FieldUnit",
     "FieldUnitName",
     "FieldUse",

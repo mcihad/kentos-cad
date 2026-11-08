@@ -10,7 +10,10 @@ import type { CandidateSource } from "./CandidateSource";
  * Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
  * areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
  * (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
- * them). Plan says what would be written; execute writes, in one undo step.
+ * them). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
+ * to that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,
+ * a decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written
+ * until a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
  * `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
