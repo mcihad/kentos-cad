@@ -34726,7 +34726,8 @@ class ExchangeKindCount(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExchangeLoss(_Model):
     """A semantic loss: its kind (one of [`EXCHANGE_LOSSES`]), how many, what changed into what where it is one change
-    (`circle → polygon`, an attribute's name), and the original objects' persistent ids (at most 100).
+    (`circle → polygon`, an attribute's name, a block's name, what of a table, a relation's name), and the original
+    objects' persistent ids (at most 100; none for a relation).
     Attributes:
         count: Unit: count.
     """

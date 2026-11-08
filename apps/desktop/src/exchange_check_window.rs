@@ -117,6 +117,12 @@ fn detail_words(loss: &str, detail: &str) -> String {
             "symbol" => "Sembol".into(),
             other => other.into(),
         },
+        "tableChanged" => match detail {
+            "cells" => "hücreler".into(),
+            "sizes" => "satır ve sütun boyları".into(),
+            "merges" => "birleşik hücreler".into(),
+            other => other.into(),
+        },
         _ => detail.to_owned(),
     }
 }
@@ -134,6 +140,9 @@ pub fn aspect_word(aspect: &str) -> &'static str {
         "identity" => "Kalıcı kimlik",
         "position" => "Köşe konumu",
         "extra" => "Fazla nesne",
+        "blocks" => "Bloklar",
+        "tables" => "Tablolar",
+        "relations" => "İlişkiler",
         _ => "—",
     }
 }
@@ -150,6 +159,26 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
             .collect::<Vec<_>>()
             .join(", "),
         "position" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
+        // Blocks and tables (docs/adr/2380): lost by kind and count, converted by a kind's change or what changed.
+        "blocks" | "tables" if c.state == ExchangeState::Lost => d
+            .split(", ")
+            .map(|kc| match kc.rsplit_once(' ') {
+                Some((k, n)) => format!("{} {n}", kind_word(k).to_lowercase()),
+                None => kc.to_owned(),
+            })
+            .collect::<Vec<_>>()
+            .join(", "),
+        "blocks" | "tables" => d
+            .split(", ")
+            .map(|x| {
+                if x.contains(" → ") {
+                    detail_words("kindChanged", x)
+                } else {
+                    detail_words(if aspect == "tables" { "tableChanged" } else { "blockChanged" }, x)
+                }
+            })
+            .collect::<Vec<_>>()
+            .join(", "),
         // Kinds and styles by their Turkish names, item by item (the losses' own words); attributes as named.
         _ => {
             let loss = match aspect {
@@ -157,6 +186,7 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
                 "curves" => "chorded",
                 "style" => "styleLost",
                 "extra" => "extra",
+                "tables" => "tableChanged",
                 _ => "",
             };
             d.split(", ").map(|x| detail_words(loss, x)).collect::<Vec<_>>().join(", ")
@@ -192,6 +222,9 @@ pub fn loss_word(kind: &str) -> &'static str {
         "styleLost" => "Nesne stili kayboldu",
         "identityLost" => "Kalıcı kimlik korunmadı",
         "extra" => "Fazla geri okunan",
+        "blockChanged" => "Blok başka tanımla geri okundu",
+        "tableChanged" => "Tablo değişti",
+        "relationLost" => "İlişki geri okunmadı",
         _ => "—",
     }
 }

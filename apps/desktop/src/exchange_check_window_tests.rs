@@ -1,7 +1,8 @@
 //! Dışa aktarma kaybı denetimi (exchange_check_window.rs, docs/adr/1660) on fixtures/exchange/v1/devir.json: GeoPackage keeps ids,
 //! arcs, heights and measures (the text is not written, the circle comes back an area); DXF loses the measures; a
 //! tolerance that is no number is said; Kayıplıları seç selects the objects the losses name; nothing is written to
-//! the drawing. Every module offers it from Dosya › Dışa aktar. And its pictures.
+//! the drawing. Every module offers it from Dosya › Dışa aktar. On fixtures/exchange/v1/devir-blok.json the matrix's
+//! Bloklar, Tablolar and İlişkiler rows (docs/adr/2380). And its pictures.
 
 use kentos_launch::Module;
 
@@ -9,8 +10,11 @@ use crate::app::{App, Dialog, Message};
 use crate::exchange_check_window::Event as X;
 
 fn opened(program: Option<Module>) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../fixtures/exchange/v1/devir.json")).expect("reads");
+    opened_with(program, include_str!("../../../fixtures/exchange/v1/devir.json"))
+}
+
+fn opened_with(program: Option<Module>, drawing: &str) -> App {
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(drawing).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -126,6 +130,66 @@ fn matrix_screens() {
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
         let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("file.exchangeCheck"));
+        let _ = app.update(Message::ExchangeCheck(X::Matrix));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-matris-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
+const BLOCK_DRAWING: &str = include_str!("../../../fixtures/exchange/v1/devir-blok.json");
+
+/// docs/adr/2380: on the drawing with a block, a table and a relation, Tüm biçimler's Bloklar and Tablolar rows keep
+/// them in DXF alone and İlişkiler in GeoPackage alone, in the cells' words; nothing is written.
+#[test]
+fn the_matrix_shows_blocks_tables_and_relations() {
+    use kentos_commands::{ExchangeFormat as F, ExchangeState as S};
+    use crate::exchange_check_window::cell_words;
+    let mut app = opened_with(Some(Module::Map), BLOCK_DRAWING);
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("file.exchangeCheck"));
+    let _ = app.update(Message::ExchangeCheck(X::Matrix));
+    let m = app.exchange_check.matrix.clone().expect("a matrix").expect("checked");
+    let cell = |aspect: &str, f: F| {
+        m.rows.iter().find(|r| r.aspect == aspect).and_then(|r| r.cells.iter().find(|c| c.format == f)).cloned().expect(aspect)
+    };
+    for f in F::ALL {
+        assert_eq!(cell("blocks", f).state, if f == F::Dxf { S::Kept } else { S::Lost }, "{f:?}");
+        assert_eq!(cell("tables", f).state, if f == F::Dxf { S::Kept } else { S::Lost }, "{f:?}");
+        assert_eq!(cell("relations", f).state, if f == F::Gpkg { S::Kept } else { S::Lost }, "{f:?}");
+    }
+    assert_eq!(cell_words("blocks", &cell("blocks", F::Gpkg)), "Kaybolur: blok 1");
+    assert_eq!(cell_words("tables", &cell("tables", F::Shp)), "Kaybolur: tablo 1");
+    assert_eq!(cell_words("relations", &cell("relations", F::Dxf)), "Kaybolur: Parselin malikleri");
+    assert_eq!(cell_words("relations", &cell("relations", F::Gpkg)), "Korunur");
+    assert_eq!(crate::exchange_check_window::aspect_word("relations"), "İlişkiler");
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+/// `.run/gui-evidence/blok-tablo-iliski-2380/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange_check_window_tests::block_matrix_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn block_matrix_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/blok-tablo-iliski-2380");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened_with(Some(Module::Map), BLOCK_DRAWING);
         let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));

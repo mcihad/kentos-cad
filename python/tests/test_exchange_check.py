@@ -235,6 +235,106 @@ class ExchangeAgainstGdal(unittest.TestCase):
             shutil.rmtree(folder, ignore_errors=True)
 
 
+BLOCK_DRAWING = json.loads((ROOT / "fixtures/exchange/v1/devir-blok.json").read_text("utf-8"))
+
+
+def opened_block() -> cad.Document:
+    return cad.Document.from_bytes(kr.container(kr.document(BLOCK_DRAWING)))
+
+
+def run_command(name: str, doc: cad.Document, args: dict) -> dict:
+    w = cad.command(name)
+    out = w.run(doc, w.input_type.from_json(args), op="execute")
+    if out.error is not None:
+        raise AssertionError(out.error.message)
+    return out.output.to_json() if out.output is not None else {}
+
+
+class BlocksTablesRelations(unittest.TestCase):
+    """docs/adr/2380 on fixtures/exchange/v1/devir-blok.json: a block, a table and a relation of the project. What the
+    files hold is read by GDAL (the GeoPackage's related tables) and ezdxf (the DXF's block and the table's anonymous
+    block), no KentOS code; the check's rows are held against it."""
+
+    def matrix(self) -> dict:
+        return run_command("file.exchange.matrix", opened_block(), {})
+
+    def test_the_rows_say_what_the_files_hold(self) -> None:
+        m = self.matrix()
+        rows = {r["aspect"]: {c["format"]: c["state"] for c in r["cells"]} for r in m["rows"]}
+        for f in ("gpkg", "parquet", "fgb", "gml", "shp", "dxf"):
+            self.assertEqual(rows["blocks"][f], "kept" if f == "dxf" else "lost", f)
+            self.assertEqual(rows["tables"][f], "kept" if f == "dxf" else "lost", f)
+            self.assertEqual(rows["relations"][f], "kept" if f == "gpkg" else "lost", f)
+
+    def test_the_geopackage_holds_the_relation_by_gdal(self) -> None:
+        if shutil.which("ogrinfo") is None:
+            self.skipTest("GDAL yok")
+        folder = Path(tempfile.mkdtemp())
+        try:
+            path = folder / "devir.gpkg"
+            run_command("file.export.gpkg", opened_block(), {"path": str(path)})
+            sql = ("SELECT base_table_name, related_table_name, mapping_table_name FROM gpkgext_relations")
+            text = subprocess.run(["ogrinfo", "-ro", "-q", "-sql", sql, str(path)], capture_output=True, text=True,
+                                  check=True).stdout
+            self.assertIn("base_table_name (String) = Malik", text)
+            self.assertIn("related_table_name (String) = Parsel", text)
+            mapping = re.search(r"mapping_table_name \(String\) = (\S+)", text).group(1)
+            # The mapping row joins Malik's point to the parcel (the only feature of each table).
+            rows = subprocess.run(["ogrinfo", "-ro", "-q", "-sql", f"SELECT base_id, related_id FROM \"{mapping}\"",
+                                   str(path)], capture_output=True, text=True, check=True).stdout
+            self.assertEqual(len(re.findall(r"base_id \(Integer(?:64)?\) = \d+", rows)), 1, rows)
+            features = sum(len(ogr_features_of(path, layer)) for layer in ("Malik", "Parsel"))
+            self.assertEqual(features, 2)
+            # The insert and the table are in no table of the file.
+            self.assertEqual(sum(len(f) for f in [ogr_features(path)]), len(BLOCK_DRAWING["entities"]) - 3)
+        finally:
+            shutil.rmtree(folder, ignore_errors=True)
+
+    def test_the_dxf_holds_the_block_and_draws_the_table_by_ezdxf(self) -> None:
+        try:
+            import ezdxf
+        except ImportError:
+            self.skipTest("ezdxf yok")
+        folder = Path(tempfile.mkdtemp())
+        try:
+            path = folder / "devir.dxf"
+            run_command("file.export.dxf", opened_block(), {"path": str(path)})
+            x = ezdxf.readfile(str(path))
+            inserts = [e for e in x.modelspace() if e.dxftype() == "INSERT"]
+            origin = BLOCK_DRAWING["origin"]
+            original = {e["kind"]: e for e in BLOCK_DRAWING["entities"] if e["kind"] in ("insert", "table")}
+            rogar = [e for e in inserts if e.dxf.name == "Rögar"]
+            self.assertEqual(len(rogar), 1)
+            p = original["insert"]["p"]
+            self.assertAlmostEqual(rogar[0].dxf.insert.x, p["x"], delta=1e-9)
+            self.assertAlmostEqual(rogar[0].dxf.insert.y, p["y"], delta=1e-9)
+            block = [(e.dxftype(), round(getattr(e.dxf, "radius", 0.0), 9), getattr(e.dxf, "text", None))
+                     for e in x.blocks.get("Rögar")]
+            self.assertEqual(block, [("CIRCLE", 0.75, None), ("TEXT", 0.0, "R")])
+            # The table: an anonymous block drawing its lines and cells, its cells also in KentOS's data; another
+            # program sees lines and texts, KentOS reads a table back.
+            drawn = [e for e in inserts if e.dxf.name.startswith("*U")]
+            self.assertEqual(len(drawn), 1)
+            texts = [e.dxf.text for e in x.blocks.get(drawn[0].dxf.name) if e.dxftype() == "TEXT"]
+            cells = original["table"]["cells"]
+            self.assertEqual(texts, [c for row in cells for c in row])
+            lines = [e for e in x.blocks.get(drawn[0].dxf.name) if e.dxftype() == "LINE"]
+            self.assertEqual(len(lines), (len(cells) + 1) + (len(cells[0]) + 1))
+            data = [t.value for t in drawn[0].get_xdata("KENTOS") if t.code == 1000]
+            self.assertEqual(json.loads(data[data.index("table") + 1])["cells"], cells)
+            t = original["table"]["p"]
+            self.assertAlmostEqual(drawn[0].dxf.insert.x, t["x"], delta=1e-9)
+            self.assertAlmostEqual(drawn[0].dxf.insert.y, t["y"], delta=1e-9)
+            self.assertEqual(origin, BLOCK_DRAWING["origin"])
+        finally:
+            shutil.rmtree(folder, ignore_errors=True)
+
+
+def ogr_features_of(path: Path, layer: str) -> list[str]:
+    text = subprocess.run(["ogrinfo", "-ro", "-q", str(path), layer], capture_output=True, text=True).stdout
+    return re.findall(r"^OGRFeature\(", text, flags=re.M)
+
+
 # Docs/adr/1880: a matrix cell's rules, written here from the ADR, not from KentOS's code.
 FIRST = {
     "kinds": [("kindChanged", "converted")],
@@ -245,7 +345,11 @@ FIRST = {
     "style": [("styleLost", "lost")],
     "identity": [("identityLost", "lost")],
     "extra": [("extra", "added")],
+    "relations": [("relationLost", "lost")],
 }
+# Docs/adr/2380: an object kind's row (inserts, tables): lost when not written, else converted when read back as
+# another kind or changed.
+PARTS = {"blocks": ("insert", "blockChanged"), "tables": ("table", "tableChanged")}
 
 
 def expected_cell(check: dict, aspect: str) -> tuple[str, int]:
@@ -255,6 +359,17 @@ def expected_cell(check: dict, aspect: str) -> tuple[str, int]:
     if aspect == "position":
         above = check["numeric"]["above"]
         return ("approximated" if above else "kept"), above
+    if aspect in PARTS:
+        kind, changed = PARTS[aspect]
+        n = sum(k["count"] for k in check["notWritten"] if k["kind"] == kind)
+        if n:
+            return "lost", n
+        n = sum(l["count"] for l in check["losses"] if l["kind"] == "kindChanged"
+                and (l.get("detail") or "").startswith(f"{kind} → "))
+        if n:
+            return "converted", n
+        n = sum(l["count"] for l in check["losses"] if l["kind"] == changed)
+        return ("converted" if n else "kept"), n
     for kind, state in FIRST[aspect]:
         n = sum(l["count"] for l in check["losses"] if l["kind"] == kind)
         if n:
@@ -267,22 +382,26 @@ class MatrixFromTheChecks(unittest.TestCase):
     tests above hold to the files), and every cell follows the ADR's rules from its format's check."""
 
     def test_the_matrix_reads_each_format_s_check_by_the_rules(self) -> None:
-        w = cad.command("file.exchange.matrix")
-        out = w.run(opened(), w.input_type.from_json({}), op="execute")
-        self.assertIsNone(out.error, out.error and out.error.message)
-        m = out.output.to_json()
-        formats = [c["format"] for c in m["checks"]]
-        self.assertEqual(formats, ["gpkg", "parquet", "fgb", "gml", "shp", "dxf"])
-        check = cad.command("file.exchange.check")
-        for c in m["checks"]:
-            alone = check.run(opened(), check.input_type.from_json({"format": c["format"]}), op="execute").output.to_json()
-            self.assertEqual(c, alone, c["format"])
-        aspects = ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra"]
-        self.assertEqual([r["aspect"] for r in m["rows"]], aspects)
-        for row in m["rows"]:
-            for cell, c in zip(row["cells"], m["checks"]):
-                self.assertEqual(cell["format"], c["format"])
-                self.assertEqual((cell["state"], cell["count"]), expected_cell(c, row["aspect"]), f"{row['aspect']} {c['format']}")
+        for drawing in (opened, opened_block):
+            w = cad.command("file.exchange.matrix")
+            out = w.run(drawing(), w.input_type.from_json({}), op="execute")
+            self.assertIsNone(out.error, out.error and out.error.message)
+            m = out.output.to_json()
+            formats = [c["format"] for c in m["checks"]]
+            self.assertEqual(formats, ["gpkg", "parquet", "fgb", "gml", "shp", "dxf"])
+            check = cad.command("file.exchange.check")
+            for c in m["checks"]:
+                alone = check.run(drawing(), check.input_type.from_json({"format": c["format"]}),
+                                  op="execute").output.to_json()
+                self.assertEqual(c, alone, c["format"])
+            aspects = ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra",
+                       "blocks", "tables", "relations"]
+            self.assertEqual([r["aspect"] for r in m["rows"]], aspects)
+            for row in m["rows"]:
+                for cell, c in zip(row["cells"], m["checks"]):
+                    self.assertEqual(cell["format"], c["format"])
+                    self.assertEqual((cell["state"], cell["count"]), expected_cell(c, row["aspect"]),
+                                     f"{drawing.__name__} {row['aspect']} {c['format']}")
 
 
 if __name__ == "__main__":

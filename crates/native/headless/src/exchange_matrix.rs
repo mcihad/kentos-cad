@@ -13,7 +13,10 @@
 //! - `style`: an object's own colour, weight or symbol lost (lost);
 //! - `identity`: persistent ids lost (lost);
 //! - `position`: vertices farther than the tolerance from the original's geometry (approximated; the greatest offset);
-//! - `extra`: objects read back that match none (added).
+//! - `extra`: objects read back that match none (added);
+//! - `blocks`, `tables` (docs/adr/2380): inserts or tables not written (lost), else read back as another kind or with
+//!   another definition or other cells (converted);
+//! - `relations`: the project's relations between the layers written not read back (lost; their names).
 
 use kentos_commands::{
     CallOp, CommandError, CommandResult, EXCHANGE_ASPECTS, ExchangeCell, ExchangeCheck, ExchangeChecked, ExchangeFormat,
@@ -73,8 +76,31 @@ pub fn cell_of(r: &ExchangeChecked, aspect: &str) -> ExchangeCell {
                 cell(r.format, S::Kept, 0, offset)
             }
         }
+        "blocks" => part(r, "insert", "blockChanged"),
+        "tables" => part(r, "table", "tableChanged"),
+        "relations" => first(r, &[("relationLost", S::Lost)]),
         _ => first(r, &[("extra", S::Added)]),
     }
+}
+
+/// An object kind's row (inserts, tables): lost when one is not written, converted when one comes back as another kind
+/// or changed (`changed`), else kept.
+fn part(r: &ExchangeChecked, kind: &str, changed: &str) -> ExchangeCell {
+    if let Some(k) = r.not_written.iter().find(|k| k.kind == kind) {
+        return cell(r.format, ExchangeState::Lost, k.count, Some(format!("{kind} {}", k.count)));
+    }
+    let prefix = format!("{kind} → ");
+    let turned: Vec<_> = r
+        .losses
+        .iter()
+        .filter(|l| l.kind == "kindChanged" && l.detail.as_deref().is_some_and(|d| d.starts_with(&prefix)))
+        .collect();
+    let count: u32 = turned.iter().map(|l| l.count).sum();
+    if count > 0 {
+        let detail = turned.iter().filter_map(|l| l.detail.as_deref()).collect::<Vec<_>>().join(", ");
+        return cell(r.format, ExchangeState::Converted, count, Some(detail));
+    }
+    first(r, &[(changed, ExchangeState::Converted)])
 }
 
 /// The rows of the checks, in [`EXCHANGE_ASPECTS`]' order.

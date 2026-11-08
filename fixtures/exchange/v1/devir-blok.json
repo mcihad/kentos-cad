@@ -1,0 +1,436 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Aktarım örneği: blok, tablo, ilişki",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 1000.0,
+  "workspace": "cad",
+  "cadWork": "map",
+  "drawingFont": "barlow",
+  "relations": [
+   {
+    "id": "parsel-malik",
+    "name": "Parselin malikleri",
+    "parent": "parsel",
+    "child": "malik",
+    "field": "parsel_id"
+   }
+  ]
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "nokta",
+   "name": "Nokta",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "guzergah",
+   "name": "Güzergah",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "baca",
+   "name": "Baca",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yazi",
+   "name": "Yazı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "malik",
+   "name": "Malik",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "point",
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N1",
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487010.0,
+    "y": 4420010.0
+   },
+   "z": 101.25,
+   "id": 1
+  },
+  {
+   "kind": "point",
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N2",
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487040.0,
+    "y": 4420012.5
+   },
+   "z": 99.875,
+   "id": 2
+  },
+  {
+   "kind": "point",
+   "layerId": "nokta",
+   "attrs": {
+    "Ad": "N3",
+    "Kod": "KOT"
+   },
+   "p": {
+    "x": 487070.0,
+    "y": 4420030.0
+   },
+   "z": 98.5,
+   "id": 3
+  },
+  {
+   "kind": "polyline",
+   "layerId": "guzergah",
+   "attrs": {
+    "Ad": "Hat 1",
+    "Uzunluk": "120.5"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420020.0
+    }
+   ],
+   "zs": [
+    100.0,
+    99.5,
+    98.25
+   ],
+   "ms": [
+    0.0,
+    50.0,
+    103.85
+   ],
+   "id": 4
+  },
+  {
+   "kind": "polyline",
+   "layerId": "yol",
+   "attrs": {
+    "Ad": "Kenar"
+   },
+   "color": "#E5484D",
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420050.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420070.0
+    }
+   ],
+   "bulges": [
+    0.0,
+    0.4142135623730951,
+    0.0
+   ],
+   "id": 5
+  },
+  {
+   "kind": "circle",
+   "layerId": "baca",
+   "attrs": {
+    "Ad": "B1"
+   },
+   "c": {
+    "x": 487080.0,
+    "y": 4420080.0
+   },
+   "r": 0.6,
+   "id": 6
+  },
+  {
+   "kind": "polygon",
+   "layerId": "parsel",
+   "attrs": {
+    "Ada": "101",
+    "Parsel": "7",
+    "Alan": "1875.00"
+   },
+   "pts": [
+    {
+     "x": 487100.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487150.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487150.0,
+     "y": 4420040.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420040.0
+    }
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 487120.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487130.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487130.0,
+       "y": 4420020.0
+      },
+      {
+       "x": 487120.0,
+       "y": 4420020.0
+      }
+     ]
+    }
+   ],
+   "id": 7
+  },
+  {
+   "kind": "text",
+   "layerId": "yazi",
+   "attrs": {},
+   "p": {
+    "x": 487105.0,
+    "y": 4420045.0
+   },
+   "text": "101/7",
+   "height": 2.0,
+   "rotation": 0.0,
+   "id": 8
+  },
+  {
+   "kind": "insert",
+   "layerId": "baca",
+   "attrs": {
+    "Ad": "R-1"
+   },
+   "block": "0192f660-1660-7000-8000-00000000b001",
+   "p": {
+    "x": 487090.0,
+    "y": 4420080.0
+   },
+   "scale": 1.0,
+   "rotation": 0.0,
+   "id": 9
+  },
+  {
+   "kind": "table",
+   "layerId": "yazi",
+   "attrs": {},
+   "p": {
+    "x": 487160.0,
+    "y": 4420040.0
+   },
+   "rotation": 0.0,
+   "height": 1.0,
+   "rows": [
+    2.0,
+    2.0
+   ],
+   "columns": [
+    10.0,
+    12.0
+   ],
+   "cells": [
+    [
+     "Ada",
+     "Parsel"
+    ],
+    [
+     "101",
+     "7"
+    ]
+   ],
+   "id": 10
+  },
+  {
+   "kind": "point",
+   "layerId": "malik",
+   "attrs": {
+    "Ad": "Malik 1",
+    "parsel_id": "0192f660-1660-7000-8000-000000000007"
+   },
+   "p": {
+    "x": 487125.0,
+    "y": 4420030.0
+   },
+   "id": 11
+  }
+ ],
+ "uids": [
+  "0192f660-1660-7000-8000-000000000001",
+  "0192f660-1660-7000-8000-000000000002",
+  "0192f660-1660-7000-8000-000000000003",
+  "0192f660-1660-7000-8000-000000000004",
+  "0192f660-1660-7000-8000-000000000005",
+  "0192f660-1660-7000-8000-000000000006",
+  "0192f660-1660-7000-8000-000000000007",
+  "0192f660-1660-7000-8000-000000000008",
+  "0192f660-1660-7000-8000-000000000009",
+  "0192f660-1660-7000-8000-00000000000a",
+  "0192f660-1660-7000-8000-00000000000b"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "blocks": [
+  {
+   "id": "0192f660-1660-7000-8000-00000000b001",
+   "name": "Rögar",
+   "base": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "entities": [
+    {
+     "kind": "circle",
+     "id": 1,
+     "layerId": "0",
+     "attrs": {},
+     "c": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "r": 0.75
+    },
+    {
+     "kind": "text",
+     "id": 2,
+     "layerId": "0",
+     "attrs": {},
+     "p": {
+      "x": -0.16,
+      "y": -0.18
+     },
+     "text": "R",
+     "height": 0.5,
+     "rotation": 0.0
+    }
+   ]
+  }
+ ]
+}

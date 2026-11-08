@@ -6,6 +6,10 @@ and M, a road edge with an arc (bulge), a manhole circle, a parcel with a hole, 
 and one object's own colour. Written as a KentOS document (v2, persistent ids) to
 fixtures/exchange/v1/devir.json.
 
+The second drawing (docs/adr/2380), fixtures/exchange/v1/devir-blok.json, is the first with a block (“Rögar”: a
+circle and a letter, inserted with an attribute on Baca), a table (two rows, two columns on Yazı) and a relation of the
+project (“Parselin malikleri”: Malik's points hold the parcel's persistent id in `parsel_id`).
+
     python3 scripts/fixtures/exchange_drawing.py [--check]
 """
 
@@ -15,6 +19,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures" / "exchange" / "v1" / "devir.json"
+OUT_BLOCK = ROOT / "fixtures" / "exchange" / "v1" / "devir-blok.json"
+BLOCK_ID = "0192f660-1660-7000-8000-00000000b001"
 X0, Y0 = 487000.0, 4420000.0
 
 
@@ -61,14 +67,42 @@ def document():
         "uids": [uid(n) for n in range(1, len(ents) + 1)], "styles": {"items": [], "categories": []}}
 
 
+def block_document():
+    """The first drawing with a block, a table and a relation (docs/adr/2380)."""
+    d = document()
+    d["name"] = "Aktarım örneği: blok, tablo, ilişki"
+    d["layers"].append(layer("malik", "Malik"))
+    d["blocks"] = [{"id": BLOCK_ID, "name": "Rögar", "base": {"x": 0.0, "y": 0.0}, "entities": [
+        {"kind": "circle", "id": 1, "layerId": "0", "attrs": {}, "c": {"x": 0.0, "y": 0.0}, "r": 0.75},
+        {"kind": "text", "id": 2, "layerId": "0", "attrs": {}, "p": {"x": -0.16, "y": -0.18}, "text": "R",
+         "height": 0.5, "rotation": 0.0}]}]
+    parcel = d["uids"][6]
+    more = [
+        {"kind": "insert", "layerId": "baca", "attrs": {"Ad": "R-1"}, "block": BLOCK_ID, "p": P(90.0, 80.0),
+         "scale": 1.0, "rotation": 0.0},
+        {"kind": "table", "layerId": "yazi", "attrs": {}, "p": P(160.0, 40.0), "rotation": 0.0, "height": 1.0,
+         "rows": [2.0, 2.0], "columns": [10.0, 12.0], "cells": [["Ada", "Parsel"], ["101", "7"]]},
+        {"kind": "point", "layerId": "malik", "attrs": {"Ad": "Malik 1", "parsel_id": parcel}, "p": P(125.0, 30.0)},
+    ]
+    for e in more:
+        n = len(d["entities"]) + 1
+        d["entities"].append({**e, "id": n})
+        d["uids"].append(uid(n))
+    d["settings"]["relations"] = [{"id": "parsel-malik", "name": "Parselin malikleri", "parent": "parsel",
+                                   "child": "malik", "field": "parsel_id"}]
+    return d
+
+
 def main():
-    text = json.dumps(document(), ensure_ascii=False, indent=1) + "\n"
+    outs = [(OUT, document()), (OUT_BLOCK, block_document())]
     if "--check" in sys.argv[1:]:
-        ok = OUT.exists() and OUT.read_text("utf-8") == text
-        print("Aktarım örneği çizimi güncel." if ok else f"{OUT.relative_to(ROOT)} güncel değil.")
-        return 0 if ok else 1
-    OUT.write_text(text, "utf-8")
-    print(f"yazıldı: {OUT.relative_to(ROOT)}")
+        bad = [o for o, d in outs if not o.exists() or o.read_text("utf-8") != json.dumps(d, ensure_ascii=False,
+                                                                                            indent=1) + "\n"]
+        print("Aktarım örneği çizimleri güncel." if not bad else f"{bad[0].relative_to(ROOT)} güncel değil.")
+        return 0 if not bad else 1
+    for out, d in outs:
+        out.write_text(json.dumps(d, ensure_ascii=False, indent=1) + "\n", "utf-8")
+        print(f"yazıldı: {out.relative_to(ROOT)}")
     return 0
 
 

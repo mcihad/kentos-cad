@@ -47,7 +47,7 @@ sırayla alır.
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320 | yardımcı eğrinin 5/1 mm deseni (önce `cad.entities.create`'e `linePattern`); şev üstü ve dibi kotları; yüzey birleştirme | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340 | bölgenin derinlik yazısı; malzeme bölgesi; stok sahası; kesit yöntemi | — |
 | MAP-16 Altyapı | 1640, 1860, 2360 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin çizimde ve profilde gösterilmesi | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
-| MAP-17 Veri devri | 1660, 1880 | blok, ilişki ve tablo örnekleri; teslim paketinin matrisi taşıması | kurum profilleri |
+| MAP-17 Veri devri | 1660, 1880, 2380 | teslim paketinin matrisi taşıması; DXF'te TABLE ve ATTRIB yazımı | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900 | ölçme kalite notu; atlas sayfalarının kaynak dökümü | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920 | iş türleri ve zaman serisi; dönen kaydın pakete eşlenmesi | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940 | işlem sürümü ve çıktı revizyonu; tariften başka projede üretim; iptal | — |
@@ -1319,6 +1319,16 @@ gidiş-dönüşünden geçirir ve on satırda (nesneler, tür, eğriler, Z, M, �
 korunan, yaklaşıklaşan, dönüşen, eklenen ve kaybolanı verir; örnek çizimin matrisi ADR 1660'ın tablosudur; Python'da
 her hücre kuralıyla ayrıca sınanır, GDAL testleri aynen geçer; pencerede Tüm biçimler. Açık: blok/ilişki/tablo örnekleri,
 teslim paketinin matrisi taşıması, kurum profilleri.
+
+**8 Kasım 2026, üçüncü tur — bloklar, tablolar ve ilişkiler ([ADR 2380](../docs/adr/2380-exchange-blocks-tables-relations.md)).**
+Kapsam: **CAD + CBS** (her modül). Araştırma: OGC 18-000 (GeoPackage ilişkili tabloları), AutoCAD DXF TABLE varlığı.
+Bulunan: denetimin boş kopyası özgünün blok tanımlarını ve ilişkilerini taşıyordu, okuyucu kurmasa da geri okunmuş
+görünüyordu. Kanıtlanan: boş kopya blok tanımı ve ilişki olmadan kurulur; yeni kayıplar blockChanged (tanım, taban,
+nesneler, ölçek, dönüklük), tableChanged (hücreler, boylar, birleşik hücreler), relationLost (kurulmayan ya da anahtarı
+ana nesneye ulaşmayan ilişki); matrise Bloklar, Tablolar, İlişkiler satırları; ikinci örnek çizim devir-blok.json:
+blok ve tablo yalnız DXF'te, ilişki yalnız GeoPackage'da korunur; GDAL ilişkili tabloları, ezdxf bloğu ve tablonun
+anonim bloğunu bağımsız okur; MCP. Açık: teslim paketinin matrisi taşıması, DXF'te TABLE ve ATTRIB yazımı (başka
+programlar tabloyu bugün çizgi ve yazı olarak görür), kurum profilleri.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

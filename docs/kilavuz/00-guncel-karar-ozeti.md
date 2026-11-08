@@ -178,6 +178,9 @@
 - **Başka bir altyapı ağının borularına açıklık (8 Kasım 2026; MAP-16, [ADR 2360](../../docs/adr/2360-pipe-clearance-to-another-network.md)).**
   `cad.pipes.check`'in `clearance`'ı: kesişimde düşey açıklık ve üstteki boru, kesişmeyen çiftte yatay açıklık; en az
   açıklıklar ve üst taraf kullanıcının, iç çaplarla (et kalınlığı katılmaz). Harita + Yol + CBS.
+- **Dışa aktarma denetiminde bloklar, tablolar ve ilişkiler (8 Kasım 2026; MAP-17, [ADR 2380](../../docs/adr/2380-exchange-blocks-tables-relations.md)).**
+  `file.exchange.check` blok tanımı ve ilişki olmadan kurulan kopyaya okur; blockChanged, tableChanged, relationLost;
+  matriste Bloklar, Tablolar, İlişkiler. DXF tabloyu KentOS XDATA'sıyla taşır, başka program çizgi ve yazı görür.
 - **Senaryo ölçüleri (6 Kasım 2026; MAP-10, [ADR 1440](../../docs/adr/1440-design-alternative-impact.md)).** Eski adı
   Alternatif etkisi (sahibin isteğiyle 7 Kasım 2026'da değişti). `cad.scenarios.impact` (Harita + CBS, salt okunur):
   senaryo ↔ mevcut durum, birimli ölçüler, değişen kararlar, taban damgasıyla eskime; tek puan yok.

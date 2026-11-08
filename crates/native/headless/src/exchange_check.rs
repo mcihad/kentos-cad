@@ -1,6 +1,7 @@
 //! `file.exchange.check` v1 (plan/map-cad.md MAP-17, docs/adr/1660): Dışa aktarma kaybı denetimi. The drawing's layers written to
 //! an exchange format by KentOS's writer (the format's `file.export.*` on a copy of the drawing), read back by KentOS's
-//! reader (`file.import.*`) into an empty copy (the settings and layers, no objects), and compared:
+//! reader (`file.import.*`) into an empty copy (the settings and layers; no objects, block definitions or relations, so
+//! those read back are the reader's own, docs/adr/2380), and compared:
 //!
 //! - **Matching:** an object read back with an original's persistent id is that one's; the others by their class
 //!   (point, line, area; a text, a block … by its kind) and the nearest original of the class by the centres of their
@@ -9,7 +10,8 @@
 //! - **Numeric:** each vertex read back measured to the original's geometry exactly (points, lines, arcs of
 //!   polylines and areas, circles, arcs; an ellipse, a spline or a NURBS by its outline of 1024 pieces), the heights
 //!   and measures vertex by vertex where the counts agree, the length's and the area's differences.
-//! - **Semantic:** the losses of [`EXCHANGE_LOSSES`], each with its detail and the originals' ids.
+//! - **Semantic:** the losses of [`EXCHANGE_LOSSES`], each with its detail and the originals' ids; the blocks', the
+//!   tables' and the project's relations' by `exchange_parts` (docs/adr/2380).
 //!
 //! The file is written in a folder of its own under the system's temporary folder and removed with it, whatever the
 //! outcome. The open drawing is not changed: the writer runs on a copy.
@@ -26,6 +28,8 @@ use kentos_geometry_core::entity::{entity_area, entity_bounds, entity_length, en
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::geometry::shape;
 use serde_json::{Value, json};
+
+use crate::exchange_parts as parts;
 
 fn refused(code: &str, message: String, path: Option<String>) -> CommandResult<Value> {
     CommandResult::Failed { error: CommandError { code: code.into(), message, path, ..CommandError::default() } }
@@ -147,7 +151,7 @@ fn ring_dist(p: Vec2, pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool) -> 
 }
 
 /// The distance from `p` to the original's geometry.
-fn to_original(o: &Entity, p: Vec2) -> f64 {
+pub(crate) fn to_original(o: &Entity, p: Vec2) -> f64 {
     match o {
         Entity::Point(e) => {
             let mut d = dist(p, e.p);
@@ -190,7 +194,7 @@ fn to_original(o: &Entity, p: Vec2) -> f64 {
 
 /// The places of an object read back that are measured: its vertices; a circle's four quarter points, an arc's ends
 /// and middle.
-fn places(e: &Entity) -> Vec<Vec2> {
+pub(crate) fn places(e: &Entity) -> Vec<Vec2> {
     match e {
         Entity::Circle(c) => (0..4)
             .map(|k| {
@@ -299,8 +303,12 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
             Some(format!("export.{}", e["path"].as_str().unwrap_or(""))),
         );
     }
-    // The reader into an empty copy: the settings and layers, no objects.
-    let Ok(mut empty) = Document::from_snapshot_v2(doc.to_snapshot_v2_of(|_| false)) else {
+    // The reader into an empty copy: the settings and layers; no objects, and no block definitions or relations, so the
+    // blocks and relations read back are the reader's own (docs/adr/2380).
+    let mut bare = doc.to_snapshot_v2_of(|_| false);
+    bare.blocks.clear();
+    bare.settings.relations.clear();
+    let Ok(mut empty) = Document::from_snapshot_v2(bare) else {
         return refused(codes::EXCHANGE_UNREADABLE, "Çizimin boş kopyası kurulamadı.".into(), None);
     };
     let read = {
@@ -481,6 +489,18 @@ fn compare(
         if uid(back, pair[i].unwrap_or(Slot(0))) != ouid {
             losses.add("identityLost", "", &ouid);
         }
+        // A block's definition and a table's cells (docs/adr/2380).
+        match (o, n) {
+            (Entity::Insert(a), Entity::Insert(b)) if parts::block_changed(doc, a, back, b, tolerance) => {
+                losses.add("blockChanged", doc.block(a.block).map_or_else(String::new, |d| d.name.clone()), &ouid);
+            }
+            (Entity::Table(a), Entity::Table(b)) => {
+                if let Some(what) = parts::table_changed(a, b, tolerance) {
+                    losses.add("tableChanged", what, &ouid);
+                }
+            }
+            _ => {}
+        }
     }
     for (k, s) in news.iter().enumerate() {
         if !taken[k]
@@ -488,6 +508,12 @@ fn compare(
         {
             losses.add("extra", e.kind(), "");
         }
+    }
+    // The project's relations between the layers written (docs/adr/2380).
+    let asked: std::collections::HashSet<String> =
+        input.layers.iter().flat_map(|l| doc.layers().leaves_of(l).into_iter().map(|n| n.id.clone())).collect();
+    for name in parts::relations_lost(doc, back, |id| input.layers.is_empty() || asked.contains(id)) {
+        losses.add("relationLost", name, "");
     }
     ExchangeChecked {
         format: input.format,

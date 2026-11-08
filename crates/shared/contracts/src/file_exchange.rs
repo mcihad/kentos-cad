@@ -1,13 +1,14 @@
 //! Dışa aktarma kaybı denetimi (plan/map-cad.md MAP-17, docs/adr/1660): the drawing written to an exchange format and read back by
-//! KentOS's own reader of that format, into an empty copy of the drawing (its settings and layers, no objects), then
-//! compared object by object. What the trip changed is said in two kinds apart (the plan's acceptance: “sayısal hata ve
+//! KentOS's own reader of that format, into an empty copy of the drawing (its settings and layers; no objects, block
+//! definitions or relations, so those read back are the reader's own, docs/adr/2380), then compared object by object. What the trip changed is said in two kinds apart (the plan's acceptance: “sayısal hata ve
 //! semantik kayıplar ayrı raporlansın”):
 //!
 //! - **numeric**: how far each vertex read back lies from the original's geometry (its lines and arcs exactly), the
 //!   heights' and the measures' differences, and the length's and the area's;
 //! - **semantic**: objects not written, a kind changed (a circle read back as an area), curves become chords, heights
 //!   or measures lost or added, attributes lost, changed or added, an object's own style lost, its persistent id lost,
-//!   objects read back that match none.
+//!   objects read back that match none; a block read back with another definition, a table with other cells, and a
+//!   relation of the project not read back (docs/adr/2380).
 //!
 //! The file is written under the system's temporary folder and removed; the open drawing is not changed. The trip is
 //! KentOS's writer and reader together: what another program reads from the file is its own (the ADR's independent
@@ -26,7 +27,7 @@ pub const EXCHANGE_TOLERANCE: f64 = 0.001;
 pub const EXCHANGE_UIDS_LISTED: usize = 100;
 
 /// The losses' kinds, in the order they are listed.
-pub const EXCHANGE_LOSSES: [&str; 12] = [
+pub const EXCHANGE_LOSSES: [&str; 15] = [
     "notWritten",
     "kindChanged",
     "chorded",
@@ -39,6 +40,9 @@ pub const EXCHANGE_LOSSES: [&str; 12] = [
     "styleLost",
     "identityLost",
     "extra",
+    "blockChanged",
+    "tableChanged",
+    "relationLost",
 ];
 
 /// The format of the trip.
@@ -130,7 +134,8 @@ pub struct ExchangeKindCount {
 }
 
 /// A semantic loss: its kind (one of [`EXCHANGE_LOSSES`]), how many, what changed into what where it is one change
-/// (`circle → polygon`, an attribute's name), and the original objects' persistent ids (at most 100).
+/// (`circle → polygon`, an attribute's name, a block's name, what of a table, a relation's name), and the original
+/// objects' persistent ids (at most 100; none for a relation).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -208,9 +213,23 @@ pub const FILE_EXCHANGE_MATRIX: &str = "file.exchange.matrix";
 pub const FILE_EXCHANGE_MATRIX_VERSION: u32 = 1;
 
 /// A support matrix's rows (docs/adr/1880), in order: the objects written, their kinds, curves, heights, measures,
-/// attributes, style, persistent ids, the vertices' places, and objects read back that match none.
-pub const EXCHANGE_ASPECTS: [&str; 10] =
-    ["objects", "kinds", "curves", "z", "m", "attributes", "style", "identity", "position", "extra"];
+/// attributes, style, persistent ids, the vertices' places, objects read back that match none, and (docs/adr/2380) the
+/// blocks, the tables and the project's relations.
+pub const EXCHANGE_ASPECTS: [&str; 13] = [
+    "objects",
+    "kinds",
+    "curves",
+    "z",
+    "m",
+    "attributes",
+    "style",
+    "identity",
+    "position",
+    "extra",
+    "blocks",
+    "tables",
+    "relations",
+];
 
 /// Input of `file.exchange.matrix` v1 (Destek matrisi; plan/map-cad.md MAP-17, docs/adr/1880): the drawing's round trip
 /// through each of `formats` (empty: all six, in [`ExchangeFormat::ALL`]'s order; one asked twice is tried once) as
