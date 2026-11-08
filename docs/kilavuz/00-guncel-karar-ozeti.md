@@ -107,6 +107,9 @@
   - **Kenet bir binanın diliyle (M20, [ADR 3020](../adr/3020-snap-names-in-a-building-s-words.md)):**
     - `snap_names::name` depodaki şekilden noktanın çizgisini adlandırır: Duvar yüzü, Çekirdek yüzü (öncelik 1'in sınırı),
       Katman sınırı, Duvar ekseni, Taban çizgisi; Açıklık ortası, Açıklık kenarı. Kenet işareti "{tür} · {ad}" yazar.
+  - **Oda aracı (M21, [ADR 3021](../adr/3021-room-tool.md)):**
+    - `tool.room` = `WallRectangle::room`: duvarlar, ortasından tohumlanan mahal ve etiketi bir `begin_group`'ta; reddedilen
+      parça hepsini geri alır. Mahal adı açık seçimdir (`Setting::open`: liste önerir, her ad alınır).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

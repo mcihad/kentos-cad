@@ -84,7 +84,8 @@ fn in_kentos_mimari_pencere_is_the_window_and_two_letters_start_the_main_tools()
     assert_eq!(typed(&mut app, "kp"), "door");
     assert_eq!(typed(&mut app, "pn"), "window");
     assert_eq!(typed(&mut app, "mh"), "space");
-    assert_eq!(typed(&mut app, "oda"), "space");
+    // Oda is a tool of its own (docs/adr/3021): its title answers "oda"; Mahal keeps MH.
+    assert_eq!(typed(&mut app, "oda"), "room");
     // Pencere yakınlaştır keeps its key and its other names.
     assert_eq!(typed(&mut app, "pencerebuyut"), "zoomWindow");
 }

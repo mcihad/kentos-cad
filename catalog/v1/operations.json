@@ -1944,6 +1944,15 @@
       ],
       "note": "İki köşe veya verilen boylar, yön, kalınlık, stil ve iç net/dış ölçü/eksen referansı komuta gider; kapalı duvarı komut üretir, önizleme aynı planı okur (plan/architecture.md ARCH-DRAW-01)."
     },
+    "tool.room": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.rectangle",
+        "cad.spaces.create",
+        "cad.tags.create"
+      ],
+      "note": "Dikdörtgen duvarın köşeleri ya da boyları, yön, kalınlık, stil, referans ve ortak duvar duvar komutuna, odanın ortası ve adı mahal komutuna, mahal etiket komutuna gider; üçü tek geri alma adımıdır (ADR 3021)."
+    },
     "tool.interiorDimensions": {
       "level": "semantic",
       "via": [

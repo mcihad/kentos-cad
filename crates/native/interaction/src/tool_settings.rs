@@ -19,6 +19,8 @@ pub struct Setting {
     pub warn: bool,
     /// A two-state setting shown directly rather than hidden in a choice menu.
     pub toggle: bool,
+    /// A choice that takes any text too (docs/adr/3021): the list offers, it does not bind (a room's name).
+    pub open: bool,
 }
 impl Setting {
     pub fn text(
@@ -35,6 +37,7 @@ impl Setting {
             note: false,
             warn: false,
             toggle: false,
+            open: false,
         }
     }
     pub fn choice(
@@ -56,13 +59,23 @@ impl Setting {
             note: false,
             warn: false,
             toggle: false,
+            open: false,
         }
     }
     pub fn read_only(mut self) -> Self {
         self.editable = false;
         self
     }
-    pub fn toggle(key: &'static str, label: impl Into<std::borrow::Cow<'static, str>>, on: bool) -> Self {
+    /// The choices offered, any text taken too (docs/adr/3021).
+    pub fn open(mut self) -> Self {
+        self.open = true;
+        self
+    }
+    pub fn toggle(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        on: bool,
+    ) -> Self {
         Self {
             toggle: true,
             ..Self::choice(

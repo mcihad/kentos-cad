@@ -334,3 +334,87 @@ fn the_snap_marker_says_a_wall_s_face_and_axis_in_a_building_s_words() {
         Some("Duvar ekseni")
     );
 }
+
+/// A new KentOS Mimari project, nothing drawn.
+fn fresh_mimari() -> App {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    app
+}
+
+fn counts(app: &App) -> (usize, usize, usize) {
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let n = |kind: &str| doc.entities().filter(|e| e.kind() == kind).count();
+    (n("wall"), n("space"), n("tag"))
+}
+
+#[test]
+fn oda_writes_the_walls_the_room_and_its_tag_in_one_undo_step() {
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::Run("tool.room"));
+    assert_eq!(app.session.tool_id(), "room");
+    let keys: Vec<&str> = app.field_settings().iter().map(|s| s.key).collect();
+    assert_eq!(
+        keys.first(),
+        Some(&"B"),
+        "Boyutlar first beside the cursor: {keys:?}"
+    );
+    assert!(
+        keys.contains(&"A"),
+        "the room's name beside the cursor: {keys:?}"
+    );
+    app.with_tool(|s, cx| s.configure("A", "Salon", cx));
+    app.with_tool(|s, cx| s.configure("B", "4,3", cx));
+    let _ = app.submit_line("10,10");
+    let _ = app.submit_line("12,12");
+    assert_eq!(counts(&app), (1, 1, 1), "the walls, the room and its tag");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let room = doc
+        .entities()
+        .find(|e| e.kind() == "space")
+        .expect("the room");
+    let kentos_commands::Entity::Space(sp) = room else {
+        unreachable!()
+    };
+    assert_eq!(sp.space.name.as_deref(), Some("Salon"));
+    match doc.arch_value(room, "area", None) {
+        Some(kentos_domain::arch_values::ArchValue::Area(a)) => {
+            assert!((a - 12.0).abs() < 1e-6, "4 × 3 clear: {a}")
+        }
+        other => panic!("an area: {other:?}"),
+    }
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(counts(&app), (0, 0, 0), "one undo takes all three");
+}
+
+#[test]
+fn oda_s_name_beside_the_cursor_takes_the_list_or_any_word() {
+    let mut app = fresh_mimari();
+    let _ = app.update(Message::Run("tool.room"));
+    let name = app
+        .field_settings()
+        .into_iter()
+        .find(|s| s.key == "A")
+        .expect("the room's name");
+    assert!(name.open, "the list offers, any word is taken");
+    let _ = app.with_tool(|s, cx| s.configure("A", "Kiler", cx));
+    let shown = app.session.settings(&app.format());
+    let row = shown.iter().find(|r| r.key == "A").expect("Mahal adı");
+    assert_eq!(row.value, "", "a word of no list is not a checked choice");
+    assert!(
+        app.session.prompt().text().contains("Mahal adı (A): Kiler"),
+        "{}",
+        app.session.prompt().text()
+    );
+}

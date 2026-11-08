@@ -11,7 +11,6 @@
     { "name": "KP", "command": "tool.door" },
     { "name": "PN", "command": "tool.window" },
     { "name": "MH", "command": "tool.space" },
-    { "name": "ODA", "command": "tool.space" },
     { "name": "DS", "command": "tool.slab" },
     { "name": "KL", "command": "tool.column" },
     { "name": "AK", "command": "tool.grid" },

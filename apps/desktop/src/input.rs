@@ -64,6 +64,8 @@ pub struct FieldSetting {
     pub value: String,
     /// A choice's words (Sol, Orta, Sağ); none for a value typed.
     pub choices: Vec<String>,
+    /// The choices offered, any text taken too (a room's name, docs/adr/3021).
+    pub open: bool,
 }
 
 impl Field {
@@ -1269,6 +1271,7 @@ impl App {
                     label: r.label.into_owned(),
                     value,
                     choices: r.choices.into_iter().map(|c| c.label).collect(),
+                    open: r.open,
                 }
             })
             .collect()
@@ -1304,13 +1307,25 @@ impl App {
             text.to_owned()
         } else {
             let start = folded(text);
-            let found: Vec<&String> = setting
+            // A word written whole is that one, though others start with it (Oda, Oda 2).
+            let whole: Vec<&String> = setting
                 .choices
                 .iter()
-                .filter(|c| folded(c).starts_with(&start))
+                .filter(|c| folded(c) == start)
                 .collect();
+            let found: Vec<&String> = if whole.is_empty() {
+                setting
+                    .choices
+                    .iter()
+                    .filter(|c| folded(c).starts_with(&start))
+                    .collect()
+            } else {
+                whole
+            };
             match found.as_slice() {
                 [one] => (*one).clone(),
+                // An open choice takes what was typed (a room's name, docs/adr/3021).
+                [] if setting.open => text.to_owned(),
                 [] => {
                     self.warn(format!(
                         "{} {} olabilir.",

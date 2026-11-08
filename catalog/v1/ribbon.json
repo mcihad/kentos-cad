@@ -1959,6 +1959,10 @@
           "label": "Çizgiden duvar"
          }
         ]
+       },
+       {
+        "command": "tool.room",
+        "size": "large"
        }
       ]
      },
@@ -2142,7 +2146,7 @@
       "items": [
        {
         "key": "archDimensions",
-        "size": "large",
+        "size": "small",
         "split": [
          {
           "command": "tool.wallDimensions",

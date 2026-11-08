@@ -382,14 +382,15 @@ CAD = [
     ]),
     T("arch", "Mimari", [
         # M15 (docs/adr/3015): a plan's six main tools large, each family one button with its ways under ▾, as
-        # Revit's Wall ▾ and Room ▾: Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ and Ölçü ▾. At most 30 buttons show
-        # (DESIGN.md §7.3.1); the seldom used wait under their panel's ▾.
+        # Revit's Wall ▾ and Room ▾: Duvar ▾, Oda (docs/adr/3021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
+        # buttons show (DESIGN.md §7.3.1); the seldom used wait under their panel's ▾.
+        # Oda (docs/adr/3021) large beside Duvar ▾: the walls, the room and its tag in one step.
         P("Duvar", "wall", [{"key": "archWalls", "size": "large", "split": [
                 {"command": "tool.wall", "title": "Duvar", "label": "Duvar"},
                 {"command": "tool.wallRectangle", "title": "Duvar", "label": "Dikdörtgen duvar"},
                 {"command": "tool.wallPartition", "title": "Duvar", "label": "Ölçülü bölme"},
                 {"command": "tool.wallFromLines", "title": "Duvar", "label": "Çizgiden duvar"},
-            ]}]),
+            ]}, L("tool.room")]),
         # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
             S("tool.column"),
@@ -419,7 +420,9 @@ CAD = [
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
         # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle (as
         # Revit's Tag panel holds Tag All), İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
-        P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "large", "split": [
+        # Ölçü ▾ small since Oda took the sixth large place (docs/adr/3021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
+        # Donatı).
+        P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "small", "split": [
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
             ]}, {"key": "archTags", "size": "small", "split": [

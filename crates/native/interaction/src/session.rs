@@ -80,6 +80,8 @@ pub const TOOLS: &[&str] = &[
     wall::ID,
     wall_from_lines::ID,
     wall_rectangle::ID,
+    // Oda (docs/adr/3021).
+    wall_rectangle::ROOM_ID,
     crate::wall_partition::ID,
     // Duvarı kaydır (docs/adr/0790 §1).
     crate::wall_shift::ID,
@@ -487,6 +489,8 @@ impl Session {
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
+            // Oda (docs/adr/3021): the rectangle's walls, its room and tag.
+            wall_rectangle::ROOM_ID => Box::new(wall_rectangle::WallRectangle::room()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
             crate::wall_shift::ID => Box::new(crate::wall_shift::WallShift::new()),
             crate::interior_dims::ID => {

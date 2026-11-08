@@ -13516,6 +13516,24 @@
    "tests": 1
   },
   {
+   "id": "tool.room",
+   "kind": "command",
+   "title": "Oda",
+   "level": "semantic",
+   "via": [
+    "cad.walls.rectangle",
+    "cad.spaces.create",
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.rectangle, kentos.cad.spaces.create, kentos.cad.tags.create",
+   "mcp": "cad.walls.rectangle, cad.spaces.create, cad.tags.create",
+   "note": "Dikdörtgen duvarın köşeleri ya da boyları, yön, kalınlık, stil, referans ve ortak duvar duvar komutuna, odanın ortası ve adı mahal komutuna, mahal etiket komutuna gider; üçü tek geri alma adımıdır (ADR 3021).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.roomElevation",
    "kind": "command",
    "title": "Oda iç görünüşü",

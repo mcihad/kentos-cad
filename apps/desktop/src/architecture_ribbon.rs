@@ -155,7 +155,7 @@ mod tests {
         }
         assert_eq!(
             large,
-            ["Duvar", "Kapı", "Pencere", "Mahal", "Donatı", "Ölçü"],
+            ["Duvar", "Oda", "Kapı", "Pencere", "Mahal", "Donatı"],
             "{large:?}"
         );
         let kat = tab

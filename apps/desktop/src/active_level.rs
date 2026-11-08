@@ -247,11 +247,13 @@ impl App {
     }
 
     /// The tools that draw on Etkin kat: their settings show it first (docs/adr/0713).
-    const ON_LEVEL: [&str; 9] = [
+    const ON_LEVEL: [&str; 10] = [
         // A fixture goes on Etkin kat too (docs/adr/0733 §1).
         "blockInsert",
         "wall",
         "wallRectangle",
+        // Oda (docs/adr/3021): its walls and room on Etkin kat.
+        "room",
         "wallPartition",
         "column",
         "stair",
