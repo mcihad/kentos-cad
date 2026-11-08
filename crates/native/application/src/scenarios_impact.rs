@@ -186,24 +186,36 @@ struct Near {
     got: f64,
     whole: f64,
     objects: usize,
+    /// The measured areas near and beyond, and the layer's objects, by persistent id (docs/adr/3060).
+    near: Vec<String>,
+    far: Vec<String>,
+    lines: Vec<String>,
 }
 
 /// The area of a side's measured areas (`from`'s uses, or all) whose centroid lies within `d` of an object of `layer`.
 fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::ImpactInfrastructure) -> Near {
+    let mut ids = Vec::new();
     let lines: Vec<_> = doc
-        .entities()
-        .filter(|e| e.base().layer_id == layer)
-        .filter_map(|e| geometry_of(&shape(e)))
+        .entities_with_uids()
+        .filter(|(_, e)| e.base().layer_id == layer)
+        .filter_map(|(u, e)| {
+            let g = geometry_of(&shape(e))?;
+            ids.push(u.to_string());
+            Some(g)
+        })
         .collect();
-    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len() };
+    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len(), near: Vec::new(), far: Vec::new(), lines: ids };
     let measured = |u: &String| infra.from.iter().all(|f| f.trim().is_empty()) || infra.from.contains(u);
-    for (sh, _, area, _) in s.areas.iter().filter(|(_, u, _, _)| measured(u)) {
+    for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| measured(u)) {
         r.whole += area;
         let close = shape_centroid(sh)
             .and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }))
             .is_some_and(|point| lines.iter().map(|t| distance(&point, t)).any(|d| d <= infra.distance));
         if close {
             r.got += area;
+            r.near.push(uid.clone());
+        } else {
+            r.far.push(uid.clone());
         }
     }
     r
@@ -352,6 +364,7 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         }
     }
     // Altyapıya yakınlık (docs/adr/2660): the layer the scenario stands in for is each side's own.
+    let mut near_out = None;
     if let Some(infra) = &input.infrastructure {
         let id = infra.layer.trim();
         let Some(node) = doc.layers().get(id).filter(|n| n.kind != LayerNodeType::Group) else {
@@ -363,6 +376,14 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         };
         let theirs = pairs.iter().find(|(base, _)| base == id).map_or(id, |(_, l)| l.as_str());
         let (x, y) = (near(doc, &b, id, infra), near(doc, &a, theirs, infra));
+        near_out = Some(kentos_commands::ImpactNear {
+            base_near: x.near.clone(),
+            base_far: x.far.clone(),
+            base_lines: x.lines.clone(),
+            alternative_near: y.near.clone(),
+            alternative_far: y.far.clone(),
+            alternative_lines: y.lines.clone(),
+        });
         let name = &node.name;
         let uses: Vec<&str> = infra.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
         let (label, which) = if uses.is_empty() {
@@ -501,6 +522,7 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         assumptions,
         stale: input.since.as_deref().map(|s| s.trim() != now),
         reach,
+        near: near_out,
         stamp: now,
         revision: doc.revision().to_string(),
     })

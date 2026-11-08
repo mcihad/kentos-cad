@@ -55,6 +55,6 @@ karşılaştırma üret. Ölçüm birimi, analiz tarihi ve varsayımlar sonuçla
 
 ## Sonra
 
-- Altyapıya yakınlığın çizimde gösterimi (erişim gibi, ADR 2260).
+- Altyapıya yakınlığın çizimde gösterimi (erişim gibi, ADR 2260). Yapıldı: [ADR 3060](3060-infrastructure-nearness-on-the-drawing.md).
 - Ağ üzerinden (yol boyunca) uzaklık; eğim; risk katmanları; damganın çizimde saklanması (MAP-10'un öbür maddeleri).
 - Web (TODOS §0.2).

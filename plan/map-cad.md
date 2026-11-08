@@ -40,7 +40,7 @@ sırayla alır.
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; altyapıya yakınlığın çizimde gösterimi | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680 | çapın tescil bildirimi ve dış parçaların numarası; değer esaslı dağıtım (resmî metinde kural yok) | m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700 | dönüşümün buluta uygulanması; çoklu tarama demeti | gerçek veri ölçümü (süre, bellek, yoğunluk) |
@@ -1030,6 +1030,12 @@ puansız ölçüleri; uzaklığın kurum kararı olduğu (KentOS değer vermez).
 alanı ve payı; senaryonun yerine geçtiği katmanda her taraf kendi hattıyla; boş katman eksik; “hattın kapasitesi ya da
 bağlantı hakkı değildir”. 7 yeni ortak durum (37), MCP, masaüstü (Altyapı katmanı / uzaklığı, ölçülen kullanımlar) ve
 resimler. Açık: eğim, ağ üzerinden erişim, damganın çizimde saklanması, altyapıya yakınlığın çizimde gösterimi.
+
+**9 Kasım 2026, beşinci tur — altyapıya yakınlık çizimde ([ADR 3060](../docs/adr/3060-infrastructure-nearness-on-the-drawing.md)).**
+Kapsam: **Harita + CBS**. Kanıtlanan: `cad.scenarios.impact`'in `near`'ı (iki tarafta yakın ve uzak alanlar, altyapı
+katmanının nesneleri; kimlikleriyle), üreteçte bağımsız; 37 ortak durum, Python, MCP; Senaryo ölçüleri'nde Altyapıyı
+çizimde göster (yakın yeşil, uzak kırmızı, hat vurgulu, İşareti kaldır'a dek); masaüstü testi ve resimler. Açık: eğim,
+ağ üzerinden erişim, damganın çizimde saklanması, en yakın hatta bağ çizgisi.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

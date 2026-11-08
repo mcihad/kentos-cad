@@ -58590,6 +58590,17 @@
           "name": {
             "type": "string"
           },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactNear"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060)."
+          },
           "reach": {
             "anyOf": [
               {
@@ -58681,6 +58692,17 @@
           },
           "name": {
             "type": "string"
+          },
+          "near": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactNear"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060)."
           },
           "reach": {
             "anyOf": [
@@ -143332,6 +143354,56 @@
         "alternative",
         "difference",
         "method"
+      ],
+      "type": "object"
+    },
+    "ImpactNear": {
+      "description": "Which areas the infrastructure measure found near (docs/adr/3060), so a host can show them: on each side, by\npersistent id in the drawing's order, the measured areas whose centroid lies within the distance, those beyond it,\nand the side's infrastructure layer's objects. Nearness only: not a line's capacity or a right to connect.",
+      "properties": {
+        "alternativeFar": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "alternativeLines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "alternativeNear": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseFar": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseLines": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "baseNear": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "baseNear",
+        "baseFar",
+        "baseLines",
+        "alternativeNear",
+        "alternativeFar",
+        "alternativeLines"
       ],
       "type": "object"
     },

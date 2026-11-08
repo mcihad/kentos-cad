@@ -2,6 +2,7 @@
 import type { ImpactChange } from "./ImpactChange";
 import type { ImpactLayer } from "./ImpactLayer";
 import type { ImpactMeasure } from "./ImpactMeasure";
+import type { ImpactNear } from "./ImpactNear";
 import type { ImpactReach } from "./ImpactReach";
 import type { ImpactUse } from "./ImpactUse";
 
@@ -11,4 +12,8 @@ import type { ImpactUse } from "./ImpactUse";
  * changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
  * asked, docs/adr/2260), and the drawing's revision.
  */
-export type ScenariosImpacted = { scenario: string, name: string, layers: Array<ImpactLayer>, field: string, key: string, measures: Array<ImpactMeasure>, uses: Array<ImpactUse>, changes: Array<ImpactChange>, gaps: Array<string>, assumptions: Array<string>, stamp: string, stale?: boolean, reach?: ImpactReach, revision: string, };
+export type ScenariosImpacted = { scenario: string, name: string, layers: Array<ImpactLayer>, field: string, key: string, measures: Array<ImpactMeasure>, uses: Array<ImpactUse>, changes: Array<ImpactChange>, gaps: Array<string>, assumptions: Array<string>, stamp: string, stale?: boolean, reach?: ImpactReach, 
+/**
+ * Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
+ */
+near?: ImpactNear, revision: string, };

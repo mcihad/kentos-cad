@@ -242,10 +242,13 @@ def to_segment(p, a, b):
 
 
 def near(s, sd, layer, infra):
-    """The area near the layer's objects (docs/adr/2660), the measured areas' whole, the layer's objects."""
-    lines = [verts(e) for e in s["entities"] if e["layerId"] == layer]
+    """The area near the layer's objects (docs/adr/2660), the measured areas' whole, the layer's objects; and the
+    measured areas near and beyond and the layer's objects by persistent id (docs/adr/3060)."""
+    objs = [e for e in s["entities"] if e["layerId"] == layer]
+    lines = [verts(e) for e in objs]
     uses = [u for u in infra.get("from", []) if u.strip()]
     got = whole = 0.0
+    yes, no = [], []
     for e, u, a in sd["areas"]:
         if uses and u not in uses:
             continue
@@ -254,7 +257,10 @@ def near(s, sd, layer, infra):
         c = ((x0 + x1) / 2, (y0 + y1) / 2)
         if any(to_segment(c, p, q) <= infra["distance"] for pts in lines for p, q in zip(pts, pts[1:])):
             got += a
-    return got, whole, len(lines)
+            yes.append(uid(e["id"]))
+        else:
+            no.append(uid(e["id"]))
+    return got, whole, len(lines), yes, no, [uid(e["id"]) for e in objs]
 
 
 def rs(v):
@@ -290,6 +296,7 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
             words = ", ".join(w or "(kullanımı yok)" for w in missing)
             asked_gaps.append(f"Geçirimsizlik payı verilmemiş kullanım: {words}; geçirimsiz alan onlarsız hesaplandı.")
     reach = None
+    near_out = None
     if access is not None:
         (xg, xw, xt, xr, xu, xs), (yg, yw, yt, yr, yu, ys) = reached(b, access), reached(a, access)
         reach = {"baseReached": xr, "baseUnreached": xu, "baseTargets": xs,
@@ -307,7 +314,9 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
     if infrastructure is not None:
         lid = infrastructure["layer"]
         theirs = next((l for b_, l in ps if b_ == lid), lid)
-        (xg, xw, xn), (yg, yw, yn) = near(s, b, lid, infrastructure), near(s, a, theirs, infrastructure)
+        (xg, xw, xn, xy, xf, xl), (yg, yw, yn, yy, yf, yl) = near(s, b, lid, infrastructure), near(s, a, theirs, infrastructure)
+        near_out = {"baseNear": xy, "baseFar": xf, "baseLines": xl,
+                    "alternativeNear": yy, "alternativeFar": yf, "alternativeLines": yl}
         name = {"altyapi": "Kanalizasyon hattı", "yol": "Yollar", "karar": "Karar alanları"}[lid]
         d = rs(infrastructure["distance"])
         uses_ = [u for u in infrastructure.get("from", []) if u.strip()]
@@ -377,6 +386,8 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
         out["stale"] = since != now
     if reach is not None:
         out["reach"] = reach
+    if near_out is not None:
+        out["near"] = near_out
     out["revision"] = "$current"
     return out
 

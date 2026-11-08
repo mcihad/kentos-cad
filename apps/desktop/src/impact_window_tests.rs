@@ -87,7 +87,22 @@ fn the_area_near_the_infrastructure_is_the_case_s() {
         assert!((got.base - w["base"].as_f64().expect("base")).abs() < 1e-9, "{got:?}");
         assert!((got.alternative - w["alternative"].as_f64().expect("alt")).abs() < 1e-9, "{got:?}");
     }
+    // docs/adr/3060: the nearness is the case's lists; Altyapıyı çizimde göster leaves the scenario side's areas near
+    // and beyond and the layer's lines on the drawing until İşareti kaldır.
+    let want = &case["steps"][0]["result"]["output"]["near"];
+    let near = r.near.clone().expect("the nearness");
+    assert_eq!(serde_json::to_value(&near).expect("writes"), *want);
+    let _ = app.update(Message::Impact(I::DrawNear));
+    assert_eq!(app.dialog, None);
+    let m = app.impact_reach_marks().expect("the marks");
+    assert_eq!(m.reached.len() + m.unreached.len(), near.alternative_near.len() + near.alternative_far.len());
+    assert_eq!(m.lines.len(), near.alternative_lines.len());
+    assert!(m.lines.iter().all(|l| l.len() >= 2) && m.targets.is_empty());
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.impact_reach_marks().is_none());
     // A distance that does not read is said.
+    let _ = app.update(Message::Run("scenario.impact"));
+    let _ = app.update(Message::Impact(I::InfraLayer("altyapi".into())));
     let _ = app.update(Message::Impact(I::InfraDistance("kırk".into())));
     assert_eq!(app.impact.answer.clone().expect("an answer"), Err("Altyapı uzaklığı “kırk” bir sayı değil.".to_owned()));
 }
@@ -292,6 +307,14 @@ fn infra_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-olculer-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        // docs/adr/3060: Altyapıyı çizimde göster, `.run/gui-evidence/altyapi-cizimde-3060/`.
+        let _ = app.update(Message::Impact(I::DrawNear));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let near = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/altyapi-cizimde-3060");
+        std::fs::create_dir_all(&near).expect("a folder");
+        let file = near.join(format!("altyapi-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

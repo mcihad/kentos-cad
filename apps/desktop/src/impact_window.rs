@@ -26,6 +26,8 @@ pub const LEAD: &str = "Seçilen senaryoyu mevcut durumla sayılarla karşılaş
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "Raporu kaydet…";
 pub const SHOW_ACCESS: &str = "Erişimi çizimde göster";
+/// Altyapıyı çizimde göster (docs/adr/3060).
+pub const SHOW_NEAR: &str = "Altyapıyı çizimde göster";
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -82,6 +84,8 @@ pub enum Event {
     Saved(Option<PathBuf>),
     /// Erişimi çizimde göster (docs/adr/2260).
     DrawAccess,
+    /// Altyapıyı çizimde göster (docs/adr/3060).
+    DrawNear,
     Close,
 }
 
@@ -344,6 +348,27 @@ impl App {
                     ),
                 );
             }
+            Event::DrawNear => {
+                let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return Task::none() };
+                let Some(near) = answer.near.clone() else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let marks = crate::impact_reach_marks::ReachMarks::of_near(&doc.model, &near);
+                let (yes, no) = (near.alternative_near.len(), near.alternative_far.len());
+                self.impact_reach = Some(crate::impact_reach_marks::Shown::near(doc.session, input));
+                self.impact = State::default();
+                self.dialog = None;
+                if let Some([x0, y0, x1, y1]) = marks.bounds() {
+                    let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
+                    let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+                    self.navigating(|app| app.zoom_to_bounds(&b));
+                }
+                self.say(
+                    Level::Info,
+                    format!(
+                        "{TITLE}: senaryoda {yes} alan altyapıya yakın (yeşil), {no} alan uzak (kırmızı); altyapının hatları vurgulu. Yakınlıktır, hattın kapasitesi ya da bağlantı hakkı değildir. İşareti kaldır işaretleri siler."
+                    ),
+                );
+            }
             Event::Close => {
                 self.impact = State::default();
                 self.dialog = None;
@@ -463,10 +488,12 @@ impl App {
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         let reached = matches!(&s.answer, Some(Ok(r)) if r.reach.is_some());
+        let near = matches!(&s.answer, Some(Ok(r)) if r.near.is_some());
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .aside(words::secondary(SHOW_ACCESS, reached.then(|| msg(Event::DrawAccess))))
+            .aside(words::secondary(SHOW_NEAR, near.then(|| msg(Event::DrawNear))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(900.0)
             .modal(msg(Event::Close))
@@ -477,6 +504,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SHOW_ACCESS) => Some(msg(Event::DrawAccess)),
+            Control::Press(SHOW_NEAR) => Some(msg(Event::DrawNear)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

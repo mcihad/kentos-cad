@@ -184,6 +184,23 @@ pub struct ImpactReach {
     pub alternative_targets: Vec<String>,
 }
 
+/// Which areas the infrastructure measure found near (docs/adr/3060), so a host can show them: on each side, by
+/// persistent id in the drawing's order, the measured areas whose centroid lies within the distance, those beyond it,
+/// and the side's infrastructure layer's objects. Nearness only: not a line's capacity or a right to connect.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactNear {
+    pub base_near: Vec<String>,
+    pub base_far: Vec<String>,
+    pub base_lines: Vec<String>,
+    pub alternative_near: Vec<String>,
+    pub alternative_far: Vec<String>,
+    pub alternative_lines: Vec<String>,
+}
+
 /// Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by
 /// code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
 /// changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
@@ -211,5 +228,9 @@ pub struct ScenariosImpacted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reach: Option<ImpactReach>,
+    /// Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub near: Option<ImpactNear>,
     pub revision: String,
 }

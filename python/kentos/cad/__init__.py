@@ -1511,6 +1511,7 @@ __all__ = [
     "ImpactInfrastructure",
     "ImpactLayer",
     "ImpactMeasure",
+    "ImpactNear",
     "ImpactOwn",
     "ImpactReach",
     "ImpactRegion",

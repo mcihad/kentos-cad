@@ -44989,6 +44989,41 @@ class ImpactMeasure(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactNear(_Model):
+    """Which areas the infrastructure measure found near (docs/adr/3060), so a host can show them: on each side, by
+    persistent id in the drawing's order, the measured areas whose centroid lies within the distance, those beyond it,
+    and the side's infrastructure layer's objects. Nearness only: not a line's capacity or a right to connect.
+    """
+    base_near: list[str]
+    base_far: list[str]
+    base_lines: list[str]
+    alternative_near: list[str]
+    alternative_far: list[str]
+    alternative_lines: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["baseNear"] = list(self.base_near)
+        out["baseFar"] = list(self.base_far)
+        out["baseLines"] = list(self.base_lines)
+        out["alternativeNear"] = list(self.alternative_near)
+        out["alternativeFar"] = list(self.alternative_far)
+        out["alternativeLines"] = list(self.alternative_lines)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactNear:
+        return cls(
+            base_near=list(data["baseNear"]),
+            base_far=list(data["baseFar"]),
+            base_lines=list(data["baseLines"]),
+            alternative_near=list(data["alternativeNear"]),
+            alternative_far=list(data["alternativeFar"]),
+            alternative_lines=list(data["alternativeLines"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactOwn(_Model):
     """Objects keeping one property of their own.
     Attributes:
@@ -82499,6 +82534,8 @@ class ScenariosImpacted(_Model):
     code, the decisions that changed (by key), the data's gaps, the assumptions, the base's stamp now and whether it
     changed since the stamp given (none when none was given), which areas the access reached (only when `access` is
     asked, docs/adr/2260), and the drawing's revision.
+    Attributes:
+        near: Which areas the infrastructure measure found near (only when `infrastructure` is asked, docs/adr/3060).
     """
     scenario: str
     name: str
@@ -82512,6 +82549,7 @@ class ScenariosImpacted(_Model):
     assumptions: list[str]
     stamp: str
     revision: str
+    near: ImpactNear | None | Unset = UNSET
     reach: ImpactReach | None | Unset = UNSET
     stale: bool | None | Unset = UNSET
 
@@ -82529,6 +82567,8 @@ class ScenariosImpacted(_Model):
         out["assumptions"] = list(self.assumptions)
         out["stamp"] = self.stamp
         out["revision"] = self.revision
+        if self.near is not UNSET:
+            out["near"] = None if self.near is None else self.near.to_json()
         if self.reach is not UNSET:
             out["reach"] = None if self.reach is None else self.reach.to_json()
         if self.stale is not UNSET:
@@ -82550,6 +82590,7 @@ class ScenariosImpacted(_Model):
             assumptions=list(data["assumptions"]),
             stamp=data["stamp"],
             revision=data["revision"],
+            near=UNSET if "near" not in data else None if data["near"] is None else ImpactNear.from_json(data["near"]),
             reach=UNSET if "reach" not in data else None if data["reach"] is None else ImpactReach.from_json(data["reach"]),
             stale=data.get("stale", UNSET),
         )
@@ -130726,6 +130767,7 @@ __all__ = [
     "ImpactInfrastructure",
     "ImpactLayer",
     "ImpactMeasure",
+    "ImpactNear",
     "ImpactOwn",
     "ImpactReach",
     "ImpactRegion",
