@@ -4,7 +4,7 @@ import type { AtlasPin } from "./AtlasPin";
 
 /**
  * Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
- * not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
+ * not a record of this sheet's atlas, docs/adr/4000; or none with `changedOnly`, docs/adr/4400), `no_sheets`,
  * `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
  * not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
  * degrees), `unknown_theme`, `invalid_time`,
@@ -63,4 +63,9 @@ coverage?: AtlasCoverage,
  * A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:
  * the answer then says which pages changed since, and why (ADR 1320's rule).
  */
-previous?: string, };
+previous?: string, 
+/**
+ * The update's PDF (docs/adr/4400): only the pages changed or new since `previous`, in the atlas's order, each
+ * numbered as the atlas numbers it (its own number and the atlas's count on it, the PDF's page labels the same).
+ */
+changedOnly?: boolean, };

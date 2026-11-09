@@ -135,6 +135,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        changed_only: bool | Unset = UNSET,
         coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
@@ -182,6 +183,8 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             doc: The drawing it works on.
             path: The file to write, an absolute path.
             sheet: The sheet that has the atlas, by id.
+            changed_only: The update's PDF (docs/adr/4400): only the pages changed or new since `previous`, in the atlas's order, each
+                numbered as the atlas numbers it (its own number and the atlas's count on it, the PDF's page labels the same).
             coverage: Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
             crs: The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's
                 is a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are
@@ -211,6 +214,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.execute_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            changed_only=changed_only,
             coverage=coverage,
             crs=crs,
             drawing=drawing,
@@ -229,6 +233,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        changed_only: bool | Unset = UNSET,
         coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
@@ -245,6 +250,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.plan_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            changed_only=changed_only,
             coverage=coverage,
             crs=crs,
             drawing=drawing,
@@ -263,6 +269,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        changed_only: bool | Unset = UNSET,
         coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
@@ -279,6 +286,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.validate_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            changed_only=changed_only,
             coverage=coverage,
             crs=crs,
             drawing=drawing,
@@ -297,6 +305,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         *,
         path: str,
         sheet: str,
+        changed_only: bool | Unset = UNSET,
         coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET,
         crs: int | None | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
@@ -318,6 +327,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         return self.answer_input(doc, ExportAtlas(
             path=path,
             sheet=sheet,
+            changed_only=changed_only,
             coverage=coverage,
             crs=crs,
             drawing=drawing,

@@ -635,13 +635,35 @@ pub(super) fn document_audited(
     let id = digest.finalize()[..16].to_vec();
 
     let meta = meta_of(book, inputs, sheets);
+    // An atlas's pages that are not its pages from the first on (an update holding the changed ones, docs/adr/4400):
+    // each page labelled by its own number, as a viewer then shows it.
+    let numbers: Vec<i32> = lists
+        .iter()
+        .filter_map(|l| {
+            let page = inputs.atlas.as_ref().and_then(|a| a.pages.get(l.page?))?;
+            i32::try_from(page.atlas.index).ok()
+        })
+        .collect();
+    let labelled = numbers.len() == lists.len() && numbers.iter().enumerate().any(|(k, n)| *n != k as i32 + 1);
+    let labels: Vec<(i32, Ref, i32)> =
+        if labelled { numbers.iter().enumerate().map(|(k, n)| (k as i32, doc.alloc(), *n)).collect() } else { Vec::new() };
     let mut pdf = Pdf::new();
     pdf.set_version(1, 7);
     pdf.set_file_id((id.clone(), id));
     pdf.extend(&doc.chunk);
+    for (_, r, n) in &labels {
+        pdf.indirect(*r).start::<pdf_writer::writers::PageLabel>().style(pdf_writer::types::NumberingStyle::Arabic).offset(*n);
+    }
     {
         let mut cat = pdf.catalog(catalog);
         cat.pages(tree);
+        if !labels.is_empty() {
+            let mut tree = cat.page_labels();
+            let mut nums = tree.nums();
+            for (k, r, _) in &labels {
+                nums.insert(*k, *r);
+            }
+        }
         if !layer_order.is_empty() {
             cat.page_mode(PageMode::UseOC);
             let mut oc = cat.insert(Name(b"OCProperties")).dict();

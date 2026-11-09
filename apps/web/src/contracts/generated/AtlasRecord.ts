@@ -7,4 +7,9 @@ import type { AtlasPin } from "./AtlasPin";
  * SHA-256, the sheet, the day, the state the pages were made from, each page with its sources and each listed
  * object's digest: what a later run is told its changes from.
  */
-export type AtlasRecord = { format: string, pdf: string, sha256: string, sheet: string, date: string, pin: AtlasPin, pages: Array<AtlasPageInfo>, objects: { [key in string]: string }, };
+export type AtlasRecord = { format: string, pdf: string, sha256: string, sheet: string, date: string, pin: AtlasPin, pages: Array<AtlasPageInfo>, objects: { [key in string]: string }, 
+/**
+ * An update's PDF (docs/adr/4400): the pages it holds, by their index; absent: every page. The pages and objects
+ * above are still the whole atlas's, what the next update is told from.
+ */
+written?: Array<number>, };

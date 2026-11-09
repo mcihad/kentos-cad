@@ -63,7 +63,7 @@ fn fark_reads_the_material_zones_from_a_layer() {
     let Read::Compare(none) = read(&app) else { panic!("a difference") };
     assert!(none.zones.is_empty() && none.rest.is_none() && none.zoned.is_none());
     send(&mut app, W::Materials(Some("malzeme".into())));
-    send(&mut app, W::VolumeGrid(true));
+    send(&mut app, W::VolumeMethod(1));
     send(&mut app, W::Field(13, "0,5".into()));
     send(&mut app, W::Preview);
     let Read::Compare(grid) = read(&app) else { panic!("a difference") };

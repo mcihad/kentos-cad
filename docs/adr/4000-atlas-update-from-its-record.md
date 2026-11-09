@@ -79,7 +79,8 @@ bir kayıt dosyası gerekir.”
 
 ## Sonra
 
-- Yalnız değişen ve yeni sayfaların ayrı bir PDF'e yazılması (güncelleme teslimi), sayfa numaralarıyla.
+- Yalnız değişen ve yeni sayfaların ayrı bir PDF'e yazılması (güncelleme teslimi), sayfa numaralarıyla:
+  [ADR 4400](4400-atlas-update-pdf-of-changed-pages.md)'de.
 - Atlas sayfalarının bayt özetiyle “görünüşü değişti” ayrımı (ADR 1320'nin pafta yayınındaki gibi).
 - Total station ve nivelman kalitesi (MAP-18'in öbür maddesi): projede karasal ve nivelman dengelemelerinin
   doğrulukları saklanmalı.

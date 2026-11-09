@@ -854,6 +854,12 @@ impl AtlasPlanned {
     }
 
     /// The sheet the atlas is of.
+    /// Only the pages `keep` names (by their index) are made into the PDF (docs/adr/4400): each keeps its own number
+    /// and the atlas's count. The plan's `pages` stay every page's.
+    pub fn keep_pages(&mut self, keep: &std::collections::BTreeSet<u32>) {
+        self.plan.retain(|p| keep.contains(&p.index));
+    }
+
     pub fn sheet(&self) -> &str {
         &self.sheet
     }

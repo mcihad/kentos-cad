@@ -180,9 +180,7 @@ pub enum Event {
     AssumeHeights(bool),
     Measure(usize),
     Roughness(bool),
-    /// Fark's method: a grid (true) or the TIN.
-    VolumeGrid(bool),
-    /// Fark's method by its place in TIN–TIN | Izgara | Kesit (docs/adr/4340).
+    /// Fark's method by its place in TIN–TIN | Izgara | Kesit (docs/adr/1600, 4340).
     VolumeMethod(usize),
     /// Fark by sections: the prismoidal formula (true) or the average end area.
     Prismoidal(bool),
@@ -455,10 +453,6 @@ impl App {
             Event::AssumeHeights(b) => w.assume_heights = b,
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
-            Event::VolumeGrid(on) => {
-                w.volume_grid = on;
-                w.volume_sections = false;
-            }
             Event::VolumeMethod(i) => {
                 w.volume_grid = i == 1;
                 w.volume_sections = i == 2;

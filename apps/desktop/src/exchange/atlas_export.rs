@@ -77,6 +77,8 @@ pub struct State {
     /// preview's pages against it.
     pub previous: Option<Result<(PathBuf, AtlasRecord), String>>,
     pub changes: Option<AtlasChanges>,
+    /// Yalnız değişen ve yeni sayfalar (docs/adr/4400): with a previous record, the PDF holds only those.
+    pub changed_only: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -104,6 +106,8 @@ pub enum Event {
     Previous,
     PreviousPicked(Option<PathBuf>),
     PreviousClear,
+    /// Yalnız değişen ve yeni sayfalar (docs/adr/4400).
+    ChangedOnly(bool),
 }
 
 fn event(e: Event) -> Message {
@@ -291,6 +295,7 @@ impl App {
             status: None,
             previous: None,
             changes: None,
+            changed_only: false,
         })
     }
 
@@ -493,6 +498,8 @@ impl App {
                         Some(Ok((path, _))) => Some(path.display().to_string()),
                         _ => None,
                     },
+                    // Docs/adr/4400: the update's PDF, with a previous record.
+                    changed_only: s.changed_only && matches!(s.previous, Some(Ok(_))),
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 // The pages are made on a copy of the drawing as it is now, on a thread of their own.
@@ -523,6 +530,13 @@ impl App {
                         .and_then(|r| std::path::Path::new(r).file_name())
                         .map(|n| format!("; kaynak kaydı {}", n.to_string_lossy()))
                         .unwrap_or_default();
+                    // Docs/adr/4400: an update's PDF says which of the atlas's pages it holds.
+                    let held = if out.written.is_empty() {
+                        format!("{} sayfa", out.pages.len())
+                    } else {
+                        let numbers: Vec<String> = out.written.iter().map(u32::to_string).collect();
+                        format!("güncelleme, {} sayfanın {}'i (sayfa {})", out.pages.len(), out.written.len(), numbers.join(", "))
+                    };
                     self.announce(
                         if warnings.is_empty() && !moved {
                             Level::Success
@@ -530,9 +544,8 @@ impl App {
                             Level::Warn
                         },
                         format!(
-                            "{} yazıldı: {} sayfa; çizim durumu {}{record}.",
+                            "{} yazıldı: {held}; çizim durumu {}{record}.",
                             out.path,
-                            out.pages.len(),
                             out.pin.digest.get(..12).unwrap_or(&out.pin.digest)
                         ),
                     );
@@ -581,6 +594,12 @@ impl App {
                 if let Some(Window::AtlasExport(s)) = &mut self.exchange {
                     s.previous = None;
                     s.changes = None;
+                    s.changed_only = false;
+                }
+            }
+            Event::ChangedOnly(on) => {
+                if let Some(Window::AtlasExport(s)) = &mut self.exchange {
+                    s.changed_only = on;
                 }
             }
         }
@@ -891,7 +910,13 @@ impl App {
             Some(Ok((path, _))) => {
                 previous = previous
                     .push(label::caption(path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()))
-                    .push(words::ghost("Kaldır", Some(event(Event::PreviousClear))));
+                    .push(words::ghost("Kaldır", Some(event(Event::PreviousClear))))
+                    // Docs/adr/4400: the update's PDF.
+                    .push(words::check(
+                        s.changed_only,
+                        "Yalnız değişen ve yeni sayfalar",
+                        Some(event(Event::ChangedOnly(!s.changed_only))),
+                    ));
             }
             Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
             None => {}

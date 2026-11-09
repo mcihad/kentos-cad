@@ -44605,6 +44605,175 @@
    ]
   },
   {
+   "name": "Güncelleme PDF'i: yalnız değişen sayfalar yazılır, kendi numaralarıyla; kayıt bütün atlasın",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "Malik": "Yeni Malik"
+      }
+     },
+     "result": {
+      "status": "completed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json",
+      "changedOnly": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "written": [
+        1,
+        2,
+        3,
+        15,
+        16,
+        17
+       ],
+       "record": "$tmp/atlas-2.kaynaklar.json"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelleme PDF'i planda da söylenir",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "Malik": "Yeni Malik"
+      }
+     },
+     "result": {
+      "status": "completed"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json",
+      "changedOnly": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "written": [
+        1,
+        2,
+        3,
+        15,
+        16,
+        17
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelleme PDF'i: önceki atlastan beri değişen sayfa yoksa ret",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json",
+      "changedOnly": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "atlas_unchanged",
+       "path": "changedOnly"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Güncelleme PDF'i önceki kayıtsız istenemez",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi",
+      "changedOnly": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_previous",
+       "path": "previous"
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Plan: yüz sayfa; katman süzgecinden geçmeyen beş parsel sayfa olmaz, sıra numaraya göre, ad ada/numara, merkez parselin ortası, büyük parsel 1/1000'de",
    "setup": "main",
    "steps": [

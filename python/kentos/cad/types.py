@@ -17652,6 +17652,7 @@ class AtlasExported(_Model):
         read: What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
             as the pages were made.
         record: The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.
+        written: Asked `changedOnly` (docs/adr/4400): the pages the update's PDF holds, by their index (the changed and new). Unit: index.
     """
     path: str
     bytes: int
@@ -17670,6 +17671,7 @@ class AtlasExported(_Model):
     objects: dict[str, str] | Unset = UNSET
     read: list[AtlasRead] | Unset = UNSET
     record: str | None | Unset = UNSET
+    written: list[int] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17694,6 +17696,8 @@ class AtlasExported(_Model):
             out["read"] = [e0.to_json() for e0 in self.read]
         if self.record is not UNSET:
             out["record"] = self.record
+        if self.written is not UNSET:
+            out["written"] = list(self.written)
         return out
 
     @classmethod
@@ -17716,6 +17720,7 @@ class AtlasExported(_Model):
             objects=dict(data["objects"]) if "objects" in data else UNSET,
             read=[AtlasRead.from_json(e0) for e0 in data["read"]] if "read" in data else UNSET,
             record=data.get("record", UNSET),
+            written=list(data["written"]) if "written" in data else UNSET,
         )
 
 
@@ -35765,7 +35770,7 @@ class ExchangeRow(_Model):
 @dataclass(kw_only=True, slots=True)
 class ExportAtlas(_Model):
     """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
-    not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
+    not a record of this sheet's atlas, docs/adr/4000; or none with `changedOnly`, docs/adr/4400), `no_sheets`,
     `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
     not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
     degrees), `unknown_theme`, `invalid_time`,
@@ -35777,6 +35782,8 @@ class ExportAtlas(_Model):
     Attributes:
         path: The file to write, an absolute path.
         sheet: The sheet that has the atlas, by id.
+        changed_only: The update's PDF (docs/adr/4400): only the pages changed or new since `previous`, in the atlas's order, each
+            numbered as the atlas numbers it (its own number and the atlas's count on it, the PDF's page labels the same).
         coverage: Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
         crs: The coordinate system the pages are drawn in (the EPSG code; absent: the project's). Another than the project's
             is a registry's system in metres the project's moves to (docs/adr/0638 §1): the pages' maps, grids and GeoPDF are
@@ -35794,6 +35801,7 @@ class ExportAtlas(_Model):
     """
     path: str
     sheet: str
+    changed_only: bool | Unset = UNSET
     coverage: AtlasCoverage | AtlasCoverageName | Unset = UNSET
     crs: int | None | Unset = UNSET
     drawing: str | None | Unset = UNSET
@@ -35808,6 +35816,8 @@ class ExportAtlas(_Model):
         out: dict[str, Any] = {}
         out["path"] = self.path
         out["sheet"] = self.sheet
+        if self.changed_only is not UNSET:
+            out["changedOnly"] = self.changed_only
         if self.coverage is not UNSET:
             out["coverage"] = _enum_out(self.coverage)
         if self.crs is not UNSET:
@@ -35832,6 +35842,7 @@ class ExportAtlas(_Model):
         return cls(
             path=data["path"],
             sheet=data["sheet"],
+            changed_only=data.get("changedOnly", UNSET),
             coverage=_enum_in(AtlasCoverage, data["coverage"]) if "coverage" in data else UNSET,
             crs=data.get("crs", UNSET),
             drawing=data.get("drawing", UNSET),

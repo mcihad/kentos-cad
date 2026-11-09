@@ -98587,8 +98587,12 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:\nnot a record of this sheet's atlas, docs/adr/4000), `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is\nnot bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in\ndegrees), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
+        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:\nnot a record of this sheet's atlas, docs/adr/4000; or none with `changedOnly`, docs/adr/4400), `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is\nnot bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in\ndegrees), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
         "properties": {
+          "changedOnly": {
+            "description": "The update's PDF (docs/adr/4400): only the pages changed or new since `previous`, in the atlas's order, each\nnumbered as the atlas numbers it (its own number and the atlas's count on it, the PDF's page labels the same).",
+            "type": "boolean"
+          },
           "coverage": {
             "$ref": "#/$defs/AtlasCoverage",
             "description": "Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole."
@@ -98770,6 +98774,16 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "written": {
+            "description": "Asked `changedOnly` (docs/adr/4400): the pages the update's PDF holds, by their index (the changed and new).",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "index"
           }
         },
         "required": [
@@ -98887,6 +98901,16 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "written": {
+            "description": "Asked `changedOnly` (docs/adr/4400): the pages the update's PDF holds, by their index (the changed and new).",
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "index"
           }
         },
         "required": [
@@ -98925,6 +98949,7 @@
           "atlas_empty",
           "pin_mismatch",
           "source_changed",
+          "atlas_unchanged",
           "pdf_unwritable",
           "file_unwritable"
         ],
@@ -107891,6 +107916,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin."
+    },
+    {
+      "code": "atlas_unchanged",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Önceki atlastan beri değişen ya da yeni sayfa yok; güncelleme PDF'i yazılmadı."
     },
     {
       "code": "no_steps",

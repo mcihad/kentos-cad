@@ -259,6 +259,7 @@ def cases():
 
     source_cases(case, P)
     update_cases(case, P)
+    update_pdf_cases(case, P)
 
     case("Plan: yüz sayfa; katman süzgecinden geçmeyen beş parsel sayfa olmaz, sıra numaraya göre, ad ada/numara, "
          "merkez parselin ortası, büyük parsel 1/1000'de", [
@@ -535,6 +536,33 @@ def update_cases(case, P):
         "plain")
     case("Güncelleme: kayıt olmayan önceki dosya reddedilir", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "previous": "$tmp/yok.kaynaklar.json"},
+         "result": refused("no_previous", "previous")}], "plain")
+
+
+def update_pdf_cases(case, P):
+    """Docs/adr/4400: the update's PDF holds only the pages changed or new since the previous record, by their index
+    (the same rule as update_cases: the pages that list the edited parcel); none changed is refused, and so is asking
+    it without a previous record. The record beside it is still the whole atlas's."""
+    record = "$tmp/atlas.kaynaklar.json"
+    then = pages()
+    edited = "$uidOf:2"
+    written = [p["index"] for p in then
+               if edited in page_sources(p, overview=False)]
+    assert 1 < len(written) < len(then), written
+    first = {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done({"record": record})}
+    owner = {"command": "cad.entities.set", "input": {"uids": [edited], "operation": "attributes",
+                                                      "attrs": {"Malik": "Yeni Malik"}}, "result": done()}
+    update = {"path": "$tmp/atlas-2.pdf", "sheet": "atlas-paftasi", "previous": record, "changedOnly": True}
+    case("Güncelleme PDF'i: yalnız değişen sayfalar yazılır, kendi numaralarıyla; kayıt bütün atlasın", [
+        first, owner,
+        {"op": "execute", "input": update, "result": done({"written": written, "record": "$tmp/atlas-2.kaynaklar.json"})}],
+        "plain")
+    case("Güncelleme PDF'i planda da söylenir", [
+        first, owner, {"op": "plan", "input": update, "result": done({"written": written})}], "plain")
+    case("Güncelleme PDF'i: önceki atlastan beri değişen sayfa yoksa ret", [
+        first, {"op": "execute", "input": update, "result": refused("atlas_unchanged", "changedOnly")}], "plain")
+    case("Güncelleme PDF'i önceki kayıtsız istenemez", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "changedOnly": True},
          "result": refused("no_previous", "previous")}], "plain")
 
 

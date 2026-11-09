@@ -996,6 +996,7 @@ fn write_atlas_record(output: &kentos_commands::AtlasExported) -> Result<(), Ref
         pin: output.pin.clone(),
         pages: output.pages.clone(),
         objects: output.objects.clone(),
+        written: (!output.written.is_empty()).then(|| output.written.clone()),
     };
     let mut bytes = serde_json::to_vec_pretty(&record).unwrap_or_default();
     bytes.push(b'\n');
@@ -1174,6 +1175,14 @@ fn atlas(
     bytes: bool,
 ) -> Result<AtlasMade, Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
+    // Docs/adr/4400: only the changed pages are told from a previous record.
+    if input.changed_only && input.previous.is_none() {
+        return Err(refuse(
+            codes::NO_PREVIOUS,
+            "Yalnız değişen sayfaları yazmak için önceki atlasın kaydını (previous, PDF'in yanındaki .kaynaklar.json) verin.".to_owned(),
+            "previous",
+        ));
+    }
     // Docs/adr/4000: the previous atlas's record, read before any page is made.
     let previous = input.previous.as_deref().map(|p| previous_record(p, &input.sheet)).transpose()?;
     let user = std::env::var("USER")
@@ -1192,15 +1201,10 @@ fn atlas(
         date: &date,
     };
     let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
-    let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
+    let mut planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
     let made_pages = bytes;
-    let (bytes, findings, notes, read) = if bytes {
-        let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
-        (made.bytes, made.findings, made.notes, made.read)
-    } else {
-        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone())
-    };
-    // Docs/adr/3600: each page's sources on its own ground, the listed objects' digests (ADR 1320 §2).
+    // Docs/adr/3600: each page's sources on its own ground, the listed objects' digests (ADR 1320 §2); before the PDF,
+    // so an update (docs/adr/4400) makes only its pages.
     let mut pages = planned.pages.clone();
     let reaches = if made_pages { planned.page_grounds(doc).map_err(at)? } else { Vec::new() };
     if made_pages && reaches.len() == pages.len() {
@@ -1213,6 +1217,32 @@ fn atlas(
     }
     let objects = kentos_native_application::sheets_sources::object_digests(doc, pages.iter().flat_map(|p| p.sources.iter()));
     let changes = previous.as_ref().filter(|_| made_pages).map(|r| atlas_changes(r, &pages, &objects, &planned.pin));
+    // Docs/adr/4400: the update's pages, the changed and the new, by their index; none is no update.
+    let written: Vec<u32> = match (&changes, input.changed_only) {
+        (Some(c), true) => c
+            .pages
+            .iter()
+            .filter(|p| matches!(p.state, kentos_commands::AtlasPageState::Changed | kentos_commands::AtlasPageState::New))
+            .map(|p| p.index)
+            .collect(),
+        _ => Vec::new(),
+    };
+    if input.changed_only && made_pages {
+        if written.is_empty() {
+            return Err(refuse(
+                codes::ATLAS_UNCHANGED,
+                "Önceki atlastan beri değişen ya da yeni sayfa yok; güncelleme PDF'i yazılmadı.".to_owned(),
+                "changedOnly",
+            ));
+        }
+        planned.keep_pages(&written.iter().copied().collect());
+    }
+    let (bytes, findings, notes, read) = if bytes {
+        let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
+        (made.bytes, made.findings, made.notes, made.read)
+    } else {
+        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone())
+    };
     let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
@@ -1231,6 +1261,7 @@ fn atlas(
         changes,
         record: made_pages.then(|| kentos_commands::atlas_record_path(&path.display().to_string())),
         objects,
+        written,
     };
     let warnings = planned
         .warnings

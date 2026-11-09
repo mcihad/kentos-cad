@@ -212,6 +212,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-18 / ADR 4400: web'in Atlası PDF yap'ında Yalnız değişen ve yeni sayfalar (`changedOnly`, PDF sayfa etiketleri;
+  atlas durumlarının 4 yenisi).
 - MAP-17 / ADR 4380: web'in DXF dışa ve içe aktarımında tanımı olmayan boşluklu adın “_” etiketi ve `tagname`
   kaydıyla geri okunması (ortak `kentos-formats`'ın WASM'ı yenilenince; raporun yeni notu).
 - MAP-16 / ADR 4360: web'in `cad.pipes.profile` işleyicisinde kesişen borunun eti, dış elipsi ve dolu halkası

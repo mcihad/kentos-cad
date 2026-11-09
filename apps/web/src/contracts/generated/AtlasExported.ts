@@ -50,4 +50,8 @@ record?: string,
 /**
  * Asked with a previous record (docs/adr/4000): the changes since it.
  */
-changes?: AtlasChanges, };
+changes?: AtlasChanges, 
+/**
+ * Asked `changedOnly` (docs/adr/4400): the pages the update's PDF holds, by their index (the changed and new).
+ */
+written?: Array<number>, };

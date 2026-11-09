@@ -121,7 +121,7 @@ pub struct AtlasPin {
 }
 
 /// Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
-/// not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
+/// not a record of this sheet's atlas, docs/adr/4000; or none with `changedOnly`, docs/adr/4400), `no_sheets`,
 /// `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
 /// not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
 /// degrees), `unknown_theme`, `invalid_time`,
@@ -181,6 +181,11 @@ pub struct ExportAtlas {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub previous: Option<String>,
+    /// The update's PDF (docs/adr/4400): only the pages changed or new since `previous`, in the atlas's order, each
+    /// numbered as the atlas numbers it (its own number and the atlas's count on it, the PDF's page labels the same).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub changed_only: bool,
 }
 
 /// The format of an atlas's record (docs/adr/4000).
@@ -204,6 +209,11 @@ pub struct AtlasRecord {
     pub pages: Vec<AtlasPageInfo>,
     #[cfg_attr(feature = "ts", ts(as = "std::collections::BTreeMap<String, String>"))]
     pub objects: std::collections::BTreeMap<String, String>,
+    /// An update's PDF (docs/adr/4400): the pages it holds, by their index; absent: every page. The pages and objects
+    /// above are still the whole atlas's, what the next update is told from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub written: Option<Vec<u32>>,
 }
 
 /// How a page stands against the previous atlas (docs/adr/4000).
@@ -386,6 +396,11 @@ pub struct AtlasExported {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub changes: Option<AtlasChanges>,
+    /// Asked `changedOnly` (docs/adr/4400): the pages the update's PDF holds, by their index (the changed and new).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub written: Vec<u32>,
 }
 
 /// The record's path beside an atlas's PDF (docs/adr/4000): `atlas.pdf` → `atlas.kaynaklar.json`; a name without the

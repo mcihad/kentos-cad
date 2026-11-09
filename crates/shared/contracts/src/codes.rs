@@ -1824,6 +1824,8 @@ codes! {
     RESUME_STALE = "resume_stale", Failed, false, "Çizim, bağlı kaynakları ya da seçenekler durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz, baştan yayınlayın.";
     /// Update publication: `previous` names a folder without a readable publication (docs/adr/1320 §3).
     NO_PREVIOUS = "no_previous", Failed, false, "Önceki teslim klasöründe okunabilir bir yayın (yayin.json) yok; güncellenecek teslimin klasörünü verin.";
+    /// Atlas update: asked only the changed pages, and no page changed or is new since the previous record (docs/adr/4400).
+    ATLAS_UNCHANGED = "atlas_unchanged", Failed, false, "Önceki atlastan beri değişen ya da yeni sayfa yok; güncelleme PDF'i yazılmadı.";
 
     // ── The change set (docs/adr/0253 §8) ───────────────────────────────
     /// No step given.

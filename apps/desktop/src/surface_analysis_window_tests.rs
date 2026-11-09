@@ -483,7 +483,7 @@ fn fark_measures_by_a_grid_beside_the_exact_tin_and_adjusts_by_the_factors() {
     send(&mut app, W::Preview);
     let Read::Compare(tin) = read(&app) else { panic!("a difference") };
     assert!(tin.exact.is_none() && tin.cell.is_none() && tin.adjusted.is_none());
-    send(&mut app, W::VolumeGrid(true));
+    send(&mut app, W::VolumeMethod(1));
     send(&mut app, W::Preview);
     assert!(matches!(&app.surface_analysis_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("hücre")));
     send(&mut app, W::Field(13, "0,25".into()));
@@ -520,7 +520,7 @@ fn screens_volume_method() {
         send(&mut app, W::Mode(Mode::Compare));
         send(&mut app, W::Surface("t-5".into()));
         send(&mut app, W::Comparison("t-8".into()));
-        send(&mut app, W::VolumeGrid(true));
+        send(&mut app, W::VolumeMethod(1));
         send(&mut app, W::Field(13, "2".into()));
         send(&mut app, W::Field(14, "1,25".into()));
         send(&mut app, W::Field(15, "1,1".into()));

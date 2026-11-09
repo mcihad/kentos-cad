@@ -48,7 +48,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360 | hattın kendi borularının dış duvarı; dış çap özniteliği | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın saydamlığı ve türü | — |
 
@@ -2144,6 +2144,14 @@ sayfayı söylemez. Kanıtlanan: `file.export.atlas` PDF'in yanına `<ad>.kaynak
 projenin parçaları değişince her sayfa changed; yanlış kayıt `no_previous`; başvuruya üç durum (40; eskiler bayt bayt
 aynı), Python (kendi okumasıyla), MCP; Atlası PDF yap'ta Önceki kayıt… ve Değişim sütunu. Açık: yalnız değişen sayfaların
 ayrı PDF'i, total station ve nivelman kalitesi (projede karasal dengelemelerin doğrulukları saklanmalı).
+
+**10 Kasım 2026, sekizinci tur — atlasın güncelleme PDF'i ([ADR 4400](../docs/adr/4400-atlas-update-pdf-of-changed-pages.md)).**
+Kapsam: **CAD + CBS**. Dayanak: PDF sayfa etiketleri (`/PageLabels`, `PageLabel` /S /St; pdf-writer 0.15'in kaynağı,
+10 Kasım 2026'da okundu), ADR 4000'in değişiklik kuralı. Kanıtlanan: `file.export.atlas`'a `changedOnly` (önceki kayıtla):
+PDF yalnız değişen ve yeni sayfaları atlas sırasıyla tutar, her sayfa kendi numarası ve atlasın sayfa sayısıyla, PDF
+sayfa etiketleri aynı; cevapta ve kayıtta `written`, kayıt bütün atlasın; `atlas_unchanged` ve önceki kayıtsız
+`no_previous` retleri; 4 bağımsız durum (eski 40 bayt bayt aynı), Python (pypdf etiketleri, pdftotext), MCP; masaüstünde
+Yalnız değişen ve yeni sayfalar. Açık: total station ve nivelman kalitesi, görünüşü değişen sayfa ayrımı.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

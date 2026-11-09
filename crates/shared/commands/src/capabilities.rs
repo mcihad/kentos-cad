@@ -7282,6 +7282,8 @@ const ENTRIES: &[Entry] = &[
                 "atlas_empty",
                 "pin_mismatch",
                 "source_changed",
+                // Docs/adr/4400: asked only the changed pages, none changed.
+                "atlas_unchanged",
             ],
             &["pdf_unwritable", "file_unwritable"],
         ],

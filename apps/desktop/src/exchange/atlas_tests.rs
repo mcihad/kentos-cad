@@ -121,7 +121,7 @@ fn the_window_draws_in_another_system_and_reads_the_coverage_from_its_source() {
     assert!(App::atlas_server_work(window(&app)).is_none());
 }
 
-fn window(app: &App) -> &super::atlas_export::State {
+pub(super) fn window(app: &App) -> &super::atlas_export::State {
     match &app.exchange {
         Some(Window::AtlasExport(s)) => s,
         _ => panic!("the atlas window"),
@@ -306,7 +306,7 @@ fn screens() {
 }
 
 /// The app with the atlas drawing and the setup `name`'s sheets (`plain`: the atlas map alone, docs/adr/3600).
-fn app_with_atlas_of(name: &str) -> App {
+pub(super) fn app_with_atlas_of(name: &str) -> App {
     let file: Value = serde_json::from_str(CASES).expect("the cases");
     let setup = &file["setups"][name];
     let snapshot = DocumentSnapshotV1::from_json(&setup["drawing"].to_string()).expect("reads");
@@ -371,7 +371,7 @@ fn sources_screens() {
 
 /// docs/adr/4000: the atlas written beside its record, parcel 2's owner changed, the window's preview against that record:
 /// the pages that list parcel 2 changed, the others the same, as the shared case says.
-fn previewed_against_the_record(app: &mut App, dir: &std::path::Path) {
+pub(super) fn previewed_against_the_record(app: &mut App, dir: &std::path::Path) {
     run(app, "file.export.atlas");
     send(app, Event::Atlas(A::SavePicked(Some(dir.join("atlas.pdf")))));
     assert!(app.exchange.is_none(), "written and closed");
