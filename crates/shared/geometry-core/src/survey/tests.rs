@@ -307,6 +307,9 @@ fn polar_survey_and_stakeout_are_inverse() {
             back: Some(back),
             targets: targets.clone(),
             grid: None,
+            station_z: None,
+            target_zs: None,
+            undulations: None,
         })
         .unwrap();
         // Readings: the instrument's zero lies anywhere; the back point reads `zero`.
@@ -377,6 +380,9 @@ fn polar_survey_and_stakeout_are_inverse() {
         back: None,
         targets: vec![Vec2::new(TM.x + 10.0, TM.y)],
         grid: None,
+        station_z: None,
+        target_zs: None,
+        undulations: None,
     })
     .unwrap();
     assert!(

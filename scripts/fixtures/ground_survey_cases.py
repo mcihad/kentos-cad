@@ -15,7 +15,9 @@ at the geodesic's middle in its direction there, ground_cases.py's rule), at the
   ellipsoidal heights, each the point's height plus its undulation; the slope length and the zenith angle are built
   from the ground length and the height difference (no refraction, no instrument or target height). A shot without a
   zenith angle, or a station without a height, is reduced at the project's mean height.
-- Aplikasyon: the known points' grid distances and their ground distances with the factors.
+- Aplikasyon: the known points' grid distances and their ground distances with the factors. With the station's height,
+  the targets' heights and the undulations at each (docs/adr/3300), a line to a target with a height is taken at its own
+  height, the mean of its two ends' ellipsoidal heights; a target without one at the project's mean height.
 - Poligon hesabı: a connected traverse through known points, its angles from the grid and its legs' ground lengths;
   the core must give the points back (within 1e-6 m) with no misclosure (within 1e-6 m).
 
@@ -117,16 +119,27 @@ def polar_heights(name, system, height, unit, station, back, targets, station_z,
     return {"name": name, "input": input_, "expect": expect}
 
 
-def stakeout(name, system, height, unit, station, back, targets):
+def stakeout(name, system, height, unit, station, back, targets, station_z=None, target_zs=None, undulations=None):
+    """Aplikasyon; with heights (docs/adr/3300) each line to a target with one at its ends' ellipsoidal heights' mean."""
     expect = []
-    for t in targets:
-        k, hf = factors(system, height, station, t)
+    for i, t in enumerate(targets):
+        z = None if target_zs is None else target_zs[i]
+        if z is None or station_z is None or undulations is None:
+            h = height
+        else:
+            h = ((station_z + undulations[0]) + (z + undulations[i + 1])) / 2.0
+        k, hf = factors(system, h, station, t)
         d = dist(station, t)
-        expect.append({"distance": d, "ground": d / (k * hf), "scale": k, "heightFactor": hf})
-    return {"name": name, "input": {"unit": unit, "station": {"x": station[0], "y": station[1]},
-                                    "back": {"x": back[0], "y": back[1]},
-                                    "targets": [{"x": t[0], "y": t[1]} for t in targets],
-                                    "grid": {"system": system, "height": height}}, "expect": expect}
+        expect.append({"distance": d, "ground": d / (k * hf), "scale": k, "heightFactor": hf, "height": h})
+    input_ = {"unit": unit, "station": {"x": station[0], "y": station[1]}, "back": {"x": back[0], "y": back[1]},
+              "targets": [{"x": t[0], "y": t[1]} for t in targets], "grid": {"system": system, "height": height}}
+    if station_z is not None:
+        input_["stationZ"] = station_z
+    if target_zs is not None:
+        input_["targetZs"] = target_zs
+    if undulations is not None:
+        input_["undulations"] = undulations
+    return {"name": name, "input": input_, "expect": expect}
 
 
 def traverse(name, system, height, unit, back, points, fore):
@@ -195,6 +208,16 @@ def build():
                  at(edge, [(120.5, 340.25), (-780.0, 410.0), (1500.0, -2200.0)])),
         stakeout("UTM 36N'de, h 1200", utm36, 1200.0, "deg", ank, (ank[0] - 400.0, ank[1] + 300.0),
                  at(ank, [(600.0, 150.0), (-220.0, -880.0)])),
+        # docs/adr/3300: the lines at their own heights.
+        stakeout("TM30'un doğu kenarında, elipsoit yükseklikleri: her çizgi uçlarının ortalamasında", tm30, 850.0,
+                 "grad", edge, (edge[0], edge[1] + 500.0),
+                 at(edge, [(420.0, 310.0), (-900.0, 260.0), (1500.0, -1800.0)]), 850.0, [1150.0, 610.25, 2100.0],
+                 [0.0, 0.0, 0.0, 0.0]),
+        stakeout("UTM 36N'de ortometrik kotlar ve geoit ayrımları; kotu olmayan hedef ortalamada", utm36, 1200.0, "deg",
+                 ank, (ank[0] - 400.0, ank[1] + 300.0), at(ank, [(600.0, 150.0), (-220.0, -880.0), (300.0, -300.0)]),
+                 1100.0, [1180.5, 990.0, None], [36.21, 36.25, 36.18, 36.2]),
+        stakeout("İstasyon kotu yokken ayrımlar kullanılmaz: ortalama yükseklik", tm30, 850.0, "grad", edge,
+                 (edge[0], edge[1] + 500.0), at(edge, [(420.0, 310.0)]), None, [1150.0], [0.0, 0.0]),
     ]
     traverses = [
         traverse("TM30'un doğu kenarında bağlı poligon, h 850", tm30, 850.0, "grad", (edge[0] - 300.0, edge[1] - 400.0),

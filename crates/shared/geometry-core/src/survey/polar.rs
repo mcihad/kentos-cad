@@ -219,6 +219,16 @@ pub struct StakeoutInput {
     /// The project's grid: each length is given on the ground too
     /// (docs/adr/0171 §4).
     pub grid: Option<Grid>,
+    /// The station's height and each target's (none: a target without one;
+    /// docs/adr/3300), as the drawing holds them.
+    pub station_z: Option<f64>,
+    pub target_zs: Option<Vec<Option<f64>>>,
+    /// The geoid's height above the ellipsoid (N, m) at the station and then
+    /// at each target, one more than the targets (zeros when the heights are
+    /// ellipsoidal; docs/adr/2900 §3). With the grid, the station's height and
+    /// a target's, that line is taken at its ends' mean ellipsoidal height;
+    /// otherwise at the grid's height.
+    pub undulations: Option<Vec<f64>>,
 }
 
 crate::json_struct!(StakeoutInput {
@@ -226,7 +236,10 @@ crate::json_struct!(StakeoutInput {
     station,
     back,
     targets,
-    grid
+    grid,
+    station_z => "stationZ",
+    target_zs => "targetZs",
+    undulations
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -237,10 +250,12 @@ pub struct Stake {
     /// Angle to turn clockwise from the back point, in [0, a turn): with the back point read as 0.
     pub angle: Option<f64>,
     /// With the project's grid: the distance on the ground to set out, and
-    /// the line's scale and height factor.
+    /// the line's scale and height factor, and the ellipsoidal height it was
+    /// taken at (its ends' mean, docs/adr/3300, or the grid's).
     pub ground: Option<f64>,
     pub scale: Option<f64>,
     pub height_factor: Option<f64>,
+    pub height: Option<f64>,
 }
 
 crate::json_struct!(out Stake {
@@ -249,10 +264,15 @@ crate::json_struct!(out Stake {
     angle,
     ground,
     scale,
-    height_factor => "heightFactor"
+    height_factor => "heightFactor",
+    height
 });
 
 /// Bearings, distances and turning angles from a station to the targets.
+/// With the grid, each line's factors at its own height when the station and
+/// the target have heights and the undulations are given (docs/adr/3300: the
+/// mean of its ends' ellipsoidal heights, as a polar shot's, docs/adr/2900),
+/// else at the grid's height.
 pub fn stakeout(input: &StakeoutInput) -> Result<Vec<Stake>, String> {
     let unit = Unit::parse(&input.unit)?;
     let orient = match input.back {
@@ -262,23 +282,56 @@ pub fn stakeout(input: &StakeoutInput) -> Result<Vec<Stake>, String> {
         }
         None => None,
     };
+    if let Some(zs) = &input.target_zs
+        && zs.len() != input.targets.len()
+    {
+        return Err(format!(
+            "Hedeflerin kotları hedeflerle bire bir olmalı: {} hedef için {} kot verildi.",
+            input.targets.len(),
+            zs.len()
+        ));
+    }
+    if let Some(u) = &input.undulations {
+        if u.len() != input.targets.len() + 1 {
+            return Err(format!(
+                "Geoit ayrımı durulan nokta ve her hedef için birer tane olmalı: {} hedef için {} ayrım beklenirken {} verildi.",
+                input.targets.len(),
+                input.targets.len() + 1,
+                u.len()
+            ));
+        }
+        if u.iter().any(|n| !n.is_finite()) {
+            return Err("Geoit ayrımı sonlu bir sayı olmalı.".into());
+        }
+    }
     input
         .targets
         .iter()
-        .map(|&p| {
+        .enumerate()
+        .map(|(k, &p)| {
             let t = bearing(input.station, p);
             let d = distance(input.station, p);
+            // The line's own height: its ends' ellipsoidal heights' mean (docs/adr/3300).
+            let target_z = input.target_zs.as_ref().and_then(|zs| zs[k]);
+            let own = match (&input.undulations, input.station_z, target_z) {
+                (Some(u), Some(zs), Some(z)) => Some(((zs + u[0]) + (z + u[k + 1])) / 2.0),
+                _ => None,
+            };
             let factor = match &input.grid {
-                Some(g) if d > 0.0 => Some(grid_factor(g, input.station, p)?),
+                Some(g) if d > 0.0 => {
+                    let line = Grid { system: g.system.clone(), height: own.unwrap_or(g.height) };
+                    Some((grid_factor(&line, input.station, p)?, line.height))
+                }
                 _ => None,
             };
             Ok(Stake {
                 bearing: unit.of(t),
                 distance: d,
                 angle: orient.map(|o| unit.of(positive(t - o))),
-                ground: factor.map(|f| d / f.combined()),
-                scale: factor.map(|f| f.scale),
-                height_factor: factor.map(|f| f.height_factor),
+                ground: factor.as_ref().map(|(f, _)| d / f.combined()),
+                scale: factor.as_ref().map(|(f, _)| f.scale),
+                height_factor: factor.as_ref().map(|(f, _)| f.height_factor),
+                height: factor.as_ref().map(|(_, h)| *h),
             })
         })
         .collect()

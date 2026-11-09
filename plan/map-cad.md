@@ -32,7 +32,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280 | tipli katman profili; silinenin onaylı hâli; değişen özniteliğin adı | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
@@ -367,6 +367,14 @@ kotları projenin kotlarıyla ve geoit modeliyle elipsoit yüksekliğine; tahmin
 MCP. Kutupsal alım ve `cad.survey.points` her alımı istasyonla noktanın elipsoit yüksekliklerinin ortalamasında
 indirir (çekirdeğin `undulations`'ı, PROJ'a karşı üç yeni durum); pencerede h sütunu, çarpanlar komutunkiyle aynı.
 Açık: Poligon hesabı ve Aplikasyon'da kotlu çizgi, Koordinat dönüştür'de nokta başına karar, zamana bağlı Helmert.
+
+**9 Kasım 2026, altıncı tur — Aplikasyon'da çizginin kendi yüksekliği ([ADR 3300](../docs/adr/3300-stakeout-lines-at-their-own-height.md)).**
+Kapsam: **CAD + CBS**. Dayanak: ADR 2900'ün kuralı (yükseklik çarpanı çizginin elipsoit yüksekliğinde). Kanıtlanan:
+çekirdeğin `surveyStakeout`'u istasyonun ve hedeflerin kotlarını ve ayrımlarını alır; kotlu hedefin çizgisi uçlarının
+elipsoit yüksekliklerinin ortalamasında, kotsuz hedef ortalamada (`height`); masaüstünde kotlar çizimin noktalarından,
+h sütunu ve not. PROJ 9.5.1 ile üç yeni bağımsız durum (eski sayılar aynı), masaüstünde `cad.crs.factors` ile aynı
+çarpan. Açık: Poligon'da trigonometrik kotla bacağın yüksekliği, Koordinat dönüştür'de nokta başına karar, zamana bağlı
+Helmert.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

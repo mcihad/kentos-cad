@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Aplikasyon'da çizginin kendi yüksekliği (9 Kasım 2026; MAP-02, [ADR 3300](../../docs/adr/3300-stakeout-lines-at-their-own-height.md)).**
+  Kotlu hedefin çizgisi istasyonla hedefin elipsoit yüksekliklerinin ortalamasında (ADR 2900'ün kuralı); kotsuz hedef
+  ortalamada; h sütunu. CAD + CBS.
 - **Onaydan sonra neyin değiştiği (9 Kasım 2026; MAP-01, [ADR 3280](../../docs/adr/3280-map-work-changed-object-parts.md)).**
   Onay her nesnenin geometri, öznitelik, katman ve görünüş özetini tutar (`approvedParts`, `.kcad` şema 211);
   `changes` değişen parçaları söyler. Yalnız Harita.

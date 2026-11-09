@@ -381,6 +381,9 @@ pub struct StakeoutRead {
     pub names: Vec<String>,
     /// Whether a back point was given (the turning angles).
     pub back: bool,
+    /// docs/adr/3300: the lines taken at their own heights (the geoid model's name when the heights are orthometric),
+    /// or why at the mean; none where no line could be (no station or target height, no grid).
+    pub heights: Option<Result<Option<String>, String>>,
 }
 
 /// Aplikasyon's fields read and computed: the values and the targets'
@@ -392,9 +395,13 @@ pub fn read_stakeout(
     resolve: impl Fn(&str) -> Known,
     unit: &str,
     grid: Option<Grid>,
+    z_of: &dyn Fn(&str) -> Option<f64>,
+    heights: &dyn Fn(&StakeoutInput) -> Option<Result<(Vec<f64>, Option<String>), String>>,
 ) -> StakeoutRead {
     let mut errors = Vec::new();
     let st = resolve(station);
+    // docs/adr/3300: the station point's height in the drawing.
+    let station_z = z_of(station);
     let bk = resolve(back);
     match &st {
         Known::Empty => errors.push("Durulan nokta verilmedi.".to_owned()),
@@ -406,6 +413,7 @@ pub fn read_stakeout(
     }
     let station = st.point();
     let mut targets = Vec::new();
+    let mut target_zs = Vec::new();
     let mut names = Vec::new();
     for (i, row) in rows.iter().enumerate() {
         match resolve(row) {
@@ -419,6 +427,8 @@ pub fn read_stakeout(
             }
             Known::Point { p, name } => {
                 targets.push(p);
+                // docs/adr/3300: the drawing point's height, when the row names one.
+                target_zs.push(z_of(row));
                 names.push(if name.is_empty() {
                     js_trim(row).to_owned()
                 } else {
@@ -431,26 +441,40 @@ pub fn read_stakeout(
         errors.push("Tabloya aplike edilecek en az bir nokta yazın.".to_owned());
     }
     let back_point = bk.point();
-    let out = |errors, stakes| StakeoutRead {
+    let out = |errors, stakes, heights| StakeoutRead {
         errors,
         stakes,
         names: names.clone(),
         back: back_point.is_some(),
+        heights,
     };
     let Some(station) = station.filter(|_| errors.is_empty()) else {
-        return out(errors, None);
+        return out(errors, None, None);
     };
-    match stakeout(&StakeoutInput {
+    let mut input = StakeoutInput {
         unit: unit.to_owned(),
         station,
         back: back_point,
         targets,
         grid,
-    }) {
-        Ok(stakes) => out(errors, Some(stakes)),
+        station_z,
+        target_zs: target_zs.iter().any(Option::is_some).then_some(target_zs),
+        undulations: None,
+    };
+    // docs/adr/3300: each line at its own height, the undulations from the project's heights; or why not.
+    let said = match heights(&input) {
+        Some(Ok((ns, model))) => {
+            input.undulations = Some(ns);
+            Some(Ok(model))
+        }
+        Some(Err(why)) => Some(Err(why)),
+        None => None,
+    };
+    match stakeout(&input) {
+        Ok(stakes) => out(errors, Some(stakes), said),
         Err(e) => {
             errors.push(e);
-            out(errors, None)
+            out(errors, None, None)
         }
     }
 }

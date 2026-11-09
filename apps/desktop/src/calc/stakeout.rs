@@ -2,7 +2,10 @@
 //! values to set out known points from a station: the bearing (semt) and
 //! horizontal distance to each (the second fundamental task) and, with a
 //! back point, the angle to turn clockwise from it. Nothing is added to the
-//! drawing; the report is copied for the field.
+//! drawing; the report is copied for the field. With the project's grid each
+//! line to a target is taken at its own height when the station and the target
+//! are drawing points with heights (docs/adr/3300: the mean of their ellipsoidal
+//! heights, the h column), as Kutupsal alım's shots (docs/adr/2900).
 
 use iced::widget::{button, column, row};
 use iced::{Center, Element, Fill};
@@ -89,13 +92,20 @@ impl Form {
     }
 
     pub fn compute(&self, model: &Model) -> StakeoutRead {
+        let settings = model.settings();
         read_stakeout(
             &self.station,
             &self.back,
             &self.rows,
             |t| resolve_point(model, t),
-            unit_name(model.settings().angle_unit),
-            survey_grid(model.settings()),
+            unit_name(settings.angle_unit),
+            survey_grid(settings),
+            // docs/adr/3300: a drawing point's height, by the name typed.
+            &|t| match super::read::point_named(model, t) {
+                Some(kentos_commands::Entity::Point(p)) => p.z,
+                _ => None,
+            },
+            &|input| kentos_native_application::survey_heights::stakeout_undulations(settings, input),
         )
     }
 
@@ -104,6 +114,7 @@ impl Form {
         let stakes = read.stakes?;
         // With the project's grid: the distance on the ground and the line's factors (docs/adr/0171 §4).
         let reduced = stakes.iter().any(|s| s.ground.is_some());
+        let own = matches!(read.heights, Some(Ok(_)));
         let mut head = vec!["Nokta", "Semt", "Yatay uzunluk"];
         if reduced {
             head.push("Zeminde");
@@ -111,6 +122,9 @@ impl Form {
         head.push("Açı");
         if reduced {
             head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
+        if own {
+            head.push("Elipsoit yüksekliği");
         }
         let mut lines = vec![
             vec![TITLE.to_owned()],
@@ -129,6 +143,9 @@ impl Form {
             if reduced {
                 row.push(s.scale.map(|k| fixed(k, 8)).unwrap_or_default());
                 row.push(s.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
+            }
+            if own {
+                row.push(s.height.map(|h| fixed(h, 3)).unwrap_or_default());
             }
             lines.push(row);
         }
@@ -194,7 +211,12 @@ impl Form {
                     .ground_height()
                     .filter(|_| stakes.iter().any(|s| s.ground.is_some()))
                 {
-                    lines.push((Line::Info, stake_note(h)));
+                    // Each line at its own height, or why at the mean (docs/adr/3300).
+                    match &read.heights {
+                        Some(Ok(geoid)) => lines.push((Line::Info, own_height_note(h, geoid.as_deref()))),
+                        Some(Err(why)) => lines.push((Line::Info, format!("{} {why}", stake_note(h)))),
+                        None => lines.push((Line::Info, stake_note(h))),
+                    }
                 }
                 if !read.back {
                     lines.push((
@@ -210,8 +232,10 @@ impl Form {
             body = body.push(summary);
         }
         if let Some(stakes) = &read.stakes {
-            // With the project's grid the distance to set out on the ground comes too (docs/adr/0171 §4).
+            // With the project's grid the distance to set out on the ground comes too (docs/adr/0171 §4); each line's
+            // height when it was taken at its own (docs/adr/3300).
             let reduced = stakes.iter().any(|s| s.ground.is_some());
+            let own = reduced && matches!(read.heights, Some(Ok(_)));
             let rows = stakes
                 .iter()
                 .zip(&read.names)
@@ -234,10 +258,27 @@ impl Form {
                         s.angle
                             .map_or_else(|| "—".to_owned(), |a| angle_text(format, a)),
                     );
+                    if own {
+                        row.push(s.height.map(|h| format.length_bare(h)).unwrap_or_default());
+                    }
                     row
                 })
                 .collect();
-            let table = if reduced {
+            let table = if own {
+                result_table(
+                    &[
+                        "Nokta",
+                        "Semt",
+                        "Düzlemde (m)",
+                        "Zeminde (m)",
+                        "Çarpan",
+                        "Bakılan noktadan açı",
+                        "h (m)",
+                    ],
+                    rows,
+                    &[false, true, true, true, true, true, true],
+                )
+            } else if reduced {
                 result_table(
                     &[
                         "Nokta",
@@ -278,6 +319,19 @@ impl Form {
             .max_height(super::MAX_HEIGHT)
             .into()
     }
+}
+
+/// Said when each line is taken at its own height (docs/adr/3300): its ends' ellipsoidal heights' mean, the drawing's
+/// heights plus the geoid model's N when they are orthometric; a target without a height at the mean.
+fn own_height_note(mean: f64, model: Option<&str>) -> String {
+    let made = match model {
+        Some(m) => format!("kotlar artı “{m}” geoit modelinin ayrımı"),
+        None => "kotlar elipsoit yüksekliği".to_owned(),
+    };
+    format!(
+        "Zemin uzunlukları da verildi, her çizgi kendi yüksekliğinde: istasyonun ve hedefin elipsoit yüksekliklerinin ortalaması ({made}, h sütunu); kotu olmayan hedefin çizgisi ortalama elipsoit yüksekliğinde ({} m). Arazide zemindekini ölçün.",
+        kentos_interaction::ground::trimmed(mean)
+    )
 }
 
 const COLUMNS: [Col; 1] = [Col {

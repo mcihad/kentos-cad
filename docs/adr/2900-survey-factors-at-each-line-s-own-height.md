@@ -107,7 +107,7 @@ MCP: `{"tool": "cad.crs.factors", "arguments": {"points": [...], "elevations": [
 
 ## Sonra
 
-- Poligon hesabında ve Aplikasyon'da noktaların kotlarıyla çizgi yüksekliği (bugün ortalama).
+- Poligon hesabında ve ~~Aplikasyon'da~~ (ADR 3300) noktaların kotlarıyla çizgi yüksekliği (bugün ortalama).
 - Gauss ortalama yarıçapıyla (NGS'nin bölge tasarımındaki gibi) çarpan seçeneği.
 - Mesafe ölç ve Alan hesapla'nın satırlarında noktaların kotları.
 - Web (TODOS §0.2).

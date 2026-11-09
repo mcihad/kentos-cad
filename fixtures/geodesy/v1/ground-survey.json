@@ -590,19 +590,22 @@
      "distance": 360.9574940349625,
      "ground": 360.937532455198,
      "scale": 1.0001888576535771,
-     "heightFactor": 0.9998664723689021
+     "heightFactor": 0.9998664723689021,
+     "height": 850.0
     },
     {
      "distance": 881.1923740024082,
      "ground": 881.144548708817,
      "scale": 1.0001874879122765,
-     "heightFactor": 0.9998668133900644
+     "heightFactor": 0.9998668133900644,
+     "height": 850.0
     },
     {
      "distance": 2662.7053911388693,
      "ground": 2662.5522652225673,
      "scale": 1.0001909693976423,
-     "heightFactor": 0.9998665670362631
+     "heightFactor": 0.9998665670362631,
+     "height": 850.0
     }
    ]
   },
@@ -645,13 +648,210 @@
      "distance": 618.4658438426491,
      "ground": 618.8285610747661,
      "scale": 0.9996016819833553,
-     "heightFactor": 0.999812107927844
+     "heightFactor": 0.999812107927844,
+     "height": 1200.0
     },
     {
      "distance": 907.0832376358853,
      "ground": 907.6157104499496,
      "scale": 0.9996018017126191,
-     "heightFactor": 0.9998114511083929
+     "heightFactor": 0.9998114511083929,
+     "height": 1200.0
+    }
+   ]
+  },
+  {
+   "name": "TM30'un doğu kenarında, elipsoit yükseklikleri: her çizgi uçlarının ortalamasında",
+   "input": {
+    "unit": "grad",
+    "station": {
+     "x": 623823.4173178353,
+     "y": 4430536.278251616
+    },
+    "back": {
+     "x": 623823.4173178353,
+     "y": 4431036.278251616
+    },
+    "targets": [
+     {
+      "x": 624243.4173178353,
+      "y": 4430846.278251616
+     },
+     {
+      "x": 622923.4173178353,
+      "y": 4430796.278251616
+     },
+     {
+      "x": 625323.4173178353,
+      "y": 4428736.278251616
+     }
+    ],
+    "grid": {
+     "system": {
+      "kind": "tm",
+      "datum": "TUREF",
+      "centralMeridian": 30,
+      "scaleFactor": 1,
+      "falseEasting": 500000,
+      "falseNorthing": 0
+     },
+     "height": 850.0
+    },
+    "stationZ": 850.0,
+    "targetZs": [
+     1150.0,
+     610.25,
+     2100.0
+    ],
+    "undulations": [
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ]
+   },
+   "expect": [
+    {
+     "distance": 522.0153254455275,
+     "ground": 521.9983436751402,
+     "scale": 1.0001893147016858,
+     "heightFactor": 0.9998432472043279,
+     "height": 1000.0
+    },
+    {
+     "distance": 936.8030742904295,
+     "ground": 936.7347450243017,
+     "scale": 1.0001873059160742,
+     "heightFactor": 0.9998856595933154,
+     "height": 730.125
+    },
+    {
+     "distance": 2343.074902771996,
+     "ground": 2343.169833790709,
+     "scale": 1.0001909693116515,
+     "heightFactor": 0.9997685609560655,
+     "height": 1475.0
+    }
+   ]
+  },
+  {
+   "name": "UTM 36N'de ortometrik kotlar ve geoit ayrımları; kotu olmayan hedef ortalamada",
+   "input": {
+    "unit": "deg",
+    "station": {
+     "x": 488012.40529644216,
+     "y": 4420374.733892243
+    },
+    "back": {
+     "x": 487612.40529644216,
+     "y": 4420674.733892243
+    },
+    "targets": [
+     {
+      "x": 488612.40529644216,
+      "y": 4420524.733892243
+     },
+     {
+      "x": 487792.40529644216,
+      "y": 4419494.733892243
+     },
+     {
+      "x": 488312.40529644216,
+      "y": 4420074.733892243
+     }
+    ],
+    "grid": {
+     "system": {
+      "kind": "tm",
+      "datum": "WGS84",
+      "centralMeridian": 33,
+      "scaleFactor": 0.9996,
+      "falseEasting": 500000,
+      "falseNorthing": 0
+     },
+     "height": 1200.0
+    },
+    "stationZ": 1100.0,
+    "targetZs": [
+     1180.5,
+     990.0,
+     null
+    ],
+    "undulations": [
+     36.21,
+     36.25,
+     36.18,
+     36.2
+    ]
+   },
+   "expect": [
+    {
+     "distance": 618.4658438426491,
+     "ground": 618.8262821243453,
+     "scale": 0.9996016819833553,
+     "heightFactor": 0.9998157899340707,
+     "height": 1176.48
+    },
+    {
+     "distance": 907.0832376358853,
+     "ground": 907.5987678732232,
+     "scale": 0.9996018017126191,
+     "heightFactor": 0.9998301150630189,
+     "height": 1081.1950000000002
+    },
+    {
+     "distance": 424.26406871192853,
+     "ground": 424.5130110546963,
+     "scale": 0.9996017251489008,
+     "heightFactor": 0.9998117812479205,
+     "height": 1200.0
+    }
+   ]
+  },
+  {
+   "name": "İstasyon kotu yokken ayrımlar kullanılmaz: ortalama yükseklik",
+   "input": {
+    "unit": "grad",
+    "station": {
+     "x": 623823.4173178353,
+     "y": 4430536.278251616
+    },
+    "back": {
+     "x": 623823.4173178353,
+     "y": 4431036.278251616
+    },
+    "targets": [
+     {
+      "x": 624243.4173178353,
+      "y": 4430846.278251616
+     }
+    ],
+    "grid": {
+     "system": {
+      "kind": "tm",
+      "datum": "TUREF",
+      "centralMeridian": 30,
+      "scaleFactor": 1,
+      "falseEasting": 500000,
+      "falseNorthing": 0
+     },
+     "height": 850.0
+    },
+    "targetZs": [
+     1150.0
+    ],
+    "undulations": [
+     0.0,
+     0.0
+    ]
+   },
+   "expect": [
+    {
+     "distance": 522.0153254455275,
+     "ground": 521.986069970184,
+     "scale": 1.0001893147016858,
+     "heightFactor": 0.9998667569907467,
+     "height": 850.0
     }
    ]
   }

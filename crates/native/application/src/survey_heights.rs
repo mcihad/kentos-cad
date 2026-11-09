@@ -2,14 +2,15 @@
 //! docs/adr/2900): the geoid's height above the ellipsoid (N) at points of the project's map, by what the project says
 //! its heights are (Proje ayarları › Kotlar, docs/adr/0519): 0 where they are ellipsoidal, the project's geoid model's
 //! N where they are orthometric. `cad.crs.factors` takes the drawing's heights through it (`elevations`), and
-//! Kutupsal alım and `cad.survey.points` reduce each shot at its own line's height with it; one rule for the window,
+//! Kutupsal alım and `cad.survey.points` reduce each shot at its own line's height with it, Aplikasyon each line to a
+//! target (docs/adr/3300); one rule for the window,
 //! Python and MCP. Nothing is guessed: a project that does not say what its heights are, an orthometric one without a
 //! geoid model or a model whose grid is not on this device gets the reason, never a zero N.
 
 use kentos_commands::{HeightKind, ProjectSettings};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::crs::geoid;
-use kentos_geometry_core::survey::polar::{PolarInput, polar_survey};
+use kentos_geometry_core::survey::polar::{PolarInput, StakeoutInput, polar_survey};
 
 use crate::crs_models::{self, Missing, ModelKind};
 
@@ -101,6 +102,26 @@ pub fn polar_undulations(settings: &ProjectSettings, input: &PolarInput) -> Opti
         Ok((ns, model)) => match ns.iter().position(Option::is_none) {
             Some(0) => Err("Durulan nokta geoit modelinin ızgarasının dışında: çizgiler ortalama elipsoit yüksekliğinde indirildi.".into()),
             Some(k) => Err(format!("{k}. nokta geoit modelinin ızgarasının dışında: çizgiler ortalama elipsoit yüksekliğinde indirildi.")),
+            None => Ok((ns.into_iter().flatten().collect(), model)),
+        },
+    })
+}
+
+/// What Aplikasyon takes its lines with (docs/adr/3300): none where no line is taken at its own height (no grid, no
+/// station height, no target with a height); else the undulations at the station and at each target, with the geoid
+/// model's name, or why not, said in the window. The targets are known points: no first pass is needed.
+pub fn stakeout_undulations(settings: &ProjectSettings, input: &StakeoutInput) -> Option<Result<(Vec<f64>, Option<String>), String>> {
+    let any_target = input.target_zs.as_ref().is_some_and(|zs| zs.iter().any(Option::is_some));
+    if input.grid.is_none() || input.station_z.is_none() || !any_target {
+        return None;
+    }
+    let mut at = vec![input.station];
+    at.extend(input.targets.iter().copied());
+    Some(match undulations(settings, &at) {
+        Err(why) => Err(why.words()),
+        Ok((ns, model)) => match ns.iter().position(Option::is_none) {
+            Some(0) => Err("Durulan nokta geoit modelinin ızgarasının dışında: çizgiler ortalama elipsoit yüksekliğinde alındı.".into()),
+            Some(k) => Err(format!("{k}. hedef geoit modelinin ızgarasının dışında: çizgiler ortalama elipsoit yüksekliğinde alındı.")),
             None => Ok((ns.into_iter().flatten().collect(), model)),
         },
     })
