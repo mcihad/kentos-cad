@@ -45062,6 +45062,42 @@ class ImpactLayer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactLink(_Model):
+    """A measured area joined to the nearest object of the infrastructure layer (docs/adr/3460): the area's and the
+    object's persistent ids, the area's centroid, the object's nearest place to it (the centroid itself when the
+    object reaches it) and the distance between them. Nearness only: not the line's capacity or a right to connect.
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        distance: Unit: length.
+    """
+    area: str
+    line: str
+    from_: list[float]
+    to: list[float]
+    distance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = self.area
+        out["line"] = self.line
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["to"] = [float(e0) for e0 in self.to]
+        out["distance"] = float(self.distance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactLink:
+        return cls(
+            area=data["area"],
+            line=data["line"],
+            from_=[float(e0) for e0 in data["from"]],
+            to=[float(e0) for e0 in data["to"]],
+            distance=float(data["distance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactMeasure(_Model):
     """A measure: its id (`objects`, `area`, `length`, `capacity`), what it is called, its unit (`count`, `m2`, `m`), its
     value on the field state's side and on the alternative's, the difference (alternative − base), and how it is
@@ -45108,6 +45144,9 @@ class ImpactNear(_Model):
     """Which areas the infrastructure measure found near (docs/adr/3060), so a host can show them: on each side, by
     persistent id in the drawing's order, the measured areas whose centroid lies within the distance, those beyond it,
     and the side's infrastructure layer's objects. Nearness only: not a line's capacity or a right to connect.
+    Attributes:
+        base_links: Each side's measured areas joined to their nearest object of the layer (docs/adr/3460), in the drawing's order;
+            none when the side's layer has no object.
     """
     base_near: list[str]
     base_far: list[str]
@@ -45115,6 +45154,8 @@ class ImpactNear(_Model):
     alternative_near: list[str]
     alternative_far: list[str]
     alternative_lines: list[str]
+    alternative_links: list[ImpactLink] | Unset = UNSET
+    base_links: list[ImpactLink] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -45124,6 +45165,10 @@ class ImpactNear(_Model):
         out["alternativeNear"] = list(self.alternative_near)
         out["alternativeFar"] = list(self.alternative_far)
         out["alternativeLines"] = list(self.alternative_lines)
+        if self.alternative_links is not UNSET:
+            out["alternativeLinks"] = [e0.to_json() for e0 in self.alternative_links]
+        if self.base_links is not UNSET:
+            out["baseLinks"] = [e0.to_json() for e0 in self.base_links]
         return out
 
     @classmethod
@@ -45135,6 +45180,8 @@ class ImpactNear(_Model):
             alternative_near=list(data["alternativeNear"]),
             alternative_far=list(data["alternativeFar"]),
             alternative_lines=list(data["alternativeLines"]),
+            alternative_links=[ImpactLink.from_json(e0) for e0 in data["alternativeLinks"]] if "alternativeLinks" in data else UNSET,
+            base_links=[ImpactLink.from_json(e0) for e0 in data["baseLinks"]] if "baseLinks" in data else UNSET,
         )
 
 
@@ -131295,6 +131342,7 @@ __all__ = [
     "ImpactDerived",
     "ImpactInfrastructure",
     "ImpactLayer",
+    "ImpactLink",
     "ImpactMeasure",
     "ImpactNear",
     "ImpactOwn",

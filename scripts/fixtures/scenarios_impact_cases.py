@@ -241,14 +241,24 @@ def to_segment(p, a, b):
     return ((px - ax - t * dx) ** 2 + (py - ay - t * dy) ** 2) ** 0.5
 
 
+def nearest_on_segment(p, a, b):
+    """The segment's nearest place to p and its distance (the foot of the perpendicular, held within the ends)."""
+    (px, py), (ax, ay), (bx, by) = p, a, b
+    dx, dy = bx - ax, by - ay
+    t = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+    q = (ax + t * dx, ay + t * dy)
+    return q, ((px - q[0]) ** 2 + (py - q[1]) ** 2) ** 0.5
+
+
 def near(s, sd, layer, infra):
     """The area near the layer's objects (docs/adr/2660), the measured areas' whole, the layer's objects; and the
-    measured areas near and beyond and the layer's objects by persistent id (docs/adr/3060)."""
+    measured areas near and beyond and the layer's objects by persistent id (docs/adr/3060); and each measured area
+    joined to its nearest object (docs/adr/3460): the first of equals in the drawing's order, its nearest place."""
     objs = [e for e in s["entities"] if e["layerId"] == layer]
     lines = [verts(e) for e in objs]
     uses = [u for u in infra.get("from", []) if u.strip()]
     got = whole = 0.0
-    yes, no = [], []
+    yes, no, links = [], [], []
     for e, u, a in sd["areas"]:
         if uses and u not in uses:
             continue
@@ -260,7 +270,15 @@ def near(s, sd, layer, infra):
             yes.append(uid(e["id"]))
         else:
             no.append(uid(e["id"]))
-    return got, whole, len(lines), yes, no, [uid(e["id"]) for e in objs]
+        tried = [(k,) + nearest_on_segment(c, p, q) for k, pts in enumerate(lines) for p, q in zip(pts, pts[1:])]
+        if tried:
+            best = min(tried, key=lambda x: (x[2], x[0]))
+            # Two objects at exactly one distance (axis-parallel roads, whole metres: both sides compute it exactly)
+            # take the first in the drawing's order; none at nearly one distance, which would hang on the last digit.
+            assert all(x[0] == best[0] or x[2] == best[2] or x[2] - best[2] > 1e-6 for x in tried), (e["id"], tried)
+            links.append({"area": uid(e["id"]), "line": uid(objs[best[0]]["id"]), "from": [c[0], c[1]],
+                          "to": [best[1][0], best[1][1]], "distance": best[2]})
+    return got, whole, len(lines), yes, no, [uid(e["id"]) for e in objs], links
 
 
 def rs(v):
@@ -314,9 +332,14 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
     if infrastructure is not None:
         lid = infrastructure["layer"]
         theirs = next((l for b_, l in ps if b_ == lid), lid)
-        (xg, xw, xn, xy, xf, xl), (yg, yw, yn, yy, yf, yl) = near(s, b, lid, infrastructure), near(s, a, theirs, infrastructure)
+        (xg, xw, xn, xy, xf, xl, xk), (yg, yw, yn, yy, yf, yl, yk) = (near(s, b, lid, infrastructure),
+                                                                      near(s, a, theirs, infrastructure))
         near_out = {"baseNear": xy, "baseFar": xf, "baseLines": xl,
                     "alternativeNear": yy, "alternativeFar": yf, "alternativeLines": yl}
+        if xk:
+            near_out["baseLinks"] = xk
+        if yk:
+            near_out["alternativeLinks"] = yk
         name = {"altyapi": "Kanalizasyon hattı", "yol": "Yollar", "karar": "Karar alanları"}[lid]
         d = rs(infrastructure["distance"])
         uses_ = [u for u in infrastructure.get("from", []) if u.strip()]

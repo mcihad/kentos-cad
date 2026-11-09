@@ -4,7 +4,8 @@
 //! dashed, in the accent. The marks are worked out again with the same input whenever the drawing changes, so housing
 //! a moved park now reaches turns at once. Altyapıyı çizimde göster (docs/adr/3060) shows the infrastructure measure the
 //! same way: the measured areas near the layer filled in the success colour, those beyond it in the danger colour, the
-//! layer's objects drawn over in the accent; nearness only, not a line's capacity. Nothing is written.
+//! layer's objects drawn over in the accent; nearness only, not a line's capacity. Nothing is written. Each measured area
+//! is joined to its nearest object by a dashed line from its centroid, the distance at its middle (docs/adr/3460).
 
 use std::cell::RefCell;
 use std::sync::Arc;
@@ -54,6 +55,9 @@ pub struct ReachMarks {
     pub targets: Vec<Area>,
     /// The infrastructure layer's objects as lines, arcs as points along them (docs/adr/3060).
     pub lines: Vec<Vec<kentos_geometry_core::Vec2>>,
+    /// Each measured area's centroid joined to its nearest object's nearest place, and the distance as the drawing
+    /// writes lengths (docs/adr/3460).
+    pub links: Vec<([f64; 2], [f64; 2], String)>,
 }
 
 impl ReachMarks {
@@ -72,12 +76,13 @@ impl ReachMarks {
             unreached: areas(&r.alternative_unreached),
             targets: areas(&r.alternative_targets),
             lines: Vec::new(),
+            links: Vec::new(),
         }
     }
 
     /// The scenario side's nearness of `n` (docs/adr/3060): its measured areas near and beyond, and its layer's
     /// objects as lines.
-    pub fn of_near(doc: &Document, n: &ImpactNear) -> Self {
+    pub fn of_near(doc: &Document, n: &ImpactNear, f: &kentos_interaction::Format) -> Self {
         let entities = |uids: &[String]| -> Vec<&kentos_commands::Entity> {
             uids.iter()
                 .filter_map(|u| Uuid::parse_str(u).ok())
@@ -97,7 +102,8 @@ impl ReachMarks {
                 _ => None,
             })
             .collect();
-        Self { reached: areas(&n.alternative_near), unreached: areas(&n.alternative_far), targets: Vec::new(), lines }
+        let links = n.alternative_links.iter().map(|l| (l.from, l.to, f.length(l.distance))).collect();
+        Self { reached: areas(&n.alternative_near), unreached: areas(&n.alternative_far), targets: Vec::new(), lines, links }
     }
 
     /// The box of every area's outer ring (their vertices), when there is one.
@@ -135,7 +141,7 @@ impl App {
         }
         let made = scenarios_impact::preview(&doc.model, &shown.input).ok().and_then(|answer| {
             if shown.near {
-                answer.near.map(|n| Arc::new(ReachMarks::of_near(&doc.model, &n)))
+                answer.near.map(|n| Arc::new(ReachMarks::of_near(&doc.model, &n, &self.format())))
             } else {
                 answer.reach.map(|reach| Arc::new(ReachMarks::of(&doc.model, &reach)))
             }
@@ -208,5 +214,32 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
         });
         frame.stroke(&lines, stroke(6.0, colors.halo));
         frame.stroke(&lines, stroke(3.0, tokens.accent));
+    }
+    // Each area to its nearest object (docs/adr/3460): dashed on a halo, a ring at the object's place, the distance at
+    // the middle.
+    let at = |p: [f64; 2]| {
+        let s = camera.world_to_screen(kentos_geometry_core::Vec2::new(p[0], p[1]));
+        iced::Point::new(s[0] as f32, s[1] as f32)
+    };
+    for (from, to, words) in &m.links {
+        let (from, to) = (*from, *to);
+        let (a, b) = (at(from), at(to));
+        let link = Path::line(a, b);
+        frame.stroke(&link, stroke(4.0, colors.halo));
+        frame.stroke(&link, Stroke { line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 }, ..stroke(1.5, tokens.accent) });
+        frame.stroke(&Path::circle(b, 4.0), stroke(1.5, tokens.accent));
+        let text = canvas::Text {
+            content: words.clone(),
+            position: iced::Point::new((a.x + b.x) / 2.0 + 6.0, (a.y + b.y) / 2.0),
+            color: colors.halo,
+            size: iced::Pixels(kentos_ui::theme::typography::scaled(11.0)),
+            font: kentos_ui::theme::typography::ui_strong(),
+            align_y: iced::alignment::Vertical::Center,
+            ..canvas::Text::default()
+        };
+        for (ox, oy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
+            frame.fill_text(canvas::Text { position: text.position + iced::Vector::new(ox, oy), ..text.clone() });
+        }
+        frame.fill_text(canvas::Text { color: tokens.accent, ..text });
     }
 }

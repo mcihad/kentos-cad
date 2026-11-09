@@ -48,5 +48,5 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-10, beşinci tur. Durum: taslak. ADR 2660
 ## Sonra
 
 - Ağ üzerinden (yol boyunca) uzaklık; eğim; risk katmanları; damganın çizimde saklanması (MAP-10'un öbür maddeleri).
-- Alanın en yakın hatta çizgiyle bağlanması (hangi hat).
+- Alanın en yakın hatta çizgiyle bağlanması (hangi hat). Yapıldı: [ADR 3460](3460-scenario-area-to-nearest-line.md).
 - Web (TODOS §0.2).

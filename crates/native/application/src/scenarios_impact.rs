@@ -190,6 +190,31 @@ struct Near {
     near: Vec<String>,
     far: Vec<String>,
     lines: Vec<String>,
+    /// Each measured area joined to its nearest object of the layer (docs/adr/3460).
+    links: Vec<kentos_commands::ImpactLink>,
+}
+
+/// The nearest place of `t` to the point `p` (its geometry `point`), and the distance: `p` itself when `t` reaches it
+/// (as `distance` counts 0), else the nearest of `t`'s points and of its edges' nearest places, the first of equals.
+fn nearest_of(p: kentos_geometry_core::Vec2, point: &kentos_geometry_core::ops::spatial_query::Geometry, t: &kentos_geometry_core::ops::spatial_query::Geometry) -> ([f64; 2], f64) {
+    use kentos_geometry_core::geom::intersect::closest_on_edge;
+    if kentos_geometry_core::ops::spatial_query::intersects(point, t) {
+        return ([p.x, p.y], 0.0);
+    }
+    let mut best = ([p.x, p.y], f64::INFINITY);
+    for q in &t.points {
+        let d = (q.x - p.x).hypot(q.y - p.y);
+        if d < best.1 {
+            best = ([q.x, q.y], d);
+        }
+    }
+    for e in &t.edges {
+        let q = closest_on_edge(e, p);
+        if q.d < best.1 {
+            best = ([q.p.x, q.p.y], q.d);
+        }
+    }
+    best
 }
 
 /// The area of a side's measured areas (`from`'s uses, or all) whose centroid lies within `d` of an object of `layer`.
@@ -204,13 +229,26 @@ fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::Impa
             Some(g)
         })
         .collect();
-    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len(), near: Vec::new(), far: Vec::new(), lines: ids };
+    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len(), near: Vec::new(), far: Vec::new(), lines: ids, links: Vec::new() };
     let measured = |u: &String| infra.from.iter().all(|f| f.trim().is_empty()) || infra.from.contains(u);
     for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| measured(u)) {
         r.whole += area;
-        let close = shape_centroid(sh)
-            .and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }))
-            .is_some_and(|point| lines.iter().map(|t| distance(&point, t)).any(|d| d <= infra.distance));
+        let centre = shape_centroid(sh);
+        let point = centre.and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }));
+        let close = point.as_ref().is_some_and(|point| lines.iter().map(|t| distance(point, t)).any(|d| d <= infra.distance));
+        // The nearest object and its nearest place (docs/adr/3460): the first of equals in the drawing's order.
+        if let (Some(c), Some(point)) = (centre, point.as_ref()) {
+            let mut best: Option<(usize, [f64; 2], f64)> = None;
+            for (k, t) in lines.iter().enumerate() {
+                let (to, d) = nearest_of(c, point, t);
+                if best.is_none_or(|(_, _, b)| d < b) {
+                    best = Some((k, to, d));
+                }
+            }
+            if let Some((k, to, d)) = best {
+                r.links.push(kentos_commands::ImpactLink { area: uid.clone(), line: r.lines[k].clone(), from: [c.x, c.y], to, distance: d });
+            }
+        }
         if close {
             r.got += area;
             r.near.push(uid.clone());
@@ -383,6 +421,8 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
             alternative_near: y.near.clone(),
             alternative_far: y.far.clone(),
             alternative_lines: y.lines.clone(),
+            base_links: x.links.clone(),
+            alternative_links: y.links.clone(),
         });
         let name = &node.name;
         let uses: Vec<&str> = infra.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();

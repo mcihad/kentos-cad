@@ -213,9 +213,14 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
     verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları):
     ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan
     from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri
-    eksiği. Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında,
-    access.distance 0'dan büyük değil, access.from/to boş), scenario_not_found,
-    nothing_to_compare.
+    eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir
+    nesnesine o uzaklıkta olan alanların toplamı (ADR 2660), near'da yakın ve uzak
+    alanlar ve katmanın nesneleri (ADR 3060), baseLinks ve alternativeLinks'te her
+    ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın
+    yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya
+    da bağlanma hakkı değildir. Salt okunur. Retler: invalid_input
+    (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
+    access.from/to boş), scenario_not_found, nothing_to_compare.
     """
     __slots__ = ()
     id = "cad.scenarios.impact"
@@ -255,7 +260,12 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği;
         access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına
         düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
-        alanlarına oranı (%), to alanı olmayan taraf veri eksiği. Salt okunur. Retler:
+        alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer,
+        distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların
+        toplamı (ADR 2660), near'da yakın ve uzak alanlar ve katmanın nesneleri (ADR 3060),
+        baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne,
+        ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce
+        gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir. Salt okunur. Retler:
         invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
         access.from/to boş), scenario_not_found, nothing_to_compare.
 

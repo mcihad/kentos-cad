@@ -199,6 +199,33 @@ pub struct ImpactNear {
     pub alternative_near: Vec<String>,
     pub alternative_far: Vec<String>,
     pub alternative_lines: Vec<String>,
+    /// Each side's measured areas joined to their nearest object of the layer (docs/adr/3460), in the drawing's order;
+    /// none when the side's layer has no object.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactLink>>"))]
+    pub base_links: Vec<ImpactLink>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ImpactLink>>"))]
+    pub alternative_links: Vec<ImpactLink>,
+}
+
+/// A measured area joined to the nearest object of the infrastructure layer (docs/adr/3460): the area's and the
+/// object's persistent ids, the area's centroid, the object's nearest place to it (the centroid itself when the
+/// object reaches it) and the distance between them. Nearness only: not the line's capacity or a right to connect.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactLink {
+    pub area: String,
+    pub line: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub from: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub to: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
 }
 
 /// Output of `cad.scenarios.impact` v1: the scenario, its pairs, the field and key used, the measures, the uses by

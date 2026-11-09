@@ -352,7 +352,7 @@ impl App {
                 let (Some(Ok(answer)), Ok(input)) = (&self.impact.answer, self.impact_input()) else { return Task::none() };
                 let Some(near) = answer.near.clone() else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let marks = crate::impact_reach_marks::ReachMarks::of_near(&doc.model, &near);
+                let marks = crate::impact_reach_marks::ReachMarks::of_near(&doc.model, &near, &self.format());
                 let (yes, no) = (near.alternative_near.len(), near.alternative_far.len());
                 self.impact_reach = Some(crate::impact_reach_marks::Shown::near(doc.session, input));
                 self.impact = State::default();
@@ -365,7 +365,7 @@ impl App {
                 self.say(
                     Level::Info,
                     format!(
-                        "{TITLE}: senaryoda {yes} alan altyapıya yakın (yeşil), {no} alan uzak (kırmızı); altyapının hatları vurgulu. Yakınlıktır, hattın kapasitesi ya da bağlantı hakkı değildir. İşareti kaldır işaretleri siler."
+                        "{TITLE}: senaryoda {yes} alan altyapıya yakın (yeşil), {no} alan uzak (kırmızı); altyapının hatları vurgulu, her alan en yakın hatta kesikli çizgiyle bağlı. Yakınlıktır, hattın kapasitesi ya da bağlantı hakkı değildir. İşareti kaldır işaretleri siler."
                     ),
                 );
             }

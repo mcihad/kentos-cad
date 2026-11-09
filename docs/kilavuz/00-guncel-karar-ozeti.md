@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Senaryoda alanın en yakın hatta bağı (9 Kasım 2026; MAP-10, [ADR 3460](../../docs/adr/3460-scenario-area-to-nearest-line.md)).**
+  `cad.scenarios.impact`'in `near`'ı her ölçülen alanı en yakın altyapı nesnesine bağlar (nesne, merkez, en yakın yer,
+  uzaklık; eşitlerde çizimde önce gelen); Çizimde göster bağları çizer. Harita + CBS.
 - **İmar denetiminde bölgeler cevapta (9 Kasım 2026; MAP-09, [ADR 3440](../../docs/adr/3440-zoning-regions-in-the-answer.md)).**
   `cad.zoning.check`'in yol genişliği ve yola giren parsel bulguları sayılan örtüşme parçalarını `regions`'ta taşır
   (kanonik halkalar); Python ve MCP çizebilir. Harita + CBS.

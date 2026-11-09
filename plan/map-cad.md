@@ -40,7 +40,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
@@ -1105,6 +1105,14 @@ Kapsam: **Harita + CBS**. Kanıtlanan: `cad.scenarios.impact`'in `near`'ı (iki 
 katmanının nesneleri; kimlikleriyle), üreteçte bağımsız; 37 ortak durum, Python, MCP; Senaryo ölçüleri'nde Altyapıyı
 çizimde göster (yakın yeşil, uzak kırmızı, hat vurgulu, İşareti kaldır'a dek); masaüstü testi ve resimler. Açık: eğim,
 ağ üzerinden erişim, damganın çizimde saklanması, en yakın hatta bağ çizgisi.
+
+**9 Kasım 2026, altıncı tur — alanın en yakın hatta bağı ([ADR 3460](../docs/adr/3460-scenario-area-to-nearest-line.md)).**
+Kapsam: **Harita + CBS**. Araştırma: QGIS 3.40'ın Join attributes by nearest'i (uzaklık, iki nesnenin en yakın noktaları,
+Kartezyen). Kanıtlanan: `cad.scenarios.impact`'in `near`'ında `baseLinks`/`alternativeLinks`: her ölçülen alanın
+en yakın altyapı nesnesi, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen); Altyapıyı
+çizimde göster bağları kesikli çizgiyle ve uzaklıkla çizer. Ortak durumlar (bağımsız başvuru, kesin eşitlik dahil),
+Python, MCP, masaüstü ve resimler. Açık: eğim, ağ üzerinden erişim, damganın çizimde saklanması, bağların katmana
+yazılması.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

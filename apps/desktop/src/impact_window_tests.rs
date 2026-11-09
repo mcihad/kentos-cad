@@ -91,12 +91,32 @@ fn the_area_near_the_infrastructure_is_the_case_s() {
     // and beyond and the layer's lines on the drawing until İşareti kaldır.
     let want = &case["steps"][0]["result"]["output"]["near"];
     let near = r.near.clone().expect("the nearness");
-    assert_eq!(serde_json::to_value(&near).expect("writes"), *want);
+    let got = serde_json::to_value(&near).expect("writes");
+    for key in ["baseNear", "baseFar", "baseLines", "alternativeNear", "alternativeFar", "alternativeLines"] {
+        assert_eq!(got[key], want[key], "{key}");
+    }
+    // docs/adr/3460: each measured area joined to the case's nearest line at the case's place (its centroid computed
+    // two ways near 4 400 000 m, within a micrometre).
+    for key in ["baseLinks", "alternativeLinks"] {
+        let (g, w) = (got[key].as_array().expect(key), want[key].as_array().expect(key));
+        assert_eq!(g.len(), w.len(), "{key}");
+        for (a, b) in g.iter().zip(w) {
+            assert_eq!((&a["area"], &a["line"]), (&b["area"], &b["line"]));
+            for k in ["from", "to"] {
+                for i in 0..2 {
+                    assert!((a[k][i].as_f64().expect(k) - b[k][i].as_f64().expect(k)).abs() < 1e-6, "{key} {k}");
+                }
+            }
+            assert!((a["distance"].as_f64().expect("d") - b["distance"].as_f64().expect("d")).abs() < 1e-6);
+        }
+    }
     let _ = app.update(Message::Impact(I::DrawNear));
     assert_eq!(app.dialog, None);
     let m = app.impact_reach_marks().expect("the marks");
     assert_eq!(m.reached.len() + m.unreached.len(), near.alternative_near.len() + near.alternative_far.len());
     assert_eq!(m.lines.len(), near.alternative_lines.len());
+    assert_eq!(m.links.len(), near.alternative_links.len(), "each area to its nearest line");
+    assert!(m.links.iter().all(|(_, _, words)| words.ends_with(" m")), "{:?}", m.links);
     assert!(m.lines.iter().all(|l| l.len() >= 2) && m.targets.is_empty());
     let _ = app.update(Message::Run("data.unmark"));
     assert!(app.impact_reach_marks().is_none());
@@ -315,6 +335,57 @@ fn infra_screens() {
         let near = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/altyapi-cizimde-3060");
         std::fs::create_dir_all(&near).expect("a folder");
         let file = near.join(format!("altyapi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
+/// docs/adr/3460: the roads as the infrastructure, 30 m; Altyapıyı çizimde göster joins each of the scenario's areas to
+/// its nearest road (the area between the two roads to the first, by the drawing's order), the distance at the middle;
+/// light wide and dark narrow, `.run/gui-evidence/en-yakin-hat-3460/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib impact_window_tests::link_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn link_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.scenarios.impact.json")).expect("cases");
+    let setup = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "senaryonun yerine geçtiği katman altyapı: her taraf kendi yollarıyla")
+        .expect("the case")
+        .get("setup")
+        .cloned()
+        .unwrap_or_else(|| cases["setup"].clone());
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/en-yakin-hat-3460");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup.clone()).expect("reads");
+        let (mut app, _) = App::boot(None);
+        app.program = Some(Module::Map);
+        let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("scenario.impact"));
+        for e in [I::InfraLayer("yol".into()), I::InfraDistance("30".into())] {
+            let _ = app.update(Message::Impact(e));
+        }
+        let _ = app.update(Message::Impact(I::DrawNear));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("baglar-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }
