@@ -975,10 +975,13 @@ fn kentos_cad_offers_every_command_and_a_module_offers_what_its_ribbon_shows() {
 #[test]
 fn komut_ara_finds_no_other_modules_work() {
     let mut mimari = program(Some(Module::Architecture));
-    for query in ["havza", "tesis", "parsel", "altlık", "osm", "raster"] {
+    for query in ["havza", "tesis", "altlık", "osm", "raster"] {
         let hits = found(&mut mimari, query);
         assert!(hits.is_empty(), "Mimari: {query}: {hits:?}");
     }
+    // A parcel is Mimari's own too since the site plan (docs/adr/3032): its Parsel ve bahçe mesafeleri, never KentOS
+    // Harita's parcel drawing (`tool.parcel`).
+    assert_eq!(found(&mut mimari, "parsel"), ["tool.siteParcel"]);
     // An attachment's web address is no address search; Ölçülendirme's slope dimension no terrain slope.
     let hits = found(&mut mimari, "adres");
     assert!(

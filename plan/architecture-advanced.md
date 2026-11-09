@@ -975,7 +975,8 @@ _Durum (8 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M2
 - Metrekare cetveli (M29 2. bölüm): Metraj ▾ › Metrekare cetveli, bölüm çizelgesi kat kat (`byLevel`): her katta bölümler ve ortak alanların o kattaki yönetmelik brüt ve net alanı, toplam binanın.
 - Emsal ve TAKS (M30, [ADR 3030](../docs/adr/3030-emsal-taks-zoning-badge-and-table.md)): Proje ayarları › Mimari › İmar durumu (parsel, emsal, TAKS); mahalin emsal sınıfı kullanım listesinden ya da adından; durum çubuğunda canlı rozet (aşımda kırmızı), Öznitelikler › İmar durumu; Metraj ▾ › Emsal ve TAKS tablosu (PAİY 57/3'ün değerleri, kat kat alanlar, her adımda ve ayar değişince yenilenir); KCAD 210.
 - Kat irtifakı (M31, [ADR 3031](../docs/adr/3031-condominium-units-annexes-and-land-shares.md)): eklenti grubu ve bölümü, bölümün niteliği, değer katsayısı ve arsa payı paydası; toplam brüt = brüt + eklenti, genel brüt = toplam + pay; arsa payı `kentos.land/1` (payda: program, yoksa parsel alanı); Metraj ▾ › Kat irtifakı tablosu; KCAD 211.
-- Kalanlar: kat ara toplamı, gruba alınmamış mahallerin yapı inşaat alanı, merdiven altı 1,80 m, sıvasız projede sıva payı, emsal sınıfı arayüzü ve 22. maddenin %20/%50/70 m² sınırları, ortak yer sözlüğü ve elle arsa payı, vaziyet planı.
+- Vaziyet planı 1. bölüm (M32, [ADR 3032](../docs/adr/3032-site-plan-parcel-setbacks-and-datum.md)): parsel (kapalı çizgi), kenar türleri ve PAİY 23 mesafeleri (kat adedine göre artış), canlı yapı yaklaşma sınırı, oturumun kenarlara uzaklığı, ağaç sayısı, ±0,00 kotu; rozet, Öznitelikler ve Emsal ve TAKS tablosunda; KCAD 212.
+- Kalanlar: kat ara toplamı, gruba alınmamış mahallerin yapı inşaat alanı, merdiven altı 1,80 m, sıvasız projede sıva payı, emsal sınıfı arayüzü ve 22. maddenin %20/%50/70 m² sınırları, ortak yer sözlüğü ve elle arsa payı, vaziyet planının çizime basılan ölçüleri, ±0,00/röper işareti ve ağaçları (M32 2. bölüm).
 
 **Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
 Sınırı aşan değer çizim sırasında görünür. Dayanak S22; W4 §4/1–3, 8–10.
@@ -1146,7 +1147,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M29 | Türk alan motoru ve metrekare cetveli | ADV-22 | PAİY 4 alanları çizelgede **(M29, ADR 3029: yapıldı; bölüm çizelgesinde BB net, brüt, ortak alan payı, genel brüt; Metrekare cetveli kat kat)** |
 | M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo **(M30, ADR 3030: yapıldı; imar durumu Proje ayarlarında, durum çubuğu rozeti ve Öznitelikler, Emsal ve TAKS tablosu)** |
 | M31 | Bağımsız bölüm, eklenti, ortak yer, kat irtifakı | ADV-22 | Paylaşım tablosu **(M31, ADR 3031: yapıldı; eklenti, nitelik, değer katsayısı, arsa payı; Kat irtifakı tablosu)** |
-| M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 |
+| M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 **(M32 1. bölüm, ADR 3032: parsel, kenar türleri, canlı yaklaşma sınırı, oturum mesafeleri, ağaç, ±0,00)** |
 | M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu |
 | M34 | Merdiven, rampa, korkuluk, ışıklık, asansör denetimi | ADV-23 | Sivas ile PAİY çelişkisi görünür |
 | M35 | Yangın kaçışı | ADV-23 | Kaçış rotası ve çıkış genişliği |

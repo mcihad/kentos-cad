@@ -6701,6 +6701,24 @@ SinkModeName = Literal["new", "addTables", "replaceTables"]
 """The names of :class:`SinkMode`, for a plain string."""
 
 
+class SiteEdgeKind(_StrEnum):
+    """A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
+
+    - ``side``: Yan bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-b, ç).
+    - ``front``: Ön bahçe, a road's edge: at least 5.00 m (23/1-a).
+    - ``back``: Arka bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-c, ç).
+    - ``public``: A public area's edge (a park, a square): at least 5.00 m, no storey's increase (23/1-a, ç).
+    """
+    SIDE = "side"
+    FRONT = "front"
+    BACK = "back"
+    PUBLIC = "public"
+
+
+SiteEdgeKindName = Literal["side", "front", "back", "public"]
+"""The names of :class:`SiteEdgeKind`, for a plain string."""
+
+
 class SlabBoundary(_StrEnum):
     """Which of the walls' faces a slab found from them runs along.
 
@@ -16091,6 +16109,8 @@ class ArchSettings(_Model):
         options: The project's design option sets (docs/adr/0788, KCAD 153): alternatives for a part of the plan, one primary.
         phase_view: The phases the drawing shows (docs/adr/0346 §2, schema 82); absent: all, as they are.
         program: The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief.
+        site: Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
+            absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
         space_method: The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
         space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
@@ -16112,6 +16132,7 @@ class ArchSettings(_Model):
     options: list[OptionSet] | Unset = UNSET
     phase_view: PhaseView | PhaseViewName | None | Unset = UNSET
     program: BuildingProgram | Unset = UNSET
+    site: SitePlan | None | Unset = UNSET
     space_method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
     space_names: list[str] | Unset = UNSET
     space_number_prefixes: dict[str, str] | Unset = UNSET
@@ -16148,6 +16169,8 @@ class ArchSettings(_Model):
             out["phaseView"] = None if self.phase_view is None else _enum_out(self.phase_view)
         if self.program is not UNSET:
             out["program"] = self.program.to_json()
+        if self.site is not UNSET:
+            out["site"] = None if self.site is None else self.site.to_json()
         if self.space_method is not UNSET:
             out["spaceMethod"] = None if self.space_method is None else _enum_out(self.space_method)
         if self.space_names is not UNSET:
@@ -16177,6 +16200,7 @@ class ArchSettings(_Model):
             options=[OptionSet.from_json(e0) for e0 in data["options"]] if "options" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             program=BuildingProgram.from_json(data["program"]) if "program" in data else UNSET,
+            site=UNSET if "site" not in data else None if data["site"] is None else SitePlan.from_json(data["site"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
             space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
             space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
@@ -83447,6 +83471,68 @@ class SinkTable(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SiteEdge(_Model):
+    """A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.
+    Attributes:
+        setback: Unit: length.
+    """
+    kind: SiteEdgeKind | SiteEdgeKindName | Unset = UNSET
+    setback: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.kind is not UNSET:
+            out["kind"] = _enum_out(self.kind)
+        if self.setback is not UNSET:
+            out["setback"] = None if self.setback is None else float(self.setback)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SiteEdge:
+        return cls(
+            kind=_enum_in(SiteEdgeKind, data["kind"]) if "kind" in data else UNSET,
+            setback=UNSET if "setback" not in data else None if data["setback"] is None else float(data["setback"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SitePlan(_Model):
+    """Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a
+    polygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;
+    past the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on
+    the parcel and the storeys.
+    Attributes:
+        datum: ±0.00's absolute elevation, m. Unit: elevation.
+        envelope: Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.
+    """
+    datum: float | None | Unset = UNSET
+    edges: list[SiteEdge] | Unset = UNSET
+    envelope: str | None | Unset = UNSET
+    parcel: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.datum is not UNSET:
+            out["datum"] = None if self.datum is None else float(self.datum)
+        if self.edges is not UNSET:
+            out["edges"] = [e0.to_json() for e0 in self.edges]
+        if self.envelope is not UNSET:
+            out["envelope"] = self.envelope
+        if self.parcel is not UNSET:
+            out["parcel"] = self.parcel
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SitePlan:
+        return cls(
+            datum=UNSET if "datum" not in data else None if data["datum"] is None else float(data["datum"]),
+            edges=[SiteEdge.from_json(e0) for e0 in data["edges"]] if "edges" in data else UNSET,
+            envelope=data.get("envelope", UNSET),
+            parcel=data.get("parcel", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SlabBound(_Model):
     """A slab whose outline follows its source (Kaynağa bağlı sınır, docs/adr/0771 §4): what it comes from, the seed and
     the face rule (walls) or the space's persistent id, the edge offset, and, the document's, the walls that bound it
@@ -128749,6 +128835,10 @@ __all__ = [
     "SinkModeName",
     "SinkReport",
     "SinkTable",
+    "SiteEdge",
+    "SiteEdgeKind",
+    "SiteEdgeKindName",
+    "SitePlan",
     "SizeRectangleFrame",
     "SlabBound",
     "SlabBoundary",

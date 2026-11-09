@@ -2665,6 +2665,9 @@ def document(d):
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
         # Kat irtifakı: annexes, a unit's nature and value factor, the land shares' whole, their columns (docs/adr/3031).
         schema = max(schema, 211)
+    if (d.get("settings", {}).get("arch") or {}).get("site") is not None:
+        # The site plan: the parcel, its edges, ±0.00's elevation, the setback line (docs/adr/3032).
+        schema = max(schema, 212)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3540,7 +3543,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-212.kcad"] = container(root(cmap(parts), version=uint(212)))
+    files["schema-version-213.kcad"] = container(root(cmap(parts), version=uint(213)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6322,6 +6325,14 @@ def build():
     loose = load("land-shares.json")
     del loose["settings"]["arch"]["program"]["units"][-1]["annexOf"]
     out["broken/land-shares-annex-without-unit.kcad"] = container(document(loose))
+    # Schema 212 (docs/adr/3032): the site plan; schema 211 refuses it as unknown, a negative setback too.
+    site = document(load("site-plan.json"))
+    assert site.count(b"\x67version\x18\xd4") == 1, "the site plan is schema 212"
+    out["site-plan.kcad"] = container(site)
+    out["broken/site-plan-in-schema-211.kcad"] = container(site.replace(b"\x67version\x18\xd4", b"\x67version\x18\xd3"))
+    short = load("site-plan.json")
+    short["settings"]["arch"]["site"]["edges"][2]["setback"] = -1.0
+    out["broken/site-plan-negative-setback.kcad"] = container(document(short))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

@@ -469,7 +469,9 @@ CAD = [
           # Program, Şablon, Kapı ve pencere tipleri (docs/adr/0772), Oda modülleri (docs/adr/0775), Malzemeler
           # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside
           # the navigator: a view's area edited on the model.
-          overflow=["arch.program", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
+          # Parsel ve bahçe mesafeleri (docs/adr/3032) beside Program: the site plan's parcel, the project's as the
+          # program is.
+          overflow=["arch.program", "tool.siteParcel", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),

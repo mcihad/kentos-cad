@@ -10,6 +10,7 @@ import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
 import type { PhaseView } from "./PhaseView";
+import type { SitePlan } from "./SitePlan";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
 import type { Zoning } from "./Zoning";
@@ -93,4 +94,9 @@ optionCombos?: Array<OptionCombo>,
  * İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
  * ratio and the coverage are read against. Absent: none given.
  */
-zoning?: Zoning, };
+zoning?: Zoning, 
+/**
+ * Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
+ * absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
+ */
+site?: SitePlan, };

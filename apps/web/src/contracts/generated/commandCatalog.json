@@ -109939,6 +109939,17 @@
           "$ref": "#/$defs/BuildingProgram",
           "description": "The building's program (docs/adr/0773, KCAD 140): buildings, wings, units and the design brief."
         },
+        "site": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SitePlan"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the\nabsolute elevation of ±0.00 and the setback line the document keeps. Absent: none given."
+        },
         "spaceMethod": {
           "anyOf": [
             {
@@ -180690,6 +180701,84 @@
         "m",
         "columns"
       ],
+      "type": "object"
+    },
+    "SiteEdge": {
+      "additionalProperties": false,
+      "description": "A parcel edge (docs/adr/3032): its kind and the plan's own setback where the plan gives one, m.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SiteEdgeKind"
+        },
+        "setback": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "type": "object"
+    },
+    "SiteEdgeKind": {
+      "description": "A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.",
+      "oneOf": [
+        {
+          "const": "side",
+          "description": "Yan bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-b, ç).",
+          "type": "string"
+        },
+        {
+          "const": "front",
+          "description": "Ön bahçe, a road's edge: at least 5.00 m (23/1-a).",
+          "type": "string"
+        },
+        {
+          "const": "back",
+          "description": "Arka bahçe: at least 3.00 m, half a metre more for each storey past four (23/1-c, ç).",
+          "type": "string"
+        },
+        {
+          "const": "public",
+          "description": "A public area's edge (a park, a square): at least 5.00 m, no storey's increase (23/1-a, ç).",
+          "type": "string"
+        }
+      ]
+    },
+    "SitePlan": {
+      "additionalProperties": false,
+      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23, 57/2-a): the parcel drawn as a closed line or a\npolygon (its persistent id), each edge's kind and setback in the boundary's order (edge i from corner i to i + 1;\npast the list a side garden), ±0.00's absolute elevation (the röper's) and the setback line the document keeps on\nthe parcel and the storeys.",
+      "properties": {
+        "datum": {
+          "description": "±0.00's absolute elevation, m.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/SiteEdge"
+          },
+          "type": "array"
+        },
+        "envelope": {
+          "description": "Yapı yaklaşma sınırı: the persistent id of the closed line the document keeps on the setbacks.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parcel": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
       "type": "object"
     },
     "SlabBound": {

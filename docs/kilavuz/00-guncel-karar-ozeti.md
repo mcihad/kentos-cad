@@ -162,6 +162,11 @@
       kalan); `Document::land_shares`. Sütunlar `Nature`, `AnnexNet`, `AnnexGross`, `Annexes`, `TotalGross`,
       `LandShare`; hazır `SchedulePreset::LandShares` = `tool.scheduleLandShares` (`land_share_notes`: payda, KMK 12/a
       numara, niteliksiz bölüm).
+  - **Vaziyet planı (M32, [ADR 3032](../adr/3032-site-plan-parcel-setbacks-and-datum.md)):**
+    - `ArchSettings.site` = `SitePlan` (parsel kimliği, `SiteEdge` tür + mesafe, `datum`, `envelope`; KCAD 212).
+      `SiteEdgeKind::setback(floors)`; `Document::site_floors` (23/1-d), `site_report[_for]`, `footprint()`.
+    - Yaklaşma sınırı = parsel − kenar şeritleri (`band`); `follow_site` adımda, `refresh_site` ayar/geri alma
+      sonrası. `tool.siteParcel` (`parcel_tool.rs`; Harita'nın `tool.parcel`'inden ayrı); rozet/Öznitelikler/tablo.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

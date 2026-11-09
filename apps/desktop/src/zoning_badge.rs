@@ -19,6 +19,45 @@ use crate::app::{App, Message};
 thread_local! {
     /// The last report: the drawing it was read from (its address), its revision and the report.
     static LAST: RefCell<Option<(usize, u64, Option<kentos_domain::zoning::ZoningReport>)>> = const { RefCell::new(None) };
+    /// The last site plan read (docs/adr/3032), kept the same way.
+    static SITE: RefCell<Option<(usize, u64, Option<kentos_domain::site::SiteReport>)>> = const { RefCell::new(None) };
+}
+
+/// The drawing's site plan (docs/adr/3032), read again only when the drawing changed.
+pub fn site(doc: &kentos_domain::Document) -> Option<kentos_domain::site::SiteReport> {
+    let key = (std::ptr::from_ref(doc) as usize, doc.revision());
+    SITE.with(|last| {
+        let mut last = last.borrow_mut();
+        match &*last {
+            Some((at, rev, r)) if (*at, *rev) == key => r.clone(),
+            _ => {
+                let r = doc.site_report();
+                *last = Some((key.0, key.1, r.clone()));
+                r
+            }
+        }
+    })
+}
+
+/// The edges whose garden distance the footprint does not keep (docs/adr/3032), said: “2. kenar (Yan bahçe) 2,80 <
+/// 3,00 m”.
+pub fn short_edges(doc: &kentos_domain::Document) -> Vec<String> {
+    site(doc).map_or_else(Vec::new, |r| {
+        r.edges
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| e.short())
+            .map(|(i, e)| {
+                format!(
+                    "{}. kenar ({}) {} < {} m",
+                    i + 1,
+                    e.kind.label(),
+                    n2(e.drawn.unwrap_or(0.0)),
+                    n2(e.required)
+                )
+            })
+            .collect()
+    })
 }
 
 /// The drawing's report, read again only when the drawing changed.
@@ -55,7 +94,7 @@ pub fn words(doc: &kentos_domain::Document, full: bool) -> Option<(String, bool)
             part("Emsal", r.far(), r.far_limit),
             part("TAKS", r.coverage(), r.coverage_limit)
         ),
-        r.far_over() || r.coverage_over(),
+        r.far_over() || r.coverage_over() || site(doc).is_some_and(|s| s.short()),
     ))
 }
 
@@ -135,6 +174,13 @@ pub fn cell(app: &App, shown: Option<bool>) -> Option<Element<'_, Message>> {
         n2(r.parcel),
         if over { "Sınır aşıldı. " } else { "" }
     );
+    // The garden distances not kept (docs/adr/3032).
+    let short = short_edges(&doc.model);
+    let body = if short.is_empty() {
+        body
+    } else {
+        format!("Bahçe mesafesi dar: {}. {body}", short.join("; "))
+    };
     Some(
         Readout::new(
             label::strong(words).style(move |theme: &iced::Theme| text::Style {

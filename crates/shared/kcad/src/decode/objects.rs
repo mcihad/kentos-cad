@@ -427,6 +427,8 @@ pub(super) struct Features {
     pub(super) zoning: bool,
     /// Schema 211 (docs/adr/3031): kat irtifakı's program fields and schedule columns.
     pub(super) land_shares: bool,
+    /// Schema 212 (docs/adr/3032): the site plan.
+    pub(super) site_plan: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -712,6 +714,7 @@ impl Features {
             paiy_areas: schema >= crate::SCHEMA_WITH_PAIY_AREAS,
             zoning: schema >= crate::SCHEMA_WITH_ZONING,
             land_shares: schema >= crate::SCHEMA_WITH_LAND_SHARES,
+            site_plan: schema >= crate::SCHEMA_WITH_SITE_PLAN,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,

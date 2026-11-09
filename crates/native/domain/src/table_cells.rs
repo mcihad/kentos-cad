@@ -440,7 +440,8 @@ impl Document {
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
                 // Emsal ve TAKS tablosu (docs/adr/3030): the rooms (a wall moved moves its rooms in the same step).
-                || (matches!(t.source, Some(TableSource::Zoning {})) && (options_changed || kinds.contains("space")))
+                || (matches!(t.source, Some(TableSource::Zoning {}))
+                    && (options_changed || ["space", "polyline", "polygon"].iter().any(|k| kinds.contains(k))))
                 || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)))
                 || reads_settings(t, ops);
             if !reads_drawing && !touched.contains(&current.uid) {

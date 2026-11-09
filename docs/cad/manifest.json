@@ -13938,6 +13938,23 @@
    "tests": 0
   },
   {
+   "id": "tool.siteParcel",
+   "kind": "command",
+   "title": "Parsel ve bahçe mesafeleri",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set",
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set, kentos.cad.entities.create",
+   "mcp": "cad.settings.set, cad.entities.create",
+   "note": "Vaziyet planı: parsel (kapalı çizginin ya da alanın kimliği), kenar türleri ve kendi mesafeleri ayarlara (arch.site), yapı yaklaşma sınırı kesikli kapalı çizgi olarak çizime; sınırı belge her adımda yeniden yazar (ADR 3032).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.slab",
    "kind": "command",
    "title": "Döşeme",

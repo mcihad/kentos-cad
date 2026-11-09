@@ -2987,6 +2987,27 @@
       "status": "implemented"
     },
     {
+      "id": "tool.siteParcel",
+      "title": "Parsel ve bahçe mesafeleri",
+      "short": "Parsel",
+      "icon": "siteParcel",
+      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
+      "aliases": [
+        "VAZIYET",
+        "VAZİYET",
+        "VAZIYETPLANI",
+        "VAZİYETPLANI",
+        "BAHCEMESAFESI",
+        "BAHÇEMESAFESİ",
+        "YAKLASMASINIRI",
+        "YAKLAŞMASINIRI",
+        "SETBACK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.zoningTable",
       "title": "Emsal ve TAKS tablosu",
       "short": "Emsal tablosu",
@@ -5130,6 +5151,7 @@
     "scheduleFixtures": "<rect x=\"2.2\" y=\"3.5\" width=\"7.1\" height=\"3\" rx=\"0.7\"/><ellipse cx=\"5.75\" cy=\"11.6\" rx=\"3.1\" ry=\"4.4\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleAreas": "<path d=\"M2 4h6.5v12H2z\"/><path d=\"M2 8h6.5M2 12h6.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8h6.5M11.5 11.5h6.5\" stroke-width=\"1\"/><path d=\"M11.5 15.8h6.5\" stroke-width=\"2\"/>",
     "zoningTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 5.5h6v7H5z\"/><path d=\"M13 6.5h2.5M13 9.5h2.5M13 12.5h2.5\" stroke-width=\"1\"/>",
+    "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
     "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2\" y=\"4.5\" width=\"7.5\" height=\"11\" rx=\"0.8\"/><path d=\"M4 10h3.5\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",

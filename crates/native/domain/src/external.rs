@@ -289,6 +289,7 @@ impl Document {
             self.refresh_level_marks();
             self.refresh_derived_tags();
             self.refresh_zoning_tables();
+            self.refresh_site();
             // Not an edit (the revision stays), but what the drawing shows changed.
             self.generation += 1;
         }

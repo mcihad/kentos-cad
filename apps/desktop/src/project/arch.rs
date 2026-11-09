@@ -83,12 +83,14 @@ const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
     (None, "Nesnenin kendi kalınlığı"),
 ];
 
-/// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS.
+/// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
+/// elevation, m (the site plan's, docs/adr/3032).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTexts {
     pub parcel: String,
     pub far: String,
     pub coverage: String,
+    pub datum: String,
 }
 
 /// One of İmar durumu's fields.
@@ -97,6 +99,7 @@ pub enum ZoningField {
     Parcel,
     Far,
     Coverage,
+    Datum,
 }
 
 impl ZoningTexts {
@@ -111,6 +114,7 @@ impl ZoningTexts {
             parcel: t(z.map(|z| z.parcel_area)),
             far: t(z.and_then(|z| z.far)),
             coverage: t(z.and_then(|z| z.coverage)),
+            datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
         }
     }
 
@@ -119,6 +123,7 @@ impl ZoningTexts {
             ZoningField::Parcel => self.parcel = text,
             ZoningField::Far => self.far = text,
             ZoningField::Coverage => self.coverage = text,
+            ZoningField::Datum => self.datum = text,
         }
     }
 
@@ -162,11 +167,14 @@ pub(super) fn zoning_view<'a>(
         .push(line("Parsel alanı (m²)", "450", &t.parcel, ZoningField::Parcel))
         .push(line("Emsal (KAKS)", "1,50", &t.far, ZoningField::Far))
         .push(line("TAKS", "0,40", &t.coverage, ZoningField::Coverage))
+        .push(line("±0,00 kotu (m)", "1285,40", &t.datum, ZoningField::Datum))
         .push(label::caption(
             "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
              emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
              geçerse fazlası katlar alanına eklenir (Planlı Alanlar İmar Yönetmeliği 5/8, 22). TAKS, zemin katın \
-             brüt alanının parsel alanına oranıdır. KentOS bir onay vermez; planın kendi notları ayrıca okunur.",
+             brüt alanının parsel alanına oranıdır. ±0,00 kotu, projenin ±0,00'ının röperden okunan mutlak kotudur. \
+             Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. KentOS bir onay \
+             vermez; planın kendi notları ayrıca okunur.",
         ));
     for (words, value, over) in summary {
         body = body.push(
@@ -268,6 +276,13 @@ pub fn read(
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
+    // ±0.00's elevation (docs/adr/3032): the site plan's, the rest of it kept as the project has it.
+    let datum = number(&zoning.datum).map_err(|()| "±0,00 kotu bir sayı olmalı.".to_owned())?;
+    let site = {
+        let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
+        s.datum = datum;
+        (s != kentos_commands::SitePlan::default()).then_some(s)
+    };
     let zoning = zoning.read()?;
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
@@ -325,6 +340,8 @@ pub fn read(
         option_combos: choices.map_or_else(Vec::new, |a| a.option_combos.clone()),
         // The parcel's zoning (docs/adr/3030).
         zoning,
+        // The site plan (docs/adr/3032): its parcel and edges are Parsel's, ±0.00 this form's.
+        site,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

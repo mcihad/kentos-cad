@@ -711,6 +711,8 @@ mod fixture_place_tests;
 mod opening_codes_tests;
 #[cfg(test)]
 mod paiy_area_tests;
+#[cfg(test)]
+mod site_plan_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

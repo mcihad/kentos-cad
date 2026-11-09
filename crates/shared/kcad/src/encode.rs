@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 212 (docs/adr/3032): the site plan.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_site)
+    {
+        return crate::SCHEMA_WITH_SITE_PLAN;
+    }
     // Schema 211 (docs/adr/3031): kat irtifakı's program fields and schedule columns.
     if doc
         .settings

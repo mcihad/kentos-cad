@@ -51,6 +51,9 @@ pub struct ZoningReport {
     pub footprint: f64,
     /// Each storey's rooms, in the project's order of its storeys; the rooms on none last.
     pub levels: Vec<ZoningLevel>,
+    /// The footprint's outline: the ground storey's rooms it counts, their contours together (the site plan's oturum,
+    /// docs/adr/3032).
+    pub footprint_shape: Vec<Area>,
 }
 
 /// One storey's rooms as the ratios count them, m².
@@ -192,6 +195,7 @@ impl Document {
         }
         // Each room's contour on its level, a shared wall's façade corner halved between two rooms.
         let mut gross = vec![0.0; rooms.len()];
+        let mut shapes: Vec<Vec<Area>> = vec![Vec::new(); rooms.len()];
         let levels: std::collections::BTreeSet<Option<String>> =
             rooms.iter().map(|r| r.level.clone()).collect();
         for level in &levels {
@@ -215,6 +219,7 @@ impl Document {
                     region::subtract_areas(&own, &region::union_areas(&others))
                 };
                 gross[i] = kentos_geometry_core::geom::space::area(&c);
+                shapes[i].clone_from(&c);
                 let b = bounds(&c);
                 cut.push((i, c, b));
             }
@@ -299,14 +304,37 @@ impl Document {
                 })
                 .map(|l| l.id.clone())
         };
+        let counted = |r: &Room| {
+            !r.void
+                && !r.outdoor
+                && r.count != EmsalCount::Outside
+                && (ground.is_none() || r.level == ground)
+        };
         out.footprint = rooms
             .iter()
             .zip(&gross)
-            .filter(|(r, _)| !r.void && !r.outdoor && r.count != EmsalCount::Outside)
-            .filter(|(r, _)| ground.is_none() || r.level == ground)
+            .filter(|(r, _)| counted(r))
             .map(|(_, g)| g)
             .sum();
+        let outline: Vec<Area> = rooms
+            .iter()
+            .zip(&shapes)
+            .filter(|(r, _)| counted(r))
+            .flat_map(|(_, s)| s.iter().cloned())
+            .collect();
+        out.footprint_shape = if outline.is_empty() {
+            Vec::new()
+        } else {
+            region::union_areas(&outline)
+        };
         out
+    }
+
+    /// The building's footprint as the ratios count it (docs/adr/3032): its area and outline, with or without a zoning.
+    pub fn footprint(&self) -> (f64, Vec<Area>) {
+        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning);
+        let r = self.zoning_measured(zoning);
+        (r.footprint, r.footprint_shape)
     }
 
     /// Emsal ve TAKS tablosu's cells (docs/adr/3030), as PAİY 57/3 asks the approved project to show them: what the
@@ -446,6 +474,59 @@ impl Document {
             area(r.construction()),
             String::new(),
         ]);
+        // Vaziyet planı (docs/adr/3032): each kind of edge's garden distance beside the footprint's nearest, the trees
+        // (23/6) and ±0.00.
+        if let Some(site) = self.site_report() {
+            // Metres with two decimals, as the regulation writes them (“5.00 metre”), whatever the drawing's unit.
+            let length = |v: f64| crate::text_fields::number_text(v, 1.0, 2, false);
+            for kind in kentos_contracts::SiteEdgeKind::ALL {
+                let mine: Vec<&crate::site::SiteEdgeReport> =
+                    site.edges.iter().filter(|e| e.kind == kind).collect();
+                if mine.is_empty() {
+                    continue;
+                }
+                let need = mine.iter().map(|e| e.required).fold(0.0, f64::max);
+                let drawn = mine
+                    .iter()
+                    .filter_map(|e| e.drawn)
+                    .fold(f64::INFINITY, f64::min);
+                let left = mine
+                    .iter()
+                    .filter_map(|e| e.drawn.map(|d| d - e.required))
+                    .fold(f64::INFINITY, f64::min);
+                rows.push(vec![
+                    format!("{} (m)", kind.label()),
+                    length(need),
+                    if drawn.is_finite() {
+                        length(drawn)
+                    } else {
+                        String::new()
+                    },
+                    if left.is_finite() {
+                        length(left)
+                    } else {
+                        String::new()
+                    },
+                ]);
+                if left < -1e-6 {
+                    styles.push(style(rows.len() - 1, 2, 2, false, true));
+                }
+            }
+            rows.push(vec![
+                "Ağaç (adet, 23/6)".into(),
+                site.trees.to_string(),
+                String::new(),
+                String::new(),
+            ]);
+            if let Some(z) = site.datum {
+                rows.push(vec![
+                    "±0,00 kotu (m)".into(),
+                    String::new(),
+                    length(z),
+                    String::new(),
+                ]);
+            }
+        }
         // Each storey's area counted in and out.
         rows.push(vec![
             "Kat".into(),
