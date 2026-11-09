@@ -21,9 +21,11 @@ pub(crate) fn objects_of(tree: &MapSurveyTree, marks: &[&str]) -> Vec<String> {
 pub(crate) fn groups<'a>(tree: &MapSurveyTree) -> Vec<StatusItem<'a, Message>> {
     let mut out = Vec::new();
     if !tree.baselines.is_empty() {
+        // Docs/adr/3720: Ağı göster, every baseline at once on the map.
         let mut group = StatusItem::new("baselines", "Bazlar")
             .icon(icon(Icon::Line).size(14.0))
-            .meta(format!("{}", tree.baselines.len()));
+            .meta(format!("{}", tree.baselines.len()))
+            .action(icon(Icon::Line).size(13.0), "Ağı göster: bütün bazlar haritada, dışlananlar kırmızı noktalı", msg(Event::ShowNetwork));
         for b in &tree.baselines {
             group = group.push(baseline_item(b));
         }

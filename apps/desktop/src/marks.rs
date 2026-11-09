@@ -107,7 +107,7 @@ pub struct Marks {
     /// Boru hattı denetimi's crossings and near passes (docs/adr/3160).
     pub pipes: Option<std::sync::Arc<crate::pipes_marks::PipesMarks>>,
     /// GNSS arşivi's baseline drawn between its ends (docs/adr/3320).
-    pub baseline: Option<std::sync::Arc<crate::survey_baseline_marks::BaselineMark>>,
+    pub baseline: Option<std::sync::Arc<crate::survey_baseline_marks::BaselineMarks>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.

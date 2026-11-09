@@ -138,8 +138,9 @@ fn a_baseline_s_row_draws_it_between_its_ends() {
     let b = t.baselines.iter().find(|b| accepted_end(&b.from) && accepted_end(&b.to)).cloned().expect("one");
     send(&mut app, P::Baseline(b.id.clone()));
     assert_eq!(app.selection.len(), 2, "its two ends selected");
-    let mark = app.baseline_marks().expect("drawn");
-    assert_eq!(mark.words, format!("{} · {:.3} m", b.id, b.length));
+    let marks = app.baseline_marks().expect("drawn");
+    let mark = &marks.lines[0];
+    assert_eq!((marks.lines.len(), mark.words.clone()), (1, format!("{} · {:.3} m", b.id, b.length)));
     // The ends are the accepted points' objects where the drawing holds them.
     let place = |mark_name: &str| {
         let uid = crate::map_survey_network_rows::objects_of(&t, &[mark_name]).into_iter().next().expect("accepted");
@@ -191,6 +192,80 @@ fn baseline_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("baz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
+/// docs/adr/3720: Ağı göster draws every baseline whose two ends have accepted points at once, their ends selected; a
+/// baseline left out is drawn as left out (its own colour); those an end of which has no accepted point are counted, not
+/// drawn; İşareti kaldır takes them all away.
+#[test]
+fn ağı_göster_draws_every_baseline_at_once() {
+    let mut app = accepted();
+    let t = tree(&app);
+    let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
+    let drawable: Vec<String> =
+        t.baselines.iter().filter(|b| accepted_end(&b.from) && accepted_end(&b.to)).map(|b| b.id.clone()).collect();
+    let missing = t.baselines.len() - drawable.len();
+    assert!(drawable.len() > 2 && missing > 0, "{} drawable, {missing} not", drawable.len());
+    // One left out first, with a reason.
+    send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
+    let out = drawable[0].clone();
+    send(&mut app, P::Exclude(out.clone()));
+    send(&mut app, P::ShowNetwork);
+    let marks = app.baseline_marks().expect("drawn");
+    assert_eq!(marks.lines.len(), drawable.len());
+    let words: Vec<&str> = marks.lines.iter().map(|l| l.words.as_str()).collect();
+    assert!(drawable.iter().all(|id| words.iter().any(|w| w.starts_with(&format!("{id} ·")))), "{words:?}");
+    let left_out: Vec<bool> = marks.lines.iter().map(|l| l.excluded).collect();
+    assert_eq!(left_out.iter().filter(|e| **e).count(), 1, "{left_out:?}");
+    assert!(marks.lines.iter().find(|l| l.words.starts_with(&format!("{out} ·"))).is_some_and(|l| l.excluded));
+    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+    assert_eq!(
+        said,
+        format!("Ağ: {} baz çizildi; 1'i dışlandı, kırmızı noktalı. {missing} baz çizilemedi: uçlarından birinin kabul noktası yok.", drawable.len())
+    );
+    assert!(app.selection.len() > 2, "the ends selected");
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.baseline_marks().is_none());
+}
+
+/// The network drawn by Ağı göster, one baseline left out, light wide and dark narrow,
+/// `.run/gui-evidence/ag-haritada-3720/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib map_survey_network_rows_tests::network_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn network_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-haritada-3720");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = accepted();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.show_map_survey();
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
+        send(&mut app, P::Exclude("bz-8".into()));
+        for key in ["campaigns", "marks", "uses", "baselines"] {
+            send(&mut app, P::Fold(key.into()));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        // Laid out first, so the network's fit knows the map's own size beside the dock.
+        snapshot.settle(&mut app, App::view, &mut update);
+        send(&mut app, P::ShowNetwork);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("ag-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
     }

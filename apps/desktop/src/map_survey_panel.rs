@@ -52,6 +52,8 @@ pub enum Event {
     Objects(Vec<String>),
     /// A baseline's row (docs/adr/3320): its ends' accepted points selected, the baseline drawn between them.
     Baseline(String),
+    /// Ağı göster (docs/adr/3720): every baseline whose ends have accepted points drawn at once.
+    ShowNetwork,
     /// Ağ dengelemesi, from an adjustment's row (docs/adr/2920).
     Network,
     Fold(String),
@@ -173,7 +175,8 @@ impl App {
         match (from, to, self.document.as_ref().map(|d| d.session)) {
             (Some(from), Some(to), Some(session)) => {
                 let words = format!("{} · {:.3} m", b.id, b.length);
-                self.baseline_shown = Some(crate::survey_baseline_marks::Shown { session, from, to, words });
+                let line = crate::survey_baseline_marks::ShownLine { from, to, words, excluded: b.excluded.is_some() };
+                self.baseline_shown = Some(crate::survey_baseline_marks::Shown { session, lines: vec![line] });
             }
             _ => {
                 self.baseline_shown = None;
@@ -183,6 +186,44 @@ impl App {
                 );
             }
         }
+    }
+
+    /// Ağı göster (docs/adr/3720): every baseline whose two ends have accepted points drawn on the map at once, a left
+    /// out one in its own colour; their ends selected and shown; those that cannot be drawn counted.
+    fn show_network(&mut self) {
+        let Some(Ok(tree)) = self.map_survey_read() else { return };
+        let Some(session) = self.document.as_ref().map(|d| d.session) else { return };
+        let ends = |mark: &str| crate::map_survey_network_rows::objects_of(&tree, &[mark]).into_iter().next();
+        let mut lines = Vec::new();
+        let mut uids: Vec<String> = Vec::new();
+        let mut missing = 0usize;
+        for b in &tree.baselines {
+            match (ends(&b.from), ends(&b.to)) {
+                (Some(from), Some(to)) => {
+                    for u in [&from, &to] {
+                        if !uids.contains(u) {
+                            uids.push(u.clone());
+                        }
+                    }
+                    let words = format!("{} · {:.3} m", b.id, b.length);
+                    lines.push(crate::survey_baseline_marks::ShownLine { from, to, words, excluded: b.excluded.is_some() });
+                }
+                _ => missing += 1,
+            }
+        }
+        let drawn = lines.len();
+        let out = lines.iter().filter(|l| l.excluded).count();
+        self.select_uids(&uids);
+        self.baseline_shown = (drawn > 0).then_some(crate::survey_baseline_marks::Shown { session, lines });
+        let mut said = match (drawn, out) {
+            (0, _) => "Ağ çizilemedi: hiçbir bazın iki ucunun da kabul noktası yok.".to_owned(),
+            (n, 0) => format!("Ağ: {n} baz çizildi."),
+            (n, k) => format!("Ağ: {n} baz çizildi; {k}'i dışlandı, kırmızı noktalı."),
+        };
+        if missing > 0 && drawn > 0 {
+            said.push_str(&format!(" {missing} baz çizilemedi: uçlarından birinin kabul noktası yok."));
+        }
+        self.say(kentos_interaction::Level::Info, said);
     }
 
     fn select_uids(&mut self, uids: &[String]) {
@@ -357,6 +398,7 @@ impl App {
             }
             Event::Objects(uids) => self.select_uids(&uids),
             Event::Baseline(id) => self.show_baseline(&id),
+            Event::ShowNetwork => self.show_network(),
             Event::Network => return self.open_survey_network(),
             Event::Fold(key) => {
                 if !self.map_survey.toggled.remove(&key) {

@@ -195,6 +195,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve web'in Harita işi panelinde değişen özniteliğin ve silinenin söylenmesi.
 - MAP-02 / ADR 3700: `cad.crs.transform`'un web işleyicisinde `flagged` ve `outside_area` (78 ortak durum), web'in
   ConvertDialog'unda listenin Alan dışı sütunu; web'in katman dönüştürmesinde kenara 10⁻⁹° yakın noktanın kenarda sayılması.
+- MAP-03 / ADR 3720: web'in GNSS arşivi panelinde Bazlar'ın Ağı göster'i (bütün bazlar haritada, dışlanan ayrı renkte).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

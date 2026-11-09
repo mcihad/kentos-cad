@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **GNSS ağının haritada görünüşü (9 Kasım 2026; MAP-03, [ADR 3720](../../docs/adr/3720-gnss-network-drawn-on-the-map.md)).**
+  GNSS arşivi › Bazlar › Ağı göster: iki ucu kabul noktası olan bütün bazlar haritada, dışlanan kırmızı noktalı; hiçbir
+  şey yazılmaz. Harita.
 - **Koordinat dönüştür'de nokta başına karar (9 Kasım 2026; MAP-02, [ADR 3700](../../docs/adr/3700-coordinate-transform-point-by-point-areas.md)).**
   `cad.crs.transform`'un `flagged`'i her noktanın dışında kaldığı kullanım alanlarını (kaynak, dönüşüm, hedef) söyler;
   nokta yine dönüştürülür; kenara 10⁻⁹° yakın nokta kenarda. Pencerede Alan dışı sütunu. CAD + CBS.
