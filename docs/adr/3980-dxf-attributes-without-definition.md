@@ -61,6 +61,6 @@ olmayan ek özniteliklerin ATTRIB'i”, ADR 2380'in “DXF'te ek özniteliklerin
 ## Sonra
 
 - Boşluklu adın etiketi (“_” ile) ve geri okunduğunda adının KentOS verisinden düzeltilmesi: iki kaynağın çakışma kuralı
-  gerekir.
+  gerekir. [ADR 4380](4380-dxf-attribute-tag-for-a-name-with-a-space.md)'de.
 - DXF'te TABLE (ACAD_TABLE) yazımı (ADR 3580 Sonra): doğrulama yolu bekler.
 - Web (TODOS §0.2).

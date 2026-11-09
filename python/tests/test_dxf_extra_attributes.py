@@ -1,12 +1,15 @@
-"""Tanımı olmayan öznitelikler DXF'te (docs/adr/3980; plan/map-cad.md MAP-17), read by an independent reader (ezdxf).
+"""Tanımı olmayan öznitelikler DXF'te (docs/adr/3980, 4380; plan/map-cad.md MAP-17), read by an independent reader
+(ezdxf).
 
 A block without attribute definitions inserted with attributes of its own:
 
 - a name that is a DXF tag as it is with a value of one line goes out as an invisible ATTRIB of the INSERT (AutoCAD's
   DXF reference: group 70 bit 1, “attribute is invisible”), so another program sees it: ezdxf reads its tag, value
   and flag;
-- a name with a space (a DXF tag “cannot contain spaces”) and a value on two lines stay in KentOS's data alone;
-- KentOS reads the file back with every attribute as it was.
+- a name with a space (a DXF tag “cannot contain spaces”) goes out too, its tag with “_” (docs/adr/4380): ezdxf reads
+  “Bakım_notu”;
+- a value on two lines stays in KentOS's data alone;
+- KentOS reads the file back with every attribute as it was, “Bakım notu” by its name.
 """
 
 from __future__ import annotations
@@ -42,7 +45,7 @@ class DxfExtraAttributes(unittest.TestCase):
             external = ezdxf.readfile(out)
             (insert,) = [e for e in external.modelspace().query("INSERT") if e.dxf.name == "Rögar"]
             seen = sorted((a.dxf.tag, a.dxf.text, a.is_invisible) for a in insert.attribs)
-            self.assertEqual(seen, [("Malzeme", "Çelik", True), ("No", "12", True)])
+            self.assertEqual(seen, [("Bakım_notu", "2026", True), ("Malzeme", "Çelik", True), ("No", "12", True)])
             back = cad.Document.open(out)
             inserts = [r for r in back.entities() if r.entity.to_json()["kind"] == "insert"]
             self.assertEqual(len(inserts), 1)

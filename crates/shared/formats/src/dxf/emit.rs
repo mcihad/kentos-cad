@@ -1625,7 +1625,7 @@ impl<'l> Emitter<'l> {
                 attribs,
                 bad_attribs,
             } => {
-                let attrs: BTreeMap<String, String> = attribs
+                let mut attrs: BTreeMap<String, String> = attribs
                     .iter()
                     .filter_map(|a| match &a.kind {
                         Kind::Text { tag, text, .. } if !tag.is_empty() => {
@@ -1634,6 +1634,21 @@ impl<'l> Emitter<'l> {
                         _ => None,
                     })
                     .collect();
+                // Docs/adr/4380: a tag KentOS wrote for a name DXF's tags cannot hold takes the name back from KentOS's
+                // data, DXF's tags being case-blind; the value is the file's (edited elsewhere, it wins), and a tag no
+                // ATTRIB has any more names nothing.
+                if let Some(m) = e.meta.as_ref() {
+                    for (tag, name) in &m.tag_names {
+                        let wanted = tag.to_uppercase();
+                        let found = attrs.keys().find(|k| k.to_uppercase() == wanted).cloned();
+                        if let Some(k) = found
+                            && !attrs.contains_key(name)
+                            && let Some(v) = attrs.remove(&k)
+                        {
+                            attrs.insert(name.clone(), v);
+                        }
+                    }
+                }
                 let placed = Placed {
                     p: *p,
                     scale: *scale,

@@ -816,8 +816,9 @@ impl Writer<'_> {
     /// block's (§7): an ATTRIB for each, its text as the insert shows it (its
     /// value, else the default) where KentOS shows it, then SEQEND. Its other
     /// attributes (no definition holds them; docs/adr/3980) follow as
-    /// invisible ATTRIBs when their names are DXF tags as they are and their
-    /// values one line; the rest stay in KentOS's data, said.
+    /// invisible ATTRIBs when their values are one line, tagged by their names
+    /// (white space "_", a tag taken before "_2" …, the name kept in KentOS's
+    /// data: docs/adr/4380); the rest stay in KentOS's data, said.
     fn insert(&mut self, i: &InsertEntity) -> bool {
         let (names, defined) = (self.names, self.defined);
         let Some(name) = names.get(&i.block) else {
@@ -864,8 +865,12 @@ impl Writer<'_> {
         for (tag, _) in &block.tags {
             m.attrs.remove(tag);
         }
-        for (name, _) in &extra {
+        for (name, tag, _) in &extra {
             m.attrs.remove(name);
+            // Docs/adr/4380: a name its tag does not hold is kept in KentOS's data, read back under the tag.
+            if tag != name {
+                m.tag_names.insert(tag.clone(), name.clone());
+            }
         }
         if turn_of(degrees) != i.rotation {
             m.turn = Some(i.rotation);
@@ -890,27 +895,44 @@ impl Writer<'_> {
         true
     }
 
-    /// An insert's attributes no definition of its block holds (docs/adr/3980) that go out as invisible ATTRIBs: a
-    /// name that is a DXF tag as it is (no white space or control character, AutoCAD's DXF reference: a tag “cannot
-    /// contain spaces”; no other tag of the insert the same but for case) and a value of one line, so it comes back
-    /// as it was. Any other stays in KentOS's data alone, and that is said.
-    fn extra_attributes(&mut self, i: &InsertEntity, tags: &[(String, String)]) -> Vec<(String, String)> {
+    /// An insert's attributes no definition of its block holds (docs/adr/3980) that go out as invisible ATTRIBs: each
+    /// with a value of one line, so it comes back as it was. Its tag is its name where DXF's tags hold it; else, as a
+    /// definition's tag is written (docs/adr/0144 §7), its white space and control characters "_" (AutoCAD's DXF
+    /// reference: a tag “cannot contain spaces”), and a tag the insert already has but for case gets "_2", "_3" …
+    /// (docs/adr/4380): the name is then kept in KentOS's data under the tag, and said. A value on more lines stays in
+    /// KentOS's data alone, and that is said. Answers each one's name, tag and value.
+    fn extra_attributes(&mut self, i: &InsertEntity, tags: &[(String, String)]) -> Vec<(String, String, String)> {
         let mut taken: std::collections::BTreeSet<String> = tags.iter().map(|(_, dxf)| dxf.to_uppercase()).collect();
         let mut out = Vec::new();
         for (name, value) in &i.base.attrs {
             if tags.iter().any(|(own, _)| own == name) {
                 continue;
             }
-            let tag_as_is = !name.is_empty() && !name.chars().any(|c| c.is_whitespace() || c.is_control());
-            if tag_as_is && blocks::one_line(value) == *value && taken.insert(name.to_uppercase()) {
-                out.push((name.clone(), value.clone()));
-            } else {
+            if name.is_empty() || blocks::one_line(value) != *value {
                 self.report.note(
                     "Öznitelik",
-                    "tanımı olmayan öznitelik DXF etiketi olarak aynen yazılamadığından (boşluk, satır ya da büyük küçük harf çakışması) yalnız KentOS verisinde kaldı; başka program onu görmez",
+                    "tanımı olmayan özniteliğin değeri birden çok satır olduğundan yalnız KentOS verisinde kaldı; başka program onu görmez",
+                    0,
+                );
+                continue;
+            }
+            let base: String = name.chars().map(|c| if c.is_whitespace() || c.is_control() { '_' } else { c }).collect();
+            let mut tag = base.clone();
+            let mut k = 2;
+            while !taken.insert(tag.to_uppercase()) {
+                tag = format!("{base}_{k}");
+                k += 1;
+            }
+            if tag != *name {
+                self.report.note(
+                    "Öznitelik etiketi",
+                    &format!(
+                        "tanımı olmayan “{name}” özniteliği “{tag}” etiketiyle yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz); adı KentOS verisinde, KentOS geri okurken düzeltir"
+                    ),
                     0,
                 );
             }
+            out.push((name.clone(), tag, value.clone()));
         }
         out
     }
@@ -918,7 +940,7 @@ impl Writer<'_> {
     /// An insert's ATTRIBs and their SEQEND, owned by the insert `owner` (§7); after its definitions' ones, its
     /// other attributes' (`extra`, docs/adr/3980): invisible (70 = 1), at the insert's point, 2.5 mm high at true size
     /// (ISO 3098's lettering height; shown only if a program shows invisible attributes).
-    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)], extra: &[(String, String)]) {
+    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)], extra: &[(String, String, String)]) {
         let layers = self.layers;
         let layer = layers.name_of(&i.base.layer_id).unwrap_or("0").to_owned();
         let placing = self.placing;
@@ -965,7 +987,7 @@ impl Writer<'_> {
             }
         }
         let height = 0.0025 * self.per_metre;
-        for (name, value) in extra {
+        for (_, tag, value) in extra {
             let h = self.handles.take();
             self.out.str(0, "ATTRIB");
             self.out.handle(5, h);
@@ -976,7 +998,7 @@ impl Writer<'_> {
             let justified = Justified { p: i.p, height, rotation: 0.0, align: None, width_factor: None };
             self.out.text(value, value, &justified);
             self.out.str(100, "AcDbAttribute");
-            self.out.str(2, name);
+            self.out.str(2, tag);
             self.out.int(70, 1);
         }
         let h = self.handles.take();

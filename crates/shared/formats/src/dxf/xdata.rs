@@ -131,6 +131,10 @@ pub struct Meta {
     pub table_style: Option<String>,
     /// A table's INSERT: the handle of the TABLESTYLE object its table follows (docs/adr/1128 §3).
     pub table_style_ref: Option<u64>,
+    /// An insert's ATTRIB tags KentOS wrote for attribute names DXF's tags cannot hold (docs/adr/4380: white space as
+    /// "_", a tag taken before "_2" …): tag → name. Read back, the ATTRIB under the tag takes the name, its value the
+    /// file's.
+    pub tag_names: BTreeMap<String, String>,
 }
 
 /// A STYLE record's `face` when KentOS wrote it for a styleless face
@@ -255,6 +259,12 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
         item("attr", &mut out, |o| {
             string(k, o);
             string(v, o);
+        });
+    }
+    for (tag, name) in &meta.tag_names {
+        item("tagname", &mut out, |o| {
+            string(tag, o);
+            string(name, o);
         });
     }
     if let Some(s) = &meta.symbol {
@@ -530,6 +540,11 @@ pub fn read(groups: &[(i32, String)]) -> Option<Meta> {
                     m.attrs.insert(k, v);
                 }
             }
+            "tagname" => {
+                if let (Some(tag), Some(name)) = (text(a), text(b)) {
+                    m.tag_names.insert(tag, name);
+                }
+            }
             "symbol" => m.symbol = text(a).or(m.symbol),
             "color" => m.color = text(a).or(m.color),
             "weight" => m.line_weight = real(a).or(m.line_weight),
@@ -663,6 +678,7 @@ mod tests {
             table: Some(r#"{"p":{"x":1,"y":2},"cells":[["Ad","ğ ^ \\"]]}"#.into()),
             table_style: Some(r#"{"name":"Metraj ^","title":{"height":3.5}}"#.into()),
             table_style_ref: Some(0x2A7),
+            tag_names: BTreeMap::from([("Bakım_notu".into(), "Bakım notu".into())]),
             along: Some(r#"{"text":"Dere ^","height":2,"path":{"pts":[{"x":20,"y":0}],"bulges":[0.3]}}"#.into()),
             hatch: Some(r#"{"type":"pattern","angle":30,"spacing":1,"name":"ANSI31","scale":0.5,"lines":[{"angle":45,"origin":[0,0],"offset":[0,3.175]}]}"#.into()),
         };

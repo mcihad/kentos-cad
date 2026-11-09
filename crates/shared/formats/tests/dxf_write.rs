@@ -2430,10 +2430,10 @@ fn attributes_go_out_as_attdef_and_attrib_and_come_back() {
 /// KentOS's data under its tag (§7).
 #[test]
 fn an_attrib_edited_elsewhere_wins() {
-    // An attribute no definition holds and whose name is no DXF tag stays in KentOS's data (docs/adr/3980).
+    // An attribute no definition holds whose value is on two lines stays in KentOS's data (docs/adr/3980, 4380).
     let mut input = blocks_input();
     if let Entity::Insert(i) = &mut input.entities[0] {
-        i.base.attrs.insert("Bakım notu".into(), "2026".into());
+        i.base.attrs.insert("Bakım".into(), "iki\nsatır".into());
     }
     let (text, _) = write(&input);
     // KentOS's data of the first insert holds only that one: Malzeme went out as an ATTRIB too.
@@ -2444,7 +2444,7 @@ fn an_attrib_edited_elsewhere_wins() {
         .expect("Direk's first insert");
     let data: Vec<&str> = first.iter().filter(|g| g.0 == 1000).map(|g| g.1).collect();
     assert!(
-        data.contains(&"Bakım notu") && !data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
+        data.contains(&"Bakım") && !data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
         "{data:?}"
     );
     // Another program sets its No to 8.
@@ -2463,8 +2463,8 @@ fn an_attrib_edited_elsewhere_wins() {
         values[0].iter().find(|(k, _)| *k == "No"),
         Some(&("No", "8"))
     );
-    // KentOS's data says No is “2026” (a hand edit): the ATTRIB's 7 wins.
-    let clash = text.replacen("1000\r\nBakım notu\r\n", "1000\r\nNo\r\n", 1);
+    // KentOS's data says No is the two lines (a hand edit): the ATTRIB's 7 wins.
+    let clash = text.replacen("1000\r\nBakım\r\n", "1000\r\nNo\r\n", 1);
     assert_ne!(clash, text);
     let back = read(&clash);
     let values = insert_values(&back, "Direk");
@@ -2477,9 +2477,10 @@ fn an_attrib_edited_elsewhere_wins() {
 /// An insert's attributes no definition of its block holds go out as
 /// invisible ATTRIBs (docs/adr/3980): tagged by their names, flag 70 = 1,
 /// out of KentOS's data, and come back as the insert's attributes and no
-/// text. A name that is no DXF tag as it is (a space), one that differs
-/// from another only by case, and a value on two lines stay in KentOS's
-/// data alone, said, and come back as they were. A block without any
+/// text. A name that is no DXF tag as it is (a space) goes out as its tag with
+/// "_", one that differs from another only by case with "_2" (docs/adr/4380),
+/// their names in KentOS's data, said; a value on two lines stays in KentOS's
+/// data alone, said. All come back as they were. A block without any
 /// definition gets its ATTRIBs and SEQEND too.
 #[test]
 fn attributes_without_a_definition_go_out_as_invisible_attribs() {
@@ -2501,12 +2502,18 @@ fn attributes_without_a_definition_go_out_as_invisible_attribs() {
         .filter(|a| group(a, 70) == Some("1"))
         .map(|a| (group(a, 2).unwrap_or_default(), group(a, 1).unwrap_or_default()))
         .collect();
-    assert_eq!(invisible, [("Malzeme", "Çelik"), ("NOT", "a")], "the others are no tags as they are or not one line");
+    assert_eq!(
+        invisible,
+        [("Bakım_notu", "2026"), ("Malzeme", "Çelik"), ("NOT", "a"), ("Not_2", "b")],
+        "the two lines' value is not one line"
+    );
     assert!(
         report.notes.iter().any(|n| n.what == "Öznitelik" && n.reason.contains("yalnız KentOS verisinde kaldı")),
         "{:?}",
         report.notes
     );
+    let renamed = report.notes.iter().filter(|n| n.what == "Öznitelik etiketi" && n.reason.contains("KentOS geri okurken düzeltir")).count();
+    assert_eq!(renamed, 2, "{:?}", report.notes);
     let back = read(&text);
     let values = insert_values(&back, "Direk");
     // Every attribute back as it was; and, as before, the definition's default shown (Kol_boyu) as the insert's value.
@@ -2515,6 +2522,48 @@ fn attributes_without_a_definition_go_out_as_invisible_attribs() {
     want.sort_unstable();
     assert_eq!(values[0], want, "every attribute back as it was");
     assert!(!back.entities.iter().any(|e| matches!(e, Entity::Text(_))), "no ATTRIB comes back as a text");
+}
+
+/// docs/adr/4380: a name with a space goes out under its tag (“Bakım_notu”), the name in KentOS's data; read back,
+/// the ATTRIB under the tag takes the name and its value the file's: edited elsewhere, the edit; its tag's case changed
+/// elsewhere, still (DXF's tags are case-blind); deleted elsewhere, gone (KentOS's data does not bring it back); its
+/// name taken by another ATTRIB (a hand edit of KentOS's data), the file wins and the tag stays as it is.
+#[test]
+fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
+    let mut input = blocks_input();
+    if let Entity::Insert(i) = &mut input.entities[0] {
+        i.base.attrs.insert("Bakım notu".into(), "2026".into());
+    }
+    let (text, _) = write(&input);
+    assert!(text.contains("  2\r\nBakım_notu\r\n 70\r\n1\r\n"), "its invisible ATTRIB under its tag");
+    assert!(text.contains("1000\r\ntagname\r\n1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n"), "its name in KentOS's data");
+    let value = |back: &ImportResult, k: &str| {
+        insert_values(back, "Direk")[0].iter().find(|(n, _)| *n == k).map(|(_, v)| v.to_string())
+    };
+    let back = read(&text);
+    assert_eq!(value(&back, "Bakım notu").as_deref(), Some("2026"));
+    assert_eq!(value(&back, "Bakım_notu"), None);
+    // Edited elsewhere: the edit, under the name.
+    let edited = text.replacen("  1\r\n2026\r\n", "  1\r\n2027\r\n", 1);
+    assert_ne!(edited, text);
+    assert_eq!(value(&read(&edited), "Bakım notu").as_deref(), Some("2027"));
+    // Its tag upper-cased elsewhere: still the name.
+    let upper = text.replacen("  2\r\nBakım_notu\r\n", "  2\r\nBAKIM_NOTU\r\n", 1);
+    assert_eq!(value(&read(&upper), "Bakım notu").as_deref(), Some("2026"));
+    // Deleted elsewhere: the ATTRIB's groups gone, the attribute gone.
+    let start = text.find("  2\r\nBakım_notu\r\n").expect("its tag");
+    let begin = text[..start].rfind("  0\r\nATTRIB\r\n").expect("its ATTRIB");
+    let end = begin + 1 + text[begin + 1..].find("  0\r\n").expect("the next entity");
+    let deleted = format!("{}{}", &text[..begin], &text[end..]);
+    let back = read(&deleted);
+    assert_eq!(value(&back, "Bakım notu"), None);
+    assert_eq!(value(&back, "Bakım_notu"), None);
+    // KentOS's data names it No, which an ATTRIB holds: No stays the file's 7, the tag keeps its value.
+    let clash = text.replacen("1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n", "1000\r\nBakım_notu\r\n1000\r\nNo\r\n", 1);
+    assert_ne!(clash, text);
+    let back = read(&clash);
+    assert_eq!(value(&back, "No").as_deref(), Some("7"));
+    assert_eq!(value(&back, "Bakım_notu").as_deref(), Some("2026"));
 }
 
 /// DXF's attribute texts are one line: a line break in a value, a default

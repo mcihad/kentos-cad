@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Boşluklu öznitelik adının ATTRIB etiketi (10 Kasım 2026; MAP-17, [ADR 4380](../../docs/adr/4380-dxf-attribute-tag-for-a-name-with-a-space.md)).**
+  Tanımı olmayan öznitelik “_” etiketli görünmez ATTRIB, adı KentOS verisinde (`tagname`); geri okumada dosya kazanır.
+  CAD + CBS.
 - **Kesişen borunun dış duvarı (10 Kasım 2026; MAP-16, [ADR 4360](../../docs/adr/4360-crossing-pipe-outer-wall-and-live-check.md)).**
   `cad.pipes.profile` kesişen ağın `diameter.wall`'unu okur: dış elips ve arası dolu halka (kesin sınır), `wall`
   cevapta. Boru hattı denetimi açıkken çizim değişince yeniden okunur. Harita + Yol + CBS.

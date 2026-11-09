@@ -1,7 +1,7 @@
-//! Tanımı olmayan öznitelikler DXF'te through a real AI host (plan/map-cad.md MAP-17, docs/adr/3980): a block without
-//! attribute definitions inserted with attributes of its own, written by `file.export.dxf`. The attribute whose name is
-//! a DXF tag as it is goes out as an invisible ATTRIB of the INSERT; the one with a space stays in KentOS's data, and
-//! the export's report says so; the file opened again has every attribute as it was.
+//! Tanımı olmayan öznitelikler DXF'te through a real AI host (plan/map-cad.md MAP-17, docs/adr/3980, 4380): a block
+//! without attribute definitions inserted with attributes of its own, written by `file.export.dxf`. The attribute whose
+//! name is a DXF tag as it is goes out as an invisible ATTRIB of the INSERT; the one with a space too, its tag with “_”
+//! and its name in KentOS's data, and the export's report says so; the file opened again has every attribute as it was.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -31,9 +31,10 @@ fn an_attribute_without_a_definition_goes_out_as_an_invisible_attrib() {
     let written = ok(&mut server, "file.export.dxf", json!({"drawing": drawing, "path": path}));
     assert_eq!(written["status"], "completed", "{written}");
     let notes = written["output"]["report"]["notes"].as_array().unwrap();
-    assert!(notes.iter().any(|n| n["what"] == "Öznitelik" && n["reason"].as_str().unwrap().contains("yalnız KentOS verisinde kaldı")), "{notes:?}");
+    assert!(notes.iter().any(|n| n["what"] == "Öznitelik etiketi" && n["reason"].as_str().unwrap().contains("“Bakım_notu” etiketiyle")), "{notes:?}");
     let text = String::from_utf8(std::fs::read(&path).unwrap()).unwrap();
     assert!(text.contains("AcDbAttribute\r\n  2\r\nMalzeme\r\n 70\r\n1\r\n"), "Malzeme's invisible ATTRIB");
+    assert!(text.contains("AcDbAttribute\r\n  2\r\nBakım_notu\r\n 70\r\n1\r\n"), "Bakım notu's, its tag with “_”");
     assert!(!text.contains("  2\r\nBakım notu\r\n"), "no tag with a space");
     let back = ok(&mut server, "drawing.open", json!({"path": path}));
     let records = ok(&mut server, "drawing.entities", json!({"drawing": back["drawing"]}));

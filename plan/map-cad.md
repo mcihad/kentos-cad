@@ -47,7 +47,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360 | hattın kendi borularının dış duvarı; dış çap özniteliği | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın saydamlığı ve türü | — |
@@ -2033,6 +2033,14 @@ Kapsam: **CAD + CBS**. Dayanak: AutoCAD DXF başvurusunun ATTRIB'i (etiket boşl
 ve değeri tek satır olanlar, INSERT'in görünmez ATTRIB'i olarak yazılır ve KentOS verisinden çıkar; öbürleri KentOS
 verisinde kalır, raporda söylenir; gidiş-dönüş aynen; yazıcı testleri, ezdxf'li bağımsız Python, MCP. Açık: boşluklu
 adların etiketi, DXF'te TABLE (doğrulama yolu bekler).
+
+**10 Kasım 2026, sekizinci tur — boşluklu öznitelik adının ATTRIB etiketi ([ADR 4380](../docs/adr/4380-dxf-attribute-tag-for-a-name-with-a-space.md)).**
+Kapsam: **CAD + CBS**. Dayanak: AutoCAD DXF başvurusu (ATTRIB etiketi boşluk içermez, 70 bit 1 görünmez; ADR 3980'in
+okuması), ADR 0144 §7'nin tanım etiketi kuralı. Kanıtlanan: tanımı olmayan, değeri tek satır her öznitelik görünmez
+ATTRIB: boşluklu ad “_” ile, büyük küçük harf çakışması “_2” ile, adı eklemenin KentOS verisinde (`tagname`), söylenir;
+geri okumada dosya kazanır (değer ATTRIB'in, silinen ATTRIB bir şey getirmez, adı başka ATTRIB'de olan etiket kalır,
+etiket büyük küçük harf ayırmadan); yazıcı testleri (yeni kural testi; işlenmiş baytlar değişmedi), ezdxf ile bağımsız
+okuma, MCP. Açık: tanımlı özniteliğin boşluklu etiketinin geri adı.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 
