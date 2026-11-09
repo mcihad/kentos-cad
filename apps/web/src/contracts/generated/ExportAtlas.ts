@@ -3,7 +3,8 @@ import type { AtlasCoverage } from "./AtlasCoverage";
 import type { AtlasPin } from "./AtlasPin";
 
 /**
- * Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
+ * Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
+ * not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
  * `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
  * not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
  * degrees), `unknown_theme`, `invalid_time`,
@@ -57,4 +58,9 @@ pin?: AtlasPin,
 /**
  * Where the coverage layer's objects come from: the drawing (the default) or its bound source, whole.
  */
-coverage?: AtlasCoverage, };
+coverage?: AtlasCoverage, 
+/**
+ * A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:
+ * the answer then says which pages changed since, and why (ADR 1320's rule).
+ */
+previous?: string, };
