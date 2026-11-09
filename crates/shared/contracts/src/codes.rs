@@ -2725,6 +2725,10 @@ codes! {
     BYKHY_EXIT_COUNT_BELOW = "bykhy_exit_count_below", Warning, false, "Kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 39/2'nin istediği çıkış sayısı yok.";
     BYKHY_CORRIDOR_NARROW = "bykhy_corridor_narrow", Warning, false, "Kaçış yolu olan koridor Binaların Yangından Korunması Hakkında Yönetmelik 33/1'in 1,10 metresinden (yüksek binada 33/2'nin 1,20 metresinden) dar.";
     BYKHY_STAIR_COUNT_BELOW = "bykhy_stair_count_below", Warning, false, "Yapı yüksekliğine göre Binaların Yangından Korunması Hakkında Yönetmelik 48/5'in istediği kaçış merdiveni sayısı yok.";
+    PARKING_SHORT = "parking_short", Warning, false, "Çizimdeki otopark yeri (Otopark ya da Garaj mahallerinin net alanı ÷ 20 m²) Otopark Yönetmeliği Ek-1'in istediğinden az.";
+    SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
+    SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
+    SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";
     /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).

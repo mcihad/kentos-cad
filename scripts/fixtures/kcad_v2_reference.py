@@ -1616,12 +1616,12 @@ def table_parts(e):
     """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
     `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
     src = e.get("source")
-    if src is None or src["kind"] not in ("blocks", "file", "schedule", "extraction", "zoning"):
+    if src is None or src["kind"] not in ("blocks", "file", "schedule", "extraction", "zoning", "parking", "shelter"):
         return e
     e = dict(e)
     # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule; schema 182's data
     # extraction table too (docs/adr/1030 §6), schema 210's Emsal ve TAKS tablosu (docs/adr/3030).
-    if src["kind"] in ("blocks", "schedule", "extraction", "zoning"):
+    if src["kind"] in ("blocks", "schedule", "extraction", "zoning", "parking", "shelter"):
         assert src.get("names", [None]), "boş ad listesi yazılmaz"
         e["schedule"] = e.pop("source")
         return e
@@ -2674,6 +2674,10 @@ def document(d):
     if (d.get("settings", {}).get("arch") or {}).get("sprinklers"):
         # The building's sprinkler system (docs/adr/3035).
         schema = max(schema, 214)
+    if any(e["kind"] == "table" and (e.get("source") or {}).get("kind") in ("parking", "shelter")
+           for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
+        # Otopark and Sığınak hesabı (docs/adr/3036).
+        schema = max(schema, 215)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3549,7 +3553,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-215.kcad"] = container(root(cmap(parts), version=uint(215)))
+    files["schema-version-216.kcad"] = container(root(cmap(parts), version=uint(216)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6349,6 +6353,11 @@ def build():
     assert sprinklers.count(b"\x67version\x18\xd6") == 1, "the sprinkler system is schema 214"
     out["sprinklers.kcad"] = container(sprinklers)
     out["broken/sprinklers-in-schema-213.kcad"] = container(sprinklers.replace(b"\x67version\x18\xd6", b"\x67version\x18\xd5"))
+    # Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı; schema 214 refuses them as unknown.
+    provision = document(load("provision-tables.json"))
+    assert provision.count(b"\x67version\x18\xd7") == 1, "the parking and shelter tables are schema 215"
+    out["provision-tables.kcad"] = container(provision)
+    out["broken/provision-tables-in-schema-214.kcad"] = container(provision.replace(b"\x67version\x18\xd7", b"\x67version\x18\xd6"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

@@ -1761,18 +1761,17 @@ impl Packer {
                     flags |= OPT[10];
                     self.float(*f);
                 }
-                if let Some(source) = source
-                    .as_ref()
-                    .filter(|s| {
-                        !matches!(
-                            s,
-                            TableSource::Blocks { .. }
-                                | TableSource::Schedule { .. }
-                                | TableSource::Extraction(_)
-                                | TableSource::Zoning {}
-                        )
-                    })
-                {
+                if let Some(source) = source.as_ref().filter(|s| {
+                    !matches!(
+                        s,
+                        TableSource::Blocks { .. }
+                            | TableSource::Schedule { .. }
+                            | TableSource::Extraction(_)
+                            | TableSource::Zoning {}
+                            | TableSource::Parking {}
+                            | TableSource::Shelter {}
+                    )
+                }) {
                     flags |= OPT[9];
                     match source {
                         TableSource::File { name, sheet, .. } => {
@@ -3843,6 +3842,8 @@ fn table_cells_json(
                     | TableSource::Schedule { .. }
                     | TableSource::Extraction(_)
                     | TableSource::Zoning {}
+                    | TableSource::Parking {}
+                    | TableSource::Shelter {}
             )
         })
         .cloned();

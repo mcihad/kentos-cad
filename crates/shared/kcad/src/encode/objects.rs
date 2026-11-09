@@ -1092,8 +1092,13 @@ impl<'d> Encoder<'d> {
                         TableSource::Blocks { .. }
                         | TableSource::Schedule { .. }
                         | TableSource::Extraction(_)
-                        | TableSource::Zoning {} => {
-                            f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
+                        | TableSource::Zoning {}
+                        | TableSource::Parking {}
+                        | TableSource::Shelter {} => {
+                            f.push((
+                                "schedule",
+                                Val::Json(serde_json::to_value(source).unwrap_or_default()),
+                            ));
                         }
                         TableSource::File {
                             path,

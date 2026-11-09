@@ -717,6 +717,8 @@ mod site_plan_tests;
 mod regulation_audit_tests;
 #[cfg(test)]
 mod fire_escape_tests;
+#[cfg(test)]
+mod provisions_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

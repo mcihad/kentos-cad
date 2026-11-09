@@ -970,12 +970,13 @@ Dayanak S20, S22.
 
 #### ADV-22 — Alan hesabı, vaziyet planı ve imar tabloları [~]
 
-_Durum (8 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M29 1. bölüm, [ADR 3029](../docs/adr/3029-regulation-areas-of-independent-units.md)).
+_Durum (9 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M29 1. bölüm, [ADR 3029](../docs/adr/3029-regulation-areas-of-independent-units.md)).
 - Bölüm çizelgesinde BB net, BB brüt (dış cephede dış yüz, komşuyla eksen; şaft ve galeri hariç), ortak alan payı (ortak alanların brütünden) ve BB genel brüt; eski "Brüt" (net + pay) "Net + pay" adını aldı; KCAD 209.
 - Metrekare cetveli (M29 2. bölüm): Metraj ▾ › Metrekare cetveli, bölüm çizelgesi kat kat (`byLevel`): her katta bölümler ve ortak alanların o kattaki yönetmelik brüt ve net alanı, toplam binanın.
 - Emsal ve TAKS (M30, [ADR 3030](../docs/adr/3030-emsal-taks-zoning-badge-and-table.md)): Proje ayarları › Mimari › İmar durumu (parsel, emsal, TAKS); mahalin emsal sınıfı kullanım listesinden ya da adından; durum çubuğunda canlı rozet (aşımda kırmızı), Öznitelikler › İmar durumu; Metraj ▾ › Emsal ve TAKS tablosu (PAİY 57/3'ün değerleri, kat kat alanlar, her adımda ve ayar değişince yenilenir); KCAD 210.
 - Kat irtifakı (M31, [ADR 3031](../docs/adr/3031-condominium-units-annexes-and-land-shares.md)): eklenti grubu ve bölümü, bölümün niteliği, değer katsayısı ve arsa payı paydası; toplam brüt = brüt + eklenti, genel brüt = toplam + pay; arsa payı `kentos.land/1` (payda: program, yoksa parsel alanı); Metraj ▾ › Kat irtifakı tablosu; KCAD 211.
 - Vaziyet planı (M32, [ADR 3032](../docs/adr/3032-site-plan-parcel-setbacks-and-datum.md)): parsel (kapalı çizgi), kenar türleri ve PAİY 23 mesafeleri (kat adedine göre artış), canlı yapı yaklaşma sınırı, oturumun kenarlara uzaklığı, ağaç sayısı, ±0,00 kotu; rozet, Öznitelikler ve Emsal ve TAKS tablosunda; çizimde cephe ortası bahçe ölçüleri, ±0,00 işareti ve kot yazısı; KCAD 212.
+- Otopark ve sığınak (M36, [ADR 3036](../docs/adr/3036-parking-and-shelter-provisions.md)): Metraj ▾ › Otopark hesabı (Ek-1: konut brüt alana göre 80/120/180 m² eşikleri, dükkân 50 m²'ye 1 ve bölüm başına en az 1, büro 50 m²'ye 1; toplam bir üste, 8/4; Otopark/Garaj mahallerinin net alanı ÷ 20 m², 4/1-ç; 20 yerde %5 şarj, 5/1-j) ve Sığınak hesabı (8/a: oda sayısına göre 2/3/4 kişi, konut dışı brüt ÷ 20, kişi başına 1 m² net; 7/a–c muafiyetleri; tuvalet ve çıkış); eksikler Denetim › Mevzuat'ta; KCAD 215.
 - Kalanlar: kat ara toplamı, gruba alınmamış mahallerin yapı inşaat alanı, merdiven altı 1,80 m, sıvasız projede sıva payı, emsal sınıfı arayüzü ve 22. maddenin %20/%50/70 m² sınırları, ortak yer sözlüğü ve elle arsa payı, vaziyet planında ağaç simgeleri ve bağlı ölçüler.
 
 **Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
@@ -1153,7 +1154,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu **(M33, ADR 3033: yapıldı; Denetim › Mevzuat: PAİY 29/1–3 piyes ve koridor, 28/1-c kat yüksekliği, 39/1 kapı; bulgu maddesini ve RG'yi taşır)** |
 | M34 | Merdiven, rampa, korkuluk, ışıklık, asansör denetimi | ADV-23 | Sivas ile PAİY çelişkisi görünür **(M34, ADR 3034: yapıldı; PAİY 30/12, 31, 32/2–3, 34/1–2, 38/1; yerel yönetmelik Sivas: sıkı değer bağlar, gevşeğin tuttuğu ölçü çelişki)** |
 | M35 | Yangın kaçışı | ADV-23 | Kaçış rotası ve çıkış genişliği **(M35, ADR 3035: yapıldı; kaçış yolları motoru; BYKHY 32/4, 32/6, 4/i, 33/1–2, 33/6-b, 39/2, 48/1–5, Ek-5/A–B; yağmurlama ayarı; Proje ▾ › Kaçış yolları rotayı ölçüsü ve sınırıyla plana çizer, aşan kırmızı)** |
-| M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler |
+| M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler **(M36, ADR 3036: yapıldı; Metraj ▾ › Otopark hesabı ve Sığınak hesabı canlı tabloları; Otopark Yön. 4/1-ç, 5/1-j, 8/3–4, Ek-1; Sığınak Yön. 7/a–c, 8/a, 8/c; eksik yer ve alan Denetim › Mevzuat'ta)** |
 | M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla |
 | M38 | Mahal listesi ve grafik doğrama listesi | ADV-24 | 57(29) listesi; tip görünüşleri |
 | M39 | Tadilat grafik dili | ADV-17 | Üç evre paftası |

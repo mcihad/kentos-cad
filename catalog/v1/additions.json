@@ -3046,6 +3046,40 @@
       "status": "implemented"
     },
     {
+      "id": "arch.parkingTable",
+      "title": "Otopark hesabı",
+      "short": "Otopark hesabı",
+      "icon": "parkingTable",
+      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/3036): konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
+      "aliases": [
+        "OTOPARK",
+        "OTOPARKHESABI",
+        "PARKYERI",
+        "PARKİNG",
+        "PARKING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.shelterTable",
+      "title": "Sığınak hesabı",
+      "short": "Sığınak hesabı",
+      "icon": "shelterTable",
+      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/3036): konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
+      "aliases": [
+        "SIGINAK",
+        "SIĞINAK",
+        "SIGINAKHESABI",
+        "SIĞINAKHESABI",
+        "SHELTER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.scheduleLandShares",
       "title": "Kat irtifakı tablosu",
       "short": "Kat irtifakı",
@@ -5170,6 +5204,8 @@
     "scheduleFixtures": "<rect x=\"2.2\" y=\"3.5\" width=\"7.1\" height=\"3\" rx=\"0.7\"/><ellipse cx=\"5.75\" cy=\"11.6\" rx=\"3.1\" ry=\"4.4\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleAreas": "<path d=\"M2 4h6.5v12H2z\"/><path d=\"M2 8h6.5M2 12h6.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8h6.5M11.5 11.5h6.5\" stroke-width=\"1\"/><path d=\"M11.5 15.8h6.5\" stroke-width=\"2\"/>",
     "zoningTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 5.5h6v7H5z\"/><path d=\"M13 6.5h2.5M13 9.5h2.5M13 12.5h2.5\" stroke-width=\"1\"/>",
+    "parkingTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 14.5v-9h3.5a2.5 2.5 0 0 1 0 5H7\"/>",
+    "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",

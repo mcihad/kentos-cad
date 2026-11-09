@@ -433,6 +433,8 @@ pub(super) struct Features {
     pub(super) local_rules: bool,
     /// Schema 214 (docs/adr/3035): the building's sprinkler system.
     pub(super) sprinklers: bool,
+    /// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+    pub(super) provision_tables: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -721,6 +723,7 @@ impl Features {
             site_plan: schema >= crate::SCHEMA_WITH_SITE_PLAN,
             local_rules: schema >= crate::SCHEMA_WITH_LOCAL_RULES,
             sprinklers: schema >= crate::SCHEMA_WITH_SPRINKLERS,
+            provision_tables: schema >= crate::SCHEMA_WITH_PROVISION_TABLES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -1986,7 +1989,9 @@ pub(super) fn object(
                     // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
                     || (has.extraction && matches!(v, TableSource::Extraction(_)))
                     // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
-                    || (has.zoning && matches!(v, TableSource::Zoning {}));
+                    || (has.zoning && matches!(v, TableSource::Zoning {}))
+                    // Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+                    || (has.provision_tables && matches!(v, TableSource::Parking {} | TableSource::Shelter {}));
                 // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
                 if !has.fixtures
                     && matches!(&v, TableSource::Schedule { of, columns, filter, sort, .. }
@@ -2004,6 +2009,16 @@ pub(super) fn object(
                         Code::UnknownField,
                         at,
                         "emsal ve TAKS tablosunun kaynağı şema 210'dan beri yazılır",
+                    ));
+                }
+                // Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
+                if !has.provision_tables
+                    && matches!(v, TableSource::Parking {} | TableSource::Shelter {})
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "otopark ve sığınak hesabı tablolarının kaynağı şema 215'ten beri yazılır",
                     ));
                 }
                 // Schema 182 (docs/adr/1030 §6): a data extraction table.

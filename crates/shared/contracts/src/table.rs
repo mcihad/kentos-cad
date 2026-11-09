@@ -330,6 +330,12 @@ pub enum TableSource {
     /// drawing's, the construction area) and each storey's area counted in and out; written again by the document at
     /// every step and when the project's settings change.
     Zoning {},
+    /// Otopark hesabı (docs/adr/3036; `.kcad` schema 215): the independent units' parking need by Otopark Yönetmeliği
+    /// Ek-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.
+    Parking {},
+    /// Sığınak hesabı (docs/adr/3036; `.kcad` schema 215): the units' shelter people by Sığınak Yönetmeliği 8/a against
+    /// the drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.
+    Shelter {},
 }
 
 impl TableSource {
@@ -344,7 +350,18 @@ impl TableSource {
             TableSource::Schedule { .. } => "schedule",
             TableSource::Extraction(_) => "extraction",
             TableSource::Zoning {} => "zoning",
+            TableSource::Parking {} => "parking",
+            TableSource::Shelter {} => "shelter",
         }
+    }
+
+    /// Whether the document writes its rows from the project (docs/adr/3030, 3036): Emsal ve TAKS, Otopark and Sığınak
+    /// hesabı; they name no objects.
+    pub fn of_regulation(&self) -> bool {
+        matches!(
+            self,
+            TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}
+        )
     }
 
     /// The objects it names; none for a file.
@@ -357,7 +374,9 @@ impl TableSource {
             | TableSource::Blocks { .. }
             | TableSource::Schedule { .. }
             | TableSource::Extraction(_)
-            | TableSource::Zoning {} => &[],
+            | TableSource::Zoning {}
+            | TableSource::Parking {}
+            | TableSource::Shelter {} => &[],
         }
     }
 }
@@ -685,8 +704,9 @@ impl TableShape<'_> {
                     return Some(("source", words));
                 }
             }
-            // Emsal ve TAKS tablosu (docs/adr/3030): its rows are the document's; it names nothing.
-            Some(TableSource::Zoning {}) => {}
+            // Emsal ve TAKS tablosu (docs/adr/3030), Otopark and Sığınak hesabı (docs/adr/3036): their rows are the
+            // document's; they name nothing.
+            Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {}
             Some(s) if s.objects().is_empty() || s.objects().len() > MAX_SOURCE_OBJECTS => {
                 return Some((
                     "source",

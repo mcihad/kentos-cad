@@ -234,7 +234,7 @@ fn size_holds(x: f64, what: &str, path: &str) -> Result<(), Stop> {
 fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Result<TableEntity, Stop> {
     // A schedule's rows and cells are the document's (docs/adr/0344 §3): only its sizes and lines change here; Emsal ve
     // TAKS tablosu's too (docs/adr/3030).
-    let zoning = matches!(t.source, Some(TableSource::Zoning {}));
+    let zoning = t.source.as_ref().is_some_and(TableSource::of_regulation);
     if (zoning || matches!(t.source, Some(TableSource::Schedule { .. })))
         && !matches!(
             e,
@@ -1049,7 +1049,12 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                         ));
                     }
                     // Emsal ve TAKS tablosu (docs/adr/3030) too: the document writes it at every step.
-                    Some(TableSource::Blocks { .. } | TableSource::Zoning {}) => {
+                    Some(
+                        TableSource::Blocks { .. }
+                        | TableSource::Zoning {}
+                        | TableSource::Parking {}
+                        | TableSource::Shelter {},
+                    ) => {
                         status = TableRefresh::Live;
                         None
                     }

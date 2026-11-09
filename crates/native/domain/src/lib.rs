@@ -80,6 +80,8 @@ pub mod paiy_areas;
 pub mod zoning;
 pub mod site;
 pub mod escape;
+pub mod room_names;
+pub mod provisions;
 pub mod tag_read;
 mod tag_follow;
 pub mod viewmark_follow;

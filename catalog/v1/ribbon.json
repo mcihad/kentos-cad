@@ -2209,6 +2209,16 @@
           "command": "tool.scheduleLandShares",
           "title": "Metraj",
           "label": "Kat irtifakı tablosu"
+         },
+         {
+          "command": "arch.parkingTable",
+          "title": "Metraj",
+          "label": "Otopark hesabı"
+         },
+         {
+          "command": "arch.shelterTable",
+          "title": "Metraj",
+          "label": "Sığınak hesabı"
          }
         ]
        },

@@ -3577,6 +3577,13 @@ impl App {
             "arch.revisionList" => self.place_revision_list(),
             // Emsal ve TAKS tablosu (docs/adr/3030).
             "arch.zoningTable" => self.place_zoning_table(),
+            // Otopark and Sığınak hesabı (docs/adr/3036).
+            "arch.parkingTable" => {
+                self.place_provision_table(kentos_commands::TableSource::Parking {})
+            }
+            "arch.shelterTable" => {
+                self.place_provision_table(kentos_commands::TableSource::Shelter {})
+            }
             "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)

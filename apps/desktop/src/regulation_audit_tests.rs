@@ -147,8 +147,14 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
             "paiy_room_area_below",
             "paiy_room_width_below",
             "paiy_corridor_narrow",
-            "paiy_storey_height_over"
+            "paiy_storey_height_over",
+            "parking_short"
         ],
+        "{messages:?}"
+    );
+    // Otopark Yönetmeliği (M36): the flat asks one place and the drawing has no Otopark.
+    assert!(
+        messages.contains(&"Otopark: gereken 1 yer, çizimde 0 (0.00 m² ÷ 20 m²) — Otopark Yön. 8, Ek-1 (16.6.2022)"),
         "{messages:?}"
     );
     assert!(
@@ -207,10 +213,15 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     );
     let found = regulation(&mut app, json!(["regulation"]));
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
-    assert_eq!(messages.len(), 1, "{found:?}");
+    assert_eq!(messages.len(), 2, "{found:?}");
     assert!(
         messages[0].starts_with("Koridor net eni 0.8")
             && messages[0].ends_with("< 1.10 m (kaçış yolu) — BYKHY 33/1 (9.7.2015)"),
+        "{found:?}"
+    );
+    // An office of some 40 m² asks one place for 50 m² (Ek-1, M36).
+    assert!(
+        messages[1].starts_with("Otopark: gereken 1 yer, çizimde 0"),
         "{found:?}"
     );
 }

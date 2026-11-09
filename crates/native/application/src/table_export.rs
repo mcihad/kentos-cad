@@ -155,8 +155,13 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
             (of.label().to_owned(), heads, rows)
         }
         // Emsal ve TAKS tablosu (docs/adr/3030): its rows worked out again, its words as the drawing shows them.
-        Some(TableSource::Zoning {}) => {
-            let written = doc.zoning_table();
+        // Otopark and Sığınak hesabı (docs/adr/3036) alike.
+        Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {
+            let written = match &t.source {
+                Some(TableSource::Parking {}) => doc.parking_table(),
+                Some(TableSource::Shelter {}) => doc.shelter_table(),
+                _ => doc.zoning_table(),
+            };
             let (head, rest) = written
                 .rows
                 .split_first()

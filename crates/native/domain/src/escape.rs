@@ -96,48 +96,7 @@ pub struct Escape {
     pub exits: BTreeMap<Option<String>, usize>,
 }
 
-/// Upper-case ASCII, Turkish letters folded.
-fn fold(t: &str) -> String {
-    t.chars()
-        .map(|c| match c {
-            'ç' | 'Ç' => 'C',
-            'ğ' | 'Ğ' => 'G',
-            'ı' | 'I' | 'İ' | 'i' => 'I',
-            'ö' | 'Ö' => 'O',
-            'ş' | 'Ş' => 'S',
-            'ü' | 'Ü' | 'û' | 'Û' => 'U',
-            'â' | 'Â' => 'A',
-            'î' | 'Î' => 'I',
-            c => c.to_ascii_uppercase(),
-        })
-        .collect()
-}
-
-/// Whether a unit's nature is a dwelling's (Daire, Mesken, Konut, Ev) or not given (docs/adr/3033).
-pub fn dwelling_nature(nature: Option<&str>) -> bool {
-    nature.is_none_or(|n| {
-        let n = fold(n);
-        ["DAIRE", "MESKEN", "KONUT", "EV"]
-            .iter()
-            .any(|w| n.contains(w))
-    })
-}
-
-/// Whether a room's name or use is a stair's (Merdiven, Merdiven evi, Yangın merdiveni …); the room under a stair
-/// (Merdiven altı, Merdiven altı deposu) is not.
-pub fn stair_name(name: Option<&str>, usage: Option<&str>) -> bool {
-    [name, usage].into_iter().flatten().any(|t| {
-        let t = fold(t);
-        let words: Vec<&str> = t
-            .split(|c: char| !c.is_alphanumeric())
-            .filter(|w| !w.is_empty())
-            .collect();
-        words.iter().any(|w| w.starts_with("MERDIVEN"))
-            && !words
-                .iter()
-                .any(|w| w.starts_with("ALTI") || w.starts_with("DEPO"))
-    })
-}
+pub use crate::room_names::{dwelling_nature, stair_name};
 
 /// A room as the routes read it.
 struct Room {

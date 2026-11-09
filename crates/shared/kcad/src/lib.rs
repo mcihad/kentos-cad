@@ -873,11 +873,13 @@ pub const SCHEMA_WITH_SITE_PLAN: u32 = 212;
 pub const SCHEMA_WITH_LOCAL_RULES: u32 = 213;
 /// Schema 214 (docs/adr/3035): the building's sprinkler system (`settings.arch.sprinklers`).
 pub const SCHEMA_WITH_SPRINKLERS: u32 = 214;
+/// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı (a table's source `parking`, `shelter`).
+pub const SCHEMA_WITH_PROVISION_TABLES: u32 = 215;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 212] = [
+pub const SCHEMAS: [u32; 213] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1090,6 +1092,7 @@ pub const SCHEMAS: [u32; 212] = [
     SCHEMA_WITH_SITE_PLAN,
     SCHEMA_WITH_LOCAL_RULES,
     SCHEMA_WITH_SPRINKLERS,
+    SCHEMA_WITH_PROVISION_TABLES,
 ];
 
 /// The file a drawing is saved as.

@@ -2304,6 +2304,22 @@
       "operation": "table",
       "note": "Emsal ve TAKS tablosu (kaynağı zoning): parsel, emsal, TAKS, izin verilen ve projedeki alanlar, kat kat emsale dahil ve harici alan; satırlarını belge her adımda ve Proje ayarları değişince kendisi yazar (ADR 3030)."
     },
+    "arch.parkingTable": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Otopark hesabı (kaynağı parking): bölümlerin Ek-1 ihtiyacı, toplam, Otopark/Garaj mahallerinden yer sayısı ve şarj yeri; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 3036)."
+    },
+    "arch.shelterTable": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Sığınak hesabı (kaynağı shelter): bölümlerin kişi sayısı, gereken net alan, Sığınak mahallerinin alanı, muafiyet, tuvalet ve çıkış; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 3036)."
+    },
     "tool.scheduleLandShares": {
       "level": "semantic",
       "via": [

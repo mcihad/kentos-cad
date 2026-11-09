@@ -123,8 +123,16 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
     kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
     yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
-    çizimden okunmaz; bulguda yazılır. regulation, doors ve fixtures gibi yalnız adıyla
-    istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+    çizimden okunmaz; bulguda yazılır. docs/adr/3036: Otopark ve Sığınak Yönetmelikleri
+    — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
+    üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
+    m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² az
+    ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4
+    kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
+    mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
+    aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
+    shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
+    çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -243,8 +251,16 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         bykhy_corridor_narrow, konutta yapı yüksekliği 21,50/30,50/51,50 m'yi aşınca en az 2
         kaçış merdiveni bykhy_stair_count_below (48/5). settings.arch.sprinklers
         yağmurlamalı sınırları okutur. Korunumluluk, yangın dayanımı ve güvenlik holü
-        çizimden okunmaz; bulguda yazılır. regulation, doors ve fixtures gibi yalnız adıyla
-        istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
+        çizimden okunmaz; bulguda yazılır. docs/adr/3036: Otopark ve Sığınak Yönetmelikleri
+        — bölümlerin Ek-1 ihtiyacından (konutta BB brüt alanına göre 3/2/1 daireye 1, 180 m²
+        üstü daireye 2; dükkân, mağaza, banka 50 m²'ye 1, bölüm başına en az 1; büro 50
+        m²'ye 1; toplam bir üste) Otopark ya da Garaj adlı mahallerin net alanı ÷ 20 m² az
+        ise parking_short; konutta oda sayısından (1 oda 2, 2 oda 3, 3 ve daha fazla 4
+        kişi), öbür bölümlerde brüt alan ÷ 20'den kişi başına 1 m² net, Sığınak adlı
+        mahallerin alanı az ise shelter_short (7/a–c muafiyetlerinde aranmaz), 100 m²'yi
+        aşan sığınakta 2 çıkış shelter_exit_count (8/c), iç yükseklik 2,40 m
+        shelter_height_low (8/a). regulation, doors ve fixtures gibi yalnız adıyla istenince
+        çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.
 
         Args:
             doc: The drawing it works on.

@@ -86,16 +86,18 @@ pub(crate) struct Store {
 /// Whether a table has cells the document works out (docs/adr/0327).
 fn computed_table(stored: &Stored) -> bool {
     matches!(&*stored.entity, Entity::Table(t)
-        if !t.fields.is_empty()
-            || !t.formulas.is_empty()
-            || matches!(
-                t.source,
-                Some(
-                    kentos_contracts::TableSource::Blocks { .. }
-                        | kentos_contracts::TableSource::Schedule { .. }
-                        | kentos_contracts::TableSource::Zoning {}
-                )
-            ))
+    if !t.fields.is_empty()
+        || !t.formulas.is_empty()
+        || matches!(
+            t.source,
+            Some(
+                kentos_contracts::TableSource::Blocks { .. }
+                    | kentos_contracts::TableSource::Schedule { .. }
+                    | kentos_contracts::TableSource::Zoning {}
+                    | kentos_contracts::TableSource::Parking {}
+                    | kentos_contracts::TableSource::Shelter {}
+            )
+        ))
 }
 
 /// The objects a text's fields read, and whether one reads the project or a layer's name (docs/adr/0325 §2).

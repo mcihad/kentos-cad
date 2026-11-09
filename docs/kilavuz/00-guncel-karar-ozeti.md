@@ -190,6 +190,14 @@
       ayarları › Yangın güvenliği.
     - `fire_audit::walks` (ölçülen yollar, sınırlarıyla) → `fire_marks::draw` (çizgi + ok başı + "tek yön 28,07 m >
       15,00 m"; `MARK_ATTR` = `Kaçış`, yeniden çizimde eskiler silinir) → `tool.escapeRoutes` (`escape_tool.rs`, Proje ▾).
+  - **Otopark ve sığınak (M36, [ADR 3036](../adr/3036-parking-and-shelter-provisions.md)):**
+    - `kentos_domain::room_names`: `RoomKind`, `fold`/`words`/`has`/`kind_of`, `dwelling_nature`, `stair_name` (Mevzuat
+      ve kaçış aynı adları buradan okur).
+    - `kentos_domain::provisions`: `parking_report`/`shelter_report` (program bölümleri + `paiy_areas` brütü; Ek-1
+      `parking_use`, `dwelling_parking`; 8/a `dwelling_persons`, 7/a–c `exempt`), `parking_table`/`shelter_table`
+      (`ZoningTable`). `TableSource::Parking`/`Shelter` (KCAD 215) Emsal tablosu gibi `reads_settings` ile yenilenir.
+    - `provisions_audit.rs` (application): `parking_short`, `shelter_short`, `shelter_exit_count`, `shelter_height_low`;
+      kaçış kurallarından sonra. Masaüstü `place_provision_table` (Metraj ▾ › Otopark hesabı, Sığınak hesabı).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -76,6 +76,10 @@ pub enum Source {
     Sivas,
     /// Binaların Yangından Korunması Hakkında Yönetmelik (docs/adr/3035).
     Bykhy,
+    /// Otopark Yönetmeliği (docs/adr/3036).
+    Otopark,
+    /// Sığınak Yönetmeliği (docs/adr/3036).
+    Siginak,
 }
 
 impl Source {
@@ -85,6 +89,8 @@ impl Source {
             Source::Paiy => "PAİY",
             Source::Sivas => "Sivas",
             Source::Bykhy => "BYKHY",
+            Source::Otopark => "Otopark Yön.",
+            Source::Siginak => "Sığınak Yön.",
         }
     }
 
@@ -94,6 +100,8 @@ impl Source {
             Source::Paiy => "PAİY",
             Source::Sivas => "Sivas İmar Yön.",
             Source::Bykhy => "BYKHY",
+            Source::Otopark => "Otopark Yön.",
+            Source::Siginak => "Sığınak Yön.",
         }
     }
 }
@@ -178,7 +186,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/3035).
-pub const CODES: [&str; 26] = [
+pub const CODES: [&str; 30] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -205,6 +213,10 @@ pub const CODES: [&str; 26] = [
     codes::BYKHY_EXIT_COUNT_BELOW,
     codes::BYKHY_CORRIDOR_NARROW,
     codes::BYKHY_STAIR_COUNT_BELOW,
+    codes::PARKING_SHORT,
+    codes::SHELTER_SHORT,
+    codes::SHELTER_EXIT_COUNT,
+    codes::SHELTER_HEIGHT_LOW,
 ];
 
 /// A fix a finding offers (docs/adr/3034): `cad.arch.edit`'s operation on its first object (a stair, a ramp) and the
@@ -215,40 +227,17 @@ pub struct Fix {
     pub operation: serde_json::Value,
 }
 
-/// A room's kind as the regulation names it.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum RoomKind {
-    Living,
-    Bedroom,
-    Kitchen,
-    Bath,
-    Toilet,
-    Corridor,
-}
+pub use kentos_domain::room_names::{RoomKind, has, is, kind_of, words};
 
-impl RoomKind {
-    /// Its name in a finding.
-    pub fn label(self) -> &'static str {
-        match self {
-            RoomKind::Living => "Oturma odası",
-            RoomKind::Bedroom => "Yatak odası",
-            RoomKind::Kitchen => "Mutfak",
-            RoomKind::Bath => "Banyo",
-            RoomKind::Toilet => "Tuvalet",
-            RoomKind::Corridor => "Hol",
-        }
-    }
-
-    /// 29/1's narrow side and net area, m and m²; a corridor's 29/3 width and no area.
-    pub fn limits(self) -> (f64, Option<f64>) {
-        match self {
-            RoomKind::Living => (3.00, Some(12.0)),
-            RoomKind::Bedroom => (2.50, Some(9.00)),
-            RoomKind::Kitchen => (1.50, Some(3.30)),
-            RoomKind::Bath => (1.50, Some(3.00)),
-            RoomKind::Toilet => (1.00, Some(1.20)),
-            RoomKind::Corridor => (1.20, None),
-        }
+/// 29/1's narrow side and net area, m and m²; a corridor's 29/3 width and no area.
+pub fn limits(kind: RoomKind) -> (f64, Option<f64>) {
+    match kind {
+        RoomKind::Living => (3.00, Some(12.0)),
+        RoomKind::Bedroom => (2.50, Some(9.00)),
+        RoomKind::Kitchen => (1.50, Some(3.30)),
+        RoomKind::Bath => (1.50, Some(3.00)),
+        RoomKind::Toilet => (1.00, Some(1.20)),
+        RoomKind::Corridor => (1.20, None),
     }
 }
 
@@ -261,75 +250,6 @@ pub enum ShaftKind {
     AirShaft,
     /// Asansör kuyusu (34/2); its lobby (Asansör holü, önü) is not.
     Elevator,
-}
-
-/// Upper-case ASCII, Turkish letters folded (İ, ı → I; Ş → S …).
-fn fold(t: &str) -> String {
-    t.chars()
-        .map(|c| match c {
-            'ç' | 'Ç' => 'C',
-            'ğ' | 'Ğ' => 'G',
-            'ı' | 'I' | 'İ' | 'i' => 'I',
-            'ö' | 'Ö' => 'O',
-            'ş' | 'Ş' => 'S',
-            'ü' | 'Ü' | 'û' | 'Û' => 'U',
-            'â' | 'Â' => 'A',
-            'î' | 'Î' => 'I',
-            c => c.to_ascii_uppercase(),
-        })
-        .collect()
-}
-
-/// A name's and a use's words, folded.
-pub(crate) fn words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
-    [name, usage]
-        .into_iter()
-        .flatten()
-        .flat_map(|t| {
-            fold(t)
-                .split(|c: char| !c.is_alphanumeric())
-                .filter(|w| !w.is_empty())
-                .map(str::to_owned)
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
-
-/// Whether a word begins with `w`.
-pub(crate) fn has(words: &[String], w: &str) -> bool {
-    words.iter().any(|x| x.starts_with(w))
-}
-
-/// Whether a word is `w`.
-pub(crate) fn is(words: &[String], w: &str) -> bool {
-    words.iter().any(|x| x == w)
-}
-
-/// A room's kind by its name or use: the wet rooms first (an Ebeveyn banyosu is a bathroom), then the kitchen, the
-/// passages, the living room and the bedrooms; none for another (a store, a study, a balcony …).
-pub fn kind_of(name: Option<&str>, usage: Option<&str>) -> Option<RoomKind> {
-    let texts: Vec<String> = [name, usage].into_iter().flatten().map(fold).collect();
-    let w = words(name, usage);
-    let has = |p: &str| has(&w, p);
-    if has("WC") || has("TUVALET") {
-        Some(RoomKind::Toilet)
-    } else if has("BANYO") || has("DUS") || has("YIKANMA") {
-        Some(RoomKind::Bath)
-    } else if has("MUTFAK") {
-        Some(RoomKind::Kitchen)
-    } else if has("HOL") || has("KORIDOR") || has("ANTRE") {
-        Some(RoomKind::Corridor)
-    } else if has("SALON") || has("OTURMA") {
-        Some(RoomKind::Living)
-    } else if has("YATAK")
-        || has("EBEVEYN")
-        || has("COCUK")
-        || texts.iter().any(|t| t == "ODA" || t.starts_with("ODA "))
-    {
-        Some(RoomKind::Bedroom)
-    } else {
-        None
-    }
 }
 
 /// A shaft's kind by its name or use: an elevator's shaft (not its lobby), a light well, an air shaft.
@@ -731,7 +651,7 @@ pub fn findings(
         }
     };
     for r in &rooms {
-        let (least_width, least_area) = r.kind.limits();
+        let (least_width, least_area) = limits(r.kind);
         if r.kind == RoomKind::Corridor {
             if let Some(s) = said(
                 codes::PAIY_CORRIDOR_NARROW,
@@ -1583,6 +1503,8 @@ pub fn findings(
     }
     // Yangın kaçışı (docs/adr/3035): Binaların Yangından Korunması Hakkında Yönetmelik.
     crate::fire_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
+    // Otopark ve sığınak (docs/adr/3036).
+    crate::provisions_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     out
 }
 

@@ -11876,6 +11876,8 @@ class TableSource(_Union):
     - :class:`ScheduleTableSource` (``kind: schedule``)
     - :class:`ExtractionTableSource` (``kind: extraction``)
     - :class:`ZoningTableSource` (``kind: zoning``)
+    - :class:`ParkingTableSource` (``kind: parking``)
+    - :class:`ShelterTableSource` (``kind: shelter``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -15690,7 +15692,8 @@ class ArchAuditFinding(_Model):
             `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
             `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
             (docs/adr/3034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
-            `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035).
+            `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035); `parking_short`,
+            `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/3036).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -123540,6 +123543,38 @@ class ZoningTableSource(TableSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParkingTableSource(TableSource):
+    """Otopark hesabı (docs/adr/3036; `.kcad` schema 215): the independent units' parking need by Otopark Yönetmeliği
+    Ek-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.
+    """
+    TAG_VALUE: ClassVar[str] = "parking"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "parking"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParkingTableSource:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ShelterTableSource(TableSource):
+    """Sığınak hesabı (docs/adr/3036; `.kcad` schema 215): the units' shelter people by Sığınak Yönetmeliği 8/a against
+    the drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.
+    """
+    TAG_VALUE: ClassVar[str] = "shelter"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "shelter"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShelterTableSource:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class EditTablesOperation(TablesOperation):
     """Tabloyu düzenle: the edits in order, as one step."""
     TAG_VALUE: ClassVar[str] = "edit"
@@ -125653,7 +125688,7 @@ _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "po
 _TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "breaks": BreaksTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
 
 
-_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource, "extraction": ExtractionTableSource, "zoning": ZoningTableSource}
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource, "extraction": ExtractionTableSource, "zoning": ZoningTableSource, "parking": ParkingTableSource, "shelter": ShelterTableSource}
 
 
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
@@ -128034,6 +128069,7 @@ __all__ = [
     "ParcelsCreate",
     "ParkedInfo",
     "ParkedPin",
+    "ParkingTableSource",
     "ParquetCompression",
     "ParquetCompressionName",
     "ParquetExported",
@@ -128848,6 +128884,7 @@ __all__ = [
     "SheetsPublished",
     "SheetsSet",
     "SheetsSetResult",
+    "ShelterTableSource",
     "ShiftWallsOperation",
     "ShowHeaderPaperEmptyTable",
     "ShownExtractValue",

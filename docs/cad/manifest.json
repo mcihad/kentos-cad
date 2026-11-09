@@ -468,6 +468,22 @@
    "tests": 0
   },
   {
+   "id": "arch.parkingTable",
+   "kind": "command",
+   "title": "Otopark hesabı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Otopark hesabı (kaynağı parking): bölümlerin Ek-1 ihtiyacı, toplam, Otopark/Garaj mahallerinden yer sayısı ve şarj yeri; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 3036).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.phase.all",
    "kind": "command",
    "title": "Evre: Tümü",
@@ -608,6 +624,22 @@
    "python": "kentos.cad.sheets.set",
    "mcp": "cad.sheets.set",
    "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.shelterTable",
+   "kind": "command",
+   "title": "Sığınak hesabı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Sığınak hesabı (kaynağı shelter): bölümlerin kişi sayısı, gereken net alan, Sığınak mahallerinin alanı, muafiyet, tuvalet ve çıkış; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 3036).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

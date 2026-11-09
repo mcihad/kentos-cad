@@ -442,6 +442,9 @@ CAD = [
                 {"command": "arch.zoningTable", "title": "Metraj", "label": "Emsal ve TAKS tablosu"},
                 # Kat irtifakı tablosu (docs/adr/3031): the deed's sharing table.
                 {"command": "tool.scheduleLandShares", "title": "Metraj", "label": "Kat irtifakı tablosu"},
+                # Otopark and Sığınak hesabı (docs/adr/3036): the regulations' needs against the drawing.
+                {"command": "arch.parkingTable", "title": "Metraj", "label": "Otopark hesabı"},
+                {"command": "arch.shelterTable", "title": "Metraj", "label": "Sığınak hesabı"},
             ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},

@@ -39,10 +39,15 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
 /// Whether a schedule reads the project's settings a step's `ops` change (docs/adr/0795): a units schedule the
 /// program and the levels, a spaces schedule with a program field the program.
 fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
-    let program = ops.iter().any(|op| matches!(op, Op::BuildingProgram { .. }));
-    let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
-    // Emsal ve TAKS tablosu (docs/adr/3030): the program's briefs count the rooms; the levels are its rows.
-    if matches!(t.source, Some(TableSource::Zoning {})) {
+    let program = ops
+        .iter()
+        .any(|op| matches!(op, Op::BuildingProgram { .. }));
+    let settings = ops
+        .iter()
+        .any(|op| matches!(op, Op::TemplateSettings { .. }));
+    // Emsal ve TAKS tablosu (docs/adr/3030): the program's briefs count the rooms; the levels are its rows. Otopark and
+    // Sığınak hesabı (docs/adr/3036): the program's units are their rows.
+    if t.source.as_ref().is_some_and(TableSource::of_regulation) {
         return program || settings;
     }
     let Some(TableSource::Schedule { of, columns, .. }) = &t.source else {
@@ -266,9 +271,14 @@ impl Document {
             let rows = self.blocks_schedule(names, by.as_deref(), columns);
             self.take_rows(&mut out, rows);
         }
-        // Emsal ve TAKS tablosu (docs/adr/3030): its rows, alignments, and bold and warning cells.
-        if matches!(t.source, Some(TableSource::Zoning {})) {
-            let written = self.zoning_table();
+        // Emsal ve TAKS tablosu (docs/adr/3030), Otopark and Sığınak hesabı (docs/adr/3036): their rows, alignments,
+        // and bold and warning cells.
+        if let Some(source) = t.source.as_ref().filter(|s| s.of_regulation()) {
+            let written = match source {
+                TableSource::Parking {} => self.parking_table(),
+                TableSource::Shelter {} => self.shelter_table(),
+                _ => self.zoning_table(),
+            };
             self.take_rows(&mut out, written.rows);
             out.aligns = Some(written.aligns);
             out.header = true;
@@ -378,7 +388,7 @@ impl Document {
             let Entity::Table(t) = &*current.entity else {
                 continue;
             };
-            if !matches!(t.source, Some(TableSource::Zoning {})) {
+            if !t.source.as_ref().is_some_and(TableSource::of_regulation) {
                 continue;
             }
             let next = self.table_worked_out(t);
@@ -440,7 +450,7 @@ impl Document {
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
                 // Emsal ve TAKS tablosu (docs/adr/3030): the rooms (a wall moved moves its rooms in the same step).
-                || (matches!(t.source, Some(TableSource::Zoning {}))
+                || (t.source.as_ref().is_some_and(TableSource::of_regulation)
                     && (options_changed || ["space", "polyline", "polygon"].iter().any(|k| kinds.contains(k))))
                 || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)))
                 || reads_settings(t, ops);
