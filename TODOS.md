@@ -156,6 +156,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   yeniden derleme) ve Harita işi panelinde değişen parçaların cümlesi.
 - MAP-02 / ADR 3300: web'in Aplikasyon penceresinde çizimin noktalarının kotları ve geoit ayrımlarıyla h sütunu
   (`surveyStakeout`'un `stationZ`, `targetZs`, `undulations`'ı; `groundSurvey.wasm.test.ts` yeni durumları okur).
+- MAP-03 / ADR 3320: web'in GNSS arşivi panelinde bazın satırından haritada bazın geçici çizgisi.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

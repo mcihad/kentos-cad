@@ -50,6 +50,8 @@ pub enum Event {
     Regenerate(String),
     /// An accepted point's or a use's row: its objects selected and shown.
     Objects(Vec<String>),
+    /// A baseline's row (docs/adr/3320): its ends' accepted points selected, the baseline drawn between them.
+    Baseline(String),
     /// Ağ dengelemesi, from an adjustment's row (docs/adr/2920).
     Network,
     Fold(String),
@@ -157,6 +159,30 @@ impl App {
             return;
         }
         self.select_uids(&uids);
+    }
+
+    /// A baseline's row (docs/adr/3320): its two ends' accepted points selected and shown, and the baseline drawn
+    /// between them on the map with its id and length, until İşareti kaldır; a mark without an accepted point says so.
+    fn show_baseline(&mut self, id: &str) {
+        let Some(Ok(tree)) = self.map_survey_read() else { return };
+        let Some(b) = tree.baselines.iter().find(|b| b.id == id).cloned() else { return };
+        let ends = |mark: &str| crate::map_survey_network_rows::objects_of(&tree, &[mark]).into_iter().next();
+        let (from, to) = (ends(&b.from), ends(&b.to));
+        let uids: Vec<String> = from.iter().chain(to.iter()).cloned().collect();
+        self.select_uids(&uids);
+        match (from, to, self.document.as_ref().map(|d| d.session)) {
+            (Some(from), Some(to), Some(session)) => {
+                let words = format!("{} · {:.3} m", b.id, b.length);
+                self.baseline_shown = Some(crate::survey_baseline_marks::Shown { session, from, to, words });
+            }
+            _ => {
+                self.baseline_shown = None;
+                self.say(
+                    kentos_interaction::Level::Info,
+                    format!("{} çizilemedi: {} → {} uçlarından birinin kabul noktası yok.", b.id, b.from, b.to),
+                );
+            }
+        }
     }
 
     fn select_uids(&mut self, uids: &[String]) {
@@ -330,6 +356,7 @@ impl App {
                 }
             }
             Event::Objects(uids) => self.select_uids(&uids),
+            Event::Baseline(id) => self.show_baseline(&id),
             Event::Network => return self.open_survey_network(),
             Event::Fold(key) => {
                 if !self.map_survey.toggled.remove(&key) {

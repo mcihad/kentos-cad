@@ -106,6 +106,8 @@ pub struct Marks {
     pub zoning: Option<std::sync::Arc<crate::zoning_marks::ZoningMarks>>,
     /// Boru hattı denetimi's crossings and near passes (docs/adr/3160).
     pub pipes: Option<std::sync::Arc<crate::pipes_marks::PipesMarks>>,
+    /// GNSS arşivi's baseline drawn between its ends (docs/adr/3320).
+    pub baseline: Option<std::sync::Arc<crate::survey_baseline_marks::BaselineMark>>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
@@ -226,6 +228,7 @@ impl Marks {
             && self.reach.is_none()
             && self.zoning.is_none()
             && self.pipes.is_none()
+            && self.baseline.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
             && self.clips.is_empty()
@@ -293,6 +296,9 @@ impl<Message> canvas::Program<Message> for Marks {
         }
         if let Some(z) = &self.zoning {
             crate::zoning_marks::draw(&mut frame, z, &self.camera, &self.colors, &Tokens::of(theme));
+        }
+        if let Some(m) = &self.baseline {
+            crate::survey_baseline_marks::draw(&mut frame, m, &self.camera, &self.colors, &Tokens::of(theme));
         }
         if let Some(m) = &self.pipes {
             crate::pipes_marks::draw(&mut frame, m, &self.camera, &self.colors, &Tokens::of(theme));

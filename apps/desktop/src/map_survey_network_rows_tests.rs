@@ -119,3 +119,79 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/3320: a baseline's row draws it on the map between its ends' accepted points, with its id and length,
+/// besides selecting them; the drawing's points are its ends (a point moved, the line follows); İşareti kaldır takes
+/// it away, and is offered only while something is marked.
+#[test]
+fn a_baseline_s_row_draws_it_between_its_ends() {
+    let mut app = accepted();
+    let t = tree(&app);
+    let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
+    // A baseline from a known point without an accepted point of its own is not drawn, and the window says why.
+    let lone = t.baselines.iter().find(|b| !(accepted_end(&b.from) && accepted_end(&b.to))).cloned().expect("one");
+    send(&mut app, P::Baseline(lone.id.clone()));
+    assert!(app.baseline_marks().is_none());
+    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains(&format!("{} çizilemedi", lone.id)), "{said}");
+    // One between two accepted points is.
+    let b = t.baselines.iter().find(|b| accepted_end(&b.from) && accepted_end(&b.to)).cloned().expect("one");
+    send(&mut app, P::Baseline(b.id.clone()));
+    assert_eq!(app.selection.len(), 2, "its two ends selected");
+    let mark = app.baseline_marks().expect("drawn");
+    assert_eq!(mark.words, format!("{} · {:.3} m", b.id, b.length));
+    // The ends are the accepted points' objects where the drawing holds them.
+    let place = |mark_name: &str| {
+        let uid = crate::map_survey_network_rows::objects_of(&t, &[mark_name]).into_iter().next().expect("accepted");
+        let doc = app.document.as_ref().expect("open");
+        let slot = doc.model.slot_of(kentos_domain::Uuid::parse_str(&uid).expect("a uid")).expect("drawn");
+        match doc.model.get(slot) {
+            Some(kentos_commands::Entity::Point(p)) => [p.p.x, p.p.y],
+            _ => panic!("a point"),
+        }
+    };
+    assert_eq!((mark.from, mark.to), (place(&b.from), place(&b.to)));
+    assert!(app.available("data.unmark"), "something is marked");
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.baseline_marks().is_none());
+}
+
+/// The baseline drawn from its row, light wide and dark narrow, `.run/gui-evidence/baz-haritada-3320/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib map_survey_network_rows_tests::baseline_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn baseline_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/baz-haritada-3320");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = accepted();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.show_map_survey();
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        for key in ["campaigns", "marks", "uses", "baselines"] {
+            send(&mut app, P::Fold(key.into()));
+        }
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let t = tree(&app);
+        let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
+        let b = t.baselines.iter().find(|b| accepted_end(&b.from) && accepted_end(&b.to)).expect("one").id.clone();
+        send(&mut app, P::Baseline(b));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("baz-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

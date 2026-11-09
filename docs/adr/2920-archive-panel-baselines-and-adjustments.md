@@ -64,6 +64,6 @@ için ayrı bir araştırma ve karar istiyor (ADR 2520). Sonraki tura kaldı.
 ## Sonra
 
 - GVX oturumlarının çapraz korelasyonları ve korelasyonlu gözlemde bazın uyuşumsuzluk testi (araştırma ve karar).
-- Bazın satırından haritada bazın çizilmesi (iki uç arasında geçici çizgi).
+- ~~Bazın satırından haritada bazın çizilmesi (iki uç arasında geçici çizgi).~~ ADR 3320.
 - Yeni noktaların hızı (ADR 2520 Sonra).
 - Web (TODOS §0.2).

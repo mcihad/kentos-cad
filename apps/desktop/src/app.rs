@@ -1556,6 +1556,8 @@ pub struct App {
     pub(crate) zoning_shown_marks: Option<crate::zoning_marks::Shown>,
     /// Boru hattı denetimi's crossings left on the drawing (pipes_marks.rs, docs/adr/3160).
     pub(crate) pipes_shown_marks: Option<crate::pipes_marks::Shown>,
+    /// GNSS arşivi's baseline drawn on the map (docs/adr/3320).
+    pub(crate) baseline_shown: Option<crate::survey_baseline_marks::Shown>,
     pub(crate) pipes_check: crate::pipes_check_window::State,
     pub(crate) exchange_check: crate::exchange_check_window::State,
     pub(crate) asbuilt: crate::asbuilt_window::State,
@@ -2028,6 +2030,7 @@ impl App {
             impact_reach: None,
             zoning_shown_marks: None,
             pipes_shown_marks: None,
+            baseline_shown: None,
             pipes_check: Default::default(),
             exchange_check: Default::default(),
             asbuilt: Default::default(),
@@ -3694,6 +3697,7 @@ impl App {
                 self.impact_reach = None;
                 self.zoning_shown_marks = None;
                 self.pipes_shown_marks = None;
+                self.baseline_shown = None;
                 return self.data_event(crate::search::Event::Unmark);
             }
             // Topoloji kuralları (topology/, docs/adr/0202 §5, §6).
@@ -4246,6 +4250,7 @@ impl App {
                     || self.impact_reach_marks().is_some()
                     || self.zoning_marks().is_some()
                     || self.pipes_marks().is_some()
+                    || self.baseline_marks().is_some()
             }
             // Only where there is a view to go to (docs/adr/0141).
             "view.previous" => self.view_history.can_back(),

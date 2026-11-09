@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **GNSS bazı haritada (9 Kasım 2026; MAP-03, [ADR 3320](../../docs/adr/3320-gnss-baseline-drawn-on-the-map.md)).**
+  GNSS arşivi › Bazlar satırı bazı iki ucunun kabul noktaları arasında geçici kesikli çizgi, ok ve uzunlukla çizer;
+  İşareti kaldır ile gider. Harita.
 - **Aplikasyon'da çizginin kendi yüksekliği (9 Kasım 2026; MAP-02, [ADR 3300](../../docs/adr/3300-stakeout-lines-at-their-own-height.md)).**
   Kotlu hedefin çizgisi istasyonla hedefin elipsoit yüksekliklerinin ortalamasında (ADR 2900'ün kuralı); kotsuz hedef
   ortalamada; h sütunu. CAD + CBS.

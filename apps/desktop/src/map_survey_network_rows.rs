@@ -1,7 +1,7 @@
 //! GNSS arşivi's network rows (plan/map-cad.md MAP-03, docs/adr/2920): the baselines `bz-N`, the known points `bn-N`
 //! and the accepted network adjustments `da-N` that `map.survey.query` reads, under the panel's marks, as Trimble
 //! Business Center's Project Explorer lists a project's GNSS vectors. A baseline's or a known point's row selects its
-//! marks' accepted points; its button leaves it out with the toolbar's reason, or takes it back (`map.survey.edit`'s
+//! marks' accepted points (a baseline's also drawn on the map between them, docs/adr/3320); its button leaves it out with the toolbar's reason, or takes it back (`map.survey.edit`'s
 //! exclude and include take `bz-` and `bn-` ids). An adjustment's row selects the points it made, its button opens
 //! Ağ dengelemesi; it is out of date when one of its baselines or known points has been left out since.
 
@@ -13,7 +13,7 @@ use crate::app::Message;
 use crate::map_survey_panel::{Event, glyph, msg};
 
 /// The accepted points' objects of the marks, by their lasting ids.
-fn objects_of(tree: &MapSurveyTree, marks: &[&str]) -> Vec<String> {
+pub(crate) fn objects_of(tree: &MapSurveyTree, marks: &[&str]) -> Vec<String> {
     tree.points.iter().filter(|p| marks.contains(&p.mark.as_str())).map(|p| p.uid.clone()).collect()
 }
 
@@ -25,7 +25,7 @@ pub(crate) fn groups<'a>(tree: &MapSurveyTree) -> Vec<StatusItem<'a, Message>> {
             .icon(icon(Icon::Line).size(14.0))
             .meta(format!("{}", tree.baselines.len()));
         for b in &tree.baselines {
-            group = group.push(baseline_item(tree, b));
+            group = group.push(baseline_item(b));
         }
         out.push(group);
     }
@@ -70,7 +70,7 @@ fn out_or_back<'a>(item: StatusItem<'a, Message>, id: &str, excluded: bool) -> S
 
 /// A baseline's row: its marks and id, its length faint, its state as a pill (left out, its file missing or changed,
 /// in the adjustment, in the archive); its σ, source, file and adjustments in the tip.
-fn baseline_item<'a>(tree: &MapSurveyTree, b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
+fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
     let file = b.file.as_ref().map(|f| f.state);
     let (tone, words) = match (&b.excluded, file) {
         (Some(_), _) => (Status::Neutral, "Dışlandı"),
@@ -96,7 +96,7 @@ fn baseline_item<'a>(tree: &MapSurveyTree, b: &SurveyBaselineRow) -> StatusItem<
         .meta(format!("{:.3} m", b.length))
         .status(tone, words)
         .detail(detail.join(" "))
-        .on_press(msg(Event::Objects(objects_of(tree, &[&b.from, &b.to]))));
+        .on_press(msg(Event::Baseline(b.id.clone())));
     out_or_back(item, &b.id, b.excluded.is_some())
 }
 

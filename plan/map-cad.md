@@ -33,7 +33,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280 | tipli katman profili; silinenin onaylı hâli; değişen özniteliğin adı | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
@@ -486,6 +486,13 @@ panelinde Bazlar (uzunluk, σ, dosya, dengelemede/dışlandı), Bilinen noktalar
 Dengelemeler (sonradan dışlanan baz ya da bilinen nokta varsa güncel değil); satırlar ilgili noktaları seçer, düğmeler
 nedenle dışlar ya da geri alır, dengelemeninki Ağ dengelemesi'ni açar; masaüstü testi ve resimler. Sözleşme değişmedi.
 Açık: GVX oturum korelasyonları ve korelasyonlu baz testi, yeni noktaların hızı, bazın haritada çizilmesi.
+
+**9 Kasım 2026, altıncı tur — bazın haritada çizilmesi ([ADR 3320](../docs/adr/3320-gnss-baseline-drawn-on-the-map.md)).**
+Kapsam: **Harita**. Dayanak: Trimble Business Center'da vektörler plan görünüşünde iki noktası arasında, okla ve
+uzunluğuyla. Kanıtlanan: Bazlar satırı iki ucun kabul noktalarını seçer ve bazı haritada kesikli çizgi, bitişinde ok,
+ortasında “bz-N · uzunluk m” olarak bırakır; uçlar noktaların bugünkü yeri; kabul noktası olmayan uç söylenir; İşareti
+kaldır ile gider; hiçbir şey yazılmaz. Masaüstü testi ve resimler. Açık: bilinen noktanın kendi yerinden çizim, bütün
+ağın görünüşü, GVX korelasyonları, yeni noktaların hızı.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 
