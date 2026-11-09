@@ -133,8 +133,8 @@ fn scope_case() -> (Value, Document) {
     (case, doc)
 }
 
-/// docs/adr/2800: each map says its own points. Three maps, B turned 45° (kn-4 is in its box, out of its diamond),
-/// C over no point. As the export does: the sheet drawn once, its data worked out of the maps' ground (each map's words
+/// docs/adr/2800: each map says its own points. Five maps, B turned 45° (kn-4 is in its box, out of its diamond),
+/// C over no point, D and E bounded by their clip shapes (docs/adr/3200: D's L leaves kn-4 out, E's rectangle kn-2). As the export does: the sheet drawn once, its data worked out of the maps' ground (each map's words
 /// the reference's), drawn again; every text's words the reference's (tied texts their map's, the untied one the first
 /// map's). The print check says the text that reads C's empty value, and no other.
 #[test]
@@ -196,7 +196,8 @@ fn picture() {
     println!("{}", out.join("pafta.pdf").display());
 }
 
-/// `.run/gui-evidence/harita-kalitesi-2800/pafta.pdf`, the three maps' sheet as printed (pdftotext reads its words):
+/// `.run/gui-evidence/harita-kirpma-3200/pafta.pdf` (docs/adr/3200; before it `harita-kalitesi-2800`), the five maps'
+/// sheet as printed, D and E cut to their shapes (pdftotext reads its words):
 ///
 /// ```text
 /// cargo test -p kentos-plot --test all survey_facts::scope_picture -- --ignored --nocapture
@@ -204,7 +205,7 @@ fn picture() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn scope_picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/harita-kalitesi-2800");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/harita-kirpma-3200");
     std::fs::create_dir_all(&out).expect("a folder");
     let (_, doc) = scope_case();
     let made = kentos_plot::book::book_pdf(&doc, &[], "Ayşe", "2026-11-08").expect("a PDF");

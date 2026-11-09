@@ -86,7 +86,8 @@ kapsadığı noktalarla sınırlanması (bağlı haritanın çerçevesi)”.
 
 ## Sonra
 
-- Haritanın özel kırpma şekliyle ve atlas nesnesiyle sınırlanması.
+- Haritanın özel kırpma şekliyle ve atlas nesnesiyle sınırlanması yapıldı:
+  [ADR 3200](3200-sheet-survey-quality-by-clip-shape.md).
 - Total station ve nivelman ölçmelerinin kalitesi (ADR 2400 Sonra).
 - Atlas sayfalarının kaynak dökümü (ADR 1320 Kalan).
 - Web (TODOS §0.2).

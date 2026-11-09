@@ -144,6 +144,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   bulgusunun renginde, çizim değişince yeniden hesaplanır).
 - MAP-17 / ADR 3180: web'in Paketle'sinde ızgaraların `izgaralar/`'a konması (web'in ızgara kütüphanesinden) ve
   `PackagedKind` `grid`.
+- MAP-18 / ADR 3200: web'in pafta önizlemesinde ve PDF'inde haritanın kalite notunun kırpma şekliyle (dikdörtgen,
+  çokgen, atlas nesnesi) sınırlanması (`survey-scope.json`'un beş haritası).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

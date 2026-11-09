@@ -884,6 +884,94 @@
     }
    },
    {
+    "id": "d",
+    "name": "D",
+    "frame": {
+     "left": 240000,
+     "top": 64000,
+     "width": 80000,
+     "height": 50000
+    },
+    "border": {
+     "width": 350
+    },
+    "kind": {
+     "type": "map",
+     "view": {
+      "type": "fixed",
+      "center": {
+       "x": 544810.0,
+       "y": 4404910.0
+      },
+      "scale": 500,
+      "rotation": 0
+     },
+     "clip": {
+      "type": "polygon",
+      "points": [
+       [
+        0,
+        0
+       ],
+       [
+        500000,
+        0
+       ],
+       [
+        500000,
+        500000
+       ],
+       [
+        1000000,
+        500000
+       ],
+       [
+        1000000,
+        1000000
+       ],
+       [
+        0,
+        1000000
+       ]
+      ]
+     }
+    }
+   },
+   {
+    "id": "e",
+    "name": "E",
+    "frame": {
+     "left": 330000,
+     "top": 20000,
+     "width": 60000,
+     "height": 60000
+    },
+    "border": {
+     "width": 350
+    },
+    "kind": {
+     "type": "map",
+     "view": {
+      "type": "fixed",
+      "center": {
+       "x": 544612.0,
+       "y": 4404873.0
+      },
+      "scale": 500,
+      "rotation": 0
+     },
+     "clip": {
+      "type": "rectangle",
+      "bounds": [
+       0,
+       500000,
+       1000000,
+       1000000
+      ]
+     }
+    }
+   },
+   {
     "id": "a_konum",
     "name": "a_konum",
     "frame": {
@@ -1001,6 +1089,36 @@
      "type": "text",
      "content": "Serbest: [% @konum_dogrulugu %]"
     }
+   },
+   {
+    "id": "d_konum",
+    "name": "d_konum",
+    "frame": {
+     "left": 20000,
+     "top": 248000,
+     "width": 380000,
+     "height": 12000
+    },
+    "kind": {
+     "type": "text",
+     "content": "D: [% @konum_dogrulugu %] [% @yukseklik_dogrulugu %]",
+     "map": "d"
+    }
+   },
+   {
+    "id": "e_not",
+    "name": "e_not",
+    "frame": {
+     "left": 20000,
+     "top": 264000,
+     "width": 380000,
+     "height": 12000
+    },
+    "kind": {
+     "type": "text",
+     "content": "E: [% @olcme_kalitesi %]",
+     "map": "e"
+    }
    }
   ]
  },
@@ -1012,7 +1130,13 @@
   "b": [
    "kn-3"
   ],
-  "c": []
+  "c": [],
+  "d": [
+   "kn-3"
+  ],
+  "e": [
+   "kn-1"
+  ]
  },
  "maps": {
   "a": {
@@ -1032,6 +1156,18 @@
    "height": "",
    "network": "",
    "note": "Haritanın içinde GNSS ile kabul edilmiş nokta yok."
+  },
+  "d": {
+   "position": "±1,0 cm",
+   "height": "±1,2 cm",
+   "network": "da-2, C2 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 1,05, serbestlik 5",
+   "note": "GNSS ile 1 nokta: en büyük nokta konum hatası ±1,0 cm, yükseklik hatası ±1,2 cm (ortalama hata); ağ dengelemesi da-2 (C2, kurallar sağlandı)."
+  },
+  "e": {
+   "position": "",
+   "height": "",
+   "network": "",
+   "note": "GNSS ile 1 nokta: doğrulukları kayıtlı değil."
   }
  },
  "texts": {
@@ -1042,7 +1178,9 @@
   "b_not": "GNSS ile 1 nokta: en büyük nokta konum hatası ±1,0 cm, yükseklik hatası ±1,2 cm (ortalama hata); ağ dengelemesi da-2 (C2, kurallar sağlandı).",
   "c_not": "C: Haritanın içinde GNSS ile kabul edilmiş nokta yok.",
   "c_konum": "‹konum_dogrulugu?›",
-  "serbest": "Serbest: ±0,5 cm"
+  "serbest": "Serbest: ±0,5 cm",
+  "d_konum": "D: ±1,0 cm ±1,2 cm",
+  "e_not": "E: GNSS ile 1 nokta: doğrulukları kayıtlı değil."
  },
  "findings": [
   {

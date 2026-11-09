@@ -20,12 +20,19 @@ da-2, C2; kn-4 with a large σ) and their objects, and a sheet of three maps and
 
 Map B is turned 45°: its ground is a diamond. kn-4 lies inside the diamond's box but outside the diamond: counted, its
 σ (20 / 20 / 30 mm) would make B's words ±2,8 cm and ±3,0 cm.
+
+docs/adr/3180's maps (docs/adr/3200): a map's own clip shape bounds what it shows. Its corners are in the content
+frame's millionths (left to right, top to bottom); each is carried to the ground as the frame's corners are, and a point
+is shown when it is inside the shape's ring or on an edge (even-odd, the side decided in exact fractions). Map D's frame
+holds kn-3 and kn-4, its L-shaped clip leaves the top right quarter, where kn-4 is, out: D says kn-3's words. Map E's
+rectangle keeps the frame's lower half: of kn-1 and kn-2 only kn-1, whose accuracy is not recorded.
 """
 
 import copy
 import json
 import math
 import sys
+from fractions import Fraction as F
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,7 +47,13 @@ PLACES = {"kn-1": (544604.5188026087, 4404866.510293009), "kn-2": (544620.0, 440
 # The maps: frame (left, top, width, height) in µm, centre, scale, view turn in millidegrees.
 MAPS = [("a", (20000, 20000, 100000, 80000), (544612.0, 4404873.0), 500, 0),
         ("b", (140000, 20000, 80000, 80000), (544800.0, 4404900.0), 500, 45000),
-        ("c", (240000, 20000, 60000, 40000), (545000.0, 4405000.0), 500, 0)]
+        ("c", (240000, 20000, 60000, 40000), (545000.0, 4405000.0), 500, 0),
+        ("d", (240000, 64000, 80000, 50000), (544810.0, 4404910.0), 500, 0),
+        ("e", (330000, 20000, 60000, 60000), (544612.0, 4404873.0), 500, 0)]
+# docs/adr/3200: the clip shapes, in the content frame's millionths (left to right, top to bottom).
+CLIPS = {"d": {"type": "polygon", "points": [[0, 0], [500000, 0], [500000, 500000], [1000000, 500000], [1000000, 1000000],
+                                             [0, 1000000]]},
+         "e": {"type": "rectangle", "bounds": [0, 500000, 1000000, 1000000]}}
 # The texts: id, the map tied to (none: the first map's), content.
 TEXTS = [("a_konum", "a", "A: [% @konum_dogrulugu %]"),
          ("a_not", "a", "[% @olcme_kalitesi %]"),
@@ -49,7 +62,9 @@ TEXTS = [("a_konum", "a", "A: [% @konum_dogrulugu %]"),
          ("b_not", "b", "[% @olcme_kalitesi %]"),
          ("c_not", "c", "C: [% @olcme_kalitesi %]"),
          ("c_konum", "c", "[% @konum_dogrulugu %]"),
-         ("serbest", None, "Serbest: [% @konum_dogrulugu %]")]
+         ("serbest", None, "Serbest: [% @konum_dogrulugu %]"),
+         ("d_konum", "d", "D: [% @konum_dogrulugu %] [% @yukseklik_dogrulugu %]"),
+         ("e_not", "e", "E: [% @olcme_kalitesi %]")]
 
 
 def drawing():
@@ -79,10 +94,11 @@ def sheet():
     items = []
     for mid, (left, top, w, h), (cx, cy), scale, turn in MAPS:
         # A 0.35 mm frame line: the owner sees what each map covers (it does not change the content's corners).
+        kind = {"type": "map", "view": {"type": "fixed", "center": {"x": cx, "y": cy}, "scale": scale, "rotation": turn}}
+        if mid in CLIPS:
+            kind["clip"] = CLIPS[mid]
         items.append({"id": mid, "name": mid.upper(), "frame": {"left": left, "top": top, "width": w, "height": h},
-                      "border": {"width": 350},
-                      "kind": {"type": "map", "view": {"type": "fixed", "center": {"x": cx, "y": cy}, "scale": scale,
-                                                       "rotation": turn}}})
+                      "border": {"width": 350}, "kind": kind})
     for k, (tid, mid, content) in enumerate(TEXTS):
         kind = {"type": "text", "content": content}
         if mid:
@@ -114,6 +130,44 @@ def inside(quad, q):
                 return False
             side = 1 if cross > 0 else -1
     return True
+
+
+def clip_ring(mid, frame, centre, scale, turn):
+    """docs/adr/3200: the ground the map shows, its clip shape's corners carried as the frame's are: the millionths
+    (u, v) are the frame's point (u − ½, ½ − v) of its width and height from the centre, turned."""
+    clip = CLIPS.get(mid)
+    if clip is None:
+        return corners(frame, centre, scale, turn)
+    if clip["type"] == "rectangle":
+        l, t, r, b = clip["bounds"]
+        pts = [(l, t), (r, t), (r, b), (l, b)]
+    else:
+        pts = [tuple(q) for q in clip["points"]]
+    w, h = frame[2] / 1e6 * scale, frame[3] / 1e6 * scale
+    a = math.radians(turn / 1000.0)
+    c, s = math.cos(a), math.sin(a)
+    out = []
+    for u, v in pts:
+        x, y = (u / 1e6 - 0.5) * w, (0.5 - v / 1e6) * h
+        out.append((centre[0] + x * c - y * s, centre[1] + x * s + y * c))
+    return out
+
+
+def inside_ring(ring, q):
+    """Inside a simple ring or on an edge, in exact fractions: on an edge, else the crossings to the right counted."""
+    qx, qy = F(q[0]), F(q[1])
+    odd = False
+    n = len(ring)
+    for i in range(n):
+        (ax, ay), (bx, by) = [(F(x), F(y)) for x, y in (ring[i], ring[(i + 1) % n])]
+        turn = (bx - ax) * (qy - ay) - (by - ay) * (qx - ax)
+        if turn == 0 and min(ax, bx) <= qx <= max(ax, bx) and min(ay, by) <= qy <= max(ay, by):
+            return True
+        if (ay > qy) != (by > qy):
+            left = turn > 0 if by > ay else turn < 0
+            if left:
+                odd = not odd
+    return odd
 
 
 def cm(metres):
@@ -163,10 +217,18 @@ def main():
     survey = d["settings"]["mapSurvey"]
     shown, words = {}, {}
     for mid, frame, centre, scale, turn in MAPS:
-        quad = corners(frame, centre, scale, turn)
-        shown[mid] = [pid for pid, q in PLACES.items() if inside(quad, q)]
+        if mid in CLIPS:
+            ring = clip_ring(mid, frame, centre, scale, turn)
+            shown[mid] = [pid for pid, q in PLACES.items() if inside_ring(ring, q)]
+        else:
+            quad = corners(frame, centre, scale, turn)
+            shown[mid] = [pid for pid, q in PLACES.items() if inside(quad, q)]
         words[mid] = facts(survey, shown[mid])
-    assert shown == {"a": ["kn-1", "kn-2"], "b": ["kn-3"], "c": []}, shown
+    assert shown == {"a": ["kn-1", "kn-2"], "b": ["kn-3"], "c": [], "d": ["kn-3"], "e": ["kn-1"]}, shown
+    # docs/adr/3200: D's frame holds kn-4 too, E's kn-2: their clips leave them out.
+    for mid, pid in (("d", "kn-4"), ("e", "kn-2")):
+        m = next(x for x in MAPS if x[0] == mid)
+        assert inside(corners(*m[1:]), PLACES[pid]), (mid, pid)
     # kn-4 is in B's box, out of its diamond.
     quad = corners(*MAPS[1][1:])
     xs, ys = [p[0] for p in quad], [p[1] for p in quad]

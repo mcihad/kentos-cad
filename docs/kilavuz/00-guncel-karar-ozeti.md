@@ -270,6 +270,9 @@
 - **Paketin ızgaraları (9 Kasım 2026; MAP-17, [ADR 3180](../../docs/adr/3180-delivery-package-grids.md)).**
   Paketle projenin adladığı NTv2, geoit ve hız ızgaralarını cihazın kütüphanesinden `izgaralar/<SHA-256>` olarak taşır
   (dosya türü `grid`); bulunmayanı ayarın yeriyle söyler. CAD + CBS.
+- **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
+  Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
+  noktalarla; içerilme kesin yüklemle. CAD + CBS.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

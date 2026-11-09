@@ -48,7 +48,7 @@ sırayla alır.
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840 | tariften başka projede üretim; bütçe; çizimin kendi hesabının içinde durdurma | — |
 
@@ -1698,6 +1698,14 @@ ağ dengelemesi yalnız o noktalarınki; nokta göstermeyen harita bunu söyler;
 haritanınkini okur; atlas sayfası kendi yerininkini; ön denetim boş değeri ve basılacak `‹ad?›`'yı söyler; bağımsız
 başvuru (üç harita, biri 45° dönük), PDF, MCP, masaüstü önizlemesi. Açık: kırpma şekliyle sınırlama, total station ve
 nivelman kalitesi, atlas sayfalarının kaynak dökümü, kurum eksen adları, resmî profil kapısı.
+
+**9 Kasım 2026, beşinci tur — notun kırpma şekliyle sınırlanması ([ADR 3200](../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
+Kapsam: **CAD + CBS** (pafta). Dayanak: ISO 19157'nin kalite kapsamı (ADR 2800), pafta çekirdeğinin kırpma şekli ve atlas
+nesnesine kırpma (çizilen şekil). Kanıtlanan: haritanın gösterdiği yer şeklidir: dikdörtgen ve çokgen köşeleri çerçevenin
+milyonda birlerinden kâğıda, oradan yere taşınır; atlas sayfasında nesnenin çizilen dış çizgisi; içerilme halkada kesin
+yönelim yüklemiyle (kenar içeride, iç bükey doğru). Başvuruya L kırpmalı D (kn-4 dışarıda) ve dikdörtgen kırpmalı E
+eklendi; beş harita, on yazı Rust'ta, MCP'de ve masaüstünde başvurununki. Açık: atlas nesnesinin inceltilmemiş dış çizgisi,
+total station ve nivelman kalitesi, atlas sayfalarının kaynak dökümü.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 
