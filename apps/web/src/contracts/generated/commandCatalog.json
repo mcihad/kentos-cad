@@ -60658,7 +60658,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
           "control": {
             "description": "A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond\nthe limits says the two epochs do not rest on one datum (or the mark moved).",
@@ -60667,11 +60667,25 @@
             },
             "type": "array"
           },
+          "date": {
+            "description": "This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "design": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "epochs": {
+            "description": "A monitoring job's earlier epochs, oldest first (docs/adr/4420; Trimble Business Center's reference epoch the\nfirst): each a layer of points and its day. With them the answer tracks each point measured now through every\nepoch, its movement from the first epoch it was measured in.",
+            "items": {
+              "$ref": "#/$defs/AsbuiltEpoch"
+            },
+            "type": "array"
           },
           "expectedDesign": {
             "type": [
@@ -60887,6 +60901,13 @@
             "description": "docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its\nsources changed since the package was written.",
             "type": "boolean"
           },
+          "tracks": {
+            "description": "A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.",
+            "items": {
+              "$ref": "#/$defs/AsbuiltTrack"
+            },
+            "type": "array"
+          },
           "unmatched": {
             "format": "uint32",
             "minimum": 0,
@@ -61021,6 +61042,13 @@
           "surfaceChanged": {
             "description": "docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its\nsources changed since the package was written.",
             "type": "boolean"
+          },
+          "tracks": {
+            "description": "A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.",
+            "items": {
+              "$ref": "#/$defs/AsbuiltTrack"
+            },
+            "type": "array"
           },
           "unmatched": {
             "format": "uint32",
@@ -117052,6 +117080,25 @@
       ],
       "type": "object"
     },
+    "AsbuiltEpoch": {
+      "additionalProperties": false,
+      "description": "An earlier epoch of a monitoring job's series (docs/adr/4420): its points' layer and its day (`YYYY-MM-DD`).",
+      "properties": {
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "layer": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "layer"
+      ],
+      "type": "object"
+    },
     "AsbuiltKind": {
       "description": "What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation\nmeasurement as their own jobs): what was built against the design, stakes against their design points, or the same\nmarks at two epochs (physical movement, never a design change).",
       "enum": [
@@ -117299,6 +117346,43 @@
       ],
       "type": "object"
     },
+    "AsbuiltStep": {
+      "description": "A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)\nand horizontal; `outside` when it is beyond the job's horizontal or vertical limit.",
+      "properties": {
+        "de": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "dn": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "dz": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "outside": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "de",
+        "dn",
+        "horizontal"
+      ],
+      "type": "object"
+    },
     "AsbuiltSurfaceBy": {
       "description": "What a point's surface difference is measured as (docs/adr/4020).",
       "oneOf": [
@@ -117313,6 +117397,55 @@
           "type": "string"
         }
       ]
+    },
+    "AsbuiltTrack": {
+      "description": "A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was\nfirst measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch\nits movement from the reference, none where it was not measured; with the days of its reference and of this epoch,\nits mean rates (m a year: its last horizontal and vertical movement over the years between).",
+      "properties": {
+        "from": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rateHorizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "rateVertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "steps": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltStep"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "from",
+        "steps"
+      ],
+      "type": "object"
     },
     "AssetCounts": {
       "description": "How many of each state.",

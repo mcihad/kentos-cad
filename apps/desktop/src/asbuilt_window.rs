@@ -95,6 +95,10 @@ pub struct State {
     pub control: String,
     /// The surface's limit held to the nearest distance (docs/adr/4020), not the height difference.
     pub nearest: bool,
+    /// A monitoring job's earlier epochs (docs/adr/4420): their layers' names, oldest first, comma separated.
+    pub epochs: String,
+    /// The series table's epoch titles (docs/adr/4420): “1. dönem” … then “Bu dönem”, as the last answer has them.
+    pub epoch_titles: Vec<String>,
 }
 
 /// The jobs' words, in the kind's order (docs/adr/3620).
@@ -130,6 +134,8 @@ pub enum Event {
     Control(String),
     /// Yüzey farkı (docs/adr/4020): the height difference (false) or the nearest distance.
     Nearest(bool),
+    /// Önceki dönemler (docs/adr/4420): the earlier epochs' layers' names.
+    Epochs(String),
     Close,
 }
 
@@ -349,7 +355,31 @@ impl App {
                 Vec::new()
             },
             surface_by: (!watch && s.nearest).then_some(kentos_commands::AsbuiltSurfaceBy::Nearest),
+            // Docs/adr/4420: the earlier epochs by their layers' names, each epoch's day its layer's Veri kümesi
+            // bilgisi's (Güncelleme günü), this epoch's too.
+            epochs: if watch { self.asbuilt_epochs()? } else { Vec::new() },
+            date: if watch && !s.epochs.trim().is_empty() { self.layer_day(&s.measured) } else { None },
         })
+    }
+
+    /// A layer's day, its Veri kümesi bilgisi's Güncelleme günü (docs/adr/4420).
+    fn layer_day(&self, id: &str) -> Option<String> {
+        let doc = self.document.as_ref()?;
+        doc.model.layers().get(id).and_then(|n| n.dataset.as_ref()).and_then(|d| d.updated.clone())
+    }
+
+    /// Önceki dönemler (docs/adr/4420): the layers named, oldest first, each with its day; a name no layer has is said.
+    fn asbuilt_epochs(&self) -> Result<Vec<kentos_commands::AsbuiltEpoch>, String> {
+        let s = &self.asbuilt;
+        let mut out = Vec::new();
+        for name in s.epochs.split([',', ';']).map(str::trim).filter(|n| !n.is_empty()) {
+            let low = name.to_lowercase();
+            let Some((id, _)) = s.layers.iter().find(|(id, n)| n.to_lowercase() == low || id == name) else {
+                return Err(format!("“{name}” adlı katman yok; önceki dönemleri katman adlarıyla, eskiden yeniye yazın."));
+            };
+            out.push(kentos_commands::AsbuiltEpoch { layer: id.clone(), date: self.layer_day(id) });
+        }
+        Ok(out)
     }
 
     /// The package's input from the form: its design and limits, the notes a line each (empty lines left out).
@@ -413,6 +443,13 @@ impl App {
                 _ => Err("Denetlenemedi.".to_owned()),
             }
         }));
+        // Docs/adr/4420: the series' epochs as the table titles them.
+        let epochs = match &self.asbuilt.answer {
+            Some(Ok(r)) => r.tracks.first().map_or(0, |t| t.steps.len()),
+            _ => 0,
+        };
+        self.asbuilt.epoch_titles =
+            (1..epochs).map(|k| format!("{k}. dönem")).chain((epochs > 0).then(|| "Bu dönem".to_owned())).collect();
     }
 
     /// Uygulama kontrolü (`asbuilt.check`): the layers guessed by their names (a measured layer, a design layer, a
@@ -488,6 +525,7 @@ impl App {
             Event::Design(v) => s.design = v,
             Event::Kind(k) => s.kind = k.min(2),
             Event::Control(v) => s.control = v,
+            Event::Epochs(v) => s.epochs = v,
             Event::Nearest(on) => s.nearest = on,
             Event::Lines(v) => s.lines = v,
             Event::Surface(v) => s.surface = v,
@@ -629,6 +667,9 @@ impl App {
             .help("Noktalar adla eşlenir; fark bu dönem − önceki dönem, yani noktanın hareketi.")
             .field("Kontrol noktaları", text(&s.control, "ör. K1, K2", Event::Control, 260.0))
             .help("Oynamaması gereken noktalar: biri sınırı aşarsa iki dönem aynı datumda değildir ya da nokta oynamıştır.")
+            // Docs/adr/4420: the series through the earlier epochs.
+            .field("Önceki dönemler", text(&s.epochs, "ör. Birinci dönem, İkinci dönem", Event::Epochs, 260.0))
+            .help("Katman adları eskiden yeniye: her nokta ilk ölçüldüğü döneme göre izlenir; günler katmanların Veri kümesi bilgisinden (hız için).")
         } else {
             form.field(
                 "Tasarım noktaları",
@@ -833,13 +874,50 @@ impl App {
             ]
         };
         let table = sheet(columns, rows, "Bu süzgeçte nokta yok.", 260.0);
-        let body = Grows::new()
+        // Docs/adr/4420: a monitoring job's series: each point's horizontal movement from its first epoch at every
+        // epoch (— where it was not measured or before it), its last height movement and its mean rates.
+        let series = match &s.answer {
+            Some(Ok(r)) if watched(r) && !r.tracks.is_empty() => {
+                let mut columns = vec![col("Nokta", 70.0)];
+                for title in &s.epoch_titles {
+                    columns.push(num(title, 80.0));
+                }
+                columns.extend([num("ΔKot", 70.0), num("Hız m/yıl", 80.0), num("Düşey m/yıl", 80.0)]);
+                let comma = |v: f64| format!("{v:.3}").replace('.', ",");
+                let rows: Vec<Vec<String>> = r
+                    .tracks
+                    .iter()
+                    .map(|t| {
+                        let mut row = vec![t.name.clone()];
+                        row.extend(t.steps.iter().map(|st| match st {
+                            Some(st) if st.outside => format!("{} !", comma(st.horizontal)),
+                            Some(st) => comma(st.horizontal),
+                            None => "—".to_owned(),
+                        }));
+                        row.push(t.steps.last().cloned().flatten().and_then(|st| st.dz).map(mm).unwrap_or_default());
+                        row.push(t.rate_horizontal.map(comma).unwrap_or_default());
+                        row.push(t.rate_vertical.map(comma).unwrap_or_default());
+                        row
+                    })
+                    .collect();
+                let lead = format!(
+                    "Dönem dizisi: {} nokta ilk ölçüldüğü döneme göre izlendi (yatay hareket, m; ! sınırı aştı).",
+                    r.tracks.len()
+                );
+                Some((lead, sheet(columns, rows, "İzlenen nokta yok.", 200.0)))
+            }
+            _ => None,
+        };
+        let mut body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
             .push(Segmented::new([Show::All, Show::Faults], s.show, |v| msg(Event::Show(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
+        if let Some((lead, series)) = series {
+            body = body.push(label::caption(lead)).push_fit(series, kentos_ui::theme::typography::scaled(100.0));
+        }
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.points.is_empty());
         Frame::new(TITLE)
             .scroll(body)

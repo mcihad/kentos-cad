@@ -397,6 +397,8 @@ mod exchange_check_window_tests;
 #[cfg(test)]
 mod asbuilt_window_tests;
 #[cfg(test)]
+mod asbuilt_series_tests;
+#[cfg(test)]
 mod project_graph_window_tests;
 #[cfg(test)]
 mod survey_network_window_tests;

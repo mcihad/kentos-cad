@@ -74,5 +74,5 @@ yakın uzaklık”ının ikinci yarısı.
 
 - Ölçen aletin yerine göre işaret (Trimble'ınki): kaydın alet kurulumunu taşıması gerekir.
 - Yüzeyin dışındaki noktanın yüzeyin kenarına uzaklığı.
-- Yetkili inceleme kaydı; zaman serisi (MAP-19'un öbür maddeleri).
+- Yetkili inceleme kaydı; zaman serisi (MAP-19'un öbür maddeleri; zaman serisi [ADR 4420](4420-monitoring-series-of-epochs.md)'de).
 - Web (TODOS §0.2).

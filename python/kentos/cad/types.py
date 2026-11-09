@@ -16923,16 +16923,21 @@ class AsbuiltCheck(_Model):
     Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
     attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
     job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
-    monitoring job, an empty control point's name); the package's (docs/adr/2420;
+    monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
+    is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
     at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
     field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
-    `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
+    `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
     surface file not there, not read or not its SHA-256's, docs/adr/3220),
     `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
     (more than 100 000 measured points).
     Attributes:
         control: A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond
             the limits says the two epochs do not rest on one datum (or the mark moved).
+        date: This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.
+        epochs: A monitoring job's earlier epochs, oldest first (docs/adr/4420; Trimble Business Center's reference epoch the
+            first): each a layer of points and its day. With them the answer tracks each point measured now through every
+            epoch, its movement from the first epoch it was measured in.
         horizontal: Unit: length.
         kind: The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points
             measured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package.
@@ -16952,7 +16957,9 @@ class AsbuiltCheck(_Model):
     """
     measured: str
     control: list[str] | Unset = UNSET
+    date: str | None | Unset = UNSET
     design: str | None | Unset = UNSET
+    epochs: list[AsbuiltEpoch] | Unset = UNSET
     expected_design: str | None | Unset = UNSET
     field: str | None | Unset = UNSET
     horizontal: float | None | Unset = UNSET
@@ -16972,8 +16979,12 @@ class AsbuiltCheck(_Model):
         out["measured"] = self.measured
         if self.control is not UNSET:
             out["control"] = list(self.control)
+        if self.date is not UNSET:
+            out["date"] = self.date
         if self.design is not UNSET:
             out["design"] = self.design
+        if self.epochs is not UNSET:
+            out["epochs"] = [e0.to_json() for e0 in self.epochs]
         if self.expected_design is not UNSET:
             out["expectedDesign"] = self.expected_design
         if self.field is not UNSET:
@@ -17007,7 +17018,9 @@ class AsbuiltCheck(_Model):
         return cls(
             measured=data["measured"],
             control=list(data["control"]) if "control" in data else UNSET,
+            date=data.get("date", UNSET),
             design=data.get("design", UNSET),
+            epochs=[AsbuiltEpoch.from_json(e0) for e0 in data["epochs"]] if "epochs" in data else UNSET,
             expected_design=data.get("expectedDesign", UNSET),
             field=data.get("field", UNSET),
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
@@ -17044,6 +17057,7 @@ class AsbuiltChecked(_Model):
         rms_vertical: Unit: length.
         surface_changed: docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its
             sources changed since the package was written.
+        tracks: A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.
     """
     design_digest: str
     points: list[AsbuiltPoint]
@@ -17062,6 +17076,7 @@ class AsbuiltChecked(_Model):
     rms_horizontal: float | None | Unset = UNSET
     rms_vertical: float | None | Unset = UNSET
     surface_changed: bool | Unset = UNSET
+    tracks: list[AsbuiltTrack] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17091,6 +17106,8 @@ class AsbuiltChecked(_Model):
             out["rmsVertical"] = None if self.rms_vertical is None else float(self.rms_vertical)
         if self.surface_changed is not UNSET:
             out["surfaceChanged"] = self.surface_changed
+        if self.tracks is not UNSET:
+            out["tracks"] = [e0.to_json() for e0 in self.tracks]
         return out
 
     @classmethod
@@ -17113,6 +17130,7 @@ class AsbuiltChecked(_Model):
             rms_horizontal=UNSET if "rmsHorizontal" not in data else None if data["rmsHorizontal"] is None else float(data["rmsHorizontal"]),
             rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
             surface_changed=data.get("surfaceChanged", UNSET),
+            tracks=[AsbuiltTrack.from_json(e0) for e0 in data["tracks"]] if "tracks" in data else UNSET,
         )
 
 
@@ -17138,6 +17156,27 @@ class AsbuiltControl(_Model):
             checked=list(data["checked"]),
             moved=list(data["moved"]),
             missing=list(data["missing"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltEpoch(_Model):
+    """An earlier epoch of a monitoring job's series (docs/adr/4420): its points' layer and its day (`YYYY-MM-DD`)."""
+    layer: str
+    date: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.date is not UNSET:
+            out["date"] = self.date
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltEpoch:
+        return cls(
+            layer=data["layer"],
+            date=data.get("date", UNSET),
         )
 
 
@@ -17335,6 +17374,83 @@ class AsbuiltPoint(_Model):
             normal=UNSET if "normal" not in data else None if data["normal"] is None else float(data["normal"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
             surface=UNSET if "surface" not in data else None if data["surface"] is None else float(data["surface"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltStep(_Model):
+    """A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)
+    and horizontal; `outside` when it is beyond the job's horizontal or vertical limit.
+    Attributes:
+        de: Unit: m.
+        dn: Unit: m.
+        horizontal: Unit: m.
+        dz: Unit: m.
+    """
+    de: float
+    dn: float
+    horizontal: float
+    dz: float | None | Unset = UNSET
+    outside: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["de"] = float(self.de)
+        out["dn"] = float(self.dn)
+        out["horizontal"] = float(self.horizontal)
+        if self.dz is not UNSET:
+            out["dz"] = None if self.dz is None else float(self.dz)
+        if self.outside is not UNSET:
+            out["outside"] = self.outside
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltStep:
+        return cls(
+            de=float(data["de"]),
+            dn=float(data["dn"]),
+            horizontal=float(data["horizontal"]),
+            dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
+            outside=data.get("outside", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltTrack(_Model):
+    """A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was
+    first measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch
+    its movement from the reference, none where it was not measured; with the days of its reference and of this epoch,
+    its mean rates (m a year: its last horizontal and vertical movement over the years between).
+    Attributes:
+        from_: Unit: index.
+        rate_horizontal: Unit: m.
+        rate_vertical: Unit: m.
+    """
+    name: str
+    from_: int
+    steps: list[AsbuiltStep | None]
+    rate_horizontal: float | None | Unset = UNSET
+    rate_vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["from"] = self.from_
+        out["steps"] = [None if e0 is None else e0.to_json() for e0 in self.steps]
+        if self.rate_horizontal is not UNSET:
+            out["rateHorizontal"] = None if self.rate_horizontal is None else float(self.rate_horizontal)
+        if self.rate_vertical is not UNSET:
+            out["rateVertical"] = None if self.rate_vertical is None else float(self.rate_vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltTrack:
+        return cls(
+            name=data["name"],
+            from_=data["from"],
+            steps=[None if e0 is None else AsbuiltStep.from_json(e0) for e0 in data["steps"]],
+            rate_horizontal=UNSET if "rateHorizontal" not in data else None if data["rateHorizontal"] is None else float(data["rateHorizontal"]),
+            rate_vertical=UNSET if "rateVertical" not in data else None if data["rateVertical"] is None else float(data["rateVertical"]),
         )
 
 
@@ -132413,13 +132529,16 @@ __all__ = [
     "AsbuiltCheck",
     "AsbuiltChecked",
     "AsbuiltControl",
+    "AsbuiltEpoch",
     "AsbuiltKind",
     "AsbuiltKindName",
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltStep",
     "AsbuiltSurfaceBy",
     "AsbuiltSurfaceByName",
+    "AsbuiltTrack",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",

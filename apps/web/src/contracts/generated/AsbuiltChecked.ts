@@ -4,6 +4,7 @@ import type { AsbuiltKind } from "./AsbuiltKind";
 import type { AsbuiltMissing } from "./AsbuiltMissing";
 import type { AsbuiltPackage } from "./AsbuiltPackage";
 import type { AsbuiltPoint } from "./AsbuiltPoint";
+import type { AsbuiltTrack } from "./AsbuiltTrack";
 
 /**
  * Output of `cad.asbuilt.check` v1: the design's digest and whether it differs from the one expected; every measured
@@ -27,4 +28,8 @@ kind?: AsbuiltKind,
 /**
  * A monitoring job's control points (docs/adr/3620).
  */
-control?: AsbuiltControl, };
+control?: AsbuiltControl, 
+/**
+ * A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.
+ */
+tracks?: Array<AsbuiltTrack>, };

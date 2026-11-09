@@ -229,7 +229,8 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     if input.package_design && input.package.is_none() {
         return bad("Paketin tasarımıyla denetlemek için kaydın saha paketini (package) de verin.", "packageDesign");
     }
-    Ok(())
+    // Docs/adr/4420: a monitoring job's series and its days.
+    crate::asbuilt_series::asked(input)
 }
 
 fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
@@ -281,6 +282,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     if let Some(l) = &input.lines {
         layer(l, "lines")?;
     }
+    crate::asbuilt_series::layers(doc, input)?;
     // docs/adr/3220: with the package's design, the surface the package carries is the one compared; the drawing's
     // surface, given, is then not made, only its sources' digest read. Either way a surface the package names says
     // whether the drawing's (given) changed since: another surface, or its sources' digest not the package's.
@@ -314,6 +316,8 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     let field = input.field.as_deref().map(str::trim).unwrap_or(NAME_FIELD);
     let quality = input.quality_field.as_deref().map(str::trim);
     let measured = points(doc, &input.measured, field, quality);
+    // Docs/adr/4420: the points measured now tracked through a monitoring job's series.
+    let tracks = crate::asbuilt_series::tracks(doc, input, field, &measured);
     if measured.len() > ASBUILT_LIMIT {
         return Err(refuse(
             codes::INVALID_ASBUILT_CHECK,
@@ -560,6 +564,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     Ok(AsbuiltChecked {
         kind: input.kind,
         control,
+        tracks,
         design_changed,
         surface_changed,
         design_digest,

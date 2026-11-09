@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İzlemenin dönem dizisi (10 Kasım 2026; MAP-19, [ADR 4420](../../docs/adr/4420-monitoring-series-of-epochs.md)).**
+  `cad.asbuilt.check`'in izleme işinde `epochs` ve `date`: her nokta ilk ölçüldüğü döneme göre izlenir (`tracks`),
+  günlerle ortalama hız. Uygulama kontrolü › İzleme › Önceki dönemler. Harita + Yol + CBS.
 - **Atlasın güncelleme PDF'i (10 Kasım 2026; MAP-18, [ADR 4400](../../docs/adr/4400-atlas-update-pdf-of-changed-pages.md)).**
   `file.export.atlas`'ın `changedOnly`'si: yalnız değişen ve yeni sayfalar, kendi numaralarıyla (PDF sayfa etiketleri),
   `written`; kayıt bütün atlasın; `atlas_unchanged`. CAD + CBS.

@@ -49,7 +49,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360 | hattın kendi borularının dış duvarı; dış çap özniteliği | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın saydamlığı ve türü | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -2250,6 +2250,14 @@ karşılaştırılan her noktaya `nearest` (işareti düşey farkınki) ve `near
 kenar, yüz bölgeleri) ve zeminin ızgarasıyla aday üçgenler; `surfaceBy: nearest` yüzey sınırını ona uygular; başvuruda
 düzlemin dikdörtgenine kapalı biçim (65 durum), Python (normal boyunca ayak), MCP; Uygulama kontrolü'nde Yüzey farkı
 seçimi ve En yakın sütunu. Açık: zaman serisi, yetkili inceleme kaydı, alete göre işaret.
+
+**10 Kasım 2026, sekizinci tur — izlemenin dönem dizisi ([ADR 4420](../docs/adr/4420-monitoring-series-of-epochs.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Trimble Business Center “Monitor Point Movement” (başvuru dönemi, adla eşleme,
+en az iki dönem; ADR 3620'nin okuması). Kanıtlanan: `cad.asbuilt.check`'in izleme işine `epochs` (önceki dönemler,
+günleriyle) ve `date`: bu dönemde ölçülen her nokta ilk ölçüldüğü döneme göre her dönemde izlenir (`tracks`: başvuru,
+adımlar, sınırı aşan adım), günler varsa ortalama yatay ve düşey hız; gün denetimi ve retler; 22 bağımsız durum (eski 65
+değişmedi), Python (testin kendi okuması), MCP; masaüstünde Önceki dönemler satırı (günler katmanların Veri kümesi
+bilgisinden) ve Dönem dizisi tablosu. Açık: yetkili inceleme kaydı, doğru uydurma, uyarı ve alarm eşikleri.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

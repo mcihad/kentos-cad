@@ -46,10 +46,11 @@ pub const ASBUILT_FLAGS: [&str; 8] = [
 /// Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
 /// attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
 /// job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
-/// monitoring job, an empty control point's name); the package's (docs/adr/2420;
+/// monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
+/// is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
 /// at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
 /// field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
-/// `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
+/// `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
 /// surface file not there, not read or not its SHA-256's, docs/adr/3220),
 /// `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
 /// (more than 100 000 measured points).
@@ -123,6 +124,76 @@ pub struct AsbuiltCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub surface_by: Option<AsbuiltSurfaceBy>,
+    /// A monitoring job's earlier epochs, oldest first (docs/adr/4420; Trimble Business Center's reference epoch the
+    /// first): each a layer of points and its day. With them the answer tracks each point measured now through every
+    /// epoch, its movement from the first epoch it was measured in.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AsbuiltEpoch>>", optional))]
+    pub epochs: Vec<AsbuiltEpoch>,
+    /// This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
+}
+
+/// An earlier epoch of a monitoring job's series (docs/adr/4420): its points' layer and its day (`YYYY-MM-DD`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltEpoch {
+    pub layer: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub date: Option<String>,
+}
+
+/// A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was
+/// first measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch
+/// its movement from the reference, none where it was not measured; with the days of its reference and of this epoch,
+/// its mean rates (m a year: its last horizontal and vertical movement over the years between).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltTrack {
+    pub name: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub from: u32,
+    pub steps: Vec<Option<AsbuiltStep>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rate_horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rate_vertical: Option<f64>,
+}
+
+/// A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)
+/// and horizontal; `outside` when it is beyond the job's horizontal or vertical limit.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltStep {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub de: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub dn: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub dz: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub horizontal: f64,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub outside: bool,
 }
 
 /// What a point's surface difference is measured as (docs/adr/4020).
@@ -355,4 +426,8 @@ pub struct AsbuiltChecked {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub control: Option<AsbuiltControl>,
+    /// A monitoring job's series (docs/adr/4420): each point measured now and in another epoch, in this epoch's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AsbuiltTrack>>", optional))]
+    pub tracks: Vec<AsbuiltTrack>,
 }

@@ -13,6 +13,7 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AsbuiltCheck,
     AsbuiltChecked,
+    AsbuiltEpoch,
     AsbuiltKind,
     AsbuiltKindName,
     AsbuiltSurfaceBy,
@@ -67,7 +68,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         *,
         measured: str,
         control: Sequence[str] | Unset = UNSET,
+        date: str | None | Unset = UNSET,
         design: str | None | Unset = UNSET,
+        epochs: Sequence[AsbuiltEpoch] | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
@@ -116,7 +119,11 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             measured:
             control: A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond
                 the limits says the two epochs do not rest on one datum (or the mark moved).
+            date: This epoch's day, `YYYY-MM-DD` (docs/adr/4420): with the day of a point's first epoch, its mean rate of movement.
             design:
+            epochs: A monitoring job's earlier epochs, oldest first (docs/adr/4420; Trimble Business Center's reference epoch the
+                first): each a layer of points and its day. With them the answer tracks each point measured now through every
+                epoch, its movement from the first epoch it was measured in.
             expected_design:
             field:
             horizontal: Unit: length.
@@ -153,7 +160,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         return self.execute_input(doc, AsbuiltCheck(
             measured=measured,
             control=_opt(control, lambda x: list(x)),
+            date=date,
             design=design,
+            epochs=_opt(epochs, lambda x: list(x)),
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
@@ -176,7 +185,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         *,
         measured: str,
         control: Sequence[str] | Unset = UNSET,
+        date: str | None | Unset = UNSET,
         design: str | None | Unset = UNSET,
+        epochs: Sequence[AsbuiltEpoch] | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
@@ -197,7 +208,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         return self.plan_input(doc, AsbuiltCheck(
             measured=measured,
             control=_opt(control, lambda x: list(x)),
+            date=date,
             design=design,
+            epochs=_opt(epochs, lambda x: list(x)),
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
@@ -220,7 +233,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         *,
         measured: str,
         control: Sequence[str] | Unset = UNSET,
+        date: str | None | Unset = UNSET,
         design: str | None | Unset = UNSET,
+        epochs: Sequence[AsbuiltEpoch] | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
@@ -241,7 +256,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         return self.validate_input(doc, AsbuiltCheck(
             measured=measured,
             control=_opt(control, lambda x: list(x)),
+            date=date,
             design=design,
+            epochs=_opt(epochs, lambda x: list(x)),
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
@@ -264,7 +281,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         *,
         measured: str,
         control: Sequence[str] | Unset = UNSET,
+        date: str | None | Unset = UNSET,
         design: str | None | Unset = UNSET,
+        epochs: Sequence[AsbuiltEpoch] | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
@@ -290,7 +309,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         return self.answer_input(doc, AsbuiltCheck(
             measured=measured,
             control=_opt(control, lambda x: list(x)),
+            date=date,
             design=design,
+            epochs=_opt(epochs, lambda x: list(x)),
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
