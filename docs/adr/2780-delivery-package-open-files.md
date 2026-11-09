@@ -103,6 +103,7 @@ MCP: `{"tool": "file.package", "arguments": {..., "exchange": {"formats": ["gpkg
 
 ## Sonra
 
-- Paketin CRS ızgara bilgisi (kullanılan dönüşüm ızgaraları ve sürümleri).
+- Paketin CRS ızgara bilgisi yapıldı: [ADR 3180](3180-delivery-package-grids.md) (projenin adladığı NTv2, geoit ve hız
+  ızgaraları `izgaralar/`'da).
 - Kurum profiline göre biçim önerisi; LandXML ve IFC alt modelleri.
 - Web (TODOS §0.2).

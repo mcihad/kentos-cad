@@ -18,6 +18,10 @@
 //!
 //! Asked (`exchange`, docs/adr/2780), the package's objects go in open formats too, made and tried back in the scratch
 //! folder (`package_exchange`) and copied into `devir/` like the rest; their matrix in the answer and `paket.json`.
+//!
+//! The grids the project names (docs/adr/3180: the datum choices' NTv2 grids, the heights' geoid model, the survey
+//! campaigns' velocity grids) go from the device's grid library into `izgaralar/` under their SHA-256, their notes
+//! beside them; a grid named without its SHA-256 or not kept on this device is left out, said.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -39,6 +43,9 @@ use crate::package_sources::{Leave, Scratch, copy_database};
 
 /// The folder the copies go into, in the package.
 const DATA: &str = "veri";
+
+/// The folder the grids go into, in the package (docs/adr/3180), as the device's library names them.
+const GRIDS: &str = "izgaralar";
 
 /// The manifest's name in the package and its format (docs/adr/0350 §4).
 pub const MANIFEST: &str = "paket.json";
@@ -489,6 +496,7 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         }
     }
     profile_files(from_ref, &mut copies, &mut left);
+    grid_files(&value, kentos_native_application::crs_models::device_dir().as_deref(), &mut copies, &mut left);
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
     for f in &fonts.styles {
@@ -677,6 +685,65 @@ fn profile_files(from: Option<&Path>, copies: &mut Copies, left: &mut Vec<Packag
         copies
             .list
             .push((path, format!("{PROFILE_FOLDER}/{name}"), kind, 0));
+    }
+}
+
+/// A grid the project names: its SHA-256 (none when the setting gives none), its name, the setting naming it and the
+/// extensions the library keeps such a grid with.
+type NamedGrid = (Option<String>, String, String, &'static [&'static str]);
+
+/// The grids the project names (docs/adr/3180), in the settings' order: each datum choice's NTv2 grid
+/// (`datumTransforms[i].grid`), the heights' geoid model (`heights.geoid`), each survey campaign's velocity grid
+/// (`mapSurvey.campaigns[i].velocity`).
+fn named_grids(value: &Value) -> Vec<NamedGrid> {
+    let text = |v: &Value, key: &str| v.get(key).and_then(Value::as_str).map(str::to_owned);
+    let mut out: Vec<NamedGrid> = Vec::new();
+    if let Some(Value::Array(list)) = value.pointer("/settings/datumTransforms") {
+        for (i, t) in list.iter().enumerate() {
+            if let Some(g) = t.get("grid").filter(|g| g.is_object()) {
+                let name = text(g, "file").or_else(|| text(t, "name")).unwrap_or_default();
+                out.push((text(g, "id"), name, format!("datumTransforms[{i}].grid"), &["gsb"]));
+            }
+        }
+    }
+    if let Some(g) = value.pointer("/settings/heights/geoid").filter(|g| g.is_object()) {
+        out.push((text(g, "sha256"), text(g, "name").unwrap_or_default(), "heights.geoid".to_owned(), &["gtx", "tif"]));
+    }
+    if let Some(Value::Array(list)) = value.pointer("/settings/mapSurvey/campaigns") {
+        for (i, c) in list.iter().enumerate() {
+            if let Some(g) = c.get("velocity").filter(|g| g.is_object()) {
+                let at = format!("mapSurvey.campaigns[{i}].velocity");
+                out.push((text(g, "sha256"), text(g, "name").unwrap_or_default(), at, &["tif", "gtx"]));
+            }
+        }
+    }
+    out
+}
+
+/// The grids the project names (docs/adr/3180), from the device's grid library `dir`: each copied once as
+/// `izgaralar/<SHA-256>.<ext>` (its links the times it is named) with its note `<SHA-256>.json` beside it when the
+/// library has one. A grid named without a SHA-256, or not in the library, is left out with the setting naming it.
+fn grid_files(value: &Value, dir: Option<&Path>, copies: &mut Copies, left: &mut Vec<PackageLeft>) {
+    let mut done: BTreeMap<String, usize> = BTreeMap::new();
+    for (id, name, at, exts) in named_grids(value) {
+        let id = id.filter(|i| kentos_native_application::crs_models::is_sha256(i));
+        if let Some(&k) = id.as_ref().and_then(|i| done.get(i)) {
+            copies.list[k].3 += 1;
+            continue;
+        }
+        let found = id.as_ref().zip(dir).and_then(|(i, d)| {
+            exts.iter().map(|e| (d.join(format!("{i}.{e}")), *e)).find(|(p, _)| p.is_file())
+        });
+        let (Some(id), Some((path, ext))) = (id, found) else {
+            left.push(PackageLeft { kind: PackagedKind::Grid, path: name, why: LeftWhy::Missing, at, objects: None });
+            continue;
+        };
+        done.insert(id.clone(), copies.list.len());
+        let note = path.with_extension("json");
+        copies.list.push((path, format!("{GRIDS}/{id}.{ext}"), PackagedKind::Grid, 1));
+        if note.is_file() {
+            copies.list.push((note, format!("{GRIDS}/{id}.json"), PackagedKind::Grid, 0));
+        }
     }
 }
 
@@ -961,5 +1028,54 @@ mod tests {
             c.take(Path::new("/c/README"), PackagedKind::Attachment),
             "veri/README"
         );
+    }
+
+    /// docs/adr/3180: the grids the settings name, from a library folder: the geoid and the NTv2 grid copied under their
+    /// SHA-256 (the geoid's note too), the geoid named twice copied once with two links; the velocity grid the library
+    /// lacks and a geoid named without its SHA-256 left out with the settings naming them.
+    #[test]
+    fn the_grids_the_project_names_come_from_the_library() {
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+        let dir = std::env::temp_dir().join(format!("kentos-package-grids-{}", std::process::id()));
+        fs::create_dir_all(&dir).expect("a folder");
+        let put = |file: &str, ext: &str| {
+            let bytes = fs::read(root.join(file)).expect("a fixture");
+            let id = sha256_hex(&bytes);
+            fs::write(dir.join(format!("{id}.{ext}")), &bytes).expect("written");
+            id
+        };
+        let geoid = put("geoid/v1/tg.gtx", "gtx");
+        fs::write(dir.join(format!("{geoid}.json")), r#"{"kind":"geoid"}"#).expect("a note");
+        let ntv2 = put("geodesy/v1/ntv2/tr.gsb", "gsb");
+        let velocity = "a".repeat(64);
+        let value = serde_json::json!({ "settings": {
+            "datumTransforms": [{ "from": "ED50", "to": "TUREF", "name": "Bölge", "grid": { "id": ntv2, "file": "tr.gsb", "size": 1 } }],
+            "heights": { "kind": "orthometric", "geoid": { "name": "TG-20", "sha256": geoid } },
+            "mapSurvey": { "campaigns": [
+                { "id": "k-1", "name": "Bir", "velocity": { "name": "Hız", "sha256": velocity } },
+                { "id": "k-2", "name": "İki", "velocity": { "name": "TG-20 yine", "sha256": geoid } }
+            ] }
+        } });
+        let (mut copies, mut left) = (Copies::default(), Vec::new());
+        grid_files(&value, Some(&dir), &mut copies, &mut left);
+        let got: Vec<(String, u32)> = copies.list.iter().map(|c| (c.1.clone(), c.3)).collect();
+        assert_eq!(
+            got,
+            [
+                (format!("izgaralar/{ntv2}.gsb"), 1),
+                (format!("izgaralar/{geoid}.gtx"), 2),
+                (format!("izgaralar/{geoid}.json"), 0)
+            ]
+        );
+        assert!(copies.list.iter().all(|c| c.2 == PackagedKind::Grid));
+        let said: Vec<(&str, &str)> = left.iter().map(|l| (l.path.as_str(), l.at.as_str())).collect();
+        assert_eq!(said, [("Hız", "mapSurvey.campaigns[0].velocity")]);
+        // A geoid named without its SHA-256: left out, no library looked in.
+        let unnamed = serde_json::json!({ "settings": { "heights": { "kind": "orthometric", "geoid": { "name": "TG-20" } } } });
+        let (mut copies, mut left) = (Copies::default(), Vec::new());
+        grid_files(&unnamed, Some(&dir), &mut copies, &mut left);
+        assert!(copies.list.is_empty());
+        assert_eq!(left.iter().map(|l| l.at.as_str()).collect::<Vec<_>>(), ["heights.geoid"]);
+        let _ = fs::remove_dir_all(dir);
     }
 }

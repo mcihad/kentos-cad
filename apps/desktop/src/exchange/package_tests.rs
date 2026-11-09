@@ -149,6 +149,85 @@ fn the_window_asks_the_open_files_without_bound_layers() {
     assert!(said.iter().any(|l| l.contains("Devir dosyaları projenin her şeyini taşımaz")), "{said:?}");
 }
 
+/// docs/adr/3180: the package's message counts the grids it carries, not their notes.
+#[test]
+fn the_message_counts_the_grids() {
+    let mut app = sample();
+    run(&mut app, "file.package");
+    let out = scratch("paket-izgara-ileti").join("teslim");
+    let input = app.package_input(&out).expect("an input");
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let mut planned = kentos_headless::package::plan(doc, &input).expect("planned");
+    for (path, links) in [("izgaralar/a.gtx", 1), ("izgaralar/a.json", 0), ("izgaralar/b.gsb", 2)] {
+        planned.output.files.push(kentos_commands::PackagedFile {
+            path: path.into(),
+            from: path.into(),
+            kind: kentos_commands::PackagedKind::Grid,
+            bytes: 1,
+            sha256: String::new(),
+            links,
+            table: None,
+            rows: None,
+        });
+    }
+    send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(said.iter().any(|l| l.contains(", 2 ızgara")), "{said:?}");
+}
+
+/// The grids the project names in a package (docs/adr/3180); `.run/gui-evidence/paket-izgara-3180/`. Run alone: it
+/// points the device's grid library (`KENTOS_GRID_DIR`) at a scratch folder holding the sample's geoid model.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange::package_tests::grid_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures, run by hand"]
+fn grid_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paket-izgara-3180");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let library = scratch("paket-izgara-kutuphane");
+    let bytes = std::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geoid/v1/tg.gtx")).expect("the geoid");
+    let id = kentos_commands::encoding::sha256_hex(&bytes);
+    std::fs::write(library.join(format!("{id}.gtx")), &bytes).expect("in the library");
+    // SAFETY: a picture test run by hand on its own; no other thread reads the variable.
+    unsafe { std::env::set_var("KENTOS_GRID_DIR", &library) };
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = sample();
+        let doc = &mut app.document.as_mut().expect("a drawing").model;
+        let mut settings = doc.settings().clone();
+        settings.heights = Some(kentos_commands::HeightReference {
+            kind: kentos_commands::HeightKind::Orthometric,
+            vertical_srid: Some(5775),
+            geoid: Some(kentos_commands::GeoidModel { name: "TG-20".into(), sha256: Some(id.clone()) }),
+        });
+        doc.set_settings(settings);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(crate::app::Message::WindowResized(size));
+        let _ = app.update(crate::app::Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        run(&mut app, "file.package");
+        let target = scratch(&format!("paket-izgara-{name}")).join("teslim");
+        let input = app.package_input(&target).expect("an input");
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let planned = kentos_headless::package::plan(doc, &input).expect("planned");
+        kentos_headless::package::write(&planned).expect("packed");
+        let _ = app.update(crate::app::Message::DialogClosed);
+        send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+        snapshot.settle(&mut app, App::view, &mut |app: &mut App, message| {
+            let _ = app.update(message);
+        });
+        let path = out.join(format!("ileti-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        println!("{}", path.display());
+        let _ = std::fs::copy(target.join("paket.json"), out.join(format!("paket-{name}.json")));
+    }
+}
+
 /// The open files' window and the package's message; `.run/gui-evidence/teslim-devir-2780/`:
 ///
 /// ```text

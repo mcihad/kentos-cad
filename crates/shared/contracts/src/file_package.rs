@@ -132,6 +132,10 @@ pub enum PackagedKind {
     /// The project in an open exchange format, written by KentOS's writer, or the matrix's report (docs/adr/2780):
     /// `devir/…`, its `from` the command that wrote it.
     Exchange,
+    /// A grid the project names (docs/adr/3180): a datum choice's NTv2 grid, the heights' geoid model, a survey
+    /// campaign's velocity grid, from the device's grid library: `izgaralar/<SHA-256>.<gsb|gtx|tif>` and its note
+    /// `<SHA-256>.json` (links 0).
+    Grid,
 }
 
 /// A file copied into the package.

@@ -47,7 +47,7 @@ sırayla alır.
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840 | tariften başka projede üretim; bütçe; çizimin kendi hesabının içinde durdurma | — |
@@ -1611,6 +1611,14 @@ kendisidir), destek matrisi ve denetimler cevapta ve `paket.json`'da, Türkçesi
 `export_losses`; dışarıda bırakılan katman açık dosyalara da girmez; GDAL, ezdxf, hashlib ve csv ile bağımsız 5 test,
 MCP; Paketle'de Devir dosyaları. Bulunan: öznitelik tanımlı blokların ATTRIB'i DXF'te zaten yazılıyor (ADR 2380'in notu
 düzeltildi). Açık: DXF'te TABLE, tanımı olmayan ek özniteliklerinin ATTRIB'i, paketin ızgara bilgisi, kurum profilleri.
+
+**9 Kasım 2026, beşinci tur — paketin ızgaraları ([ADR 3180](../docs/adr/3180-delivery-package-grids.md)).** Kapsam:
+**CAD + CBS**. Araştırma: PROJ'un kaynak dosyaları (ızgaralar makinenin klasörlerinde aranır; en iyi dönüşümün ızgarası
+yoksa ayara göre hata ya da sessiz kabul). Kanıtlanan: Paketle projenin adladığı ızgaraları (datum seçiminin NTv2'si,
+yüksekliklerin geoidi, kampanyaların hız ızgarası) cihazın kütüphanesinden `izgaralar/<SHA-256>.<uzantı>` olarak, notlarıyla
+taşır; yeni dosya türü `grid`; adı olup dosyası olmayan ızgara ayarının yeriyle bırakılır ve söylenir; Rust birim testi,
+bağımsız Python (hashlib), MCP; masaüstü iletisi ızgara sayısını söyler. Açık: paketten açılan projede ızgaraların
+kendiliğinden bulunması, DXF'te TABLE ve ATTRIB.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

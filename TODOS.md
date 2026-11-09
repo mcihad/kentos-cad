@@ -142,6 +142,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   ve web'in Stok hacmi penceresi (Arazi › Analiz).
 - MAP-16 / ADR 3160: web'in Boru hattı denetiminde Kesişimleri göster (kesişim ve yakın geçiş işaretleri, komutun
   bulgusunun renginde, çizim değişince yeniden hesaplanır).
+- MAP-17 / ADR 3180: web'in Paketle'sinde ızgaraların `izgaralar/`'a konması (web'in ızgara kütüphanesinden) ve
+  `PackagedKind` `grid`.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

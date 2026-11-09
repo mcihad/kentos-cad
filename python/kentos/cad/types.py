@@ -4643,6 +4643,7 @@ class PackagedKind(_StrEnum):
     - ``mapping``: An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
     - ``workFile``: A map work item's file (docs/adr/1201 §2): a survey campaign's, a reference's.
     - ``exchange``: The project in an open exchange format, written by KentOS's writer, or the matrix's report (docs/adr/2780):
+    - ``grid``: A grid the project names (docs/adr/3180): a datum choice's NTv2 grid, the heights' geoid model, a survey
     """
     SOURCE = "source"
     PICTURE = "picture"
@@ -4655,9 +4656,10 @@ class PackagedKind(_StrEnum):
     MAPPING = "mapping"
     WORK_FILE = "workFile"
     EXCHANGE = "exchange"
+    GRID = "grid"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping", "workFile", "exchange"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping", "workFile", "exchange", "grid"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 

@@ -237,6 +237,11 @@ impl App {
                     0 => {}
                     n => extra += &format!(", {n} veritabanı tablosunun kopyası"),
                 }
+                // docs/adr/3180: the grids the project names, their notes not counted.
+                match count(&|f| f.kind == kentos_commands::PackagedKind::Grid && f.links > 0) {
+                    0 => {}
+                    n => extra += &format!(", {n} ızgara"),
+                }
                 // The open files (docs/adr/2780): the formats and where their losses are.
                 if let Some(m) = &out.exchange {
                     let names: Vec<&str> = m.checks.iter().map(|c| c.format.title()).collect();
