@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_opening_specs)
+    {
+        return crate::SCHEMA_WITH_OPENING_SPECS;
+    }
     // Schema 216 (docs/adr/3038): the room list's finishes and columns.
     if objs.iter().any(kentos_contracts::needs_room_list)
         || doc

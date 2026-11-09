@@ -32,4 +32,15 @@ source?: string, form: OpeningForm,
 /**
  * The rough opening, metres (an opening's `width`).
  */
-width: number, leaves?: number, operation?: OpeningOperation, swing?: number, showSwing?: boolean, frame?: number, sill?: number, head?: number, depth?: number, build?: OpeningBuild, };
+width: number, leaves?: number, operation?: OpeningOperation, swing?: number, showSwing?: boolean, frame?: number, sill?: number, head?: number, depth?: number, build?: OpeningBuild, 
+/**
+ * Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+ * odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
+ * (KCAD schema 217).
+ */
+material?: string, 
+/**
+ * Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
+ * 825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).
+ */
+uValue?: number, };

@@ -879,11 +879,14 @@ pub const SCHEMA_WITH_PROVISION_TABLES: u32 = 215;
 /// `stair`, `railing`) and a spaces schedule's room list columns (`sillFinish`, `stairFinish`, `railingFinish`,
 /// `doors`, `windows`).
 pub const SCHEMA_WITH_ROOM_LIST: u32 = 216;
+/// Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value (`openingTypes[].material`,
+/// `uValue`).
+pub const SCHEMA_WITH_OPENING_SPECS: u32 = 217;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 214] = [
+pub const SCHEMAS: [u32; 215] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1098,6 +1101,7 @@ pub const SCHEMAS: [u32; 214] = [
     SCHEMA_WITH_SPRINKLERS,
     SCHEMA_WITH_PROVISION_TABLES,
     SCHEMA_WITH_ROOM_LIST,
+    SCHEMA_WITH_OPENING_SPECS,
 ];
 
 /// The file a drawing is saved as.

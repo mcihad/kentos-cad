@@ -32,4 +32,12 @@ build?: OpeningBuild,
 /**
  * The construction's fields taken away.
  */
-unset?: Array<OpeningTypeField>, };
+unset?: Array<OpeningTypeField>, 
+/**
+ * Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.
+ */
+material?: string | null, 
+/**
+ * Its thermal transmittance, W/m²K (docs/adr/3038); null: not said.
+ */
+uValue?: number | null, };

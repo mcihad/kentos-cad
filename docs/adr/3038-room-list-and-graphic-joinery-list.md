@@ -86,9 +86,29 @@ Tarih: 2026-11-09. Durum: kabul, 1. bölüm (M38; ADV-24). 2. bölüm grafik do�
 - Tablo paftalarında her tablonun görünüm penceresi tablodan kâğıtta 1,5 mm büyüktür: pencere tablonun kendi sınırına
   oturunca tablonun sağ kenar çizgisi kırpılıyordu (M37'nin hesap paftası da).
 
+### 5. Doğrama tipinin kasa ve kanadı ve U değeri (2. bölümün ilk adımı)
+
+- `OpeningType.material` (Kasa ve kanat; tek satır, en çok 200 harf) ve `uValue` (W/m²K, 0 < U ≤ 10), KCAD şema 217.
+  Tipin kendi alanlarıdır: açıklıklar tutmaz; yalnız bunların değişmesi tipin sürümünü artırmaz, açıklıklara dokunmaz.
+- `cad.openingtypes.edit` `update`'in `change`'i `material` ve `uValue` alır (null kaldırır). Kopya tip bunları
+  taşır (kodunu taşımaz, ADR 3028).
+- Kapı ve pencere tipleri penceresi: "Kasa ve kanat" ve "U değeri" (pencerede "W/m²K · TS 825: en çok 1,8").
+- **Mevzuat:** çizimin kullandığı bir pencere tipinin U değeri 1,8'i aşarsa `window_u_high`, tip başına bir bulgu,
+  pencereleriyle: "P01 (1 pencere): U 2,4 W/m²K > 1,8 W/m²K — TS 825 tavsiye edilen U değerleri". Kaynak "TS
+  825:2024 … · RG 20.2.2025/32819, Tebliğ MHGM-2025/1". U değeri yazılmamış tip yargılanmaz (üreticinin sayısı
+  çizimden tahmin edilmez). Kapılar TS 825:2024'ün çizelgesinde yok; yargılanmaz.
+- Birim kataloğuna `W/m2K` eklendi.
+
 ## Ölçüm
 
-- **Testler:**
+- **Testler (2. bölümün ilk adımı):**
+  - `opening_types_tests::a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it`: okunamayan U ("iki")
+    söylenir; P01'e "PVC, 3 odacıklı; çift camlı" ve 2,4 → bulgu ve kaynağı; 1,8 → bulgu yok; pencere tipin
+    değerlerini yeniden gösterir.
+  - Ortak örnekler (`opening_types_cases.py`): "Kasa ve kanat ile U değeri: yalnız tip yazılır, sürüm aynı", "Ret: U
+    değeri sıfır".
+  - KCAD: `opening-specs.kcad` (şema 217) ve kırık `opening-specs-in-schema-216`; 248 geçerli dosya.
+- **Testler (1. bölüm):**
   - `room_list_tests` (kabul dairesi): Doğrama kodları'ndan sonra liste Kat, No, Ad … Küpeşte ve korkuluk; "Zemin kat"
     başlık satırı; Salon "Lamine parke … K01, P01 (2), Mermer denizlik, 3 cm"; Yatak odası 1 "K01, P01"; Yatak odası 2
     "—, P01" (kapısı banyoya açılır, banyonun); Koridor "GK01"; Banyo "K01 (2), P02". Hücreden döşeme ve denizlik

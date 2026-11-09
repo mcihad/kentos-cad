@@ -115,11 +115,12 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                     Found::Project(t) => OpeningType {
                         id: id.clone(),
                         name: name.clone(),
-                        // A copy is another type: its code is not the original's (docs/adr/3028).
+                        // A copy is another type: its code is not the original's (docs/adr/3028); its frame and
+                        // leaves and its U value are (docs/adr/3038).
                         code: None,
                         version: 1,
                         source: None,
-                        ..*t
+                        ..(*t).clone()
                     },
                     Found::Builtin(t) => types::of_builtin(&t, id.clone(), name.clone()),
                 },
@@ -155,13 +156,16 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
             if change.is_empty() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik ya da yapı verin.".into(),
+                    "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik, yapı, kasa ve kanat ya da U değeri verin.".into(),
                     "operation.change",
                 ));
             }
             let mut new = types::changed(&old, change, "operation.change")?;
             let fields = new.differs_from(&old);
-            if fields.is_empty() {
+            // Its frame and leaves and its U value are the type's own (docs/adr/3038): the openings do not keep them,
+            // so a change of them alone writes the type and keeps its version.
+            let specs = new.material != old.material || new.u_value != old.u_value;
+            if fields.is_empty() && !specs {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     format!(
@@ -171,10 +175,12 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
                     "operation.change",
                 ));
             }
-            new.version = old.version + 1;
-            let followed = types::follow(doc, &new, &fields, input.on_refused, None)?;
-            work.updates = followed.updates;
-            work.report = followed.report;
+            if !fields.is_empty() {
+                new.version = old.version + 1;
+                let followed = types::follow(doc, &new, &fields, input.on_refused, None)?;
+                work.updates = followed.updates;
+                work.report = followed.report;
+            }
             if let Some(t) = list.iter_mut().find(|t| t.id == new.id) {
                 *t = new;
             }

@@ -109,6 +109,7 @@ UNITS: dict[str, str] = {
     "L/h": "Litre bölü saat: rölantide yakıt.",
     "kg/L": "Kilogram bölü litre: yakıtın litresinin salımı.",
     "volume/h": "Saatte hacim: üretim.",
+    "W/m2K": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038).",
 }
 
 
@@ -59036,9 +59037,14 @@ class OpeningType(_Model):
         frame: Unit: length.
         head: Unit: elevation.
         leaves: Unit: count.
+        material: Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+            odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
+            (KCAD schema 217).
         sill: Unit: elevation.
         source: Where it came from: the office library's name it was taken from; absent: made in this project.
         swing: Unit: deg.
+        u_value: Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
+            825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217). Unit: W/m2K.
     """
     id: str
     name: str
@@ -59051,11 +59057,13 @@ class OpeningType(_Model):
     frame: float | None | Unset = UNSET
     head: float | None | Unset = UNSET
     leaves: int | Unset = UNSET
+    material: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | Unset = UNSET
     show_swing: bool | Unset = UNSET
     sill: float | None | Unset = UNSET
     source: str | None | Unset = UNSET
     swing: float | None | Unset = UNSET
+    u_value: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -59076,6 +59084,8 @@ class OpeningType(_Model):
             out["head"] = None if self.head is None else float(self.head)
         if self.leaves is not UNSET:
             out["leaves"] = self.leaves
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.operation is not UNSET:
             out["operation"] = _enum_out(self.operation)
         if self.show_swing is not UNSET:
@@ -59086,6 +59096,8 @@ class OpeningType(_Model):
             out["source"] = self.source
         if self.swing is not UNSET:
             out["swing"] = None if self.swing is None else float(self.swing)
+        if self.u_value is not UNSET:
+            out["uValue"] = None if self.u_value is None else float(self.u_value)
         return out
 
     @classmethod
@@ -59102,11 +59114,13 @@ class OpeningType(_Model):
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
             leaves=data.get("leaves", UNSET),
+            material=data.get("material", UNSET),
             operation=_enum_in(OpeningOperation, data["operation"]) if "operation" in data else UNSET,
             show_swing=data.get("showSwing", UNSET),
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
             source=data.get("source", UNSET),
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            u_value=UNSET if "uValue" not in data else None if data["uValue"] is None else float(data["uValue"]),
         )
 
 
@@ -59119,10 +59133,12 @@ class OpeningTypeChange(_Model):
         frame: The frame's width at each jamb, metres; null: none. Unit: length.
         head: Unit: elevation.
         leaves: Unit: count.
+        material: Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.
         nominal: Its nominal size instead of the rough opening: the rough opening follows from it, its fitting gap and frame
             (after them, when they change too), and `build.sizeBy` becomes the width it names.
         sill: Unit: elevation.
         swing: Degrees; null: 90. Unit: deg.
+        u_value: Its thermal transmittance, W/m²K (docs/adr/3038); null: not said. Unit: W/m2K.
         unset: The construction's fields taken away.
         width: The rough opening, metres. Unit: length.
     """
@@ -59131,11 +59147,13 @@ class OpeningTypeChange(_Model):
     frame: float | None | Unset = UNSET
     head: float | None | Unset = UNSET
     leaves: int | None | Unset = UNSET
+    material: str | None | Unset = UNSET
     nominal: OpeningNominal | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
     show_swing: bool | None | Unset = UNSET
     sill: float | None | Unset = UNSET
     swing: float | None | Unset = UNSET
+    u_value: float | None | Unset = UNSET
     unset: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
     width: float | None | Unset = UNSET
 
@@ -59151,6 +59169,8 @@ class OpeningTypeChange(_Model):
             out["head"] = None if self.head is None else float(self.head)
         if self.leaves is not UNSET:
             out["leaves"] = self.leaves
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.nominal is not UNSET:
             out["nominal"] = None if self.nominal is None else self.nominal.to_json()
         if self.operation is not UNSET:
@@ -59161,6 +59181,8 @@ class OpeningTypeChange(_Model):
             out["sill"] = None if self.sill is None else float(self.sill)
         if self.swing is not UNSET:
             out["swing"] = None if self.swing is None else float(self.swing)
+        if self.u_value is not UNSET:
+            out["uValue"] = None if self.u_value is None else float(self.u_value)
         if self.unset is not UNSET:
             out["unset"] = [_enum_out(e0) for e0 in self.unset]
         if self.width is not UNSET:
@@ -59175,11 +59197,13 @@ class OpeningTypeChange(_Model):
             frame=UNSET if "frame" not in data else None if data["frame"] is None else float(data["frame"]),
             head=UNSET if "head" not in data else None if data["head"] is None else float(data["head"]),
             leaves=data.get("leaves", UNSET),
+            material=data.get("material", UNSET),
             nominal=UNSET if "nominal" not in data else None if data["nominal"] is None else OpeningNominal.from_json(data["nominal"]),
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
             show_swing=data.get("showSwing", UNSET),
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
             swing=UNSET if "swing" not in data else None if data["swing"] is None else float(data["swing"]),
+            u_value=UNSET if "uValue" not in data else None if data["uValue"] is None else float(data["uValue"]),
             unset=[_enum_in(OpeningTypeField, e0) for e0 in data["unset"]] if "unset" in data else UNSET,
             width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
         )

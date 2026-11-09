@@ -109,6 +109,24 @@ pub struct OpeningTypeChange {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningTypeField>>", optional))]
     pub unset: Vec<OpeningTypeField>,
+    /// Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub material: Option<Option<String>>,
+    /// Its thermal transmittance, W/m²K (docs/adr/3038); null: not said.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>", extend("x-unit" = "W/m2K")))]
+    pub u_value: Option<Option<f64>>,
 }
 
 impl OpeningTypeChange {

@@ -526,6 +526,7 @@ pub mod fire_audit;
 pub mod fire_marks;
 pub mod permit_set;
 pub mod provisions_audit;
+pub mod joinery_audit;
 pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;

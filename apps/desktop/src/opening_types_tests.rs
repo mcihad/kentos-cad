@@ -193,5 +193,95 @@ fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
     let cg = done.types.iter().find(|t| t.id == "cg1").unwrap();
     assert_eq!(cg.operation, OpeningOperation::Folding);
     assert_eq!(cg.build.as_ref().and_then(|b| b.both_sides), Some(true));
-    assert_eq!(cg.build.as_ref().and_then(|b| b.lip), None, "a pocket's lip goes with the pocket");
+    assert_eq!(
+        cg.build.as_ref().and_then(|b| b.lip),
+        None,
+        "a pocket's lip goes with the pocket"
+    );
+}
+
+/// A type's frame and leaves and its U value (M38, docs/adr/3038): typed in the window, kept on the type; a window
+/// above TS 825:2024's 1,8 W/m²K is Mevzuat's finding, at or below it none.
+#[test]
+fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {
+    let mut app = app();
+    let _ = app.update(Message::Run("arch.openingTypes"));
+    let i = {
+        let w = app.opening_types.as_ref().unwrap();
+        w.uses.iter().position(|u| u.kind.id == "p01").unwrap()
+    };
+    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    // An unreadable U value is said, not written.
+    let _ = app.update(Message::OpeningTypes(Event::UValue("iki".into())));
+    assert!(
+        matches!(app.opening_type_change(), Some(Err(ref why)) if why.starts_with("U değeri:")),
+        "{:?}",
+        app.opening_type_change()
+    );
+    let _ = app.update(Message::OpeningTypes(Event::Material(
+        "PVC, 3 odacıklı; çift camlı".into(),
+    )));
+    let _ = app.update(Message::OpeningTypes(Event::UValue("2,4".into())));
+    let _ = app.update(Message::OpeningTypes(Event::Apply));
+    let p01 = |app: &App| {
+        app.document
+            .as_ref()
+            .unwrap()
+            .model
+            .settings()
+            .arch
+            .as_ref()
+            .unwrap()
+            .opening_type("P01")
+            .unwrap()
+            .clone()
+    };
+    let t = p01(&app);
+    assert_eq!(
+        (t.material.as_deref(), t.u_value),
+        (Some("PVC, 3 odacıklı; çift camlı"), Some(2.4))
+    );
+    let findings = |app: &mut App| -> Vec<(String, String)> {
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(doc),
+            "cad.arch.audit",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({ "checks": ["regulation"] }),
+        )
+        .unwrap();
+        answer["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| f["code"] == "window_u_high")
+            .map(|f| {
+                (
+                    f["message"].as_str().unwrap_or_default().to_owned(),
+                    f["rule"].as_str().unwrap_or_default().to_owned(),
+                )
+            })
+            .collect()
+    };
+    let said = findings(&mut app);
+    assert_eq!(
+        said,
+        [(
+            "P01 (1 pencere): U 2,4 W/m²K > 1,8 W/m²K — TS 825 tavsiye edilen U değerleri (pencere 1,8 W/m²K)"
+                .to_owned(),
+            "TS 825:2024 tavsiye edilen U değerleri (pencere 1,8 W/m²K) · RG 20.2.2025/32819, Tebliğ MHGM-2025/1"
+                .to_owned()
+        )]
+    );
+    // At TS 825's value: no finding; the window shows the type's own again.
+    let _ = app.update(Message::OpeningTypes(Event::UValue("1,8".into())));
+    let _ = app.update(Message::OpeningTypes(Event::Apply));
+    assert_eq!(p01(&app).u_value, Some(1.8));
+    assert!(findings(&mut app).is_empty());
+    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    let w = app.opening_types.as_ref().unwrap();
+    assert_eq!(
+        (w.material.as_str(), w.u_value.as_str()),
+        ("PVC, 3 odacıklı; çift camlı", "1,8")
+    );
 }

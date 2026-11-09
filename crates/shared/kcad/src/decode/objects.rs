@@ -437,6 +437,8 @@ pub(super) struct Features {
     pub(super) provision_tables: bool,
     /// Schema 216 (docs/adr/3038): the room list's finishes and columns.
     pub(super) room_list: bool,
+    /// Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value.
+    pub(super) opening_specs: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -727,6 +729,7 @@ impl Features {
             sprinklers: schema >= crate::SCHEMA_WITH_SPRINKLERS,
             provision_tables: schema >= crate::SCHEMA_WITH_PROVISION_TABLES,
             room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
+            opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,

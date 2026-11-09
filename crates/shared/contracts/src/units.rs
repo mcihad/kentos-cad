@@ -167,6 +167,10 @@ pub const UNITS: &[(&str, &str)] = &[
     ("L/h", "Litre bölü saat: rölantide yakıt."),
     ("kg/L", "Kilogram bölü litre: yakıtın litresinin salımı."),
     ("volume/h", "Saatte hacim: üretim."),
+    (
+        "W/m2K",
+        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038).",
+    ),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

@@ -1740,6 +1740,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "parselin imar durumu (zoning) ve kullanımın emsal sınıfı şema 210 ister",
                     ));
                 }
+                if !has.opening_specs && a.has_opening_specs() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kapı ve pencere tipinin kasa ve kanadı (material) ve U değeri (uValue) şema 217 ister",
+                    ));
+                }
                 if !has.opening_codes && a.has_opening_codes() {
                     return Err(r.fail_at(
                         Code::UnknownField,

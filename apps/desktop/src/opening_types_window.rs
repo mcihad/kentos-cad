@@ -97,6 +97,9 @@ pub struct Window {
     pub nominal: String,
     pub size_by: OpeningSizeBy,
     pub operation: OpeningOperation,
+    /// Its frame and leaves and its U value as typed (docs/adr/3038).
+    pub material: String,
+    pub u_value: String,
     pub typed: Vec<(OpeningTypeField, String)>,
     /// What the change typed would do; its refusal's words when refused.
     pub preview: Option<Result<OpeningTypesEdited, String>>,
@@ -112,6 +115,9 @@ pub enum Event {
     SizeBy(OpeningSizeBy),
     Operation(OpeningOperation),
     Field(OpeningTypeField, String),
+    /// Kasa ve kanat, U değeri (docs/adr/3038).
+    Material(String),
+    UValue(String),
     New,
     Remove,
     Apply,
@@ -449,6 +455,38 @@ impl App {
                 )));
             }
         }
+        // Its frame and leaves and its U value (docs/adr/3038): the type's own, written when they differ.
+        let material = w.material.trim();
+        if material != t.material.as_deref().unwrap_or_default() {
+            top.insert(
+                "material".into(),
+                if material.is_empty() {
+                    Value::Null
+                } else {
+                    Value::from(material)
+                },
+            );
+        }
+        let u = w.u_value.trim();
+        let new_u = if u.is_empty() {
+            None
+        } else {
+            match u.replace(',', ".").parse::<f64>() {
+                Ok(v) if v.is_finite() => Some(v),
+                _ => {
+                    return Some(Err(format!(
+                        "U değeri: “{u}” okunamadı; W/m²K olarak bir sayı yazın (1,6 gibi)."
+                    )));
+                }
+            }
+        };
+        let same_u = match (new_u, t.u_value) {
+            (Some(a), Some(b)) => (a - b).abs() < 1e-9,
+            (a, b) => a.is_none() && b.is_none(),
+        };
+        if !same_u {
+            top.insert("uValue".into(), new_u.map_or(Value::Null, Value::from));
+        }
         if !build.is_empty() {
             top.insert("build".into(), Value::Object(build));
         }
@@ -553,6 +591,18 @@ impl App {
             Event::Nominal(t) => {
                 if let Some(w) = self.opening_types.as_mut() {
                     w.nominal = t;
+                }
+                self.opening_types_preview();
+            }
+            Event::Material(t) => {
+                if let Some(w) = self.opening_types.as_mut() {
+                    w.material = t;
+                }
+                self.opening_types_preview();
+            }
+            Event::UValue(t) => {
+                if let Some(w) = self.opening_types.as_mut() {
+                    w.u_value = t;
                 }
                 self.opening_types_preview();
             }
@@ -950,6 +1000,25 @@ impl App {
         if t.form != OpeningForm::Opening {
             cells.push(words::field("Açılış", operation, None));
         }
+        // The joinery list's (docs/adr/3038): its frame and leaves, its U value (a window's above 1,8 is a finding of
+        // TS 825:2024).
+        if matches!(t.form, OpeningForm::Door | OpeningForm::Window) {
+            let material = kentos_ui::widget::text_field(
+                "Örn. PVC, 5 odacıklı; çift camlı Low-E",
+                &w.material,
+            )
+            .on_input(|t| msg(Event::Material(t)));
+            cells.push(words::field("Kasa ve kanat", material, None));
+            let u = kentos_ui::widget::text_field("Yok", &w.u_value)
+                .on_input(|t| msg(Event::UValue(t)));
+            let hint =
+                (t.form == OpeningForm::Window).then(|| "W/m²K · TS 825: en çok 1,8".to_owned());
+            cells.push(words::field(
+                "U değeri",
+                u,
+                Some(hint.unwrap_or_else(|| "W/m²K".to_owned())),
+            ));
+        }
         for (field, text) in &w.typed {
             let field = *field;
             let input = kentos_ui::widget::text_field("Yok", text)
@@ -1054,6 +1123,13 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
     w.size_by = t.build.as_ref().and_then(|b| b.size_by).unwrap_or_default();
     w.nominal = f.length_bare(t.fields().sizes().nominal);
     w.operation = t.operation;
+    w.material = t.material.clone().unwrap_or_default();
+    w.u_value = t.u_value.map_or_else(String::new, |u| {
+        let s = format!("{u:.2}");
+        s.trim_end_matches('0')
+            .trim_end_matches('.')
+            .replace('.', ",")
+    });
     w.typed.clear();
     refit(w, t, f);
     w.preview = None;

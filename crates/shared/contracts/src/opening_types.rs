@@ -496,7 +496,22 @@ pub struct OpeningType {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<OpeningBuild>,
+    /// Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+    /// odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
+    /// (KCAD schema 217).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    /// Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
+    /// 825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "W/m2K")))]
+    pub u_value: Option<f64>,
 }
+
+/// The highest thermal transmittance a type may say, W/m²K (a single glazed metal window is about 6).
+pub const MAX_U_VALUE: f64 = 10.0;
 
 fn one() -> u8 {
     1
@@ -640,9 +655,35 @@ impl OpeningType {
                 "Boş yapı yazılmaz; yapının en az bir alanı olur.".into(),
             ));
         }
+        // Its frame and leaves and its U value (docs/adr/3038).
+        if let Some(m) = &self.material
+            && (m.trim().is_empty()
+                || m.trim() != m
+                || m.chars().count() > 200
+                || m.chars().any(char::is_control))
+        {
+            return Some((
+                "material".into(),
+                "Kasa ve kanat tek satır, boş değil, kenarı boşluksuz ve en çok 200 harftir."
+                    .into(),
+            ));
+        }
+        if let Some(u) = self.u_value
+            && !(u.is_finite() && u > 0.0 && u <= MAX_U_VALUE)
+        {
+            return Some((
+                "uValue".into(),
+                format!("U değeri sıfırdan büyük, en çok {MAX_U_VALUE} W/m²K olur."),
+            ));
+        }
         let mut f = self.fields();
         f.host = "tip".into();
         f.problem()
+    }
+
+    /// Whether it says its frame and leaves or its U value (docs/adr/3038, `.kcad` schema 217).
+    pub fn has_specs(&self) -> bool {
+        self.material.is_some() || self.u_value.is_some()
     }
 
     /// Its value of `field`, as JSON (null: none).
@@ -1344,6 +1385,8 @@ mod tests {
             head: Some(2.1),
             depth: None,
             build: Some(build),
+            material: None,
+            u_value: None,
         }
         .fields()
     }
@@ -1390,12 +1433,36 @@ mod tests {
             head: Some(2.1),
             depth: None,
             build: None,
+            material: None,
+            u_value: None,
         };
         f.take_type(&t);
         assert_eq!(
             (f.width, f.frame, f.type_version),
             (1.1, Some(0.07), Some(2))
         );
+        // Its frame and leaves and its U value (docs/adr/3038): one line, a U above 0 and at most 10.
+        t.material = Some("PVC, 5 odacıklı".into());
+        t.u_value = Some(1.6);
+        assert_eq!(t.problem(), None);
+        assert!(t.has_specs());
+        for (m, u, field) in [
+            (Some(" PVC"), Some(1.6), "material"),
+            (Some("PVC\nAhşap"), Some(1.6), "material"),
+            (Some("PVC"), Some(0.0), "uValue"),
+            (Some("PVC"), Some(12.0), "uValue"),
+            (Some("PVC"), Some(f64::NAN), "uValue"),
+        ] {
+            t.material = m.map(str::to_owned);
+            t.u_value = u;
+            assert_eq!(
+                t.problem().map(|p| p.0),
+                Some(field.to_owned()),
+                "{m:?} {u:?}"
+            );
+        }
+        t.material = None;
+        t.u_value = None;
         t.version = 0;
         assert!(t.problem().is_some());
         assert_eq!(opening_type_id_of("Kapı K01 / ıslak"), "kapi-k01-islak");

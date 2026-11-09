@@ -2729,6 +2729,8 @@ codes! {
     SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
     SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
     SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";
+    /// A window type's U value above TS 825:2024's (docs/adr/3038).
+    WINDOW_U_HIGH = "window_u_high", Warning, false, "Pencere tipinin ısıl geçirgenliği (U) TS 825:2024'ün tavsiye edilen 1,8 W/m²K değerinden yüksek.";
     /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).

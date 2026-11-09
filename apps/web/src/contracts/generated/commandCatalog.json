@@ -104799,6 +104799,12 @@
       "meaning": "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az."
     },
     {
+      "code": "window_u_high",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Pencere tipinin ısıl geçirgenliği (U) TS 825:2024'ün tavsiye edilen 1,8 W/m²K değerinden yüksek."
+    },
+    {
       "code": "arch_fixture_zone_door",
       "kind": "warning",
       "retryable": false,
@@ -106054,6 +106060,10 @@
     {
       "unit": "volume/h",
       "meaning": "Saatte hacim: üretim."
+    },
+    {
+      "unit": "W/m2K",
+      "meaning": "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/3038)."
     }
   ],
   "effects": [
@@ -154676,6 +154686,13 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "material": {
+          "description": "Its frame's and leaves' make (kasa ve kanat; docs/adr/3038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5\nodacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said\n(KCAD schema 217).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "name": {
           "description": "What it is called (K01): unique in the project, case aside.",
           "type": "string"
@@ -154708,6 +154725,15 @@
             "null"
           ],
           "x-unit": "deg"
+        },
+        "uValue": {
+          "description": "Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS\n825:2024's 1.8 is a finding (docs/adr/3038). Above 0, at most 10; absent: not said (KCAD schema 217).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "W/m2K"
         },
         "version": {
           "description": "Each change gives it the next; an opening that took an older one is behind (eski sürüm).",
@@ -154782,6 +154808,13 @@
           ],
           "x-unit": "count"
         },
+        "material": {
+          "description": "Its frame's and leaves' make (kasa ve kanat, docs/adr/3038); null: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "nominal": {
           "anyOf": [
             {
@@ -154825,6 +154858,15 @@
             "null"
           ],
           "x-unit": "deg"
+        },
+        "uValue": {
+          "description": "Its thermal transmittance, W/m²K (docs/adr/3038); null: not said.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "W/m2K"
         },
         "unset": {
           "description": "The construction's fields taken away.",

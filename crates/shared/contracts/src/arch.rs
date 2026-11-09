@@ -1827,6 +1827,11 @@ impl ArchSettings {
         self.opening_types.iter().any(|t| t.code.is_some())
     }
 
+    /// Whether a door or window type says its frame and leaves or its U value (KCAD 217, docs/adr/3038).
+    pub fn has_opening_specs(&self) -> bool {
+        self.opening_types.iter().any(crate::OpeningType::has_specs)
+    }
+
     /// Whether it keeps combinations of design options (KCAD 154, docs/adr/0808).
     pub fn has_option_combos(&self) -> bool {
         !self.option_combos.is_empty()

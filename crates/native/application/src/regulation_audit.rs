@@ -80,6 +80,8 @@ pub enum Source {
     Otopark,
     /// Sığınak Yönetmeliği (docs/adr/3036).
     Siginak,
+    /// TS 825:2024 Binalarda ısı yalıtım kuralları, binding by Tebliğ MHGM-2025/1 (docs/adr/3038).
+    Ts825,
 }
 
 impl Source {
@@ -91,6 +93,7 @@ impl Source {
             Source::Bykhy => "BYKHY",
             Source::Otopark => "Otopark Yön.",
             Source::Siginak => "Sığınak Yön.",
+            Source::Ts825 => "TS 825",
         }
     }
 
@@ -102,6 +105,7 @@ impl Source {
             Source::Bykhy => "BYKHY",
             Source::Otopark => "Otopark Yön.",
             Source::Siginak => "Sığınak Yön.",
+            Source::Ts825 => "TS 825:2024",
         }
     }
 }
@@ -1505,6 +1509,8 @@ pub fn findings(
     crate::fire_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     // Otopark ve sığınak (docs/adr/3036).
     crate::provisions_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
+    // Doğramaların U değeri (docs/adr/3038): TS 825:2024.
+    crate::joinery_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     out
 }
 
