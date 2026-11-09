@@ -140,6 +140,16 @@ fn msg(e: Event) -> Message {
     Message::OrthoCompare(e)
 }
 
+/// The summary's word on the resampling (docs/adr/3660): the second resampled onto the first's grid; docs/adr/4060: a
+/// turned first is the grid itself. None when nothing was resampled.
+pub(crate) fn resample_words(m: &kentos_commands::OrthoSeam) -> Option<&'static str> {
+    m.resampled.then_some(if m.turned {
+        "Birinci görüntü dönük: ikincisi onun ızgarasına kübik evrişimle yeniden örneklendi; yerler ve eşleme onun pikselleriyle, kayma doğu ve kuzey olarak."
+    } else {
+        "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi; kayma birincinin pikselleriyle ölçüldü."
+    })
+}
+
 fn cm(v: f64) -> String {
     format!("{:.1}", v * 100.0)
 }
@@ -523,12 +533,8 @@ impl App {
                 ),
                 _ => words::text_line(Kind::Warn, format!("{counted} Sayılan yer yok: pencereyi, aramayı ya da korelasyon sınırını değiştirin.")),
             });
-            // docs/adr/3660: the second resampled onto the first's grid.
-            if m.resampled {
-                lines.push(words::text_line(
-                    Kind::Info,
-                    "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi; kayma birincinin pikselleriyle ölçüldü.",
-                ));
+            if let Some(said) = resample_words(m) {
+                lines.push(words::text_line(Kind::Info, said));
             }
         }
         lines.push(words::text_line(
@@ -664,7 +670,7 @@ impl App {
                     s.seam.then(|| msg(Event::Resample(!s.resample))),
                 ),
             )
-            .help("Pikselleri farklı boyda ya da dönük ikinci görüntü kübik evrişimle birincinin ızgarasına örneklenir; birinci kuzeye bakmalı.");
+            .help("Pikselleri farklı boyda ya da dönük ikinci görüntü kübik evrişimle birincinin ızgarasına örneklenir; birinci dönükse ızgara onun pikselleridir.");
         let (lines, rows) = self.ortho_compare_lines();
         let f = self.format();
         let table = if s.show == Show::Seam {

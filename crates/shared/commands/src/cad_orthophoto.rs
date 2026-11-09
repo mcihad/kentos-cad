@@ -375,6 +375,11 @@ pub struct OrthoSeam {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub resampled: bool,
+    /// The first image, the grid, is turned (docs/adr/4060): the places, its patches and the match are in its own
+    /// pixels, its affine taking them to the ground; the shifts are still east and north.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub turned: bool,
 }
 
 /// A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,

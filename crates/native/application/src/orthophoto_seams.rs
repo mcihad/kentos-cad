@@ -17,10 +17,12 @@
 //! The two images must have pixels of one size and no turn (north up); or (docs/adr/3660, `resample`) the second is
 //! resampled onto the first's grid: at each place, the block of the first's pixel centres its patches and search use
 //! (one pixel more round them for `bicubic`), each centre mapped into the second's pixels by the inverse of its affine
-//! and read there by cubic convolution (Keys, a = −1/2). The first, the grid, must face north. A place whose block
-//! reaches past the second's pixels (the cubic's 4 × 4 included) is outside the overlap. The match, the refinement and
-//! the shift are then the first grid's; `bicubic` samples the second the same way at fractions of the first's pixel.
-//! Nothing is written.
+//! and read there by cubic convolution (Keys, a = −1/2). A place whose block reaches past the second's pixels (the
+//! cubic's 4 × 4 included) is outside the overlap. The match, the refinement and the shift are then the first grid's;
+//! `bicubic` samples the second the same way at fractions of the first's pixel. A turned first (docs/adr/4060) is the
+//! grid itself: a place is the centre of its pixel the place falls in, its whole affine (GDAL's: east = t0 + col·t1 +
+//! row·t2, north = t3 + col·t4 + row·t5) takes its pixels to the ground and its inverse the ground to them, and a place
+//! whose window leaves its pixels is outside the overlap; the shift is said in east and north. Nothing is written.
 //!
 //! Along a drawn seam line (`line`, docs/adr/2860): the places are every `step` metres along it from its start (the
 //! k-th at k × step, the line's length included when it falls on a step), each the point at that distance on its edges,
@@ -265,17 +267,22 @@ pub(crate) fn measure(
             "seam",
         ));
     }
-    if resample && !unturned(fa) {
-        return Err(fail(
-            codes::INVALID_INPUT,
-            "Yeniden örneklemede ızgara birinci görüntünündür; o kuzeye bakmalı (dönüksüz). Dönük görüntüyü ikinci verin.".into(),
-            "seam.resample",
-        ));
+    // docs/adr/4060: a turned first is the grid itself (only resampled: two alike images face north).
+    let turned = !unturned(fa);
+    let det_a = fa[1] * fa[5] - fa[2] * fa[4];
+    if turned && !(det_a.is_finite() && det_a != 0.0) {
+        return Err(fail(codes::INVALID_INPUT, "Birinci görüntünün piksel dönüşümü tersinir değil; ızgara olamaz.".into(), "seam.resample"));
     }
     if resample && !(det.is_finite() && det != 0.0) {
         return Err(fail(codes::INVALID_INPUT, "İkinci görüntünün piksel dönüşümü tersinir değil; yeniden örneklenemez.".into(), "seam.resample"));
     }
-    let (px, py) = (fa[1], -fa[5]);
+    // The margin's pixel: the first's along its axes; a turned first's longer side.
+    let (px, py) = if turned {
+        let side = fa[1].hypot(fa[4]).max(fa[2].hypot(fa[5]));
+        (side, side)
+    } else {
+        (fa[1], -fa[5])
+    };
     let extent = |t: [f64; 6], w: u32, h: u32| (t[0], t[0] + f64::from(w) * t[1], t[3] + f64::from(h) * t[5], t[3]);
     // A turned or resized second: the box of its corners (the places then kept where its pixels reach, below).
     let corners = |t: [f64; 6], w: u32, h: u32| {
@@ -286,7 +293,8 @@ pub(crate) fn measure(
         let hi = |v: [f64; 4]| v.into_iter().fold(f64::NEG_INFINITY, f64::max);
         (lo(xs), hi(xs), lo(ys), hi(ys))
     };
-    let (ax0, ax1, ay0, ay1) = extent(fa, first.raster.width, first.raster.height);
+    let (ax0, ax1, ay0, ay1) =
+        if turned { corners(fa, first.raster.width, first.raster.height) } else { extent(fa, first.raster.width, first.raster.height) };
     let (bx0, bx1, by0, by1) =
         if resample { corners(sa, second.raster.width, second.raster.height) } else { extent(sa, second.raster.width, second.raster.height) };
     let half = i64::from(a.window / 2);
@@ -300,9 +308,14 @@ pub(crate) fn measure(
             "seam",
         ));
     }
+    // A point of the first's pixels (whole numbers: their corners) on the ground: a turned first's whole affine
+    // (docs/adr/4060).
+    let ground_of = move |i: f64, j: f64| -> [f64; 2] {
+        if turned { [fa[0] + i * fa[1] + j * fa[2], fa[3] + i * fa[4] + j * fa[5]] } else { [fa[0] + i * fa[1], fa[3] + j * fa[5]] }
+    };
     // docs/adr/3660: where the first's pixel centre (i, j) falls in the second's pixels (whole numbers: their centres).
     let into_second = |i: f64, j: f64| -> (f64, f64) {
-        let (x, y) = (fa[0] + (i + 0.5) * fa[1], fa[3] + (j + 0.5) * fa[5]);
+        let [x, y] = ground_of(i + 0.5, j + 0.5);
         let (dx, dy) = (x - sa[0], y - sa[3]);
         ((sa[5] * dx - sa[2] * dy) / det - 0.5, (-sa[4] * dx + sa[1] * dy) / det - 0.5)
     };
@@ -321,13 +334,24 @@ pub(crate) fn measure(
         let fits = x0 >= 0 && y0 >= 0 && x1 < i64::from(second.raster.width) && y1 < i64::from(second.raster.height);
         fits.then(|| (x0, y0, (x1 - x0 + 1) as u32, (y1 - y0 + 1) as u32))
     };
-    let pixel_of = |p: [f64; 2]| (((p[0] - fa[0]) / fa[1]).floor() as i64, ((p[1] - fa[3]) / fa[5]).floor() as i64);
+    // The first's pixel a ground point falls in: a turned first's by its affine's inverse (docs/adr/4060).
+    let pixel_of = |p: [f64; 2]| {
+        if turned {
+            let (dx, dy) = (p[0] - fa[0], p[1] - fa[3]);
+            (((fa[5] * dx - fa[2] * dy) / det_a).floor() as i64, ((-fa[4] * dx + fa[1] * dy) / det_a).floor() as i64)
+        } else {
+            (((p[0] - fa[0]) / fa[1]).floor() as i64, ((p[1] - fa[3]) / fa[5]).floor() as i64)
+        }
+    };
+    // A turned first's window inside its pixels (a north-up one's is, inside the overlap's margin).
+    let (fw, fh) = (i64::from(first.raster.width), i64::from(first.raster.height));
+    let window_in = |ci: i64, cj: i64| ci - half >= 0 && cj - half >= 0 && ci + half < fw && cj + half < fh;
     // The places: the overlap's grid (north to south, west to east), or every step along the seam line (docs/adr/2860);
     // resampled, only those whose block the second's pixels hold.
     let inside = |p: [f64; 2]| {
         p[0] >= ox0 && p[0] <= ox1 && p[1] >= oy0 && p[1] <= oy1 && (!resample || {
             let (ci, cj) = pixel_of(p);
-            block(ci, cj).is_some()
+            (!turned || window_in(ci, cj)) && block(ci, cj).is_some()
         })
     };
     let mut places: Vec<([f64; 2], Option<f64>)> = Vec::new();
@@ -400,7 +424,7 @@ pub(crate) fn measure(
         {
             // The place: the centre of the first image's pixel it falls in.
             let (ci, cj) = pixel_of([x, y]);
-            let at = [fa[0] + (ci as f64 + 0.5) * fa[1], fa[3] + (cj as f64 + 0.5) * fa[5]];
+            let at = ground_of(ci as f64 + 0.5, cj as f64 + 0.5);
             let pa = read(&mut ia, ci - half, cj - half, w, w, "first")?;
             let first_patch: Vec<f64> = (0..w).flat_map(|j| (0..w).map(move |i| (i, j))).map(|(i, j)| grey(&pa, i, j)).collect();
             // The second's block: its own pixels round the one whose centre is nearest the place, or (docs/adr/3660) its
@@ -424,7 +448,6 @@ pub(crate) fn measure(
                 (values, (bi, bj), Box::new(move |u: f64, v: f64| bicubic(&pb, u, v)))
             };
             let (bi, bj) = base;
-            let gb = if resample { fa } else { sa };
             let side = (2 * r + 1) as usize;
             let mut scores: Vec<Option<f64>> = vec![None; side * side];
             for v in -r..=r {
@@ -457,8 +480,8 @@ pub(crate) fn measure(
                             (vertex(s(-1, 0), c, s(1, 0)), vertex(s(0, -1), c, s(0, 1)))
                         };
                         // The match on the block's grid: the second's own, or (resampled) the first's.
-                        let xb = gb[0] + ((bi + u) as f64 + fu + 0.5) * gb[1];
-                        let yb = gb[3] + ((bj + v) as f64 + fv + 0.5) * gb[5];
+                        let (i, j) = ((bi + u) as f64 + fu + 0.5, (bj + v) as f64 + fv + 0.5);
+                        let [xb, yb] = if resample { ground_of(i, j) } else { [sa[0] + i * sa[1], sa[3] + j * sa[5]] };
                         let (dx, dy) = (xb - at[0], yb - at[1]);
                         let d = dx.hypot(dy);
                         let ok = a.correlation.is_none_or(|m| c >= m);
@@ -503,5 +526,6 @@ pub(crate) fn measure(
         patches,
         line,
         resampled: resample,
+        turned,
     })
 }

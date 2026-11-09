@@ -17,4 +17,9 @@ line?: OrthoSeamLine,
  * The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
  * is turned, and `resample` was asked.
  */
-resampled?: boolean, };
+resampled?: boolean, 
+/**
+ * The first image, the grid, is turned (docs/adr/4060): the places, its patches and the match are in its own
+ * pixels, its affine taking them to the ground; the shifts are still east and north.
+ */
+turned?: boolean, };

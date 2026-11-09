@@ -3,7 +3,8 @@
 //! `cad.orthophoto.compare` with `seam` gives the case's places, counts and shift; a narrow search leaves every peak
 //! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it;
 //! docs/adr/3260: along a line with an arc, and with the peak refined by the second image resampled (bicubic);
-//! docs/adr/3660: a second image of 0.08 m pixels and a turned one resampled onto the first's grid, along a line too.
+//! docs/adr/3660: a second image of 0.08 m pixels and a turned one resampled onto the first's grid, along a line too;
+//! docs/adr/4060: the turned image first, the grid itself (its places, the shift and `turned`).
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -30,7 +31,7 @@ fn alike(got: &Value, want: &Value, name: &str) {
             }
         }
     }
-    for key in ["ok", "low", "edge", "flat", "passed", "resampled"] {
+    for key in ["ok", "low", "edge", "flat", "passed", "resampled", "turned"] {
         assert_eq!(got[key], want[key], "{name} {key}");
     }
     // The seam line's length, places and those outside (docs/adr/2860), where one was asked.
@@ -55,6 +56,10 @@ fn the_seam_over_mcp_is_the_cases() {
         "dikiş: ikinci görüntü 0,08 m pikselli; birincinin ızgarasına yeniden örneklenir",
         "dikiş: ikinci görüntü 9° dönük; pikselleri yetmeyen yerler örtüşmenin dışında",
         "dikiş hattı boyunca, dönük ikinci görüntü, çift kübik piksel altı",
+        // docs/adr/4060: the turned image first, the grid itself.
+        "dikiş: birinci görüntü 9° dönük; ızgara onun pikselleri, ikincisi ona örneklenir (parabol)",
+        "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı",
+        "dikiş hattı boyunca, dönük birinci görüntü, 0,08 m pikselli ikinci, çift kübik piksel altı",
     ] {
         let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
         let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();

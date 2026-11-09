@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dikiş ölçümünde dönük birinci görüntü (9 Kasım 2026; MAP-12, [ADR 4060](../../docs/adr/4060-orthophoto-seam-on-a-turned-first-grid.md)).**
+  `seam.resample`'da dönük birinci ızgaranın kendisidir: yerler onun piksel merkezleri, kayma doğu ve kuzey;
+  `seam.turned`. Kuzeye bakan birincide hesap aynen. CAD + CBS.
 - **Tarifin katmanının grubu ve tam stili; çizimlerin içinde durdurma (9 Kasım 2026; MAP-20, [ADR 4040](../../docs/adr/4040-recipe-layer-groups-style-and-stop-within-drawings.md)).**
   Tarif katmanın gruplarını, bütün stilini ve proje çizgi türünü taşır; Tariften üret katmanı gruplarına ekler.
   Enkesit, istinat duvarı, eş yükselti, kazı-dolgu ve sıfır hattı kendi hesabının içinde ilerler ve durur. Harita + Yol.

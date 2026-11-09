@@ -85,5 +85,6 @@ olabilir”.
 ## Sonra
 
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenlerinden hatlar.
-- Dönük birinci görüntü (ızgaranın kendisi dönük: yerler onun pikselleriyle).
+- Dönük birinci görüntü (ızgaranın kendisi dönük: yerler onun pikselleriyle):
+  [ADR 4060](4060-orthophoto-seam-on-a-turned-first-grid.md).
 - Web (TODOS §0.2).

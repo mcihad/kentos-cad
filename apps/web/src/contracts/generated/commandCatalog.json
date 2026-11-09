@@ -162549,6 +162549,10 @@
               "type": "null"
             }
           ]
+        },
+        "turned": {
+          "description": "The first image, the grid, is turned (docs/adr/4060): the places, its patches and the match are in its own\npixels, its affine taking them to the ground; the shifts are still east and north.",
+          "type": "boolean"
         }
       },
       "required": [

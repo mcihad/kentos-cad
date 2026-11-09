@@ -184,6 +184,10 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
                     .into(),
             );
         }
+        // docs/adr/4060: a turned first is the grid itself.
+        if s.turned {
+            notes.push("Birinci görüntü dönük: yerler ve eşleme onun pikselleriyle; kayma doğu ve kuzey olarak verildi.".into());
+        }
     }
     Ok(OrthophotoCompared {
         rules: rules.id.clone(),

@@ -402,6 +402,79 @@ fn yeniden_ornekleme_gives_the_shared_cases_places() {
     }
 }
 
+/// docs/adr/4060: the turned image first, the grid itself: refused until Yeniden örnekleme is on, then the shared case's
+/// places and shift (the parabola, and the bicubic refinement), `turned`, and the summary saying the grid is the turned
+/// image's.
+#[test]
+fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
+    for (name, bicubic) in [
+        ("dikiş: birinci görüntü 9° dönük; ızgara onun pikselleri, ikincisi ona örneklenir (parabol)", false),
+        ("dikiş: birinci görüntü 9° dönük, çift kübik piksel altı", true),
+    ] {
+        let c = case(name);
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        if bicubic {
+            let _ = app.update(Message::OrthoCompare(C::Refine(crate::ortho_compare_window::Refine::Bicubic)));
+        }
+        let refused = app.ortho_compare.answer.clone().expect("an answer");
+        assert!(refused.as_ref().is_err_and(|why| why.contains("resample")), "{name}: {refused:?}");
+        let _ = app.update(Message::OrthoCompare(C::Resample(true)));
+        let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+        close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], name);
+        assert_eq!((got["seam"]["resampled"].clone(), got["seam"]["turned"].clone()), (Value::Bool(true), Value::Bool(true)));
+        let answer = app.ortho_compare.answer.clone().expect("an answer").expect("compared");
+        let said = crate::ortho_compare_window::resample_words(answer.seam.as_ref().expect("a seam"));
+        assert!(said.is_some_and(|s| s.starts_with("Birinci görüntü dönük: ikincisi onun ızgarasına")), "{said:?}");
+    }
+}
+
+/// `.run/gui-evidence/donuk-birinci-4060/`: the turned image first, its places on its own grid.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ortho_compare_window_tests::turned_first_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn turned_first_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/donuk-birinci-4060");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let case_name = "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı";
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let c = case(case_name);
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [
+            C::Seam(true),
+            C::Step(1.0),
+            C::Window(21.0),
+            C::Search(5.0),
+            C::Correlation("0,8".into()),
+            C::Refine(crate::ortho_compare_window::Refine::Bicubic),
+            C::Resample(true),
+        ] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-donuk-birinci-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
 /// `.run/gui-evidence/yeniden-ornekleme-3660/`: the 0.08 m image resampled, and the turned one.
 ///
 /// ```text

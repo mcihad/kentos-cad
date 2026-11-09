@@ -42,7 +42,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
@@ -1373,6 +1373,15 @@ yer dışarıda; cevapta `resampled`, notta söylenir; dönük birinci reddedili
 sentetik GeoTIFF (dönüş ModelTransformationTag'de), temiz yerlerde bilinen kaymadan en büyük sapma 0,047 ve 0,017
 piksel; 53 ortak durum, sıra değişince kaymanın tersine döndüğü bağımsız Python testi, MCP; Ortofoto karşılaştırması'nda
 Yeniden örnekleme kutusu. Açık: türeyen nesnenin izi, mozaiğin dikiş çokgenleri, dönük birinci görüntü.
+
+**9 Kasım 2026, yedinci tur — dönük birinci görüntü ızgaranın kendisi ([ADR 4060](../docs/adr/4060-orthophoto-seam-on-a-turned-first-grid.md)).**
+Kapsam: **CAD + CBS** (raster). Dayanak: GDAL'ın raster veri modelindeki afin dönüşüm (GT(2), GT(4) dönük görüntüde sıfır
+değil; piksel merkezi 0,5). Kanıtlanan: `seam.resample`'da dönük birinci artık reddedilmez: yerler onun piksel merkezleri
+(afinin tersiyle), pikselleri yere afinin kendisiyle; penceresi görüntüden taşan yer dışarıda; ikinci ona kübik
+evrişimle örneklenir; cevapta `turned`, notta söylenir; kuzeye bakan birincide hesap aynen. Dönük birinci ve kuzeye
+bakan ya da 0,08 m'lik ikinciyle üç yeni durum (56): temiz yerlerde en büyük sapma parabolde 0,053, çift kübikte 0,0075
+ve 0,0083 piksel; testin kendi ters afiniyle Python testi, MCP, masaüstünde özet. Açık: türeyen nesnenin izi (MAP-01
+kararı), mozaiğin dikiş çokgenleri.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

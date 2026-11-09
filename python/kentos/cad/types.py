@@ -62079,6 +62079,8 @@ class OrthoSeam(_Model):
         line: The seam line measured along (docs/adr/2860); none: the overlap's grid.
         resampled: The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
             is turned, and `resample` was asked.
+        turned: The first image, the grid, is turned (docs/adr/4060): the places, its patches and the match are in its own
+            pixels, its affine taking them to the ground; the shifts are still east and north.
     """
     patches: list[OrthoPatch]
     ok: int
@@ -62089,6 +62091,7 @@ class OrthoSeam(_Model):
     passed: bool | None | Unset = UNSET
     resampled: bool | Unset = UNSET
     shift: OrthoStats | None | Unset = UNSET
+    turned: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -62105,6 +62108,8 @@ class OrthoSeam(_Model):
             out["resampled"] = self.resampled
         if self.shift is not UNSET:
             out["shift"] = None if self.shift is None else self.shift.to_json()
+        if self.turned is not UNSET:
+            out["turned"] = self.turned
         return out
 
     @classmethod
@@ -62119,6 +62124,7 @@ class OrthoSeam(_Model):
             passed=data.get("passed", UNSET),
             resampled=data.get("resampled", UNSET),
             shift=UNSET if "shift" not in data else None if data["shift"] is None else OrthoStats.from_json(data["shift"]),
+            turned=data.get("turned", UNSET),
         )
 
 
