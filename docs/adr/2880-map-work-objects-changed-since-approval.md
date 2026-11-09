@@ -105,7 +105,7 @@ Tarih: 2026-11-08. plan/map-cad.md MAP-01, beşinci tur. Durum: taslak. ADR 2080
 
 ## Sonra
 
-- Değişen nesnenin neyinin değiştiği (geometri mi, öznitelik mi): bugün yalnız özeti farklıdır.
+- ~~Değişen nesnenin neyinin değiştiği (geometri mi, öznitelik mi): bugün yalnız özeti farklıdır.~~ ADR 3280.
 - Silinen nesnenin onaylanan hâlinin gösterilmesi (ArcGIS'in ortak atası gibi): bugün yalnız sayısı; onaylanan hâl
   saklanmaz.
 - Dosyası olan öğede nesne başına fark (dosyanın içeriğinin kendisi).

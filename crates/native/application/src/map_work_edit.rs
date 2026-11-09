@@ -162,6 +162,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 file,
                 approved: None,
                 approved_objects: Vec::new(),
+                approved_parts: Vec::new(),
             });
             Ok(Change { item: Some(id), file_revision: revision, ..Change::new(work, "Harita işine ekle") })
         }
@@ -193,6 +194,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if next.status != WorkStatus::Approved {
                 next.approved = None;
                 next.approved_objects.clear();
+                next.approved_parts.clear();
             } else if status == &Some(WorkStatus::Approved) {
                 let stamp = Revisions::new(doc, &work, std::collections::HashMap::new()).kept(&next);
                 next.approved = Some(stamp.clone());
@@ -205,6 +207,8 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                     }
                     Some(_) => Vec::new(),
                 };
+                // Docs/adr/3280: and each object's parts' digests, so a change can be told part by part.
+                next.approved_parts = crate::map_work::parts_of(doc, &next.approved_objects);
                 stamped = Some(stamp);
             }
             if next == *old {

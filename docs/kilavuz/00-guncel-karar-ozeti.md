@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Onaydan sonra neyin değiştiği (9 Kasım 2026; MAP-01, [ADR 3280](../../docs/adr/3280-map-work-changed-object-parts.md)).**
+  Onay her nesnenin geometri, öznitelik, katman ve görünüş özetini tutar (`approvedParts`, `.kcad` şema 211);
+  `changes` değişen parçaları söyler. Yalnız Harita.
 - **Dikişte çift kübik piksel altı ve yaylı hat (9 Kasım 2026; MAP-12, [ADR 3260](../../docs/adr/3260-orthophoto-seam-bicubic-and-arcs.md)).**
   `seam.subpixel: bicubic` ikinci görüntüyü kübik evrişimle (Keys, a = −1/2) yeniden örnekler; dikiş hattının yayları
   yay boyunca ölçülür. CAD + CBS.

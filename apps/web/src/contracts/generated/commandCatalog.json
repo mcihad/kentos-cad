@@ -208366,6 +208366,61 @@
       ],
       "type": "object"
     },
+    "WorkChangedObject": {
+      "description": "A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that\norder).",
+      "properties": {
+        "parts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "parts"
+      ],
+      "type": "object"
+    },
+    "WorkChangedParts": {
+      "description": "How many changed objects changed in each part (docs/adr/3280): geometry (its kind's own fields: places, corners, a\ntext's words …), attributes (`attrs`, attachments), layer, look (colour, line, label, order …).",
+      "properties": {
+        "attributes": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "geometry": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "layer": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "look": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "geometry",
+        "attributes",
+        "layer",
+        "look"
+      ],
+      "type": "object"
+    },
     "WorkChanges": {
       "description": "The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,\nand the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].",
       "properties": {
@@ -208380,6 +208435,24 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "objects": {
+          "description": "Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].",
+          "items": {
+            "$ref": "#/$defs/WorkChangedObject"
+          },
+          "type": "array"
+        },
+        "parts": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkChangedParts"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the\napproval kept its objects' parts (schema 211)."
         },
         "removed": {
           "format": "uint32",
@@ -208585,6 +208658,18 @@
                 "type": "string"
               }
             ],
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "approvedParts": {
+          "description": "Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,\nattributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.\nEmpty: approved before 211, or no `approved_objects`.",
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 4,
+            "minItems": 4,
             "type": "array"
           },
           "type": "array"

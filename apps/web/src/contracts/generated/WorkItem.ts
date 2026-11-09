@@ -30,4 +30,10 @@ approved?: string,
  * list whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most
  * [`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.
  */
-approvedObjects?: Array<[EntityId, string]>, };
+approvedObjects?: Array<[EntityId, string]>, 
+/**
+ * Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,
+ * attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
+ * Empty: approved before 211, or no `approved_objects`.
+ */
+approvedParts?: Array<[string, string, string, string]>, };

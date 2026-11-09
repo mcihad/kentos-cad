@@ -71,6 +71,23 @@ def digest(e):
     return sha(json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode())
 
 
+# docs/adr/3280: an object's four parts, its fields split by name (the slot id in none); each part's digest the first
+# 16 digits of the SHA-256 of its fields as JSON with sorted keys.
+PARTS = ("geometry", "attributes", "layer", "look")
+ATTRIBUTE_FIELDS = ("attrs", "attachments")
+LOOK_FIELDS = ("color", "label", "symbol", "lineWeight", "labelPins", "lineType", "linePattern", "lineTypeScale",
+               "transparency", "order", "byLayer", "wipeout")
+
+
+def parts(e):
+    split = [{}, {}, {}, {}]
+    for k, v in e.items():
+        if k == "id":
+            continue
+        split[1 if k in ATTRIBUTE_FIELDS else 2 if k == "layerId" else 3 if k in LOOK_FIELDS else 0][k] = v
+    return [sha(json.dumps(p, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode())[:16] for p in split]
+
+
 S_GNSS, S_LATER, S_DXF = sha(NMEA), sha(NMEA_LATER), sha(DXF)
 S_ORTHO, S_OLD = sha(ORTHO.read_bytes()), sha(OLD_ORTHO.read_bytes())
 P_GNSS, P_LATER, P_DXF = "$fixture:map-work/v1/kampanya.nmea", "$fixture:map-work/v1/kampanya-2026-11.nmea", \
@@ -293,6 +310,10 @@ class Drawing:
         return sorted([u, digest(self.entities[u])] for u, lid in self.objects.items()
                       if (self.item_of_layer(lid) or {}).get("id") == item_id)
 
+    def parts_of(self, item_id):
+        """docs/adr/3280: the parts of the objects of `pairs(item_id)`, in its order."""
+        return [parts(self.entities[u]) for u, _ in self.pairs(item_id)]
+
     def content(self, item_id):
         """ADR 2080 §1: the content revision of an item without a file."""
         return sha(json.dumps(self.pairs(item_id), separators=(",", ":")).encode())
@@ -398,6 +419,19 @@ class Drawing:
                         listed = sorted(added + changed_)[:1000]
                         if listed:
                             ch["uids"] = listed
+                        # docs/adr/3280: with the approval's parts, each changed object's parts against its parts now.
+                        if i.get("approvedParts"):
+                            then_parts = {u: ps for (u, _), ps in zip(i["approvedObjects"], i["approvedParts"])}
+                            by_part, part_objects = dict.fromkeys(PARTS, 0), []
+                            for u in changed_:
+                                now_parts = parts(self.entities[u])
+                                differ = [PARTS[k] for k in range(4) if then_parts[u][k] != now_parts[k]]
+                                for name in differ:
+                                    by_part[name] += 1
+                                part_objects.append({"uid": u, "parts": differ})
+                            ch["parts"] = by_part
+                            if part_objects:
+                                ch["objects"] = part_objects[:1000]
                         row["changes"] = ch
                     what = "dosyası" if "file" in i else "içeriği"
                     worse("revised", f"Onaydan sonra {what} değişti (onaylanan {i['approved'][:12]}, şimdi {now[:12]}): "
@@ -625,9 +659,38 @@ def query_cases():
     assert row4["changes"] == {"added": 1, "removed": 1, "changed": 1, "uids": sorted([now4[0][0], now4[1][0]])}, row4
     out.append(case("Onaydan sonra değişen nesneler: biri değişti, biri eklendi, biri silindi (onay nesne başına özet "
                     "tuttu)", [ask(lt)], d=later))
+    # docs/adr/3280: the same approval with its objects' parts: the changed object's geometry and look parts were others.
+    with_parts = copy.deepcopy(later)
+    lp = Drawing(with_parts)
+    by = {u: parts(lp.entities[u]) for u in lp.entities}
+    kept_parts = [list(by[u]) if u in by else ["1" * 16] * 4 for u, _ in earlier]
+    kept_parts[[u for u, _ in earlier].index(now4[0][0])][0] = "0" * 16
+    kept_parts[[u for u, _ in earlier].index(now4[0][0])][3] = "0" * 16
+    with_parts["settings"]["mapWork"]["items"][3]["approvedParts"] = kept_parts
+    wp = Drawing(with_parts)
+    row4 = next(r for r in wp.tree(False)["items"] if r["id"] == "is-4")
+    assert row4["changes"]["parts"] == {"geometry": 1, "attributes": 0, "layer": 0, "look": 1}, row4
+    assert row4["changes"]["objects"] == [{"uid": now4[0][0], "parts": ["geometry", "look"]}], row4
+    out.append(case("Onaydan sonra değişen nesnenin değişen parçaları: geometrisi ve görünüşü (onay parçaları tuttu)",
+                    [ask(wp)], d=with_parts))
+    # An attribute set after an approval that kept the parts: the attributes part, and only it.
+    attributed = setup()
+    attributed["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(attributed).content("is-4"),
+                                                         approvedObjects=Drawing(attributed).pairs("is-4"),
+                                                         approvedParts=Drawing(attributed).parts_of("is-4"))
+    at0 = Drawing(attributed)
+    at1 = Drawing(attributed)
+    at1.entities[T2]["attrs"] = {"Kot": "1061"}
+    row4 = next(r for r in at1.tree(False)["items"] if r["id"] == "is-4")
+    assert row4["changes"]["objects"] == [{"uid": T2, "parts": ["attributes"]}], row4
+    out.append(case("Onaydan sonra özniteliği değişen nesne: yalnız öznitelikleri", [
+        ask(at0), step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
+                       command="cad.entities.set"),
+        ask(at1, expect={"revision": "same"})], d=attributed))
     same = setup()
     same["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(same).content("is-4"),
-                                                   approvedObjects=Drawing(same).pairs("is-4"))
+                                                   approvedObjects=Drawing(same).pairs("is-4"),
+                                                   approvedParts=Drawing(same).parts_of("is-4"))
     out.append(case("Onaylı ve nesneleri aynı: değişen yok, güncel", [ask(Drawing(same))], d=same))
     ortho = setup()
     ortho["settings"]["mapWork"]["items"][1].update(status="approved", approved=S_OLD)
@@ -712,8 +775,10 @@ def edit_cases():
     # set
     stamp4 = dr.content("is-4")
     pairs4 = dr.pairs("is-4")
-    # docs/adr/2880: an approval of an item without a file keeps its objects' digests.
-    after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4))
+    parts4 = dr.parts_of("is-4")
+    # docs/adr/2880: an approval of an item without a file keeps its objects' digests; docs/adr/3280: and their parts.
+    after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4,
+                                                   approvedParts=parts4))
     out.append(case("Durum: denetlenen tasarım onaylı teslim revizyonu olur (ofisin kaydı); onay içerik revizyonunu "
                     "damgalar", write_step(dr, after, op({"op": "set", "item": "is-4", "status": "approved"}),
                                            {"item": "is-4", "content": stamp4, "approved": stamp4},
@@ -730,6 +795,7 @@ def edit_cases():
     w = copy.deepcopy(mo_after.work)
     w["items"][3]["approved"] = stamp4
     w["items"][3]["approvedObjects"] = pairs4
+    w["items"][3]["approvedParts"] = parts4
     mo_after.set_work(w)
     out.append(case("Yeniden onayla: onaydan sonra değişen tasarım bugünkü içerik revizyonuyla yeniden damgalanır",
                     write_step(mo, mo_after, op({"op": "set", "item": "is-4", "status": "approved"}),
@@ -742,13 +808,27 @@ def edit_cases():
     ka_after = Drawing(kept)
     w = copy.deepcopy(ka_after.work)
     w["items"][3]["approvedObjects"] = pairs4
+    w["items"][3]["approvedParts"] = parts4
     ka_after.set_work(w)
     out.append(case("Yeniden onayla: değişmemiş, nesneleri tutulmadan onaylanmış öğe nesne başına özetini kazanır",
                     write_step(ka, ka_after, op({"op": "set", "item": "is-4", "status": "approved"}),
                                {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
                     d=kept))
+    # docs/adr/3280: approved with its objects' digests but not their parts (schema 210): approving again keeps the parts.
+    no_parts = setup()
+    no_parts["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4)
+    np = Drawing(no_parts)
+    np_after = Drawing(no_parts)
+    w = copy.deepcopy(np_after.work)
+    w["items"][3]["approvedParts"] = parts4
+    np_after.set_work(w)
+    out.append(case("Yeniden onayla: değişmemiş, parçaları tutulmadan (şema 210) onaylanmış öğe parçalarını kazanır",
+                    write_step(np, np_after, op({"op": "set", "item": "is-4", "status": "approved"}),
+                               {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
+                    d=no_parts))
     whole = setup()
-    whole["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4)
+    whole["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4,
+                                                    approvedParts=parts4)
     out.append(case("Yeniden onayla: değişmemiş onaylı öğe", [fail_step(
         op({"op": "set", "item": "is-4", "status": "approved"}), "nothing_to_set", "Değişecek bir şey yok.",
         "operation")], d=whole))
@@ -757,8 +837,9 @@ def edit_cases():
     w = copy.deepcopy(kd_after.work)
     w["items"][3]["status"] = "review"
     del w["items"][3]["approved"]
-    # docs/adr/2880: its objects' digests go with the stamp.
+    # docs/adr/2880: its objects' digests go with the stamp; docs/adr/3280: and their parts.
     del w["items"][3]["approvedObjects"]
+    del w["items"][3]["approvedParts"]
     kd_after.set_work(w)
     out.append(case("Onaydan çıkan öğenin damgası ve nesne başına özeti kalkar",
                     write_step(kd, kd_after, op({"op": "set", "item": "is-4", "status": "review"}), {"item": "is-4"},

@@ -27,6 +27,7 @@ fn approved(pairs: Vec<(EntityId, String)>, stamp: Option<String>) -> MapWork {
             file: None,
             approved: stamp,
             approved_objects: pairs,
+            approved_parts: Vec::new(),
         }],
         derivations: Vec::new(),
     }
@@ -76,4 +77,56 @@ fn the_objects_an_approval_kept_are_its_stamp() {
     let many: Vec<_> = (1..=MAX_APPROVED_OBJECTS as u32 + 1).map(|k| (uid(k), "c".repeat(64))).collect();
     let s = stamp_of(&many);
     assert!(refused(&approved(many, Some(s))).is_some_and(|w| w.contains("en çok")));
+}
+
+/// docs/adr/3280: the parts kept beside the list, one to one with it, four digests of 16 lower-case hex digits each;
+/// else refused at `items[i].approvedParts`. An object's parts are its snapshot form's fields split four ways.
+#[test]
+fn the_parts_an_approval_kept_are_one_to_one_with_its_objects() {
+    use kentos_contracts::{OBJECT_PARTS, object_parts};
+    let pairs = vec![(uid(3), "c".repeat(64)), (uid(4), "d".repeat(64))];
+    let stamp = stamp_of(&pairs);
+    let four = || ["0123456789abcdef".to_owned(), "1".repeat(16), "2".repeat(16), "3".repeat(16)];
+    let mut w = approved(pairs.clone(), Some(stamp.clone()));
+    w.items[0].approved_parts = vec![four(), four()];
+    assert_eq!(w.problem(), None);
+    assert!(w.has_approved_parts());
+    let at = |w: &MapWork| w.problem().map(|(at, why)| (at, why));
+    for parts in [vec![four()], vec![four(), four(), four()]] {
+        let mut w = approved(pairs.clone(), Some(stamp.clone()));
+        w.items[0].approved_parts = parts;
+        let (path, why) = at(&w).expect("refused");
+        assert_eq!(path, "items[0].approvedParts");
+        assert!(why.contains("bire bir"), "{why}");
+    }
+    for bad in ["0123456789ABCDEF", "0123456789abcde", "0123456789abcdefg"] {
+        let mut w = approved(pairs.clone(), Some(stamp.clone()));
+        let mut one = four();
+        one[2] = bad.to_owned();
+        w.items[0].approved_parts = vec![four(), one];
+        assert!(at(&w).is_some_and(|(p, why)| p == "items[0].approvedParts" && why.contains("16")), "{bad}");
+    }
+    // Parts without the list.
+    let mut w = approved(Vec::new(), Some(stamp));
+    w.items[0].approved_parts = vec![four()];
+    assert!(at(&w).is_some_and(|(p, _)| p == "items[0].approvedParts"));
+    // The split: a colour is the look's, a name the attributes', the layer its own; the corners the geometry's.
+    assert_eq!(OBJECT_PARTS, ["geometry", "attributes", "layer", "look"]);
+    let line = serde_json::json!({"kind": "line", "id": 7, "layerId": "yapi", "attrs": {"Ad": "D1"},
+                                  "a": {"x": 1.0, "y": 2.0}, "b": {"x": 3.0, "y": 4.0}});
+    let base = object_parts(&line);
+    let changed = |f: &dyn Fn(&mut serde_json::Value)| {
+        let mut v = line.clone();
+        f(&mut v);
+        let now = object_parts(&v);
+        (0..4).filter(|k| now[*k] != base[*k]).map(|k| OBJECT_PARTS[k]).collect::<Vec<_>>()
+    };
+    assert_eq!(changed(&|v| v["id"] = 9.into()), Vec::<&str>::new(), "the slot is not a part");
+    assert_eq!(changed(&|v| v["b"]["x"] = 3.5.into()), ["geometry"]);
+    assert_eq!(changed(&|v| v["attrs"]["Ad"] = "D2".into()), ["attributes"]);
+    assert_eq!(changed(&|v| v["layerId"] = "yol".into()), ["layer"]);
+    assert_eq!(changed(&|v| v["color"] = "#ff0000".into()), ["look"]);
+    // The geometry's digest by hand: SHA-256 of {"a":…,"b":…,"kind":"line"}, compact with sorted keys, 16 digits.
+    let text = r#"{"a":{"x":1.0,"y":2.0},"b":{"x":3.0,"y":4.0},"kind":"line"}"#;
+    assert_eq!(base[0], sha256_hex(text.as_bytes())[..16]);
 }

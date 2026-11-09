@@ -152,6 +152,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   üretilen ve bırakılan çizimlerin satırları).
 - MAP-12 / ADR 3260: web'in Ortofoto karşılaştırması penceresinde Piksel altı (Parabol / Çift kübik) ve yaylı dikiş
   hattının alınması (komut ortak).
+- MAP-01 / ADR 3280: web'in `.kcad` okuyucu/yazıcısında şema 211 (`approvedParts`; web codec'i Rust'ın WASM'ıysa yalnız
+  yeniden derleme) ve Harita işi panelinde değişen parçaların cümlesi.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

@@ -159,6 +159,45 @@ pub struct WorkChanges {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,
+    /// Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the
+    /// approval kept its objects' parts (schema 211).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parts: Option<WorkChangedParts>,
+    /// Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkChangedObject>>", optional))]
+    pub objects: Vec<WorkChangedObject>,
+}
+
+/// How many changed objects changed in each part (docs/adr/3280): geometry (its kind's own fields: places, corners, a
+/// text's words …), attributes (`attrs`, attachments), layer, look (colour, line, label, order …).
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkChangedParts {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub geometry: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub attributes: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub layer: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub look: u32,
+}
+
+/// A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
+/// order).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkChangedObject {
+    pub uid: String,
+    pub parts: Vec<String>,
 }
 
 /// The most ids [`WorkChanges`] lists.

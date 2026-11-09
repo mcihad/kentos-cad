@@ -454,12 +454,22 @@ impl App {
             0 => String::new(),
             r => format!("; silinen {r} nesne çizimde yok"),
         };
+        // Docs/adr/3280: the changed objects' parts, when the approval kept them.
+        let which = c.parts.as_ref().map_or(String::new(), |p| {
+            let named: Vec<String> =
+                [(p.geometry, "geometrisi"), (p.attributes, "öznitelikleri"), (p.layer, "katmanı"), (p.look, "görünüşü")]
+                    .into_iter()
+                    .filter(|(k, _)| *k > 0)
+                    .map(|(k, w)| format!("{k} nesnenin {w}"))
+                    .collect();
+            if named.is_empty() { String::new() } else { format!("; değişen: {}", named.join(", ")) }
+        });
         let words = if n == 0 {
             format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
         } else {
             let first = if (c.changed + c.added) as usize > n { format!(" (ilk {n})") } else { String::new() };
             self.select_slots(slots);
-            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{gone}.")
+            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.")
         };
         self.say(Level::Info, words);
     }
@@ -620,12 +630,21 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     item
 }
 
-/// What an approved item's objects did since its approval, in one sentence (docs/adr/2880 §4).
-fn changes_words(c: &WorkChanges) -> String {
+/// What an approved item's objects did since its approval, in one sentence (docs/adr/2880 §4); with the approval's
+/// parts (docs/adr/3280), which parts of the changed objects changed, each part's count.
+pub(crate) fn changes_words(c: &WorkChanges) -> String {
+    let which = c.parts.as_ref().map_or(String::new(), |p| {
+        let named: Vec<String> = [(p.geometry, "geometri"), (p.attributes, "öznitelik"), (p.layer, "katman"), (p.look, "görünüş")]
+            .into_iter()
+            .filter(|(n, _)| *n > 0)
+            .map(|(n, w)| format!("{w} {n}"))
+            .collect();
+        if named.is_empty() { String::new() } else { format!(" ({})", named.join(", ")) }
+    });
     let parts: Vec<String> = [(c.changed, "değişti"), (c.added, "eklendi"), (c.removed, "silindi")]
         .into_iter()
         .filter(|(n, _)| *n > 0)
-        .map(|(n, w)| format!("{n} nesne {w}"))
+        .map(|(n, w)| if w == "değişti" { format!("{n} nesne {w}{which}") } else { format!("{n} nesne {w}") })
         .collect();
     match parts.is_empty() {
         true => "Onaydan sonra nesneleri değişti.".to_owned(),

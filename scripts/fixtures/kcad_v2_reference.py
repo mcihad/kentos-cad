@@ -2664,6 +2664,9 @@ def document(d):
     if any("approvedObjects" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's approval with its objects' digests (docs/adr/2880).
         schema = max(schema, 210)
+    if any("approvedParts" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # And its objects' parts' digests (docs/adr/3280).
+        schema = max(schema, 211)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3520,7 +3523,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-211.kcad"] = container(root(cmap(parts), version=uint(211)))
+    files["schema-version-212.kcad"] = container(root(cmap(parts), version=uint(212)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6049,6 +6052,26 @@ def build():
         broken_objects = copy.deepcopy(kept_objects)
         change(broken_objects)
         out[f"broken/map-work-approved-objects-{name}.kcad"] = container(document(broken_objects))
+    # Schema 211 (docs/adr/3280): the approval's objects' parts beside its list; schema 210 refuses the field, parts not
+    # one to one with the list and a digest of 15 digits are refused.
+    kept_parts = load("map-work-approved-parts.json")
+    kept_parts_data = document(kept_parts)
+    assert kept_parts_data.count(b"\x67version\x18\xd3") == 1, "an approval's parts are schema 211"
+    out["map-work-approved-parts.kcad"] = container(kept_parts_data)
+    out["broken/map-work-approved-parts-in-schema-210.kcad"] = container(
+        kept_parts_data.replace(b"\x67version\x18\xd3", b"\x67version\x18\xd2"))
+
+    def not_one_to_one(d):
+        parts = d["settings"]["mapWork"]["items"][2]["approvedParts"]
+        parts.append(list(parts[0]))
+
+    def short_digest(d):
+        d["settings"]["mapWork"]["items"][2]["approvedParts"][0][0] = "0" * 15
+
+    for name, change in (("not-one-to-one", not_one_to_one), ("short-digest", short_digest)):
+        broken_parts = copy.deepcopy(kept_parts)
+        change(broken_parts)
+        out[f"broken/map-work-approved-parts-{name}.kcad"] = container(document(broken_parts))
     # Schema 193 (docs/adr/1201 §1): the items' files with their paths from the project file's folder (one inside it,
     # one beside it); schema 192 refuses the field, an absolute, a climbing and an empty relative path are refused.
     rel = load("map-work-relative.json")

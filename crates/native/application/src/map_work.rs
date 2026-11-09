@@ -120,12 +120,33 @@ pub fn content_objects(doc: &Document, work: &MapWork, item: &str) -> Vec<(kento
     pairs
 }
 
+/// An object's parts' digests now (docs/adr/3280); none when the drawing has no object of the id.
+fn parts_now(doc: &Document, uid: &kentos_commands::EntityId) -> Option<[String; 4]> {
+    let slot = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0))?;
+    let entity = doc.get(slot)?;
+    Some(kentos_commands::object_parts(&serde_json::to_value(entity).ok()?))
+}
+
+/// The parts' digests of the objects `pairs` names, in its order (docs/adr/3280); none when one is not in the drawing.
+pub(crate) fn parts_of(doc: &Document, pairs: &[(kentos_commands::EntityId, String)]) -> Vec<[String; 4]> {
+    pairs.iter().map(|(uid, _)| parts_now(doc, uid)).collect::<Option<Vec<_>>>().unwrap_or_default()
+}
+
 /// What changed since an approval that kept its objects' digests (docs/adr/2880): the added, the removed and the
 /// changed, by the persistent id; the ids there now listed (added or changed) by id, at most `WORK_CHANGES_LISTED`.
-pub(crate) fn changes_of(then: &[(kentos_commands::EntityId, String)], now: &[(kentos_commands::EntityId, String)]) -> kentos_commands::WorkChanges {
+/// With the approval's parts (`then_parts`, docs/adr/3280), each changed object's parts set against its parts now.
+pub(crate) fn changes_of(
+    doc: &Document,
+    then: &[(kentos_commands::EntityId, String)],
+    then_parts: &[[String; 4]],
+    now: &[(kentos_commands::EntityId, String)],
+) -> kentos_commands::WorkChanges {
     let (mut i, mut j) = (0, 0);
     let (mut added, mut removed, mut changed) = (0u32, 0u32, 0u32);
     let mut uids: Vec<String> = Vec::new();
+    let with_parts = then_parts.len() == then.len() && !then.is_empty();
+    let mut counts = [0u32; 4];
+    let mut objects: Vec<kentos_commands::WorkChangedObject> = Vec::new();
     let note = |u: &kentos_commands::EntityId, uids: &mut Vec<String>| {
         if uids.len() < kentos_commands::WORK_CHANGES_LISTED {
             uids.push(kentos_commands::uuid_text(&u.0));
@@ -137,6 +158,18 @@ pub(crate) fn changes_of(then: &[(kentos_commands::EntityId, String)], now: &[(k
                 if a.1 != b.1 {
                     changed += 1;
                     note(&b.0, &mut uids);
+                    if with_parts && let Some(now_parts) = parts_now(doc, &b.0) {
+                        let differ: Vec<usize> = (0..4).filter(|k| then_parts[i][*k] != now_parts[*k]).collect();
+                        for k in &differ {
+                            counts[*k] += 1;
+                        }
+                        if objects.len() < kentos_commands::WORK_CHANGES_LISTED {
+                            objects.push(kentos_commands::WorkChangedObject {
+                                uid: kentos_commands::uuid_text(&b.0.0),
+                                parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
+                            });
+                        }
+                    }
                 }
                 i += 1;
                 j += 1;
@@ -157,7 +190,13 @@ pub(crate) fn changes_of(then: &[(kentos_commands::EntityId, String)], now: &[(k
             (None, None) => break,
         }
     }
-    kentos_commands::WorkChanges { added, removed, changed, uids }
+    let parts = with_parts.then(|| kentos_commands::WorkChangedParts {
+        geometry: counts[0],
+        attributes: counts[1],
+        layer: counts[2],
+        look: counts[3],
+    });
+    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects }
 }
 
 /// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
@@ -372,7 +411,7 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             let now = revisions.kept(i);
             if now != *stamp {
                 if i.file.is_none() && !i.approved_objects.is_empty() {
-                    changes = Some(changes_of(&i.approved_objects, &content_objects(doc, work, &i.id)));
+                    changes = Some(changes_of(doc, &i.approved_objects, &i.approved_parts, &content_objects(doc, work, &i.id)));
                 }
                 let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
                 worse(

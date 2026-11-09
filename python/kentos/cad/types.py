@@ -107954,6 +107954,61 @@ class Wipeout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkChangedObject(_Model):
+    """A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
+    order).
+    """
+    uid: str
+    parts: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["parts"] = list(self.parts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkChangedObject:
+        return cls(
+            uid=data["uid"],
+            parts=list(data["parts"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkChangedParts(_Model):
+    """How many changed objects changed in each part (docs/adr/3280): geometry (its kind's own fields: places, corners, a
+    text's words …), attributes (`attrs`, attachments), layer, look (colour, line, label, order …).
+    Attributes:
+        geometry: Unit: count.
+        attributes: Unit: count.
+        layer: Unit: count.
+        look: Unit: count.
+    """
+    geometry: int
+    attributes: int
+    layer: int
+    look: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["geometry"] = self.geometry
+        out["attributes"] = self.attributes
+        out["layer"] = self.layer
+        out["look"] = self.look
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkChangedParts:
+        return cls(
+            geometry=data["geometry"],
+            attributes=data["attributes"],
+            layer=data["layer"],
+            look=data["look"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkChanges(_Model):
     """The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,
     and the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].
@@ -107961,10 +108016,15 @@ class WorkChanges(_Model):
         added: Unit: count.
         removed: Unit: count.
         changed: Unit: count.
+        objects: Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].
+        parts: Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the
+            approval kept its objects' parts (schema 211).
     """
     added: int
     removed: int
     changed: int
+    objects: list[WorkChangedObject] | Unset = UNSET
+    parts: WorkChangedParts | None | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -107972,6 +108032,10 @@ class WorkChanges(_Model):
         out["added"] = self.added
         out["removed"] = self.removed
         out["changed"] = self.changed
+        if self.objects is not UNSET:
+            out["objects"] = [e0.to_json() for e0 in self.objects]
+        if self.parts is not UNSET:
+            out["parts"] = None if self.parts is None else self.parts.to_json()
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -107982,6 +108046,8 @@ class WorkChanges(_Model):
             added=data["added"],
             removed=data["removed"],
             changed=data["changed"],
+            objects=[WorkChangedObject.from_json(e0) for e0 in data["objects"]] if "objects" in data else UNSET,
+            parts=UNSET if "parts" not in data else None if data["parts"] is None else WorkChangedParts.from_json(data["parts"]),
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -108147,6 +108213,9 @@ class WorkItem(_Model):
         approved_objects: The objects its approval stamped (schema 210, docs/adr/2880): `[persistent id, object digest]` by id, the very
             list whose compact JSON's SHA-256 is `approved`; only on an approved item without a file, of at most
             [`MAX_APPROVED_OBJECTS`]. Empty: approved before 210, an item with a file, or one of more objects.
+        approved_parts: Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,
+            attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
+            Empty: approved before 211, or no `approved_objects`.
         layers: Layer or group ids; a layer is in one item at most.
     """
     id: str
@@ -108154,6 +108223,7 @@ class WorkItem(_Model):
     name: str
     approved: str | None | Unset = UNSET
     approved_objects: list[list[Any]] | Unset = UNSET
+    approved_parts: list[list[str]] | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
@@ -108167,6 +108237,8 @@ class WorkItem(_Model):
             out["approved"] = self.approved
         if self.approved_objects is not UNSET:
             out["approvedObjects"] = [list(e0) for e0 in self.approved_objects]
+        if self.approved_parts is not UNSET:
+            out["approvedParts"] = [list(e0) for e0 in self.approved_parts]
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
@@ -108183,6 +108255,7 @@ class WorkItem(_Model):
             name=data["name"],
             approved=data.get("approved", UNSET),
             approved_objects=[list(e0) for e0 in data["approvedObjects"]] if "approvedObjects" in data else UNSET,
+            approved_parts=[list(e0) for e0 in data["approvedParts"]] if "approvedParts" in data else UNSET,
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
@@ -133708,6 +133781,8 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkChangedObject",
+    "WorkChangedParts",
     "WorkChanges",
     "WorkDerivation",
     "WorkDerivationRow",

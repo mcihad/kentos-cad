@@ -31,7 +31,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880 | tipli katman profili; değişen nesnenin neyinin değiştiği; silinenin onaylı hâli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280 | tipli katman profili; silinenin onaylı hâli; değişen özniteliğin adı | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon ve Aplikasyon'da çizginin kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bazın haritada çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
@@ -259,6 +259,13 @@ listeden seçme), AutoCAD'in DWG Compare'i. Kanıtlanan: onay dosyasız öğenin
 değişen nesneleri sayar, bugün olanların kimliklerini verir; `map.work.query` 32, `map.work.edit` 55 ortak durum, MCP;
 Harita işi panelinde Değişenler satırı onları seçer. Açık: değişenin neyinin değiştiği, silinenin onaylı hâli,
 dosyalı öğede nesne başına fark, tipli katman profili.
+
+**9 Kasım 2026, altıncı tur — değişen nesnenin neyinin değiştiği ([ADR 3280](../docs/adr/3280-map-work-changed-object-parts.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: ArcGIS Pro'nun sürüm farkları (güncellenen nesnede öznitelik ve geometri
+ayrı). Kanıtlanan: onay her nesnenin dört parçasının (geometri, öznitelik, katman, görünüş) 16 haneli özetini
+`approvedParts`'ta tutar (`.kcad` şema 211, bağımsız okuyucu ve yazıcı, 1710 dosya); `map.work.query`'nin `changes`'i
+parça sayılarını ve her değişen nesnenin değişen parçalarını söyler; Harita işi'nde ipucu ve durum çubuğu. 90 ortak
+durum, sözleşme testi, MCP, masaüstü. Açık: tipli katman profili, silinenin onaylı hâli, değişen özniteliğin adı.
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

@@ -142,10 +142,66 @@ pub struct WorkItem {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<(EntityId, String)>>"))]
     pub approved_objects: Vec<(EntityId, String)>,
+    /// Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,
+    /// attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
+    /// Empty: approved before 211, or no `approved_objects`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<[String; 4]>>"))]
+    pub approved_parts: Vec<[String; 4]>,
 }
 
 /// The most objects an approval keeps a digest for (docs/adr/2880): an item of more is stamped whole only.
 pub const MAX_APPROVED_OBJECTS: usize = 100_000;
+
+/// The parts of an object an approval keeps a digest of (docs/adr/3280), in their order.
+pub const OBJECT_PARTS: [&str; 4] = ["geometry", "attributes", "layer", "look"];
+/// The fields of an object's snapshot form that are its attributes part (docs/adr/3280).
+pub const ATTRIBUTE_FIELDS: [&str; 2] = ["attrs", "attachments"];
+/// The field that is its layer part.
+pub const LAYER_FIELD: &str = "layerId";
+/// The fields that are its look part; the rest but `id` (its `kind` and its own fields: places, corners, a text's
+/// words …) are its geometry.
+pub const LOOK_FIELDS: [&str; 12] = [
+    "color",
+    "label",
+    "symbol",
+    "lineWeight",
+    "labelPins",
+    "lineType",
+    "linePattern",
+    "lineTypeScale",
+    "transparency",
+    "order",
+    "byLayer",
+    "wipeout",
+];
+
+/// An object's parts' digests (docs/adr/3280) from its snapshot form: each part's fields as compact JSON with sorted
+/// keys (an object of the fields it has, maybe none), the first 16 lower-case hex digits of its SHA-256.
+pub fn object_parts(object: &serde_json::Value) -> [String; 4] {
+    let mut parts: [serde_json::Map<String, serde_json::Value>; 4] = Default::default();
+    if let Some(fields) = object.as_object() {
+        for (k, v) in fields {
+            let at = match k.as_str() {
+                "id" => continue,
+                f if ATTRIBUTE_FIELDS.contains(&f) => 1,
+                LAYER_FIELD => 2,
+                f if LOOK_FIELDS.contains(&f) => 3,
+                _ => 0,
+            };
+            parts[at].insert(k.clone(), v.clone());
+        }
+    }
+    parts.map(|m| {
+        let text = serde_json::to_vec(&serde_json::Value::Object(m)).unwrap_or_default();
+        crate::encoding::sha256_hex(&text)[..16].to_owned()
+    })
+}
+
+/// Whether a part's digest is 16 lower-case hex digits.
+fn is_part_digest(d: &str) -> bool {
+    d.len() == 16 && d.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
 
 /// Objects made from an item: the item, its revision then, the operation that made them and the objects.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -199,6 +255,11 @@ impl MapWork {
     /// Whether an approval keeps its objects' digests (schema 210, docs/adr/2880).
     pub fn has_approved_objects(&self) -> bool {
         self.items.iter().any(|i| !i.approved_objects.is_empty())
+    }
+
+    /// Whether an approval keeps its objects' parts' digests (schema 211, docs/adr/3280).
+    pub fn has_approved_parts(&self) -> bool {
+        self.items.iter().any(|i| !i.approved_parts.is_empty())
     }
 
     /// Whether it says what schema 206 added (docs/adr/2080): an approval's stamp, or a derivation from an item without
@@ -312,6 +373,16 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(objects, "nesnelerin listesi onay damgasını vermiyor (damga listenin SHA-256'sı olmalı)");
             }
         }
+        // Docs/adr/3280: each approved object's parts, one to one with the list.
+        if !item.approved_parts.is_empty() {
+            let parts = at("approvedParts");
+            if item.approved_parts.len() != item.approved_objects.len() {
+                return fail(parts, "nesnelerin parçaları onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)");
+            }
+            if item.approved_parts.iter().flatten().any(|d| !is_part_digest(d)) {
+                return fail(parts, "her parçanın özeti 16 küçük onaltılık hanedir");
+            }
+        }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
         return fail("derivations".into(), &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"));
@@ -375,6 +446,7 @@ mod tests {
                     file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64), relative: None }),
                     approved: None,
                     approved_objects: Vec::new(),
+                    approved_parts: Vec::new(),
                 },
                 WorkItem {
                     id: "is-2".into(),
@@ -385,6 +457,7 @@ mod tests {
                     file: None,
                     approved: None,
                     approved_objects: Vec::new(),
+                    approved_parts: Vec::new(),
                 },
             ],
             derivations: vec![WorkDerivation {
