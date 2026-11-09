@@ -9,7 +9,11 @@ export type MapSurveyEdited = { id?: string, uid?: string, pointRevision?: numbe
 /**
  * The error ellipses a network drew (docs/adr/2960).
  */
-ellipses?: number, stale: number, 
+ellipses?: number, 
+/**
+ * The height bars a network drew beside them (docs/adr/3360).
+ */
+bars?: number, stale: number, 
 /**
  * The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
  */
