@@ -4,11 +4,21 @@
  * The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
  * region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
  * map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With
- * `heights` (docs/adr/3360) each point's height half-interval too, as a bar.
+ * `heights` (docs/adr/3360) each point's height half-interval too, as a bar. With `labels` (docs/adr/3760) each
+ * ellipse's semi-axes in millimetres beside it (and the half-interval with `heights`), a text `labelHeight`
+ * millimetres high on paper at the project's plot scale (none: 2.5).
  */
 export type NetworkEllipses = { layer: string, scale: number, 
 /**
  * docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the
  * ellipse, with ticks at its ends.
  */
-heights?: boolean, };
+heights?: boolean, 
+/**
+ * docs/adr/3760: each ellipse labelled with its semi-axes.
+ */
+labels?: boolean, 
+/**
+ * The labels' height on paper (mm, over 0); none: [`ELLIPSE_LABEL_HEIGHT`].
+ */
+labelHeight?: number, };

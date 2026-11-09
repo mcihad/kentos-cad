@@ -185,3 +185,87 @@ fn bar_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/3760: Etiket ticked beside the ellipses writes each ellipse's semi-axes in millimetres beside it, 2.5 mm on
+/// paper at the drawing's plot scale, east of the ellipse, in the same use; the message counts the labels.
+#[test]
+fn etiket_writes_each_ellipse_s_semi_axes_beside_it() {
+    let mut app = opened();
+    app.selected_layer = Some("gnss".into());
+    let _ = app.update(Message::Run("map.survey.adjustment"));
+    let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
+    let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
+    let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
+    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let doc = app.document.as_ref().expect("a drawing");
+    let plot = doc.model.settings().plot_scale;
+    let drawn = ellipses(&app);
+    let labels: Vec<&kentos_commands::TextEntity> = doc
+        .model
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Text(t) if t.base.attrs.contains_key("Dengeleme") => Some(t),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(labels.len(), 3);
+    for (t, e) in labels.iter().zip(&drawn) {
+        // The ellipse drawn 2000 times: its semi-axes in millimetres are the drawn ones over 2000, times 1000.
+        let major = e.major.x.hypot(e.major.y) / 2000.0 * 1000.0;
+        assert_eq!(t.text, format!("a {:.1} · b {:.1} mm", major, major * e.ratio));
+        assert!((t.height - 2.5 * plot / 1000.0).abs() < 1e-12);
+        assert_eq!(t.align, Some(kentos_commands::TextAlign::MiddleLeft));
+        assert!(t.p.x > e.c.x + (e.major.x.hypot(e.major.y)), "east of the ellipse");
+        assert_eq!(t.base.attrs.get("İşaret"), e.base.attrs.get("İşaret"));
+    }
+    let survey = doc.model.map_survey().cloned().expect("an archive");
+    let used = survey.uses.iter().find(|u| u.operation == "Hata elipsleri (da-1)").expect("recorded");
+    assert_eq!(used.uids.len(), 6, "three ellipses and three labels");
+    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains("3 etiket yazıldı"), "{said}");
+}
+
+/// The window with Etiket ticked, then the network accepted with ellipses, bars and labels 2000 times, seen close to N1,
+/// `.run/gui-evidence/elips-etiketi-3760/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib network_ellipses_tests::label_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn label_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/elips-etiketi-3760");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.selected_layer = Some("gnss".into());
+        let _ = app.update(Message::Run("map.survey.adjustment"));
+        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
+        let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
+        let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
+        let _ = app.update(Message::SurveyNetwork(N::Labels(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        app.dialog = None;
+        snapshot.settle(&mut app, App::view, &mut update);
+        // Close to N1: its ellipse 6 m across the 3 mm major, its bar and the label 2.5 m high east of them.
+        let n1 = ellipses(&app)[0].c;
+        app.zoom_to_bounds(&kentos_commands::Bounds { min_x: n1.x - 12.0, min_y: n1.y - 16.0, max_x: n1.x + 52.0, max_y: n1.y + 16.0 });
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("etiketler-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

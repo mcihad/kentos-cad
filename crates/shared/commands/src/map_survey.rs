@@ -736,6 +736,11 @@ pub struct MapSurveyEdited {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub bars: u32,
+    /// The ellipses' labels a network wrote (docs/adr/3760).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub labels: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
     /// The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -1046,7 +1051,9 @@ pub struct NetworkStation {
 /// The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
 /// region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
 /// map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With
-/// `heights` (docs/adr/3360) each point's height half-interval too, as a bar.
+/// `heights` (docs/adr/3360) each point's height half-interval too, as a bar. With `labels` (docs/adr/3760) each
+/// ellipse's semi-axes in millimetres beside it (and the half-interval with `heights`), a text `labelHeight`
+/// millimetres high on paper at the project's plot scale (none: 2.5).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1061,7 +1068,20 @@ pub struct NetworkEllipses {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub heights: bool,
+    /// docs/adr/3760: each ellipse labelled with its semi-axes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub labels: bool,
+    /// The labels' height on paper (mm, over 0); none: [`ELLIPSE_LABEL_HEIGHT`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub label_height: Option<f64>,
 }
+
+/// An ellipse label's height on paper (mm) when none is given (docs/adr/3760): the height KentOS's drawn annotations
+/// take (a slope plan's elevations, docs/adr/0905).
+pub const ELLIPSE_LABEL_HEIGHT: f64 = 2.5;
 
 /// The magnifications an ellipse may be drawn at.
 pub const ELLIPSE_SCALES: (f64, f64) = (1.0, 100_000.0);

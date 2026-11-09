@@ -13,7 +13,11 @@ ellipses?: number,
 /**
  * The height bars a network drew beside them (docs/adr/3360).
  */
-bars?: number, stale: number, 
+bars?: number, 
+/**
+ * The ellipses' labels a network wrote (docs/adr/3760).
+ */
+labels?: number, stale: number, 
 /**
  * The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
  */

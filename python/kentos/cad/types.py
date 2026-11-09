@@ -54043,6 +54043,7 @@ class MapSurveyEdited(_Model):
         stale: Unit: count.
         bars: The height bars a network drew beside them (docs/adr/3360). Unit: count.
         ellipses: The error ellipses a network drew (docs/adr/2960). Unit: count.
+        labels: The ellipses' labels a network wrote (docs/adr/3760). Unit: count.
         observations: Unit: count.
         point_revision: Unit: version.
         records: The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -54053,6 +54054,7 @@ class MapSurveyEdited(_Model):
     bars: int | Unset = UNSET
     ellipses: int | Unset = UNSET
     id: str | None | Unset = UNSET
+    labels: int | Unset = UNSET
     observations: int | Unset = UNSET
     point_revision: int | None | Unset = UNSET
     records: list[str] | Unset = UNSET
@@ -54069,6 +54071,8 @@ class MapSurveyEdited(_Model):
             out["ellipses"] = self.ellipses
         if self.id is not UNSET:
             out["id"] = self.id
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
         if self.observations is not UNSET:
             out["observations"] = self.observations
         if self.point_revision is not UNSET:
@@ -54089,6 +54093,7 @@ class MapSurveyEdited(_Model):
             bars=data.get("bars", UNSET),
             ellipses=data.get("ellipses", UNSET),
             id=data.get("id", UNSET),
+            labels=data.get("labels", UNSET),
             observations=data.get("observations", UNSET),
             point_revision=data.get("pointRevision", UNSET),
             records=list(data["records"]) if "records" in data else UNSET,
@@ -57443,15 +57448,21 @@ class NetworkEllipses(_Model):
     """The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
     region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
     map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With
-    `heights` (docs/adr/3360) each point's height half-interval too, as a bar.
+    `heights` (docs/adr/3360) each point's height half-interval too, as a bar. With `labels` (docs/adr/3760) each
+    ellipse's semi-axes in millimetres beside it (and the half-interval with `heights`), a text `labelHeight`
+    millimetres high on paper at the project's plot scale (none: 2.5).
     Attributes:
         scale: Unit: scale.
         heights: docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the
             ellipse, with ticks at its ends.
+        label_height: The labels' height on paper (mm, over 0); none: [`ELLIPSE_LABEL_HEIGHT`]. Unit: paper-mm.
+        labels: docs/adr/3760: each ellipse labelled with its semi-axes.
     """
     layer: str
     scale: float
     heights: bool | Unset = UNSET
+    label_height: float | None | Unset = UNSET
+    labels: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -57459,6 +57470,10 @@ class NetworkEllipses(_Model):
         out["scale"] = float(self.scale)
         if self.heights is not UNSET:
             out["heights"] = self.heights
+        if self.label_height is not UNSET:
+            out["labelHeight"] = None if self.label_height is None else float(self.label_height)
+        if self.labels is not UNSET:
+            out["labels"] = self.labels
         return out
 
     @classmethod
@@ -57467,6 +57482,8 @@ class NetworkEllipses(_Model):
             layer=data["layer"],
             scale=float(data["scale"]),
             heights=data.get("heights", UNSET),
+            label_height=UNSET if "labelHeight" not in data else None if data["labelHeight"] is None else float(data["labelHeight"]),
+            labels=data.get("labels", UNSET),
         )
 
 

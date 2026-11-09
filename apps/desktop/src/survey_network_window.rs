@@ -150,6 +150,8 @@ pub struct State {
     pub ellipses: bool,
     pub magnify: f64,
     pub bars: bool,
+    /// Each ellipse's semi-axes written beside it (docs/adr/3760).
+    pub labels: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -169,6 +171,8 @@ pub enum Event {
     Magnify(f64),
     /// The height bars beside the ellipses (docs/adr/3360).
     Bars(bool),
+    /// The ellipses' labels (docs/adr/3760).
+    Labels(bool),
     Accept,
     Close,
 }
@@ -395,6 +399,8 @@ impl App {
                 }),
                 scale: self.survey_network.magnify,
                 heights: self.survey_network.bars,
+                labels: self.survey_network.labels,
+                label_height: None,
             }),
         };
         if let Some(out) = self.map_survey_edit(op) {
@@ -402,6 +408,11 @@ impl App {
                 (0, _) => String::new(),
                 (n, 0) => format!(", {n} hata elipsi {} kat büyütülerek çizildi", self.survey_network.magnify),
                 (n, b) => format!(", {n} hata elipsi ve {b} kot çubuğu {} kat büyütülerek çizildi", self.survey_network.magnify),
+            };
+            // Docs/adr/3760: and their labels.
+            let drawn = match out.labels {
+                0 => drawn,
+                l => format!("{drawn}; {l} etiket yazıldı"),
             };
             self.say(
                 Level::Success,
@@ -420,6 +431,7 @@ impl App {
             }
             Event::Ellipses(on) => self.survey_network.ellipses = on,
             Event::Bars(on) => self.survey_network.bars = on,
+            Event::Labels(on) => self.survey_network.labels = on,
             Event::Magnify(v) => {
                 if v > 0.0 {
                     self.survey_network.magnify = v;
@@ -545,7 +557,13 @@ impl App {
                         "Kot çubuğu",
                         s.ellipses.then(|| msg(Event::Bars(!s.bars)))
                     ),
-                    label::caption("kat büyütülmüş; Katmanlar'da seçili katmana, yoksa etkin katmana. 1000 kat: 1 cm, 10 m çizilir.")
+                    // Docs/adr/3760: the semi-axes in millimetres beside each ellipse.
+                    fields::check(
+                        if s.labels { Check::Checked } else { Check::Unchecked },
+                        "Etiket",
+                        s.ellipses.then(|| msg(Event::Labels(!s.labels)))
+                    ),
+                    label::caption("kat büyütülmüş; Katmanlar'da seçili katmana, yoksa etkin katmana. 1000 kat: 1\u{a0}cm, 10\u{a0}m çizilir.")
                 ]
                 .spacing(10)
                 .align_y(Center),

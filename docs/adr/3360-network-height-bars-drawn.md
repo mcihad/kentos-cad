@@ -59,6 +59,6 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-05, altıncı tur. Durum: taslak. ADR 296
 
 ## Sonra
 
-- Elipsin etiketi (yarı eksenler mm): yazı nesnesinin boyu ve yeri için ölçek kuralıyla.
+- ~~Elipsin etiketi (yarı eksenler mm): yazı nesnesinin boyu ve yeri için ölçek kuralıyla.~~ ADR 3760.
 - Robust kestirim; seyrek çözüm; ağırlıklı benzerlik (MAP-05'in kalanı).
 - Web (TODOS §0.2).

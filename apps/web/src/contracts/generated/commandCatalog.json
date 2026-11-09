@@ -62935,6 +62935,13 @@
               "null"
             ]
           },
+          "labels": {
+            "description": "The ellipses' labels a network wrote (docs/adr/3760).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "observations": {
             "format": "uint32",
             "minimum": 0,
@@ -63009,6 +63016,13 @@
               "string",
               "null"
             ]
+          },
+          "labels": {
+            "description": "The ellipses' labels a network wrote (docs/adr/3760).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "observations": {
             "format": "uint32",
@@ -155854,10 +155868,23 @@
     },
     "NetworkEllipses": {
       "additionalProperties": false,
-      "description": "The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence\nregion magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the\nmap's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With\n`heights` (docs/adr/3360) each point's height half-interval too, as a bar.",
+      "description": "The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence\nregion magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the\nmap's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With\n`heights` (docs/adr/3360) each point's height half-interval too, as a bar. With `labels` (docs/adr/3760) each\nellipse's semi-axes in millimetres beside it (and the half-interval with `heights`), a text `labelHeight`\nmillimetres high on paper at the project's plot scale (none: 2.5).",
       "properties": {
         "heights": {
           "description": "docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the\nellipse, with ticks at its ends.",
+          "type": "boolean"
+        },
+        "labelHeight": {
+          "description": "The labels' height on paper (mm, over 0); none: [`ELLIPSE_LABEL_HEIGHT`].",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "labels": {
+          "description": "docs/adr/3760: each ellipse labelled with its semi-axes.",
           "type": "boolean"
         },
         "layer": {

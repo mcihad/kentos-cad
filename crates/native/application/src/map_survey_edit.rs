@@ -666,6 +666,10 @@ fn network(
             if with.heights {
                 change.drawn.push(crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
             }
+            // Docs/adr/3760: and its label, recorded with it.
+            if with.labels {
+                change.drawn.push(crate::network_ellipses::label(&n.mark, &da, at, e, with, doc.settings().plot_scale));
+            }
             if let Some(p) = next.points.iter().find(|p| p.mark == n.mark) {
                 points.push(PointRevision { point: p.id.clone(), revision: p.result.revision });
             }
@@ -1509,6 +1513,7 @@ fn output(doc: &Document, c: &Change, uid: Option<String>, revision: String) -> 
         removed: c.removed,
         ellipses: c.drawn.iter().filter(|e| matches!(e, Entity::Ellipse(_))).count() as u32,
         bars: c.drawn.iter().filter(|e| matches!(e, Entity::Polyline(_))).count() as u32,
+        labels: c.drawn.iter().filter(|e| matches!(e, Entity::Text(_))).count() as u32,
         stale: stale_count(doc, &c.survey),
         records: c.records.clone(),
         revision,

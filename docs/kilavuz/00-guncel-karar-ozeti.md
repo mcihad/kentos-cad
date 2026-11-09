@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Hata elipslerinin etiketi (9 Kasım 2026; MAP-05, [ADR 3760](../../docs/adr/3760-network-ellipse-labels.md)).**
+  `map.survey.edit network`'ün `ellipses.labels`'ı her elipsin doğusuna yarı eksenleri (kot çubuğuyla kot yarı
+  aralığını da) mm olarak yazar; boy kâğıtta 2,5 mm × ölçek paydası / 1000; Ağ dengelemesi'nde Etiket. Harita.
 - **Detay eşleştirmenin sürüm derlemesinde ölçümü (9 Kasım 2026; MAP-04, [ADR 3740](../../docs/adr/3740-reconcile-measured-in-a-release-build.md)).**
   `map.features.reconcile`'ın planı sürümde 40 000 kümede 0,215 s, 100 000 kümede 0,567 s (debug 1,042 ve 2,676 s);
   aynı commit ve veri, Apple M5. Kod değişmedi. Harita.

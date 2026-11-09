@@ -1193,6 +1193,19 @@ def height_bar(mark, da, at, e, with_):
     return {"kind": "polyline", "layerId": with_["layer"], "attrs": attrs, "pts": [{"x": a, "y": b} for a, b in pts]}
 
 
+def ellipse_label(mark, da, at, e, with_, plot_scale):
+    """ADR 3760: an ellipse's label: its semi-axes in millimetres to a tenth (with the bars the half-interval too),
+    the label height on paper (2.5 mm when not given) at the plot scale, its middle left at the point's place plus the
+    magnified semi-major axis and the height."""
+    h = with_.get("labelHeight", 2.5) * plot_scale / 1000.0
+    text = f"a {e['major'] * 1000.0:.1f} · b {e['minor'] * 1000.0:.1f} mm"
+    if with_.get("heights"):
+        text += f" · h ±{e['up'] * 1000.0:.1f} mm"
+    return {"kind": "text", "layerId": with_["layer"], "attrs": {"İşaret": mark, "Dengeleme": da},
+            "p": {"x": at[0] + e["major"] * with_["scale"] + h, "y": at[1]}, "text": text, "height": h, "rotation": 0.0,
+            "align": "middleLeft"}
+
+
 def accept(m, inp, layer="gnss", ellipses=None):
     """map.survey.edit network: the archive after (da-N, the points), the new and moved objects, the records; with
     `ellipses` ({layer, scale}) each point's error ellipse and the use that records them (ADR 2960)."""
@@ -1277,6 +1290,16 @@ def accept(m, inp, layer="gnss", ellipses=None):
                 after.uids[bt] = f"$uidOf:{bt}"
                 uids.append(f"$uidOf:{bt}")
                 fields[str(bt)] = {k: bar[k] for k in ("layerId", "attrs", "pts")}
+            # ADR 3760: its label beside it, recorded with it.
+            if ellipses.get("labels"):
+                lt = max(after.entities) + 1
+                lab = ellipse_label(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses,
+                                    after.d["settings"]["plotScale"])
+                lab["id"] = lt
+                after.entities[lt] = lab
+                after.uids[lt] = f"$uidOf:{lt}"
+                uids.append(f"$uidOf:{lt}")
+                fields[str(lt)] = {k: lab[k] for k in ("layerId", "attrs", "p", "text", "height", "rotation", "align")}
             p = next(p for p in sv["points"] if p["mark"] == n["mark"])
             points.append({"point": p["id"], "revision": p["result"]["revision"]})
         kb = f"kb-{1 + max([int(u['id'][3:]) for u in sv['uses']] or [0])}"
@@ -1434,6 +1457,26 @@ def edit_cases():
                        write(with_known, after_h, {"op": "network", "ellipses": with_h},
                              {"id": da, "records": records, "ellipses": 3, "bars": 3}, "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after_h.entities), "fields": fields}), d=with_known))
+    # ADR 3760: with the labels, each ellipse's semi-axes (and the half-interval) beside it, recorded with them.
+    with_l = {"layer": "gnss", "scale": 1000.0, "heights": True, "labels": True}
+    after_l, _, da, records, fields = accept(with_known, {}, ellipses=with_l)
+    out.append(ms.case("Ağı kabul et, hata elipsleri, kot çubukları ve etiketleriyle: her elipsin yanında yarı eksenleri "
+                       "ve kot yarı aralığı mm olarak, kâğıtta 2,5 mm yüksekliğinde (1/1000'de 2,5 m)",
+                       write(with_known, after_l, {"op": "network", "ellipses": with_l},
+                             {"id": da, "records": records, "ellipses": 3, "bars": 3, "labels": 3},
+                             "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_l.entities), "fields": fields}), d=with_known))
+    with_l5 = {"layer": "gnss", "scale": 2000.0, "labels": True, "labelHeight": 5.0}
+    after_l5, _, da, records, fields = accept(with_known, {}, ellipses=with_l5)
+    out.append(ms.case("Ağı kabul et, hata elipsleri ve 5 mm etiketleriyle, 2000 kat: etiket yalnız yarı eksenleri",
+                       write(with_known, after_l5, {"op": "network", "ellipses": with_l5},
+                             {"id": da, "records": records, "ellipses": 3, "labels": 3}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_l5.entities), "fields": fields}, then_undo=False),
+                       d=with_known))
+    out.append(ms.case("Ağı kabul et, hata elipsleri: etiket yüksekliği 0", [refusal(
+        {"op": "network", "ellipses": {"layer": "gnss", "scale": 1000.0, "labels": True, "labelHeight": 0.0}},
+        "invalid_survey_value", "Elips etiketinin kâğıttaki yüksekliği 0'dan büyük olmalı (mm); 0 verildi.",
+        "operation.ellipses.labelHeight")], d=with_known))
     # The oblong network's ellipses have directions: the major axis turned by the convergence (ADR 2960).
     oblong = networked(baselines=[record(k + 1, vector(f, t, ERRS[(f, t)], sig=(0.0015, 0.004, 0.005), turn=30.0))
                                   for k, (f, t) in enumerate(PAIRS)])

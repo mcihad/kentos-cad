@@ -35,7 +35,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700 | Poligon'da trigonometrik kotla bacağın kendi yüksekliği; EPSG'nin çokgen kullanım alanları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
@@ -716,6 +716,14 @@ Kapsam: **Harita**. Dayanak: TBC'nin dengeleme resimleri yatay ve düşey hatay�
 `ellipses.heights` ile kabul her noktanın kot yarı aralığını elipsle aynı büyütmede, uçlarında çentikli düşey çubuk
 olarak çizer, elipslerle aynı dayanan kaydında; cevapta `bars`; Ağ dengelemesi'nde Kot çubuğu kutusu. Yeni bağımsız
 durum, MCP, masaüstü. Açık: elipsin etiketi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
+
+**9 Kasım 2026, yedinci tur — hata elipslerinin etiketi ([ADR 3760](../docs/adr/3760-network-ellipse-labels.md)).**
+Kapsam: **Harita**. Dayanak: TBC'de elipsler hatanın büyüklüğünü ve yönünü gösterir, sayılar raporda okunur; paftada
+okunan çizim yazıyı ister. Kanıtlanan: `ellipses.labels` ile kabul her elipsin doğusuna “a 3.0 · b 1.1 mm” (kot
+çubuğuyla “· h ±” de) yazar, kâğıtta `labelHeight` mm (verilmezse 2,5) × ölçek paydası / 1000 boyunda, elipslerle aynı
+dayanan kaydında; cevapta `labels`; yükseklik 0 reddedilir; Ağ dengelemesi'nde Etiket kutusu. 3 yeni bağımsız durum
+(121), MCP, masaüstü ve resimler. Açık: etiketin komşu elipsle çakışınca kaydırılması, robust kestirim, seyrek çözüm,
+ağırlıklı benzerlik.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

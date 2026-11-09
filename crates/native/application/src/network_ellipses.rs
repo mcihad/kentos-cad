@@ -5,12 +5,15 @@
 //! (`System::true_north`) between them. The ellipses are recorded as made from the points (a use, `kb-N`), so they go
 //! out of date when a point is made again. With `heights` (docs/adr/3360) each point's height half-interval is drawn
 //! too: a vertical bar through the point, ± the half-interval magnified as the ellipse, ticks a fifth of it each way at
-//! its ends, recorded with the ellipses.
+//! its ends, recorded with the ellipses. With `labels` (docs/adr/3760) each ellipse's semi-axes in millimetres are
+//! written beside it, its height on paper by the project's plot scale, recorded with them.
 
 use std::collections::BTreeMap;
 use std::f64::consts::TAU;
 
-use kentos_commands::{EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, PathEntity, Vec2};
+use kentos_commands::{
+    EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, PathEntity, TextAlign, TextEntity, Vec2,
+};
 use kentos_domain::Document;
 use kentos_geometry_core::jsmath::{cos, sin};
 
@@ -100,6 +103,48 @@ pub(crate) fn height_bar(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with:
     })
 }
 
+/// The label of `mark`'s ellipse (docs/adr/3760): “a 8.4 · b 3.1 mm” (its semi-axes, a tenth of a millimetre; with
+/// `heights` “· h ±12.0 mm” too), `with`'s label height on paper (mm) times the plot scale's denominator over 1000
+/// high, its middle left at the right of the ellipse: the point's place plus the magnified semi-major axis and the
+/// height (no turned ellipse reaches further east). Its attributes name the mark and the adjustment.
+pub(crate) fn label(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &NetworkEllipses, plot_scale: f64) -> Entity {
+    let h = with.label_height.unwrap_or(kentos_commands::ELLIPSE_LABEL_HEIGHT) * plot_scale / 1000.0;
+    let mut text = format!("a {:.1} · b {:.1} mm", e.major * 1000.0, e.minor * 1000.0);
+    if with.heights {
+        text.push_str(&format!(" · h ±{:.1} mm", e.up * 1000.0));
+    }
+    let mut attrs = BTreeMap::new();
+    attrs.insert("İşaret".to_owned(), mark.to_owned());
+    attrs.insert("Dengeleme".to_owned(), da.to_owned());
+    Entity::Text(TextEntity {
+        base: EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: with.layer.clone(),
+            color: None,
+            attrs,
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        },
+        p: Vec2 { x: at.x + e.major * with.scale + h, y: at.y },
+        text,
+        height: h,
+        rotation: 0.0,
+        align: Some(TextAlign::MiddleLeft),
+        width_factor: None,
+        mask: false,
+        label_of: None,
+        label_scale: None,
+        paragraph: Default::default(),
+        face: Default::default(),
+        path: None,
+        annotative: None,
+    })
+}
+
 /// The magnification and the layer, checked: 1 to 100 000, a layer of the drawing that is not locked.
 pub(crate) fn check(doc: &Document, with: &NetworkEllipses) -> Result<(), Stop> {
     let (lo, hi) = kentos_commands::ELLIPSE_SCALES;
@@ -108,6 +153,16 @@ pub(crate) fn check(doc: &Document, with: &NetworkEllipses) -> Result<(), Stop> 
             codes::INVALID_SURVEY_VALUE,
             format!("Elipslerin büyütmesi 1 ile 100 000 arasında olmalı; {} verildi.", with.scale),
             "operation.ellipses.scale",
+        ));
+    }
+    // docs/adr/3760: a label's height on paper, over 0.
+    if let Some(h) = with.label_height
+        && !(h.is_finite() && h > 0.0)
+    {
+        return Err(fail(
+            codes::INVALID_SURVEY_VALUE,
+            format!("Elips etiketinin kâğıttaki yüksekliği 0'dan büyük olmalı (mm); {h} verildi."),
+            "operation.ellipses.labelHeight",
         ));
     }
     if doc.layers().get(&with.layer).is_none() {
