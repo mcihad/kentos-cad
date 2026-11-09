@@ -9535,6 +9535,34 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180).
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_DRAPE.into(),
+            version: crate::CAD_ENTITIES_DRAPE_VERSION,
+            title: "Yüzeyden kot ver".into(),
+            summary: "Noktaların, çizgilerin, çoklu çizgilerin ve alanların her köşesine (her parça ve delik) projenin arazi yüzeyinin altındaki kotunu verir (Civil 3D'nin Elevations From Surface'ı gibi; ADR 4180); yüzeyin dışındaki köşe kendi kotunu korur. surface Harita ya da Yol projesinin yüzeyinin kimliği ya da adıdır. breaks ile düz bir kenarın yüzeyin üçgenlerinin kenarlarını kestiği her yere kotlu ara köşe eklenir (Insert Intermediate Grade Break Points gibi); yay bölünmez, çizgi iki ucunu tutar, ölçülü (M) ya da genişlikli çoklu çizgi bölünmez (unsplit). Kotlar yüzeye bağlı kalmaz. Cevap: her nesnenin kot verilen, yüzey dışında kalan ve eklenen köşe sayısı ve toplamlar. Tek geri alma adımı “Yüzeyden kot ver”. \
+                      Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_terrain, invalid_input (nesne yok, 10 000'den çok, biri iki kez), invalid_uid, entity_not_found, not_a_path, terrain_unbuildable, off_surface (yüzeyde köşe yok), layer_locked."
+                .into(),
+            aliases: vec!["yuzeydenkot".into(), "drape".into(), "elevationsfromsurface".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesDrape>(),
+            output: schema::<crate::EntitiesDraped>(),
+            plan: Some(schema::<crate::EntitiesDraped>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bordür çizgisi zemin yüzeyinden, ara kırık noktalarıyla".into(),
+                    input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"], "surface": "Zemin", "breaks": true }),
+                    output: None,
+                },
+            ],
+        },
         // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
         CommandDescriptor {
             id: crate::CAD_POINTCLOUDS_OVERLAP.into(),
@@ -16661,6 +16689,7 @@ mod tests {
                     crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselines>(e.input.clone()).map(|_| ()),
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
                     crate::CAD_ENTITIES_RAISE => serde_json::from_value::<crate::EntitiesRaise>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ENTITIES_DRAPE => serde_json::from_value::<crate::EntitiesDrape>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(e.input.clone()).map(|_| ()),
@@ -17638,6 +17667,7 @@ mod tests {
                         crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
                         crate::CAD_ENTITIES_RAISE => serde_json::from_value::<crate::EntitiesRaised>(output.clone()).map(|_| ()),
+                        crate::CAD_ENTITIES_DRAPE => serde_json::from_value::<crate::EntitiesDraped>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),

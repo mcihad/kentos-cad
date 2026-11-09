@@ -36,7 +36,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
@@ -863,6 +863,15 @@ referansın kotu artı eğim × yatay uzaklık (ya da artı kot farkı) verir, n
 aynı farkla kayar, kotsuz köşeler kotsuz kalır; tek geri alma adımı. 27 bağımsız durum, Python, MCP (yıkıcı listesinde,
 Eğimle kot ver de), masaüstü (Eğimle kot ver › Hedef Referanstan; Hedef ilk satırda; iki tıkla referans ve köşe; referans
 sonraki nesne için kalır) ve resimler. Açık: yüzeyden kot alma, çok parçalı nesne, dönen ve yaylı referans bağı.
+
+**9 Kasım 2026, sekizinci tur — Yüzeyden kot ver ([ADR 4180](../docs/adr/4180-elevations-from-surface.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Elevations From Surface'ı (her köşe yüzeyin kotunu alır; Insert
+Intermediate Grade Break Points TIN çizgilerini kestiği yerlere kot noktası ekler; kotlar dinamik değil). Kanıtlanan: yeni
+`cad.entities.drape` noktanın, çizginin, çoklu çizginin ve alanın her köşesine (parçalar, delikler) yüzeyin kotunu
+verir, dışındaki kendi kotunu korur; `breaks` ile düz kenarlar TIN kenarlarında bölünür (yay, çizgi, ölçülü çizgi
+bölünmez); yeni `off_surface`; tek geri alma adımı. Delaunay'ı elle kuran 21 bağımsız durum, Python, MCP (yıkıcı),
+masaüstünde Eğimle kot ver › Hedef Yüzeyden ve resimler. Açık: yüzeye göreli kot, çok parçalı nesne, dönen ve yaylı
+referans bağı.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

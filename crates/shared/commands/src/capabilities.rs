@@ -2478,6 +2478,26 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180).
+    Entry {
+        id: "cad.entities.drape",
+        refusals: &[
+            REVISION,
+            &[
+                "not_a_road_project",
+                "unknown_terrain",
+                "invalid_input",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_path",
+                "terrain_unbuildable",
+                "off_surface",
+                "layer_locked",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
     Entry {
         id: "cad.pointclouds.overlap",

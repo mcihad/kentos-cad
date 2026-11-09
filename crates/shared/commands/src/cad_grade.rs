@@ -219,3 +219,79 @@ pub struct EntitiesRaised {
     pub unset: u32,
     pub revision: String,
 }
+
+/// Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180), as Civil 3D's Elevations From Surface: each vertex of the
+/// objects takes the project's terrain surface's height under it; one off the surface keeps its own. With `breaks`,
+/// as its Insert Intermediate Grade Break Points, a vertex is put wherever a straight edge crosses an edge of the
+/// surface's triangles. The heights are not kept tied to the surface. One undo step “Yüzeyden kot ver”.
+pub const CAD_ENTITIES_DRAPE: &str = "cad.entities.drape";
+pub const CAD_ENTITIES_DRAPE_VERSION: u32 = 1;
+
+/// The most objects one `cad.entities.drape` takes.
+pub const MAX_DRAPED: usize = 10_000;
+
+/// Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),
+/// the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
+/// only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
+/// keeps its two ends.
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
+/// `invalid_input` (no object, more than 10 000, one given twice), `invalid_uid`, `entity_not_found`, `not_a_path`
+/// (not a point, a line, a polyline or an area), `terrain_unbuildable`, `off_surface` (no vertex of them on the
+/// surface), `layer_locked`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesDrape {
+    pub uids: Vec<String>,
+    pub surface: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub breaks: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// One object as `cad.entities.drape` leaves it: its vertices given the surface's height, those off the surface (kept
+/// as they were), the break points put in, and whether breaks were asked of an object that takes none (a point, a
+/// line, a polyline with measures or widths).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DrapedObject {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub set: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub inserted: u32,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub unsplit: bool,
+}
+
+/// Output of `cad.entities.drape` v1 (and its plan): the surface's id, each object as given, the totals and the
+/// drawing's revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesDraped {
+    pub surface: String,
+    pub objects: Vec<DrapedObject>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub set: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub outside: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub inserted: u32,
+    pub revision: String,
+}

@@ -236,9 +236,10 @@
       "level": "semantic",
       "via": [
         "cad.entities.grade",
-        "cad.entities.raise"
+        "cad.entities.raise",
+        "cad.entities.drape"
       ],
-      "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290). Hedef Referanstan'da cad.entities.raise ile (ADR 3780)."
+      "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290). Hedef Referanstan'da cad.entities.raise ile (ADR 3780), Yüzeyden'de cad.entities.drape ile (ADR 4180)."
     },
     "survey.baselines": {
       "level": "query",

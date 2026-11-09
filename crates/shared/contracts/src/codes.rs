@@ -704,6 +704,8 @@ codes! {
     /// No surface is made of what its sources give (too few points, two heights at one place, crossing breaklines,
     /// a boundary outside the points).
     TERRAIN_UNBUILDABLE = "terrain_unbuildable", Failed, false, "Kaynaklardan yüzey kurulamıyor; ileti nedenini ve yerini söyler.";
+    /// Yüzeyden kot ver (docs/adr/4180): no vertex of the objects on the surface.
+    OFF_SURFACE = "off_surface", Failed, false, "Nesnelerin hiçbir köşesi yüzeyin üstünde değil; yüzeyin içindeki nesneleri seçin.";
     /// A query's places: not finite, a line of one place, too many.
     INVALID_PLACES = "invalid_places", Failed, false, "Yerler sonlu sayılar olmalı; hat en az iki yerden oluşur, en çok 100 000 yer.";
     /// Contour lines of an interval not above zero, a base not finite, or too many levels (plan/road.md Y2.5).

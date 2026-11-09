@@ -1,0 +1,2912 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.drape",
+ "commandVersion": 1,
+ "title": "Yüzeyden kot ver",
+ "note": "ADR 4180. Bağımsız başvuru scripts/fixtures/drape_cases.py: dört noktanın Delaunay üçgenleri boş çember sınamasıyla, düzlem kotları ve kenar kesişimleri kesirlerle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Yüzeyden kot",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map",
+   "road": {
+    "surfaces": [
+     {
+      "id": "t-1",
+      "name": "Zemin",
+      "points": {
+       "layers": [
+        "zemin"
+       ]
+      }
+     }
+    ]
+   }
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "zemin",
+    "name": "Zemin noktaları",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "seyrek",
+    "name": "Seyrek",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "layerId": "zemin",
+    "attrs": {
+     "Ad": "A"
+    },
+    "p": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "z": 100.0,
+    "id": 1
+   },
+   {
+    "kind": "point",
+    "layerId": "zemin",
+    "attrs": {
+     "Ad": "B"
+    },
+    "p": {
+     "x": 500100.0,
+     "y": 4400000.0
+    },
+    "z": 104.0,
+    "id": 2
+   },
+   {
+    "kind": "point",
+    "layerId": "zemin",
+    "attrs": {
+     "Ad": "C"
+    },
+    "p": {
+     "x": 500100.0,
+     "y": 4400080.0
+    },
+    "z": 112.0,
+    "id": 3
+   },
+   {
+    "kind": "point",
+    "layerId": "zemin",
+    "attrs": {
+     "Ad": "D"
+    },
+    "p": {
+     "x": 500000.0,
+     "y": 4400100.0
+    },
+    "z": 106.0,
+    "id": 4
+   },
+   {
+    "kind": "point",
+    "layerId": "cizim",
+    "attrs": {
+     "Ad": "R1"
+    },
+    "p": {
+     "x": 500060.0,
+     "y": 4400020.0
+    },
+    "id": 5
+   },
+   {
+    "kind": "point",
+    "layerId": "cizim",
+    "attrs": {
+     "Ad": "R2"
+    },
+    "p": {
+     "x": 500150.0,
+     "y": 4400050.0
+    },
+    "z": 99.0,
+    "id": 6
+   },
+   {
+    "kind": "line",
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 500020.0,
+     "y": 4400030.0
+    },
+    "b": {
+     "x": 500130.0,
+     "y": 4400040.0
+    },
+    "zb": 98.5,
+    "id": 7
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500010.0,
+      "y": 4400050.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500090.0,
+      "y": 4400010.0
+     }
+    ],
+    "id": 8
+   },
+   {
+    "kind": "polygon",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500030.0,
+      "y": 4400010.0
+     },
+     {
+      "x": 500070.0,
+      "y": 4400010.0
+     },
+     {
+      "x": 500070.0,
+      "y": 4400060.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400060.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 500040.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500052.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500052.0,
+        "y": 4400038.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400038.0
+       }
+      ]
+     }
+    ],
+    "id": 9
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500010.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400040.0
+     }
+    ],
+    "bulges": [
+     0.2,
+     0.0
+    ],
+    "id": 10
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4400070.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400050.0
+     }
+    ],
+    "ms": [
+     0.0,
+     63.2456
+    ],
+    "id": 11
+   },
+   {
+    "kind": "text",
+    "layerId": "cizim",
+    "attrs": {},
+    "text": "Kot",
+    "p": {
+     "x": 500050.0,
+     "y": 4400050.0
+    },
+    "height": 2.0,
+    "rotation": 0.0,
+    "id": 12
+   },
+   {
+    "kind": "polyline",
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500010.0,
+      "y": 4400010.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400010.0
+     }
+    ],
+    "id": 13
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4400200.0
+     },
+     {
+      "x": 500250.0,
+      "y": 4400220.0
+     }
+    ],
+    "id": 14
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500015.0,
+      "y": 4400020.0
+     },
+     {
+      "x": 500045.0,
+      "y": 4400020.0
+     }
+    ],
+    "zs": [
+     90.0,
+     91.0
+    ],
+    "id": 15
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4400010.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400010.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400070.0
+     }
+    ],
+    "closed": true,
+    "id": 16
+   },
+   {
+    "kind": "polyline",
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500010.0,
+      "y": 4400090.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4400060.0
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 500060.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500070.0,
+        "y": 4400070.0
+       }
+      ]
+     }
+    ],
+    "id": 17
+   }
+  ],
+  "uids": [
+   "0192f5c0-4180-7000-8000-000000000001",
+   "0192f5c0-4180-7000-8000-000000000002",
+   "0192f5c0-4180-7000-8000-000000000003",
+   "0192f5c0-4180-7000-8000-000000000004",
+   "0192f5c0-4180-7000-8000-000000000005",
+   "0192f5c0-4180-7000-8000-000000000006",
+   "0192f5c0-4180-7000-8000-000000000007",
+   "0192f5c0-4180-7000-8000-000000000008",
+   "0192f5c0-4180-7000-8000-000000000009",
+   "0192f5c0-4180-7000-8000-00000000000a",
+   "0192f5c0-4180-7000-8000-00000000000b",
+   "0192f5c0-4180-7000-8000-00000000000c",
+   "0192f5c0-4180-7000-8000-00000000000d",
+   "0192f5c0-4180-7000-8000-00000000000e",
+   "0192f5c0-4180-7000-8000-00000000000f",
+   "0192f5c0-4180-7000-8000-000000000010",
+   "0192f5c0-4180-7000-8000-000000000011"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Her köşe yüzeyin kotunu alır; yüzeyin dışındaki nokta ve çizgi ucu kendi kotunu korur; yay ve ölçülü çizgi de; geri alma",
+   "note": "Köşegen AC: ABC'de z = 100 + 0.04x + 0.1y, ACD'de z = 100 + 0.072x + 0.06y (yerel koordinat).",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000006",
+       "0192f5c0-4180-7000-8000-000000000007",
+       "0192f5c0-4180-7000-8000-000000000008",
+       "0192f5c0-4180-7000-8000-000000000009",
+       "0192f5c0-4180-7000-8000-00000000000a",
+       "0192f5c0-4180-7000-8000-00000000000b"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000005",
+         "set": 1,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000006",
+         "set": 0,
+         "outside": 1,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000007",
+         "set": 1,
+         "outside": 1,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 3,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 8,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000a",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000b",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 17,
+       "outside": 2,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "5": {
+        "z": 104.4
+       },
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "za": 103.24,
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.72,
+         105.4,
+         104.6
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "zs": [
+         102.2,
+         103.8,
+         108.64,
+         105.76
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ],
+          "zs": [
+           104.6,
+           105.08,
+           105.88,
+           105.16
+          ]
+         }
+        ]
+       },
+       "10": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         }
+        ],
+        "zs": [
+         103.12,
+         107.2
+        ],
+        "bulges": [
+         0.2,
+         0.0
+        ]
+       },
+       "11": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400070.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400050.0
+         }
+        ],
+        "zs": [
+         105.64,
+         108.2
+        ],
+        "ms": [
+         0.0,
+         63.2456
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "5": {},
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ]
+         }
+        ]
+       },
+       "10": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.2,
+         0.0
+        ]
+       },
+       "11": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400070.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400050.0
+         }
+        ],
+        "ms": [
+         0.0,
+         63.2456
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ara kırık noktalarıyla: köşegeni kesen düz kenarlara kotlu köşe eklenir (çoklu çizgiye 1, alanın dış halkasına 2, deliğine 2); yay bölünmez; nokta, çizgi ve ölçülü çizgi bölünmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000006",
+       "0192f5c0-4180-7000-8000-000000000007",
+       "0192f5c0-4180-7000-8000-000000000008",
+       "0192f5c0-4180-7000-8000-000000000009",
+       "0192f5c0-4180-7000-8000-00000000000a",
+       "0192f5c0-4180-7000-8000-00000000000b"
+      ],
+      "surface": "t-1",
+      "breaks": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000005",
+         "set": 1,
+         "outside": 0,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000006",
+         "set": 0,
+         "outside": 1,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000007",
+         "set": 1,
+         "outside": 1,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 3,
+         "outside": 0,
+         "inserted": 1
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 8,
+         "outside": 0,
+         "inserted": 4
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000a",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000b",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0,
+         "unsplit": true
+        }
+       ],
+       "set": 17,
+       "outside": 2,
+       "inserted": 5,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "5": {
+        "z": 104.4
+       },
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "za": 103.24,
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400036.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.72,
+         105.4,
+         105.4,
+         104.6
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400056.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400024.0
+         }
+        ],
+        "zs": [
+         102.2,
+         103.8,
+         108.4,
+         108.64,
+         105.76,
+         103.6
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500047.5,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400032.0
+           }
+          ],
+          "zs": [
+           104.6,
+           105.08,
+           105.88,
+           105.7,
+           105.16,
+           104.8
+          ]
+         }
+        ]
+       },
+       "10": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         }
+        ],
+        "zs": [
+         103.12,
+         107.2
+        ],
+        "bulges": [
+         0.2,
+         0.0
+        ]
+       },
+       "11": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400070.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400050.0
+         }
+        ],
+        "zs": [
+         105.64,
+         108.2
+        ],
+        "ms": [
+         0.0,
+         63.2456
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "5": {},
+       "6": {
+        "z": 99.0
+       },
+       "7": {
+        "zb": 98.5
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       },
+       "9": {
+        "pts": [
+         {
+          "x": 500030.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400060.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400060.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500040.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500052.0,
+            "y": 4400038.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400038.0
+           }
+          ]
+         }
+        ]
+       },
+       "10": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.2,
+         0.0
+        ]
+       },
+       "11": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400070.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400050.0
+         }
+        ],
+        "ms": [
+         0.0,
+         63.2456
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzey adıyla (büyük küçük harf ayrımı yok)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "zemin"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000005",
+         "set": 1,
+         "outside": 0,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 3,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 4,
+       "outside": 0,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "5": {
+        "z": 104.4
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.72,
+         105.4,
+         104.6
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "5": {},
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kotlu çoklu çizgi: eski kotları yüzeyinkiyle değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-00000000000f"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000f",
+         "set": 2,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 2,
+       "outside": 0,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "15": {
+        "pts": [
+         {
+          "x": 500015.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         }
+        ],
+        "zs": [
+         102.28,
+         103.8
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "15": {
+        "pts": [
+         {
+          "x": 500015.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500045.0,
+          "y": 4400020.0
+         }
+        ],
+        "zs": [
+         90.0,
+         91.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi, ara kırık noktalarıyla: kapanış kenarına da köşe eklenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000010"
+      ],
+      "surface": "t-1",
+      "breaks": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000010",
+         "set": 3,
+         "outside": 0,
+         "inserted": 2
+        }
+       ],
+       "set": 3,
+       "outside": 0,
+       "inserted": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "16": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400064.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400070.0
+         },
+         {
+          "x": 500050.0,
+          "y": 4400040.0
+         }
+        ],
+        "zs": [
+         101.8,
+         104.2,
+         109.6,
+         109.96,
+         106.0
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "16": {
+        "pts": [
+         {
+          "x": 500020.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400070.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki parçalı çoklu çizgi, ara kırık noktalarıyla: ikinci parça da bölünür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000011"
+      ],
+      "surface": "t-1",
+      "breaks": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000011",
+         "set": 4,
+         "outside": 0,
+         "inserted": 1
+        }
+       ],
+       "set": 4,
+       "outside": 0,
+       "inserted": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "17": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400090.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400060.0
+         }
+        ],
+        "zs": [
+         106.12,
+         106.48
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500060.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500066.6666666667,
+            "y": 4400053.333333333
+           },
+           {
+            "x": 500070.0,
+            "y": 4400070.0
+           }
+          ],
+          "zs": [
+           104.4,
+           108.0,
+           109.24
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "17": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400090.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400060.0
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500060.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500070.0,
+            "y": 4400070.0
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzeyin dışındakiyle birlikte: yüzeydeki yazılır, dışındaki olduğu gibi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000006",
+       "0192f5c0-4180-7000-8000-00000000000e",
+       "0192f5c0-4180-7000-8000-000000000008"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000006",
+         "set": 0,
+         "outside": 1,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-00000000000e",
+         "set": 0,
+         "outside": 2,
+         "inserted": 0
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000008",
+         "set": 3,
+         "outside": 0,
+         "inserted": 0
+        }
+       ],
+       "set": 3,
+       "outside": 3,
+       "inserted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "6": {
+        "z": 99.0
+       },
+       "14": {
+        "pts": [
+         {
+          "x": 500200.0,
+          "y": 4400200.0
+         },
+         {
+          "x": 500250.0,
+          "y": 4400220.0
+         }
+        ]
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ],
+        "zs": [
+         103.72,
+         105.4,
+         104.6
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yüzeyden kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "6": {
+        "z": 99.0
+       },
+       "14": {
+        "pts": [
+         {
+          "x": 500200.0,
+          "y": 4400200.0
+         },
+         {
+          "x": 500250.0,
+          "y": 4400220.0
+         }
+        ]
+       },
+       "8": {
+        "pts": [
+         {
+          "x": 500010.0,
+          "y": 4400050.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500090.0,
+          "y": 4400010.0
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000009"
+      ],
+      "surface": "t-1",
+      "breaks": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "surface": "t-1",
+       "objects": [
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000005",
+         "set": 1,
+         "outside": 0,
+         "inserted": 0,
+         "unsplit": true
+        },
+        {
+         "uid": "0192f5c0-4180-7000-8000-000000000009",
+         "set": 8,
+         "outside": 0,
+         "inserted": 4
+        }
+       ],
+       "set": 9,
+       "outside": 0,
+       "inserted": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1",
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Harita ya da Yol projesi değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yüzeyden kot",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "architecture"
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "seyrek",
+      "name": "Seyrek",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "A"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 100.0,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "B"
+      },
+      "p": {
+       "x": 500100.0,
+       "y": 4400000.0
+      },
+      "z": 104.0,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "C"
+      },
+      "p": {
+       "x": 500100.0,
+       "y": 4400080.0
+      },
+      "z": 112.0,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "D"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400100.0
+      },
+      "z": 106.0,
+      "id": 4
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "attrs": {
+       "Ad": "R1"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400020.0
+      },
+      "id": 5
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "attrs": {
+       "Ad": "R2"
+      },
+      "p": {
+       "x": 500150.0,
+       "y": 4400050.0
+      },
+      "z": 99.0,
+      "id": 6
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 500020.0,
+       "y": 4400030.0
+      },
+      "b": {
+       "x": 500130.0,
+       "y": 4400040.0
+      },
+      "zb": 98.5,
+      "id": 7
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500030.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500070.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500070.0,
+        "y": 4400060.0
+       },
+       {
+        "x": 500030.0,
+        "y": 4400060.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500040.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500052.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500052.0,
+          "y": 4400038.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400038.0
+         }
+        ]
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400040.0
+       }
+      ],
+      "bulges": [
+       0.2,
+       0.0
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400070.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400050.0
+       }
+      ],
+      "ms": [
+       0.0,
+       63.2456
+      ],
+      "id": 11
+     },
+     {
+      "kind": "text",
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Kot",
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0,
+      "id": 12
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kilitli",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 13
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400220.0
+       }
+      ],
+      "id": 14
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500045.0,
+        "y": 4400020.0
+       }
+      ],
+      "zs": [
+       90.0,
+       91.0
+      ],
+      "id": 15
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400070.0
+       }
+      ],
+      "closed": true,
+      "id": 16
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400090.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400060.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 500060.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400070.0
+         }
+        ]
+       }
+      ],
+      "id": 17
+     }
+    ],
+    "uids": [
+     "0192f5c0-4180-7000-8000-000000000001",
+     "0192f5c0-4180-7000-8000-000000000002",
+     "0192f5c0-4180-7000-8000-000000000003",
+     "0192f5c0-4180-7000-8000-000000000004",
+     "0192f5c0-4180-7000-8000-000000000005",
+     "0192f5c0-4180-7000-8000-000000000006",
+     "0192f5c0-4180-7000-8000-000000000007",
+     "0192f5c0-4180-7000-8000-000000000008",
+     "0192f5c0-4180-7000-8000-000000000009",
+     "0192f5c0-4180-7000-8000-00000000000a",
+     "0192f5c0-4180-7000-8000-00000000000b",
+     "0192f5c0-4180-7000-8000-00000000000c",
+     "0192f5c0-4180-7000-8000-00000000000d",
+     "0192f5c0-4180-7000-8000-00000000000e",
+     "0192f5c0-4180-7000-8000-00000000000f",
+     "0192f5c0-4180-7000-8000-000000000010",
+     "0192f5c0-4180-7000-8000-000000000011"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_road_project",
+       "message": "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden biri değil."
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Projede olmayan yüzey",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_terrain",
+       "message": "“yok” kimlikli ya da adlı yüzey projede yok.",
+       "path": "surface"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesne yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "1 ile 10000 arasında nesne verin; 0 verildi.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir nesne iki kez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f5c0-4180-7000-8000-000000000005” nesnesi iki kez verildi.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "x"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000063"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-4180-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazının köşesi yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-00000000000c"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_path",
+       "message": "“0192f5c0-4180-7000-8000-00000000000c” nokta, çizgi, çoklu çizgi ya da alan değil: köşesi yok, yüzeyden kot alamaz.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tek noktalı yüzey kurulamaz",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Yüzeyden kot",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "road": {
+      "surfaces": [
+       {
+        "id": "t-1",
+        "name": "Zemin",
+        "points": {
+         "layers": [
+          "zemin"
+         ]
+        }
+       },
+       {
+        "id": "t-2",
+        "name": "Seyrek",
+        "points": {
+         "layers": [
+          "seyrek"
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "zemin",
+      "name": "Zemin noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "seyrek",
+      "name": "Seyrek",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "A"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 100.0,
+      "id": 1
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "B"
+      },
+      "p": {
+       "x": 500100.0,
+       "y": 4400000.0
+      },
+      "z": 104.0,
+      "id": 2
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "C"
+      },
+      "p": {
+       "x": 500100.0,
+       "y": 4400080.0
+      },
+      "z": 112.0,
+      "id": 3
+     },
+     {
+      "kind": "point",
+      "layerId": "zemin",
+      "attrs": {
+       "Ad": "D"
+      },
+      "p": {
+       "x": 500000.0,
+       "y": 4400100.0
+      },
+      "z": 106.0,
+      "id": 4
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "attrs": {
+       "Ad": "R1"
+      },
+      "p": {
+       "x": 500060.0,
+       "y": 4400020.0
+      },
+      "id": 5
+     },
+     {
+      "kind": "point",
+      "layerId": "cizim",
+      "attrs": {
+       "Ad": "R2"
+      },
+      "p": {
+       "x": 500150.0,
+       "y": 4400050.0
+      },
+      "z": 99.0,
+      "id": 6
+     },
+     {
+      "kind": "line",
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 500020.0,
+       "y": 4400030.0
+      },
+      "b": {
+       "x": 500130.0,
+       "y": 4400040.0
+      },
+      "zb": 98.5,
+      "id": 7
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500060.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 8
+     },
+     {
+      "kind": "polygon",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500030.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500070.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500070.0,
+        "y": 4400060.0
+       },
+       {
+        "x": 500030.0,
+        "y": 4400060.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500040.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500052.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500052.0,
+          "y": 4400038.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400038.0
+         }
+        ]
+       }
+      ],
+      "id": 9
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400040.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400040.0
+       }
+      ],
+      "bulges": [
+       0.2,
+       0.0
+      ],
+      "id": 10
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400070.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400050.0
+       }
+      ],
+      "ms": [
+       0.0,
+       63.2456
+      ],
+      "id": 11
+     },
+     {
+      "kind": "text",
+      "layerId": "cizim",
+      "attrs": {},
+      "text": "Kot",
+      "p": {
+       "x": 500050.0,
+       "y": 4400050.0
+      },
+      "height": 2.0,
+      "rotation": 0.0,
+      "id": 12
+     },
+     {
+      "kind": "polyline",
+      "layerId": "kilitli",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       }
+      ],
+      "id": 13
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500200.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400220.0
+       }
+      ],
+      "id": 14
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500015.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500045.0,
+        "y": 4400020.0
+       }
+      ],
+      "zs": [
+       90.0,
+       91.0
+      ],
+      "id": 15
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500020.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400070.0
+       }
+      ],
+      "closed": true,
+      "id": 16
+     },
+     {
+      "kind": "polyline",
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 500010.0,
+        "y": 4400090.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400060.0
+       }
+      ],
+      "parts": [
+       {
+        "pts": [
+         {
+          "x": 500060.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500070.0,
+          "y": 4400070.0
+         }
+        ]
+       }
+      ],
+      "id": 17
+     },
+     {
+      "kind": "point",
+      "id": 18,
+      "layerId": "seyrek",
+      "attrs": {},
+      "p": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "z": 1.0
+     }
+    ],
+    "uids": [
+     "0192f5c0-4180-7000-8000-000000000001",
+     "0192f5c0-4180-7000-8000-000000000002",
+     "0192f5c0-4180-7000-8000-000000000003",
+     "0192f5c0-4180-7000-8000-000000000004",
+     "0192f5c0-4180-7000-8000-000000000005",
+     "0192f5c0-4180-7000-8000-000000000006",
+     "0192f5c0-4180-7000-8000-000000000007",
+     "0192f5c0-4180-7000-8000-000000000008",
+     "0192f5c0-4180-7000-8000-000000000009",
+     "0192f5c0-4180-7000-8000-00000000000a",
+     "0192f5c0-4180-7000-8000-00000000000b",
+     "0192f5c0-4180-7000-8000-00000000000c",
+     "0192f5c0-4180-7000-8000-00000000000d",
+     "0192f5c0-4180-7000-8000-00000000000e",
+     "0192f5c0-4180-7000-8000-00000000000f",
+     "0192f5c0-4180-7000-8000-000000000010",
+     "0192f5c0-4180-7000-8000-000000000011",
+     "0192f5c0-4180-7000-8000-000000000012"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005"
+      ],
+      "surface": "t-2"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "terrain_unbuildable",
+       "message": "$any"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüzeyin dışında: hiçbir köşe yüzeyde değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-00000000000e"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "off_surface",
+       "message": "Nesnelerin hiçbir köşesi “Zemin” yüzeyinin üstünde değil; yüzeyin içindeki nesneleri seçin.",
+       "path": "uids"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "0192f5c0-4180-7000-8000-000000000005",
+       "0192f5c0-4180-7000-8000-00000000000d"
+      ],
+      "surface": "t-1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

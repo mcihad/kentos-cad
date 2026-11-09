@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Yüzeyden kot ver (9 Kasım 2026; MAP-06, [ADR 4180](../../docs/adr/4180-elevations-from-surface.md)).**
+  Yeni `cad.entities.drape`: her köşe projenin arazi yüzeyinin kotunu alır, dışındaki korur; `breaks` ile TIN
+  kenarlarında ara kırık noktaları; yeni `off_surface`. Eğimle kot ver › Hedef Yüzeyden. CAD (Harita + Yol).
 - **Hata elipsi etiketinin boş yere konması (9 Kasım 2026; MAP-05, [ADR 4160](../../docs/adr/4160-network-ellipse-label-places.md)).**
   Etiket önce doğuda; elips, çubuk ya da önceki etikete düşerse QGIS'in kartografik sırasıyla ilk boş yerde, yoksa
   doğuda çakışıyor; `labelsMoved`, `labelsCrowded`. Harita.

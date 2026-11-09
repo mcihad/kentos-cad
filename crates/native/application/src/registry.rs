@@ -56,6 +56,7 @@ use crate::crs_factors;
 use crate::map_features;
 use crate::survey_baselines;
 use crate::entities_grade;
+use crate::entities_drape;
 use crate::entities_raise;
 use crate::topology_clean;
 use crate::parcels_boundaries;
@@ -565,6 +566,9 @@ macro_rules! by_command {
             }
             kentos_commands::CAD_ENTITIES_RAISE => {
                 $then!(entities_raise, kentos_commands::EntitiesRaise)
+            }
+            kentos_commands::CAD_ENTITIES_DRAPE => {
+                $then!(entities_drape, kentos_commands::EntitiesDrape)
             }
             kentos_commands::CAD_TOPOLOGY_CLEAN => {
                 $then!(topology_clean, kentos_commands::TopologyClean)

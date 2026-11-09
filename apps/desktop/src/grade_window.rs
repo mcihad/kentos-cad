@@ -11,7 +11,8 @@
 //! the preview says where the point falls (a new vertex between two, or an existing one) and rings it on the drawing.
 //!
 //! docs/adr/3780: Hedef Referanstan raises or lowers the object whole from a reference point, by `cad.entities.raise`
-//! (grade_reference.rs); Hedef is the form's first row.
+//! (grade_reference.rs); Hedef is the form's first row. docs/adr/4180: Hedef Yüzeyden gives the vertices the project's
+//! terrain surface's heights, by `cad.entities.drape` (grade_surface.rs).
 
 use iced::widget::Column;
 use iced::{Element, Task};
@@ -40,6 +41,7 @@ pub enum Target {
     End,
     Peak,
     Reference,
+    Surface,
 }
 
 impl std::fmt::Display for Target {
@@ -49,6 +51,7 @@ impl std::fmt::Display for Target {
             Target::End => "Bitiş kotu",
             Target::Peak => "Yüksek/alçak nokta",
             Target::Reference => "Referanstan",
+            Target::Surface => "Yüzeyden",
         })
     }
 }
@@ -110,6 +113,10 @@ pub struct State {
     pub by: By,
     pub difference: f64,
     pub raised: Option<Result<EntitiesRaised, String>>,
+    /// Yüzeyden (docs/adr/4180): the surface's id, whether break points go in, the command's plan.
+    pub surface: String,
+    pub breaks: bool,
+    pub draped: Option<Result<kentos_commands::EntitiesDraped, String>>,
 }
 
 #[derive(Clone, Debug)]
@@ -129,6 +136,9 @@ pub enum Event {
     Height(f64),
     By(By),
     Difference(f64),
+    /// Yüzeyden's surface and break points.
+    Surface(String),
+    Breaks(bool),
     /// Sahneden seç: the range by two clicks, its start then its end; for Referanstan the reference, then the vertex.
     Pick,
     Apply,
@@ -158,6 +168,10 @@ impl App {
     fn grade_plan(&mut self) {
         if self.grade.target == Target::Reference {
             self.raise_plan();
+            return;
+        }
+        if self.grade.target == Target::Surface {
+            self.drape_plan();
             return;
         }
         let input = self.grade_input();
@@ -217,6 +231,9 @@ impl App {
             by: kept.as_ref().map_or(By::Grade, |k| k.by),
             difference: kept.as_ref().map_or(0.0, |k| k.difference),
             raised: None,
+            surface: self.grade_surfaces().first().map(|(id, _)| id.clone()).unwrap_or_default(),
+            breaks: false,
+            draped: None,
         };
         self.grade_plan();
         self.dialog = Some(Dialog::Grade);
@@ -239,6 +256,8 @@ impl App {
             Event::Height(v) => (self.grade.height, self.grade.referenced) = (v, true),
             Event::By(b) => self.grade.by = b,
             Event::Difference(v) => self.grade.difference = v,
+            Event::Surface(id) => self.grade.surface = id,
+            Event::Breaks(on) => self.grade.breaks = on,
             Event::Pick => {
                 let first = if self.grade.target == Target::Reference { Pick::Reference } else { Pick::Start };
                 self.start_grade_pick(first);
@@ -246,6 +265,10 @@ impl App {
             }
             Event::Apply if self.grade.target == Target::Reference => {
                 self.raise_apply();
+                return Task::none();
+            }
+            Event::Apply if self.grade.target == Target::Surface => {
+                self.drape_apply();
                 return Task::none();
             }
             Event::Apply => {
@@ -315,6 +338,10 @@ impl App {
         let open = self.dialog == Some(Dialog::Grade) || self.grade.picking.is_some();
         if open && self.grade.target == Target::Reference {
             return self.reference_marks();
+        }
+        // Yüzeyden takes the whole object: no range to mark.
+        if self.grade.target == Target::Surface {
+            return (Vec::new(), Vec::new());
         }
         let Some(doc) = self.document.as_ref().filter(|_| open) else { return (Vec::new(), Vec::new()) };
         let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
@@ -429,10 +456,14 @@ impl App {
             pts.get(i).map_or(String::new(), |v| format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y)))
         };
         // Hedef first: what is done decides the rows under it (docs/adr/3780).
-        let targets = [Target::Grade, Target::End, Target::Peak, Target::Reference];
+        let targets = [Target::Grade, Target::End, Target::Peak, Target::Reference, Target::Surface];
         let form = Form::new().label_width(130.0).field("Hedef", Segmented::new(targets, s.target, |t| msg(Event::Target(t))));
         if s.target == Target::Reference {
             let (form, lines, ready) = self.reference_form(form, BOX);
+            return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
+        }
+        if s.target == Target::Surface {
+            let (form, lines, ready) = self.surface_form(form);
             return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
         }
         let form = form
@@ -454,7 +485,8 @@ impl App {
             ))
             .field("Başlangıç kotu (m)", NumberInput::new(s.start, |v| msg(Event::Start(v))).step(0.1).decimals(3).point().width(BOX));
         let form = match s.target {
-            Target::Grade | Target::Reference => form.field("Eğim (%)", percent(s.percent, Event::Percent)),
+            // Referanstan and Yüzeyden return their own forms above.
+            Target::Grade | Target::Reference | Target::Surface => form.field("Eğim (%)", percent(s.percent, Event::Percent)),
             Target::End => form.field("Bitiş kotu (m)", end()),
             Target::Peak => form
                 .field("Bitiş kotu (m)", end())
@@ -512,12 +544,12 @@ impl App {
     }
 }
 
-/// The window around its body: Vazgeç, and Uygula when the preview holds. Four targets side by side need the width.
+/// The window around its body: Vazgeç, and Uygula when the preview holds. Five targets side by side need the width.
 fn frame(body: Column<'_, Message>, ready: bool) -> Element<'_, Message> {
     Frame::new(TITLE)
         .push(body)
         .aside(words::ghost(CANCEL, Some(msg(Event::Close))))
         .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
-        .width(600.0)
+        .width(680.0)
         .modal(msg(Event::Close))
 }

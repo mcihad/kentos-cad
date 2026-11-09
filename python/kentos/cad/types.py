@@ -30680,6 +30680,43 @@ class DrainageQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DrapedObject(_Model):
+    """One object as `cad.entities.drape` leaves it: its vertices given the surface's height, those off the surface (kept
+    as they were), the break points put in, and whether breaks were asked of an object that takes none (a point, a
+    line, a polyline with measures or widths).
+    Attributes:
+        set: Unit: count.
+        outside: Unit: count.
+        inserted: Unit: count.
+    """
+    uid: str
+    set: int
+    outside: int
+    inserted: int
+    unsplit: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["set"] = self.set
+        out["outside"] = self.outside
+        out["inserted"] = self.inserted
+        if self.unsplit is not UNSET:
+            out["unsplit"] = self.unsplit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DrapedObject:
+        return cls(
+            uid=data["uid"],
+            set=data["set"],
+            outside=data["outside"],
+            inserted=data["inserted"],
+            unsplit=data.get("unsplit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DrawingAudit(_Model):
     """Input of `cad.drawing.audit` v1. Finds what the drawing carries broken (`AuditCode`) and the named resources
     nothing uses (empty layers and groups and unplaced block definitions as `cad.layers.edit`'s purge finds them, not
@@ -32958,6 +32995,81 @@ class EntitiesDivide(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesDrape(_Model):
+    """Input of `cad.entities.drape` v1: the objects (points, lines, polylines, areas: every part's and hole's vertices),
+    the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
+    only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
+    keeps its two ends.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
+    `invalid_input` (no object, more than 10 000, one given twice), `invalid_uid`, `entity_not_found`, `not_a_path`
+    (not a point, a line, a polyline or an area), `terrain_unbuildable`, `off_surface` (no vertex of them on the
+    surface), `layer_locked`.
+    """
+    uids: list[str]
+    surface: str
+    breaks: bool | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["surface"] = self.surface
+        if self.breaks is not UNSET:
+            out["breaks"] = self.breaks
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesDrape:
+        return cls(
+            uids=list(data["uids"]),
+            surface=data["surface"],
+            breaks=data.get("breaks", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesDraped(_Model):
+    """Output of `cad.entities.drape` v1 (and its plan): the surface's id, each object as given, the totals and the
+    drawing's revision.
+    Attributes:
+        set: Unit: count.
+        outside: Unit: count.
+        inserted: Unit: count.
+    """
+    surface: str
+    objects: list[DrapedObject]
+    set: int
+    outside: int
+    inserted: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["objects"] = [e0.to_json() for e0 in self.objects]
+        out["set"] = self.set
+        out["outside"] = self.outside
+        out["inserted"] = self.inserted
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesDraped:
+        return cls(
+            surface=data["surface"],
+            objects=[DrapedObject.from_json(e0) for e0 in data["objects"]],
+            set=data["set"],
+            outside=data["outside"],
+            inserted=data["inserted"],
+            revision=data["revision"],
         )
 
 
@@ -132033,6 +132145,7 @@ __all__ = [
     "DrainagePondsAsk",
     "DrainageQueried",
     "DrainageQuery",
+    "DrapedObject",
     "DrawingAudit",
     "DrawingAudited",
     "DrawingCompare",
@@ -132129,6 +132242,8 @@ __all__ = [
     "EntitiesDeletePlan",
     "EntitiesDeleted",
     "EntitiesDivide",
+    "EntitiesDrape",
+    "EntitiesDraped",
     "EntitiesEdit",
     "EntitiesEditPlan",
     "EntitiesEdited",

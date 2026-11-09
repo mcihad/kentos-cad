@@ -104,7 +104,8 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-06, yedinci tur. Durum: taslak. ADR 1290'
 
 ## Sonra
 
-- Referansın yüzeyden kotu (Civil 3D'deki gibi yüzey kotu); yüzeyden kot alma (ADR 1290 Sonra).
+- Referansın yüzeyden kotu (Civil 3D'deki gibi yüzey kotu); ~~yüzeyden kot alma (ADR 1290 Sonra)~~:
+  [ADR 4180](4180-elevations-from-surface.md).
 - Köşe yerine çizginin üstünde herhangi bir nokta (bugün köşe; kenarın içi için önce Köşe ekle).
 - Noktanın kotu referanstan (bugün Kot ver).
 - Çok parçalı nesne; dönen ve yaylı referansın bağı (MAP-06'nın kalanı).
