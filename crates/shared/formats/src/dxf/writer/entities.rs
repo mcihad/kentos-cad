@@ -814,7 +814,10 @@ impl Writer<'_> {
     /// degrees (the exact radians in KentOS's data when degrees lose a bit).
     /// Its extent is its block's, placed. With attribute definitions its
     /// block's (§7): an ATTRIB for each, its text as the insert shows it (its
-    /// value, else the default) where KentOS shows it, then SEQEND.
+    /// value, else the default) where KentOS shows it, then SEQEND. Its other
+    /// attributes (no definition holds them; docs/adr/3980) follow as
+    /// invisible ATTRIBs when their names are DXF tags as they are and their
+    /// values one line; the rest stay in KentOS's data, said.
     fn insert(&mut self, i: &InsertEntity) -> bool {
         let (names, defined) = (self.names, self.defined);
         let Some(name) = names.get(&i.block) else {
@@ -839,10 +842,11 @@ impl Writer<'_> {
                 .skip("Blok", "ölçeği sıfır ya da negatif; yazılmadı", 0);
             return false;
         }
+        let extra = self.extra_attributes(i, &block.tags);
         let h = self.begin("INSERT", &i.base);
         self.out.str(100, "AcDbBlockReference");
         // Attributes follow.
-        let attributed = !block.tags.is_empty();
+        let attributed = !block.tags.is_empty() || !extra.is_empty();
         if attributed {
             self.out.int(66, 1);
         }
@@ -859,6 +863,9 @@ impl Writer<'_> {
         // Its attributes' values go out once, as ATTRIBs (§7): another program edits those.
         for (tag, _) in &block.tags {
             m.attrs.remove(tag);
+        }
+        for (name, _) in &extra {
+            m.attrs.remove(name);
         }
         if turn_of(degrees) != i.rotation {
             m.turn = Some(i.rotation);
@@ -878,13 +885,40 @@ impl Writer<'_> {
         }
         self.end(m);
         if attributed {
-            self.attributes(i, h, &block.tags);
+            self.attributes(i, h, &block.tags, &extra);
         }
         true
     }
 
-    /// An insert's ATTRIBs and their SEQEND, owned by the insert `owner` (§7).
-    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)]) {
+    /// An insert's attributes no definition of its block holds (docs/adr/3980) that go out as invisible ATTRIBs: a
+    /// name that is a DXF tag as it is (no white space or control character, AutoCAD's DXF reference: a tag “cannot
+    /// contain spaces”; no other tag of the insert the same but for case) and a value of one line, so it comes back
+    /// as it was. Any other stays in KentOS's data alone, and that is said.
+    fn extra_attributes(&mut self, i: &InsertEntity, tags: &[(String, String)]) -> Vec<(String, String)> {
+        let mut taken: std::collections::BTreeSet<String> = tags.iter().map(|(_, dxf)| dxf.to_uppercase()).collect();
+        let mut out = Vec::new();
+        for (name, value) in &i.base.attrs {
+            if tags.iter().any(|(own, _)| own == name) {
+                continue;
+            }
+            let tag_as_is = !name.is_empty() && !name.chars().any(|c| c.is_whitespace() || c.is_control());
+            if tag_as_is && blocks::one_line(value) == *value && taken.insert(name.to_uppercase()) {
+                out.push((name.clone(), value.clone()));
+            } else {
+                self.report.note(
+                    "Öznitelik",
+                    "tanımı olmayan öznitelik DXF etiketi olarak aynen yazılamadığından (boşluk, satır ya da büyük küçük harf çakışması) yalnız KentOS verisinde kaldı; başka program onu görmez",
+                    0,
+                );
+            }
+        }
+        out
+    }
+
+    /// An insert's ATTRIBs and their SEQEND, owned by the insert `owner` (§7); after its definitions' ones, its
+    /// other attributes' (`extra`, docs/adr/3980): invisible (70 = 1), at the insert's point, 2.5 mm high at true size
+    /// (ISO 3098's lettering height; shown only if a program shows invisible attributes).
+    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)], extra: &[(String, String)]) {
         let layers = self.layers;
         let layer = layers.name_of(&i.base.layer_id).unwrap_or("0").to_owned();
         let placing = self.placing;
@@ -929,6 +963,21 @@ impl Writer<'_> {
             if vertical != 0 {
                 self.out.int(74, vertical);
             }
+        }
+        let height = 0.0025 * self.per_metre;
+        for (name, value) in extra {
+            let h = self.handles.take();
+            self.out.str(0, "ATTRIB");
+            self.out.handle(5, h);
+            self.out.handle(330, owner);
+            self.out.str(100, "AcDbEntity");
+            self.out.str(8, &layer);
+            self.out.str(100, "AcDbText");
+            let justified = Justified { p: i.p, height, rotation: 0.0, align: None, width_factor: None };
+            self.out.text(value, value, &justified);
+            self.out.str(100, "AcDbAttribute");
+            self.out.str(2, name);
+            self.out.int(70, 1);
         }
         let h = self.handles.take();
         self.out.str(0, "SEQEND");

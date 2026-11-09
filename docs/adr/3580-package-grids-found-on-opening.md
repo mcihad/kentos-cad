@@ -65,5 +65,5 @@ projede ızgaraların kendiliğinden bulunması: komutlar `izgaralar/`'a da baks
 - DXF'te TABLE (ACAD_TABLE) yazımı: varlık çok karmaşık (Autodesk DXF başvurusu; ezdxf de yalnız okur). AutoCAD ya
   da bağımsız bir okuyucuyla doğrulanamadan yazılırsa dosya başka programda hiç açılmayabilir; doğrulama yolu bulunana
   dek tablo çizgi ve yazı olarak kalır.
-- Tanımı olmayan ek özniteliklerin ATTRIB'i (MAP-17'nin öbür maddesi).
+- ~~Tanımı olmayan ek özniteliklerin ATTRIB'i~~ ([ADR 3980](3980-dxf-attributes-without-definition.md)).
 - Web (TODOS §0.2).

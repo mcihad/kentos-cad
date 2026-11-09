@@ -47,7 +47,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640 | bütçe (gerçek veriyle ölçüm); öbür çizimlerin kendi hesabının içinde durması; tarif katmanının grubu ve tam stili | — |
@@ -1878,6 +1878,13 @@ adladığı her ızgara çekirdekte, cihazın kitaplığında, yoksa proje dosya
 denetlenerek) aranır ve oradan çekirdeğe okunur; kitaplık yazılmaz; masaüstü iletisi ve başsız özetin `grids`'i;
 çekirdek birim testi, MCP (tek başına ret, paketten cevap), bağımsız Python, masaüstü. DXF'te TABLE: ACAD_TABLE AutoCAD
 ya da bağımsız bir okuyucuyla doğrulanamadığı için açık kaldı. Açık: ATTRIB, TABLE.
+
+**9 Kasım 2026, yedinci tur — tanımı olmayan öznitelikler görünmez ATTRIB ([ADR 3980](../docs/adr/3980-dxf-attributes-without-definition.md)).**
+Kapsam: **CAD + CBS**. Dayanak: AutoCAD DXF başvurusunun ATTRIB'i (etiket boşluk içermez; 70'in 1. biti görünmez), 9 Kasım
+2026'da okundu. Kanıtlanan: blok ekinin bloğunda tanımı olmayan öznitelikleri, adı DXF etiketi olarak aynen yazılabilen
+ve değeri tek satır olanlar, INSERT'in görünmez ATTRIB'i olarak yazılır ve KentOS verisinden çıkar; öbürleri KentOS
+verisinde kalır, raporda söylenir; gidiş-dönüş aynen; yazıcı testleri, ezdxf'li bağımsız Python, MCP. Açık: boşluklu
+adların etiketi, DXF'te TABLE (doğrulama yolu bekler).
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

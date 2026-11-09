@@ -113,7 +113,7 @@ $PDSIZE
   9
 $HANDSEED
   5
-4F
+50
   9
 $TILEMODE
  70
@@ -613,7 +613,7 @@ Continuous
   0
 LAYER
   5
-4D
+4E
 330
 1
 100
@@ -647,7 +647,7 @@ fg-dim
   0
 LAYER
   5
-4E
+4F
 330
 1
 100
@@ -1627,16 +1627,6 @@ KENTOS
 1002
 {
 1000
-attr
-1000
-Malzeme
-1000
-Çelik
-1002
-}
-1002
-{
-1000
 turn
 1040
 0.1
@@ -1769,9 +1759,37 @@ Kol_boyu
  74
 3
   0
-SEQEND
+ATTRIB
   5
 45
+330
+41
+100
+AcDbEntity
+  8
+Yapı
+100
+AcDbText
+ 10
+452355.123
+ 20
+4412365.678
+ 30
+0.0
+ 40
+0.0025
+  1
+Çelik
+100
+AcDbAttribute
+  2
+Malzeme
+ 70
+1
+  0
+SEQEND
+  5
+46
 330
 41
 100
@@ -1781,7 +1799,7 @@ Yapı
   0
 INSERT
   5
-46
+47
 330
 17
 100
@@ -1811,9 +1829,9 @@ Direk
   0
 ATTRIB
   5
-47
+48
 330
-46
+47
 100
 AcDbEntity
   8
@@ -1839,9 +1857,9 @@ No
   0
 ATTRIB
   5
-48
+49
 330
-46
+47
 100
 AcDbEntity
   8
@@ -1867,9 +1885,9 @@ Tür
   0
 ATTRIB
   5
-49
+4A
 330
-46
+47
 100
 AcDbEntity
   8
@@ -1897,9 +1915,9 @@ Kol_boyu
   0
 SEQEND
   5
-4A
+4B
 330
-46
+47
 100
 AcDbEntity
   8
@@ -1907,7 +1925,7 @@ Parsel sınırı
   0
 INSERT
   5
-4B
+4C
 330
 17
 100
@@ -1935,7 +1953,7 @@ Ağaç_Çınar
   0
 LINE
   5
-4C
+4D
 330
 17
 100

@@ -107,7 +107,8 @@ for row in m.rows:
   görür; matris bunu KentOS'un yazıcısıyla okuyucusunun birlikte yaptığı olarak “korunur” der.
 - DXF'te ek özniteliklerinin ATTRIB olarak yazılması. Not (ADR 2780 sırasında koddan okundu): bloğunda öznitelik
   tanımı olan ekin değerleri ATTRIB olarak zaten yazılıyor (ADR 0144 §7, `writer/entities.rs`). KentOS XDATA'sında
-  kalan, tanımı olmayan nesne öznitelikleridir.
+  kalan, tanımı olmayan nesne öznitelikleridir. Yapıldı: [ADR 3980](3980-dxf-attributes-without-definition.md)
+  (görünmez ATTRIB; boşluklu adlar KentOS verisinde).
 - Teslim paketinin matrisi ve kayıp raporunu taşıması (ADR 1880 Sonra). Yapıldı:
   [ADR 2780](2780-delivery-package-open-files.md).
 - Kurum profillerine göre biçim önerisi.

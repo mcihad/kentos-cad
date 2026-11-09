@@ -2430,8 +2430,13 @@ fn attributes_go_out_as_attdef_and_attrib_and_come_back() {
 /// KentOS's data under its tag (§7).
 #[test]
 fn an_attrib_edited_elsewhere_wins() {
-    let (text, _) = write(&blocks_input());
-    // KentOS's data of the first insert holds only its other attribute.
+    // An attribute no definition holds and whose name is no DXF tag stays in KentOS's data (docs/adr/3980).
+    let mut input = blocks_input();
+    if let Entity::Insert(i) = &mut input.entities[0] {
+        i.base.attrs.insert("Bakım notu".into(), "2026".into());
+    }
+    let (text, _) = write(&input);
+    // KentOS's data of the first insert holds only that one: Malzeme went out as an ATTRIB too.
     let p = pairs(&text);
     let first = entities_of(&p, "INSERT")
         .into_iter()
@@ -2439,7 +2444,7 @@ fn an_attrib_edited_elsewhere_wins() {
         .expect("Direk's first insert");
     let data: Vec<&str> = first.iter().filter(|g| g.0 == 1000).map(|g| g.1).collect();
     assert!(
-        data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
+        data.contains(&"Bakım notu") && !data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
         "{data:?}"
     );
     // Another program sets its No to 8.
@@ -2458,15 +2463,58 @@ fn an_attrib_edited_elsewhere_wins() {
         values[0].iter().find(|(k, _)| *k == "No"),
         Some(&("No", "8"))
     );
-    // KentOS's data says No is “Çelik” (a hand edit): the ATTRIB's 7 wins.
-    let clash = text.replacen("1000\r\nMalzeme\r\n", "1000\r\nNo\r\n", 1);
+    // KentOS's data says No is “2026” (a hand edit): the ATTRIB's 7 wins.
+    let clash = text.replacen("1000\r\nBakım notu\r\n", "1000\r\nNo\r\n", 1);
     assert_ne!(clash, text);
     let back = read(&clash);
     let values = insert_values(&back, "Direk");
     assert_eq!(
         values[0],
-        [("Kol_boyu", "2.5 m"), ("No", "7"), ("Tür", "LED")]
+        [("Kol_boyu", "2.5 m"), ("Malzeme", "Çelik"), ("No", "7"), ("Tür", "LED")]
     );
+}
+
+/// An insert's attributes no definition of its block holds go out as
+/// invisible ATTRIBs (docs/adr/3980): tagged by their names, flag 70 = 1,
+/// out of KentOS's data, and come back as the insert's attributes and no
+/// text. A name that is no DXF tag as it is (a space), one that differs
+/// from another only by case, and a value on two lines stay in KentOS's
+/// data alone, said, and come back as they were. A block without any
+/// definition gets its ATTRIBs and SEQEND too.
+#[test]
+fn attributes_without_a_definition_go_out_as_invisible_attribs() {
+    let mut input = blocks_input();
+    let Entity::Insert(first) = &mut input.entities[0] else { panic!("Direk's first insert") };
+    first.base.attrs.insert("Bakım notu".into(), "2026".into());
+    first.base.attrs.insert("NOT".into(), "a".into());
+    first.base.attrs.insert("Not".into(), "b".into());
+    first.base.attrs.insert("Açıklama".into(), "iki\nsatır".into());
+    let given = first.base.attrs.clone();
+    let (text, report) = write(&input);
+    let p = pairs(&text);
+    let insert_at = p.iter().position(|g| *g == (0, "INSERT")).expect("an INSERT");
+    let after = &p[insert_at + 1..];
+    let seqend = after.iter().position(|g| *g == (0, "SEQEND")).expect("its SEQEND");
+    let attribs: Vec<Vec<(i32, &str)>> = entities_of(&after[..seqend], "ATTRIB");
+    let invisible: Vec<(&str, &str)> = attribs
+        .iter()
+        .filter(|a| group(a, 70) == Some("1"))
+        .map(|a| (group(a, 2).unwrap_or_default(), group(a, 1).unwrap_or_default()))
+        .collect();
+    assert_eq!(invisible, [("Malzeme", "Çelik"), ("NOT", "a")], "the others are no tags as they are or not one line");
+    assert!(
+        report.notes.iter().any(|n| n.what == "Öznitelik" && n.reason.contains("yalnız KentOS verisinde kaldı")),
+        "{:?}",
+        report.notes
+    );
+    let back = read(&text);
+    let values = insert_values(&back, "Direk");
+    // Every attribute back as it was; and, as before, the definition's default shown (Kol_boyu) as the insert's value.
+    let mut want: Vec<(&str, &str)> = given.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    want.push(("Kol_boyu", "2.5 m"));
+    want.sort_unstable();
+    assert_eq!(values[0], want, "every attribute back as it was");
+    assert!(!back.entities.iter().any(|e| matches!(e, Entity::Text(_))), "no ATTRIB comes back as a text");
 }
 
 /// DXF's attribute texts are one line: a line break in a value, a default
