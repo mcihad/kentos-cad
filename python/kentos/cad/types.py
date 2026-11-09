@@ -17469,6 +17469,8 @@ class AtlasExported(_Model):
         filtered_out: The coverage layer's objects the layer's filter or the time left out, counted. Unit: count.
         findings: The sheet core's findings (an SVG picture drawn as a box …).
         notes: What a host without a window cannot draw, said in words.
+        objects: The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its
+            snapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.
         read: What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
             as the pages were made.
     """
@@ -17485,6 +17487,7 @@ class AtlasExported(_Model):
     filtered_out: int
     findings: Any
     notes: list[str]
+    objects: dict[str, str] | Unset = UNSET
     read: list[AtlasRead] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17502,6 +17505,8 @@ class AtlasExported(_Model):
         out["filteredOut"] = self.filtered_out
         out["findings"] = self.findings
         out["notes"] = list(self.notes)
+        if self.objects is not UNSET:
+            out["objects"] = dict(self.objects)
         if self.read is not UNSET:
             out["read"] = [e0.to_json() for e0 in self.read]
         return out
@@ -17522,6 +17527,7 @@ class AtlasExported(_Model):
             filtered_out=data["filteredOut"],
             findings=data["findings"],
             notes=list(data["notes"]),
+            objects=dict(data["objects"]) if "objects" in data else UNSET,
             read=[AtlasRead.from_json(e0) for e0 in data["read"]] if "read" in data else UNSET,
         )
 
@@ -17536,6 +17542,9 @@ class AtlasPageInfo(_Model):
         scale: The first atlas map's scale, the denominator (1000 is 1/1000). Unit: scale.
         center: The map's centre: the middle of the object's box. Unit: length.
         bbox: The object's box: minimum east, north, maximum east, north. Unit: length.
+        sources: The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
+            its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
+            when they are not listed (a check that makes no pages).
     """
     index: int
     name: str
@@ -17543,6 +17552,7 @@ class AtlasPageInfo(_Model):
     scale: int
     center: Vec2
     bbox: list[float]
+    sources: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17552,6 +17562,8 @@ class AtlasPageInfo(_Model):
         out["scale"] = self.scale
         out["center"] = _vec2_out(self.center)
         out["bbox"] = [float(e0) for e0 in self.bbox]
+        if self.sources is not UNSET:
+            out["sources"] = list(self.sources)
         return out
 
     @classmethod
@@ -17563,6 +17575,7 @@ class AtlasPageInfo(_Model):
             scale=data["scale"],
             center=Vec2.from_json(data["center"]),
             bbox=[float(e0) for e0 in data["bbox"]],
+            sources=list(data["sources"]) if "sources" in data else UNSET,
         )
 
 

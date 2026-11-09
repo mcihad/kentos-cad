@@ -131,7 +131,8 @@ kutulardan ve JSON'dan bağımsız hesaplanır. Rust koşucusu `crates/native/he
 
 ### 7. Kalan işler
 
-- Atlas sayfaları (zemin bilinmeyen pencere) için sayfa başına kaynak dökümü ve atlas nesnesinin kimliği.
+- ~~Atlas sayfaları (zemin bilinmeyen pencere) için sayfa başına kaynak dökümü ve atlas nesnesinin kimliği.~~
+  [ADR 3600](3600-atlas-page-sources.md): `file.export.atlas`'ın cevabında.
 - Tek PDF teslimin güncellemesi (değişmeyen sayfaları önceki PDF'ten nesne düzeyinde taşımak).
 - Devam ettirilebilir (`resumable`) güncelleme yayını.
 - Anotasyon/tabloların kalıcı kaynak kimliği ve revizyonuna bağlanması (kot, ad, eğri kotu, kenar/alan, istasyon), CAD

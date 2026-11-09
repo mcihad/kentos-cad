@@ -324,7 +324,19 @@ impl App {
                         ..AtlasInput::default()
                     },
                 )
-                .map(Box::new)
+                .map(|mut planned| {
+                    // Docs/adr/3600: each page's sources on its own ground, as the command's answer gives them.
+                    if let Ok(grounds) = planned.page_grounds(&doc.model) {
+                        let asked: Vec<(Vec<(String, [f64; 4])>, String)> =
+                            grounds.into_iter().zip(&planned.pages).map(|(g, p)| (g, p.feature.clone())).collect();
+                        if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(&doc.model, &row.id, &asked) {
+                            for (page, sources) in planned.pages.iter_mut().zip(listed) {
+                                page.sources = sources.unwrap_or_default();
+                            }
+                        }
+                    }
+                    Box::new(planned)
+                })
                 .map_err(|e| e.message)
             }
         };
@@ -809,6 +821,8 @@ impl App {
                     container(label::caption("Ad")).width(Fill),
                     container(label::caption("Ölçek")).width(72),
                     container(label::caption(format.axes_text("Merkez (Y, X)"))).width(200),
+                    // Docs/adr/3600: the objects the page draws or reads, its own first.
+                    container(label::caption("Kaynak")).width(60),
                 ]
                 .spacing(8),
             );
@@ -824,6 +838,7 @@ impl App {
                             format.coord(page.center.y)
                         )))
                         .width(200),
+                        container(label::body(page.sources.len().to_string())).width(60),
                     ]
                     .spacing(8),
                 );

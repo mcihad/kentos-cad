@@ -28,4 +28,10 @@ center: Vec2,
 /**
  * The object's box: minimum east, north, maximum east, north.
  */
-bbox: [number, number, number, number], };
+bbox: [number, number, number, number], 
+/**
+ * The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
+ * its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
+ * when they are not listed (a check that makes no pages).
+ */
+sources?: Array<string>, };

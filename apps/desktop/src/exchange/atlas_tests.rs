@@ -304,3 +304,67 @@ fn screens() {
         }
     }
 }
+
+/// The app with the atlas drawing and the setup `name`'s sheets (`plain`: the atlas map alone, docs/adr/3600).
+fn app_with_atlas_of(name: &str) -> App {
+    let file: Value = serde_json::from_str(CASES).expect("the cases");
+    let setup = &file["setups"][name];
+    let snapshot = DocumentSnapshotV1::from_json(&setup["drawing"].to_string()).expect("reads");
+    let mut doc = crate::document::Document::new(snapshot, None).expect("opens");
+    for sheet in setup["book"]["sheets"].as_array().expect("sheets") {
+        let input = serde_json::from_value(json!({ "ops": [{ "op": "addSheet", "sheet": sheet }] })).expect("an input");
+        let answer = kentos_native_application::sheets_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        assert!(matches!(answer, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+    }
+    let (mut app, _) = App::boot(None);
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/3600: the preview lists each page's sources on its own ground: with the atlas map alone, the first page
+/// is its parcel and the three its ground meets (the shared case's), its own first; the big parcel's page more.
+#[test]
+fn the_preview_lists_each_page_s_sources() {
+    let mut app = app_with_atlas_of("plain");
+    run(&mut app, "file.export.atlas");
+    let planned = window(&app).plan.as_ref().expect("planned");
+    let first = &planned.pages[0];
+    assert_eq!(first.sources.len(), 4, "{:?}", first.sources);
+    assert_eq!(first.sources[0], first.feature, "its own object first");
+    let big = planned.pages.last().expect("the big parcel's page");
+    assert_eq!(big.sources.len(), 14, "{:?}", big.sources);
+    // With the overview map every page meets the whole drawing.
+    let mut app = app_with_atlas();
+    run(&mut app, "file.export.atlas");
+    let planned = window(&app).plan.as_ref().expect("planned");
+    assert!(planned.pages.iter().all(|p| p.sources.len() == 109));
+}
+
+/// docs/adr/3600: the preview with each page's sources counted; `.run/gui-evidence/atlas-kaynak-3600/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange::atlas_tests::sources_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn sources_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlas-kaynak-3600");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = app_with_atlas_of("plain");
+        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        run(&mut app, "file.export.atlas");
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("onizleme-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

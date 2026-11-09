@@ -80,6 +80,36 @@ def pages(keep=lambda p: True):
     } for k, p in enumerate(out)]
 
 
+def page_sources(page, overview=True):
+    """Docs/adr/3600: a page's sources by the drawing's object number (`$uidOf:N`): its own parcel first, then, in the
+    drawing's order, every object (parcel or road; the layer's filter does not hide it from the box test) whose box
+    meets the ground of a map the page draws: the atlas map at the page's centre, half its content (165 × 150 mm) at
+    the page's scale each way; the overview map (the template's 72 × 76 mm frame at 1/25000) at the same centre."""
+    cx, cy, k = page["center"]["x"], page["center"]["y"], page["scale"] / 1000.0
+    grounds = [(cx - CONTENT_MM[0] / 2 * k, cy - CONTENT_MM[1] / 2 * k, cx + CONTENT_MM[0] / 2 * k, cy + CONTENT_MM[1] / 2 * k)]
+    if overview:
+        grounds.append((cx - 36.0 * 25.0, cy - 38.0 * 25.0, cx + 36.0 * 25.0, cy + 38.0 * 25.0))
+    own = int(page["name"].split("/")[1])
+    out = [own]
+    boxes = [(p["n"], (p["x"], p["y"], p["x"] + p["w"], p["y"] + p["h"])) for p in parcels()]
+    roads = COLUMNS * ROWS
+    for j in range(4):
+        y = ORIGIN[1] - 10.0 + j * 60.0
+        boxes.append((roads + j + 1, (ORIGIN[0] - 20.0, y, ORIGIN[0] + 520.0, y)))
+    for n, (x0, y0, x1, y1) in boxes:
+        if n != own and any(x0 <= g[2] and x1 >= g[0] and y0 <= g[3] and y1 >= g[1] for g in grounds):
+            out.append(n)
+    return [f"$uidOf:{n}" for n in out]
+
+
+def object_digest(e):
+    """ADR 1320 §2's object digest (kentos.object-digest/1): the object's snapshot form without its slot id, keys
+    sorted, no whitespace, UTF-8, SHA-256."""
+    import hashlib
+    v = {k: x for k, x in e.items() if k != "id"}
+    return hashlib.sha256(json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()
+
+
 def near(value, within=1e-3):
     """A number the runner takes within `within` of `value`: PROJ's TM and the core's agree to the millimetre."""
     return {"$near": value, "within": within}
@@ -100,7 +130,7 @@ def pages_in(target):
     return out
 
 
-def book(atlas=None, with_atlas=True, second=True):
+def book(atlas=None, with_atlas=True, second=True, plain=False):
     t = json.loads(TEMPLATE.read_text())
     sheet = t["sheet"]
     sheet["id"] = "atlas-paftasi"
@@ -125,6 +155,13 @@ def book(atlas=None, with_atlas=True, second=True):
                               {"heading": "Malik", "value": "Malik"}],
                   "source": {"type": "layer", "layer": "parsel", "atlasFilter": True}}},
     ]
+    if plain:
+        # Docs/adr/3600: the atlas map alone (no overview map, no table of the layer), so a page lists only what its
+        # own ground meets.
+        gone = ("genel-bakis", "parseller")
+        sheet["items"] = [it for it in sheet["items"] if it["id"] not in gone]
+        for v in sheet.get("variants", []):
+            v["frames"] = [f for f in v.get("frames", []) if f.get("item") not in gone]
     sheets = [sheet]
     if second:
         # A sheet with no atlas of its own.
@@ -142,7 +179,7 @@ def layer(id_, name, color):
 
 
 def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, states=False, form=True, filter_=True,
-          parcels_=True, withheld=False):
+          parcels_=True, withheld=False, plain=False):
     entities = []
     for p in (parcels() if parcels_ else []):
         attrs = {"Ada": p["ada"], "Parsel": str(p["n"]), "Durum": p["durum"], "Malik": f"Gizli Kişi {p['n']}",
@@ -184,7 +221,7 @@ def setup(name="Parsel atlası", *, sheets=True, atlas=None, temporal=False, sta
                "origin": {"x": ORIGIN[0], "y": ORIGIN[1]}, "layers": layers,
                "activeLayer": layers[0]["id"], "entities": entities, "styles": {"items": [], "categories": []}}
     # The sheets are added by `cad.sheets.edit`, as a script would (a v1 file has no sheet book).
-    return {"drawing": drawing, "book": book(atlas=atlas) if sheets else None}
+    return {"drawing": drawing, "book": book(atlas=atlas, plain=plain) if sheets else None}
 
 
 def done(output=None, warnings=None):
@@ -225,6 +262,19 @@ def cases():
     case("Plan: yüz sayfa; katman süzgecinden geçmeyen beş parsel sayfa olmaz, sıra numaraya göre, ad ada/numara, "
          "merkez parselin ortası, büyük parsel 1/1000'de", [
              {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done(plan_output(every))}])
+    # Docs/adr/3600: each page's sources on its own ground, its parcel first.
+    case("Plan: her sayfanın kaynakları kendi zemininde: sayfanın parseli önce, haritanın gördüğü yere değen parseller "
+         "ve yollar çizim sırasıyla", [
+             {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"},
+              "result": done({"pages": [{"index": p["index"], "name": p["name"], "sources": page_sources(p)} for p in every]})}])
+    case("Plan: haritası tek olan sayfa yalnız kendi zemininin değdiği nesneleri sayar: parseli ve komşuları",
+         [{"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"},
+           "result": done({"pages": [{"index": p["index"], "name": p["name"], "sources": page_sources(p, overview=False)}
+                                     for p in every],
+                           # The first page's objects' digests, from the drawing's own JSON.
+                           "objects": {f"$uidOf:{e['id']}": object_digest(e)
+                                       for e in setup(plain=True)["drawing"]["entities"] if e["id"] in (1, 2, 16, 17)}})}],
+         "plain")
     case("Plan dosya yazmaz; execute yazar: PDF'in sayfa sayısı sayfa sayısıdır", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done(), "file": {"exists": False}},
         {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi"},
@@ -449,6 +499,7 @@ def document():
         # No parcels: the source's tables are bound onto new layers (docs/adr/0638 §3).
         "source": setup(parcels_=False),
         "withheld": setup(form=False, withheld=True),
+        "plain": setup(plain=True),
     }
     return {
         "format": "kentos.file-command-cases", "version": 1, "command": "file.export.atlas", "commandVersion": 1,

@@ -97029,7 +97029,7 @@
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",
-      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "atlaspdf"
       ],
@@ -97162,6 +97162,13 @@
             },
             "type": "array"
           },
+          "objects": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its\nsnapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.",
+            "type": "object"
+          },
           "pages": {
             "items": {
               "$ref": "#/$defs/AtlasPageInfo"
@@ -97253,6 +97260,13 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "objects": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its\nsnapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.",
+            "type": "object"
           },
           "pages": {
             "items": {
@@ -115930,6 +115944,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "scale"
+        },
+        "sources": {
+          "description": "The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects\nits maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty\nwhen they are not listed (a check that makes no pages).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         }
       },
       "required": [

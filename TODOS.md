@@ -181,6 +181,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Rust'ın WASM'ıysa yalnız yeniden derleme) ve web'in proje ağacında ağ satırı; tutulan çizimlerin nesne damgası `id`'siz.
 - MAP-17 / ADR 3580: web'de açılan projenin adladığı ızgaraların paketin `izgaralar/`'ından bulunması (tarayıcıda klasör
   erişimi; web'in ızgara kitaplığı IndexedDB'de).
+- MAP-18 / ADR 3600: web'in atlas penceresinde sayfaların kaynak sayısı (`AtlasPageInfo.sources`, `AtlasExported.objects`;
+  komut başsız).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Atlas sayfalarının kaynak dökümü (9 Kasım 2026; MAP-18, [ADR 3600](../../docs/adr/3600-atlas-page-sources.md)).**
+  `file.export.atlas`'ın cevabında her sayfanın kaynakları (kendi nesnesi önce, haritaların sayfadaki zeminine değenler) ve
+  nesne özetleri; Atlası PDF yap önizlemesinde Kaynak sütunu. CAD + CBS.
 - **Paketten açılan projede ızgaralar bulunur (9 Kasım 2026; MAP-17, [ADR 3580](../../docs/adr/3580-package-grids-found-on-opening.md)).**
   Açılışta adlanan ızgara çekirdekte, kitaplıkta, yoksa yanındaki `izgaralar/`'da (SHA-256 denetimiyle) aranır ve
   çekirdeğe okunur; kitaplık yazılmaz. CAD + CBS.

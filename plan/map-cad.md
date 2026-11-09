@@ -48,7 +48,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240 | bütçe; çizimin kendi hesabının içinde durdurma; katmanların adla eşlenmesi | — |
 
@@ -1841,6 +1841,14 @@ milyonda birlerinden kâğıda, oradan yere taşınır; atlas sayfasında nesnen
 yönelim yüklemiyle (kenar içeride, iç bükey doğru). Başvuruya L kırpmalı D (kn-4 dışarıda) ve dikdörtgen kırpmalı E
 eklendi; beş harita, on yazı Rust'ta, MCP'de ve masaüstünde başvurununki. Açık: atlas nesnesinin inceltilmemiş dış çizgisi,
 total station ve nivelman kalitesi, atlas sayfalarının kaynak dökümü.
+
+**9 Kasım 2026, altıncı tur — atlas sayfalarının kaynak dökümü ([ADR 3600](../docs/adr/3600-atlas-page-sources.md)).**
+Kapsam: **CAD + CBS** (pafta). Dayanak: ADR 1320'nin kuralı ve kalan işi; QGIS atlası ve ArcGIS harita serisi değişen
+sayfayı söylemez. Kanıtlanan: her atlas sayfasının haritaları ve zeminleri PDF çizilmeden görüntü listesinden; sayfanın
+kaynakları kendi nesnesi önce, haritaların zeminine değen ve basılan nesneler, tablolar, işaretler; `file.export.atlas`'ın
+cevabında `pages[].sources` ve `objects` (nesne özetleri); başvuruya iki durum (genel bakışla 109, yalnız atlas
+haritasıyla komşular), `$uidOf:N` koşucuda; Python, MCP; Atlası PDF yap önizlemesinde Kaynak sütunu. Açık: atlasın
+güncelleme yayını, total station ve nivelman kalitesi.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

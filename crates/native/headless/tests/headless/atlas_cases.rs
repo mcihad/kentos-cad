@@ -73,6 +73,21 @@ fn within(got: &Value, want: &Value, at: &str, problems: &mut Vec<String>) {
     }
 }
 
+/// `$uidOf:N` in an expectation, as a value or a key: the persistent id the drawing's object N got when the v1
+/// drawing was read (docs/adr/3600: a page's sources and their digests are by persistent id).
+fn uids_of(want: &Value, s: &Session) -> Value {
+    let uid = |t: &str| -> Option<String> {
+        let n: u64 = t.strip_prefix("$uidOf:")?.parse().ok()?;
+        s.document().entities_with_uids().find(|(_, e)| u64::from(e.base().id) == n).map(|(u, _)| u.to_string())
+    };
+    match want {
+        Value::String(t) => uid(t).map_or_else(|| want.clone(), Value::String),
+        Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (uid(k).unwrap_or_else(|| k.clone()), uids_of(v, s))).collect()),
+        Value::Array(a) => Value::Array(a.iter().map(|v| uids_of(v, s)).collect()),
+        other => other.clone(),
+    }
+}
+
 /// The input with `$tmp` in its paths and `$name` its captured pins and values.
 fn filled(input: &Value, tmp: &str, pins: &std::collections::HashMap<String, Value>) -> Value {
     match input {
@@ -156,7 +171,7 @@ fn the_shared_cases_pass() {
                 within(&answer["error"], e, &format!("{at} error"), &mut problems);
             }
             if let Some(o) = want.get("output") {
-                within(&answer["output"], o, &format!("{at} output"), &mut problems);
+                within(&answer["output"], &uids_of(o, &s), &format!("{at} output"), &mut problems);
             }
             if let Some(w) = want.get("warnings") {
                 let codes: Vec<&Value> = answer["warnings"]

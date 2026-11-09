@@ -204,6 +204,12 @@ pub struct AtlasPageInfo {
     /// The object's box: minimum east, north, maximum east, north.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub bbox: [f64; 4],
+    /// The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
+    /// its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
+    /// when they are not listed (a check that makes no pages).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub sources: Vec<String>,
 }
 
 /// What a run was bound to, written into the output (`Keywords`) and given back.
@@ -268,4 +274,9 @@ pub struct AtlasExported {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AtlasRead>>", optional))]
     pub read: Vec<AtlasRead>,
+    /// The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its
+    /// snapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.
+    #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<std::collections::BTreeMap<String, String>>", optional))]
+    pub objects: std::collections::BTreeMap<String, String>,
 }

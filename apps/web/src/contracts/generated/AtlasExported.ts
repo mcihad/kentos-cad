@@ -36,4 +36,9 @@ notes: Array<string>,
  * What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
  * as the pages were made.
  */
-read?: Array<AtlasRead>, };
+read?: Array<AtlasRead>, 
+/**
+ * The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its
+ * snapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.
+ */
+objects?: { [key in string]: string }, };

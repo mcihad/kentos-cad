@@ -103,9 +103,13 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
     izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda
     hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden
     ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür.
-    GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. plan
-    dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı
-    değildir.
+    GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her
+    sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada
+    çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek,
+    duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler,
+    tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources);
+    listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). plan dosyayı
+    yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.atlas"
@@ -149,8 +153,13 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact
         işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen
         nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem)
-        her harita çerçevesi coğrafi görüntü penceresi taşır. plan dosyayı yazmaz, sayfaları
-        ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.
+        her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü
+        (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas
+        haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde)
+        zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı
+        kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik
+        özeti (objects, kentos.object-digest/1). plan dosyayı yazmaz, sayfaları ve pin'i
+        söyler; çizimi değiştirmez ve geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.

@@ -694,6 +694,7 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                     },
                 ),
                 bbox: boxes.get(&p.feature.id).copied().unwrap_or(p.feature.bbox),
+                sources: Vec::new(),
             }
         })
         .collect();
@@ -1180,6 +1181,36 @@ impl AtlasPlanned {
             }
         }
         (maps, data)
+    }
+
+    /// Each page's maps and their grounds (docs/adr/3600), in the plan's order, as the PDF lays the pages out but without
+    /// drawing them: every map a page draws (its atlas maps where the page puts them, an overview where it follows them,
+    /// the maps that stand still) and the box it shows on the project's ground; a map a page does not draw is not there.
+    pub fn page_grounds(&self, doc: &Document) -> Result<Vec<Vec<(String, [f64; 4])>>, AtlasError> {
+        let base: RenderInputs = base_inputs(doc, &self.user, &self.date);
+        self.plan
+            .iter()
+            .map(|page| {
+                let mut render = base.clone();
+                render.atlas = Some(page.clone());
+                display::display_list(&self.book, &self.sheet, &render)
+                    .map(|list| self.grounds_of(&list))
+                    .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))
+            })
+            .collect()
+    }
+
+    /// Every map a page draws and the box it shows on the project's ground (docs/adr/3600: a page's sources).
+    fn grounds_of(&self, list: &display::DisplayList) -> Vec<(String, [f64; 4])> {
+        list.prims
+            .iter()
+            .filter_map(|p| match p {
+                Prim::Map(m) if m.view.center.is_some() => {
+                    m.extent.and_then(|e| crate::maps::project_box(self.map, e)).map(|b| (m.item.clone(), b))
+                }
+                _ => None,
+            })
+            .collect()
     }
 
     /// The box a page's atlas maps show, on the project's ground: what a bound part is read in for it.

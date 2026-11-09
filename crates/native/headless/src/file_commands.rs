@@ -1076,19 +1076,32 @@ fn atlas(
     };
     let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
     let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
+    let made_pages = bytes;
     let (bytes, findings, notes, read) = if bytes {
         let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
         (made.bytes, made.findings, made.notes, made.read)
     } else {
         (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone())
     };
+    // Docs/adr/3600: each page's sources on its own ground, the listed objects' digests (ADR 1320 §2).
+    let mut pages = planned.pages.clone();
+    let reaches = if made_pages { planned.page_grounds(doc).map_err(at)? } else { Vec::new() };
+    if made_pages && reaches.len() == pages.len() {
+        let asked: Vec<(Vec<(String, [f64; 4])>, String)> = reaches.into_iter().zip(&pages).map(|(r, p)| (r, p.feature.clone())).collect();
+        if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(doc, planned.sheet(), &asked) {
+            for (page, sources) in pages.iter_mut().zip(listed) {
+                page.sources = sources.unwrap_or_default();
+            }
+        }
+    }
+    let objects = kentos_native_application::sheets_sources::object_digests(doc, pages.iter().flat_map(|p| p.sources.iter()));
     let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
         sha256: sha256_hex(&bytes),
         replaced: exists,
         sheet: planned.sheet().to_owned(),
-        pages: planned.pages.clone(),
+        pages,
         pin: planned.pin.clone(),
         bindings: planned.bindings.clone(),
         fields: planned.fields.clone(),
@@ -1097,6 +1110,7 @@ fn atlas(
         findings: serde_json::to_value(&findings).unwrap_or(Value::Null),
         notes,
         read,
+        objects,
     };
     let warnings = planned
         .warnings
