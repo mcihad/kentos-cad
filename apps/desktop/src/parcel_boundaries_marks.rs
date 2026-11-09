@@ -5,6 +5,10 @@
 //! On the screen a number that would crowd another is left out (a problem's words never), so the view reads at any
 //! zoom. The row chosen in the window's table, when one was, is brought forward in the accent: a boundary along its
 //! curve, a corner or a problem with a double ring, its name beside it (docs/adr/3020). Nothing is written.
+//!
+//! docs/adr/3820: an arc drawn with chords shows its strip, the room between the arc and the chain of chords, filled
+//! in the danger colour and outlined; problems whose rings would meet on the screen share one ring and one phrase
+//! (“Komşuda eksik köşe (2) · Ayrık köşe”), so their words no longer lie over each other.
 
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashSet};
@@ -25,6 +29,8 @@ use crate::viewport::MarkColors;
 const MOST_NUMBERS: usize = 600;
 /// A number's room on the screen, logical pixels: no two numbers within a cell of each other.
 const ROOM: (f32, f32) = (34.0, 16.0);
+/// A problem's ring's radius on the screen, logical pixels; problems nearer than two of them share one (docs/adr/3820).
+const RING: f32 = 9.0;
 
 /// What Çizimde göster keeps: the drawing's session, the parcels asked (none: the parcel layer's), and the marks of
 /// the drawing as it was last seen (its generation and revision).
@@ -51,6 +57,9 @@ pub struct GraphMarks {
     pub problems: Vec<(Vec2, String)>,
     pub corners: Vec<(Vec2, String)>,
     pub boundaries: Vec<(Vec2, String)>,
+    /// Each arc drawn with chords' strip (docs/adr/3820): the arc from its first corner to its last, then the chain
+    /// back, a closed outline.
+    pub strips: Vec<Vec<Vec2>>,
     /// The chosen row's places (a boundary's curve, a corner's or a problem's place) and its name (docs/adr/3020).
     pub focus: Option<(Vec<Vec2>, String)>,
 }
@@ -133,8 +142,16 @@ impl GraphMarks {
                 Some((middle, b.id.clone()))
             })
             .collect();
+        // The strip is as narrow as its widest place (`gap`): its arc drawn by points two hundred times finer.
+        let strips = g
+            .problems
+            .iter()
+            .filter(|p| p.kind == "approxArc")
+            .filter_map(|p| strip(g, &places, &p.boundaries, p.gap.map(|w| (w / 200.0).max(1e-6))))
+            .collect();
         Self {
             focus: None,
+            strips,
             problems: g
                 .problems
                 .iter()
@@ -144,6 +161,67 @@ impl GraphMarks {
             boundaries,
         }
     }
+}
+
+/// A boundary's curve from `a` to `e`, an arc as points along it: a chord's sagitta under a two-thousandth of it, or
+/// under `finer` when that is less.
+fn curve(a: Vec2, e: Vec2, bulge: f64, finer: Option<f64>) -> Vec<Vec2> {
+    if bulge == 0.0 {
+        return vec![a, e];
+    }
+    let tol = ((e.x - a.x).hypot(e.y - a.y) / 2000.0).max(1e-6);
+    let tol = finer.map_or(tol, |f| f.min(tol));
+    kentos_geometry_core::tessellate::bulge_path(&[a, e], Some(&[bulge]), false, tol)
+}
+
+/// An arc drawn with chords' strip (docs/adr/3420's `boundaries`: the arc, then the chain's boundaries): the arc from
+/// its `from` corner to its `to`, then the chain walked back from `to` to `from`; none when the chain does not join
+/// them.
+fn strip(g: &ParcelsBounded, places: &BTreeMap<&str, Vec2>, ids: &[String], finer: Option<f64>) -> Option<Vec<Vec2>> {
+    let find = |id: &String| g.boundaries.iter().find(|b| b.id == *id);
+    let (arc, chain) = ids.split_first()?;
+    let arc = find(arc)?;
+    let mut out = curve(*places.get(arc.from.as_str())?, *places.get(arc.to.as_str())?, arc.bulge, finer);
+    // The chain from the arc's end back to its start, each boundary taken in the way it is walked.
+    let mut left: Vec<_> = chain.iter().filter_map(find).collect();
+    let mut at = arc.to.as_str();
+    while at != arc.from.as_str() {
+        let k = left.iter().position(|b| b.from == at || b.to == at)?;
+        let b = left.swap_remove(k);
+        let (next, bulge) = if b.from == at { (b.to.as_str(), b.bulge) } else { (b.from.as_str(), -b.bulge) };
+        let piece = curve(*places.get(at)?, *places.get(next)?, bulge, finer);
+        out.extend(piece.into_iter().skip(1));
+        at = next;
+    }
+    Some(out)
+}
+
+/// The problems as the screen shows them (docs/adr/3820): those whose rings would meet (nearer than two radii) share
+/// the first one's place, their words in one phrase — each kind once in the order met, with its count when more than
+/// one.
+pub fn gathered(problems: &[(Point, &str)]) -> Vec<(Point, String)> {
+    let mut groups: Vec<(Point, Vec<(&str, usize)>)> = Vec::new();
+    for (c, w) in problems {
+        let near = groups.iter_mut().find(|(g, _)| (g.x - c.x).hypot(g.y - c.y) < 2.0 * RING);
+        match near {
+            Some((_, words)) => match words.iter_mut().find(|(k, _)| k == w) {
+                Some((_, n)) => *n += 1,
+                None => words.push((w, 1)),
+            },
+            None => groups.push((*c, vec![(w, 1)])),
+        }
+    }
+    groups
+        .into_iter()
+        .map(|(c, words)| {
+            let phrase = words
+                .iter()
+                .map(|(w, n)| if *n > 1 { format!("{w} ({n})") } else { (*w).to_owned() })
+                .collect::<Vec<_>>()
+                .join(" · ");
+            (c, phrase)
+        })
+        .collect()
 }
 
 impl App {
@@ -256,8 +334,27 @@ pub fn draw(
     let inside = |p: Point| p.x >= -24.0 && p.y >= -24.0 && p.x <= size.width + 24.0 && p.y <= size.height + 24.0;
     let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     let mut crowd = Crowd::default();
+    // Problems whose rings would meet share one ring and one phrase (docs/adr/3820).
     let problems: Vec<(Point, &str)> =
         m.problems.iter().map(|(p, w)| (screen(*p), w.as_str())).filter(|(c, _)| inside(*c)).collect();
+    let problems = gathered(&problems);
+    // An arc drawn with chords' strip under all: filled faintly in the danger colour, outlined (docs/adr/3820).
+    for outline in &m.strips {
+        let on: Vec<Point> = outline.iter().map(|p| screen(*p)).collect();
+        if on.len() < 3 {
+            continue;
+        }
+        let shape = Path::new(|b| {
+            b.move_to(on[0]);
+            for q in &on[1..] {
+                b.line_to(*q);
+            }
+            b.close();
+        });
+        frame.fill(&shape, iced::Color { a: 0.22, ..danger });
+        frame.stroke(&shape, stroke(3.0, colors.halo));
+        frame.stroke(&shape, stroke(1.5, danger));
+    }
     let corners: Vec<(Point, &str)> =
         m.corners.iter().map(|(p, n)| (screen(*p), n.as_str())).filter(|(c, _)| inside(*c)).collect();
     // The corners' dots, all of them in the view.
@@ -271,7 +368,7 @@ pub fn draw(
     // The problems: a ring on a halo, the words above right; never left out.
     let rings = Path::new(|b| {
         for (c, _) in &problems {
-            b.circle(*c, 9.0);
+            b.circle(*c, RING);
         }
     });
     frame.stroke(&rings, stroke(4.0, colors.halo));
@@ -299,7 +396,7 @@ pub fn draw(
             .min_by_key(|p| crowd.met(*p, width, &own))
             .unwrap_or(spots[0]);
         crowd.force(at, width);
-        words(frame, at, w, danger, colors.halo, true);
+        words(frame, at, w.as_str(), danger, colors.halo, true);
     }
     let mut written = 0;
     for (c, n) in &corners {

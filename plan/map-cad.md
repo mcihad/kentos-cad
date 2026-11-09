@@ -38,7 +38,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -1011,6 +1011,13 @@ arasında, köşeleri yayın üstünde (1 µm'de ya da kullanıcının `arcToler
 geniş yeri; zincirin köşeleri ayrıca eksik köşe sayılmaz; yayın kendi parçalarından oluşan zincir yayın bölünmesidir,
 eksik köşe kalır. 6 yeni ortak durum (mpmath başvurusu), Python, MCP, masaüstü (uzaklık kutusu, Fark sütunu) ve resimler.
 Açık: kalıcı parsel kaydı ve sınır kimliği, aynı yerdeki sözler, zincirin çizimde vurgusu, erişim denetimli hak/pay.
+
+**9 Kasım 2026, yedinci tur — kirişli yayın şeridi, aynı yerdeki sorunlar tek sözde ([ADR 3820](../docs/adr/3820-boundary-graph-strip-and-shared-rings.md)).**
+Kapsam: **Harita + CBS**. Araştırma: QGIS'in Point Cluster Renderer'ı (yakın noktalar sayısıyla tek işarette, yerleri
+değişmez). Kanıtlanan: Çizimde göster kirişli yayın şeridini (yay ile zincirin arası) soluk tehlike renginde doldurur,
+yayı şeridin genişliğine göre ince noktalar (alanı sorununkiyle %1 içinde); ekranda halkası buluşan sorunlar tek halka
+ve tek söz olur (“Komşuda eksik köşe (2) · Çakışan kenar”), yakınlaşınca ayrılır. Sözleşme değişmedi; masaüstü testi
+ve resimler. Açık: kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli), erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

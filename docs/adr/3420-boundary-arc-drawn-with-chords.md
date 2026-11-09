@@ -87,7 +87,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-08, altıncı tur. Durum: taslak. ADR 262
 
 ## Sonra
 
-- Çizimde zincirin ve yayın vurgulanması (bugün en geniş yer halkalanır).
-- Aynı yerdeki sorun sözlerinin tek sözde birleşmesi (ADR 3020 Sonra).
+- ~~Çizimde zincirin ve yayın vurgulanması (bugün en geniş yer halkalanır).~~ ADR 3820.
+- ~~Aynı yerdeki sorun sözlerinin tek sözde birleşmesi (ADR 3020 Sonra).~~ ADR 3820.
 - Kalıcı parsel kaydı ve sınır kimliği (MAP-08'in ana açığı).
 - Web (TODOS §0.2).

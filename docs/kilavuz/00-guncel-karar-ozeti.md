@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Sınır grafiği çizimde: kirişli yayın şeridi, tek sözde sorunlar (9 Kasım 2026; MAP-08, [ADR 3820](../../docs/adr/3820-boundary-graph-strip-and-shared-rings.md)).**
+  Çizimde göster kirişli yayın şeridini boyar; ekranda halkası buluşan sorunlar tek halka ve sayılı tek söz olur.
+  Sözleşme değişmez. Harita + CBS.
 - **Seçili nesnenin topoloji bulguları (9 Kasım 2026; MAP-07, [ADR 3800](../../docs/adr/3800-topology-findings-of-the-selected-object.md)).**
   `cad.topology.check`'in `uids` süzgeci; Öznitelikler'de tek nesnenin Topoloji bölümü (son denetimden, düğmesi sekmeyi
   bulguda açar) ve Formla düzenle'de kaydın bulguları. Harita + CBS.

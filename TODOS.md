@@ -203,6 +203,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Referanstan (iki tıkla referans ve köşe, referansın sonraki nesne için kalması).
 - MAP-07 / ADR 3800: `cad.topology.check`'in web işleyicisinde `uids` (35 ortak durum), web'in Öznitelikler'inde
   Topoloji bölümü ve form penceresinde kaydın bulguları.
+- MAP-08 / ADR 3820: web'in Sınır grafiği çizim işaretlerinde kirişli yayın şeridi ve halkası buluşan sorunların tek
+  sözde birleşmesi.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

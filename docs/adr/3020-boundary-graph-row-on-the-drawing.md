@@ -47,8 +47,8 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-08, beşinci tur. Durum: taslak. ADR 2620
 
 ## Sonra
 
-- Aynı yerdeki birkaç sorunun sözleri üst üste biniyor (resimde görüldü; ADR 2220'nin yerleştirmesi): tek sözde
-  birleşmeleri.
+- ~~Aynı yerdeki birkaç sorunun sözleri üst üste biniyor (resimde görüldü; ADR 2220'nin yerleştirmesi): tek sözde
+  birleşmeleri.~~ [ADR 3820](3820-boundary-graph-strip-and-shared-rings.md).
 - Kalıcı parsel kaydı ve sınır kimliği (MAP-08'in ana açığı).
 - Yayın kirişlerle yaklaşık çizildiği komşu (ADR 2620 Sonra). Yapıldı: [ADR 3420](3420-boundary-arc-drawn-with-chords.md).
 - Web (TODOS §0.2).

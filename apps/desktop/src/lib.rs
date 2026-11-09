@@ -376,6 +376,8 @@ mod clean_report_window_tests;
 #[cfg(test)]
 mod parcels_check_window_tests;
 #[cfg(test)]
+mod parcel_boundaries_marks_tests;
+#[cfg(test)]
 mod parcel_boundaries_window_tests;
 #[cfg(test)]
 mod pipes_check_window_tests;
