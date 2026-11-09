@@ -72672,6 +72672,8 @@ class PublishSheets(_Model):
         dpi: None preserves each page's own physical raster setting. Unit: dpi.
         name: One PDF's leaf name; .pdf is appended when missing.
         naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
+        pdfa: PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a
+            drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
         pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.
         previous: An update of this earlier delivery folder (absolute; docs/adr/1320 §3), published into the new `path`: a sheet
             whose page now draws what that delivery's page drew (equal content digests) and whose delivered PDF still has
@@ -72693,6 +72695,7 @@ class PublishSheets(_Model):
     mode: SheetPublishMode | SheetPublishModeName = SheetPublishMode.SINGLE
     name: str | None | Unset = UNSET
     naming: str = "{index}-{sheet}"
+    pdfa: bool | Unset = UNSET
     pin: SheetPublishPin | None | Unset = UNSET
     previous: str | None | Unset = UNSET
     resources: bool = False
@@ -72713,6 +72716,8 @@ class PublishSheets(_Model):
         if self.name is not UNSET:
             out["name"] = self.name
         out["naming"] = self.naming
+        if self.pdfa is not UNSET:
+            out["pdfa"] = self.pdfa
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
         if self.previous is not UNSET:
@@ -72737,6 +72742,7 @@ class PublishSheets(_Model):
             mode=_enum_in(SheetPublishMode, data["mode"]) if "mode" in data else SheetPublishMode.SINGLE,
             name=data.get("name", UNSET),
             naming=data["naming"] if "naming" in data else "{index}-{sheet}",
+            pdfa=data.get("pdfa", UNSET),
             pin=UNSET if "pin" not in data else None if data["pin"] is None else SheetPublishPin.from_json(data["pin"]),
             previous=data.get("previous", UNSET),
             resources=data["resources"] if "resources" in data else False,

@@ -1081,6 +1081,7 @@ impl AtlasPlanned {
             sheets: vec![self.sheet.clone()],
             geo: inputs.crs.is_some(),
             layers: true,
+            pdfa: false,
         };
         crate::images::svg_assets(&book, &mut inputs, &options, sheet.export.dpi)
             .map_err(|e| AtlasError::new("plot_asset_unreadable", e, "assets"))?;

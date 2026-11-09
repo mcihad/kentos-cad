@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use pdf_writer::types::PageMode;
+use pdf_writer::types::{OutputIntentSubtype, PageMode};
 use pdf_writer::{Chunk, Date, Filter, Finish, Name, Pdf, Rect, Ref, Str, TextStr};
 use sha2::{Digest, Sha256};
 
@@ -199,6 +199,19 @@ pub(super) fn faces_of(
     Ok(usage_of(&lists(book, inputs, sheets)?, inputs)?.faces())
 }
 
+/// A CMYK JPEG in an archival file (docs/adr/3037): its colours have no profile there (PDF/A-2 6.2.4.3).
+fn cmyk_refused(p: &Picture, pdfa: bool, what: &str) -> Result<()> {
+    if pdfa && matches!(p.kind, PictureKind::Jpeg { components: 4, .. }) {
+        return Err(SheetError::at(
+            "pdfa_cmyk_picture",
+            what,
+            "PDF/A'da CMYK JPEG resim kullanılamaz: resmi RGB olarak (PNG ya da RGB JPEG) yeniden kaydedip değiştirin \
+             ya da PDF/A seçeneğini kapatın.",
+        ));
+    }
+    Ok(())
+}
+
 /// A picture as an image object (and its soft mask): `Im…` for the pages.
 fn write_picture(doc: &mut Doc, p: &Picture) -> Ref {
     let id = doc.alloc();
@@ -247,6 +260,10 @@ fn write_picture(doc: &mut Doc, p: &Picture) -> Ref {
     x.finish();
     id
 }
+
+/// The information dictionary's `Creator` and `Producer` (and the XMP's).
+const CREATOR: &str = "KentOS pafta düzeni";
+const PRODUCER: &str = "KentOS";
 
 /// The document's title, author and subject from its variables and the project.
 struct Meta {
@@ -328,18 +345,20 @@ pub(super) fn document_audited(
                 Prim::Image(i) if !images.contains_key(&i.asset) => {
                     // An SVG picture as the PNG the host drew of it (the core draws no SVG).
                     let svg = super::is_svg(book, &i.asset);
-                    let pic =
-                        inputs
-                            .assets
-                            .iter()
-                            .find(|a| a.sha256 == i.asset)
-                            .and_then(|a| {
-                                if svg {
-                                    a.raster.as_deref().and_then(picture)
-                                } else {
-                                    picture(&a.data)
-                                }
-                            });
+                    let pic = inputs
+                        .assets
+                        .iter()
+                        .find(|a| a.sha256 == i.asset)
+                        .and_then(|a| {
+                            if svg {
+                                a.raster.as_deref().and_then(picture)
+                            } else {
+                                picture(&a.data)
+                            }
+                        });
+                    if let Some(pic) = &pic {
+                        cmyk_refused(pic, options.pdfa, &i.asset)?;
+                    }
                     let named = pic.map(|pic| {
                         let r = write_picture(&mut doc, &pic);
                         (format!("Im{}", images.len() + rasters.len() + 1), r)
@@ -361,6 +380,7 @@ pub(super) fn document_audited(
                         "Haritanın resmi PNG değil ya da bozuk: haritayı yeniden çizdirip aktarın.",
                     )
                 })?;
+                        cmyk_refused(&pic, options.pdfa, &m.item)?;
                         let id = write_picture(&mut doc, &pic);
                         rasters.insert(
                             (l.sheet.clone(), l.page, m.item.clone()),
@@ -625,6 +645,29 @@ pub(super) fn document_audited(
         .kids(page_refs.iter().copied())
         .count(page_refs.len() as i32);
 
+    // An archival file's metadata and output profile (docs/adr/3037), among the objects its id is the digest of.
+    let meta = meta_of(book, inputs, sheets);
+    let described = super::archive::Described {
+        title: meta.title.clone(),
+        author: meta.author.clone(),
+        subject: meta.subject.clone(),
+        keywords: inputs.keywords.clone().unwrap_or_default(),
+        creator: CREATOR.into(),
+        producer: PRODUCER.into(),
+        date: super::archive::day_of(&inputs.render.project.date),
+    };
+    let archive = options.pdfa.then(|| {
+        let (metadata, profile) = (doc.alloc(), doc.alloc());
+        doc.chunk
+            .metadata(metadata, &super::archive::xmp(&described));
+        let icc = deflate(&super::archive::srgb_icc());
+        doc.chunk
+            .icc_profile(profile, &icc)
+            .n(3)
+            .filter(Filter::FlateDecode);
+        (metadata, profile)
+    });
+
     // The file's id: the digest of its objects (and the coordinates set into them).
     let mut digest = Sha256::new();
     digest.update(doc.chunk.as_bytes());
@@ -633,7 +676,6 @@ pub(super) fn document_audited(
     }
     let id = digest.finalize()[..16].to_vec();
 
-    let meta = meta_of(book, inputs, sheets);
     let mut pdf = Pdf::new();
     pdf.set_version(1, 7);
     pdf.set_file_id((id.clone(), id));
@@ -641,6 +683,15 @@ pub(super) fn document_audited(
     {
         let mut cat = pdf.catalog(catalog);
         cat.pages(tree);
+        if let Some((metadata, profile)) = archive {
+            cat.metadata(metadata);
+            cat.output_intents()
+                .push()
+                .subtype(OutputIntentSubtype::PDFA)
+                .output_condition_identifier(TextStr(super::archive::OUTPUT_CONDITION))
+                .info(TextStr(super::archive::OUTPUT_CONDITION))
+                .dest_output_profile(profile);
+        }
         if !layer_order.is_empty() {
             cat.page_mode(PageMode::UseOC);
             let mut oc = cat.insert(Name(b"OCProperties")).dict();
@@ -671,9 +722,24 @@ pub(super) fn document_audited(
         if let Some(k) = inputs.keywords.as_deref().filter(|k| !k.is_empty()) {
             di.keywords(TextStr(k));
         }
-        di.creator(TextStr("KentOS pafta düzeni"));
-        di.producer(TextStr("KentOS"));
-        if let Some(d) = meta.date {
+        di.creator(TextStr(CREATOR));
+        di.producer(TextStr(PRODUCER));
+        // An archival file's dates are the XMP's to the second (PDF/A-2 6.6.2.3.1): the day at 00:00 UTC.
+        let date = match (options.pdfa, described.date) {
+            (true, Some((y, m, d))) => Some(
+                Date::new(y)
+                    .month(m)
+                    .day(d)
+                    .hour(0)
+                    .minute(0)
+                    .second(0)
+                    .utc_offset_hour(0)
+                    .utc_offset_minute(0),
+            ),
+            (true, None) => None,
+            (false, _) => meta.date,
+        };
+        if let Some(d) = date {
             di.creation_date(d);
             di.modified_date(d);
         }

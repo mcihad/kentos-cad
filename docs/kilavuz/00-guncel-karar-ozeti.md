@@ -198,6 +198,11 @@
       (`ZoningTable`). `TableSource::Parking`/`Shelter` (KCAD 215) Emsal tablosu gibi `reads_settings` ile yenilenir.
     - `provisions_audit.rs` (application): `parking_short`, `shelter_short`, `shelter_exit_count`, `shelter_height_low`;
       kaçış kurallarından sonra. Masaüstü `place_provision_table` (Metraj ▾ › Otopark hesabı, Sığınak hesabı).
+  - **PDF/A ve Türk pafta takımı (M37, [ADR 3037](../adr/3037-turkish-title-block-sheet-sets-pdfa.md)):**
+    - `kentos_sheet::pdf::archive` (`PdfOptions.pdfa`): XMP (`pdfaid` 2/B), bilgi ↔ XMP aynı, sRGB ICC (kodda
+      üretilir, v2.1 mntr), `GTS_PDFA1`; CMYK JPEG `pdfa_cmyk_picture`.
+    - `kentos_formats::pdf::pdfa::pdfa2_report`: projenin PDF okuyucusuyla PDF/A-2 maddeleri (6.1.2–6.9); yayın her
+      PDF/A dosyasını teslimden önce okur (`pdfa_rule` yayını durdurur). `file.publish.sheets` `pdfa`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -210,9 +210,24 @@ pub(crate) fn journal_dir(target: &Path) -> Option<PathBuf> {
 pub(crate) const JOURNAL: &str = "devam.json";
 pub(crate) const JOURNAL_FORMAT: &str = "kentos.publish-resume/1";
 
+/// The options `yayin.json` records: what an update compares before it carries a page (docs/adr/1320 §3); `pdfa` only
+/// when on (docs/adr/3037).
+fn published_options(input: &PublishSheets) -> serde_json::Value {
+    let mut o = serde_json::json!({"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers});
+    if input.pdfa {
+        o["pdfa"] = serde_json::Value::Bool(true);
+    }
+    o
+}
+
 /// The options a resumed publication must share with the one it goes on from.
 fn journal_options(input: &PublishSheets) -> serde_json::Value {
-    serde_json::json!({"mode":input.mode,"naming":input.naming,"name":input.name,"dpi":input.dpi,"geo":input.geo,"layers":input.layers,"resources":input.resources,"drawing":input.drawing})
+    let mut o = serde_json::json!({"mode":input.mode,"naming":input.naming,"name":input.name,"dpi":input.dpi,"geo":input.geo,"layers":input.layers,"resources":input.resources,"drawing":input.drawing});
+    // Written only when on, so a journal from before PDF/A (docs/adr/3037) still goes on.
+    if input.pdfa {
+        o["pdfa"] = serde_json::Value::Bool(true);
+    }
+    o
 }
 
 /// The scope summary of the chosen sheets (docs/adr/1090 §7).
@@ -321,7 +336,8 @@ pub(crate) fn digests(
     let mut out = Vec::with_capacity(chosen.len());
     for id in chosen {
         stopped(progress)?;
-        let opts = kentos_sheet::pdf::PdfOptions { sheets: vec![id.clone()], geo, layers };
+        // A page's digest is its content's, archival or not (docs/adr/3037).
+        let opts = kentos_sheet::pdf::PdfOptions { sheets: vec![id.clone()], geo, layers, pdfa: false };
         let got = match kentos_plot::book::book_pdf_captured(&neutral, std::slice::from_ref(id), Some(opts), None) {
             Ok(pdf) => pdf.pages.first().map(|p| p.digest.clone()).ok_or_else(|| ("pdf_no_page".to_owned(), "Sayfa yazılmadı.".to_owned())),
             Err(e) if e.code == "cancelled" => return Err(refuse("cancelled", e.message, "path")),
@@ -581,6 +597,7 @@ fn work(
             sheets: sheets.clone(),
             geo: input.geo,
             layers: input.layers,
+            pdfa: input.pdfa,
         };
         let page_progress = progress.map(|p| {
             p.span(
@@ -599,6 +616,24 @@ fn work(
         });
         match kentos_plot::book::book_pdf_captured(&captured,sheets,Some(opts),page_progress.as_ref()) {
             Ok(pdf) => {
+                // An archival file read back by the PDF reader's PDF/A-2 rules before it is delivered (docs/adr/3037):
+                // a broken rule blocks the publication, never a file that only says it is PDF/A.
+                if input.pdfa {
+                    let read = kentos_formats::pdf::pdfa::pdfa2_report(&pdf.bytes);
+                    let broken: Vec<String> = match &read {
+                        Ok(r) => r.findings.iter().map(|f| format!("PDF/A-2 {}: {}", f.clause, f.message)).collect(),
+                        Err(e) => vec![format!("PDF/A-2 denetimi dosyayı okuyamadı: {e}")],
+                    };
+                    for message in broken {
+                        issues.push(issue(
+                            &sheets.join(","),
+                            "pdfa_rule",
+                            message,
+                            true,
+                            "PDF/A seçeneğini kapatıp yayınlayın ve durumu bildirin.".into(),
+                        ));
+                    }
+                }
                 for (owner, f) in pdf.sheet_findings {
                     issues.push(issue(
                         &owner,
@@ -706,7 +741,7 @@ fn work(
         return Err(e);
     }
     let ready = !issues.iter().any(|i| i.error);
-    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":{"mode":input.mode,"naming":input.naming,"dpi":input.dpi,"geo":input.geo,"layers":input.layers},"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes=serde_json::to_vec_pretty(&serde_json::json!({"format":"kentos.publish/1","snapshot":captured.metadata().map_err(|e|refuse(&e.code,e.message,"pin"))?,"drawingSet":chosen.iter().filter_map(|id| book.sheet(id).map(|s|serde_json::json!({"id":s.id,"name":s.name,"info":s.drawing_info}))).collect::<Vec<_>>(),"source":source,"date":date,"user":user,"options":published_options(input),"sheets":chosen,"files":files,"pages":pages,"scope":scope,"resources":resources,"issues":issues,"previous":previous.as_ref().map(|p|&p.report),"carried":carried,"sources":if matches!(op,CallOp::Execute){crate::publish_update::source_record(doc,&kept_book,&chosen)}else{serde_json::Value::Null}})).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
     let report = SheetsPublished {
         resources,
         path: input.path.clone(),

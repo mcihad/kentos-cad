@@ -73,6 +73,11 @@ pub struct PublishSheets {
     pub geo: bool,
     #[serde(default = "yes")]
     pub layers: bool,
+    /// PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a
+    /// drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub pdfa: bool,
     /// A plan's immutable document pin; changed source refuses publication before any file is exposed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

@@ -1026,7 +1026,9 @@ Kuralın kaynağı ve yürürlük tarihi görünür. Dayanak S22; W4 §4/4–7, 
 - Bağımsız başvuru kuralları KentOS kodu olmadan sınar.
 - Sivas ile PAİY arasındaki çelişki raporda görünür.
 
-#### ADV-24 — Türk proje takımı: antet, paftalar ve listeler [ ]
+#### ADV-24 — Türk proje takımı: antet, paftalar ve listeler [~]
+
+_Durum (9 Kasım 2026):_ PDF/A-2b yapıldı (M37 1. bölüm, [ADR 3037](../docs/adr/3037-turkish-title-block-sheet-sets-pdfa.md)): pafta yazıcısında XMP, sRGB çıktı niyeti ve kendi profili; projenin PDF okuyucusuyla PDF/A-2 denetimi; Paftaları toplu yayınla'da "PDF/A-2 arşiv biçimi" (`file.publish.sheets` `pdfa`), her dosya teslimden önce denetlenir. Araştırma: 2026 dijital proje yönetmeliğinin EK-1 proje kodu, EK-2 dosya adı (`ProjeKodu_00_MM_XXXX_PL_MMC_K00_01_000`), MO pafta başlığı ve sunuş sırası. Kalanlar: Türk anteti ve projeden dolan bilgileri, EK-2 adları, Ruhsat takımı komutu, A4 katlama izleri.
 
 **Kullanıcı sonucu:** "Ruhsat takımı" komutu, PAİY 57(2)(a)'nın istediği paftaları Türk antetiyle tek PDF/A takımı olarak
 basar. Dayanak S22; W4 §3, §4/11–12.
@@ -1155,7 +1157,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M34 | Merdiven, rampa, korkuluk, ışıklık, asansör denetimi | ADV-23 | Sivas ile PAİY çelişkisi görünür **(M34, ADR 3034: yapıldı; PAİY 30/12, 31, 32/2–3, 34/1–2, 38/1; yerel yönetmelik Sivas: sıkı değer bağlar, gevşeğin tuttuğu ölçü çelişki)** |
 | M35 | Yangın kaçışı | ADV-23 | Kaçış rotası ve çıkış genişliği **(M35, ADR 3035: yapıldı; kaçış yolları motoru; BYKHY 32/4, 32/6, 4/i, 33/1–2, 33/6-b, 39/2, 48/1–5, Ek-5/A–B; yağmurlama ayarı; Proje ▾ › Kaçış yolları rotayı ölçüsü ve sınırıyla plana çizer, aşan kırmızı)** |
 | M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler **(M36, ADR 3036: yapıldı; Metraj ▾ › Otopark hesabı ve Sığınak hesabı canlı tabloları; Otopark Yön. 4/1-ç, 5/1-j, 8/3–4, Ek-1; Sığınak Yön. 7/a–c, 8/a, 8/c; eksik yer ve alan Denetim › Mevzuat'ta)** |
-| M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla |
+| M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla **(M37 1. bölüm, ADR 3037: PDF/A-2b yazımı, kendi PDF/A-2 denetimi, yayında PDF/A seçeneği; 2. bölüm: Türk anteti ve takım)** |
 | M38 | Mahal listesi ve grafik doğrama listesi | ADV-24 | 57(29) listesi; tip görünüşleri |
 | M39 | Tadilat grafik dili | ADV-17 | Üç evre paftası |
 

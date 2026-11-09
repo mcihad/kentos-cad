@@ -96531,6 +96531,10 @@
             "description": "Absolute new or empty delivery folder; existing nonempty folders are refused.",
             "type": "string"
           },
+          "pdfa": {
+            "description": "PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a\ndrawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.",
+            "type": "boolean"
+          },
           "pin": {
             "anyOf": [
               {

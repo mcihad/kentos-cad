@@ -658,6 +658,7 @@ pub(crate) fn prepare_captured(
         sheets: chosen.clone(),
         geo: inputs.crs.is_some(),
         layers: true,
+        pdfa: false,
     };
     Ok((book, inputs, options, notes))
 }

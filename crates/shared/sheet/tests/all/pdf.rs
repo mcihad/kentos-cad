@@ -165,6 +165,7 @@ fn the_options_choose_sheets_layers_and_the_place() {
         sheets: vec!["s1".into()],
         geo: false,
         layers: false,
+        pdfa: false,
     };
     let t = text(&to_pdf(&book, &inputs, &plain).unwrap());
     assert!(!t.contains("/OCProperties") && !t.contains("/OC /oc"));
@@ -274,6 +275,103 @@ fn pictures_go_in_as_images_with_their_masks() {
     assert!(
         t.contains("/Im1 Do") || t.contains("/Im1 "),
         "drawn on the page"
+    );
+}
+
+/// PDF/A-2b (docs/adr/3037): the ifraz sheet (its faces, its map's layers as optional content, a geographic viewport)
+/// with a picture and its soft mask, written archival, reads back as PDF/A-2 by the PDF reader's rules; the same sheet
+/// written plainly lacks the metadata and the output intent; a CMYK JPEG is refused by name.
+#[test]
+fn an_archival_sheet_reads_back_as_pdf_a_2() {
+    let mut book = ifraz();
+    let mut png = Vec::new();
+    {
+        let mut e = png::Encoder::new(&mut png, 4, 4);
+        e.set_color(png::ColorType::Rgba);
+        e.set_depth(png::BitDepth::Eight);
+        let mut w = e.write_header().unwrap();
+        let px: Vec<u8> = (0..16u32)
+            .flat_map(|i| [(i * 16) as u8, 90, 200, 120])
+            .collect();
+        w.write_image_data(&px).unwrap();
+    }
+    let mut inputs = inputs_for(&book);
+    let picture = |book: &mut SheetBook,
+                   inputs: &mut PdfInputs,
+                   bytes: &Vec<u8>,
+                   kind: AssetKind,
+                   id: &str| {
+        let sha = sha(bytes);
+        book.assets.push(AssetMeta {
+            sha256: sha.clone(),
+            kind,
+            name: id.into(),
+            width: 4,
+            height: 4,
+            bytes: bytes.len() as u32,
+            dpi: None,
+        });
+        inputs.assets.push(PdfAsset {
+            sha256: sha.clone(),
+            data: bytes.clone(),
+            raster: None,
+        });
+        book.sheets[0].items.push(Item::new(
+            id,
+            "Logo",
+            RectUm::new(310_000, 230_000, 20_000, 20_000),
+            ItemKind::Picture(PictureItem {
+                asset: Some(sha),
+                fit: PictureFit::Contain,
+                clip: true,
+            }),
+        ));
+    };
+    picture(&mut book, &mut inputs, &png, AssetKind::Png, "logo");
+    inputs.render.project.date = "2026-11-09".into();
+    inputs.keywords = Some("ruhsat; mimari".into());
+    let archival = PdfOptions {
+        pdfa: true,
+        ..PdfOptions::default()
+    };
+    let pdf = to_pdf(&book, &inputs, &archival).expect("an archival PDF");
+    let report = kentos_formats::pdf::pdfa::pdfa2_report(&pdf).expect("read back");
+    assert_eq!(report.findings, Vec::new(), "every rule read is kept");
+    assert_eq!(
+        (report.part, report.conformance.as_deref()),
+        (Some(2), Some("B"))
+    );
+    assert!(report.conforms());
+    let t = text(&pdf);
+    assert!(
+        t.contains("/OCProperties"),
+        "the map's layers stay (part 1 would forbid them)"
+    );
+    assert!(t.contains("/SMask"), "the picture's transparency stays");
+    assert!(t.contains("/S /GTS_PDFA1"));
+    assert!(t.contains("D:20261109000000Z"), "the dates to the second");
+    assert_eq!(
+        to_pdf(&book, &inputs, &archival).unwrap(),
+        pdf,
+        "the same bytes every time"
+    );
+
+    let plain = to_pdf(&book, &inputs, &PdfOptions::default()).unwrap();
+    let report = kentos_formats::pdf::pdfa::pdfa2_report(&plain).unwrap();
+    let clauses: Vec<&str> = report.findings.iter().map(|f| f.clause).collect();
+    assert_eq!(clauses, ["6.6.2.1", "6.2.3"], "{:?}", report.findings);
+
+    // A CMYK JPEG: four components (an Adobe marker would invert them).
+    let mut cmyk = vec![0xff, 0xd8, 0xff, 0xc0, 0, 20, 8, 0, 4, 0, 4, 4];
+    cmyk.extend_from_slice(&[1, 0x11, 0, 2, 0x11, 0, 3, 0x11, 0, 4, 0x11, 0]);
+    cmyk.extend_from_slice(&[0xff, 0xda, 0, 2, 0xff, 0xd9]);
+    picture(&mut book, &mut inputs, &cmyk, AssetKind::Jpeg, "baski");
+    let err = to_pdf(&book, &inputs, &archival).unwrap_err();
+    assert_eq!(err.code, "pdfa_cmyk_picture");
+    assert!(err.message.contains("CMYK"), "{}", err.message);
+    assert!(
+        to_pdf(&book, &inputs, &PdfOptions::default()).is_ok(),
+        "a plain PDF keeps it"
     );
 }
 
