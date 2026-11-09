@@ -698,6 +698,617 @@
    ]
   },
   {
+   "name": "Nokta kaynak sistemin kullanım alanının dışında: TM30'da yazılmış Ankara noktası WGS 84'e",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 744455.9528009866,
+        "y": 4426051.867710872
+       }
+      ],
+      "to": {
+       "srid": 4326
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 29.0665,
+         "y": 40.182599999999994
+        },
+        {
+         "x": 32.8597,
+         "y": 39.933400000000006
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "WGS 84 (EPSG:4326)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
+       },
+       "flagged": [
+        {
+         "index": 1,
+         "notes": [
+          "outside_source_area"
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta kaynak sistemin kullanım alanının dışında (nokta başka bir sistemde olabilir). Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
+   "name": "Nokta hedef sistemin kullanım alanının dışında: Bursa TUREF / TM33'e",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 544600.6244147683,
+        "y": 4404865.116370585
+       }
+      ],
+      "to": {
+       "srid": 5255
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 164955.19744342874,
+         "y": 4457231.279328417
+        },
+        {
+         "x": 287574.26098963304,
+         "y": 4407677.13536957
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 33°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "TUREF / TM33 (EPSG:5255)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5255,
+         "name": "TUREF / TM33",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "exact"
+        ],
+        "grids": [],
+        "status": "complete",
+        "reasons": [],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 1,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "2 nokta EPSG'nin kullanım alanlarından birinin dışında: 2 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Nokta datum dönüşümünün kullanım alanının dışında: WGS 84 / UTM 35N'de Filibe TUREF'e (hedefin de)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 313662.5954133047,
+        "y": 4667270.092606169
+       }
+      ],
+      "from": {
+       "srid": 32635
+      },
+      "to": {
+       "srid": 5252
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 24.7453,
+         "y": 42.1354
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 27°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=27 +k=0.9996 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257223563 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "WGS 84 / UTM 35N (EPSG:32635)",
+        "to": "TUREF (EPSG:5252)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 32635,
+         "name": "WGS 84 / UTM 35N",
+         "family": "transverseMercator",
+         "datum": "WGS84",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "en",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 5252,
+         "name": "TUREF",
+         "family": "geographic",
+         "datum": "TUREF",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_operation_area",
+          "outside_target_area"
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli değil); 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
+   "name": "Noktaların ayrı kararları: biri içeride, biri hedefin, biri hem kaynağın hem hedefin dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 544600.6244147683,
+        "y": 4404865.116370585
+       },
+       {
+        "x": 744455.9528009866,
+        "y": 4426051.867710872
+       }
+      ],
+      "to": {
+       "srid": 32635
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 675931.5278566639,
+         "y": 4450071.9332699645
+        },
+        {
+         "x": 801528.7128779793,
+         "y": 4408904.685220321
+        },
+        {
+         "x": 1000822.2698194482,
+         "y": 4436835.643104437
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 27°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=27 +k=0.9996 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257223563",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "WGS 84 / UTM 35N (EPSG:32635)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 32635,
+         "name": "WGS 84 / UTM 35N",
+         "family": "transverseMercator",
+         "datum": "WGS84",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "en",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg",
+         "exact"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-06,
+         "vertical": 1e-06
+        }
+       },
+       "flagged": [
+        {
+         "index": 1,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 2,
+         "notes": [
+          "outside_source_area",
+          "outside_target_area"
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "2 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta kaynak sistemin kullanım alanının dışında (nokta başka bir sistemde olabilir); 2 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
    "name": "WGS 84'ten UTM 35N'e: yalnız izdüşüm, doğruluk 0, kullanım alanı yok",
    "steps": [
     {
@@ -1338,7 +1949,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -1350,6 +1969,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların ne olduğu söylenmedi, değişmeden kaldı.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },
@@ -1466,9 +2090,23 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1777,7 +2415,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -1789,6 +2435,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: yalnız bir yanın epoku söylendi; öbürünün aynı epokta olduğu varsayıldı.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },

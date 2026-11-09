@@ -25607,6 +25607,29 @@ class CrsPoint(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CrsPointNotes(_Model):
+    """A transformed point beyond an area of use (docs/adr/3700): its place in `points` and its notes ([`CRS_POINT_NOTES`]).
+    Attributes:
+        index: Unit: index.
+    """
+    index: int
+    notes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsPointNotes:
+        return cls(
+            index=data["index"],
+            notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CrsSide(_Model):
     """One side of a transformation: a system of the registry by its EPSG code, or the project's own (absent `srid`);
     what its heights are and its coordinate epoch. Absent `heights` and `epoch` take the project's when the system is
@@ -25693,13 +25716,15 @@ class CrsTransform(_Model):
 @dataclass(kw_only=True, slots=True)
 class CrsTransformed(_Model):
     """Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
-    the operation's record, the report and the coordinate chain (docs/adr/1230).
+    the operation's record, the report and the coordinate chain (docs/adr/1230); the points beyond an area of use, each
+    with its notes (docs/adr/3700: the decision point by point, the chain's stays the call's).
     """
     points: list[CrsPoint | None]
     unreached: list[UnreachedPoint]
     operation: CrsOperation
     report: AccuracyReport
     chain: CrsChain
+    flagged: list[CrsPointNotes] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -25708,6 +25733,8 @@ class CrsTransformed(_Model):
         out["operation"] = self.operation.to_json()
         out["report"] = self.report.to_json()
         out["chain"] = self.chain.to_json()
+        if self.flagged is not UNSET:
+            out["flagged"] = [e0.to_json() for e0 in self.flagged]
         return out
 
     @classmethod
@@ -25718,6 +25745,7 @@ class CrsTransformed(_Model):
             operation=CrsOperation.from_json(data["operation"]),
             report=AccuracyReport.from_json(data["report"]),
             chain=CrsChain.from_json(data["chain"]),
+            flagged=[CrsPointNotes.from_json(e0) for e0 in data["flagged"]] if "flagged" in data else UNSET,
         )
 
 
@@ -131081,6 +131109,7 @@ __all__ = [
     "CrsOperation",
     "CrsPlane",
     "CrsPoint",
+    "CrsPointNotes",
     "CrsSide",
     "CrsSource",
     "CrsSourceName",

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Koordinat dönüştür'de nokta başına karar (9 Kasım 2026; MAP-02, [ADR 3700](../../docs/adr/3700-coordinate-transform-point-by-point-areas.md)).**
+  `cad.crs.transform`'un `flagged`'i her noktanın dışında kaldığı kullanım alanlarını (kaynak, dönüşüm, hedef) söyler;
+  nokta yine dönüştürülür; kenara 10⁻⁹° yakın nokta kenarda. Pencerede Alan dışı sütunu. CAD + CBS.
 - **Onayın nesnelerin değerlerini tutması (9 Kasım 2026; MAP-01, [ADR 3680](../../docs/adr/3680-map-work-approved-values.md)).**
   Onay `approvedValues`'i yazar (özetin alındığı metin, en çok 4 MiB; `.kcad` şema 213); `map.work.query` değişen
   özniteliğin adını, onaylanan ve şimdiki değerini, silinen nesnenin onaylanan hâlini söyler. Yalnız Harita.

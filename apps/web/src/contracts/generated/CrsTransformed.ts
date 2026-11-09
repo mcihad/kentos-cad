@@ -3,10 +3,12 @@ import type { AccuracyReport } from "./AccuracyReport";
 import type { CrsChain } from "./CrsChain";
 import type { CrsOperation } from "./CrsOperation";
 import type { CrsPoint } from "./CrsPoint";
+import type { CrsPointNotes } from "./CrsPointNotes";
 import type { UnreachedPoint } from "./UnreachedPoint";
 
 /**
  * Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
- * the operation's record, the report and the coordinate chain (docs/adr/1230).
+ * the operation's record, the report and the coordinate chain (docs/adr/1230); the points beyond an area of use, each
+ * with its notes (docs/adr/3700: the decision point by point, the chain's stays the call's).
  */
-export type CrsTransformed = { points: Array<CrsPoint | null>, unreached: Array<UnreachedPoint>, operation: CrsOperation, report: AccuracyReport, chain: CrsChain, };
+export type CrsTransformed = { points: Array<CrsPoint | null>, unreached: Array<UnreachedPoint>, operation: CrsOperation, report: AccuracyReport, chain: CrsChain, flagged?: Array<CrsPointNotes>, };

@@ -723,6 +723,7 @@ __all__ = [
     "CrsOperation",
     "CrsPlane",
     "CrsPoint",
+    "CrsPointNotes",
     "CrsSide",
     "CrsSource",
     "CrsSourceName",

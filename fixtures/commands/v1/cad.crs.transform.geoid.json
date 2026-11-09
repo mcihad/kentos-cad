@@ -1037,7 +1037,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -1049,6 +1057,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor); ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },
@@ -2424,7 +2437,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -2436,6 +2457,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: bir adımın yatay doğruluğu bilinmiyor; kotların doğruluğu bilinmiyor (geoit ya da hız modeli doğruluk söylemiyor); ED50'nin EPSG işlemi resmî dönüşüm değil.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },

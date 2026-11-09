@@ -32,7 +32,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680 | tipli katman profili; silineni onaylı hâline geri getirme; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700 | Poligon'da trigonometrik kotla bacağın kendi yüksekliği; EPSG'nin çokgen kullanım alanları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
@@ -384,6 +384,15 @@ elipsoit yüksekliklerinin ortalamasında, kotsuz hedef ortalamada (`height`); m
 h sütunu ve not. PROJ 9.5.1 ile üç yeni bağımsız durum (eski sayılar aynı), masaüstünde `cad.crs.factors` ile aynı
 çarpan. Açık: Poligon'da trigonometrik kotla bacağın yüksekliği, Koordinat dönüştür'de nokta başına karar, zamana bağlı
 Helmert.
+
+**9 Kasım 2026, yedinci tur — Koordinat dönüştür'de nokta başına karar ([ADR 3700](../docs/adr/3700-coordinate-transform-point-by-point-areas.md)).**
+Kapsam: **CAD + CBS**. Dayanak: IOGP GN 7-1 §5.7 ve §6.5, PROJ'un işlem seçimi (ADR 2500'ün okuması). Kanıtlanan:
+`cad.crs.transform`'un `flagged`'i: her nokta kaynak sistemin, datum dönüşümünün ve hedef sistemin kullanım alanına
+karşı okunur, dışındaki notlarıyla söylenir, yine dönüştürülür (`outside_area`); kenara 10⁻⁹° yakın nokta kenarda
+(Bulunan: PROJ ile KentOS'un ters izdüşümü orta meridyende kenarı farklı okuyordu), aynı kural katmanın dönüştürülmesinde;
+dört yeni bağımsız durum, üç üretici aynı kuralı paylaşır (78 durum), bağımsız Python testi, MCP; Koordinat dönüştür
+penceresinde tek noktanın uyarısı ve listenin Alan dışı sütunu. Açık: Poligon'da trigonometrik kot, çokgen kullanım
+alanları, zamana bağlı Helmert (resmî parametre bekler).
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

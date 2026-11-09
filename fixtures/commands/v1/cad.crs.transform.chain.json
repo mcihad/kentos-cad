@@ -154,9 +154,35 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 1,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 2,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "3 nokta EPSG'nin kullanım alanlarından birinin dışında: 3 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -276,9 +302,35 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 1,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 2,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "3 nokta EPSG'nin kullanım alanlarından birinin dışında: 3 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -1176,9 +1228,29 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        },
+        {
+         "index": 1,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
-      "warnings": []
+      "warnings": [
+       {
+        "code": "outside_area",
+        "message": "2 nokta EPSG'nin kullanım alanlarından birinin dışında: 2 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
      },
      "expect": {
       "ids": [],
@@ -2128,7 +2200,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -2140,6 +2220,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: yalnız bir yanın epoku söylendi; öbürünün aynı epokta olduğu varsayıldı.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },
@@ -2250,13 +2335,26 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
         "code": "epoch_not_applied",
         "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
         "path": "from.epoch"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },
@@ -2771,7 +2869,15 @@
          "horizontal": 1e-06,
          "vertical": 1e-06
         }
-       }
+       },
+       "flagged": [
+        {
+         "index": 0,
+         "notes": [
+          "outside_target_area"
+         ]
+        }
+       ]
       },
       "warnings": [
        {
@@ -2783,6 +2889,11 @@
         "code": "chain_limited",
         "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: kotların ne olduğu söylenmedi, değişmeden kaldı.",
         "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta hedef sistemin kullanım alanının dışında. Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
        }
       ]
      },

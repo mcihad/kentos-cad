@@ -6971,6 +6971,7 @@ const ENTRIES: &[Entry] = &[
             "unofficial_operation",
             "points_outside",
             "chain_limited",
+            "outside_area",
         ],
         targets: none,
     },

@@ -146,7 +146,8 @@ fn shift_of(
 ) -> ReprojectShift {
     let mut outside = [false; 3];
     let held = |b: Option<[f64; 4]>, at: Option<(f64, f64)>| match (b, at) {
-        (Some(b), Some((lat, lon))) => kentos_project::crs::box_holds(b, lon, lat),
+        // docs/adr/3700: a point within EDGE of an edge is on it.
+        (Some(b), Some((lat, lon))) => kentos_project::crs::box_holds_near(b, lon, lat),
         _ => true,
     };
     let (mut least, mut most) = (f64::INFINITY, 0.0_f64);

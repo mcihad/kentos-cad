@@ -22,6 +22,13 @@ transformation (accuracy unknown) when no grid is given; that is the silent fall
 The vertical systems KentOS knows (kentos_contracts::VERTICAL_SYSTEMS) are checked against PROJ's database: name,
 datum, unit and area of use. Grid coordinates are compared within 1e-6 m, degrees within 1e-9 (each case's
 `within`); the rest exactly.
+
+docs/adr/3700: each transformed point read against EPSG's areas of use, as PROJ's database gives them (checked against
+fixtures/crs/v1/areas.json): the source system's and the datum operation's at the point's place on the source's datum
+(PROJ's conversion to the source's geodetic system), the target system's where it lands; a box holds its edges (west
+past east wraps the antimeridian; a point within 1e-9° of an edge is on it, the noise of two engines' inverse
+projections on a point exactly on an edge). A point beyond any is flagged with its notes in that order and the call warned
+(`outside_area`), the counts per note.
 """
 
 import json
@@ -254,6 +261,42 @@ def proj_3d(src, dst):
     return lambda x, y, z: t.transform(x, y, z)
 
 
+# docs/adr/3700: EPSG's areas of use of the registry's systems, as PROJ's database gives them.
+REGISTRY_AREAS = {a["srid"]: (a["west"], a["south"], a["east"], a["north"])
+                  for a in json.loads((ROOT / "fixtures/crs/v1/areas.json").read_text("utf-8"))["areas"]}
+POINT_NOTES = ("outside_source_area", "outside_operation_area", "outside_target_area")
+NOTE_WORDS = {"outside_source_area": "kaynak sistemin kullanım alanının dışında (nokta başka bir sistemde olabilir)",
+              "outside_operation_area": "datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli "
+                                        "değil)",
+              "outside_target_area": "hedef sistemin kullanım alanının dışında"}
+
+
+def registry_box(srid):
+    """A registry system's area of use: PROJ's, the same as the fixture KentOS reads; none for a system not there."""
+    if srid not in REGISTRY_AREAS:
+        return None
+    assert tuple(CRS.from_epsg(srid).area_of_use.bounds) == REGISTRY_AREAS[srid], srid
+    return REGISTRY_AREAS[srid]
+
+
+# A point within 1e-9° of an edge is on it: the noise two inverse projections leave on a point exactly on an edge.
+EDGE = 1e-9
+
+
+def box_holds(b, lon, lat):
+    w, s, e, n = b[0] - EDGE, b[1] - EDGE, b[2] + EDGE, b[3] + EDGE
+    along = (w <= lon <= e) if w <= e else (lon >= w or lon <= e)
+    return along and s <= lat <= n
+
+
+def geodetic(srid, x, y):
+    """(longitude, latitude) of a point of system `srid` on its own datum: PROJ's conversion."""
+    c = CRS.from_epsg(srid)
+    if c.is_geographic:
+        return x, y
+    return Transformer.from_crs(c, c.geodetic_crs, always_xy=True).transform(x, y)
+
+
 def place(srid, lat, lon):
     return ct.into(entry(srid), lat, lon)
 
@@ -420,7 +463,35 @@ def transformed(points, frm=None, to=None, uncertainty=None, within=None, op="ex
     # The coordinate chain (docs/adr/1230), from the ADR's rules and PROJ's database.
     (fe, fs), (te, ts), stated = chain.epoch_sources(se, de, "srid" not in (frm or {}), "srid" not in (to or {}))
     chain.add(s, chain.side(entry(src), sh, fe, fs), chain.side(entry(dst), dh, te, ts), stated)
-    return s
+    # docs/adr/3700: the points beyond an area of use, after the chain's word.
+    return flag(s, area_notes(src, dst, rec, points, out))
+
+
+def area_notes(src, dst, rec, points, out):
+    """docs/adr/3700: each transformed point against the source's, the operation's and the target's areas of use."""
+    boxes = (registry_box(src), (rec["area"]["west"], rec["area"]["south"], rec["area"]["east"], rec["area"]["north"])
+             if "area" in rec else None, registry_box(dst))
+    flagged = []
+    for i, (q, p) in enumerate(zip(points, out)):
+        if p is None:
+            continue
+        here, there = geodetic(src, q["x"], q["y"]), geodetic(dst, p["x"], p["y"])
+        outside = [b is not None and not box_holds(b, *at) for b, at in zip(boxes, (here, here, there))]
+        if any(outside):
+            flagged.append({"index": i, "notes": [n for n, o in zip(POINT_NOTES, outside) if o]})
+    return flagged
+
+
+def flag(step, flagged):
+    """docs/adr/3700: a completed step with its flagged points and the warning that counts them per note."""
+    if flagged:
+        step["result"]["output"]["flagged"] = flagged
+        counts = [(n, sum(1 for f in flagged if n in f["notes"])) for n in POINT_NOTES]
+        step["result"]["warnings"].append(warning(
+            "outside_area", f"{len(flagged)} nokta EPSG'nin kullanım alanlarından birinin dışında: "
+            + "; ".join(f"{k} nokta {NOTE_WORDS[n]}" for n, k in counts if k)
+            + ". Dönüştürüldüler; bu noktaları denetleyin.", "points"))
+    return step
 
 
 def refused(points, code, message, path, frm=None, to=None, uncertainty=None, **more):
@@ -462,6 +533,17 @@ def cases():
     out.append(case("TUREF / TM30'dan WGS 84'e elipsoit yüksekliğiyle: boş dönüşüm, kot aynen kalır",
                     transformed([pt(*own, 1043.25)], frm={"srid": 5254, "heights": ell},
                                 to={"srid": 4326, "heights": ell}, within=1e-9)))
+    # docs/adr/3700: each point's own decision against the areas of use.
+    ankara = place(5254, 39.9334, 32.8597)
+    out.append(case("Nokta kaynak sistemin kullanım alanının dışında: TM30'da yazılmış Ankara noktası WGS 84'e",
+                    transformed([pt(*own), pt(*ankara)], to={"srid": 4326})))
+    out.append(case("Nokta hedef sistemin kullanım alanının dışında: Bursa TUREF / TM33'e",
+                    transformed([pt(*own), pt(*own2)], to={"srid": 5255})))
+    plovdiv = place(32635, 42.1354, 24.7453)
+    out.append(case("Nokta datum dönüşümünün kullanım alanının dışında: WGS 84 / UTM 35N'de Filibe TUREF'e (hedefin de)",
+                    transformed([pt(*plovdiv)], frm={"srid": 32635}, to={"srid": 5252})))
+    out.append(case("Noktaların ayrı kararları: biri içeride, biri hedefin, biri hem kaynağın hem hedefin dışında",
+                    transformed([pt(*own), pt(*own2), pt(*ankara)], to={"srid": 32635})))
     wgs = (BURSA[1], BURSA[0])
     out.append(case("WGS 84'ten UTM 35N'e: yalnız izdüşüm, doğruluk 0, kullanım alanı yok",
                     transformed([pt(*wgs, 95.5)], frm={"srid": 4326, "heights": ell},

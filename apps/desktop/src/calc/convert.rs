@@ -15,6 +15,10 @@
 //! taken where they apply (docs/adr/0168 §9 3c). The readings and writings
 //! pass the shared cases (`fixtures/crs/v1/convert.json`,
 //! `scripts/fixtures/crs_convert_cases.py`: PROJ).
+//!
+//! Each converted point is read against EPSG's areas of use (docs/adr/3700, `cad.crs.transform`'s rule): the source
+//! system's and the datum operation's at its place, the target system's where it lands. A point beyond one is said
+//! under the single point and in the list's Alan dışı column; it is converted all the same.
 
 use std::path::PathBuf;
 
@@ -116,6 +120,14 @@ impl Side {
             Pick::Second => systems::second(settings)
                 .filter(|_| settings.second().is_none())
                 .and_then(|n| Side::named(pick, n)),
+        }
+    }
+
+    /// The registry's code of the system; none for the project's own definitions.
+    pub fn srid(&self) -> Option<u32> {
+        match self.pick {
+            Pick::Srid(s) => Some(s),
+            Pick::Own | Pick::Second => None,
         }
     }
 
@@ -236,13 +248,36 @@ impl ConvertFormat {
 }
 
 /// A converted point: its values with their names, how sure they are, and
-/// whether only the projection changed (one datum).
+/// whether only the projection changed (one datum); the point it was read as
+/// (docs/adr/3700: its areas of use are read there).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Converted {
     pub point: Vec2,
     pub values: [(&'static str, String); 2],
     pub accuracy: String,
     pub exact: bool,
+    pub at: Vec2,
+}
+
+/// docs/adr/3700: what a converted point lies beyond, as `cad.crs.transform` notes it: the source system's and the
+/// datum operation's areas of use at its place, the target system's where it lands (a system of the registry; the
+/// project's own definitions have none).
+pub fn area_notes(from: &Side, to: &Side, choices: &[core::Choice], c: &Converted) -> Vec<&'static str> {
+    let operation = core::operation::operation(&from.system, &to.system, choices, false)
+        .ok()
+        .and_then(|o| o.area)
+        .map(|(_, b)| b);
+    kentos_native_application::crs_transform::PointAreas::of(from.srid(), to.srid(), operation)
+        .notes(&from.system, &to.system, c.at, c.point)
+}
+
+/// A note in the list's Alan dışı column: which area.
+fn note_short(note: &str) -> &'static str {
+    match note {
+        "outside_source_area" => "kaynak",
+        "outside_operation_area" => "dönüşüm",
+        _ => "hedef",
+    }
 }
 
 fn geographic(sys: &core::System) -> bool {
@@ -312,6 +347,7 @@ pub fn convert_point(
         values: write_point(to, moved.point, f),
         accuracy: accuracy_text(&moved),
         exact: moved.via.is_empty(),
+        at: p,
     })
 }
 
@@ -580,11 +616,15 @@ impl Form {
             convert_rows(&from.system, &to.system, &choices, &self.rows, f)
                 .into_iter()
                 .filter_map(|(name, _, r)| {
-                    r.ok()
-                        .map(|c| vec![name, c.values[0].1.clone(), c.values[1].1.clone()])
+                    r.ok().map(|c| {
+                        // docs/adr/3700: the areas of use the point lies beyond.
+                        let beyond: Vec<&str> =
+                            area_notes(&from, &to, &choices, &c).into_iter().map(note_short).collect();
+                        vec![name, c.values[0].1.clone(), c.values[1].1.clone(), beyond.join(", ")]
+                    })
                 })
                 .collect();
-        (!rows.is_empty()).then(|| (vec!["Ad", a, b], rows))
+        (!rows.is_empty()).then(|| (vec!["Ad", a, b, "Alan dışı"], rows))
     }
 
     pub fn view<'a>(
@@ -701,6 +741,16 @@ impl Form {
                             if c.exact { Line::Ok } else { Line::Info },
                             format!("{}: {}.", to.name, c.accuracy),
                         ));
+                        // docs/adr/3700: the areas of use the point lies beyond.
+                        for note in area_notes(&from, &to, &datum_choices, &c) {
+                            lines.push((
+                                Line::Warn,
+                                format!(
+                                    "Nokta {}; dönüştürüldü, sonucu denetleyin.",
+                                    kentos_native_application::crs_transform::point_note_words(note)
+                                ),
+                            ));
+                        }
                     }
                 }
             }
@@ -758,7 +808,17 @@ impl Form {
                     ));
                 }
                 if let Some((heading, rows)) = self.listed(settings, f) {
-                    body = body.push(result_table(&heading, rows, &[false, true, true]));
+                    // docs/adr/3700: how many points lie beyond an area of use.
+                    let beyond = rows.iter().filter(|r| r.get(3).is_some_and(|n| !n.is_empty())).count();
+                    if beyond > 0 {
+                        lines.push((
+                            Line::Warn,
+                            format!(
+                                "{beyond} nokta EPSG'nin kullanım alanlarından birinin dışında (Alan dışı sütunu: kaynak sistem, datum dönüşümü, hedef sistem); dönüştürüldüler, bu noktaları denetleyin."
+                            ),
+                        ));
+                    }
+                    body = body.push(result_table(&heading, rows, &[false, true, true, false]));
                 }
             }
         }
@@ -1114,6 +1174,48 @@ mod tests {
             "Ad,Y,X\nR1,414154.869,4540584.350\n\"a,b\",1,2\n"
         );
     }
+
+    /// TUREF / TM30 coordinates of a place given in degrees (KentOS's own projection).
+    pub(super) fn tm30(lat: f64, lon: f64) -> [String; 2] {
+        let geo = crs::system(5252).and_then(System::transform_system).expect("TUREF");
+        let tm = crs::system(5254).and_then(System::transform_system).expect("TM30");
+        let p = transform_in(&geo, &tm, Vec2::new(lon, lat), &[]).expect("moves").point;
+        [format!("{:.3}", p.x), format!("{:.3}", p.y)]
+    }
+
+    /// docs/adr/3700: each point read against EPSG's areas of use. From TUREF / TM30 to TUREF / TM33, Bursa lies beyond
+    /// the target's area and a TM30 point written for Ankara beyond the source's; the list's Alan dışı column says
+    /// which. Bursa alone gets its note; to WGS 84 it lies within every area.
+    #[test]
+    fn a_point_beyond_an_area_of_use_is_said() {
+        let settings: ProjectSettings = serde_json::from_value(serde_json::json!({
+            "srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000
+        }))
+        .expect("settings");
+        let f = ConvertFormat { east: "Y", north: "X", decimals: 3, notation: Notation::Dms };
+        let [bx, by] = tm30(40.1826, 29.0665);
+        let [ax, ay] = tm30(39.9334, 32.8597);
+        let form = Form {
+            from: Some(Pick::Srid(5254)),
+            to: Some(Pick::Srid(5255)),
+            mode: Mode::List,
+            rows: vec![["Bursa".into(), bx.clone(), by.clone()], ["Ankara".into(), ax, ay]],
+            ..Form::default()
+        };
+        let (heading, rows) = form.listed(&settings, &f).expect("the list");
+        assert_eq!(heading.last().copied(), Some("Alan dışı"));
+        let beyond: Vec<&str> = rows.iter().map(|r| r[3].as_str()).collect();
+        assert_eq!(beyond, ["hedef", "kaynak"]);
+        // The single point: converted all the same, its note in words.
+        let (from, to) = form.systems(&settings);
+        let c = convert_point(&from.system, &to.system, &[], &bx, &by, &f).expect("converted");
+        assert_eq!(area_notes(&from, &to, &[], &c), ["outside_target_area"]);
+        // Within every area: no note.
+        let inside = Form { to: Some(Pick::Srid(4326)), ..form.clone() };
+        let (from, to) = inside.systems(&settings);
+        let c = convert_point(&from.system, &to.system, &[], &bx, &by, &f).expect("converted");
+        assert!(area_notes(&from, &to, &[], &c).is_empty());
+    }
 }
 
 /// Koordinat dönüştür's pictures over the sample drawing (TUREF TM36), its
@@ -1216,6 +1318,42 @@ mod screens {
                     println!("{}", file.display());
                 }
             }
+        }
+    }
+
+    /// `.run/gui-evidence/kullanim-alani-3700/`: the list from TUREF / TM30 to TUREF / TM33 with Bursa and Eskişehir
+    /// (beyond the target's area: TM33's begins at 31°30'E) and Ankara (beyond the source's), its Alan dışı column and
+    /// the warning:
+    ///
+    /// ```text
+    /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib calc::convert::screens::area_screens -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "pictures for the owner, run by hand"]
+    fn area_screens() {
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-alani-3700");
+        std::fs::create_dir_all(&out).expect("a folder for the pictures");
+        for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+            let mut app = crate::files_testing::app_with_drawing();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            app.follow.flash = None;
+            let _ = app.update(Message::Run("crs.transform"));
+            send(&mut app, Event::From(Pick::Srid(5254)));
+            send(&mut app, Event::To(Pick::Srid(5255)));
+            send(&mut app, Event::Mode(Mode::List));
+            let at = |lat, lon| super::tests::tm30(lat, lon);
+            let ([bx, by], [ex, ey], [ax, ay]) = (at(40.1826, 29.0665), at(39.7767, 30.5206), at(39.9334, 32.8597));
+            app.calc.convert.rows = vec![["Bursa".into(), bx, by], ["Eskişehir".into(), ex, ey], ["Ankara".into(), ax, ay]];
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("1-liste-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
         }
     }
 }

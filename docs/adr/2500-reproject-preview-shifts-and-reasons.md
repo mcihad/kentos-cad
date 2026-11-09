@@ -130,6 +130,7 @@ takma adıdır.
 - Yazı, blok ve dairenin taşınması: yerleşme noktası, meridyen yakınsaması farkıyla dönüş ve ölçek.
 - EPSG'nin çokgen kullanım alanları (bugün kutu).
 - Çizgilerde her köşenin satırı (bugün ilk nokta ve köşelerin en küçük/en büyük kayması).
-- Koordinat dönüştür'ün kendisinde nokta başına karar (ADR 1230 §7'nin öbür yarısı).
+- ~~Koordinat dönüştür'ün kendisinde nokta başına karar (ADR 1230 §7'nin öbür yarısı).~~ ADR 3700 (kullanım alanları;
+  kenara 10⁻⁹° yakın nokta kenarda, aynı kural buradaki notlara da geçti).
 - Büyük katmanda önizlemenin iş olarak koşması (ilerleme, durdurma).
 - Web (TODOS §0.2).

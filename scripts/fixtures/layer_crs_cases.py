@@ -311,8 +311,12 @@ def lonlat(srid, x, y):
     return Transformer.from_crs(crs, crs.geodetic_crs, always_xy=True).transform(x, y)
 
 
+# docs/adr/3700: a point within 1e-9° of an edge is on it (the noise of two engines' inverse projections on an edge).
+EDGE = 1e-9
+
+
 def holds(box, lon, lat):
-    west, south, east, north = box
+    west, south, east, north = box[0] - EDGE, box[1] - EDGE, box[2] + EDGE, box[3] + EDGE
     along = west <= lon <= east if west <= east else (lon >= west or lon <= east)
     return along and south <= lat <= north
 

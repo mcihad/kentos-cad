@@ -9,8 +9,8 @@
 //! `fixtures/commands/v1/cad.crs.transform.json` (`scripts/fixtures/crs_vertical_cases.py`, PROJ through pyproj).
 
 use kentos_commands::{
-    AccuracyReport, AreaOfUse, CRS_ENGINE, CommandResult, CommandWarning, CrsOperation, CrsPoint,
-    CrsSide, CrsTransform, CrsTransformed, GridUse, HeightKind, HeightMethod, HeightReference,
+    AccuracyReport, AreaOfUse, CRS_ENGINE, CRS_POINT_NOTES, CommandResult, CommandWarning, CrsOperation, CrsPoint,
+    CrsPointNotes, CrsSide, CrsTransform, CrsTransformed, GridUse, HeightKind, HeightMethod, HeightReference,
     MAX_CRS_POINTS, OperationStep, ProjectSettings, SourceUncertainty, StepKind, UnreachedPoint,
 };
 use kentos_domain::Document;
@@ -31,6 +31,47 @@ use crate::crs_models::{self, Missing, ModelKind};
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+/// The boxes (degrees west, south, east, north) a transformed point is read against (docs/adr/3700, the rule of a
+/// layer's objects in docs/adr/2500 §3): EPSG's areas of use of the source system, of the datum transformation's
+/// operation, of the target system; none where not known (a definition of the project's own, the same datum).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct PointAreas {
+    pub source: Option<[f64; 4]>,
+    pub operation: Option<[f64; 4]>,
+    pub target: Option<[f64; 4]>,
+}
+
+impl PointAreas {
+    /// The boxes of the systems `from_srid` and `to_srid` (the registry's codes) and of the operation's area.
+    pub fn of(from_srid: Option<u32>, to_srid: Option<u32>, operation: Option<[f64; 4]>) -> Self {
+        let area = |srid: Option<u32>| {
+            srid.and_then(kentos_project::crs::area).map(|a| [a.west, a.south, a.east, a.north])
+        };
+        PointAreas { source: area(from_srid), operation, target: area(to_srid) }
+    }
+
+    /// The notes of a point at `at` in `from` that landed at `moved` in `to`, in [`CRS_POINT_NOTES`]' order: the source's
+    /// and the operation's boxes read at its place on the source's datum, the target's where it lands.
+    pub fn notes(&self, from: &core::System, to: &core::System, at: Vec2, moved: Vec2) -> Vec<&'static str> {
+        let held = |b: Option<[f64; 4]>, g: Option<(f64, f64)>| match (b, g) {
+            (Some(b), Some((lat, lon))) => kentos_project::crs::box_holds_near(b, lon, lat),
+            _ => true,
+        };
+        let (here, there) = (from.geographic_of(at), to.geographic_of(moved));
+        let outside = [!held(self.source, here), !held(self.operation, here), !held(self.target, there)];
+        CRS_POINT_NOTES.iter().zip(outside).filter(|(_, o)| *o).map(|(n, _)| *n).collect()
+    }
+}
+
+/// What a point's note says (docs/adr/3700).
+pub fn point_note_words(note: &str) -> &'static str {
+    match note {
+        "outside_source_area" => "kaynak sistemin kullanım alanının dışında (nokta başka bir sistemde olabilir)",
+        "outside_operation_area" => "datum dönüşümünün kullanım alanının dışında (dönüşümün doğruluğu orada geçerli değil)",
+        _ => "hedef sistemin kullanım alanının dışında",
+    }
 }
 
 /// Checks `input`.
@@ -462,6 +503,9 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
     let choices = kentos_project::systems::choices(settings);
     let mut points = Vec::with_capacity(input.points.len());
     let mut unreached = Vec::new();
+    // docs/adr/3700: the boxes each point is read against.
+    let areas = PointAreas::of(p.from.srid, p.to.srid, p.operation.area.map(|(_, b)| b));
+    let mut flagged: Vec<CrsPointNotes> = Vec::new();
     let grid = |id: &str| geoid::get(id);
     let from_geoid = match &p.heights {
         Heights::Geoid {
@@ -531,7 +575,17 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             }),
         };
         match moved {
-            Ok((v, z)) => points.push(Some(CrsPoint { x: v.x, y: v.y, z })),
+            Ok((v, z)) => {
+                // docs/adr/3700: the point read against the areas of use, its own decision.
+                let notes = areas.notes(&p.from.system, &p.to.system, at, v);
+                if !notes.is_empty() {
+                    flagged.push(CrsPointNotes {
+                        index: u32::try_from(i).unwrap_or(u32::MAX),
+                        notes: notes.into_iter().map(str::to_owned).collect(),
+                    });
+                }
+                points.push(Some(CrsPoint { x: v.x, y: v.y, z }));
+            }
             Err(why) => {
                 points.push(None);
                 unreached.push(UnreachedPoint {
@@ -682,6 +736,24 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             path: Some("to".into()),
         });
     }
+    // docs/adr/3700: the points beyond an area of use, how many beyond which.
+    if !flagged.is_empty() {
+        let said: Vec<String> = CRS_POINT_NOTES
+            .iter()
+            .map(|n| (n, flagged.iter().filter(|f| f.notes.iter().any(|m| m == n)).count()))
+            .filter(|(_, k)| *k > 0)
+            .map(|(n, k)| format!("{k} nokta {}", point_note_words(n)))
+            .collect();
+        warnings.push(CommandWarning {
+            code: codes::OUTSIDE_AREA.into(),
+            message: format!(
+                "{} nokta EPSG'nin kullanım alanlarından birinin dışında: {}. Dönüştürüldüler; bu noktaları denetleyin.",
+                flagged.len(),
+                said.join("; ")
+            ),
+            path: Some("points".into()),
+        });
+    }
     let decimals = settings.length_decimals;
     let report = AccuracyReport {
         source: p.uncertainty,
@@ -725,6 +797,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
             },
             report,
             chain,
+            flagged,
         },
         warnings,
     }

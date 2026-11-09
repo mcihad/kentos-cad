@@ -312,8 +312,27 @@ pub struct UnreachedPoint {
     pub reason: String,
 }
 
+/// What a transformed point may lie beyond (docs/adr/3700, as a layer's objects in docs/adr/2500 §3), in this order:
+/// EPSG's area of use of the source system (read at the point on the source's datum), of the datum transformation's
+/// operation (the same place; none when the datum stays or the way is the project's own), of the target system (where
+/// the point lands). A box is approximate (IOGP GN 7-1 §5.7): a note warns, it does not refuse.
+pub const CRS_POINT_NOTES: [&str; 3] = ["outside_source_area", "outside_operation_area", "outside_target_area"];
+
+/// A transformed point beyond an area of use (docs/adr/3700): its place in `points` and its notes ([`CRS_POINT_NOTES`]).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CrsPointNotes {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub index: u32,
+    pub notes: Vec<String>,
+}
+
 /// Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
-/// the operation's record, the report and the coordinate chain (docs/adr/1230).
+/// the operation's record, the report and the coordinate chain (docs/adr/1230); the points beyond an area of use, each
+/// with its notes (docs/adr/3700: the decision point by point, the chain's stays the call's).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -325,6 +344,9 @@ pub struct CrsTransformed {
     pub operation: CrsOperation,
     pub report: AccuracyReport,
     pub chain: CrsChain,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CrsPointNotes>>", optional))]
+    pub flagged: Vec<CrsPointNotes>,
 }
 
 /// The families of horizontal systems KentOS's engine resolves (docs/adr/1230 §1). A system outside them, or an EPSG

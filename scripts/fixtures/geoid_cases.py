@@ -346,8 +346,10 @@ def transformed(points, frm=None, to=None, vel=None, op="execute", warn=(), unre
          "expect": SAME, "within": tol}
     # The coordinate chain (docs/adr/1230): the sides from PROJ's database, the grids with the boxes their nodes cover.
     (fe, fs), (te, ts), stated = chain.epoch_sources(se, de, "srid" not in (frm or {}), "srid" not in (to or {}))
-    return chain.add(c, chain.side(cv.entry(src), sh, fe, fs), chain.side(cv.entry(dst), dh, te, ts), stated,
+    step = chain.add(c, chain.side(cv.entry(src), sh, fe, fs), chain.side(cv.entry(dst), dh, te, ts), stated,
                      [chain_grid(g) for g in rec["grids"]])
+    # docs/adr/3700: each point against the areas of use (crs_vertical_cases.py's rule).
+    return cv.flag(step, cv.area_notes(src, dst, rec, points, out))
 
 
 # The box each file's nodes cover (degrees): west, south, east, north.

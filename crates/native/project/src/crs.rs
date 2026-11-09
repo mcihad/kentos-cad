@@ -98,6 +98,17 @@ impl AreaOfUse {
     }
 }
 
+/// How near an edge (degrees) a point is read as on it when a point is noted against an area of use (docs/adr/3700):
+/// 10⁻⁹° (about 0.1 mm), far below an EPSG box's own precision (two decimals) and the noise two engines' inverse
+/// projections leave on a point exactly on an edge (a central meridian that is a zone's border), so the note does not
+/// turn on it.
+pub const EDGE: f64 = 1e-9;
+
+/// [`box_holds`] with every edge [`EDGE`] out (docs/adr/3700): the box a point's note reads.
+pub fn box_holds_near([west, south, east, north]: [f64; 4], lon: f64, lat: f64) -> bool {
+    box_holds([west - EDGE, south - EDGE, east + EDGE, north + EDGE], lon, lat)
+}
+
 /// Whether a box (degrees west, south, east, north) holds a longitude and latitude, its edges included.
 pub fn box_holds([west, south, east, north]: [f64; 4], lon: f64, lat: f64) -> bool {
     let along = if west <= east {
