@@ -869,11 +869,13 @@ pub const SCHEMA_WITH_LAND_SHARES: u32 = 211;
 /// Schema 212 (docs/adr/3032): the site plan (`settings.arch.site`: the parcel, its edges' kinds and setbacks, ±0.00's
 /// elevation, the setback line).
 pub const SCHEMA_WITH_SITE_PLAN: u32 = 212;
+/// Schema 213 (docs/adr/3034): the municipality's regulation the audit reads (`settings.arch.localRules`).
+pub const SCHEMA_WITH_LOCAL_RULES: u32 = 213;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 210] = [
+pub const SCHEMAS: [u32; 211] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1084,6 +1086,7 @@ pub const SCHEMAS: [u32; 210] = [
     SCHEMA_WITH_ZONING,
     SCHEMA_WITH_LAND_SHARES,
     SCHEMA_WITH_SITE_PLAN,
+    SCHEMA_WITH_LOCAL_RULES,
 ];
 
 /// The file a drawing is saved as.

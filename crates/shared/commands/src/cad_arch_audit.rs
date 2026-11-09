@@ -318,7 +318,11 @@ pub struct ArchAuditFinding {
     /// `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
     /// `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
     /// `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
-    /// `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033).
+    /// `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),
+    /// `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
+    /// `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
+    /// `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
+    /// (docs/adr/3034).
     pub code: String,
     /// What is wrong.
     pub message: String,
@@ -350,7 +354,8 @@ pub struct ArchAuditFinding {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub nature: Option<ArchAuditNature>,
-    /// A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”.
+    /// A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
+    /// regulation's (docs/adr/3034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rule: Option<String>,

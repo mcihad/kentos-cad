@@ -173,6 +173,13 @@
     - `ArchAuditCheck::Regulation` (yalnız adıyla; panel hepsini adıyla ister), `regulation_audit.rs`: `Article` (madde
       + RG; `named` bulgunun `rule`'u, `short` iletinin sonu, değişiklik tarihli), `kind_of` (ıslak hacim önce),
       `RoomKind::limits` (29/1, 29/3); kat 28/1-c (yalnız konut projesinde); kapı 39/1 (giriş türü `sides` ile).
+  - **Merdiven, rampa, korkuluk, ışıklık, asansör ve yerel yönetmelik (M34, [ADR 3034](../adr/3034-regulation-stairs-shafts-elevators-local-rules.md)):**
+    - `Article.source` (`Source::Paiy`/`Sivas`); `said()` + `judge()`: sıkı yerel değer bağlar (öbürü iletide), yerel
+      gevşek değerin tuttuğu ölçü `regulation_conflict` (rule "yerel ↔ ulusal"). `ArchSettings.local_rules`
+      (`LocalRules::Sivas`, KCAD 213); Proje ayarları › İmar durumu › Yerel imar yönetmeliği.
+    - `shaft_of` (Asansör, Işıklık/Aydınlık, Hava bacası; asansör holü değil), `technical` (34/1 bodrum sayımı),
+      `storeys()`; merdivenin yeri `StairIn` (durduğu mahalin bölümü). Düzeltme `Fix` → `cad.arch.edit`.
+    - Denetim tablosunun sütunları sürüklenir (`ArchAuditPanel.columns`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

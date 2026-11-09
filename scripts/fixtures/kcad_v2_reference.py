@@ -2668,6 +2668,9 @@ def document(d):
     if (d.get("settings", {}).get("arch") or {}).get("site") is not None:
         # The site plan: the parcel, its edges, ±0.00's elevation, the setback line (docs/adr/3032).
         schema = max(schema, 212)
+    if (d.get("settings", {}).get("arch") or {}).get("localRules") is not None:
+        # The municipality's regulation the audit reads (docs/adr/3034).
+        schema = max(schema, 213)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3543,7 +3546,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-213.kcad"] = container(root(cmap(parts), version=uint(213)))
+    files["schema-version-214.kcad"] = container(root(cmap(parts), version=uint(214)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6333,6 +6336,11 @@ def build():
     short = load("site-plan.json")
     short["settings"]["arch"]["site"]["edges"][2]["setback"] = -1.0
     out["broken/site-plan-negative-setback.kcad"] = container(document(short))
+    # Schema 213 (docs/adr/3034): the municipality's regulation; schema 212 refuses it as unknown.
+    local = document(load("local-rules.json"))
+    assert local.count(b"\x67version\x18\xd5") == 1, "the local regulation is schema 213"
+    out["local-rules.kcad"] = container(local)
+    out["broken/local-rules-in-schema-212.kcad"] = container(local.replace(b"\x67version\x18\xd5", b"\x67version\x18\xd4"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

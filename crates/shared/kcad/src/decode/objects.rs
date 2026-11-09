@@ -429,6 +429,8 @@ pub(super) struct Features {
     pub(super) land_shares: bool,
     /// Schema 212 (docs/adr/3032): the site plan.
     pub(super) site_plan: bool,
+    /// Schema 213 (docs/adr/3034): the municipality's regulation.
+    pub(super) local_rules: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -715,6 +717,7 @@ impl Features {
             zoning: schema >= crate::SCHEMA_WITH_ZONING,
             land_shares: schema >= crate::SCHEMA_WITH_LAND_SHARES,
             site_plan: schema >= crate::SCHEMA_WITH_SITE_PLAN,
+            local_rules: schema >= crate::SCHEMA_WITH_LOCAL_RULES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,

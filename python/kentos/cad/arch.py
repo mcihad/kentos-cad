@@ -81,9 +81,32 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde
     1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below
     (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır.
-    Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. regulation,
-    doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da
-    standart uygunluğu değildir.
+    Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. docs/adr/3034:
+    merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut binasında 1,20, konut
+    dışında 1,50, bağımsız bölüm içinde 1,00 m paiy_stair_width_narrow,
+    paiy_stair_landing_short (merdivenin durduğu mahalin bölümünden; hiçbir mahalde
+    değilse dış merdiven, kol ölçülmez), rıht asansörsüz binada 0,16, asansörlüde 0,18 m
+    paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27, döner merdivende dar uçta 0,10
+    m paiy_stair_step; korkuluk ortak merdivende iki yanda (31/1-ç), öbür merdivende
+    birden çok basamakta ve rampada en az bir (38/1) paiy_railing_missing; rampa eğimi
+    kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt
+    rampasıdır, okunmaz); zemin kattan yukarıda denizliği 0,90 m'den alçak pencere
+    paiy_window_railing (38/1); Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve
+    daha fazlada 2,00 m ve 9 m² paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m
+    paiy_air_shaft_small (32/3); bodrumları (teknik hacimler dışında mahali olanlar)
+    dahil 3 katta asansör yeri, 4 ve daha fazlada asansör paiy_elevator_missing (34/1,
+    1.7.2026; tek bağımsız bölümlü konut hariç), Asansör adlı mahalin net ölçüsü
+    kabinden (1,20 m, 1,80 m²) küçük paiy_elevator_small, asansör kapısının açıldığı
+    sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
+    (34/2). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa
+    değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de
+    yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+    yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+    regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
+    0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
+    cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). regulation, doors ve fixtures
+    gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+    değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -160,9 +183,32 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde
         1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below
         (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır.
-        Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. regulation,
-        doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da
-        standart uygunluğu değildir.
+        Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. docs/adr/3034:
+        merdiven 31 — ortak merdiven kolu ve ara sahanlığı konut binasında 1,20, konut
+        dışında 1,50, bağımsız bölüm içinde 1,00 m paiy_stair_width_narrow,
+        paiy_stair_landing_short (merdivenin durduğu mahalin bölümünden; hiçbir mahalde
+        değilse dış merdiven, kol ölçülmez), rıht asansörsüz binada 0,16, asansörlüde 0,18 m
+        paiy_stair_riser_high, 2a+b 0,60–0,64, basamak 0,27, döner merdivende dar uçta 0,10
+        m paiy_stair_step; korkuluk ortak merdivende iki yanda (31/1-ç), öbür merdivende
+        birden çok basamakta ve rampada en az bir (38/1) paiy_railing_missing; rampa eğimi
+        kot farkına göre %8/7/6/5 paiy_ramp_steep (30/12; 2,75 m ve daha geniş rampa taşıt
+        rampasıdır, okunmaz); zemin kattan yukarıda denizliği 0,90 m'den alçak pencere
+        paiy_window_railing (38/1); Işıklık adlı boşluk 1–6 katta 1,50 m ve 4,50 m², 7 ve
+        daha fazlada 2,00 m ve 9 m² paiy_lightwell_small (32/2), Hava bacası 0,60 × 0,60 m
+        paiy_air_shaft_small (32/3); bodrumları (teknik hacimler dışında mahali olanlar)
+        dahil 3 katta asansör yeri, 4 ve daha fazlada asansör paiy_elevator_missing (34/1,
+        1.7.2026; tek bağımsız bölümlü konut hariç), Asansör adlı mahalin net ölçüsü
+        kabinden (1,20 m, 1,80 m²) küçük paiy_elevator_small, asansör kapısının açıldığı
+        sahanlık sürme kapıda 1,20, kanatlıda 1,50 m'den dar paiy_elevator_landing_narrow
+        (34/2). Projenin yerel imar yönetmeliği (settings.arch.localRules: sivas) varsa
+        değerleri PAİY'nin üstüne okunur (PAİY 69/3): sıkı olan bağlar ve iletide öbürü de
+        yazılır (Sivas ortak merdiven ve ara sahanlık 1,30 m, 3 katta asansör, konutta kat
+        yüksekliği 3,60 m); ölçü yerel yönetmeliğe uyup PAİY'ye uymuyorsa
+        regulation_conflict (Sivas hava bacası 0,30 m ve 0,36 m², tuvalet ve balkon kapısı
+        0,80 m; rule iki maddeyi taşır). Merdiven ve rampa bulgularının düzeltmesi
+        cad.arch.edit (genişlik, sahanlık, iki yana korkuluk). regulation, doors ve fixtures
+        gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu
+        değildir.
 
         Args:
             doc: The drawing it works on.

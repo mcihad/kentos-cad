@@ -84,14 +84,24 @@ const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
 ];
 
 /// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
-/// elevation, m (the site plan's, docs/adr/3032).
+/// elevation, m (the site plan's, docs/adr/3032); the municipality's regulation chosen (docs/adr/3034).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTexts {
     pub parcel: String,
     pub far: String,
     pub coverage: String,
     pub datum: String,
+    pub local: Option<kentos_commands::LocalRules>,
 }
+
+/// Yerel imar yönetmeliği's choices (docs/adr/3034): none, or a municipality's.
+const LOCAL_RULES: [(Option<kentos_commands::LocalRules>, &str); 2] = [
+    (None, "Yok (yalnız Planlı Alanlar İmar Yönetmeliği)"),
+    (
+        Some(kentos_commands::LocalRules::Sivas),
+        "Sivas Belediyesi İmar Yönetmeliği (10.11.2022)",
+    ),
+];
 
 /// One of İmar durumu's fields.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -115,6 +125,7 @@ impl ZoningTexts {
             far: t(z.and_then(|z| z.far)),
             coverage: t(z.and_then(|z| z.coverage)),
             datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
+            local: arch.and_then(|a| a.local_rules),
         }
     }
 
@@ -150,6 +161,7 @@ impl ZoningTexts {
 pub(super) fn zoning_view<'a>(
     t: &'a ZoningTexts,
     on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
+    on_local: impl Fn(Option<kentos_commands::LocalRules>) -> Message + 'a,
     summary: Vec<(String, String, bool)>,
 ) -> Element<'a, Message> {
     let wrong = |s: &str| number(s).is_err();
@@ -168,13 +180,31 @@ pub(super) fn zoning_view<'a>(
         .push(line("Emsal (KAKS)", "1,50", &t.far, ZoningField::Far))
         .push(line("TAKS", "0,40", &t.coverage, ZoningField::Coverage))
         .push(line("±0,00 kotu (m)", "1285,40", &t.datum, ZoningField::Datum))
+        .push(
+            row![
+                container(label::body("Yerel imar yönetmeliği")).width(typography::scaled(140.0)),
+                container(
+                    Select::new(
+                        LOCAL_RULES.iter().map(|(_, l)| Choice::new(*l)),
+                        LOCAL_RULES.iter().position(|(r, _)| *r == t.local),
+                        move |i| on_local(LOCAL_RULES.get(i).and_then(|(r, _)| *r)),
+                    )
+                    .searchable(false)
+                )
+                .width(typography::scaled(330.0)),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        )
         .push(label::caption(
             "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
              emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
              geçerse fazlası katlar alanına eklenir (Planlı Alanlar İmar Yönetmeliği 5/8, 22). TAKS, zemin katın \
              brüt alanının parsel alanına oranıdır. ±0,00 kotu, projenin ±0,00'ının röperden okunan mutlak kotudur. \
-             Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. KentOS bir onay \
-             vermez; planın kendi notları ayrıca okunur.",
+             Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. Yerel imar \
+             yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
+             belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
+             verir). KentOS bir onay vermez; planın kendi notları ayrıca okunur.",
         ));
     for (words, value, over) in summary {
         body = body.push(
@@ -278,6 +308,8 @@ pub fn read(
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
     // ±0.00's elevation (docs/adr/3032): the site plan's, the rest of it kept as the project has it.
     let datum = number(&zoning.datum).map_err(|()| "±0,00 kotu bir sayı olmalı.".to_owned())?;
+    // The municipality's regulation the audit reads (docs/adr/3034).
+    let local_rules = zoning.local;
     let site = {
         let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
         s.datum = datum;
@@ -342,6 +374,7 @@ pub fn read(
         zoning,
         // The site plan (docs/adr/3032): its parcel and edges are Parsel's, ±0.00 this form's.
         site,
+        local_rules,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),

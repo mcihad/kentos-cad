@@ -6,6 +6,7 @@ import type { ArchModule } from "./ArchModule";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { LevelView } from "./LevelView";
 import type { LineGroups } from "./LineGroups";
+import type { LocalRules } from "./LocalRules";
 import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
@@ -99,4 +100,9 @@ zoning?: Zoning,
  * Vaziyet planı (docs/adr/3032; `.kcad` schema 212): the parcel's boundary, its edges' kinds and setbacks, the
  * absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
  */
-site?: SitePlan, };
+site?: SitePlan, 
+/**
+ * Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+ * Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
+ */
+localRules?: LocalRules, };

@@ -1360,6 +1360,40 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub site: Option<SitePlan>,
+    /// Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+    /// Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub local_rules: Option<LocalRules>,
+}
+
+/// A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
+/// 69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the
+/// national value is said as a conflict the administration decides; both are named where they differ.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum LocalRules {
+    /// Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022, 32009).
+    Sivas,
+}
+
+impl LocalRules {
+    pub const ALL: [LocalRules; 1] = [LocalRules::Sivas];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            LocalRules::Sivas => "Sivas Belediyesi İmar Yönetmeliği (10.11.2022)",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            LocalRules::Sivas => "sivas",
+        }
+    }
 }
 
 /// A parcel edge's kind (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23/1): what its garden distance is measured by.
@@ -1739,6 +1773,11 @@ impl ArchSettings {
     /// Whether it gives a site plan (KCAD 212, docs/adr/3032).
     pub fn has_site(&self) -> bool {
         self.site.is_some()
+    }
+
+    /// Whether it names a municipality's regulation (KCAD 213, docs/adr/3034).
+    pub fn has_local_rules(&self) -> bool {
+        self.local_rules.is_some()
     }
 
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).

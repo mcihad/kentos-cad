@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 213 (docs/adr/3034): the municipality's regulation.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_local_rules) {
+        return crate::SCHEMA_WITH_LOCAL_RULES;
+    }
     // Schema 212 (docs/adr/3032): the site plan.
     if doc
         .settings

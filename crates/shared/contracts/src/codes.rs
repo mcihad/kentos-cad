@@ -2706,6 +2706,19 @@ codes! {
     PAIY_STOREY_HEIGHT_OVER = "paiy_storey_height_over", Warning, false, "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor.";
     PAIY_DOOR_HEIGHT_BELOW = "paiy_door_height_below", Warning, false, "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az.";
     PAIY_DOOR_WIDTH_BELOW = "paiy_door_width_below", Warning, false, "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar.";
+    PAIY_STAIR_WIDTH_NARROW = "paiy_stair_width_narrow", Warning, false, "Merdiven kolu Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından dar.";
+    PAIY_STAIR_LANDING_SHORT = "paiy_stair_landing_short", Warning, false, "Merdivenin ara sahanlığı Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından kısa.";
+    PAIY_STAIR_RISER_HIGH = "paiy_stair_riser_high", Warning, false, "Merdivenin rıhtı Planlı Alanlar İmar Yönetmeliği 31/2-a'nın en çoğundan yüksek (asansörsüz binada 0,16, asansörlüde 0,18 metre).";
+    PAIY_STAIR_STEP = "paiy_stair_step", Warning, false, "Merdivenin basamağı Planlı Alanlar İmar Yönetmeliği 31/2-b, c'ye uymuyor (2a+b 60–64 cm, basamak en az 0,27, döner merdivende dar uçta 0,10 metre).";
+    PAIY_RAILING_MISSING = "paiy_railing_missing", Warning, false, "Merdivende ya da rampada Planlı Alanlar İmar Yönetmeliği 31/1-ç, 38/1'in istediği korkuluk yok.";
+    PAIY_RAMP_STEEP = "paiy_ramp_steep", Warning, false, "Rampanın eğimi Planlı Alanlar İmar Yönetmeliği 30/12'nin kot farkına göre en çoğunu aşıyor.";
+    PAIY_WINDOW_RAILING = "paiy_window_railing", Warning, false, "Denizliği 0,90 metreden alçak pencere: Planlı Alanlar İmar Yönetmeliği 38/1'e göre 1,10 metre korkuluk gerekir.";
+    PAIY_LIGHTWELL_SMALL = "paiy_lightwell_small", Warning, false, "Işıklığın dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/2'nin en azından küçük.";
+    PAIY_AIR_SHAFT_SMALL = "paiy_air_shaft_small", Warning, false, "Hava bacasının dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/3'ün (ya da yerel yönetmeliğin) en azından küçük.";
+    PAIY_ELEVATOR_MISSING = "paiy_elevator_missing", Warning, false, "Kat adedine göre Planlı Alanlar İmar Yönetmeliği 34/1'in (ya da yerel yönetmeliğin) istediği asansör ya da asansör yeri yok.";
+    PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük.";
+    PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";
+    REGULATION_CONFLICT = "regulation_conflict", Warning, false, "Ölçü yerel imar yönetmeliğine uyuyor, Planlı Alanlar İmar Yönetmeliği'ne uymuyor: çelişkide idare karar verir.";
     /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).

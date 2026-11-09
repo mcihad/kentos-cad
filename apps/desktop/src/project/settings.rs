@@ -284,6 +284,8 @@ pub enum Event {
     ArchZoning(super::arch::ZoningField, String),
     /// Mimari: Çizgi kalınlıkları chosen (docs/adr/3013).
     ArchLines(Option<kentos_commands::LineGroups>),
+    /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/3034).
+    ArchLocalRules(Option<kentos_commands::LocalRules>),
     RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
@@ -622,6 +624,7 @@ impl App {
             Event::ArchCut(text) => s.arch_cut = text,
             Event::ArchZoning(field, text) => s.arch_zoning.edit(field, text),
             Event::ArchLines(lines) => s.arch_lines = lines,
+            Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
             Event::RoomChoices(edit) => {
                 super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
             }
@@ -1116,6 +1119,7 @@ impl App {
                 super::arch::zoning_view(
                     &s.arch_zoning,
                     |f, t| event(Event::ArchZoning(f, t)),
+                    |r| event(Event::ArchLocalRules(r)),
                     crate::zoning_badge::summary(&doc.model),
                 ),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),

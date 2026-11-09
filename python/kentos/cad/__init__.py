@@ -1844,6 +1844,8 @@ __all__ = [
     "LocalCommand",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LocalRules",
+    "LocalRulesName",
     "LocationFormItem",
     "LockPaperOp",
     "LookLeaderEdit",

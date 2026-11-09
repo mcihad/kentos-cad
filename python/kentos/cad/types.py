@@ -3765,6 +3765,20 @@ LinearRefDefineOperationName = Literal["set", "remove"]
 """The names of :class:`LinearRefDefineOperation`, for a plain string."""
 
 
+class LocalRules(_StrEnum):
+    """A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
+    69/3 applies it where a plan says nothing more. A stricter value binds; a looser one a drawing keeps while missing the
+    national value is said as a conflict the administration decides; both are named where they differ.
+
+    - ``sivas``: Sivas Belediyesi İmar Yönetmeliği (RG 10.11.2022, 32009).
+    """
+    SIVAS = "sivas"
+
+
+LocalRulesName = Literal["sivas"]
+"""The names of :class:`LocalRules`, for a plain string."""
+
+
 class LookPart(_StrEnum):
     """A part of an object's look whose source can be its layer."""
     COLOR = "color"
@@ -15671,7 +15685,11 @@ class ArchAuditFinding(_Model):
             `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
             `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
             `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
-            `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033).
+            `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),
+            `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
+            `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
+            `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
+            (docs/adr/3034).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -15681,7 +15699,8 @@ class ArchAuditFinding(_Model):
         lapsed: Marked as left on purpose, but the finding changed since: open again.
         nature: A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
         note: The exception's note.
-        rule: A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”.
+        rule: A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
+            regulation's (docs/adr/3034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
     """
     key: str
     check: ArchAuditCheck | ArchAuditCheckName
@@ -16111,6 +16130,8 @@ class ArchSettings(_Model):
             plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
             line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
             own pen whatever the scale. A new Mimari project writes `byScale`.
+        local_rules: Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
+            Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
         materials: The project's building materials (docs/adr/0785, KCAD 150), in the order they were made.
         modules: The project's room modules and their instances (docs/adr/0775, KCAD 142).
         opening_types: The project's door and window types (docs/adr/0772, KCAD 137), in the order they were made.
@@ -16134,6 +16155,7 @@ class ArchSettings(_Model):
     level_view: LevelView | LevelViewName | None | Unset = UNSET
     levels: list[ArchLevel] | Unset = UNSET
     line_groups: LineGroups | LineGroupsName | None | Unset = UNSET
+    local_rules: LocalRules | LocalRulesName | None | Unset = UNSET
     materials: list[ArchMaterial] | Unset = UNSET
     modules: list[ArchModule] | Unset = UNSET
     opening_types: list[OpeningType] | Unset = UNSET
@@ -16164,6 +16186,8 @@ class ArchSettings(_Model):
             out["levels"] = [e0.to_json() for e0 in self.levels]
         if self.line_groups is not UNSET:
             out["lineGroups"] = None if self.line_groups is None else _enum_out(self.line_groups)
+        if self.local_rules is not UNSET:
+            out["localRules"] = None if self.local_rules is None else _enum_out(self.local_rules)
         if self.materials is not UNSET:
             out["materials"] = [e0.to_json() for e0 in self.materials]
         if self.modules is not UNSET:
@@ -16202,6 +16226,7 @@ class ArchSettings(_Model):
             level_view=UNSET if "levelView" not in data else None if data["levelView"] is None else _enum_in(LevelView, data["levelView"]),
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             line_groups=UNSET if "lineGroups" not in data else None if data["lineGroups"] is None else _enum_in(LineGroups, data["lineGroups"]),
+            local_rules=UNSET if "localRules" not in data else None if data["localRules"] is None else _enum_in(LocalRules, data["localRules"]),
             materials=[ArchMaterial.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
             modules=[ArchModule.from_json(e0) for e0 in data["modules"]] if "modules" in data else UNSET,
             opening_types=[OpeningType.from_json(e0) for e0 in data["openingTypes"]] if "openingTypes" in data else UNSET,
@@ -127433,6 +127458,8 @@ __all__ = [
     "ListedConstraint",
     "LocalCrsSystem",
     "LocalDefinition",
+    "LocalRules",
+    "LocalRulesName",
     "LocationFormItem",
     "LockPaperOp",
     "LookLeaderEdit",

@@ -1,0 +1,55 @@
+# M34 (docs/adr/3034), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim on a four-storey building of two flats
+# (bina.kcad from regulation_audit_tests): its common stair, its ramp, its air shaft and light well, a first-floor
+# window and the missing elevator read by PAİY 30/12, 31, 32, 34 and 38. Then Proje ayarları › Mimari › İmar durumu ›
+# Yerel imar yönetmeliği: Sivas; Denetle again: Sivas's 1.30 m stair binds with PAİY's 1.20 m beside it, the air shaft
+# and the toilet's door are a conflict. Then the stair's fix (Genişliği 1.30 m yap) through Düzelt.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 1162 111  # Denetim
+wait 3000
+drag 760 663 760 330  # the panel taller
+wait 1200
+drag 849 447 1290 447  # Bulgu wider
+wait 800
+click 760 240 middle
+click 760 240 middle
+wait 1500
+wheel 760 240 2
+wait 1000
+move 1300 250
+wait 600
+shot m34-02-denetim
+click 196 414  # Bütün gruplar
+wait 1000
+type mevzuat
+wait 800
+shot m34-03-arama
+click 180 481  # Mevzuat
+wait 1200
+move 1300 250
+wait 600
+shot m34-03-mevzuat
+click 1258 57  # Mimari ayarları
+wait 2500
+wheel 960 590 -5
+wait 1000
+click 1035 659  # Yerel imar yönetmeliği
+wait 1000
+shot m34-04-secim
+click 980 723  # Sivas Belediyesi İmar Yönetmeliği
+wait 800
+shot m34-05-sivas-secildi
+click 1395 919  # Kaydet
+wait 2500
+click 65 414  # Denetle
+wait 3000
+move 1300 250
+wait 800
+shot m34-06-sivas
+click 600 476  # the stair's finding
+wait 800
+click 1480 414  # Düzelt
+wait 2500
+move 1300 250
+wait 800
+shot m34-07-duzeltildi
