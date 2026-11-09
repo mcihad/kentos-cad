@@ -43,7 +43,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
@@ -1375,6 +1375,14 @@ yarım sıfırdan uzağa yuvarlanır, öbür alanlar aynen; LAS, LAZ, COPC; kutu
 beş ret; özet ortanın kayması ve dönüklük; 11 yeni ortak durum (41), Python, MCP; Tarama kaydı'nda Buluta uygula, yeniden
 kayıtta RMS, kot ve KOH_Z aynı kalır. Açık: ters matris, nesnenin dönüşüm geçmişi, normallerin döndürülmesi, çoklu tarama
 demeti, gerçek veriyle ölçüm.
+
+**9 Kasım 2026, altıncı tur — ters matris ve nesnenin dönüşüm geçmişi ([ADR 3500](../docs/adr/3500-point-cloud-inverse-and-history.md)).**
+Kapsam: **Harita + CBS**. Araştırma: PDAL filters.transformation'ın `invert`'ü, CloudCompare'in Apply Transformation'ı
+(tersi kutusu) ve Transformation history'si. Kanıtlanan: `Affine::inverse` sabit sırayla (kofaktör bölü determinant,
+satır satır; öteleme tersin satırlarıyla), Dönüşüm uygula'da Tersini uygula; yazılan bulut nesnesi Kaynak (zincirin ilk
+dosyası) ve Dönüşümler (uygulanan matrisler, en yenisi sonda) özniteliklerini taşır. Üç yeni ortak durum (noktalar bayt
+bayt; 44 durum), Python, MCP (zincirlenen geçmiş), masaüstü (geri gelen tarama) ve resim. Açık: çoklu tarama demeti,
+eksen-açı ya da Euler girişi, dönüşümün dosyasız nesnede tutulması, gerçek veri ölçümü.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

@@ -1694,7 +1694,10 @@
      {
       "kind": "pointcloud",
       "layerId": "islem-donusturulmus-bulut",
-      "attrs": {},
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999980000006666 -0.0019999986666669333 0 8842.009424720716 0.0019999986666669333 0.9999980000006666 0 -966.6785007352009 0 0 1 0.049999999999954525 0 0 0 1"
+      },
       "sources": [
        {
         "file": "koy-donusmus.laz",
@@ -1947,7 +1950,10 @@
      {
       "kind": "pointcloud",
       "layerId": "islem-donusturulmus-bulut",
-      "attrs": {},
+      "attrs": {
+       "Kaynak": "ikinci.laz",
+       "Dönüşümler": "0.9999988750002109 0.0014999994075000746 -0.00000029999988550001344 -6629.863344774989 -0.0014999994375000632 0.9999988550002336 -0.00019999977366671036 736.8611723147333 0 0.0001999999986666667 0.9999999800000001 -884.0719672862634 0 0 0 1"
+      },
       "sources": [
        {
         "file": "ikinci-donusmus.laz",
@@ -1976,6 +1982,291 @@
       "style": {
        "render": "elevation",
        "size": 2
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-inverse",
+   "title": "Tersini uygula: dönen ve ötelenen matrisin tersi; nesnenin geçmişinde kaynak dosya ve uygulanan ters matris",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "matrix": "0.9999980000006666 -0.0019999986666669333 0.0 8842.009424720716\n0.0019999986666669333 0.9999980000006666 0.0 -966.6785007352009\n0.0 0.0 1.0 0.049999999999954525\n0.0 0.0 0.0 1.0",
+    "invert": true,
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 0,406 m kaydı, dönüklük 0,1146°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 0.40620192017517553,
+     "angle": 0.11459155902616462
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "9b2493bd44588182"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999980000006666 0.0019999986666669333 0 -8840.058384995195 -0.0019999986666669333 0.9999980000006666 0 984.3605744389417 0 0 1 -0.049999999999954525 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.laz",
+        "format": "laz",
+        "count": 71212,
+        "bounds": [
+         487599.566,
+         4420300.082,
+         838.941,
+         487719.567,
+         4420390.307,
+         862.568
+        ]
+       }
+      ],
+      "bounds": [
+       487599.566,
+       4420300.082,
+       838.941,
+       487719.567,
+       4420390.307,
+       862.568
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-inverse-registered",
+   "title": "Tersini uygula: Tarama kaydı'nın tarifinin tersi, kayıtlı bulut eski yerine",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "matrix": "0.99999775000091 -0.002100118288230866 -0.0002991593106401065 9284.479134201538\n0.0020999983620004106 0.999997714748988 -0.0004006291068107812 -1013.5625761831179\n0.0002999999955 0.00039999997133333403 0.999999875000005 -1914.4047402384188\n0.0 0.0 0.0 1.0",
+    "invert": true,
+    "format": "las",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 0,148 m kaydı, dönüklük 0,1237°; “koy-donusmus.las” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 0.14751610076516608,
+     "angle": 0.12368793212236877
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.las": {
+      "count": 71212,
+      "points": "14d9dfc6ebd28346"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999977500009098 0.00209999836200041 0.00029999999550000005 -9281.755442968706 -0.002100118288230866 0.999997714748988 0.00039999997133333403 1033.8245262058654 -0.0002991593106401065 -0.00040062910681078125 0.9999998750000051 1916.7759766456832 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.las",
+        "format": "las",
+        "count": 71212,
+        "bounds": [
+         487600.028,
+         4420299.794,
+         838.988,
+         487720.041,
+         4420390.031,
+         862.57
+        ]
+       }
+      ],
+      "bounds": [
+       487600.028,
+       4420299.794,
+       838.988,
+       487720.041,
+       4420390.031,
+       862.57
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-inverse-translation",
+   "title": "Tersini uygula: yalnız ötelemenin tersi, tam sayılar tam geri kayar",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "matrix": "1.0 0.0 0.0 12.5\n0.0 1.0 0.0 -3.25\n0.0 0.0 1.0 0.0\n0.0 0.0 0.0 1.0",
+    "invert": true,
+    "format": "las",
+    "output": "geri",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 12,916 m kaydı, dönüklük 0,0000°; “geri.las” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 12.91559135308949,
+     "angle": 0.0
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "geri.las": {
+      "count": 71212,
+      "points": "344eb8bec48a0693"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "1 0 0 -12.5 0 1 0 3.25 0 0 1 0 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "geri.las",
+        "format": "las",
+        "count": 71212,
+        "bounds": [
+         487587.5,
+         4420303.25,
+         838.991,
+         487707.338,
+         4420393.249,
+         862.618
+        ]
+       }
+      ],
+      "bounds": [
+       487587.5,
+       4420303.25,
+       838.991,
+       487707.338,
+       4420393.249,
+       862.618
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
       }
      }
     ]

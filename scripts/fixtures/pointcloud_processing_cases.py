@@ -518,6 +518,34 @@ def matrix_text(m):
     return "\n".join(" ".join(repr(float(v)) for v in m[i * 4:i * 4 + 4]) for i in range(4))
 
 
+def inverse(m):
+    """docs/adr/3500: the inverse map in the core's fixed order: the cofactors over the determinant, row by row; the
+    translation the negated rows of that inverse times the translation, added in order; the bottom row 0 0 0 1."""
+    d = (m[0] * (m[5] * m[10] - m[6] * m[9]) - m[1] * (m[4] * m[10] - m[6] * m[8])
+         + m[2] * (m[4] * m[9] - m[5] * m[8]))
+    i = [(m[5] * m[10] - m[6] * m[9]) / d, (m[2] * m[9] - m[1] * m[10]) / d, (m[1] * m[6] - m[2] * m[5]) / d,
+         (m[6] * m[8] - m[4] * m[10]) / d, (m[0] * m[10] - m[2] * m[8]) / d, (m[2] * m[4] - m[0] * m[6]) / d,
+         (m[4] * m[9] - m[5] * m[8]) / d, (m[1] * m[8] - m[0] * m[9]) / d, (m[0] * m[5] - m[1] * m[4]) / d]
+    t = [-(i[3 * r] * m[3] + i[3 * r + 1] * m[7] + i[3 * r + 2] * m[11]) for r in range(3)]
+    return [i[0], i[1], i[2], t[0], i[3], i[4], i[5], t[1], i[6], i[7], i[8], t[2], 0.0, 0.0, 0.0, 1.0]
+
+
+def rust_number(v):
+    """An f64 as Rust writes it: the shortest digits that read back (Python's repr gives the same), never an exponent,
+    no “.0” on a whole number; a negative zero written as 0 (the history adds 0.0)."""
+    from decimal import Decimal
+    v = v + 0.0
+    text = format(Decimal(repr(v)), "f")
+    if "." in text:
+        text = text.rstrip("0").rstrip(".")
+    return "0" if text in ("-0", "") else text
+
+
+def matrix_words(m):
+    """docs/adr/3500: the 16 numbers of the history, row by row, apart by spaces."""
+    return " ".join(rust_number(v) for v in m)
+
+
 def apply(m, p):
     return [m[0] * p[0] + m[1] * p[1] + m[2] * p[2] + m[3],
             m[4] * p[0] + m[5] * p[1] + m[6] * p[2] + m[7],
@@ -581,9 +609,12 @@ IKINCI_TURNED = about(mul(rz(-0.0015), rx(0.0002)), middle(IKINCI), [0.05, 0.02,
 
 
 def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=True, style=KOY_STYLE, srid=SRID,
-                     text=None):
+                     text=None, invert=False):
     kind, ext = FORMAT[fmt]
     path = (output + ext) if output else f"{file}-donusmus{ext}"
+    given = m
+    if invert:
+        m = inverse(m)
     X, Y, Z = moved(c, m)
     triples = list(zip(X.tolist(), Y.tolist(), Z.tolist()))
     if fmt == "copc":
@@ -591,7 +622,9 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
     check = {"count": c.n, "points": ref.fnv(b"".join(struct.pack("<iii", *t) for t in triples))}
     if fmt == "copc":
         check["copc"] = True
-    values = {"input": on(lid), "matrix": text if text is not None else matrix_text(m)}
+    values = {"input": on(lid), "matrix": text if text is not None else matrix_text(given)}
+    if invert:
+        values["invert"] = True
     if fmt != "laz":
         values["format"] = fmt
     if output:
@@ -617,8 +650,10 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
         values["layer"] = {"newName": "Dönüştürülmüş bulut"}
         nx, ny, nz = (X * c.scale[0] + c.offset[0], Y * c.scale[1] + c.offset[1], Z * c.scale[2] + c.offset[2])
         b = [float(nx.min()), float(ny.min()), float(nz.min()), float(nx.max()), float(ny.max()), float(nz.max())]
+        # docs/adr/3500: the history: the source's file and the matrix applied (the inverse when asked).
+        history = {"Kaynak": f"{file}.laz", "Dönüşümler": matrix_words(m)}
         expect.update({"undo": "Dönüşüm uygula", "layers": [layer], "added": [
-            {"kind": "pointcloud", "layerId": layer["id"], "attrs": {},
+            {"kind": "pointcloud", "layerId": layer["id"], "attrs": history,
              "sources": [{"file": path, "format": kind, "count": c.n, "bounds": b}],
              "bounds": b, "count": c.n, "srid": srid, "style": style}]})
     else:
@@ -649,6 +684,13 @@ def transform_cases():
         transformed_case("transform-second-grid", "Dönüşüm uygula, X ve Y'si 0,4 mm'lik ızgaradaki ikinci bulut: kendi "
                          "ızgarasında kalır, yuvarlama eksen eksen söylenir", IKINCI, "ikinci", "ikinci", IKINCI_TURNED,
                          style=GREY_STYLE),
+        # docs/adr/3500: the inverse, in the core's fixed order.
+        transformed_case("transform-inverse", "Tersini uygula: dönen ve ötelenen matrisin tersi; nesnenin geçmişinde "
+                         "kaynak dosya ve uygulanan ters matris", KOY, "koy", "koy", ROTATED, invert=True),
+        transformed_case("transform-inverse-registered", "Tersini uygula: Tarama kaydı'nın tarifinin tersi, kayıtlı "
+                         "bulut eski yerine", KOY, "koy", "koy", REGISTERED, invert=True, fmt="las"),
+        transformed_case("transform-inverse-translation", "Tersini uygula: yalnız ötelemenin tersi, tam sayılar tam "
+                         "geri kayar", KOY, "koy", "koy", MOVED_ONLY, invert=True, fmt="las", output="geri"),
         refused("transform-count", "Dönüşüm uygula, 12 sayı: ret", "1 0 0 0\n0 1 0 0\n0 0 1 0",
                 "Matris 16 sayıdır (4 satır, 4 sütun, satır satır); 12 sayı verildi."),
         refused("transform-word", "Dönüşüm uygula, sayı olmayan söz: ret", "1 0 0 a\n0 1 0 0\n0 0 1 0\n0 0 0 1",

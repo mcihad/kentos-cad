@@ -267,6 +267,66 @@ fn the_fit_is_applied_to_the_moving_scan() {
     assert!((fitted.koh_z - moved_koh.koh_z).abs() < 0.001, "{} vs {}", fitted.koh_z, moved_koh.koh_z);
 }
 
+/// docs/adr/3500: the fit applied, then the same matrix with Tersini uygula on the moved scan: the scan is back where
+/// it was (Tarama kaydı's RMS before is the first fit's before), and the third cloud's history keeps the first file and
+/// both matrices, the inverse last.
+#[test]
+fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
+    use crate::processing::{Event as P, RunStatus};
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let r = app.register.answer.clone().expect("an answer").expect("registered");
+    let (fixed, moving) = (app.register.fixed.clone(), app.register.moving.clone());
+    let _ = app.update(Message::Register(R::Apply));
+    let dir = crate::files_testing::scratch("tersini-uygula");
+    let run = |app: &mut App, file: &str| {
+        let out = dir.join(file);
+        let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(out.to_string_lossy().into_owned()))));
+        let task = app.update(Message::Processing(P::Run));
+        crate::files_testing::drive(app, task);
+        let status = app.processing.dialog.as_ref().map(|w| w.status.clone());
+        assert!(matches!(status, Some(RunStatus::Ok { .. })), "{status:?}");
+    };
+    run(&mut app, "kayitli.laz");
+    let clouds_on = |app: &App, name: &str| -> Vec<(String, std::collections::BTreeMap<String, String>)> {
+        let doc = &app.document.as_ref().expect("open").model;
+        let layer = doc.layers().leaves().into_iter().find(|l| l.name == name).expect("the layer").id.clone();
+        doc.entities_with_uids()
+            .filter(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+            .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
+            .collect()
+    };
+    let moved = clouds_on(&app, "Kaydedilmiş bulut");
+    let (moved_uid, moved_attrs) = moved.last().cloned().expect("the moved scan");
+    assert_eq!(moved_attrs.get("Dönüşümler").map(|h| h.split(" | ").count()), Some(1), "{moved_attrs:?}");
+    // Back: the same matrix, inverted, on the moved scan.
+    let _ = app.update(Message::Processing(P::Close));
+    let slot = |app: &App, uid: &str| {
+        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+    };
+    app.selection.set([slot(&app, &moved_uid)]);
+    let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+    assert_eq!(app.dialog, Some(Dialog::Processing));
+    let matrix = crate::register_window::matrix_text(&r.matrix);
+    let _ = app.update(Message::Processing(P::Value("matrix".into(), Value::from(matrix))));
+    let _ = app.update(Message::Processing(P::Value("invert".into(), Value::Bool(true))));
+    let _ = app.update(Message::Processing(P::Value("layer".into(), serde_json::json!({"newName": "Kaydedilmiş bulut"}))));
+    run(&mut app, "geri.laz");
+    let back = clouds_on(&app, "Kaydedilmiş bulut");
+    let (back_uid, back_attrs) = back.last().cloned().expect("the scan moved back");
+    let history: Vec<&str> = back_attrs["Dönüşümler"].split(" | ").collect();
+    assert_eq!(history.len(), 2, "{back_attrs:?}");
+    assert_eq!(history[0], moved_attrs["Dönüşümler"]);
+    assert_eq!(back_attrs["Kaynak"], moved_attrs["Kaynak"], "the first file kept");
+    // Fitted again against the fixed scan from where it is back: the first fit's RMS before.
+    let _ = app.update(Message::Processing(P::Close));
+    app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let again = app.register.answer.clone().expect("an answer").expect("registered");
+    assert!((again.rms_before - r.rms_before).abs() < 0.001, "{} vs {}", again.rms_before, r.rms_before);
+    let _ = moving;
+}
+
 #[test]
 fn harita_and_gis_offer_it() {
     for module in [Module::Map, Module::Gis] {
@@ -376,4 +436,66 @@ fn screens() {
     let file = out.join("3-menu-bulut-sekmesi.png");
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
+}
+
+/// docs/adr/3500: Dönüşüm uygula with Tersini uygula on the moved scan, and the cloud moved back selected (its
+/// Kaynak and Dönüşümler in Öznitelikler); light wide and dark narrow, `.run/gui-evidence/tersini-uygula-3500/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib register_window_tests::inverse_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn inverse_screens() {
+    use crate::processing::Event as P;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tersini-uygula-3500");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pointcloud.register"));
+        let r = app.register.answer.clone().expect("an answer").expect("registered");
+        let _ = app.update(Message::Register(R::Apply));
+        let dir = crate::files_testing::scratch(&format!("tersini-uygula-resim-{name}"));
+        let run = |app: &mut App, file: &str| {
+            let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(dir.join(file).to_string_lossy().into_owned()))));
+            let task = app.update(Message::Processing(P::Run));
+            crate::files_testing::drive(app, task);
+        };
+        run(&mut app, "kayitli.laz");
+        let _ = app.update(Message::Processing(P::Close));
+        let doc = &app.document.as_ref().expect("open").model;
+        let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("its layer").id.clone();
+        let moved = doc.entities_with_uids().filter(|(_, e)| e.base().layer_id == layer).map(|(u, _)| u).last().expect("moved");
+        let moved = doc.slot_of(moved).expect("its slot");
+        app.selection.set([moved]);
+        let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+        let _ = app.update(Message::Processing(P::Value("matrix".into(), Value::from(crate::register_window::matrix_text(&r.matrix)))));
+        let _ = app.update(Message::Processing(P::Value("invert".into(), Value::Bool(true))));
+        let _ = app.update(Message::Processing(P::Value("layer".into(), serde_json::json!({"newName": "Kaydedilmiş bulut"}))));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-tersini-uygula-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        run(&mut app, "geri.laz");
+        let _ = app.update(Message::Processing(P::Close));
+        let doc = &app.document.as_ref().expect("open").model;
+        let back = doc.entities_with_uids().filter(|(_, e)| e.base().layer_id == layer).map(|(u, _)| u).last().expect("back");
+        let back = doc.slot_of(back).expect("its slot");
+        app.selection.set([back]);
+        app.follow_selection_tab();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-gecmis-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }

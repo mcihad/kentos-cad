@@ -75,6 +75,41 @@ impl Affine {
         self.m
     }
 
+    /// The inverse map (docs/adr/3500), each number in a fixed order so that an independent reference gets the same
+    /// bits: the linear part's cofactors over its determinant (the determinant as `determinant` takes it), row by row;
+    /// the translation the negated rows of that inverse times the translation, the three products added in order; the
+    /// bottom row 0 0 0 1. A map's determinant is never zero (`new`).
+    pub fn inverse(&self) -> Affine {
+        let m = &self.m;
+        let d = self.determinant();
+        let i = [
+            (m[5] * m[10] - m[6] * m[9]) / d,
+            (m[2] * m[9] - m[1] * m[10]) / d,
+            (m[1] * m[6] - m[2] * m[5]) / d,
+            (m[6] * m[8] - m[4] * m[10]) / d,
+            (m[0] * m[10] - m[2] * m[8]) / d,
+            (m[2] * m[4] - m[0] * m[6]) / d,
+            (m[4] * m[9] - m[5] * m[8]) / d,
+            (m[1] * m[8] - m[0] * m[9]) / d,
+            (m[0] * m[5] - m[1] * m[4]) / d,
+        ];
+        let t = |r: usize| -(i[3 * r] * m[3] + i[3 * r + 1] * m[7] + i[3 * r + 2] * m[11]);
+        Affine {
+            m: [
+                i[0], i[1], i[2], t(0), //
+                i[3], i[4], i[5], t(1), //
+                i[6], i[7], i[8], t(2), //
+                0.0, 0.0, 0.0, 1.0,
+            ],
+        }
+    }
+
+    /// The 16 numbers as text, row-major, each as Rust writes an f64 (the shortest that reads back the same, no
+    /// exponent; a negative zero as 0), apart by spaces: the object's transform history keeps it (docs/adr/3500).
+    pub fn text(&self) -> String {
+        self.m.iter().map(|v| format!("{}", v + 0.0)).collect::<Vec<_>>().join(" ")
+    }
+
     /// A point moved: each coordinate its row's three products and the translation, added in that order.
     #[inline]
     pub fn apply(&self, p: [f64; 3]) -> [f64; 3] {
@@ -187,6 +222,27 @@ fn whole(v: f64, scale: f64, offset: f64) -> Option<i32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// docs/adr/3500: a map and its inverse give the point back (within rounding); a translation's inverse is exactly
+    /// its negation; the inverse of the inverse is the map within rounding.
+    #[test]
+    fn the_inverse_takes_the_points_back() {
+        let a = Affine::new([
+            0.999998, -0.002, 0.0, 8812.25, //
+            0.002, 0.999998, 0.0, -973.5, //
+            0.0, 0.0, 1.0, 0.05, //
+            0.0, 0.0, 0.0, 1.0,
+        ])
+        .expect("a map");
+        let p = [487123.25, 4420456.5, 852.125];
+        let back = a.inverse().apply(a.apply(p));
+        assert!((0..3).all(|k| (back[k] - p[k]).abs() < 1e-6), "{back:?}");
+        let moved = Affine::new([1.0, 0.0, 0.0, 12.5, 0.0, 1.0, 0.0, -3.25, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]).expect("a map");
+        assert_eq!(moved.inverse().matrix(), [1.0, 0.0, 0.0, -12.5, 0.0, 1.0, 0.0, 3.25, 0.0, 0.0, 1.0, -0.0, 0.0, 0.0, 0.0, 1.0]);
+        assert_eq!(moved.inverse().text(), "1 0 0 -12.5 0 1 0 3.25 0 0 1 0 0 0 0 1");
+        let twice = a.inverse().inverse().matrix();
+        assert!(twice.iter().zip(a.matrix()).all(|(x, y)| (x - y).abs() < 1e-9));
+    }
 
     const ID: [f64; 16] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
 

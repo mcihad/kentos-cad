@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Bulutta ters matris ve dönüşüm geçmişi (9 Kasım 2026; MAP-13, [ADR 3500](../../docs/adr/3500-point-cloud-inverse-and-history.md)).**
+  Dönüşüm uygula'da Tersini uygula (`Affine::inverse`, sabit hesap sırası); yazılan bulut Kaynak ve Dönüşümler
+  özniteliklerini taşır, zincirde geçmiş büyür. Harita + CBS.
 - **Ayırma çapında dış parçanın numarası çizimde (9 Kasım 2026; MAP-11, [ADR 3480](../../docs/adr/3480-separation-sheet-piece-numbers-drawn.md)).**
   Numaralı dış parça parselin “dış parçalar” katmanında alan olarak (Parsel, Kısım, ParselNo) ve içinde numaralı
   noktayla; Koordinat listesi yalnız köşeleri okur; cevapta `labels`. Harita + CBS.

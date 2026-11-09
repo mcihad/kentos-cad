@@ -171,6 +171,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   komut ortak).
 - MAP-11 / ADR 3480: web'in ayırma çapı akışında numaralı dış parçaların katmanı ve etiketleri (komut ortak; web'in
   Koordinat listesi yalnız nokta katmanını okumalı).
+- MAP-13 / ADR 3500: web'in İşlemler aracında Dönüşüm uygula'nın Tersini uygula'sı ve bulut nesnesinin Kaynak/Dönüşümler
+  öznitelikleri (araç yerel; web'in işlem kayıt defteri aynı parametreyi göstermeli).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

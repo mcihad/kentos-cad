@@ -4,6 +4,10 @@
 //! as it was. Before anything is written the files' boxes are moved, so a matrix that would take points off the grid
 //! is refused at once. The summary says how far the cloud's middle went and, for a rigid matrix, the rotation's angle;
 //! a matrix that scales or shears is said to change lengths. The machine is the core's (`ops::transform`).
+//!
+//! docs/adr/3500: Tersini uygula applies the matrix's inverse (the core's fixed order). The object written keeps its
+//! history as attributes: Kaynak, the first file of the chain (the source object's own Kaynak when it has one, else its
+//! file), and Dönüşümler, the matrices applied from it, each as 16 numbers, the newest last after “ | ”.
 
 use kentos_pointcloud::ops::transform::Affine;
 use serde_json::json;
@@ -19,6 +23,9 @@ use crate::types::{
 
 /// The result's file name after the source's.
 const SUFFIX: &str = "-donusmus";
+/// The written object's attributes of its history (docs/adr/3500).
+const ORIGIN: &str = "Kaynak";
+const HISTORY: &str = "Dönüşümler";
 
 pub fn tool() -> Tool {
     Tool {
@@ -50,6 +57,9 @@ pub fn tool() -> Tool {
                 },
             )
             .describe("Satır satır 16 sayı: dönüklük ve öteleme, son satır 0 0 0 1 (Tarama kaydı'nın matrisi)."),
+            ParamDef::new("invert", "Tersini uygula", ParamKind::Boolean)
+                .default_value(json!(false))
+                .describe("Matrisin tersi uygulanır: kaydın taşıdığı bulut eski yerine döner."),
             format_param(),
             output_param(SUFFIX, &[".laz", ".las"]),
             add_param(),
@@ -73,6 +83,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         (Err(e), _) | (_, Err(e)) => return *e,
     };
     let affine = match Affine::parse(r.text("matrix")) {
+        Ok(a) if r.flag("invert") => a.inverse(),
         Ok(a) => a,
         Err(e) => return RunResult::refused(e.0),
     };
@@ -158,7 +169,7 @@ fn go(
     let middle = [0, 1, 2].map(|k| (lo[k] + hi[k]) / 2.0);
     let shift = affine.shift(middle);
     let angle = rigid.then(|| affine.angle());
-    let object = cloud_object(
+    let mut object = cloud_object(
         &at,
         count,
         bounds,
@@ -166,6 +177,16 @@ fn go(
         cloud.cloud.style.clone(),
         &r.layer("layer").id,
     );
+    // The history (docs/adr/3500): the chain's first file and the matrices applied from it, this one last.
+    let had = |k: &str| cloud.base.attrs.get(k).cloned();
+    let origin = had(ORIGIN).or_else(|| sources.first().and_then(|s| s.file.clone())).unwrap_or_default();
+    let history = match had(HISTORY) {
+        Some(h) if !h.trim().is_empty() => format!("{h} | {}", affine.text()),
+        _ => affine.text(),
+    };
+    let attrs = &mut object.base_mut().attrs;
+    attrs.insert(ORIGIN.to_owned(), origin);
+    attrs.insert(HISTORY.to_owned(), history);
     let turned = angle.map_or_else(String::new, |a| format!(", dönüklük {}°", comma(a, 4)));
     let mut result = written(
         r,

@@ -96,8 +96,9 @@ uygulanması”.
 
 ## Sonra
 
-- Ters matris (`invert`) ve eksen-açı ya da Euler girişi.
-- Dönüşümün yeni dosya yazmadan nesnede tutulması ve nesnenin dönüşüm geçmişi (CloudCompare'in geçmişi gibi).
+- Ters matris (`invert`; yapıldı, [ADR 3500](3500-point-cloud-inverse-and-history.md)) ve eksen-açı ya da Euler girişi.
+- Dönüşümün yeni dosya yazmadan nesnede tutulması ve nesnenin dönüşüm geçmişi (CloudCompare'in geçmişi gibi; geçmiş
+  yapıldı, [ADR 3500](3500-point-cloud-inverse-and-history.md)).
 - Ek baytlardaki normallerin döndürülmesi; tarama açısının düzeltilmesi.
 - Çoklu tarama demeti; gerçek veriyle süre, bellek ve yoğunluk ölçümü (MAP-13'ün öbür maddeleri).
 - Web (TODOS §0.2).
