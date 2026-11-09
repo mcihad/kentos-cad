@@ -67,6 +67,7 @@ pub mod volume;
 pub mod volume_zones;
 pub mod volume_ledger;
 pub mod volume_materials;
+pub mod volume_sections;
 pub mod volume_uncertainty;
 pub mod wall;
 pub mod widening;

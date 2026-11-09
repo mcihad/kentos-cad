@@ -1,22 +1,29 @@
 //! `road.terrains.compare` v1 (plan/road.md Y18.3, docs/adr/0916 §3): the difference of two terrain surfaces over the
 //! comparison's plan (Civil 3D's TIN volume surface), read now with `kentos_road::volume::difference`: cut, fill and
 //! net volumes, their areas, the extremes and the ranges' areas; with material zones (docs/adr/3540,
-//! `kentos_road::volume_materials`) each zone's part, the rest and the adjusted volumes by material. Nothing is
-//! written. The shared cases are `fixtures/commands/v1/road.terrains.compare.json` and `….compare.zones.json`.
+//! `kentos_road::volume_materials`) each zone's part, the rest and the adjusted volumes by material; by sections
+//! (docs/adr/4340, `kentos_road::volume_sections`) each section's areas and the volumes between them. Nothing is
+//! written. The shared cases are `fixtures/commands/v1/road.terrains.compare.json`, `….compare.zones.json` and
+//! `….compare.sections.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CompareMethod, CompareZone, MOST_COMPARE_CELLS, TerrainAdjusted, TerrainDifferenceAt,
-    TerrainDifferenceBand, TerrainVolumes, TerrainZoneRest, TerrainZoneVolumes, TerrainsCompare, TerrainsCompared,
+    CommandResult, CommandWarning, CompareMethod, CompareZone, MOST_COMPARE_CELLS, MOST_COMPARE_SECTIONS, SectionFormula,
+    TerrainAdjusted, TerrainDifferenceAt, TerrainDifferenceBand, TerrainSection, TerrainVolumes, TerrainZoneRest,
+    TerrainZoneVolumes, TerrainsCompare, TerrainsCompared,
 };
 use kentos_domain::Document;
 use kentos_road::surface::{Region, Surface};
 use kentos_road::volume::{self, Triangle};
 use kentos_road::volume_materials;
+use kentos_road::volume_sections::{self, SectionsError};
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
 use crate::codes;
 use crate::road_terrains::{self as terrains, fail};
+
+/// The section method's axis (docs/adr/4340).
+const AZIMUTH: &str = "Eksenin semti 0 ile 360 derece arasında olmalı (kuzeyden saat yönünde; 360 hariç).";
 
 fn invalid(message: &str, path: &str) -> Stop {
     fail(codes::INVALID_ANALYSIS, message.to_owned(), path)
@@ -96,6 +103,31 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
             ));
         }
     }
+    // The section method (docs/adr/4340): its interval and the axis's azimuth; its ranges and zones are the exact TIN's.
+    let sections = input.method == Some(CompareMethod::Sections);
+    if sections {
+        match input.interval {
+            None => return Err(invalid("Kesit yönteminde kesitlerin aralığını (interval, m) verin.", "interval")),
+            Some(v) if !(v.is_finite() && v > 0.0) => {
+                return Err(invalid("Kesit aralığı 0'dan büyük bir uzunluk olmalı.", "interval"));
+            }
+            _ => {}
+        }
+        if input.azimuth.is_some_and(|a| !(a.is_finite() && (0.0..360.0).contains(&a))) {
+            return Err(invalid(AZIMUTH, "azimuth"));
+        }
+        if input.ranges.is_some() {
+            return Err(invalid("Fark aralıkları TIN yöntemiyle verilir; kesit yönteminde aralık istenmez.", "ranges"));
+        }
+        if !input.zones.is_empty() {
+            return Err(invalid("Malzeme bölgeleri TIN yöntemiyle ölçülür; kesit yönteminde bölge istenmez.", "zones"));
+        }
+    } else if input.formula.is_some() {
+        return Err(invalid(
+            "Formül (ortalama alan ya da prizmoidal) kesit yönteminindir; yöntemi kesit seçin ya da formülü kaldırın.",
+            "formula",
+        ));
+    }
     const FACTOR: &str = "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).";
     let bad = |v: Option<f64>| v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0));
     for (path, v) in [("cutFactor", input.cut_factor), ("fillFactor", input.fill_factor)] {
@@ -150,7 +182,32 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
         }
         _ => None,
     };
+    // The sections (docs/adr/4340), on the two surfaces' triangles.
+    let azimuth = input.azimuth.unwrap_or(0.0);
+    let formula = input.formula.unwrap_or_default();
+    let by_sections = match (sections, input.interval) {
+        (true, Some(interval)) => Some(
+            volume_sections::measure(
+                &triangles(sc),
+                &triangles(sb),
+                azimuth,
+                interval,
+                formula == SectionFormula::Prismoidal,
+                MOST_COMPARE_SECTIONS,
+            )
+            .map_err(|e| match e {
+                SectionsError::TooMany => {
+                    invalid("Bu aralıkla 10 000'den çok kesit olur; kesit aralığını büyütün.", "interval")
+                }
+                SectionsError::Interval => invalid("Kesit aralığı 0'dan büyük bir uzunluk olmalı.", "interval"),
+                SectionsError::Azimuth => invalid(AZIMUTH, "azimuth"),
+            })?,
+        ),
+        _ => None,
+    };
     let v = measured.as_ref().unwrap_or(&d.volumes);
+    // The volumes of the method asked: the sections', the grid's, else the exact TIN's.
+    let (main_cut, main_fill) = by_sections.as_ref().map_or((v.cut, v.fill), |s| (s.cut, s.fill));
     if v.uncovered > 0.0 {
         warnings.push(CommandWarning {
             code: codes::COMPARE_UNCOVERED.into(),
@@ -214,9 +271,9 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
     let out = TerrainsCompared {
         base,
         comparison,
-        cut: v.cut,
-        fill: v.fill,
-        net: v.fill - v.cut,
+        cut: main_cut,
+        fill: main_fill,
+        net: main_fill - main_cut,
         cut_area: v.cut_area,
         fill_area: v.fill_area,
         covered: v.covered,
@@ -226,15 +283,21 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
         bands: d.bands.iter().map(|b| TerrainDifferenceBand { from: b.0, to: b.1, area: b.2 }).collect(),
         outside_area: input.ranges.as_ref().map(|_| d.outside),
         cell: measured.as_ref().and(input.cell),
-        exact: measured.as_ref().map(|_| TerrainVolumes {
+        exact: (measured.is_some() || by_sections.is_some()).then(|| TerrainVolumes {
             cut: d.volumes.cut,
             fill: d.volumes.fill,
             net: d.volumes.fill - d.volumes.cut,
         }),
-        adjusted: (input.cut_factor.is_some() || input.fill_factor.is_some()).then(|| adjust(v.cut, v.fill, cf, ff)),
+        adjusted: (input.cut_factor.is_some() || input.fill_factor.is_some()).then(|| adjust(main_cut, main_fill, cf, ff)),
         zones,
         rest,
         zoned,
+        interval: by_sections.as_ref().and(input.interval),
+        azimuth: by_sections.as_ref().map(|_| azimuth),
+        formula: by_sections.as_ref().map(|_| formula),
+        sections: by_sections
+            .map(|s| s.rows.iter().map(|r| TerrainSection { station: r.station, cut_area: r.cut, fill_area: r.fill }).collect())
+            .unwrap_or_default(),
     };
     Ok((out, warnings))
 }

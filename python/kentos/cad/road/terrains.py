@@ -18,6 +18,8 @@ from ..types import (  # noqa: F401
     CompareZone,
     ContourRules,
     HeightReference,
+    SectionFormula,
+    SectionFormulaName,
     SheetSlopes,
     SurfaceSources,
     TerrainCheckpointsAsk,
@@ -524,12 +526,23 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
     dolgu, net, katsayılı), bölgelerin dışı (rest, karşılaştırmanın katsayılarıyla) ve
     malzemeye göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara
     yönteminde istenmez; iki yüzeyin dışına taşan bölge uyarıyla (compare_uncovered).
-    Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki
-    düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
-    gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
-    taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
-    heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
-    unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.
+    Kesit yöntemi (method: sections, ADR 4340; Civil 3D'nin örnek çizgi hacimleri):
+    semti azimuth (derece, kuzeyden saat yönünde; yoksa 0) olan eksene dik paralel
+    kesitler, karşılaştırmanın eksen boyunca ilk yerinden başlayıp interval (m) arayla,
+    sonuncusu son yerinde; her kesitin kazı ve dolgu alanı iki yüzeyin ortak yerinde
+    farkın kesin integralidir (fark sıfırında bölünür). Hacim ardışık iki kesit arasında
+    ortalama alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki kesitle L/6·(A₀ +
+    4·Aₘ + A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin TIN'in. Cevapta
+    interval, azimuth, formula ve sections (uzaklık, kazı alanı, dolgu alanı). Retler
+    (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt [0, 360)
+    dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan formül,
+    10 000'den çok kesit. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi
+    kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
+    söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
+    true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
+    her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler:
+    not_a_road_project, invalid_analysis, unknown_terrain, entity_not_found,
+    unproven_heights, terrain_unbuildable.
     """
     __slots__ = ()
     id = "road.terrains.compare"
@@ -548,9 +561,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
+        formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
+        interval: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
@@ -570,11 +586,21 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         kesin TIN–TIN farkı (alan, örtülen alan, kazı, dolgu, net, katsayılı), bölgelerin
         dışı (rest, karşılaştırmanın katsayılarıyla) ve malzemeye göre katsayılı toplam
         (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara yönteminde istenmez; iki yüzeyin
-        dışına taşan bölge uyarıyla (compare_uncovered). Kotlar (ADR 1029): iki yüzeyin
-        kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan
-        alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri
-        bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır
-        (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
+        dışına taşan bölge uyarıyla (compare_uncovered). Kesit yöntemi (method: sections,
+        ADR 4340; Civil 3D'nin örnek çizgi hacimleri): semti azimuth (derece, kuzeyden saat
+        yönünde; yoksa 0) olan eksene dik paralel kesitler, karşılaştırmanın eksen boyunca
+        ilk yerinden başlayıp interval (m) arayla, sonuncusu son yerinde; her kesitin kazı
+        ve dolgu alanı iki yüzeyin ortak yerinde farkın kesin integralidir (fark sıfırında
+        bölünür). Hacim ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 ya da
+        formula: prismoidal ile ortadaki kesitle L/6·(A₀ + 4·Aₘ + A₁); kesin TIN–TIN
+        exact'te yanında, plan alanları kesin TIN'in. Cevapta interval, azimuth, formula ve
+        sections (uzaklık, kazı alanı, dolgu alanı). Retler (invalid_analysis): kesitte
+        aralık yok ya da 0'dan büyük değil, semt [0, 360) dışında, kesitte fark aralığı ya
+        da malzeme bölgesi, kesit yöntemi olmadan formül, 10 000'den çok kesit. Kotlar (ADR
+        1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey
+        sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
+        gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
+        taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
         heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
         unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.
 
@@ -583,9 +609,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base:
             comparison:
             assume_heights:
+            azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
             cell: Unit: m.
             cut_factor: Unit: 1.
             fill_factor: Unit: 1.
+            formula: How the volume between two sections is reckoned; none: the average end area.
+            interval: The sections' spacing, m (docs/adr/4340; the section method's). Unit: m.
             method:
             ranges: Unit: m.
             zones:
@@ -605,9 +634,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            azimuth=azimuth,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
+            formula=formula,
+            interval=interval,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
             zones=_opt(zones, lambda x: list(x)),
@@ -621,9 +653,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
+        formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
+        interval: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
@@ -635,9 +670,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            azimuth=azimuth,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
+            formula=formula,
+            interval=interval,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
             zones=_opt(zones, lambda x: list(x)),
@@ -651,9 +689,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
+        formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
+        interval: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
@@ -665,9 +706,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            azimuth=azimuth,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
+            formula=formula,
+            interval=interval,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
             zones=_opt(zones, lambda x: list(x)),
@@ -681,9 +725,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
+        formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
+        interval: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
@@ -700,9 +747,12 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            azimuth=azimuth,
             cell=cell,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
+            formula=formula,
+            interval=interval,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
             zones=_opt(zones, lambda x: list(x)),

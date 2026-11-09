@@ -171,9 +171,16 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 /// `zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with
 /// its own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted
 /// volumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.
+/// `sections` (docs/adr/4340; Civil 3D's sample line volumes): parallel sections `interval` metres apart, across an axis
+/// whose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to
+/// its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
+/// the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
+/// with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
-/// increasing; grid without a cell, a cell not over 0, ranges or zones with grid; a factor not over 0 or over 10, the
+/// increasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an
+/// interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; more than
+/// 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
 /// comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
 /// `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
 /// polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
@@ -213,6 +220,52 @@ pub struct TerrainsCompare {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CompareZone>>", optional))]
     pub zones: Vec<CompareZone>,
+    /// The sections' spacing, m (docs/adr/4340; the section method's).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub interval: Option<f64>,
+    /// The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub azimuth: Option<f64>,
+    /// How the volume between two sections is reckoned; none: the average end area.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub formula: Option<SectionFormula>,
+}
+
+/// The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
+/// `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SectionFormula {
+    #[default]
+    EndArea,
+    Prismoidal,
+}
+
+/// The most sections a section comparison measures.
+pub const MOST_COMPARE_SECTIONS: f64 = 10_000.0;
+
+/// A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
+/// fill areas (m²).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainSection {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
 }
 
 /// A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is
@@ -287,7 +340,8 @@ pub struct TerrainZoneRest {
     pub adjusted: TerrainAdjusted,
 }
 
-/// How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells.
+/// How two surfaces' volume is measured (docs/adr/1600, 4340): the exact TIN–TIN prisms, a grid's cells, or parallel
+/// sections.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -297,6 +351,7 @@ pub enum CompareMethod {
     #[default]
     Tin,
     Grid,
+    Sections,
 }
 
 /// The most cells a grid comparison measures.
@@ -368,6 +423,8 @@ pub struct TerrainDifferenceBand {
 /// Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
 /// (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
 /// the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
+/// With `sections` (docs/adr/4340): the interval, the azimuth, the formula and each section's areas (`sections`); the
+/// volumes are the sections', the plan areas the exact TIN's, the exact TIN–TIN volumes beside (`exact`).
 /// With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
 /// factor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all
 /// (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
@@ -426,6 +483,20 @@ pub struct TerrainsCompared {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub zoned: Option<TerrainVolumes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub interval: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub azimuth: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub formula: Option<SectionFormula>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSection>>", optional))]
+    pub sections: Vec<TerrainSection>,
 }
 
 pub const ROAD_TERRAINS_ZEROLINE: &str = "road.terrains.zeroline";

@@ -74,5 +74,6 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-15, yedinci tur. Durum: taslak. ADR 3140'
 
 - Tabanın ve hacmin çizimde gösterimi; CSV (ADR 3140 Sonra).
 - Belirsiz köşegende iki köşegenin hacmini birlikte vermek (aralık olarak).
-- Kesit yöntemiyle hacim karşılaştırması; malzeme bölgelerinin çizime yazılması (MAP-15'in öbür maddeleri).
+- Kesit yöntemiyle hacim karşılaştırması ([ADR 4340](4340-surface-comparison-by-sections.md)'te); malzeme
+  bölgelerinin çizime yazılması (MAP-15'in öbür maddesi).
 - Web (TODOS §0.2).

@@ -45,7 +45,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
@@ -1823,6 +1823,16 @@ köşeler yüzeydeki kotlarıyla çekirdeğin kısıtlı Delaunay'ıyla halkanı
 hacim yüzey üçgeni × taban üçgeni parçalarında kesin tümlenir; cevapta düzlem yerine üçgenler; dört köşe bir çemberdeyse
 köşegen notta söylenir; 5 yeni bağımsız durum (30; Triangle, kesirler, üçgenlemenin tekliği doğrulanır), Python (kendi
 hesabıyla), MCP; masaüstünde Taban › Üçgenlenmiş. Açık: kesit yöntemi, bölgelerin çizime yazılması.
+
+**10 Kasım 2026, sekizinci tur — karşılaştırmada kesit yöntemi ([ADR 4340](../docs/adr/4340-surface-comparison-by-sections.md)).**
+Kapsam: **Harita + Yol**. Dayanak: Civil 3D 2024 “About Analyzing Sectional Volumes” (Average End Area, Prismoidal:
+ortada ek kesit, Composite; 10 Kasım 2026'da okundu), yolun `kentos.end-area/1` ve `kentos.prismoidal/1`'i (ADR 0906).
+Kanıtlanan: `road.terrains.compare`'e `method: sections`: semti verilen eksene dik paralel kesitler (`interval`,
+`azimuth`), her kesitin kazı ve dolgu alanı iki yüzeyin ortak yerinde farkın kesin integrali (sıfırda bölünür), hacim
+ortalama alan ya da `formula: prismoidal` ile ortadaki gerçek kesitle; kesin TIN `exact`'te yanında, plan alanları
+TIN'in; dokuz ret; 27 bağımsız durum (kafes yüzeylerde kesin integral), çekirdekte analitik sınama (düzlemde ortalama alan
+kesin, üçgen planda prizmoidal kesin), Python (testin kapalı formülleri), MCP; masaüstünde Fark › Yöntem › Kesit, kesit
+alanları grafiği ve Kesitler tablosu. Açık: malzeme bölgelerinin ve kesitlerin çizime yazılması, aks boyunca kesit.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

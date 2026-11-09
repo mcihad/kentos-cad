@@ -69,7 +69,7 @@ pub(crate) const MATERIAL: &str = "Malzeme";
 pub(crate) const CUT_FACTOR: &str = "Kazı katsayısı";
 pub(crate) const FILL_FACTOR: &str = "Dolgu katsayısı";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 17] = [
+pub(crate) const FIELDS: [&str; 19] = [
     "Sınırlar",
     "Raster hücresi (m)",
     "Fark aralıkları (m)",
@@ -89,8 +89,13 @@ pub(crate) const FIELDS: [&str; 17] = [
     "Dolgu katsayısı",
     // Fark's cut and fill zones' bands (docs/adr/1840): empty, the cut and the fill only.
     "Bant aralığı (m)",
+    // Fark by sections (docs/adr/4340): their spacing and the axis's azimuth (degrees from north, clockwise).
+    "Kesit aralığı (m)",
+    "Eksenin semti (°)",
 ];
 const MODES: [&str; 5] = ["Analiz", "Fark", "Kalite", "Kapsam", "Yoğunluk"];
+/// Fark by sections' spacing when none is typed, m (docs/adr/4340).
+const SECTION_INTERVAL: f64 = 10.0;
 /// The form's label column and a control's width in it (DESIGN.md §7.19: a 300 px form, 130 px labels).
 const LABEL: f32 = 130.0;
 const BOX: f32 = 160.0;
@@ -143,6 +148,9 @@ pub struct Window {
     pub(crate) roughness: bool,
     /// Fark by a grid's cells (docs/adr/1600), else the exact TIN–TIN prisms.
     pub(crate) volume_grid: bool,
+    /// Fark by parallel sections (docs/adr/4340), the prismoidal formula instead of the average end area.
+    pub(crate) volume_sections: bool,
+    pub(crate) prismoidal: bool,
     /// The cut and fill zones' labels and quantity table (docs/adr/2340), their deepest places (docs/adr/2740).
     pub(crate) zone_labels: bool,
     pub(crate) zone_table: bool,
@@ -154,7 +162,7 @@ pub struct Window {
     pub(crate) boundary: Option<String>,
     /// Kapsam's layer for the low confidence areas.
     pub(crate) layer: Option<String>,
-    pub(crate) fields: [String; 17],
+    pub(crate) fields: [String; 19],
     /// The result's tab: the chart or the content; the content's table shown (one at a time, DESIGN.md §7.19).
     pub(crate) tab: Tab,
     pub(crate) list: &'static str,
@@ -174,6 +182,10 @@ pub enum Event {
     Roughness(bool),
     /// Fark's method: a grid (true) or the TIN.
     VolumeGrid(bool),
+    /// Fark's method by its place in TIN–TIN | Izgara | Kesit (docs/adr/4340).
+    VolumeMethod(usize),
+    /// Fark by sections: the prismoidal formula (true) or the average end area.
+    Prismoidal(bool),
     Checks(Option<String>),
     Boundary(Option<String>),
     Layer(String),
@@ -276,13 +288,21 @@ impl Window {
         Ok(TerrainsCompare {
             base: self.surface()?,
             comparison: self.comparison.clone().ok_or("Karşılaştırılacak ikinci yüzeyi seçin.")?,
-            ranges: if self.volume_grid { None } else { list(&self.fields[2], FIELDS[2])? },
-            method: self.volume_grid.then_some(kentos_commands::CompareMethod::Grid),
+            ranges: if self.volume_grid || self.volume_sections { None } else { list(&self.fields[2], FIELDS[2])? },
+            method: if self.volume_sections {
+                Some(kentos_commands::CompareMethod::Sections)
+            } else {
+                self.volume_grid.then_some(kentos_commands::CompareMethod::Grid)
+            },
             cell: if self.volume_grid { number(&self.fields[13], FIELDS[13])? } else { None },
             cut_factor: number(&self.fields[14], FIELDS[14])?,
             fill_factor: number(&self.fields[15], FIELDS[15])?,
             assume_heights: self.assume_heights,
-            zones: if self.volume_grid { Vec::new() } else { self.materials_of(doc, layers)? },
+            zones: if self.volume_grid || self.volume_sections { Vec::new() } else { self.materials_of(doc, layers)? },
+            // Docs/adr/4340: the sections' spacing (none typed: one every 10 m), the axis's azimuth and the formula.
+            interval: if self.volume_sections { Some(number(&self.fields[17], FIELDS[17])?.unwrap_or(SECTION_INTERVAL)) } else { None },
+            azimuth: if self.volume_sections { number(&self.fields[18], FIELDS[18])? } else { None },
+            formula: (self.volume_sections && self.prismoidal).then_some(kentos_commands::SectionFormula::Prismoidal),
         })
     }
 
@@ -371,6 +391,8 @@ impl App {
             measure: 1,
             roughness: false,
             volume_grid: false,
+            volume_sections: false,
+            prismoidal: false,
             zone_labels: false,
             zone_table: false,
             zone_depths: false,
@@ -433,7 +455,15 @@ impl App {
             Event::AssumeHeights(b) => w.assume_heights = b,
             Event::Measure(m) => w.measure = m.min(2),
             Event::Roughness(on) => w.roughness = on,
-            Event::VolumeGrid(on) => w.volume_grid = on,
+            Event::VolumeGrid(on) => {
+                w.volume_grid = on;
+                w.volume_sections = false;
+            }
+            Event::VolumeMethod(i) => {
+                w.volume_grid = i == 1;
+                w.volume_sections = i == 2;
+            }
+            Event::Prismoidal(on) => w.prismoidal = on,
             Event::Materials(layer) => w.materials = layer,
             Event::ZoneLabels(on) => {
                 w.zone_labels = on;
@@ -672,14 +702,29 @@ impl App {
             Mode::Compare => {
                 // The method and the factors (docs/adr/1600): a grid's cell instead of the ranges; the factors and the
                 // material zones (docs/adr/3540, the TIN's alone) are the user's, none is guessed.
-                let method = container(Select::new(["TIN–TIN", "Izgara"].into_iter().map(Choice::new), Some(usize::from(w.volume_grid)), |i| {
-                    msg(Event::VolumeGrid(i == 1))
+                let chosen = if w.volume_sections { 2 } else { usize::from(w.volume_grid) };
+                let method = container(Select::new(["TIN–TIN", "Izgara", "Kesit"].into_iter().map(Choice::new), Some(chosen), |i| {
+                    msg(Event::VolumeMethod(i))
                 }))
                 .width(BOX);
                 form = form.section("Hacim").field("Yöntem", method);
-                form = if w.volume_grid { form.field("Hücre (m)", input("ör. 1", 13)) } else { form.field(FIELDS[2], input("ör. -1, 0, 1", 2)) };
+                form = if w.volume_sections {
+                    // Docs/adr/4340: parallel sections across an axis; Civil 3D's Average End Area and Prismoidal.
+                    let formula = container(Select::new(["Ortalama alan", "Prizmoidal"].into_iter().map(Choice::new), Some(usize::from(w.prismoidal)), |i| {
+                        msg(Event::Prismoidal(i == 1))
+                    }))
+                    .width(BOX);
+                    form.field(FIELDS[17], input("10", 17))
+                        .field(FIELDS[18], input("0", 18))
+                        .field("Formül", formula)
+                        .help("Kesitler eksene dik; semt kuzeyden saat yönünde (0: kesitler doğu–batı).")
+                } else if w.volume_grid {
+                    form.field("Hücre (m)", input("ör. 1", 13))
+                } else {
+                    form.field(FIELDS[2], input("ör. -1, 0, 1", 2))
+                };
                 form = form.field(FIELDS[14], input("1", 14)).field(FIELDS[15], input("1", 15));
-                if !w.volume_grid {
+                if !w.volume_grid && !w.volume_sections {
                     form = form
                         .field("Malzeme bölgeleri", pick_layer(w.materials.as_ref(), true, Box::new(|l| msg(Event::Materials(l)))))
                         .help("Katmanın kapalı nesneleri; ad Malzeme, katsayılar Kazı katsayısı ve Dolgu katsayısı özniteliklerinden.");
@@ -897,6 +942,8 @@ fn facts<'a>(rows: Vec<(String, String)>) -> Element<'a, Message> {
 const SUMMARY: &str = "Özet";
 const RANGES: &str = "Aralıklar";
 const MATERIALS: &str = "Malzemeler";
+/// Fark by sections' table (docs/adr/4340): each section's distance and areas.
+const SECTIONS: &str = "Kesitler";
 const CHECKS: &str = "Kontrol noktaları";
 const ROBUST: &str = "Sağlam ölçüler";
 
@@ -942,9 +989,16 @@ fn content<'a>(w: &'a Window, read: &'a Read) -> (Vec<(String, String)>, Vec<(&'
             } else if let Some(a) = &c.adjusted {
                 figures.push(("Katsayılı net".into(), format!("{}{} m³", if a.net > 0.0 { "+" } else { "" }, grouped(a.net, 2))));
             }
-            let method = match c.cell {
-                Some(cell) => format!("Izgara, {cell} m hücre (orta nokta)"),
-                None => "TIN–TIN, kesin prizmalar".to_owned(),
+            let method = match (c.cell, c.interval) {
+                (Some(cell), _) => format!("Izgara, {cell} m hücre (orta nokta)"),
+                // Docs/adr/4340: the sections' spacing, the axis and the formula.
+                (None, Some(interval)) => format!(
+                    "Kesit, {} m arayla, eksenin semti {}° ({})",
+                    format!("{interval}").replace('.', ","),
+                    format!("{}", c.azimuth.unwrap_or(0.0)).replace('.', ","),
+                    if c.formula == Some(kentos_commands::SectionFormula::Prismoidal) { "prizmoidal" } else { "ortalama alan" }
+                ),
+                (None, None) => "TIN–TIN, kesin prizmalar".to_owned(),
             };
             let mut rows = vec![
                 ("Yöntem".to_owned(), method),
@@ -973,6 +1027,21 @@ fn content<'a>(w: &'a Window, read: &'a Read) -> (Vec<(String, String)>, Vec<(&'
                     rows.push(vec!["Aralıkların dışı".to_owned(), grouped(o, 2)]);
                 }
                 parts.push((RANGES, crate::road_dialog::table(vec![col("Fark (m)", 170.0), num("Alan m²", 110.0)], rows, "")));
+            }
+            // The sections (docs/adr/4340): each one's distance from the first and its cut and fill areas.
+            if !c.sections.is_empty() {
+                let rows: Vec<Vec<String>> = c
+                    .sections
+                    .iter()
+                    .enumerate()
+                    .map(|(k, s)| vec![(k + 1).to_string(), grouped(s.station, 2), grouped(s.cut_area, 2), grouped(s.fill_area, 2)])
+                    .collect();
+                let table = crate::road_dialog::table(
+                    vec![num("Kesit", 60.0), num("Uzaklık m", 100.0), num("Kazı alanı m²", 120.0), num("Dolgu alanı m²", 120.0)],
+                    rows,
+                    "Kesit yok",
+                );
+                parts.push((SECTIONS, said(table, format!("{} kesit; alanlar iki yüzeyin ortak yerinde kesin.", c.sections.len()))));
             }
             // The material zones (docs/adr/3540): each zone and the rest (the exact TIN's cut and fill, the factors, the
             // adjusted net), then the quantity by material.
@@ -1242,6 +1311,35 @@ impl canvas::Program<Message> for Plan<'_> {
                             text(&mut frame, format!("{word} {v:.2} m³"), Point::new(136.0 + w, top + bar / 2.0 - 6.0));
                         }
                     }
+                    return vec![frame.into_geometry()];
+                }
+                // The sections (docs/adr/4340) along the axis: the fill's area up, the cut's down.
+                if !c.sections.is_empty() {
+                    let last = c.sections.last().map_or(0.0, |s| s.station).max(1e-9);
+                    let most = c.sections.iter().flat_map(|s| [s.cut_area, s.fill_area]).fold(0.0_f64, f64::max).max(1e-9);
+                    text(&mut frame, "Kesit alanları boyunca: dolgu yukarı, kazı aşağı".into(), Point::new(10.0, 6.0));
+                    let (left, right) = (70.0_f32, (bounds.width - 24.0).max(80.0));
+                    let half = ((bounds.height - 70.0) / 2.0).max(8.0);
+                    let mid = 30.0 + half;
+                    frame.stroke(
+                        &Path::line(Point::new(left, mid), Point::new(right, mid)),
+                        Stroke::default().with_width(1.0).with_color(tk.muted),
+                    );
+                    let bar = ((right - left) / c.sections.len() as f32 * 0.6).clamp(2.0, 16.0);
+                    for s in &c.sections {
+                        let x = left + (s.station / last) as f32 * (right - left);
+                        let (up, down) = ((s.fill_area / most) as f32 * half, (s.cut_area / most) as f32 * half);
+                        if up > 0.0 {
+                            frame.fill_rectangle(Point::new(x - bar / 2.0, mid - up), iced::Size::new(bar, up), tk.success);
+                        }
+                        if down > 0.0 {
+                            frame.fill_rectangle(Point::new(x - bar / 2.0, mid), iced::Size::new(bar, down), tk.danger);
+                        }
+                    }
+                    text(&mut frame, format!("{most:.1} m²"), Point::new(10.0, mid - half));
+                    text(&mut frame, format!("{most:.1} m²"), Point::new(10.0, mid + half - 12.0));
+                    text(&mut frame, "0 m".into(), Point::new(left - 8.0, mid + half + 8.0));
+                    text(&mut frame, format!("{last:.0} m"), Point::new(right - 40.0, mid + half + 8.0));
                     return vec![frame.into_geometry()];
                 }
                 if c.bands.is_empty() {

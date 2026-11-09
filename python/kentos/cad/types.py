@@ -1391,12 +1391,15 @@ ColumnShapeName = Literal["rect", "round", "lShape"]
 
 
 class CompareMethod(_StrEnum):
-    """How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells."""
+    """How two surfaces' volume is measured (docs/adr/1600, 4340): the exact TIN–TIN prisms, a grid's cells, or parallel
+    sections.
+    """
     TIN = "tin"
     GRID = "grid"
+    SECTIONS = "sections"
 
 
-CompareMethodName = Literal["tin", "grid"]
+CompareMethodName = Literal["tin", "grid", "sections"]
 """The names of :class:`CompareMethod`, for a plain string."""
 
 
@@ -6684,6 +6687,18 @@ class SchemaKind(_StrEnum):
 
 SchemaKindName = Literal["layers", "forms", "domains", "relations"]
 """The names of :class:`SchemaKind`, for a plain string."""
+
+
+class SectionFormula(_StrEnum):
+    """The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
+    `L/6 · (A₀ + 4·Aₘ + A₁)` with the middle section's area `Aₘ`.
+    """
+    END_AREA = "endArea"
+    PRISMOIDAL = "prismoidal"
+
+
+SectionFormulaName = Literal["endArea", "prismoidal"]
+"""The names of :class:`SectionFormula`, for a plain string."""
 
 
 class SelectKind(_StrEnum):
@@ -101078,6 +101093,35 @@ class TerrainRoughness(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainSection(_Model):
+    """A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
+    fill areas (m²).
+    Attributes:
+        station: Unit: m.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+    """
+    station: float
+    cut_area: float
+    fill_area: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainSection:
+        return cls(
+            station=float(data["station"]),
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainSectionPoint(_Model):
     """A place of a section: its distance from the line's start, where it is, its height (none off the surface), and
     `gap`: the line from the previous place to this one is off the surface.
@@ -101512,9 +101556,16 @@ class TerrainsCompare(_Model):
     `zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with
     its own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted
     volumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.
+    `sections` (docs/adr/4340; Civil 3D's sample line volumes): parallel sections `interval` metres apart, across an axis
+    whose direction is `azimuth` (degrees from north, clockwise; none: 0), from the comparison's first place along it to
+    its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
+    the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
+    with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
 
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
-    increasing; grid without a cell, a cell not over 0, ranges or zones with grid; a factor not over 0 or over 10, the
+    increasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an
+    interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; more than
+    10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
     comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
     `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
     polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
@@ -101522,17 +101573,23 @@ class TerrainsCompare(_Model):
     draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
     `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
     Attributes:
+        azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
         cell: Unit: m.
         cut_factor: Unit: 1.
         fill_factor: Unit: 1.
+        formula: How the volume between two sections is reckoned; none: the average end area.
+        interval: The sections' spacing, m (docs/adr/4340; the section method's). Unit: m.
         ranges: Unit: m.
     """
     base: str
     comparison: str
     assume_heights: bool | Unset = UNSET
+    azimuth: float | None | Unset = UNSET
     cell: float | None | Unset = UNSET
     cut_factor: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
+    formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
+    interval: float | None | Unset = UNSET
     method: CompareMethod | CompareMethodName | None | Unset = UNSET
     ranges: list[float] | None | Unset = UNSET
     zones: list[CompareZone] | Unset = UNSET
@@ -101543,12 +101600,18 @@ class TerrainsCompare(_Model):
         out["comparison"] = self.comparison
         if self.assume_heights is not UNSET:
             out["assumeHeights"] = self.assume_heights
+        if self.azimuth is not UNSET:
+            out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.cell is not UNSET:
             out["cell"] = None if self.cell is None else float(self.cell)
         if self.cut_factor is not UNSET:
             out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
         if self.fill_factor is not UNSET:
             out["fillFactor"] = None if self.fill_factor is None else float(self.fill_factor)
+        if self.formula is not UNSET:
+            out["formula"] = None if self.formula is None else _enum_out(self.formula)
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
         if self.method is not UNSET:
             out["method"] = None if self.method is None else _enum_out(self.method)
         if self.ranges is not UNSET:
@@ -101563,9 +101626,12 @@ class TerrainsCompare(_Model):
             base=data["base"],
             comparison=data["comparison"],
             assume_heights=data.get("assumeHeights", UNSET),
+            azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+            formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(CompareMethod, data["method"]),
             ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
             zones=[CompareZone.from_json(e0) for e0 in data["zones"]] if "zones" in data else UNSET,
@@ -101577,6 +101643,8 @@ class TerrainsCompared(_Model):
     """Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
     (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
     the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
+    With `sections` (docs/adr/4340): the interval, the azimuth, the formula and each section's areas (`sections`); the
+    volumes are the sections', the plan areas the exact TIN's, the exact TIN–TIN volumes beside (`exact`).
     With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
     factor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all
     (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
@@ -101589,7 +101657,9 @@ class TerrainsCompared(_Model):
         fill_area: Unit: area.
         covered: Unit: area.
         uncovered: Unit: area.
+        azimuth: Unit: deg.
         cell: Unit: m.
+        interval: Unit: m.
         outside_area: Unit: area.
     """
     base: str
@@ -101602,13 +101672,17 @@ class TerrainsCompared(_Model):
     covered: float
     uncovered: float
     adjusted: TerrainAdjusted | None | Unset = UNSET
+    azimuth: float | None | Unset = UNSET
     bands: list[TerrainDifferenceBand] | Unset = UNSET
     cell: float | None | Unset = UNSET
     exact: TerrainVolumes | None | Unset = UNSET
+    formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
+    interval: float | None | Unset = UNSET
     largest: TerrainDifferenceAt | None | Unset = UNSET
     least: TerrainDifferenceAt | None | Unset = UNSET
     outside_area: float | None | Unset = UNSET
     rest: TerrainZoneRest | None | Unset = UNSET
+    sections: list[TerrainSection] | Unset = UNSET
     zoned: TerrainVolumes | None | Unset = UNSET
     zones: list[TerrainZoneVolumes] | Unset = UNSET
 
@@ -101625,12 +101699,18 @@ class TerrainsCompared(_Model):
         out["uncovered"] = float(self.uncovered)
         if self.adjusted is not UNSET:
             out["adjusted"] = None if self.adjusted is None else self.adjusted.to_json()
+        if self.azimuth is not UNSET:
+            out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.bands is not UNSET:
             out["bands"] = [e0.to_json() for e0 in self.bands]
         if self.cell is not UNSET:
             out["cell"] = None if self.cell is None else float(self.cell)
         if self.exact is not UNSET:
             out["exact"] = None if self.exact is None else self.exact.to_json()
+        if self.formula is not UNSET:
+            out["formula"] = None if self.formula is None else _enum_out(self.formula)
+        if self.interval is not UNSET:
+            out["interval"] = None if self.interval is None else float(self.interval)
         if self.largest is not UNSET:
             out["largest"] = None if self.largest is None else self.largest.to_json()
         if self.least is not UNSET:
@@ -101639,6 +101719,8 @@ class TerrainsCompared(_Model):
             out["outsideArea"] = None if self.outside_area is None else float(self.outside_area)
         if self.rest is not UNSET:
             out["rest"] = None if self.rest is None else self.rest.to_json()
+        if self.sections is not UNSET:
+            out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.zoned is not UNSET:
             out["zoned"] = None if self.zoned is None else self.zoned.to_json()
         if self.zones is not UNSET:
@@ -101658,13 +101740,17 @@ class TerrainsCompared(_Model):
             covered=float(data["covered"]),
             uncovered=float(data["uncovered"]),
             adjusted=UNSET if "adjusted" not in data else None if data["adjusted"] is None else TerrainAdjusted.from_json(data["adjusted"]),
+            azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             bands=[TerrainDifferenceBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
             exact=UNSET if "exact" not in data else None if data["exact"] is None else TerrainVolumes.from_json(data["exact"]),
+            formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
+            interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
             least=UNSET if "least" not in data else None if data["least"] is None else TerrainDifferenceAt.from_json(data["least"]),
             outside_area=UNSET if "outsideArea" not in data else None if data["outsideArea"] is None else float(data["outsideArea"]),
             rest=UNSET if "rest" not in data else None if data["rest"] is None else TerrainZoneRest.from_json(data["rest"]),
+            sections=[TerrainSection.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             zoned=UNSET if "zoned" not in data else None if data["zoned"] is None else TerrainVolumes.from_json(data["zoned"]),
             zones=[TerrainZoneVolumes.from_json(e0) for e0 in data["zones"]] if "zones" in data else UNSET,
         )
@@ -135230,6 +135316,8 @@ __all__ = [
     "ScopePart",
     "ScopeRing",
     "SectionCrossing",
+    "SectionFormula",
+    "SectionFormulaName",
     "SectionGround",
     "SectionLayer",
     "SectionPavement",
@@ -135824,6 +135912,7 @@ __all__ = [
     "TerrainProblem",
     "TerrainReport",
     "TerrainRoughness",
+    "TerrainSection",
     "TerrainSectionPoint",
     "TerrainSpike",
     "TerrainSpikesAsk",
