@@ -187,12 +187,13 @@
       "note": "Pencere cad.scenarios.impact'in cevabını gösterir (salt okunur); Raporu kaydet CSV yazar ve damgayı bu oturumda saklar, sonraki karşılaştırma since ile tabanın değişip değişmediğini söyler (ADR 1440)."
     },
     "zoning.check": {
-      "level": "query",
+      "level": "semantic",
       "via": [
         "cad.zoning.check",
-        "cad.profiles.apply"
+        "cad.profiles.apply",
+        "cad.zoning.symbolize"
       ],
-      "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420)."
+      "note": "Pencere cad.zoning.check'in cevabını gösterir (salt okunur); Seç ve göster seçimi değiştirir; Profili uygula imar-plani'nin eksik katmanlarını cad.profiles.apply ile tek adımda ekler (ADR 1420). Sembolleri karardan ver… karar alanlarının sembolünü cad.zoning.symbolize ile tek adımda verir (ADR 4240)."
     },
     "asbuilt.check": {
       "level": "query",

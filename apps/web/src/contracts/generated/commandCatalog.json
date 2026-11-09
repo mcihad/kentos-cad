@@ -59956,6 +59956,187 @@
       ]
     },
     {
+      "id": "cad.zoning.symbolize",
+      "version": 1,
+      "title": "Sembolü karardan ver",
+      "summary": "Karar alanlarına MPYY sembolünü kararlarından verir, tersini hiç yapmaz (ADR 4240): sembol alanın kullanımından (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir. KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan sembollerinden; KentOS tahmin etmez). Yalnız nesnenin kitaplık sembolü yazılır; karar (öznitelikler) hiç değişmez, sonra değişen sembol kararı değiştirmez. uids yoksa profilin karar katmanının bütün alanları. Her alanın durumu: set, same, unmapped, noPlan, noLevel, noUse, unknownUse; önceki sembolü was. Tek geri alma adımı “Sembolü karardan ver”. Retler: invalid_revision, revision_conflict, invalid_input (seçimin kademesi ya da kullanımı, aynı çift iki kez; aynı alan iki kez), unknown_plan_symbol, layer_not_found (karar katmanı yok), invalid_uid, entity_not_found, not_a_decision (uids[i]), layer_locked.",
+      "aliases": [
+        "sembolkarar",
+        "imarsembol",
+        "mpyysembol"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the\nuser's symbols, which go before KentOS's table.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS\nhas symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol\nnot one of the level's area symbols); `layer_not_found` (the drawing has no decision layer); for `uids[i]`:\n`invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision\nlayer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symbols": {
+            "items": {
+              "$ref": "#/$defs/ZoningSymbolPick"
+            },
+            "type": "array"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "ZoningSymbolize",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.symbolize` v1: every decision area in the drawing's order and the counts: symbols set, already\nso, uses without a symbol, areas left (no plan, no level, no use or one not in the list); the revision after.",
+        "properties": {
+          "areas": {
+            "items": {
+              "$ref": "#/$defs/ZoningSymbolRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "same": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "set": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unmapped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "areas",
+          "set",
+          "same",
+          "unmapped",
+          "skipped",
+          "revision"
+        ],
+        "title": "ZoningSymbolized",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.zoning.symbolize` v1: every decision area in the drawing's order and the counts: symbols set, already\nso, uses without a symbol, areas left (no plan, no level, no use or one not in the list); the revision after.",
+        "properties": {
+          "areas": {
+            "items": {
+              "$ref": "#/$defs/ZoningSymbolRow"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "same": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "set": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unmapped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "areas",
+          "set",
+          "same",
+          "unmapped",
+          "skipped",
+          "revision"
+        ],
+        "title": "ZoningSymbolized",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "unknown_plan_symbol",
+          "layer_not_found",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_decision",
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün karar alanları KentOS'un tablosuyla",
+          "input": {}
+        },
+        {
+          "title": "Konut alanının sembolü kullanıcıdan",
+          "input": {
+            "symbols": [
+              {
+                "level": "uip",
+                "symbol": "mpyy.uip.konut.gelisme-konut-alani",
+                "use": "konut"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.field.package",
       "version": 1,
       "title": "Saha paketi",
@@ -108226,6 +108407,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Alan güncel bir parsel kaydını çiziyor; belge önce o parseli kapatmalı."
+    },
+    {
+      "code": "unknown_plan_symbol",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kademenin MPYY alan sembolleri arasında bu kimlikte sembol yok; kademenin sembollerinden birini seçin."
+    },
+    {
+      "code": "not_a_decision",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir."
     },
     {
       "code": "parcel_identity_taken",
@@ -212997,6 +213190,73 @@
       },
       "required": [
         "outer"
+      ],
+      "type": "object"
+    },
+    "ZoningSymbolPick": {
+      "additionalProperties": false,
+      "description": "The user's symbol for a use at a level: a library id among the level's choices.",
+      "properties": {
+        "level": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "use": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "use",
+        "symbol"
+      ],
+      "type": "object"
+    },
+    "ZoningSymbolRow": {
+      "description": "A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from\n(`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),\n`unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the\ndrawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).",
+      "properties": {
+        "from": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "level": {
+          "type": "string"
+        },
+        "plan": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        },
+        "use": {
+          "type": "string"
+        },
+        "was": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "uid",
+        "plan",
+        "level",
+        "use",
+        "state"
       ],
       "type": "object"
     }

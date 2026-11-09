@@ -2121,6 +2121,7 @@ impl App {
             Asking::SurveyNetwork => self.survey_network_view(),
             Asking::FeaturesReconcile => self.features_reconcile_view(),
             Asking::Zoning => self.zoning_view(),
+            Asking::ZoningSymbols => self.zoning_symbols_view(),
             Asking::Impact => self.impact_view(),
             Asking::Readjustment => self.readjustment_view(),
             Asking::Ortho => self.ortho_view(),

@@ -70,6 +70,7 @@ katmanına yazılması (topoloji bulguları gibi, ADR 2200)”.
 
 ## Sonra
 
-- Plan değişikliği taslağı; sembolün karardan seçilmesi; resmî şema ve eşleme (MAP-09'un öbür maddeleri).
+- Plan değişikliği taslağı; ~~sembolün karardan seçilmesi~~ (ADR 4240); resmî şema ve eşleme (MAP-09'un öbür
+  maddeleri).
 - Hata katmanının GeoPackage'a yazılması (İşlem penceresinin Sonucun yeri ile; ADR 2200 Sonra).
 - Web (TODOS §0.2).

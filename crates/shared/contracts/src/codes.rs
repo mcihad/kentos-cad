@@ -2051,6 +2051,10 @@ codes! {
     /// Parsel kaydı (docs/adr/4220): the area draws a current recorded parcel the document does not close.
     PARCEL_RECORDED = "parcel_recorded", Failed, false, "Alan güncel bir parsel kaydını çiziyor; belge önce o parseli kapatmalı.";
     /// Parsel kaydı (docs/adr/4220): a current parcel, or another the document makes, has the identity.
+    /// Sembolü karardan ver (docs/adr/4240): a symbol not among the level's MPYY area symbols.
+    UNKNOWN_PLAN_SYMBOL = "unknown_plan_symbol", Failed, false, "Kademenin MPYY alan sembolleri arasında bu kimlikte sembol yok; kademenin sembollerinden birini seçin.";
+    /// Sembolü karardan ver (docs/adr/4240): the object is not an area on the zoning plan's decision layer.
+    NOT_A_DECISION = "not_a_decision", Failed, false, "Nesne imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir.";
     PARCEL_IDENTITY_TAKEN = "parcel_identity_taken", Failed, false, "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı.";
     /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";

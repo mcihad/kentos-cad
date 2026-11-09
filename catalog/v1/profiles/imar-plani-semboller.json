@@ -1,0 +1,1500 @@
+{
+ "format": "kentos.zoning-symbols",
+ "version": 1,
+ "profile": "imar-plani",
+ "basis": "KentOS'un eşlemesi (ADR 4240): kademenin MPYY alan sembollerinden (sistem kitaplığı, yönetmelik eklerinin lejant adları) adı kullanımın adıyla aynı yazılan tek sembol. Birebir eşi olmayan kullanım açık kalır; sembolünü kullanıcı seçer, KentOS tahmin etmez. Sembol karar değildir: karar alanın Kullanım değeridir.",
+ "levels": [
+  {
+   "level": "uip",
+   "library": "MPYY › Uygulama imar planı",
+   "uses": [
+    {
+     "code": "ticaret",
+     "symbol": "mpyy.uip.calisma.ticaret-alani"
+    },
+    {
+     "code": "saglik",
+     "symbol": "mpyy.uip.saglik.saglik-tesisi-alani"
+    },
+    {
+     "code": "sosyal",
+     "symbol": "mpyy.uip.sosyal-kulturel.sosyal-tesis-alani"
+    },
+    {
+     "code": "kultur",
+     "symbol": "mpyy.uip.sosyal-kulturel.kulturel-tesis-alani"
+    },
+    {
+     "code": "resmi",
+     "symbol": "mpyy.uip.calisma.resmi-kurum-alani"
+    },
+    {
+     "code": "teknik",
+     "symbol": "mpyy.uip.ortak-atik.teknik-altyapi-alani"
+    },
+    {
+     "code": "park",
+     "symbol": "mpyy.uip.acik-yesil.park"
+    },
+    {
+     "code": "meydan",
+     "symbol": "mpyy.uip.acik-yesil.meydan"
+    }
+   ],
+   "choices": [
+    {
+     "id": "mpyy.uip.ortak-ozel-kanun.teknoloji-gelistirme-bolgesi",
+     "name": "Teknoloji geliştirme bölgesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-ozel-kanun.serbest-bolge",
+     "name": "Serbest bölge"
+    },
+    {
+     "id": "mpyy.uip.ortak-ozel-kanun.organize-sanayi-bolgesi",
+     "name": "Organize sanayi bölgesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-ozel-kanun.endustri-bolgesi",
+     "name": "Endüstri bölgesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-ozel-kanun.askeri-yasak-ve-guvenlik-bolgesi",
+     "name": "Askeri yasak ve güvenlik bölgesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.1-derece-arkeolojik-sit-alani",
+     "name": "1. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.2-derece-arkeolojik-sit-alani",
+     "name": "2. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.3-derece-arkeolojik-sit-alani",
+     "name": "3. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.1-derece-dogal-sit-alani",
+     "name": "1. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.2-derece-dogal-sit-alani",
+     "name": "2. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.3-derece-dogal-sit-alani",
+     "name": "3. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.kesin-korunacak-hassas-alan",
+     "name": "Kesin korunacak hassas alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.nitelikli-dogal-koruma-alani",
+     "name": "Nitelikli doğal koruma alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.surdurulebilir-koruma-ve-kontrollu-kullanim-alani",
+     "name": "Sürdürülebilir koruma ve kontrollü kullanım alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.kentsel-sit-alani",
+     "name": "Kentsel sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.kentsel-arkeolojik-sit-alani",
+     "name": "Kentsel arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.tarihi-sit-alani",
+     "name": "Tarihi sit alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.milli-park",
+     "name": "Milli park"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.tabiat-parki-alani",
+     "name": "Tabiat parkı alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.tabiati-koruma-alani",
+     "name": "Tabiatı koruma alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.yaban-hayati-koruma-ve-gelistirme-alani",
+     "name": "Yaban hayatı koruma ve geliştirme alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.ock-bolgesi-hassas-alan-a",
+     "name": "ÖÇK bölgesi hassas alan (A)"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.ock-bolgesi-hassas-alan-b",
+     "name": "ÖÇK bölgesi hassas alan (B)"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.ock-bolgesi-hassas-alan-c",
+     "name": "ÖÇK bölgesi hassas alan (C)"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.korunmasi-gerekli-flora-ve-fauna-alani",
+     "name": "Korunması gerekli flora ve fauna alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sit.ekolojik-niteligi-korunacak-alan",
+     "name": "Ekolojik niteliği korunacak alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.orman-alani",
+     "name": "Orman alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.zeytinlik-alan",
+     "name": "Zeytinlik alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.mera-alani",
+     "name": "Mera alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.dogal-karakteri-korunacak-alan",
+     "name": "Doğal karakteri korunacak alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.deniz-kaplumbagalari-ureme-ve-koruma-alani",
+     "name": "Deniz kaplumbağaları üreme ve koruma alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.akdeniz-foku-yasam-alani",
+     "name": "Akdeniz foku yaşam alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.dogal-ve-ekolojik-yapisi-korunacak-alan",
+     "name": "Doğal ve ekolojik yapısı korunacak alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-arazi.ekolojik-oneme-sahip-alan",
+     "name": "Ekolojik öneme sahip alan"
+    },
+    {
+     "id": "mpyy.uip.ortak-yapi-sinirlamasi.sulak-alan-bolgesi",
+     "name": "Sulak alan bölgesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-yapi-sinirlamasi.yer-alti-su-kaynaklari-koruma-alanlari",
+     "name": "Yer altı su kaynakları koruma alanları"
+    },
+    {
+     "id": "mpyy.uip.ortak-calisma.tuzla-alani",
+     "name": "Tuzla alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-sosyal.millet-bahcesi",
+     "name": "Millet bahçesi"
+    },
+    {
+     "id": "mpyy.uip.ortak-sosyal.sokak-hayvanlari-barinagi-alani",
+     "name": "Sokak hayvanları barınağı alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-afet.afet-arama-kurtarma-hizmet-lojistik-merkezi",
+     "name": "Afet arama kurtarma hizmet lojistik merkezi"
+    },
+    {
+     "id": "mpyy.uip.ortak-karayollari.terminal-otogar",
+     "name": "Terminal (otogar)"
+    },
+    {
+     "id": "mpyy.uip.ortak-demiryollari.ana-istasyon-gar",
+     "name": "Ana istasyon (gar)"
+    },
+    {
+     "id": "mpyy.uip.ortak-denizyollari.tersane-alani",
+     "name": "Tersane alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-havayollari.havaalani-hava-limani",
+     "name": "Havaalanı / hava limanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-enerji.enerji-uretim-alani",
+     "name": "Enerji üretim alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.su-kaynaklari-toplama-yeri-kaptaj-alani",
+     "name": "Su kaynakları toplama yeri (kaptaj alanı)"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.icme-suyu-tesisleri-alani",
+     "name": "İçme suyu tesisleri alanı (depolama, arıtma, terfi merkezi)"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.atiksu-tesisleri-alani",
+     "name": "Atıksu tesisleri alanı (arıtma, terfi merkezi)"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.kati-atik-tesisleri-alani",
+     "name": "Katı atık tesisleri alanı (boşaltma, bertaraf, işleme, transfer ve depolama)"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.tehlikeli-atik-tesisleri-alani",
+     "name": "Tehlikeli atık tesisleri alanı (bertaraf ve depolama)"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.atik-geri-kazanim-tesisleri-alani",
+     "name": "Atık geri kazanım tesisleri alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.teknik-altyapi-alani",
+     "name": "Teknik altyapı alanı"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.su-yuzeyi",
+     "name": "Su yüzeyi"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.yapay-ada",
+     "name": "Yapay ada"
+    },
+    {
+     "id": "mpyy.uip.ortak-atik.vahsi-cop-depolama-rehabilitasyon-ve-kapatma-alani",
+     "name": "Vahşi çöp depolama rehabilitasyon ve kapatma alanı"
+    },
+    {
+     "id": "mpyy.uip.konut.yerlesik-konut-alani",
+     "name": "Yerleşik konut alanı"
+    },
+    {
+     "id": "mpyy.uip.konut.gelisme-konut-alani",
+     "name": "Gelişme konut alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.ticaret-alani",
+     "name": "Ticaret alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.ticaret-konut-alani",
+     "name": "Ticaret-konut alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.ticaret-turizm-alani",
+     "name": "Ticaret-turizm alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.ticaret-turizm-konut-alani",
+     "name": "Ticaret-turizm-konut alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.toptan-ticaret-alani",
+     "name": "Toptan ticaret alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.toplu-isyerleri",
+     "name": "Toplu işyerleri (…)"
+    },
+    {
+     "id": "mpyy.uip.calisma.belediye-hizmet-alani",
+     "name": "Belediye hizmet alanı (…)"
+    },
+    {
+     "id": "mpyy.uip.calisma.idari-hizmet-alani",
+     "name": "İdari hizmet alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.resmi-kurum-alani",
+     "name": "Resmi kurum alanı (…)"
+    },
+    {
+     "id": "mpyy.uip.calisma.akaryakit-ve-servis-istasyonu-alani",
+     "name": "Akaryakıt ve servis istasyonu alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.sanayi-tesis-alani",
+     "name": "Sanayi tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.endustriyel-gelisme-bolgesi",
+     "name": "Endüstriyel gelişme bölgesi"
+    },
+    {
+     "id": "mpyy.uip.calisma.kucuk-sanayi-alani",
+     "name": "Küçük sanayi alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.depolama-alani",
+     "name": "Depolama alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.imalathane-tesis-alani",
+     "name": "İmalathane tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.lojistik-tesis-alani",
+     "name": "Lojistik tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.pazar-alani",
+     "name": "Pazar alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.tarim-ve-hayvancilik-tesis-alani",
+     "name": "Tarım ve hayvancılık tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.calisma.askeri-alan",
+     "name": "Askeri alan"
+    },
+    {
+     "id": "mpyy.uip.calisma.beton-santrali",
+     "name": "Beton santrali"
+    },
+    {
+     "id": "mpyy.uip.calisma.su-urunleri-uretim-ve-yetistirme-tesisi",
+     "name": "Su ürünleri üretim ve yetiştirme tesisi"
+    },
+    {
+     "id": "mpyy.uip.calisma.osb-hizmet-ve-destek-alanlari",
+     "name": "Organize sanayi bölgesi hizmet ve destek alanları"
+    },
+    {
+     "id": "mpyy.uip.turizm.pansiyon-alani",
+     "name": "Pansiyon alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.apart-otel-alani",
+     "name": "Apart otel alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.otel-alani",
+     "name": "Otel alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.motel-alani",
+     "name": "Motel alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.hostel-alani",
+     "name": "Hostel alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.tatil-koyu-alani",
+     "name": "Tatil köyü alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.saglik-odakli-tatil-koyu",
+     "name": "Sağlık odaklı tatil köyü"
+    },
+    {
+     "id": "mpyy.uip.turizm.termal-turizm-alani",
+     "name": "Termal turizm alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.kamping-alani",
+     "name": "Kamping alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.gunubirlik-tesis-alani",
+     "name": "Günübirlik tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.golf-turizm-tesis-alani",
+     "name": "Golf turizm tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.kis-sporlari-ve-kayak-tesisi-alani",
+     "name": "Kış sporları ve kayak tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.turizm.ekoturizm-kirsal-turizm-tesis-alani",
+     "name": "Ekoturizm / kırsal turizm tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.korunacak.tescilli-anit-yapi",
+     "name": "Tescilli anıt yapı"
+    },
+    {
+     "id": "mpyy.uip.korunacak.tescilli-bina",
+     "name": "Tescilli bina"
+    },
+    {
+     "id": "mpyy.uip.korunacak.tescilli-parsel",
+     "name": "Tescilli parsel"
+    },
+    {
+     "id": "mpyy.uip.korunacak.tescilli-tabiat-varligi",
+     "name": "Tescilli tabiat varlığı"
+    },
+    {
+     "id": "mpyy.uip.korunacak.sit-etkilesim-gecis-alani-siniri",
+     "name": "Sit etkileşim geçiş alanı sınırı"
+    },
+    {
+     "id": "mpyy.uip.korunacak.hassas-endemik-biyotop-alani",
+     "name": "Hassas endemik biyotop alanı"
+    },
+    {
+     "id": "mpyy.uip.bugunku.tarimsal-nitelikli-alan",
+     "name": "Tarımsal nitelikli alan"
+    },
+    {
+     "id": "mpyy.uip.bugunku.ortu-alti-tarim-arazisi",
+     "name": "Örtü altı tarım arazisi"
+    },
+    {
+     "id": "mpyy.uip.bugunku.organik-tarim-alani",
+     "name": "Organik tarım alanı"
+    },
+    {
+     "id": "mpyy.uip.bugunku.makilik-fundalik-alan",
+     "name": "Makilik-fundalık alan"
+    },
+    {
+     "id": "mpyy.uip.bugunku.kumsal-plaj",
+     "name": "Kumsal-plaj"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.nukleer-enerji-uretim-alani-koruma-kusagi",
+     "name": "Nükleer enerji üretim alanı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.havaalani-havalimani-koruma-kusagi",
+     "name": "Havaalanı/havalimanı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.karayollari-yol-kenari-koruma-kusagi",
+     "name": "Karayolları yol kenarı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.boru-hatti-koruma-kusagi",
+     "name": "Boru hattı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.su-kanallari-koruma-kusagi",
+     "name": "Su kanalları koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.icme-suyu-ana-iletim-hatti-koruma-kusagi",
+     "name": "İçme suyu ana iletim hattı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.yer-alti-su-kaynaklari-koruma-kusagi",
+     "name": "Yer altı su kaynakları koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.demiryollari-koruma-kusagi",
+     "name": "Demiryolları koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.yanici-parlayici-patlayici-maddeler-koruma-kusagi",
+     "name": "Yanıcı parlayıcı ve patlayıcı maddeler koruma kuşağı (güvenlik mesafesi)"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.saglik-koruma-bandi",
+     "name": "Sağlık koruma bandı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.enerji-nakil-hatti-koruma-kusagi",
+     "name": "Enerji nakil hattı koruma kuşağı"
+    },
+    {
+     "id": "mpyy.uip.yapi-sinirlamasi.tunel-etki-alani",
+     "name": "Tünel etki alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.anaokulu-alani",
+     "name": "Anaokulu alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.ilkokul-alani",
+     "name": "İlkokul alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.ortaokul-alani",
+     "name": "Ortaokul alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.lise-alani",
+     "name": "Lise alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.ozel-egitim-alani",
+     "name": "Özel eğitim alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.mesleki-ve-teknik-ogretim-tesisi-alani",
+     "name": "Mesleki ve teknik öğretim tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.yuksek-ogretim-tesisi-alani",
+     "name": "Yüksek öğretim tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.egitim.halk-egitim-merkezi",
+     "name": "Halk eğitim merkezi"
+    },
+    {
+     "id": "mpyy.uip.saglik.saglik-tesisi-alani",
+     "name": "Sağlık tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.saglik.ozel-saglik-tesisi-alani",
+     "name": "Özel sağlık tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.saglik.hastane",
+     "name": "Hastane"
+    },
+    {
+     "id": "mpyy.uip.saglik.aile-sagligi-merkezi",
+     "name": "Aile sağlığı merkezi"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.sosyal-tesis-alani",
+     "name": "Sosyal tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.kulturel-tesis-alani",
+     "name": "Kültürel tesis alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.kres-gunduz-bakimevi",
+     "name": "Kreş, gündüz bakımevi"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.acik-spor-tesisi-alani",
+     "name": "Açık spor tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.kapali-spor-tesisi-alani",
+     "name": "Kapalı spor tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.yurt-alani",
+     "name": "Yurt alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.kongre-ve-sergi-merkezi-alani",
+     "name": "Kongre ve sergi merkezi alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.yasli-bakimevi-alani",
+     "name": "Yaşlı bakımevi alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.sefkat-evleri-alani",
+     "name": "Şefkat evleri alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.semt-spor-alani",
+     "name": "Semt spor alanı"
+    },
+    {
+     "id": "mpyy.uip.sosyal-kulturel.cemevi-alani",
+     "name": "Cemevi alanı"
+    },
+    {
+     "id": "mpyy.uip.ibadet.cami",
+     "name": "Cami"
+    },
+    {
+     "id": "mpyy.uip.ibadet.mescit",
+     "name": "Mescit"
+    },
+    {
+     "id": "mpyy.uip.ibadet.kilise",
+     "name": "Kilise"
+    },
+    {
+     "id": "mpyy.uip.ibadet.sapel",
+     "name": "Şapel"
+    },
+    {
+     "id": "mpyy.uip.ibadet.sinagog-havra",
+     "name": "Sinagog (havra)"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.park",
+     "name": "Park"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.cocuk-bahcesi-ve-oyun-alani",
+     "name": "Çocuk bahçesi ve oyun alanı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.pasif-yesil-alan",
+     "name": "Pasif yeşil alan"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.rekreasyon-alani",
+     "name": "Rekreasyon alanı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.fuar-panayir-ve-festival-gosteri-alani",
+     "name": "Fuar, panayır ve festival/gösteri alanı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.mesire-yeri",
+     "name": "Mesire yeri"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.hayvanat-bahcesi",
+     "name": "Hayvanat bahçesi"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.hipodrom",
+     "name": "Hipodrom"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.meydan",
+     "name": "Meydan"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.baki-ve-seyir-terasi",
+     "name": "Bakı ve seyir terası"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.kent-ormani",
+     "name": "Kent ormanı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.arboretum-botanik-parki",
+     "name": "Arboretum - botanik parkı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.agaclandirilacak-alan",
+     "name": "Ağaçlandırılacak alan"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.mezarlik-alani",
+     "name": "Mezarlık alanı"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.korunacak-bahce",
+     "name": "Korunacak bahçe"
+    },
+    {
+     "id": "mpyy.uip.acik-yesil.rekreaktif-alan",
+     "name": "Rekreaktif alan"
+    },
+    {
+     "id": "mpyy.uip.afet.yapi-yasakli-alan",
+     "name": "Yapı yasaklı alan"
+    },
+    {
+     "id": "mpyy.uip.afet.taskina-maruz-alan",
+     "name": "Taşkına maruz alan"
+    },
+    {
+     "id": "mpyy.uip.afet.heyelan-alani",
+     "name": "Heyelan alanı"
+    },
+    {
+     "id": "mpyy.uip.afet.onlemli-alan",
+     "name": "Önlemli alan"
+    },
+    {
+     "id": "mpyy.uip.afet.kentsel-risk-alani",
+     "name": "Kentsel risk alanı"
+    },
+    {
+     "id": "mpyy.uip.afet.tsunami-riskli-alan",
+     "name": "Tsunami riskli alan"
+    },
+    {
+     "id": "mpyy.uip.afet.kutle-hareketi-riskli-alan",
+     "name": "Kütle hareketi riskli alan"
+    },
+    {
+     "id": "mpyy.uip.afet.fay-sakinim-zonu-tampon-alani",
+     "name": "Fay sakınım zonu/tampon alanı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.genel-otopark-alani",
+     "name": "Genel otopark alanı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.tir-kamyon-makine-parki-ve-garaj-alani",
+     "name": "Tır, kamyon, makine parkı ve garaj alanı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.bisiklet-parki",
+     "name": "Bisiklet parkı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.katli-otopark",
+     "name": "Katlı otopark"
+    },
+    {
+     "id": "mpyy.uip.karayollari.elektrikli-arac-sarj-istasyonu-alani",
+     "name": "Elektrikli araç şarj istasyonu alanı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.elektronik-haberlesme-altyapi-alani",
+     "name": "Elektronik haberleşme altyapı alanı"
+    },
+    {
+     "id": "mpyy.uip.karayollari.motokurye-park-alani",
+     "name": "Motokurye park alanı"
+    },
+    {
+     "id": "mpyy.uip.demiryollari.ara-istasyon",
+     "name": "Ara istasyon"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.konteyner-limani",
+     "name": "Konteyner limanı"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.kruvaziyer-limani",
+     "name": "Kruvaziyer limanı"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.ro-ro-limani",
+     "name": "Ro ro limanı"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.yat-limani",
+     "name": "Yat limanı"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.balikci-barinagi",
+     "name": "Balıkçı barınağı"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.iskele",
+     "name": "İskele"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.tekne-imal-ve-cekek-yeri",
+     "name": "Tekne imal ve çekek yeri"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.gemi-sokum-yeri",
+     "name": "Gemi söküm yeri"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.menfez",
+     "name": "Menfez"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.mahmuz",
+     "name": "Mahmuz"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.rihtim",
+     "name": "Rıhtım"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.barinak",
+     "name": "Barınak"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.dolfen-platform",
+     "name": "Dolfen/platform"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.liman",
+     "name": "Liman"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.tekne-imal-ve-bakim-yeri",
+     "name": "Tekne imal ve bakım yeri"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.kiyi-koruma-yapilari",
+     "name": "Kıyı koruma yapıları"
+    },
+    {
+     "id": "mpyy.uip.denizyollari.deniz-inis-rampasi",
+     "name": "Deniz iniş rampası"
+    },
+    {
+     "id": "mpyy.uip.havayollari.helikopter-inis-alani",
+     "name": "Helikopter iniş alanı"
+    },
+    {
+     "id": "mpyy.uip.toplu-tasima.rayli-toplu-tasima-istasyonu",
+     "name": "Raylı toplu taşıma istasyonu"
+    },
+    {
+     "id": "mpyy.uip.toplu-tasima.havai-hat-istasyonu",
+     "name": "Havai hat istasyonu"
+    },
+    {
+     "id": "mpyy.uip.toplu-tasima.havaray-istasyonu",
+     "name": "Havaray istasyonu"
+    },
+    {
+     "id": "mpyy.uip.toplu-tasima.toplutasim-turleri-arasi-degisim-ve-aktarma-alani",
+     "name": "Toplutaşım türleri arası değişim ve aktarma alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.nukleer-enerji-santrali-alani",
+     "name": "Nükleer enerji santrali alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.termik-santral-alani",
+     "name": "Termik santral alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.yenilenebilir-enerji-kaynaklarina-dayali-uretim-tesisi-alani",
+     "name": "Yenilenebilir enerji kaynaklarına dayalı üretim tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.rafineri-petrokimya-tesisi-alani",
+     "name": "Rafineri-petrokimya tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.enerji-depolama-alani",
+     "name": "Enerji depolama alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.regulator-alani",
+     "name": "Regülatör alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.turbin-alani",
+     "name": "Türbin alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.dogalgaz-dagitim-tesisi-alani",
+     "name": "Doğalgaz/dağıtım tesisi alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.yanici-parlayici-ve-patlayici-maddeler-uretim-ve-depo-alani",
+     "name": "Yanıcı parlayıcı ve patlayıcı maddeler üretim ve depo alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.akaryakit-urunleri-depolama-alani",
+     "name": "Akaryakıt ürünleri depolama alanı"
+    },
+    {
+     "id": "mpyy.uip.enerji.trafo-alani",
+     "name": "Trafo alanı"
+    }
+   ]
+  },
+  {
+   "level": "nip",
+   "library": "MPYY › Nazım imar planı",
+   "uses": [
+    {
+     "code": "sanayi",
+     "symbol": "mpyy.nip.calisma.sanayi-alani"
+    },
+    {
+     "code": "sosyal",
+     "symbol": "mpyy.nip.sosyal.sosyal-tesis-alani"
+    },
+    {
+     "code": "kultur",
+     "symbol": "mpyy.nip.sosyal.kulturel-tesis-alani"
+    },
+    {
+     "code": "spor",
+     "symbol": "mpyy.nip.sosyal.spor-alani"
+    },
+    {
+     "code": "teknik",
+     "symbol": "mpyy.nip.ortak-atik.teknik-altyapi-alani"
+    }
+   ],
+   "choices": [
+    {
+     "id": "mpyy.nip.planlama.mevcut-plandaki-durumu-korunacak-alan-siniri",
+     "name": "Mevcut plandaki durumu korunacak alan sınırı"
+    },
+    {
+     "id": "mpyy.nip.planlama.yeniden-duzenlenecek-alan-siniri",
+     "name": "Yeniden düzenlenecek alan sınırı"
+    },
+    {
+     "id": "mpyy.nip.planlama.sagliklastirma-alani-siniri",
+     "name": "Sağlıklaştırma alanı sınırı"
+    },
+    {
+     "id": "mpyy.nip.mevcut-konut.mevcut-konut-cok-yuksek",
+     "name": "Mevcut konut alanı, çok yüksek (601 kişi/ha üstü)"
+    },
+    {
+     "id": "mpyy.nip.mevcut-konut.mevcut-konut-yuksek",
+     "name": "Mevcut konut alanı, yüksek (301-600 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.mevcut-konut.mevcut-konut-orta",
+     "name": "Mevcut konut alanı, orta (151-300 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.mevcut-konut.mevcut-konut-dusuk",
+     "name": "Mevcut konut alanı, düşük (51-150 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.mevcut-konut.mevcut-konut-seyrek",
+     "name": "Mevcut konut alanı, seyrek (50 kişi/ha altında)"
+    },
+    {
+     "id": "mpyy.nip.gelisme-konut.gelisme-konut-cok-yuksek",
+     "name": "Gelişme konut alanı, çok yüksek (401 kişi/ha üstü)"
+    },
+    {
+     "id": "mpyy.nip.gelisme-konut.gelisme-konut-yuksek",
+     "name": "Gelişme konut alanı, yüksek (251-400 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.gelisme-konut.gelisme-konut-orta",
+     "name": "Gelişme konut alanı, orta (121-250 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.gelisme-konut.gelisme-konut-dusuk",
+     "name": "Gelişme konut alanı, düşük (51-120 kişi/ha)"
+    },
+    {
+     "id": "mpyy.nip.gelisme-konut.gelisme-konut-seyrek",
+     "name": "Gelişme konut alanı, seyrek (50 kişi/ha altında)"
+    },
+    {
+     "id": "mpyy.nip.calisma.merkezi-is-alani",
+     "name": "Merkezi iş alanı (MİA)"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-alani-t1",
+     "name": "Ticaret alanı (T1)"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-alani-t2",
+     "name": "Ticaret alanı (T2)"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-alani-t3",
+     "name": "Ticaret alanı (T3)"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-alani-t",
+     "name": "Ticaret alanı (T)"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-konut-alani",
+     "name": "Ticaret-konut alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-turizm-alani",
+     "name": "Ticaret-turizm alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.ticaret-turizm-konut-alani",
+     "name": "Ticaret-turizm-konut alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.belediye-hizmet-alani",
+     "name": "Belediye hizmet alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.kamu-hizmet-alani",
+     "name": "Kamu hizmet alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.konut-disi-kentsel-calisma-alani",
+     "name": "Konut dışı kentsel çalışma alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.akaryakit-ve-servis-istasyonu-alani",
+     "name": "Akaryakıt ve servis istasyonu alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.sanayi-alani",
+     "name": "Sanayi alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.endustriyel-gelisme-bolgesi",
+     "name": "Endüstriyel gelişme bölgesi"
+    },
+    {
+     "id": "mpyy.nip.calisma.kucuk-sanayi-alani",
+     "name": "Küçük sanayi alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.depolama-alani",
+     "name": "Depolama alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.lojistik-tesis-alani",
+     "name": "Lojistik tesis alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.toplu-isyerleri",
+     "name": "Toplu işyerleri"
+    },
+    {
+     "id": "mpyy.nip.calisma.tarim-ve-hayvancilik-tesis-alani",
+     "name": "Tarım ve hayvancılık tesis alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.askeri-alan",
+     "name": "Askeri alan"
+    },
+    {
+     "id": "mpyy.nip.calisma.pazar-alani",
+     "name": "Pazar alanı"
+    },
+    {
+     "id": "mpyy.nip.calisma.su-urunleri-uretim-ve-yetistirme-tesisi",
+     "name": "Su ürünleri üretim ve yetiştirme tesisi"
+    },
+    {
+     "id": "mpyy.nip.calisma.beton-santrali",
+     "name": "Beton santrali"
+    },
+    {
+     "id": "mpyy.nip.calisma.organize-sanayi-bolgesi-hizmet-ve-destek-alanlari",
+     "name": "Organize sanayi bölgesi hizmet ve destek alanları"
+    },
+    {
+     "id": "mpyy.nip.turizm.turizm-alani",
+     "name": "Turizm alanı"
+    },
+    {
+     "id": "mpyy.nip.turizm.gunubirlik-tesis-alani",
+     "name": "Günübirlik tesis alanı"
+    },
+    {
+     "id": "mpyy.nip.turizm.golf-turizm-alani",
+     "name": "Golf turizm alanı"
+    },
+    {
+     "id": "mpyy.nip.arazi.tarim-alani",
+     "name": "Tarım alanı"
+    },
+    {
+     "id": "mpyy.nip.arazi.makilik-fundalik-alan",
+     "name": "Makilik-fundalık alan"
+    },
+    {
+     "id": "mpyy.nip.arazi.kumsal-plaj",
+     "name": "Kumsal-plaj"
+    },
+    {
+     "id": "mpyy.nip.sosyal.egitim-alani",
+     "name": "Eğitim alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.yuksek-ogretim-alani",
+     "name": "Yüksek öğretim alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.saglik-alani",
+     "name": "Sağlık alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.sosyal-tesis-alani",
+     "name": "Sosyal tesis alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.kulturel-tesis-alani",
+     "name": "Kültürel tesis alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.spor-alani",
+     "name": "Spor alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.ozel-sosyal-altyapi-alani",
+     "name": "Özel sosyal altyapı alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.ibadet-alani",
+     "name": "İbadet alanı"
+    },
+    {
+     "id": "mpyy.nip.sosyal.semt-spor-alani",
+     "name": "Semt spor alanı"
+    },
+    {
+     "id": "mpyy.nip.yesil.park-ve-yesil-alan",
+     "name": "Park ve yeşil alan"
+    },
+    {
+     "id": "mpyy.nip.yesil.pasif-yesil-alan",
+     "name": "Pasif yeşil alan"
+    },
+    {
+     "id": "mpyy.nip.yesil.rekreasyon-alani",
+     "name": "Rekreasyon alanı"
+    },
+    {
+     "id": "mpyy.nip.yesil.fuar-panayir-ve-festival-gosteri-alani",
+     "name": "Fuar, panayır ve festival/gösteri alanı"
+    },
+    {
+     "id": "mpyy.nip.yesil.kent-ormani",
+     "name": "Kent ormanı"
+    },
+    {
+     "id": "mpyy.nip.yesil.agaclandirilacak-alan",
+     "name": "Ağaçlandırılacak alan"
+    },
+    {
+     "id": "mpyy.nip.yesil.mezarlik-alani",
+     "name": "Mezarlık alanı"
+    },
+    {
+     "id": "mpyy.nip.yesil.mesire-yeri",
+     "name": "Mesire yeri"
+    },
+    {
+     "id": "mpyy.nip.yesil.rekreaktif-alan",
+     "name": "Rekreaktif alan"
+    },
+    {
+     "id": "mpyy.nip.afet.yapi-yasakli-alan",
+     "name": "Yapı yasaklı alan"
+    },
+    {
+     "id": "mpyy.nip.afet.afete-maruz-bolge",
+     "name": "Afete maruz bölge"
+    },
+    {
+     "id": "mpyy.nip.afet.taskina-maruz-alan",
+     "name": "Taşkına maruz alan"
+    },
+    {
+     "id": "mpyy.nip.afet.onlemli-alan",
+     "name": "Önlemli alan"
+    },
+    {
+     "id": "mpyy.nip.afet.kentsel-risk-alani",
+     "name": "Kentsel risk alanı"
+    },
+    {
+     "id": "mpyy.nip.afet.tsunami-riskli-alan",
+     "name": "Tsunami riskli alan"
+    },
+    {
+     "id": "mpyy.nip.afet.kutle-hareketi-riskli-alan",
+     "name": "Kütle hareketi riskli alan"
+    },
+    {
+     "id": "mpyy.nip.afet.fay-sakinim-zonu-tampon-alani",
+     "name": "Fay sakınım zonu/tampon alanı"
+    },
+    {
+     "id": "mpyy.nip.karayollari.genel-otopark",
+     "name": "Genel otopark"
+    },
+    {
+     "id": "mpyy.nip.karayollari.tir-kamyon-makine-parki-ve-garaj",
+     "name": "Tır, kamyon, makine parkı ve garaj"
+    },
+    {
+     "id": "mpyy.nip.karayollari.katli-otopark",
+     "name": "Katlı otopark"
+    },
+    {
+     "id": "mpyy.nip.karayollari.elektrikli-arac-sarj-istasyonu-alani",
+     "name": "Elektrikli araç şarj istasyonu alanı"
+    },
+    {
+     "id": "mpyy.nip.karayollari.elektronik-haberlesme-altyapi-alani",
+     "name": "Elektronik haberleşme altyapı alanı"
+    },
+    {
+     "id": "mpyy.nip.karayollari.motokurye-park-alani",
+     "name": "Motokurye park alanı"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.liman",
+     "name": "Liman"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.balikci-barinagi",
+     "name": "Balıkçı barınağı"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.iskele",
+     "name": "İskele"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.tekne-imal-ve-bakim-yeri",
+     "name": "Tekne imal ve bakım yeri"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.tekne-imal-ve-cekek-yeri",
+     "name": "Tekne imal ve çekek yeri"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.kiyi-koruma-yapilari",
+     "name": "Kıyı koruma yapıları"
+    },
+    {
+     "id": "mpyy.nip.denizyollari.deniz-inis-rampasi",
+     "name": "Deniz iniş rampası"
+    },
+    {
+     "id": "mpyy.nip.toplu-tasima.rayli-toplu-tasima-istasyonu",
+     "name": "Raylı toplu taşıma istasyonu"
+    },
+    {
+     "id": "mpyy.nip.toplu-tasima.toplutasim-turleri-arasi-degisim-ve-aktarma-alani",
+     "name": "Toplutaşım türleri arası değişim ve aktarma alanı"
+    },
+    {
+     "id": "mpyy.nip.toplu-tasima.havai-hat-istasyonu",
+     "name": "Havai hat istasyonu"
+    },
+    {
+     "id": "mpyy.nip.toplu-tasima.havaray-istasyonu",
+     "name": "Havaray istasyonu"
+    },
+    {
+     "id": "mpyy.nip.enerji.regulator-alani",
+     "name": "Regülatör alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.turbin-alani",
+     "name": "Türbin alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.dogalgaz-iletim-dagitim-tesisi-alani",
+     "name": "Doğalgaz iletim/dağıtım tesisi alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.yanici-parlayici-ve-patlayici-maddeler-uretim-ve-depo-alani",
+     "name": "Yanıcı parlayıcı ve patlayıcı maddeler üretim ve depo alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.enerji-depolama-alani",
+     "name": "Enerji depolama alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.yenilenebilir-enerji-kaynaklarina-dayali-uretim-tesisi-alani",
+     "name": "Yenilenebilir enerji kaynaklarına dayalı üretim tesisi alanı"
+    },
+    {
+     "id": "mpyy.nip.enerji.rafineri-petrokimya-tesisi-alani",
+     "name": "Rafineri-petrokimya tesisi alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-ozel-kanun.teknoloji-gelistirme-bolgesi",
+     "name": "Teknoloji geliştirme bölgesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-ozel-kanun.serbest-bolge",
+     "name": "Serbest bölge"
+    },
+    {
+     "id": "mpyy.nip.ortak-ozel-kanun.organize-sanayi-bolgesi",
+     "name": "Organize sanayi bölgesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-ozel-kanun.endustri-bolgesi",
+     "name": "Endüstri bölgesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-ozel-kanun.askeri-yasak-ve-guvenlik-bolgesi",
+     "name": "Askeri yasak ve güvenlik bölgesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.1-derece-arkeolojik-sit-alani",
+     "name": "1. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.2-derece-arkeolojik-sit-alani",
+     "name": "2. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.3-derece-arkeolojik-sit-alani",
+     "name": "3. derece arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.1-derece-dogal-sit-alani",
+     "name": "1. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.2-derece-dogal-sit-alani",
+     "name": "2. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.3-derece-dogal-sit-alani",
+     "name": "3. derece doğal sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.kesin-korunacak-hassas-alan",
+     "name": "Kesin korunacak hassas alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.nitelikli-dogal-koruma-alani",
+     "name": "Nitelikli doğal koruma alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.surdurulebilir-koruma-ve-kontrollu-kullanim-alani",
+     "name": "Sürdürülebilir koruma ve kontrollü kullanım alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.kentsel-sit-alani",
+     "name": "Kentsel sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.kentsel-arkeolojik-sit-alani",
+     "name": "Kentsel arkeolojik sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.tarihi-sit-alani",
+     "name": "Tarihi sit alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.milli-park",
+     "name": "Milli park"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.tabiat-parki-alani",
+     "name": "Tabiat parkı alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.tabiati-koruma-alani",
+     "name": "Tabiatı koruma alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.yaban-hayati-koruma-ve-gelistirme-alani",
+     "name": "Yaban hayatı koruma ve geliştirme alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.ock-bolgesi-hassas-alan-a",
+     "name": "ÖÇK bölgesi hassas alan (A)"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.ock-bolgesi-hassas-alan-b",
+     "name": "ÖÇK bölgesi hassas alan (B)"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.ock-bolgesi-hassas-alan-c",
+     "name": "ÖÇK bölgesi hassas alan (C)"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.korunmasi-gerekli-flora-ve-fauna-alani",
+     "name": "Korunması gerekli flora ve fauna alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sit.ekolojik-niteligi-korunacak-alan",
+     "name": "Ekolojik niteliği korunacak alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.orman-alani",
+     "name": "Orman alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.zeytinlik-alan",
+     "name": "Zeytinlik alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.mera-alani",
+     "name": "Mera alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.dogal-karakteri-korunacak-alan",
+     "name": "Doğal karakteri korunacak alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.deniz-kaplumbagalari-ureme-ve-koruma-alani",
+     "name": "Deniz kaplumbağaları üreme ve koruma alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.akdeniz-foku-yasam-alani",
+     "name": "Akdeniz foku yaşam alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.dogal-ve-ekolojik-yapisi-korunacak-alan",
+     "name": "Doğal ve ekolojik yapısı korunacak alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-arazi.ekolojik-oneme-sahip-alan",
+     "name": "Ekolojik öneme sahip alan"
+    },
+    {
+     "id": "mpyy.nip.ortak-yapi-sinirlamasi.sulak-alan-bolgesi",
+     "name": "Sulak alan bölgesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-yapi-sinirlamasi.yer-alti-su-kaynaklari-koruma-alanlari",
+     "name": "Yer altı su kaynakları koruma alanları"
+    },
+    {
+     "id": "mpyy.nip.ortak-calisma.tuzla-alani",
+     "name": "Tuzla alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-sosyal.millet-bahcesi",
+     "name": "Millet bahçesi"
+    },
+    {
+     "id": "mpyy.nip.ortak-sosyal.sokak-hayvanlari-barinagi-alani",
+     "name": "Sokak hayvanları barınağı alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-afet.afet-arama-kurtarma-hizmet-lojistik-merkezi",
+     "name": "Afet arama kurtarma hizmet lojistik merkezi"
+    },
+    {
+     "id": "mpyy.nip.ortak-karayollari.terminal-otogar",
+     "name": "Terminal (otogar)"
+    },
+    {
+     "id": "mpyy.nip.ortak-demiryollari.ana-istasyon-gar",
+     "name": "Ana istasyon (gar)"
+    },
+    {
+     "id": "mpyy.nip.ortak-denizyollari.tersane-alani",
+     "name": "Tersane alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-havayollari.havaalani-hava-limani",
+     "name": "Havaalanı / hava limanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-enerji.enerji-uretim-alani",
+     "name": "Enerji üretim alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.su-kaynaklari-toplama-yeri-kaptaj-alani",
+     "name": "Su kaynakları toplama yeri (kaptaj alanı)"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.icme-suyu-tesisleri-alani",
+     "name": "İçme suyu tesisleri alanı (depolama, arıtma, terfi merkezi)"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.atiksu-tesisleri-alani",
+     "name": "Atıksu tesisleri alanı (arıtma, terfi merkezi)"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.kati-atik-tesisleri-alani",
+     "name": "Katı atık tesisleri alanı (boşaltma, bertaraf, işleme, transfer ve depolama)"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.tehlikeli-atik-tesisleri-alani",
+     "name": "Tehlikeli atık tesisleri alanı (bertaraf ve depolama)"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.atik-geri-kazanim-tesisleri-alani",
+     "name": "Atık geri kazanım tesisleri alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.teknik-altyapi-alani",
+     "name": "Teknik altyapı alanı"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.su-yuzeyi",
+     "name": "Su yüzeyi"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.yapay-ada",
+     "name": "Yapay ada"
+    },
+    {
+     "id": "mpyy.nip.ortak-atik.vahsi-cop-depolama-rehabilitasyon-ve-kapatma-alani",
+     "name": "Vahşi çöp depolama rehabilitasyon ve kapatma alanı"
+    }
+   ]
+  }
+ ]
+}

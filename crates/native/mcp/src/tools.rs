@@ -702,6 +702,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.grade"
             | "cad.entities.raise"
             | "cad.entities.drape"
+            // Sembolü karardan ver writes over the decision areas' symbols (docs/adr/4240).
+            | "cad.zoning.symbolize"
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
             // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).

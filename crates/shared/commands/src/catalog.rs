@@ -9803,6 +9803,36 @@ pub fn catalog() -> CommandCatalog {
             capabilities: None,
             examples: vec![CommandExample { title: "Çizimin imar planı".into(), input: json!({}), output: None }],
         },
+        // Sembolü karardan ver (plan/map-cad.md MAP-09, docs/adr/4240).
+        CommandDescriptor {
+            id: crate::CAD_ZONING_SYMBOLIZE.into(),
+            version: crate::CAD_ZONING_SYMBOLIZE_VERSION,
+            title: "Sembolü karardan ver".into(),
+            summary: "Karar alanlarına MPYY sembolünü kararlarından verir, tersini hiç yapmaz (ADR 4240): sembol alanın kullanımından (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir. KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan sembollerinden; KentOS tahmin etmez). \
+                      Yalnız nesnenin kitaplık sembolü yazılır; karar (öznitelikler) hiç değişmez, sonra değişen sembol kararı değiştirmez. uids yoksa profilin karar katmanının bütün alanları. Her alanın durumu: set, same, unmapped, noPlan, noLevel, noUse, unknownUse; önceki sembolü was. Tek geri alma adımı “Sembolü karardan ver”. \
+                      Retler: invalid_revision, revision_conflict, invalid_input (seçimin kademesi ya da kullanımı, aynı çift iki kez; aynı alan iki kez), unknown_plan_symbol, layer_not_found (karar katmanı yok), invalid_uid, entity_not_found, not_a_decision (uids[i]), layer_locked."
+                .into(),
+            aliases: vec!["sembolkarar".into(), "imarsembol".into(), "mpyysembol".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ZoningSymbolize>(),
+            output: schema::<crate::ZoningSymbolized>(),
+            plan: Some(schema::<crate::ZoningSymbolized>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample { title: "Bütün karar alanları KentOS'un tablosuyla".into(), input: json!({}), output: None },
+                CommandExample {
+                    title: "Konut alanının sembolü kullanıcıdan".into(),
+                    input: json!({ "symbols": [{ "level": "uip", "use": "konut", "symbol": "mpyy.uip.konut.gelisme-konut-alani" }] }),
+                    output: None,
+                },
+            ],
+        },
         // Saha paketi (plan/map-cad.md MAP-19, docs/adr/1920).
         CommandDescriptor {
             id: crate::CAD_FIELD_PACKAGE.into(),
@@ -16761,6 +16791,7 @@ mod tests {
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackage>(e.input.clone()).map(|_| ()),
                     crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningCheck>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolize>(e.input.clone()).map(|_| ()),
                     crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpact>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistribute>(e.input.clone()).map(|_| ()),
                     crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScope>(e.input.clone()).map(|_| ()),
@@ -17741,6 +17772,7 @@ mod tests {
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),
                         crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackaged>(output.clone()).map(|_| ()),
                         crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
+                        crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolized>(output.clone()).map(|_| ()),
                         crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
                         crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),

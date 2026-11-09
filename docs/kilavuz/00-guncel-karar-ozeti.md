@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Sembolü karardan ver (9 Kasım 2026; MAP-09, [ADR 4240](../../docs/adr/4240-zoning-symbol-from-decision.md)).**
+  `cad.zoning.symbolize`: karar alanının MPYY sembolü kademesi ve Kullanım'ından (KentOS'un ad eşlemesi
+  `imar-plani-semboller.json` ya da kullanıcının seçimi); karar hiç yazılmaz. Harita + CBS.
 - **Parsel kayıtları (9 Kasım 2026; MAP-08, [ADR 4220](../../docs/adr/4220-parcel-register-documents-and-boundaries.md)).**
   Çizimden ayrı `settings.parcelRegister` (`.kcad` şema 216): belgeler, parseller ve paylaşılan sınırlar (halka sınır
   zinciri). `cad.parcels.record` belge yazar ve kapatır, `cad.parcels.records` çizimle okur. Harita + CBS.

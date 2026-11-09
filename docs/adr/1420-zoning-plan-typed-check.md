@@ -98,4 +98,4 @@ parça genişliği), [ADR 1360](1360-field-codes-and-kodla-ciz.md) (yerleşik ik
   ADR 0558 eşlemesiyle bağlamak; şema doğrulaması ile plan denetimini ayrı sonuç olarak vermek.
 - **Plan değişikliği:** kaynak revizyona bağlı taslak; yürürlükteki veri doğrudan değişmesin.
 - **Ek denetimler:** üst planın sınırının alt planı kapsaması, yol devamlılığı, donatı standartları.
-- **Sembol:** MPYY sembolünün karar kodundan seçilmesi (sembol değişikliği kararı değiştirmez).
+- ~~**Sembol:** MPYY sembolünün karar kodundan seçilmesi (sembol değişikliği kararı değiştirmez).~~ ADR 4240.

@@ -315,6 +315,7 @@ COMMANDS: dict[str, Any] = {
     "cad.xrefs.edit": xrefs.edit,
     "cad.xrefs.list": xrefs.list,
     "cad.zoning.check": zoning.check,
+    "cad.zoning.symbolize": zoning.symbolize,
     "file.exchange.check": file.exchange.check,
     "file.exchange.matrix": file.exchange.matrix,
     "file.export.atlas": file.export.atlas,

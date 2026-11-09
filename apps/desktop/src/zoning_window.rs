@@ -2,7 +2,8 @@
 //! by `cad.zoning.check`, read only. The tolerance on one line; a choice over the findings by group (plans, decisions
 //! and values, areas, notes); the table says each finding, its objects and the area it measures. Seç ve göster
 //! selects the shown findings' objects and brings them into view; Profili uygula adds the profile's layers when the
-//! drawing lacks them (`cad.profiles.apply`, one undo step).
+//! drawing lacks them (`cad.profiles.apply`, one undo step); Sembolleri karardan ver… opens the window that gives the
+//! decision areas their MPYY symbols from their decisions (`cad.zoning.symbolize`, docs/adr/4240).
 
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
@@ -329,6 +330,11 @@ impl App {
             .push(table);
         let any = !self.zoning_shown().is_empty();
         let mut frame = Frame::new(TITLE).push(body).aside(words::secondary(SHOW, any.then(|| msg(Event::Show))));
+        // Sembolü karardan ver (docs/adr/4240): the decision areas' symbols from their decisions.
+        frame = frame.aside(words::secondary(
+            crate::zoning_symbols_window::OPEN,
+            Some(Message::ZoningSymbols(crate::zoning_symbols_window::Event::Open)),
+        ));
         if missing_layer {
             frame = frame.aside(words::secondary(APPLY_PROFILE, Some(msg(Event::ApplyProfile))));
         }
@@ -340,6 +346,9 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SHOW) => Some(msg(Event::Show)),
             Control::Press(APPLY_PROFILE) => Some(msg(Event::ApplyProfile)),
+            Control::Press(crate::zoning_symbols_window::OPEN) => {
+                Some(Message::ZoningSymbols(crate::zoning_symbols_window::Event::Open))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

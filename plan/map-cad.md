@@ -39,7 +39,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
@@ -1180,6 +1180,15 @@ denetimi): tablo, seçim; Bulguları hata katmanına yaz ile yola giren her böl
 (tür, kalıcı kimlikler, bulgu alanı, 1/2, ileti), tek geri alma adımı; tür sözleri ortak katmanda. 3 İşlem durumu
 (komutun bağımsız başvurusundan), Python, MCP, masaüstü ve resimler. Açık: plan değişikliği taslağı, sembolün
 karardan seçilmesi, hata katmanının GeoPackage'a yazılması, resmî şema ve eşleme.
+
+**9 Kasım 2026, sekizinci tur — Sembolü karardan ver ([ADR 4240](../docs/adr/4240-zoning-symbol-from-decision.md)).**
+Kapsam: **Harita + CBS**. Araştırma: QGIS'in Categorized renderer'ı (sembol verinin ayrık değerlerinden, sınıfsız
+değer varsayılan sınıfta). Kanıtlanan: KentOS'un tablosu (`imar-plani-semboller.json`: kademenin MPYY alan
+sembollerinden adı kullanımla aynı yazılan tek sembol; UİP 8, NİP 5 kullanım; öbürleri açık) ve `cad.zoning.symbolize`:
+karar alanının sembolü planının kademesi ve Kullanım'ından, kullanıcının seçimi önce; yalnız sembol yazılır, karar
+hiç; yanlış sembollü alan kararının sembolünü alır. 26 bağımsız durum, Python, MCP, masaüstü (İmar planı denetimi ›
+Sembolleri karardan ver…) ve resimler. Açık: seçimlerin projede saklanması, plan değişikliği taslağı, hata katmanının
+GeoPackage'a yazılması, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

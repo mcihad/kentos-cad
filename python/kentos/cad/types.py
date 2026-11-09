@@ -111182,6 +111182,147 @@ class ZoningRegion(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningSymbolPick(_Model):
+    """The user's symbol for a use at a level: a library id among the level's choices."""
+    level: str
+    use: str
+    symbol: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["use"] = self.use
+        out["symbol"] = self.symbol
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolPick:
+        return cls(
+            level=data["level"],
+            use=data["use"],
+            symbol=data["symbol"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningSymbolRow(_Model):
+    """A decision area as symbolized: its plan, the plan's level, its use; the symbol it takes and where that comes from
+    (`kentos` or `user`), the one it had; its state: `set` (its symbol changes), `same` (it has it already),
+    `unmapped` (no symbol for its use at its level), `noPlan` (its plan is not written, or not a plan boundary of the
+    drawing), `noLevel` (its plan has no level), `noUse` (no use), `unknownUse` (a use not in the list).
+    """
+    uid: str
+    plan: str
+    level: str
+    use: str
+    state: str
+    from_: str | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    was: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["plan"] = self.plan
+        out["level"] = self.level
+        out["use"] = self.use
+        out["state"] = self.state
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.was is not UNSET:
+            out["was"] = self.was
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolRow:
+        return cls(
+            uid=data["uid"],
+            plan=data["plan"],
+            level=data["level"],
+            use=data["use"],
+            state=data["state"],
+            from_=data.get("from", UNSET),
+            symbol=data.get("symbol", UNSET),
+            was=data.get("was", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningSymbolize(_Model):
+    """Input of `cad.zoning.symbolize` v1: the decision areas (none: every area on the profile's decision layer) and the
+    user's symbols, which go before KentOS's table.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (a pick's level not one KentOS
+    has symbols for, its use not in `plan-kullanim`, a level and use given twice); `unknown_plan_symbol` (a pick's symbol
+    not one of the level's area symbols); `layer_not_found` (the drawing has no decision layer); for `uids[i]`:
+    `invalid_input` (given twice), `invalid_uid`, `entity_not_found`, `not_a_decision` (not an area on the decision
+    layer); `layer_locked` (an area whose symbol would change is on a locked layer: nothing is written).
+    """
+    expected_revision: str | None | Unset = UNSET
+    symbols: list[ZoningSymbolPick] | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.symbols is not UNSET:
+            out["symbols"] = [e0.to_json() for e0 in self.symbols]
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolize:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            symbols=[ZoningSymbolPick.from_json(e0) for e0 in data["symbols"]] if "symbols" in data else UNSET,
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningSymbolized(_Model):
+    """Output of `cad.zoning.symbolize` v1: every decision area in the drawing's order and the counts: symbols set, already
+    so, uses without a symbol, areas left (no plan, no level, no use or one not in the list); the revision after.
+    Attributes:
+        set: Unit: count.
+        same: Unit: count.
+        unmapped: Unit: count.
+        skipped: Unit: count.
+    """
+    areas: list[ZoningSymbolRow]
+    set: int
+    same: int
+    unmapped: int
+    skipped: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["areas"] = [e0.to_json() for e0 in self.areas]
+        out["set"] = self.set
+        out["same"] = self.same
+        out["unmapped"] = self.unmapped
+        out["skipped"] = self.skipped
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningSymbolized:
+        return cls(
+            areas=[ZoningSymbolRow.from_json(e0) for e0 in data["areas"]],
+            set=data["set"],
+            same=data["same"],
+            unmapped=data["unmapped"],
+            skipped=data["skipped"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class HorizontalAdjustWork(AdjustWork):
     """Yatay ağ dengelemesi: direction series and horizontal distances."""
     TAG_VALUE: ClassVar[str] = "horizontal"
@@ -136023,4 +136164,8 @@ __all__ = [
     "ZoningChecked",
     "ZoningFinding",
     "ZoningRegion",
+    "ZoningSymbolPick",
+    "ZoningSymbolRow",
+    "ZoningSymbolize",
+    "ZoningSymbolized",
 ]

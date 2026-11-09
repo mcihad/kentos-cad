@@ -2570,6 +2570,24 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Sembolü karardan ver (plan/map-cad.md MAP-09, docs/adr/4240).
+    Entry {
+        id: "cad.zoning.symbolize",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "unknown_plan_symbol",
+                "layer_not_found",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_decision",
+                "layer_locked",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // Saha paketi (plan/map-cad.md MAP-19, docs/adr/1920).
     Entry {
         id: "cad.field.package",
