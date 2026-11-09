@@ -212,6 +212,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-02 / ADR 4100: web'in Poligon penceresinde (`TraverseDialog`) Kotlar anahtarı, Başucu açısı, Alet ve İşaret
+  yüksekliği sütunları, kot alanları ve H sütunu; `surveyTraverse` çağrısında `heights` (reference-calls'ın 2 yeni
+  durumu) ve web'in `cad.survey.points` işleyicisinde `work.heights` / `heightMisclosure` (6 yeni ortak durum).
 - MAP-01 / ADR 4080: web'de `map.work.restore` işleyicisi (28 ortak durum, dört yeni kod) ve Harita işi panelinde
   Değişenler satırının Onaylı hâline getir düğmesi.
 - MAP-12 / ADR 4060: web'in Ortofoto karşılaştırması'nda dönük birinci görüntünün ızgara olması (`seam.turned`;

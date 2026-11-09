@@ -7,4 +7,8 @@ export type SurveyPointsWritten = { ids: Array<number>, uids: Array<string>,
 /**
  * Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one.
  */
-angleMisclosure?: number, linearMisclosure?: number, revision: string, };
+angleMisclosure?: number, linearMisclosure?: number, 
+/**
+ * Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known.
+ */
+heightMisclosure?: number, revision: string, };

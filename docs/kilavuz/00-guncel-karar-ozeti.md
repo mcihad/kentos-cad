@@ -273,6 +273,10 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Poligon hesabında trigonometrik kotlar (9 Kasım 2026; MAP-02, [ADR 4100](../../docs/adr/4100-traverse-trigonometric-heights.md)).**
+  `cad.survey.points`'in poligonunda `work.heights`: başucu açısı, alet ve işaret yüksekliğiyle
+  Δh = S·cot z + i − t + (1 − k)·S²/2R; kot kapanması uzunluklarla dağıtılır (`heightMisclosure`); projeksiyona
+  indirmede her kenar kendi H + N ortalamasında. Poligon hesabı › Kotlar. CAD + CBS.
 - **Onaylı hâline getir (9 Kasım 2026; MAP-01, [ADR 4080](../../docs/adr/4080-map-work-restore-as-approved.md)).**
   Yeni `map.work.restore`: onaylı öğenin silinen nesneleri aynı kimlikle, değişenleri onaylanan değerleriyle geri gelir;
   eklenenler kalır. Harita işi › Değişenler'de ↺. Yalnız Harita.

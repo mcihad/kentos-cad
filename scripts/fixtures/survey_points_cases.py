@@ -19,6 +19,10 @@ command must give the points back (within 1e-6 m). The conventions, from the ADR
   less the back reading plus its reading. With a zenith angle z the horizontal length is the slope length times
   sin z and the height difference the slope length times cos z plus (1 − k)·h²/(2·6 371 000) plus the instrument's
   height less the target's (k the project's, 0.13); the point's height the station's plus that.
+- Poligon hesabı with heights (docs/adr/4100): each leg's zenith angle is built so that S·cot z + i − t +
+  (1 − k)·S²/(2·6 371 000) (S its length, i and t the instrument's and the target's heights, k the project's 0.13) is
+  the height difference; closed on a known height the misclosure (sum − known difference) is taken off the legs in
+  proportion to their lengths. The start's height is given, or the start point's own.
 - Önden kestirme: at A the angle α runs clockwise from B to the new point, at B the angle β clockwise from the new point
   to A. Geriden kestirme: at the new point α runs clockwise from A to B, β from B to C.
 - Each point is written named (its label and `Ad`), with its kind as `Tür` (Poligon noktası, Alım noktası, Kestirme
@@ -126,6 +130,79 @@ def traverse_obs(start, back, path, fore=None, unit="grad"):
         end = path[-1]
         angles.append(turn_of(bearing(end, fore, unit) - bearing(end, path[-2], unit), unit))
     return angles, lengths
+
+
+def zeniths_for(path, heights, inst, tgt, unit="grad", error=None):
+    """docs/adr/4100: the zenith angles along `path` that give its heights (`error`: (leg, metres) added to one leg's
+    height difference), in the unit."""
+    zs = []
+    for i in range(len(path) - 1):
+        s = dist(path[i], path[i + 1])
+        want = heights[i + 1] - heights[i] + (error[1] if error and error[0] == i else 0.0)
+        cot = (want - inst[i] + tgt[i] - (1 - K) * s * s / (2 * R)) / s
+        zs.append(math.atan2(1.0, cot) * TURN[unit] / (2 * math.pi))
+    return zs
+
+
+def adjusted_heights(path, heights, error):
+    """docs/adr/4100: the heights after the misclosure (`error` on one leg) is taken off in proportion to the lengths."""
+    lengths = [dist(path[i], path[i + 1]) for i in range(len(path) - 1)]
+    raw = [heights[i + 1] - heights[i] + (error[1] if error[0] == i else 0.0) for i in range(len(lengths))]
+    f = sum(raw) - (heights[-1] - heights[0])
+    out, at = [], heights[0]
+    for d, s_ in zip(raw, lengths):
+        at += d - f * s_ / sum(lengths)
+        out.append(at)
+    return out, f
+
+
+def heights_cases():
+    """docs/adr/4100: Poligon hesabı with heights by trigonometric heighting."""
+    A, Rp, E, F = KNOWN["A"], KNOWN["R"], KNOWN["E"], KNOWN["F"]
+    p1, p2 = (90, 40), (190, 70)
+    path = [A, p1, p2, E]
+    ang, ln = traverse_obs(A, Rp, path, fore=F)
+    hs, inst, tgt = [100.0, 101.2, 102.9, 103.5], [1.55, 1.48, 1.6], [1.7, 1.3, 1.65]
+    zs = zeniths_for(path, hs, inst, tgt)
+    connected = {"kind": "traverse", "shape": "connected", "start": named("A"), "back": named("R"), "end": named("E"),
+                 "fore": named("F"), "angles": ang, "distances": ln, "names": ["P101", "P102"],
+                 "heights": {"start": 100.0, "end": 103.5, "zeniths": zs, "instruments": inst, "targets": tgt}}
+    q1, q2, q3 = (80, -60), (160, 10), (90, 90)
+    cpath = [A, q1, q2, q3, A]
+    cang, cln = traverse_obs(A, Rp, cpath, fore=Rp)
+    chs, cinst, ctgt = [50.0, 51.0, 49.5, 50.8, 50.0], [1.5, 1.5, 1.5, 1.5], [1.6, 1.4, 1.5, 1.7]
+    czs = zeniths_for(cpath, chs, cinst, ctgt, error=(1, 0.012))
+    cadj, cf = adjusted_heights(cpath, chs, (1, 0.012))
+    closed = {"kind": "traverse", "shape": "closed", "start": named("A"), "back": named("R"), "angles": cang,
+              "distances": cln, "names": ["K1", "K2", "K3"],
+              "heights": {"start": 50.0, "zeniths": czs, "instruments": cinst, "targets": ctgt}}
+    zero = {"angleMisclosure": 0, "linearMisclosure": 0}
+    own = dict(SETUP, entities=[dict(e, z=100.0) if e["attrs"]["Ad"] == "A" else e for e in ENTITIES])
+    from_point = done("Poligon hesabı kotlarla: başlangıç kotu A noktasının kendisinden",
+                      {**connected, "heights": {k: v for k, v in connected["heights"].items() if k != "start"}},
+                      [written("P101", p1, "Poligon noktası", 101.2), written("P102", p2, "Poligon noktası", 102.9)],
+                      "Poligon hesabı", misclosure=dict(zero, heightMisclosure=0))
+    from_point["setup"] = own
+    return [
+        done("Poligon hesabı kotlarla: bağlı, iki uç kotu verilmiş", connected,
+             [written("P101", p1, "Poligon noktası", 101.2), written("P102", p2, "Poligon noktası", 102.9)],
+             "Poligon hesabı", misclosure=dict(zero, heightMisclosure=0)),
+        done("Poligon hesabı kotlarla: kapalı, 12 mm kot kapanması kenarlara dağıtılır", closed,
+             [written("K1", q1, "Poligon noktası", cadj[0]), written("K2", q2, "Poligon noktası", cadj[1]),
+              written("K3", q3, "Poligon noktası", cadj[2])], "Poligon hesabı",
+             misclosure=dict(zero, heightMisclosure=cf)),
+        from_point,
+        refused("Poligon hesabı kotlarla: başlangıç kotu yok",
+                {**connected, "heights": {k: v for k, v in connected["heights"].items() if k != "start"}},
+                "survey_refused", "Başlangıç noktasının kotu yok: kotunu verin (heights.start) ya da kotu olan bir "
+                "çizim noktasından başlayın.", "work.heights.start"),
+        refused("Poligon hesabı kotlarla: başucu açısı sayısı uymuyor",
+                {**connected, "heights": dict(connected["heights"], zeniths=zs[:2])}, "survey_refused",
+                "3 kenarlı bu poligonda 3 başucu açısı olmalı, 2 verildi.", "work"),
+        refused("Poligon hesabı kotlarla: başucu açısı sonlu değil", connected, "not_finite",
+                "Başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+                "work.heights.zeniths[0]", non_finite={"work.heights.zeniths[0]": "NaN"}),
+    ]
 
 
 def traverse_cases():
@@ -294,7 +371,7 @@ def general_cases():
 
 
 def build():
-    cases = traverse_cases() + polar_cases() + intersection_cases() + general_cases()
+    cases = traverse_cases() + heights_cases() + polar_cases() + intersection_cases() + general_cases()
     return {"format": "kentos.command-cases", "version": 1, "command": "cad.survey.points", "commandVersion": 1,
             "title": "Ölçme hesabı",
             "note": "Written by scripts/fixtures/survey_points_cases.py from the windows' conventions (docs/adr/0622 §9, "

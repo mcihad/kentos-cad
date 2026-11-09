@@ -202,7 +202,7 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
     );
     let form = &app.calc.traverse;
     assert_eq!(form.rows.len(), 3, "a row added before the end station");
-    assert_eq!(form.rows[1], ["P2", "100,0040", "100"].map(String::from));
+    assert_eq!(form.rows[1][..3], ["P2", "100,0040", "100"].map(String::from));
     // The end station: the start again, its angle typed, no leg.
     assert_eq!(form.last[NAME], "A");
     assert!(form.readonly(4, NAME) && form.readonly(4, DISTANCE));
@@ -436,6 +436,9 @@ fn screens() {
                 "hesap-poligon",
                 "hesap-poligon-tolerans",
                 "hesap-poligon-uyari",
+                // Trigonometrik nivelmanla kotlar (docs/adr/4100; each leg at its own height:
+                // survey_heights_tests::traverse_screens).
+                "hesap-poligon-kotlar",
                 "hesap-kutupsal",
                 "hesap-onden",
                 "hesap-geriden",
@@ -472,7 +475,7 @@ fn screens() {
                     doc.model.set_settings(settings);
                 }
                 match name.trim_end_matches("-zemin") {
-                    "hesap-poligon" | "hesap-poligon-tolerans" => {
+                    "hesap-poligon" | "hesap-poligon-tolerans" | "hesap-poligon-kotlar" => {
                         use traverse::{ANGLE, DISTANCE};
                         // A connected traverse worked out from the points'
                         // coordinates, with 9 cc and 4 mm of error in it;
@@ -513,6 +516,25 @@ fn screens() {
                             ),
                         );
                         calc(&mut app, Event::Cell(3, ANGLE, "57.9557".into()));
+                        if name.starts_with("hesap-poligon-kotlar") {
+                            use traverse::{INSTRUMENT, TARGET, ZENITH};
+                            // The zenith angle, the instrument's and the target's height at each leg's station;
+                            // the start's height P1's own (1024.35 m), the end's typed.
+                            calc(&mut app, Event::TraverseHeights(true));
+                            calc(&mut app, Event::TraverseEndZ("1024.130".into()));
+                            for (row, (z, i, t)) in [
+                                ("98.4410", "1.55", "1.70"),
+                                ("101,2215", "1.52", "1.70"),
+                                ("99.8760", "1.60", "1.65"),
+                            ]
+                            .into_iter()
+                            .enumerate()
+                            {
+                                calc(&mut app, Event::Cell(row, ZENITH, z.into()));
+                                calc(&mut app, Event::Cell(row, INSTRUMENT, i.into()));
+                                calc(&mut app, Event::Cell(row, TARGET, t.into()));
+                            }
+                        }
                     }
                     "hesap-poligon-uyari" => {
                         let _ = app.run("calc.traverse");
@@ -687,8 +709,8 @@ fn the_survey_windows_take_lengths_to_the_grid() {
         kind: traverse::Kind::Open,
         start: "486500,4420200".into(),
         back: "486500,4420700".into(),
-        first: [String::new(), "100".into(), "500".into()],
-        rows: vec![["Y1".into(), String::new(), String::new()]],
+        first: [String::new(), "100".into(), "500".into(), String::new(), String::new(), String::new()],
+        rows: vec![["Y1".into(), String::new(), String::new(), String::new(), String::new(), String::new()]],
         ..Default::default()
     };
     let r = form.compute(&doc.model).result.expect("a traverse");
@@ -710,4 +732,78 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     let points = app.calc.polar.compute(&doc.model).points.expect("computed");
     assert_eq!(points[0].grid, None);
     assert!((points[0].p.x - 487500.0).abs() < 1e-9);
+}
+
+/// Docs/adr/4100: the closed square of `a_closed_traverse_closes_and_adds_its_points_in_one_step` with its heights by
+/// trigonometric heighting. From 100 m at the start, zenith angles of 99, 101, 100.5 and 99.5 g with instruments of
+/// 1.5 m and targets of 1.6 m: each leg's S·cot z + i − t + (1 − k)·S²/(2·6 371 000), k the project's (worked out
+/// here); back on the start the misclosure is taken off by the lengths (the four alike). The result shows each point's
+/// height, the report its Δh and H and the height misclosure, the work carries the readings and the points are written
+/// with their heights.
+#[test]
+fn a_closed_traverse_carries_its_heights() {
+    use traverse::{ANGLE, DISTANCE, INSTRUMENT, NAME, TARGET, ZENITH};
+    let mut app = app_with_drawing();
+    let _ = app.run("calc.traverse");
+    calc(&mut app, Event::TraverseKind(traverse::Kind::Closed));
+    calc(&mut app, Event::Known(Field::Start, "0,0".into()));
+    calc(&mut app, Event::Known(Field::Back, "-100,0".into()));
+    calc(&mut app, Event::TraverseHeights(true));
+    calc(&mut app, Event::TraverseStartZ("100".into()));
+    assert!(!app.calc.traverse.readonly(0, ZENITH), "the start's row takes its zenith");
+    for (col, v) in [(ANGLE, "200"), (DISTANCE, "100"), (ZENITH, "99"), (INSTRUMENT, "1,5"), (TARGET, "1,6")] {
+        calc(&mut app, Event::Cell(0, col, v.into()));
+    }
+    calc(
+        &mut app,
+        Event::Pasted(
+            1,
+            NAME,
+            Some("P1\t100\t100\t101\t1,5\t1,6\nP2\t100\t100\t100,5\t1,5\t1,6\nP3\t100\t100\t99,5\t1,5\t1,6\n".into()),
+        ),
+    );
+    calc(&mut app, Event::Cell(4, ANGLE, "300".into()));
+    assert!(app.calc.traverse.readonly(4, ZENITH), "the end station has no leg");
+    let doc = app.document.as_ref().expect("open");
+    let c = app.calc.traverse.compute(&doc.model);
+    assert!(c.errors.is_empty(), "{:?}", c.errors);
+    let r = c.result.expect("a result");
+    let k = doc.settings().refraction();
+    let d = |z: f64| {
+        let z = z * std::f64::consts::PI / 200.0;
+        100.0 * z.cos() / z.sin() + 1.5 - 1.6 + (1.0 - k) * 100.0 * 100.0 / (2.0 * 6_371_000.0)
+    };
+    let raw = [99.0, 101.0, 100.5, 99.5].map(d);
+    let f: f64 = raw.iter().sum();
+    assert!((r.height_misclosure.expect("closed") - f).abs() < 1e-9);
+    let heights = r.heights.clone().expect("heights");
+    let mut h = 100.0;
+    for (got, d) in heights.iter().zip(raw) {
+        h += d - f / 4.0;
+        assert!((got - h).abs() < 1e-9, "{heights:?}");
+    }
+    assert_eq!(heights.len(), 3, "the new points' heights");
+    let format = Format::of(doc.settings());
+    let report = app.calc.traverse.report(&doc.model, &format).expect("a report");
+    assert!(report.iter().any(|row| row.iter().any(|c| c == "Δh")), "{report:?}");
+    assert!(report.iter().any(|row| row.first().is_some_and(|c| c == "Kot kapanma hatası")), "{report:?}");
+    calc(&mut app, Event::AddPoints);
+    let (_, work) = last_work(&app);
+    assert_eq!(work["heights"]["start"], json!(100.0));
+    assert_eq!(work["heights"]["zeniths"], json!([99.0, 101.0, 100.5, 99.5]));
+    assert_eq!(work["heights"]["instruments"], json!([1.5, 1.5, 1.5, 1.5]));
+    let doc = app.document.as_ref().expect("open");
+    let zs: Vec<f64> = app
+        .selection
+        .ids()
+        .iter()
+        .filter_map(|id| match doc.model.get(*id) {
+            Some(Entity::Point(p)) => p.z,
+            _ => None,
+        })
+        .collect();
+    assert_eq!(zs.len(), 3);
+    for (got, want) in zs.iter().zip(&heights) {
+        assert!((got - want).abs() < 1e-9, "{zs:?}");
+    }
 }

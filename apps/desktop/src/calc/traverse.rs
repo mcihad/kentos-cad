@@ -32,10 +32,14 @@ use crate::exchange::words::{self, Kind as Line};
 
 pub const TITLE: &str = "Poligon hesabı";
 
-/// The table's columns: Nokta, Kırılma açısı, Sonraki noktaya kenar.
+/// The table's columns: Nokta, Kırılma açısı, Sonraki noktaya kenar; with the heights (docs/adr/4100) the leg's zenith
+/// angle, the instrument's height at its station and the target's at its next point.
 pub const NAME: usize = 0;
 pub const ANGLE: usize = 1;
 pub const DISTANCE: usize = 2;
+pub const ZENITH: usize = 3;
+pub const INSTRUMENT: usize = 4;
+pub const TARGET: usize = 5;
 
 /// Which traverse.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -77,10 +81,15 @@ pub struct Form {
     pub back: String,
     pub end: String,
     pub fore: String,
-    pub first: [String; 3],
-    pub rows: Vec<[String; 3]>,
-    pub last: [String; 3],
+    pub first: [String; 6],
+    pub rows: Vec<[String; 6]>,
+    pub last: [String; 6],
     pub layer: Option<String>,
+    /// The heights by trigonometric heighting (docs/adr/4100): asked, and the start's and the end's heights as typed
+    /// (empty: the known point's own).
+    pub heights: bool,
+    pub start_z: String,
+    pub end_z: String,
 }
 
 impl Default for Form {
@@ -96,6 +105,9 @@ impl Default for Form {
             rows: vec![Default::default(); 2],
             last: Default::default(),
             layer: None,
+            heights: false,
+            start_z: String::new(),
+            end_z: String::new(),
         }
     }
 }
@@ -111,6 +123,14 @@ pub struct Computed {
     /// The angles and the legs' lengths as the core takes them.
     pub angles: Vec<f64>,
     pub distances: Vec<f64>,
+    /// Docs/adr/4100: each leg's zenith angle, instrument and target heights; whether the legs were taken at their own
+    /// heights, or why not.
+    pub zeniths: Vec<f64>,
+    pub instruments: Vec<f64>,
+    pub targets: Vec<f64>,
+    pub own_heights: Option<Result<Option<String>, String>>,
+    /// The start's and the end's heights as taken, each with whether it is the known point's own.
+    pub ends_z: Option<((f64, bool), Option<(f64, bool)>)>,
 }
 
 impl Computed {
@@ -126,6 +146,15 @@ impl Computed {
     fn leg_point(&self, r: &TraverseResult, i: usize) -> Option<Vec2> {
         r.points.get(i).copied()
     }
+}
+
+/// A known point's own height (docs/adr/4100): the drawing's point it names (or sits on) when it has one.
+fn point_height(model: &Model, text: &str) -> Option<f64> {
+    let Known::Point { p, .. } = resolve_point(model, text) else { return None };
+    model.entities().find_map(|e| match e {
+        kentos_commands::Entity::Point(pt) if pt.p.x == p.x && pt.p.y == p.y => pt.z,
+        _ => None,
+    })
 }
 
 /// A known point's name for the table's station rows: the name it was
@@ -193,7 +222,7 @@ impl Form {
             Kind::Open => (None, None),
         };
         // New points with nothing typed at the end of the table are left out.
-        let mut rows: &[[String; 3]] = &self.rows;
+        let mut rows: &[[String; 6]] = &self.rows;
         while let [head @ .., last] = rows
             && last.iter().all(|v| js_trim(v).is_empty())
         {
@@ -207,6 +236,7 @@ impl Form {
         };
         let mut angles = Vec::new();
         let mut distances = Vec::new();
+        let (mut zeniths, mut instruments, mut targets) = (Vec::new(), Vec::new(), Vec::new());
         for (i, row) in std::iter::once(&self.first).chain(legs).enumerate() {
             let a = read_number(&row[ANGLE]);
             let d = read_number(&row[DISTANCE]);
@@ -215,6 +245,24 @@ impl Form {
             } else {
                 format!("{}. satırda", i + 1)
             };
+            // Docs/adr/4100: the leg's zenith angle; the instrument's and the target's heights (empty: 0).
+            if self.heights {
+                match read_number(&row[ZENITH]) {
+                    None => errors.push(format!("{place} başucu açısı yok.")),
+                    Some(v) if v.is_nan() => errors.push(format!("{place} başucu açısı bir sayı değil.")),
+                    Some(_) => {}
+                }
+                zeniths.push(read_number(&row[ZENITH]).unwrap_or(f64::NAN));
+                for (col, what, list) in
+                    [(INSTRUMENT, "alet yüksekliği", &mut instruments), (TARGET, "işaret yüksekliği", &mut targets)]
+                {
+                    let v = read_number(&row[col]).unwrap_or(0.0);
+                    if v.is_nan() {
+                        errors.push(format!("{place} {what} bir sayı değil."));
+                    }
+                    list.push(v);
+                }
+            }
             match a {
                 None => errors.push(format!("{place} kırılma açısı yok.")),
                 Some(v) if v.is_nan() => {
@@ -254,10 +302,45 @@ impl Form {
                 name => name.to_owned(),
             })
             .collect();
+        // Docs/adr/4100: the start's height (typed, else the known point's own) and the end's.
+        let mut heights = None;
+        let mut ends_z = None;
+        if self.heights {
+            // Each height typed, else the known point's own (`true`).
+            let typed_or_own = |typed: &str, point: &str| {
+                read_number(typed).map(|z| (z, false)).or_else(|| point_height(model, point).map(|z| (z, true)))
+            };
+            match typed_or_own(&self.start_z, &self.start) {
+                None => errors.push("Başlangıç noktasının kotu yok: kotunu yazın ya da kotu olan bir nokta seçin.".to_owned()),
+                Some((v, _)) if v.is_nan() => errors.push("Başlangıç kotu bir sayı değil.".to_owned()),
+                Some((z0, own)) => {
+                    let end = match self.kind {
+                        Kind::Closed => Some((z0, own)),
+                        Kind::Open => None,
+                        Kind::Connected => typed_or_own(&self.end_z, &self.end),
+                    };
+                    let z1 = end.map(|(z, _)| z);
+                    if z1.is_some_and(f64::is_nan) {
+                        errors.push("Bitiş kotu bir sayı değil.".to_owned());
+                    }
+                    ends_z = Some(((z0, own), end));
+                    heights = Some(kentos_interaction::survey::traverse::TraverseHeights {
+                        start: z0,
+                        end: z1,
+                        zeniths: zeniths.clone(),
+                        instruments: instruments.clone(),
+                        targets: targets.clone(),
+                        refraction: Some(model.settings().refraction()),
+                        undulations: None,
+                    });
+                }
+            }
+        }
         let mut result = None;
         let mut end_name = None;
+        let mut own_heights = None;
         if let (true, Some(start), Some(back)) = (errors.is_empty(), start, back) {
-            match traverse(&TraverseInput {
+            let mut input = TraverseInput {
                 unit: unit_name(model.settings().angle_unit).to_owned(),
                 start,
                 back,
@@ -266,7 +349,17 @@ impl Form {
                 angles: angles.clone(),
                 distances: distances.clone(),
                 grid: survey_grid(model.settings()),
-            }) {
+                heights,
+            };
+            // Each leg at its own height when the project's heights can be made ellipsoidal (docs/adr/2900, 4100).
+            own_heights = kentos_native_application::survey_heights::traverse_undulations(model.settings(), &input)
+                .map(|r| r.map(|(u, name)| {
+                    if let Some(h) = input.heights.as_mut() {
+                        h.undulations = Some(u);
+                    }
+                    name
+                }));
+            match traverse(&input) {
                 Ok(r) => {
                     result = Some(r);
                     end_name = self.has_end_row().then(|| {
@@ -287,6 +380,11 @@ impl Form {
             end_name,
             angles,
             distances,
+            zeniths,
+            instruments,
+            targets,
+            own_heights,
+            ends_z,
         }
     }
 
@@ -319,6 +417,14 @@ impl Form {
             angles: c.angles,
             distances: c.distances,
             names: c.names,
+            // Docs/adr/4100: the typed heights (empty: the known points' own) and the legs' readings.
+            heights: self.heights.then(|| kentos_commands::SurveyTraverseHeights {
+                start: read_number(&self.start_z),
+                end: read_number(&self.end_z),
+                zeniths: c.zeniths,
+                instruments: c.instruments,
+                targets: c.targets,
+            }),
         })
     }
 
@@ -334,6 +440,11 @@ impl Form {
         head.extend(["Kenar", "ΔY", "ΔX", "vY", "vX", "Y", "X"]);
         if reduced {
             head.extend(["Ölçek", "Yükseklik çarpanı"]);
+        }
+        // Docs/adr/4100: the heights: each leg's height difference, its correction, the point's height.
+        let heights = r.heights.as_ref();
+        if heights.is_some() {
+            head.extend(["Δh", "vh", "H"]);
         }
         let mut lines = vec![
             vec![TITLE.to_owned()],
@@ -362,7 +473,15 @@ impl Form {
                 row.push(leg.scale.map(|k| fixed(k, 8)).unwrap_or_default());
                 row.push(leg.height_factor.map(|k| fixed(k, 8)).unwrap_or_default());
             }
+            if let Some(h) = heights {
+                row.push(leg.dh.map(|d| fixed(d, 4)).unwrap_or_default());
+                row.push(leg.vh.map(|v| fixed(v, 4)).unwrap_or_default());
+                row.push(h.get(i).map_or_else(|| "bilinen".to_owned(), |z| fixed(*z, 3)));
+            }
             lines.push(row);
+        }
+        if let Some(f) = r.height_misclosure {
+            lines.push(vec!["Kot kapanma hatası".to_owned(), mm_text(f)]);
         }
         // Each misclosure's row ends with its verdict against the project's
         // tolerance (docs/adr/0169 §3).
@@ -401,7 +520,9 @@ impl Form {
         r: &TraverseResult,
         format: &Format,
         settings: &kentos_commands::ProjectSettings,
+        c: &Computed,
     ) -> Vec<(Line, String)> {
+        let own = &c.own_heights;
         let mut lines = Vec::new();
         match r.angle_misclosure {
             Some(f) => lines.push((
@@ -448,9 +569,48 @@ impl Form {
             },
         ));
         lines.extend(closure_lines(r, settings));
+        // Docs/adr/4100: the heights' closure, and the height each leg was reduced at.
+        if r.heights.is_some() {
+            // Where the start's and the end's heights come from: typed, or the known point's own.
+            let said = |(z, own): (f64, bool)| {
+                format!("{} m{}", format.length_bare(z), if own { ", noktanın kendi kotu" } else { "" })
+            };
+            let ends = match c.ends_z {
+                Some((start, Some(end))) if self.kind == Kind::Connected => {
+                    format!(" (başlangıç {}; bitiş {})", said(start), said(end))
+                }
+                Some((start, _)) => format!(" (başlangıç {})", said(start)),
+                None => String::new(),
+            };
+            lines.push((
+                Line::Info,
+                match r.height_misclosure {
+                    Some(f) => format!(
+                        "Kot kapanma hatası fh = {}{ends}; kenarlara uzunluklarıyla orantılı dağıtıldı. Yer eğriliği ve refraksiyon: (1 − k)·D²/2R, k = {} (Proje ayarları › Ölçme).",
+                        mm_text(f),
+                        settings.refraction()
+                    ),
+                    None => format!(
+                        "Kotlar trigonometrik nivelmanla{ends}; bitişin kotu yok, kot kapanması denetlenmedi. Yer eğriliği ve refraksiyon: (1 − k)·D²/2R, k = {}.",
+                        settings.refraction()
+                    ),
+                },
+            ));
+        }
+        match own {
+            Some(Ok(model)) => lines.push((
+                Line::Info,
+                match model {
+                    Some(name) => format!("Her kenar kendi elipsoit yüksekliğinde indirildi (uçlarının H + N ortalaması; geoit {name})."),
+                    None => "Her kenar kendi elipsoit yüksekliğinde indirildi (uçlarının kotlarının ortalaması).".to_owned(),
+                },
+            )),
+            Some(Err(why)) => lines.push((Line::Warn, why.clone())),
+            None => {}
+        }
         if let Some(h) = settings
             .ground_height()
-            .filter(|_| r.legs.iter().any(|l| l.ground.is_some()))
+            .filter(|_| r.legs.iter().any(|l| l.ground.is_some()) && !matches!(own, Some(Ok(_))))
         {
             lines.push((Line::Info, grid_note(h)));
         }
@@ -474,6 +634,12 @@ impl Form {
                 None,
             ));
         }
+        // Docs/adr/4100: the heights by trigonometric heighting.
+        top = top.push(words::field(
+            "Kotlar",
+            Switch::new(self.heights, |on| event(Event::TraverseHeights(on))).label("Trigonometrik nivelmanla hesapla"),
+            None,
+        ));
         let mut fields = vec![
             known_field(
                 model,
@@ -512,24 +678,44 @@ impl Form {
                 ));
             }
         }
-        let columns: &'static [Col] = if format.angle_unit_label() == "°" {
-            &COLUMNS_DEG
-        } else {
-            &COLUMNS_GRAD
+        // With the heights' six columns the leg's header is short; the caption says it is to the next point.
+        let all: &'static [Col] = match (format.angle_unit_label() == "°", self.heights) {
+            (true, false) => &COLUMNS_DEG,
+            (false, false) => &COLUMNS_GRAD,
+            (true, true) => &HEIGHTS_DEG,
+            (false, true) => &HEIGHTS_GRAD,
         };
-        let table = grid::view(Window::Traverse, columns, self, |r, col| {
-            if col == NAME {
-                format!("P{r}")
-            } else {
-                String::new()
-            }
+        let columns = &all[..Table::columns(self)];
+        let table = grid::view(Window::Traverse, columns, self, |r, col| match col {
+            NAME => format!("P{r}"),
+            INSTRUMENT | TARGET => "0".to_owned(),
+            _ => String::new(),
         });
+        // The start's and the end's heights: empty, the known point's own.
+        let heights_row = self.heights.then(|| {
+            let mut r = row![super::number_field("Başlangıç kotu (m)", &self.start_z, "noktanın kotu", |t| {
+                event(Event::TraverseStartZ(t))
+            })]
+            .spacing(18);
+            if self.kind == Kind::Connected {
+                r = r.push(super::number_field("Bitiş kotu (m)", &self.end_z, "noktanın kotu", |t| {
+                    event(Event::TraverseEndZ(t))
+                }));
+            }
+            r
+        });
+        let mut head = column![top, knowns(fields)].spacing(12);
+        if let Some(r) = heights_row {
+            head = head.push(r);
+        }
         let mut body = column![
-            column![top, knowns(fields)].spacing(12),
+            head,
             column![
-                label::caption(
+                label::caption(if self.heights {
+                    "Kırılma açısı her istasyonda önceki noktadan sonraki noktaya saat yönünde ölçülür (başlangıçta bakılan noktadan). Kenar (yatay), başucu açısı (0 tam yukarı), alet ve işaret yüksekliği o istasyondan sonraki noktaya okunur: Δh = S·cot z + i − t. Elektronik tablodan satırları yapıştırabilirsiniz."
+                } else {
                     "Kırılma açısı her istasyonda önceki noktadan sonraki noktaya saat yönünde ölçülür (başlangıçta bakılan noktadan). Kenarlar yataydır. Elektronik tablodan satırları yapıştırabilirsiniz."
-                )
+                })
                 .width(Fill),
                 table,
             ]
@@ -543,7 +729,7 @@ impl Form {
                 .take(6)
                 .map(|e| (Line::Warn, e.clone()))
                 .collect(),
-            Some(r) => self.summary_lines(r, format, model.settings()),
+            Some(r) => self.summary_lines(r, format, model.settings(), &c),
         };
         if let Some(summary) = summary(lines) {
             body = body.push(summary);
@@ -572,10 +758,24 @@ impl Form {
                         p.map_or_else(|| "bilinen".to_owned(), |p| format.coord(p.x)),
                         p.map_or_else(|| "bilinen".to_owned(), |p| format.coord(p.y)),
                     ]);
+                    // Docs/adr/4100: the point's height.
+                    if let Some(h) = &r.heights {
+                        row.push(h.get(i).map_or_else(|| "bilinen".to_owned(), |z| format.length_bare(*z)));
+                    }
                     row
                 })
                 .collect();
-            let table = if reduced {
+            let table = if r.heights.is_some() {
+                let mut head: Vec<&str> = vec!["Nokta", "Semt"];
+                if reduced {
+                    head.extend(["Zeminde (m)", "Düzlemde (m)"]);
+                } else {
+                    head.push("Kenar (m)");
+                }
+                head.extend(["ΔY (m)", "ΔX (m)", "Y (sağa)", "X (yukarı)", "H (m)"]);
+                let numeric: Vec<bool> = (0..head.len()).map(|k| k > 0).collect();
+                result_table(&head, rows, &numeric)
+            } else if reduced {
                 result_table(
                     &[
                         "Nokta",
@@ -624,8 +824,9 @@ impl Form {
 
 /// The table as it shows: the start station, the new points, the end station.
 impl Table for Form {
+    /// Docs/adr/4100: with the heights, the legs' zenith angles and heights too.
     fn columns(&self) -> usize {
-        3
+        if self.heights { 6 } else { 3 }
     }
 
     fn rows(&self) -> usize {
@@ -662,7 +863,7 @@ impl Table for Form {
             return row == 0 || end_row;
         }
         if end_row {
-            return col == DISTANCE || !self.end_angle();
+            return col != ANGLE || !self.end_angle();
         }
         self.kind == Kind::Open && row == rows - 1 && row > 0
     }
@@ -724,10 +925,12 @@ fn unsigned(text: String) -> String {
     if zero { text[1..].to_owned() } else { text }
 }
 
-const COLUMNS_GRAD: [Col; 3] = columns("g");
-const COLUMNS_DEG: [Col; 3] = columns("°");
+const COLUMNS_GRAD: [Col; 6] = columns("g", "Sonraki noktaya kenar");
+const COLUMNS_DEG: [Col; 6] = columns("°", "Sonraki noktaya kenar");
+const HEIGHTS_GRAD: [Col; 6] = columns("g", "Kenar");
+const HEIGHTS_DEG: [Col; 6] = columns("°", "Kenar");
 
-const fn columns(unit: &'static str) -> [Col; 3] {
+const fn columns(unit: &'static str, leg: &'static str) -> [Col; 6] {
     [
         Col {
             label: "Nokta",
@@ -740,7 +943,23 @@ const fn columns(unit: &'static str) -> [Col; 3] {
             numeric: true,
         },
         Col {
-            label: "Sonraki noktaya kenar",
+            label: leg,
+            unit: Some("m"),
+            numeric: true,
+        },
+        // Docs/adr/4100: the heights' readings.
+        Col {
+            label: "Başucu açısı",
+            unit: Some(unit),
+            numeric: true,
+        },
+        Col {
+            label: "Alet yüksekliği",
+            unit: Some("m"),
+            numeric: true,
+        },
+        Col {
+            label: "İşaret yüksekliği",
             unit: Some("m"),
             numeric: true,
         },

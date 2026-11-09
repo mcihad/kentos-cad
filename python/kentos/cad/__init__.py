@@ -3710,6 +3710,7 @@ __all__ = [
     "SurveySolutionRow",
     "SurveyState",
     "SurveyStateName",
+    "SurveyTraverseHeights",
     "SurveyUse",
     "SurveyUseRow",
     "SurveyWork",

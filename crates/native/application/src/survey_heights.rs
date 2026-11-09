@@ -107,6 +107,37 @@ pub fn polar_undulations(settings: &ProjectSettings, input: &PolarInput) -> Opti
     })
 }
 
+/// What Poligon hesabı takes its legs with (docs/adr/4100): none where no leg is taken at its own height (no grid, no
+/// heights); else the undulations at the start, at each point after it and at the end (the points where a first
+/// computation without them puts them), with the geoid model's name, or why not, said in the window.
+pub fn traverse_undulations(
+    settings: &ProjectSettings,
+    input: &kentos_geometry_core::survey::traverse::TraverseInput,
+) -> Option<Result<(Vec<f64>, Option<String>), String>> {
+    if input.grid.is_none() || input.heights.is_none() {
+        return None;
+    }
+    let first = kentos_geometry_core::survey::traverse::TraverseInput {
+        heights: input.heights.clone().map(|h| kentos_geometry_core::survey::traverse::TraverseHeights { undulations: None, ..h }),
+        ..input.clone()
+    };
+    let r = kentos_geometry_core::survey::traverse::traverse(&first).ok()?;
+    let mut at = vec![input.start];
+    let mut p = input.start;
+    for leg in &r.legs {
+        p = Vec2::new(p.x + leg.dy, p.y + leg.dx);
+        at.push(p);
+    }
+    Some(match undulations(settings, &at) {
+        Err(why) => Err(why.words()),
+        Ok((ns, model)) => match ns.iter().position(Option::is_none) {
+            Some(0) => Err("Başlangıç noktası geoit modelinin ızgarasının dışında: kenarlar ortalama elipsoit yüksekliğinde indirildi.".into()),
+            Some(k) => Err(format!("{k}. nokta geoit modelinin ızgarasının dışında: kenarlar ortalama elipsoit yüksekliğinde indirildi.")),
+            None => Ok((ns.into_iter().flatten().collect(), model)),
+        },
+    })
+}
+
 /// What Aplikasyon takes its lines with (docs/adr/3300): none where no line is taken at its own height (no grid, no
 /// station height, no target with a height); else the undulations at the station and at each target, with the geoid
 /// model's name, or why not, said in the window. The targets are known points: no first pass is needed.

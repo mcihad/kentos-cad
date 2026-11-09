@@ -285,8 +285,11 @@ def S(x):
 def UNIT(u):
     return (Decimal(400) if u == "grad" else Decimal(360)) / TWO_PI
 
-def trav(unit, start, back, end, fore, angles, dists):
-    """A traverse adjusted as in the Hesap dialog: angles equally, coordinates by the compass rule."""
+def trav(unit, start, back, end, fore, angles, dists, heights=None):
+    """A traverse adjusted as in the Hesap dialog: angles equally, coordinates by the compass rule; with `heights`
+    (docs/adr/4100) its heights by trigonometric heighting (İTÜ Topografya, Trigonometrik nivelman): each leg's
+    S·cot z + i − t, with k plus (1 − k)·S²/(2R), R the field book's mean radius 6 371 000 m (docs/adr/0169 §3); closed
+    on a known height, the misclosure taken off in proportion to the lengths."""
     k = UNIT(unit)
     A = [Decimal(a) / k for a in angles]
     Sd = [Decimal(d) for d in dists]
@@ -321,6 +324,30 @@ def trav(unit, start, back, end, fore, angles, dists):
     if end is not None:
         pts.pop()
     out["points"], out["legs"], out["length"] = pts, legs, S(L)
+    if heights is not None:
+        raw_h = []
+        for i, s in enumerate(Sd):
+            z = Decimal(heights["zeniths"][i]) / k
+            d = s * dcos(z) / dsin(z) + Decimal(heights["instruments"][i]) - Decimal(heights["targets"][i])
+            if heights.get("refraction") is not None:
+                d += (1 - Decimal(heights["refraction"])) * s * s / (2 * Decimal(6371000))
+            raw_h.append(d)
+        f_h = None
+        if heights.get("end") is not None:
+            f_h = sum(raw_h) - (Decimal(heights["end"]) - Decimal(heights["start"]))
+            out["heightMisclosure"] = S(f_h)
+        at, hs = Decimal(heights["start"]), []
+        for leg, d, s in zip(legs, raw_h, Sd):
+            v = None if f_h is None else -f_h * s / L
+            d = d + (v or 0)
+            leg["dh"] = S(d)
+            if v is not None:
+                leg["vh"] = S(v)
+            at += d
+            hs.append(S(at))
+        if end is not None:
+            hs.pop()
+        out["heights"] = hs
     return out
 
 def pt(dx, dy):
@@ -365,6 +392,29 @@ angles, dists = notes("grad", [A, pt("60.2", "70.9"), pt("180.4", "95.35")], A0,
 case("Açık poligon (grad)", "surveyTraverse",
      [{"unit": "grad", "start": A[0], "back": A0[0], "end": None, "fore": None, "angles": [float(a) for a in angles], "distances": [float(d) for d in dists]}],
      trav("grad", A, A0, None, None, angles, dists), "1e-8")
+
+# docs/adr/4100: the connected traverse with its heights by trigonometric heighting: zeniths read to 0.1 mgon, the
+# instrument and target heights, the start's and the end's heights; the misclosure taken off by the lengths.
+angles, dists = notes("grad", route, A0, E0, 4, [(2, "0.0025")])
+hts = {"start": "912.345", "end": "905.117", "zeniths": ["101.2345", "98.7766", "100.5021", "99.8754"],
+       "instruments": ["1.552", "1.498", "1.605", "1.533"], "targets": ["1.700", "1.300", "1.650", "1.500"]}
+case("Bağlı poligon trigonometrik kotlarla (grad)", "surveyTraverse",
+     [{"unit": "grad", "start": A[0], "back": A0[0], "end": E_[0], "fore": E0[0], "angles": [float(a) for a in angles],
+       "distances": [float(d) for d in dists],
+       "heights": {"start": float(hts["start"]), "end": float(hts["end"]), "zeniths": [float(z) for z in hts["zeniths"]],
+                   "instruments": [float(v) for v in hts["instruments"]], "targets": [float(v) for v in hts["targets"]]}}],
+     trav("grad", A, A0, E_, E0, angles, dists, hts), "1e-8")
+# Open, with the earth's curvature and refraction: k 0.13 (the field book's R).
+angles, dists = notes("grad", [A, pt("60.2", "70.9"), pt("180.4", "95.35")], A0, None, 4)
+hts = {"start": "120.5", "zeniths": ["97.3456", "102.0011"], "instruments": ["1.5", "1.45"], "targets": ["1.8", "2.0"],
+       "refraction": "0.13"}
+case("Açık poligon kotlarla, yer küreselliği ve kırılma (k)", "surveyTraverse",
+     [{"unit": "grad", "start": A[0], "back": A0[0], "end": None, "fore": None, "angles": [float(a) for a in angles],
+       "distances": [float(d) for d in dists],
+       "heights": {"start": float(hts["start"]), "zeniths": [float(z) for z in hts["zeniths"]],
+                   "instruments": [float(v) for v in hts["instruments"]], "targets": [float(v) for v in hts["targets"]],
+                   "refraction": 0.13}}],
+     trav("grad", A, A0, None, None, angles, dists, hts), "1e-8")
 
 # Kutupsal alım (grad): slope distances with zenith angles, heights.
 St, Bk = pt("10.5", "-20.25"), pt("250.125", "180.75")

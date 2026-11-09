@@ -89748,6 +89748,15 @@
             ],
             "x-unit": "survey-angle"
           },
+          "heightMisclosure": {
+            "description": "Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          },
           "ids": {
             "items": {
               "format": "uint32",
@@ -197794,6 +197803,58 @@
       ],
       "type": "string"
     },
+    "SurveyTraverseHeights": {
+      "additionalProperties": false,
+      "description": "A traverse's heights by trigonometric heighting (docs/adr/4100): the start's height (none: the start point's own,\na drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height\nclosure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0\nstraight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the\nearth's curvature and refraction (docs/adr/0169 §3).",
+      "properties": {
+        "end": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "instruments": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "start": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "targets": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "m"
+        },
+        "zeniths": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array",
+          "x-unit": "survey-angle"
+        }
+      },
+      "required": [
+        "zeniths",
+        "instruments",
+        "targets"
+      ],
+      "type": "object"
+    },
     "SurveyUse": {
       "additionalProperties": false,
       "description": "Objects made from accepted points (a surface, a contour): the operation, the objects and each point's revision.",
@@ -197910,6 +197971,17 @@
                   "type": "null"
                 }
               ]
+            },
+            "heights": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SurveyTraverseHeights"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The new points' heights by trigonometric heighting (docs/adr/4100); none: the points without heights."
             },
             "kind": {
               "const": "traverse",

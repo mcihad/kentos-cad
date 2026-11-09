@@ -78,6 +78,6 @@ kendisinde nokta başına karar (ADR 1230 §7'nin öbür yarısı)”.
 ## Sonra
 
 - Zamana bağlı Helmert (ITRF çerçeveleri arası): resmî parametre kaynağı ve kullanım hakkı bekleniyor.
-- Poligon'da trigonometrik kotla bacakların kendi yüksekliği (ADR 3300 Sonra).
+- ~~Poligon'da trigonometrik kotla bacakların kendi yüksekliği (ADR 3300 Sonra)~~: [ADR 4100](4100-traverse-trigonometric-heights.md).
 - EPSG'nin çokgen kullanım alanları (bugün kutu; ADR 2500 Sonra).
 - Web (TODOS §0.2).

@@ -96373,12 +96373,14 @@ class SurveyPointsWritten(_Model):
     Attributes:
         ids: Unit: id.
         angle_misclosure: Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one. Unit: survey-angle.
+        height_misclosure: Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known. Unit: m.
         linear_misclosure: Unit: m.
     """
     ids: list[int]
     uids: list[str]
     revision: str
     angle_misclosure: float | None | Unset = UNSET
+    height_misclosure: float | None | Unset = UNSET
     linear_misclosure: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -96388,6 +96390,8 @@ class SurveyPointsWritten(_Model):
         out["revision"] = self.revision
         if self.angle_misclosure is not UNSET:
             out["angleMisclosure"] = None if self.angle_misclosure is None else float(self.angle_misclosure)
+        if self.height_misclosure is not UNSET:
+            out["heightMisclosure"] = None if self.height_misclosure is None else float(self.height_misclosure)
         if self.linear_misclosure is not UNSET:
             out["linearMisclosure"] = None if self.linear_misclosure is None else float(self.linear_misclosure)
         return out
@@ -96399,6 +96403,7 @@ class SurveyPointsWritten(_Model):
             uids=list(data["uids"]),
             revision=data["revision"],
             angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
+            height_misclosure=UNSET if "heightMisclosure" not in data else None if data["heightMisclosure"] is None else float(data["heightMisclosure"]),
             linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
         )
 
@@ -97023,6 +97028,48 @@ class SurveySolutionRow(_Model):
             fix=data.get("fix", UNSET),
             mark_height=UNSET if "markHeight" not in data else None if data["markHeight"] is None else float(data["markHeight"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else [float(e0) for e0 in data["sigma"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyTraverseHeights(_Model):
+    """A traverse's heights by trigonometric heighting (docs/adr/4100): the start's height (none: the start point's own,
+    a drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height
+    closure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0
+    straight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the
+    earth's curvature and refraction (docs/adr/0169 §3).
+    Attributes:
+        zeniths: Unit: survey-angle.
+        instruments: Unit: m.
+        targets: Unit: m.
+        end: Unit: elevation.
+        start: Unit: elevation.
+    """
+    zeniths: list[float]
+    instruments: list[float]
+    targets: list[float]
+    end: float | None | Unset = UNSET
+    start: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["zeniths"] = [float(e0) for e0 in self.zeniths]
+        out["instruments"] = [float(e0) for e0 in self.instruments]
+        out["targets"] = [float(e0) for e0 in self.targets]
+        if self.end is not UNSET:
+            out["end"] = None if self.end is None else float(self.end)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyTraverseHeights:
+        return cls(
+            zeniths=[float(e0) for e0 in data["zeniths"]],
+            instruments=[float(e0) for e0 in data["instruments"]],
+            targets=[float(e0) for e0 in data["targets"]],
+            end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
 
 
@@ -127796,6 +127843,7 @@ class TraverseSurveyWork(SurveyWork):
     Attributes:
         angles: Unit: survey-angle.
         distances: Unit: m.
+        heights: The new points' heights by trigonometric heighting (docs/adr/4100); none: the points without heights.
     """
     TAG_VALUE: ClassVar[str] = "traverse"
     shape: TraverseShape | TraverseShapeName
@@ -127805,6 +127853,7 @@ class TraverseSurveyWork(SurveyWork):
     distances: list[float]
     end: KnownPoint | None | Unset = UNSET
     fore: KnownPoint | None | Unset = UNSET
+    heights: SurveyTraverseHeights | None | Unset = UNSET
     names: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -127818,6 +127867,8 @@ class TraverseSurveyWork(SurveyWork):
             out["end"] = None if self.end is None else self.end.to_json()
         if self.fore is not UNSET:
             out["fore"] = None if self.fore is None else self.fore.to_json()
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.names is not UNSET:
             out["names"] = list(self.names)
         return out
@@ -127832,6 +127883,7 @@ class TraverseSurveyWork(SurveyWork):
             distances=[float(e0) for e0 in data["distances"]],
             end=UNSET if "end" not in data else None if data["end"] is None else KnownPoint.from_json(data["end"]),
             fore=UNSET if "fore" not in data else None if data["fore"] is None else KnownPoint.from_json(data["fore"]),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else SurveyTraverseHeights.from_json(data["heights"]),
             names=list(data["names"]) if "names" in data else UNSET,
         )
 
@@ -134535,6 +134587,7 @@ __all__ = [
     "SurveySolutionRow",
     "SurveyState",
     "SurveyStateName",
+    "SurveyTraverseHeights",
     "SurveyUse",
     "SurveyUseRow",
     "SurveyWork",

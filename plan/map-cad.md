@@ -32,7 +32,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080 | tipli katman profili; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700 | Poligon'da trigonometrik kotla bacağın kendi yüksekliği; EPSG'nin çokgen kullanım alanları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
@@ -403,6 +403,16 @@ karşı okunur, dışındaki notlarıyla söylenir, yine dönüştürülür (`ou
 dört yeni bağımsız durum, üç üretici aynı kuralı paylaşır (78 durum), bağımsız Python testi, MCP; Koordinat dönüştür
 penceresinde tek noktanın uyarısı ve listenin Alan dışı sütunu. Açık: Poligon'da trigonometrik kot, çokgen kullanım
 alanları, zamana bağlı Helmert (resmî parametre bekler).
+
+**9 Kasım 2026, sekizinci tur — Poligon hesabında trigonometrik kotlar ([ADR 4100](../docs/adr/4100-traverse-trigonometric-heights.md)).**
+Kapsam: **CAD + CBS**. Dayanak: İTÜ Topografya Bölüm 8'in K_B = K_A + i − t + S·cot z + (1 − k)·S²/2r kuralı, Trimble
+Access'in düzeltmeler sayfası, KentOS'un k ve 6 371 000 m kuralı (ADR 0169 §3). Kanıtlanan: çekirdeğin `traverse`'ü
+başucu açısı, alet ve işaret yüksekliğiyle kot farklarını, kot kapanmasını (uzunluklarla orantılı dağıtılır) ve yeni
+noktaların kotlarını verir; uzunluklar projeksiyona indiriliyorsa her kenar uçlarının H + N ortalamasında indirilir;
+`cad.survey.points`'in `work.heights`'ı ve `heightMisclosure`'ı; üç bağımsız üreticide dokuz yeni durum (eski sayılar
+aynı), bağımsız Python testi, MCP; masaüstünde Kotlar anahtarı, üç sütun, kot alanları, H sütunu ve özet; TG-20
+projesinde kenarın çarpanları `cad.crs.factors`'ınkiyle aynı. Açık: karşılıklı başucu açıları, kot kapanması toleransı
+(kaynak bekler), çokgen kullanım alanları, zamana bağlı Helmert.
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

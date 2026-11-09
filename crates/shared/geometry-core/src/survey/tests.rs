@@ -6,7 +6,7 @@
 
 use super::intersection::{forward_intersection, resection};
 use super::polar::{PolarInput, Shot, StakeoutInput, polar_survey, stakeout};
-use super::traverse::{TraverseInput, traverse};
+use super::traverse::{TraverseHeights, TraverseInput, traverse};
 use super::*;
 
 struct Rng(u64);
@@ -86,6 +86,7 @@ fn a_connected_traverse_gives_back_its_points() {
             angles,
             distances,
             grid: None,
+            heights: None,
         })
         .unwrap();
         assert_eq!(r.points.len(), pts.len() - 2);
@@ -119,6 +120,7 @@ fn misclosures_are_the_errors_put_in() {
         angles,
         distances,
         grid: None,
+        heights: None,
     };
     let r = traverse(&input(angles.clone(), distances.clone())).unwrap();
     assert!((r.angle_misclosure.unwrap() - 0.003).abs() < 1e-9, "{r:?}");
@@ -168,6 +170,7 @@ fn closed_and_open_traverses() {
         angles,
         distances,
         grid: None,
+        heights: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 3);
@@ -186,6 +189,7 @@ fn closed_and_open_traverses() {
         angles,
         distances,
         grid: None,
+        heights: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 3);
@@ -202,6 +206,7 @@ fn closed_and_open_traverses() {
         angles: angles[..3].to_vec(),
         distances,
         grid: None,
+        heights: None,
     })
     .unwrap();
     assert_eq!(r.points.len(), 2);
@@ -220,6 +225,7 @@ fn traverse_input_is_checked() {
             angles,
             distances,
             grid: None,
+            heights: None,
         })
     };
     assert!(
@@ -257,6 +263,7 @@ fn traverse_input_is_checked() {
             angles: vec![1.0],
             distances: vec![1.0],
             grid: None,
+            heights: None,
         })
         .unwrap_err()
         .contains("birimi")
@@ -272,6 +279,7 @@ fn traverse_input_is_checked() {
             angles: vec![1.0],
             distances: vec![1.0],
             grid: None,
+            heights: None,
         })
         .unwrap_err(),
         "Başlangıç noktası ile başlangıçta bakılan nokta aynı yerde; doğrultu tanımsız."
@@ -481,4 +489,130 @@ fn undulations_are_one_more_than_the_shots() {
     // Without the grid the undulations change nothing.
     let without = PolarInput { undulations: None, ..input(vec![36.0, 36.1]) };
     assert_eq!(polar_survey(&input(vec![36.0, 36.1])), polar_survey(&without));
+}
+
+/// Docs/adr/4100: a traverse's heights by trigonometric heighting. A square walked counter-clockwise from TM (as
+/// `the_traverse_closes_on_a_square`), each leg 100 m: Δh = S·cot z + i − t; closed back on the start's height, the
+/// misclosure is taken off in proportion to the lengths; with k and a radius the curvature and refraction
+/// (1 − k)·S²/(2R) is added; the counts and the zenith's range are refused.
+#[test]
+fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
+    let unit = Unit::DEG;
+    let sq = [
+        TM,
+        Vec2::new(TM.x + 100.0, TM.y),
+        Vec2::new(TM.x + 100.0, TM.y + 100.0),
+        Vec2::new(TM.x, TM.y + 100.0),
+        TM,
+    ];
+    let back = Vec2::new(TM.x - 50.0, TM.y);
+    let (angles, distances) = measure(unit, &sq, back, Some(back));
+    // z such that S·cot z = 1, 2, −1.5 and −1.6 m: the last 0.1 m off the closure.
+    let zenith = |d: f64| 90.0 - (d / 100.0).atan().to_degrees();
+    let heights = TraverseHeights {
+        start: 850.0,
+        end: Some(850.0),
+        zeniths: vec![zenith(1.0), zenith(2.0), zenith(-1.5), zenith(-1.6)],
+        instruments: vec![1.5, 1.4, 1.6, 1.5],
+        targets: vec![1.5, 1.4, 1.6, 1.5],
+        refraction: None,
+        undulations: None,
+    };
+    let input = TraverseInput {
+        unit: "deg".into(),
+        start: TM,
+        back,
+        end: Some(TM),
+        fore: Some(back),
+        angles,
+        distances,
+        grid: None,
+        heights: Some(heights.clone()),
+    };
+    let r = traverse(&input).expect("computes");
+    let f = r.height_misclosure.expect("closed");
+    assert!((f - (-0.1)).abs() < 1e-9, "{f}");
+    let dh: Vec<f64> = r.legs.iter().map(|l| l.dh.expect("a height difference")).collect();
+    for (got, want) in dh.iter().zip([1.025, 2.025, -1.475, -1.575]) {
+        assert!((got - want).abs() < 1e-9, "{dh:?}");
+    }
+    let h = r.heights.clone().expect("heights");
+    assert_eq!(h.len(), 3, "the end is the start: not new");
+    for (got, want) in h.iter().zip([851.025, 853.05, 851.575]) {
+        assert!((got - want).abs() < 1e-9, "{h:?}");
+    }
+    // The curvature and refraction with k = 0.13 and the field book's R = 6 371 000 m (docs/adr/0169 §3): each leg's
+    // (1 − k)·S²/(2R) more.
+    let curved = traverse(&TraverseInput {
+        heights: Some(TraverseHeights { refraction: Some(0.13), end: None, ..heights.clone() }),
+        ..input.clone()
+    })
+    .expect("computes");
+    let c = 0.87 * 100.0 * 100.0 / (2.0 * 6_371_000.0);
+    assert!((curved.legs[0].dh.expect("dh") - (1.0 + c)).abs() < 1e-12);
+    assert!(curved.height_misclosure.is_none() && curved.legs[0].vh.is_none(), "an end without a height: no closure");
+    // The counts; the zenith inside (0, 180°).
+    let e = traverse(&TraverseInput {
+        heights: Some(TraverseHeights { zeniths: vec![90.0; 3], ..heights.clone() }),
+        ..input.clone()
+    })
+    .expect_err("one short");
+    assert!(e.contains("4 başucu açısı olmalı, 3 verildi"), "{e}");
+    let e = traverse(&TraverseInput {
+        heights: Some(TraverseHeights { zeniths: vec![90.0, 0.0, 90.0, 90.0], ..heights.clone() }),
+        ..input.clone()
+    })
+    .expect_err("zenith 0");
+    assert!(e.contains("2. başucu açısı 0 ile 180° arasında"), "{e}");
+    let e = traverse(&TraverseInput {
+        heights: Some(TraverseHeights { undulations: Some(vec![36.0; 4]), ..heights }),
+        ..input
+    })
+    .expect_err("undulations one short");
+    assert!(e.contains("5 olmalı, 4 verildi"), "{e}");
+}
+
+/// Docs/adr/4100: with the project's grid and the undulations each leg's height factor is taken at its own
+/// ellipsoidal height, the mean of its ends' H + N: the factor the grid gives that leg at that height.
+#[test]
+fn each_leg_s_factor_is_taken_at_its_own_height() {
+    use crate::crs::ground::{Grid, grid_factor};
+    let unit = Unit::DEG;
+    let line = [TM, Vec2::new(TM.x + 400.0, TM.y + 300.0), Vec2::new(TM.x + 900.0, TM.y + 300.0)];
+    let back = Vec2::new(TM.x - 50.0, TM.y);
+    let (angles, distances) = measure(unit, &line, back, None);
+    use crate::api::json::{FromJson, Json};
+    let tm30 = r#"{"kind":"tm","datum":"TUREF","centralMeridian":30,"scaleFactor":1,"falseEasting":500000,"falseNorthing":0}"#;
+    let system = crate::crs::System::from_json(&Json::parse(tm30).expect("JSON")).expect("TM30");
+    let grid = Grid { system: system.clone(), height: 850.0 };
+    let r = traverse(&TraverseInput {
+        unit: "deg".into(),
+        start: TM,
+        back,
+        end: None,
+        fore: None,
+        angles,
+        distances,
+        grid: Some(grid),
+        heights: Some(TraverseHeights {
+            start: 1200.0,
+            end: None,
+            zeniths: vec![90.0, 90.0],
+            instruments: vec![0.0, 0.0],
+            targets: vec![100.0, 200.0],
+            refraction: None,
+            undulations: Some(vec![36.0, 36.5, 37.0]),
+        }),
+    })
+    .expect("computes");
+    // Heights 1200, 1100, 900: the legs' own ellipsoidal heights (1236 + 1136.5)/2 and (1136.5 + 937)/2.
+    let own: Vec<f64> = r.legs.iter().map(|l| l.height.expect("its own height")).collect();
+    assert!((own[0] - 1186.25).abs() < 1e-9 && (own[1] - 1036.75).abs() < 1e-9, "{own:?}");
+    let mut at = TM;
+    for (leg, h) in r.legs.iter().zip(&own) {
+        let next = Vec2::new(at.x + leg.dy, at.y + leg.dx);
+        let f = grid_factor(&Grid { system: system.clone(), height: *h }, at, next).expect("a factor");
+        assert!((leg.height_factor.expect("its factor") - f.height_factor).abs() < 1e-9, "{leg:?}");
+        at = next;
+    }
 }

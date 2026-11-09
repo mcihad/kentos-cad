@@ -16,6 +16,18 @@
 //! is computed with them, each leg's scale and height factor are taken on
 //! its provisional line and it is computed again with the lengths on the
 //! grid, twice; the adjustment is the last's.
+//!
+//! Heights (docs/adr/4100), trigonometric heighting as İTÜ's Topografya
+//! (M. Z. Coşkun, Trigonometrik nivelman) gives it: a leg's height difference
+//! is S·cot z + i − t, S its horizontal length as measured, z the zenith angle
+//! at its station, i the instrument's and t the target's height; with a
+//! refraction coefficient k the earth's curvature and refraction (1 − k)·S²/(2R)
+//! is added as a field book's reduction adds it (docs/adr/0169 §3: R the earth's
+//! mean radius, 6 371 000 m). Closed on
+//! a known height, the misclosure (sum − known difference) is taken off the
+//! legs in proportion to their lengths. With the geoid's undulations each
+//! leg's height factor is then taken at its own ellipsoidal height (the mean
+//! of its ends' H + N) instead of the project's mean.
 
 use super::{Unit, bearing, distinct, finite, positive, signed};
 use crate::api::Op;
@@ -41,6 +53,8 @@ pub struct TraverseInput {
     /// The project's grid: the lengths are on the ground and are taken to
     /// it (docs/adr/0171 §4); none: they are the grid's already.
     pub grid: Option<Grid>,
+    /// The points' heights by trigonometric heighting (docs/adr/4100); none: a traverse in plan only.
+    pub heights: Option<TraverseHeights>,
 }
 
 crate::json_struct!(TraverseInput {
@@ -51,7 +65,35 @@ crate::json_struct!(TraverseInput {
     fore,
     angles,
     distances,
-    grid
+    grid,
+    heights
+});
+
+/// What a traverse's heights are computed from (docs/adr/4100): the start's height and, closed on a known height, the
+/// end's (kapalı: the start's again); at each leg's station the zenith angle to its next point (in the unit), the
+/// instrument's height and the target's height there (m); the refraction coefficient k (the project's; none: the
+/// earth's curvature and refraction are not taken in); the geoid's undulations N (m) at the start, at each point after
+/// it and at the end, so that each leg's height factor is taken at its own ellipsoidal height (none: at the project's
+/// mean).
+#[derive(Clone, Debug, PartialEq)]
+pub struct TraverseHeights {
+    pub start: f64,
+    pub end: Option<f64>,
+    pub zeniths: Vec<f64>,
+    pub instruments: Vec<f64>,
+    pub targets: Vec<f64>,
+    pub refraction: Option<f64>,
+    pub undulations: Option<Vec<f64>>,
+}
+
+crate::json_struct!(TraverseHeights {
+    start,
+    end,
+    zeniths,
+    instruments,
+    targets,
+    refraction,
+    undulations
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -70,6 +112,11 @@ pub struct TraverseLeg {
     pub ground: Option<f64>,
     pub scale: Option<f64>,
     pub height_factor: Option<f64>,
+    /// With heights (docs/adr/4100): the adjusted height difference, the correction the height adjustment added, and
+    /// the ellipsoidal height its height factor was taken at (its own, with the undulations).
+    pub dh: Option<f64>,
+    pub vh: Option<f64>,
+    pub height: Option<f64>,
 }
 
 crate::json_struct!(out TraverseLeg {
@@ -81,7 +128,10 @@ crate::json_struct!(out TraverseLeg {
     vx,
     ground,
     scale,
-    height_factor => "heightFactor"
+    height_factor => "heightFactor",
+    dh,
+    vh,
+    height
 });
 
 #[derive(Clone, Debug, PartialEq)]
@@ -98,6 +148,10 @@ pub struct TraverseResult {
     pub linear_misclosure: Option<f64>,
     /// Total length of the legs.
     pub length: f64,
+    /// With heights (docs/adr/4100): the new points' heights, adjusted, in `points`' order; the height misclosure (sum
+    /// of the height differences − the known difference) when the end's height is known.
+    pub heights: Option<Vec<f64>>,
+    pub height_misclosure: Option<f64>,
 }
 
 crate::json_struct!(out TraverseResult {
@@ -108,8 +162,108 @@ crate::json_struct!(out TraverseResult {
     fy,
     fx,
     linear_misclosure => "linearMisclosure",
-    length
+    length,
+    heights,
+    height_misclosure => "heightMisclosure"
 });
+
+/// A traverse's heights worked out (docs/adr/4100): each leg's adjusted height difference and its correction, every
+/// point's height (the start's, each point after it), the misclosure, each leg's own ellipsoidal height.
+struct Heights {
+    dh: Vec<f64>,
+    vh: Vec<Option<f64>>,
+    at: Vec<f64>,
+    misclosure: Option<f64>,
+    own: Option<Vec<f64>>,
+}
+
+/// The heights of `input` (its legs' horizontal lengths as measured).
+fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, String> {
+    let unit = Unit::parse(&input.unit)?;
+    let legs = input.distances.len();
+    for (list, what) in [(&h.zeniths, "başucu açısı"), (&h.instruments, "alet yüksekliği"), (&h.targets, "işaret yüksekliği")] {
+        if list.len() != legs {
+            return Err(format!("{legs} kenarlı bu poligonda {legs} {what} olmalı, {} verildi.", list.len()));
+        }
+    }
+    finite(h.start, "Başlangıç noktasının kotu")?;
+    if let Some(e) = h.end {
+        finite(e, "Bitiş noktasının kotu")?;
+    }
+    for i in 0..legs {
+        let z = unit.rad(finite(h.zeniths[i], &format!("{}. başucu açısı", i + 1))?);
+        if !(z > 0.0 && z < PI) {
+            return Err(format!(
+                "{}. başucu açısı 0 ile {} arasında olmalı (yatay nişan {}).",
+                i + 1,
+                if unit == Unit::GRAD { "200 grad" } else { "180°" },
+                if unit == Unit::GRAD { "100 grad" } else { "90°" }
+            ));
+        }
+        finite(h.instruments[i], &format!("{}. alet yüksekliği", i + 1))?;
+        finite(h.targets[i], &format!("{}. işaret yüksekliği", i + 1))?;
+    }
+    if let Some(k) = h.refraction {
+        finite(k, "Kırılma katsayısı")?;
+    }
+    if let Some(n) = &h.undulations {
+        if n.len() != legs + 1 {
+            return Err(format!(
+                "Geoit ayrımları başlangıçta, her yeni noktada ve bitişte: {} olmalı, {} verildi.",
+                legs + 1,
+                n.len()
+            ));
+        }
+        for (i, v) in n.iter().enumerate() {
+            finite(*v, &format!("{}. geoit ayrımı", i + 1))?;
+        }
+    }
+    // Each leg's height difference as measured, the curvature and refraction taken in with k.
+    let mut raw = Vec::with_capacity(legs);
+    for (i, &s) in input.distances.iter().enumerate() {
+        let z = unit.rad(h.zeniths[i]);
+        let mut d = s * cos(z) / sin(z) + h.instruments[i] - h.targets[i];
+        if let Some(k) = h.refraction {
+            d += super::fieldbook::curvature(s, k);
+        }
+        raw.push(d);
+    }
+    // Closed on a known height: the misclosure taken off in proportion to the legs' lengths.
+    let length: f64 = input.distances.iter().sum();
+    let misclosure = h.end.map(|e| raw.iter().sum::<f64>() - (e - h.start));
+    let mut dh = Vec::with_capacity(legs);
+    let mut vh = Vec::with_capacity(legs);
+    let mut heights = vec![h.start];
+    for (i, d) in raw.iter().enumerate() {
+        let v = misclosure.map(|f| -f * input.distances[i] / length);
+        let adjusted = d + v.unwrap_or(0.0);
+        dh.push(adjusted);
+        vh.push(v);
+        let last = heights[heights.len() - 1];
+        heights.push(last + adjusted);
+    }
+    // Each leg's own ellipsoidal height: the mean of its ends' H + N.
+    let own = h.undulations.as_ref().map(|n| {
+        (0..legs).map(|i| ((heights[i] + n[i]) + (heights[i + 1] + n[i + 1])) / 2.0).collect()
+    });
+    Ok(Heights { dh, vh, at: heights, misclosure, own })
+}
+
+/// `result` with the heights `h` written into it: its legs' height differences and corrections, its new points'
+/// heights (the end's, a known point, not among them) and the misclosure.
+fn with_heights(mut result: TraverseResult, h: Heights, end_known: bool) -> TraverseResult {
+    for (i, leg) in result.legs.iter_mut().enumerate() {
+        leg.dh = Some(h.dh[i]);
+        leg.vh = h.vh[i];
+    }
+    let mut points = h.at[1..].to_vec();
+    if end_known {
+        points.pop();
+    }
+    result.heights = Some(points);
+    result.height_misclosure = h.misclosure;
+    result
+}
 
 /// Computes and adjusts a traverse; with the project's grid, three times:
 /// on the lengths as measured, then twice on the lengths taken to the grid
@@ -117,17 +271,36 @@ crate::json_struct!(out TraverseResult {
 /// by the reduction itself, a few decimetres in a kilometre; the second's
 /// by micrometres).
 pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
+    let end_known = input.end.is_some();
     let Some(grid) = &input.grid else {
-        return adjusted(input);
+        let result = adjusted(input)?;
+        return match &input.heights {
+            Some(h) => {
+                let heights = heights_of(input, h)?;
+                Ok(with_heights(result, heights, end_known))
+            }
+            None => Ok(result),
+        };
     };
     let mut result = adjusted(input)?;
+    // Docs/adr/4100: the heights on the lengths as measured; with the undulations each leg's factor at its own
+    // ellipsoidal height.
+    let heights = match &input.heights {
+        Some(h) => Some(heights_of(input, h)?),
+        None => None,
+    };
+    let own = heights.as_ref().and_then(|h| h.own.clone());
     let mut factors = Vec::new();
     for _ in 0..2 {
         let mut at = input.start;
         factors.clear();
-        for leg in &result.legs {
+        for (i, leg) in result.legs.iter().enumerate() {
             let next = Vec2::new(at.x + leg.dy, at.y + leg.dx);
-            factors.push(grid_factor(grid, at, next)?);
+            let factor = match &own {
+                Some(own) => grid_factor(&Grid { system: grid.system.clone(), height: own[i] }, at, next)?,
+                None => grid_factor(grid, at, next)?,
+            };
+            factors.push(factor);
             at = next;
         }
         result = adjusted(&TraverseInput {
@@ -138,15 +311,20 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
                 .map(|(d, f)| d * f.combined())
                 .collect(),
             grid: None,
+            heights: None,
             ..input.clone()
         })?;
     }
-    for ((leg, f), ground) in result.legs.iter_mut().zip(&factors).zip(&input.distances) {
+    for (i, ((leg, f), ground)) in result.legs.iter_mut().zip(&factors).zip(&input.distances).enumerate() {
         leg.ground = Some(*ground);
         leg.scale = Some(f.scale);
         leg.height_factor = Some(f.height_factor);
+        leg.height = own.as_ref().map(|o| o[i]);
     }
-    Ok(result)
+    Ok(match heights {
+        Some(h) => with_heights(result, h, end_known),
+        None => result,
+    })
 }
 
 /// The traverse with the lengths as given.
@@ -242,6 +420,9 @@ fn adjusted(input: &TraverseInput) -> Result<TraverseResult, String> {
             ground: None,
             scale: None,
             height_factor: None,
+            dh: None,
+            vh: None,
+            height: None,
         });
         points.push(at);
     }
@@ -258,6 +439,8 @@ fn adjusted(input: &TraverseInput) -> Result<TraverseResult, String> {
         fy,
         fx,
         length,
+        heights: None,
+        height_misclosure: None,
     })
 }
 

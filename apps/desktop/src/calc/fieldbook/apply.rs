@@ -256,9 +256,11 @@ impl crate::app::App {
         let (start, end) = (place(0), place(n - 1));
         let back = back.to_owned();
         let fore = fore.map(str::to_owned);
-        let first = [String::new(), angle(0), leg(0)];
-        let rows: Vec<[String; 3]> = (1..n - 1)
-            .map(|i| [t.stations[i].clone(), angle(i), leg(i)])
+        // The heights' columns (docs/adr/4100) are left to the window.
+        let blank = String::new;
+        let first = [String::new(), angle(0), leg(0), blank(), blank(), blank()];
+        let rows: Vec<[String; 6]> = (1..n - 1)
+            .map(|i| [t.stations[i].clone(), angle(i), leg(i), blank(), blank(), blank()])
             .collect();
         let last_angle = if fore.is_some() {
             angle(n - 1)
@@ -279,7 +281,7 @@ impl crate::app::App {
         traverse.fore = fore.unwrap_or_default();
         traverse.first = first;
         traverse.rows = rows;
-        traverse.last = [String::new(), last_angle, String::new()];
+        traverse.last = [String::new(), last_angle, String::new(), String::new(), String::new(), String::new()];
         self.say(
             Level::Success,
             format!("Karne editörü: {n} istasyonlu poligon Poligon hesabı'na aktarıldı."),

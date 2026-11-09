@@ -32,6 +32,33 @@ pub enum KnownPoint {
     },
 }
 
+/// A traverse's heights by trigonometric heighting (docs/adr/4100): the start's height (none: the start point's own,
+/// a drawing point with a height) and the end's (bağlı; none: the end point's own when it has one, else no height
+/// closure; kapalı: the start's); at each leg's station the zenith angle to its next point (in the project's unit, 0
+/// straight up), the instrument's height and the target's (m). The project's refraction coefficient k takes in the
+/// earth's curvature and refraction (docs/adr/0169 §3).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyTraverseHeights {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub start: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub end: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "survey-angle")))]
+    pub zeniths: Vec<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub instruments: Vec<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub targets: Vec<f64>,
+}
+
 /// A traverse's shape.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -99,6 +126,10 @@ pub enum SurveyWork {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
         names: Vec<String>,
+        /// The new points' heights by trigonometric heighting (docs/adr/4100); none: the points without heights.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        heights: Option<SurveyTraverseHeights>,
     },
     /// Kutupsal alım (docs/adr/0070): from `station` oriented on `back` read at `backReading`, each shot a point;
     /// with a zenith angle and the station's height its height too (the project's k).
@@ -186,6 +217,11 @@ pub struct SurveyPointsWritten {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub linear_misclosure: Option<f64>,
+    /// Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height_misclosure: Option<f64>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }

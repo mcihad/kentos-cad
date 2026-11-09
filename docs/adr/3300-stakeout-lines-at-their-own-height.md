@@ -61,7 +61,7 @@ Aplikasyon'da noktaların kotlarıyla çizgi yüksekliği (bugün ortalama)”n�
 
 ## Sonra
 
-- Poligon hesabında trigonometrik kotla bacakların kendi yüksekliği.
+- ~~Poligon hesabında trigonometrik kotla bacakların kendi yüksekliği~~: [ADR 4100](4100-traverse-trigonometric-heights.md).
 - Gauss ortalama yarıçapıyla çarpan seçeneği; Mesafe ölç ve Alan hesapla'nın satırlarında noktaların kotları
   (ADR 2900 Sonra).
 - Web (TODOS §0.2): Aplikasyon'un web penceresi aynı çekirdeği çağırır.

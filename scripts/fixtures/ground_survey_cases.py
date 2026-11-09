@@ -19,7 +19,10 @@ at the geodesic's middle in its direction there, ground_cases.py's rule), at the
   the targets' heights and the undulations at each (docs/adr/3300), a line to a target with a height is taken at its own
   height, the mean of its two ends' ellipsoidal heights; a target without one at the project's mean height.
 - Poligon hesabı: a connected traverse through known points, its angles from the grid and its legs' ground lengths;
-  the core must give the points back (within 1e-6 m) with no misclosure (within 1e-6 m).
+  the core must give the points back (within 1e-6 m) with no misclosure (within 1e-6 m). With the points' heights and
+  the undulations at each (docs/adr/4100), each leg is reduced at its own height, the mean of its ends' ellipsoidal
+  heights, and its zenith angle is built from its ground length and the height difference less the instrument's and
+  plus the target's height (S·cot z = ΔH − i + t; no refraction): the core must give the heights back too.
 
 Lengths agree within 1e-6 m, factors within 1e-10 (PROJ's factors are numerical derivatives).
 """
@@ -142,10 +145,12 @@ def stakeout(name, system, height, unit, station, back, targets, station_z=None,
     return {"name": name, "input": input_, "expect": expect}
 
 
-def traverse(name, system, height, unit, back, points, fore):
-    """A connected traverse through `points` (its first the start, its last the end), oriented on `back` and `fore`."""
+def traverse(name, system, height, unit, back, points, fore, heights=None):
+    """A connected traverse through `points` (its first the start, its last the end), oriented on `back` and `fore`.
+    `heights` (docs/adr/4100): (the points' heights, the undulations at each, the instrument's and the target's height
+    at each leg)."""
     turn = TURN[unit]
-    angles, lengths, legs = [], [], []
+    angles, lengths, legs, zeniths = [], [], [], []
     prev = back
     for i in range(len(points)):
         here = points[i]
@@ -153,17 +158,31 @@ def traverse(name, system, height, unit, back, points, fore):
         # The angle at a station, clockwise from the previous point to the next.
         angles.append((bearing(here, nxt, unit) - bearing(here, prev, unit)) % turn)
         if i + 1 < len(points):
-            k, hf = factors(system, height, here, nxt)
+            own = None
+            if heights is not None:
+                hs, ns, _, _ = heights
+                own = ((hs[i] + ns[i]) + (hs[i + 1] + ns[i + 1])) / 2
+            k, hf = factors(system, height if own is None else own, here, nxt)
             grid_len = dist(here, nxt)
-            lengths.append(grid_len / (k * hf))
-            legs.append({"distance": grid_len, "scale": k, "heightFactor": hf})
+            ground_len = grid_len / (k * hf)
+            lengths.append(ground_len)
+            legs.append({"distance": grid_len, "scale": k, "heightFactor": hf, **({} if own is None else {"height": own})})
+            if heights is not None:
+                hs, _, inst, tgt = heights
+                # S·cot z = ΔH − i + t: z = 90° − atan((ΔH − i + t)/S), in the unit.
+                z = math.pi / 2 - math.atan((hs[i + 1] - hs[i] - inst[i] + tgt[i]) / ground_len)
+                zeniths.append(z * turn / (2 * math.pi))
         prev = here
-    return {"name": name, "input": {"unit": unit, "start": {"x": points[0][0], "y": points[0][1]},
-                                    "back": {"x": back[0], "y": back[1]},
-                                    "end": {"x": points[-1][0], "y": points[-1][1]},
-                                    "fore": {"x": fore[0], "y": fore[1]}, "angles": angles, "distances": lengths,
-                                    "grid": {"system": system, "height": height}},
-            "expect": {"points": [{"x": p[0], "y": p[1]} for p in points[1:-1]], "legs": legs}}
+    input_ = {"unit": unit, "start": {"x": points[0][0], "y": points[0][1]}, "back": {"x": back[0], "y": back[1]},
+              "end": {"x": points[-1][0], "y": points[-1][1]}, "fore": {"x": fore[0], "y": fore[1]}, "angles": angles,
+              "distances": lengths, "grid": {"system": system, "height": height}}
+    expect = {"points": [{"x": p[0], "y": p[1]} for p in points[1:-1]], "legs": legs}
+    if heights is not None:
+        hs, ns, inst, tgt = heights
+        input_["heights"] = {"start": hs[0], "end": hs[-1], "zeniths": zeniths, "instruments": inst, "targets": tgt,
+                             "undulations": ns}
+        expect["heights"] = hs[1:-1]
+    return {"name": name, "input": input_, "expect": expect}
 
 
 def at(o, pts):
@@ -226,6 +245,11 @@ def build():
         traverse("UTM 36N'de bağlı poligon, h 1200, derece", utm36, 1200.0, "deg", (ank[0] + 200.0, ank[1] - 500.0),
                  at(ank, [(0, 0), (-420.0, 380.0), (-910.0, 520.0), (-1300.0, 1040.0)]),
                  (ank[0] - 1800.0, ank[1] + 1500.0)),
+        # docs/adr/4100: its heights by trigonometric heighting, each leg at its own height.
+        traverse("UTM 36N'de bağlı poligon trigonometrik kotlarla: her kenar kendi yüksekliğinde", utm36, 1200.0, "deg",
+                 (ank[0] + 200.0, ank[1] - 500.0), at(ank, [(0, 0), (-420.0, 380.0), (-910.0, 520.0), (-1300.0, 1040.0)]),
+                 (ank[0] - 1800.0, ank[1] + 1500.0),
+                 ([1120.25, 1185.5, 1320.75, 1290.0], [36.21, 36.24, 36.27, 36.3], [1.55, 1.48, 1.6], [1.7, 1.3, 1.65])),
     ]
     import pyproj
     return {"format": "kentos.ground-survey", "version": 1, "proj": pyproj.proj_version_str,

@@ -162,6 +162,8 @@ fn unit_name(doc: &Document, input: &SurveyPoints) -> &'static str {
 struct Laid {
     points: Vec<NewPoint>,
     kind: &'static str,
+    /// Docs/adr/4100: a traverse's height misclosure.
+    height_misclosure: Option<f64>,
     operation: CreateOperation,
     angle_misclosure: Option<f64>,
     linear_misclosure: Option<f64>,
@@ -169,6 +171,19 @@ struct Laid {
 
 fn refused(e: String) -> Stop {
     refuse(codes::SURVEY_REFUSED, e, "work")
+}
+
+/// A known point's own height (docs/adr/4100): a drawing point's, when it has one; none for one given by its place.
+fn known_height(doc: &Document, k: &KnownPoint) -> Option<f64> {
+    let KnownPoint::Named { name } = k else { return None };
+    let key = upper(name.trim());
+    doc.entities().find_map(|e| match e {
+        Entity::Point(pt) => {
+            let own = pt.base.label.as_deref().or_else(|| pt.base.attrs.get("Ad").map(String::as_str)).unwrap_or("");
+            (!key.is_empty() && upper(own) == key).then_some(pt.z).flatten()
+        }
+        _ => None,
+    })
 }
 
 fn finite_all(values: &[f64], what: &str, path: &str) -> Result<(), Stop> {
@@ -192,9 +207,33 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
             angles,
             distances,
             names,
+            heights,
         } => {
             finite_all(angles, "Açı", "work.angles")?;
             finite_all(distances, "Uzunluk", "work.distances")?;
+            // Docs/adr/4100: the heights asked: the start's (given, or the start point's own), the end's.
+            let wanted = match heights {
+                None => None,
+                Some(h) => {
+                    finite_all(&h.zeniths, "Başucu açısı", "work.heights.zeniths")?;
+                    finite_all(&h.instruments, "Alet yüksekliği", "work.heights.instruments")?;
+                    finite_all(&h.targets, "İşaret yüksekliği", "work.heights.targets")?;
+                    let Some(z0) = h.start.or_else(|| known_height(doc, start)) else {
+                        return Err(refuse(
+                            codes::SURVEY_REFUSED,
+                            "Başlangıç noktasının kotu yok: kotunu verin (heights.start) ya da kotu olan bir çizim noktasından başlayın.",
+                            "work.heights.start",
+                        ));
+                    };
+                    checks::finite(z0, "Başlangıç noktasının kotu", "Sonlu bir sayı verin.", "work.heights.start")?;
+                    let z1 = match shape {
+                        TraverseShape::Closed => Some(z0),
+                        TraverseShape::Open => None,
+                        TraverseShape::Connected => h.end.or_else(|| end.as_ref().and_then(|e| known_height(doc, e))),
+                    };
+                    Some((h, z0, z1))
+                }
+            };
             let start = known(doc, start, "work.start")?;
             let back = known(doc, back, "work.back")?;
             let (end, fore) = match shape {
@@ -216,7 +255,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                     (Some(end), fore)
                 }
             };
-            let r = traverse(&TraverseInput {
+            let mut input = TraverseInput {
                 unit: unit.to_owned(),
                 start,
                 back,
@@ -225,8 +264,23 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angles: angles.clone(),
                 distances: distances.clone(),
                 grid: survey_grid(settings),
-            })
-            .map_err(refused)?;
+                heights: wanted.map(|(h, z0, z1)| kentos_geometry_core::survey::traverse::TraverseHeights {
+                    start: z0,
+                    end: z1,
+                    zeniths: h.zeniths.clone(),
+                    instruments: h.instruments.clone(),
+                    targets: h.targets.clone(),
+                    refraction: Some(settings.refraction()),
+                    undulations: None,
+                }),
+            };
+            // Each leg at its own height, as Kutupsal alım reduces its lines (docs/adr/2900 §3, 4100).
+            if let Some(Ok((u, _))) = crate::survey_heights::traverse_undulations(settings, &input)
+                && let Some(h) = input.heights.as_mut()
+            {
+                h.undulations = Some(u);
+            }
+            let r = traverse(&input).map_err(refused)?;
             let points = r
                 .points
                 .iter()
@@ -238,7 +292,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                         .filter(|n| !n.is_empty())
                         .map_or_else(|| format!("P{}", i + 1), str::to_owned),
                     p,
-                    z: None,
+                    z: r.heights.as_ref().and_then(|h| h.get(i).copied()),
                 })
                 .collect();
             Ok(Laid {
@@ -247,6 +301,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 operation: CreateOperation::Traverse,
                 angle_misclosure: r.angle_misclosure,
                 linear_misclosure: r.linear_misclosure,
+                height_misclosure: r.height_misclosure,
             })
         }
         SurveyWork::Polar {
@@ -311,6 +366,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 operation: CreateOperation::PolarSurvey,
                 angle_misclosure: None,
                 linear_misclosure: None,
+                height_misclosure: None,
             })
         }
         SurveyWork::Forward {
@@ -334,6 +390,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 operation: CreateOperation::ForwardIntersection,
                 angle_misclosure: None,
                 linear_misclosure: None,
+                height_misclosure: None,
             })
         }
         SurveyWork::Resection {
@@ -359,6 +416,7 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 operation: CreateOperation::Resection,
                 angle_misclosure: None,
                 linear_misclosure: None,
+                height_misclosure: None,
             })
         }
     }
@@ -418,6 +476,7 @@ fn write_execute(
                 uids: output.created,
                 angle_misclosure: laid.angle_misclosure,
                 linear_misclosure: laid.linear_misclosure,
+                height_misclosure: laid.height_misclosure,
                 revision: output.revision,
             },
             warnings,

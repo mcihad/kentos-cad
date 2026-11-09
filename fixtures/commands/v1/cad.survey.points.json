@@ -1391,6 +1391,943 @@
       ]
     },
     {
+      "name": "Poligon hesabı kotlarla: bağlı, iki uç kotu verilmiş",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12785691729631,
+                  99.07366704223773,
+                  99.62584491983587
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ]
+              }
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0,
+              "heightMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "101.200"
+                },
+                "z": 101.2
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "102.900"
+                },
+                "z": 102.9
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı kotlarla: kapalı, 12 mm kot kapanması kenarlara dağıtılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "closed",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "angles": [
+                140.96655293982667,
+                113.27130798716263,
+                100.00000000000003,
+                95.7621390730107,
+                350.0
+              ],
+              "distances": [
+                100.0,
+                106.30145812734649,
+                106.30145812734649,
+                127.27922061357856
+              ],
+              "names": [
+                "K1",
+                "K2",
+                "K3"
+              ],
+              "heights": {
+                "start": 50.0,
+                "zeniths": [
+                  99.30018111259571,
+                  100.95141505470225,
+                  99.22195484610313,
+                  100.30065645070187
+                ],
+                "instruments": [
+                  1.5,
+                  1.5,
+                  1.5,
+                  1.5
+                ],
+                "targets": [
+                  1.6,
+                  1.4,
+                  1.5,
+                  1.7
+                ]
+              }
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8,
+                9
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8",
+                "$uidOf:9"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0,
+              "heightMisclosure": 0.01200000000000001
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "K1",
+                "p": {
+                  "x": 487080,
+                  "y": 4419940
+                },
+                "attrs": {
+                  "Ad": "K1",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "50.997"
+                },
+                "z": 50.997271996520375
+              },
+              "8": {
+                "kind": "point",
+                "label": "K2",
+                "p": {
+                  "x": 487160,
+                  "y": 4420010
+                },
+                "attrs": {
+                  "Ad": "K2",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "49.506"
+                },
+                "z": 49.50637208904377
+              },
+              "9": {
+                "kind": "point",
+                "label": "K3",
+                "p": {
+                  "x": 487090,
+                  "y": 4420090
+                },
+                "attrs": {
+                  "Ad": "K3",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "50.803"
+                },
+                "z": 50.803472181567166
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı kotlarla: başlangıç kotu A noktasının kendisinden",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "end": 103.5,
+                "zeniths": [
+                  99.12785691729631,
+                  99.07366704223773,
+                  99.62584491983587
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ]
+              }
+            }
+          },
+          "within": 1e-06,
+          "result": {
+            "status": "completed",
+            "output": {
+              "ids": [
+                7,
+                8
+              ],
+              "uids": [
+                "$uidOf:7",
+                "$uidOf:8"
+              ],
+              "revision": "$current",
+              "angleMisclosure": 0,
+              "linearMisclosure": 0,
+              "heightMisclosure": 0
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "fields": {
+              "7": {
+                "kind": "point",
+                "label": "P101",
+                "p": {
+                  "x": 487090,
+                  "y": 4420040
+                },
+                "attrs": {
+                  "Ad": "P101",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "101.200"
+                },
+                "z": 101.2
+              },
+              "8": {
+                "kind": "point",
+                "label": "P102",
+                "p": {
+                  "x": 487190,
+                  "y": 4420070
+                },
+                "attrs": {
+                  "Ad": "P102",
+                  "Tür": "Poligon noktası",
+                  "Z (m)": "102.900"
+                },
+                "z": 102.9
+              }
+            },
+            "canUndo": true,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Poligon hesabı",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "canUndo": false,
+            "canRedo": true
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ürün komutu",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 487000,
+          "y": 4420000
+        },
+        "layers": [
+          {
+            "id": "yapi",
+            "name": "Yapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli katman",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli katman",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "pafta",
+            "name": "Pafta",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "sinir",
+                "name": "Sınır",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "arsiv",
+            "name": "Arşiv",
+            "type": "group",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "eski",
+                "name": "Eski",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "taslak",
+            "name": "Taslak",
+            "type": "group",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "notlar",
+                "name": "Notlar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        ],
+        "activeLayer": "yapi",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "A"
+            },
+            "label": "A",
+            "p": {
+              "x": 487000,
+              "y": 4420000
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "R"
+            },
+            "label": "R",
+            "p": {
+              "x": 487000,
+              "y": 4420100
+            }
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "E"
+            },
+            "label": "E",
+            "p": {
+              "x": 487300,
+              "y": 4420060
+            }
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "F"
+            },
+            "label": "F",
+            "p": {
+              "x": 487400,
+              "y": 4420060
+            }
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "B"
+            },
+            "label": "B",
+            "p": {
+              "x": 487200,
+              "y": 4420000
+            }
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "yapi",
+            "attrs": {
+              "Ad": "C"
+            },
+            "label": "C",
+            "p": {
+              "x": 487100,
+              "y": 4420200
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Poligon hesabı kotlarla: başlangıç kotu yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "end": 103.5,
+                "zeniths": [
+                  99.12785691729631,
+                  99.07366704223773,
+                  99.62584491983587
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "Başlangıç noktasının kotu yok: kotunu verin (heights.start) ya da kotu olan bir çizim noktasından başlayın.",
+              "path": "work.heights.start"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı kotlarla: başucu açısı sayısı uymuyor",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12785691729631,
+                  99.07366704223773
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "survey_refused",
+              "message": "3 kenarlı bu poligonda 3 başucu açısı olmalı, 2 verildi.",
+              "path": "work"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Poligon hesabı kotlarla: başucu açısı sonlu değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "yapi",
+            "work": {
+              "kind": "traverse",
+              "shape": "connected",
+              "start": {
+                "kind": "named",
+                "name": "A"
+              },
+              "back": {
+                "kind": "named",
+                "name": "R"
+              },
+              "end": {
+                "kind": "named",
+                "name": "E"
+              },
+              "fore": {
+                "kind": "named",
+                "name": "F"
+              },
+              "angles": [
+                73.3750122504687,
+                208.07027193398287,
+                224.32630349080932,
+                194.2284123247391
+              ],
+              "distances": [
+                98.48857801796105,
+                104.4030650891055,
+                110.45361017187261
+              ],
+              "names": [
+                "P101",
+                "P102"
+              ],
+              "heights": {
+                "start": 100.0,
+                "end": 103.5,
+                "zeniths": [
+                  99.12785691729631,
+                  99.07366704223773,
+                  99.62584491983587
+                ],
+                "instruments": [
+                  1.55,
+                  1.48,
+                  1.6
+                ],
+                "targets": [
+                  1.7,
+                  1.3,
+                  1.65
+                ]
+              }
+            }
+          },
+          "nonFinite": {
+            "work.heights.zeniths[0]": "NaN"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Başucu açısı sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "work.heights.zeniths[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6
+            ],
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Kutupsal alım: üç nokta, bakılan noktada 50g okuma",
       "steps": [
         {

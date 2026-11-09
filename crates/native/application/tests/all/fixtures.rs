@@ -2268,6 +2268,11 @@ impl Input for kentos_commands::SurveyPoints {
                 },
                 "work.a.at.x",
             ) => Some(&mut at.x),
+            // docs/adr/4100: a leg's zenith angle.
+            (S::Traverse { heights: Some(h), .. }, _) if path.starts_with("work.heights.zeniths[") => {
+                let i = path.strip_prefix("work.heights.zeniths[")?.strip_suffix(']')?;
+                h.zeniths.get_mut(i.parse::<usize>().ok()?)
+            }
             (S::Traverse { angles, .. }, _) => {
                 let i = path.strip_prefix("work.angles[")?.strip_suffix(']')?;
                 angles.get_mut(i.parse::<usize>().ok()?)

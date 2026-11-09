@@ -124,6 +124,10 @@ pub enum Event {
     /// Poligon hesabı's kind, and whether the angle at the end was measured.
     TraverseKind(traverse::Kind),
     EndOriented(bool),
+    /// Docs/adr/4100: the traverse's heights asked; the start's and the end's heights typed.
+    TraverseHeights(bool),
+    TraverseStartZ(String),
+    TraverseEndZ(String),
     /// Kutupsal alım's reading to the back point and heights.
     BackReading(String),
     StationZ(String),
@@ -389,6 +393,18 @@ impl App {
             }
             Event::EndOriented(on) => {
                 self.calc.traverse.end_oriented = on;
+                Task::none()
+            }
+            Event::TraverseHeights(on) => {
+                self.calc.traverse.heights = on;
+                Task::none()
+            }
+            Event::TraverseStartZ(t) => {
+                self.calc.traverse.start_z = t;
+                Task::none()
+            }
+            Event::TraverseEndZ(t) => {
+                self.calc.traverse.end_z = t;
                 Task::none()
             }
             Event::BackReading(t) => {
