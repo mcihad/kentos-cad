@@ -177,6 +177,13 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             s.edge,
             s.flat
         ));
+        // docs/adr/3660: the second resampled onto the first's grid.
+        if s.resampled {
+            notes.push(
+                "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); kayma birincinin pikselleriyle ölçüldü."
+                    .into(),
+            );
+        }
     }
     Ok(OrthophotoCompared {
         rules: rules.id.clone(),

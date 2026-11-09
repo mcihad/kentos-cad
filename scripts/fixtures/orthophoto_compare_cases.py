@@ -29,6 +29,15 @@ from the edge's start); and `subpixel: bicubic`: the second image resampled by K
 4 × 4 pixels round a place, each row's sum by its column weights, then the rows' by theirs), the correlation's highest
 on a grid of 1/8 pixel within half a pixel of the whole pixel's peak, then of 1/64 pixel within 1/8 of it (rows then
 columns, the first of equals kept). Its places are held to the known shift too, and closer than the parabola's.
+
+docs/adr/3660: `resample`. Two more images: one of 0.08 m pixels, one turned 9° (its GeoTIFF carries the turn in
+ModelTransformationTag), each the scene displaced by its own known shift. The second is resampled onto the first's
+grid: at each place, the block of the first's pixel centres the patches and the search use (one more for bicubic), each
+centre's place in the second's pixels by the inverse of its affine (c = (t5·dx − t2·dy)/det − ½, r = (−t4·dx +
+t1·dy)/det − ½), read there by Keys' cubic convolution as above; a place whose block (the cubic's 4 × 4 included)
+passes the second's pixels is outside the overlap, the overlap's box being the two images' boxes' (the second's of its
+four corners). The match, refinement and shift are the first grid's. Each ok place is held within 0.05 pixel of the
+known shift.
 """
 
 import copy
@@ -333,18 +342,25 @@ def image(origin, shift, flat=None, change=None):
     return rows
 
 
-def geotiff(rows, origin, srid=5254):
+def geotiff(rows, origin, srid=5254, pixel=PIX, affine=None):
     """A baseline little-endian TIFF: 8-bit grey, one strip, uncompressed; GeoTIFF's pixel scale, tie point (the
-    top-left corner) and keys (projected, pixel is area, the EPSG code)."""
+    top-left corner) and keys (projected, pixel is area, the EPSG code); a turned raster (docs/adr/3660) its affine as
+    ModelTransformationTag instead of the scale and the tie point."""
     h, w = len(rows), len(rows[0])
     data = bytes(v for row in rows for v in row)
     keys = [1, 1, 0, 3, 1024, 0, 1, 1, 1025, 0, 1, 1, 3072, 0, 1, srid]
-    scale = struct.pack("<3d", PIX, PIX, 0.0)
-    tie = struct.pack("<6d", 0.0, 0.0, 0.0, origin[0], origin[1], 0.0)
     geokeys = struct.pack(f"<{len(keys)}H", *keys)
+    if affine is not None and (affine[2] != 0.0 or affine[4] != 0.0):
+        t = affine
+        matrix = struct.pack("<16d", t[1], t[2], 0.0, t[0], t[4], t[5], 0.0, t[3], 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0)
+        placed = [(34264, 12, 16, matrix)]
+    else:
+        scale = struct.pack("<3d", pixel, pixel, 0.0)
+        tie = struct.pack("<6d", 0.0, 0.0, 0.0, origin[0], origin[1], 0.0)
+        placed = [(33550, 12, 3, scale), (33922, 12, 6, tie)]
     entries = [(256, 4, 1, w), (257, 4, 1, h), (258, 3, 1, 8), (259, 3, 1, 1), (262, 3, 1, 1), (273, 4, 1, None),
-               (277, 3, 1, 1), (278, 4, 1, h), (279, 4, 1, len(data)), (284, 3, 1, 1),
-               (33550, 12, 3, scale), (33922, 12, 6, tie), (34735, 3, len(keys), geokeys)]
+               (277, 3, 1, 1), (278, 4, 1, h), (279, 4, 1, len(data)), (284, 3, 1, 1)] + placed + [
+               (34735, 3, len(keys), geokeys)]
     ifd_at = 8
     ifd_size = 2 + 12 * len(entries) + 4
     extra_at = ifd_at + ifd_size
@@ -372,15 +388,51 @@ IMAGES = {"dikis-a.tif": (A0, (0.0, 0.0), FLAT, None), "dikis-b.tif": (B0, S_B, 
           "dikis-c.tif": (B0, S_C, None, None)}
 
 
-def seam_raster(name, origin, pixel=PIX):
-    return {"kind": "raster", "layerId": "altlik", "attrs": {}, "affine": [origin[0], pixel, 0.0, origin[1], 0.0, -pixel],
-            "width": W_A, "height": H_A, "bands": 1, "sample": "u8", "srid": 5254,
+# docs/adr/3660: a second image of finer pixels and a turned one, each with its own known shift.
+S_D = (0.046, 0.012)
+S_E = (-0.028, 0.039)
+E0 = (X0 + 509.0, Y0 + 121.0)
+
+
+def affine_of(origin, pixel, turn=0.0):
+    """A raster's affine (GDAL's order): its columns `turn` radians anticlockwise from east, its rows from south."""
+    c, s = math.cos(turn), math.sin(turn)
+    return [origin[0], pixel * c, pixel * s, origin[1], pixel * s, -pixel * c]
+
+
+RESAMPLED = {"dikis-d.tif": (affine_of(B0, 0.08), (250, 150), S_D),
+             "dikis-e.tif": (affine_of(E0, PIX, math.radians(9.0)), (200, 150), S_E)}
+
+
+def image_at(t, size, shift):
+    """Rows of 8-bit values of the raster of affine `t`: the scene at each pixel's centre less the shift."""
+    rows = []
+    for j in range(size[1]):
+        row = []
+        for i in range(size[0]):
+            x = t[0] - X0 + (i + 0.5) * t[1] + (j + 0.5) * t[2]
+            y = t[3] - Y0 + (i + 0.5) * t[4] + (j + 0.5) * t[5]
+            row.append(max(0, min(255, int(math.floor(128.0 + scene(x - shift[0], y - shift[1]) + 0.5)))))
+        rows.append(row)
+    return rows
+
+
+def seam_raster(name, origin, pixel=PIX, affine=None, size=(W_A, H_A)):
+    return {"kind": "raster", "layerId": "altlik", "attrs": {},
+            "affine": affine or [origin[0], pixel, 0.0, origin[1], 0.0, -pixel],
+            "width": size[0], "height": size[1], "bands": 1, "sample": "u8", "srid": 5254,
             "style": {"render": "gray", "bands": [1]}, "file": f"$fixture:orthophoto/v1/files/{name}"}
 
 
-def seam_setup(second="dikis-b.tif", second_origin=B0, pixel=PIX, extra=()):
-    return setup(points=[], first=seam_raster("dikis-a.tif", A0), second=seam_raster(second, second_origin, pixel),
-                 extra=extra)
+def resampled_raster(name):
+    t, size, _ = RESAMPLED[name]
+    return seam_raster(name, (t[0], t[3]), affine=list(t), size=size)
+
+
+def seam_setup(second="dikis-b.tif", second_origin=B0, pixel=PIX, extra=(), first=None):
+    second_ = resampled_raster(second) if second in RESAMPLED else seam_raster(second, second_origin, pixel)
+    first_ = first or seam_raster("dikis-a.tif", A0)
+    return setup(points=[], first=first_, second=second_, extra=extra)
 
 
 # docs/adr/2860: a seam line drawn across the overlap, from north of it to south of it with a bend: its places every
@@ -500,9 +552,46 @@ def refine_bicubic(first, rows, x, y, w):
     return grid(coarse[0], coarse[1], 0.015625, 8) or coarse
 
 
-def seam(pixels, ask, limit, truth, line=None):
+def cubic_at(rows, rx, ry, x, y):
+    """docs/adr/3660: the grey at (x, y) of the block of `rows` whose top left is pixel (rx, ry), (x, y) in the
+    block's pixels: Keys' cubic convolution, each row's sum by its column weights, then the rows' by theirs."""
+    x0, y0 = math.floor(x), math.floor(y)
+    tx, ty = x - x0, y - y0
+    total = 0.0
+    for n in (-1, 0, 1, 2):
+        line = rows[ry + y0 + n]
+        row = 0.0
+        for m in (-1, 0, 1, 2):
+            row += float(line[rx + x0 + m]) * keys(tx - m)
+        total += row * keys(ty - n)
+    return total
+
+
+def refine_sampled(first, at, x, y, w):
+    """docs/adr/3660: refine_bicubic's search with the second read by `at` (a point of the block → its grey)."""
+    def score(fu, fv):
+        return ncc(first, [at(x + i + fu, y + j + fv) for j in range(w) for i in range(w)])
+
+    def grid(cu, cv, step, reach):
+        found = None
+        for kv in range(-reach, reach + 1):
+            for ku in range(-reach, reach + 1):
+                fu, fv = cu + ku * step, cv + kv * step
+                c = score(fu, fv)
+                if c is not None and (found is None or c > found[2]):
+                    found = (fu, fv, c)
+        return None if found is None else (found[0], found[1])
+
+    coarse = grid(0.0, 0.0, 0.125, 4)
+    if coarse is None:
+        return 0.0, 0.0
+    return grid(coarse[0], coarse[1], 0.015625, 8) or coarse
+
+
+def seam(pixels, ask, limit, truth, line=None, second=None):
     """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift;
-    `line` (docs/adr/2860): (uid, world vertices[, bulges]) of a seam line measured along instead of the grid."""
+    `line` (docs/adr/2860): (uid, world vertices[, bulges]) of a seam line measured along instead of the grid;
+    `second` (docs/adr/3660): the second's (affine, (width, height)) when it is resampled onto the first's grid."""
     (ra, oa), (rb, ob) = pixels
     w, r, step = ask["window"], ask["search"], ask["step"]
     half = w // 2
@@ -511,6 +600,43 @@ def seam(pixels, ask, limit, truth, line=None):
     ox1 = min(oa[0] + W_A * PIX, ob[0] + W_A * PIX) - reach * PIX
     oy0 = max(oa[1] - H_A * PIX, ob[1] - H_A * PIX) + reach * PIX
     oy1 = min(oa[1], ob[1]) - reach * PIX
+    fa = [oa[0], PIX, 0.0, oa[1], 0.0, -PIX]
+    margin = 1 if ask.get("subpixel") == "bicubic" else 0
+    block = None
+    if second is not None:
+        sa, (sw, sh) = second
+        det = sa[1] * sa[5] - sa[2] * sa[4]
+        pts = [(sa[0] + i * sa[1] + j * sa[2], sa[3] + i * sa[4] + j * sa[5]) for i, j in ((0.0, 0.0), (float(sw), 0.0),
+                                                                                         (0.0, float(sh)),
+                                                                                         (float(sw), float(sh)))]
+        bx0, bx1 = min(p[0] for p in pts), max(p[0] for p in pts)
+        by0, by1 = min(p[1] for p in pts), max(p[1] for p in pts)
+        ax0, ax1, ay0, ay1 = fa[0], fa[0] + W_A * fa[1], fa[3] + H_A * fa[5], fa[3]
+        px, py = fa[1], -fa[5]
+        ox0, ox1 = max(ax0, bx0) + reach * px, min(ax1, bx1) - reach * px
+        oy0, oy1 = max(ay0, by0) + reach * py, min(ay1, by1) - reach * py
+
+        def into_second(i, j):
+            x, y = fa[0] + (i + 0.5) * fa[1], fa[3] + (j + 0.5) * fa[5]
+            dx, dy = x - sa[0], y - sa[3]
+            return (sa[5] * dx - sa[2] * dy) / det - 0.5, (-sa[4] * dx + sa[1] * dy) / det - 0.5
+
+        def block(ci, cj):
+            k = half + r + margin
+            corners = [into_second(float(i), float(j)) for i, j in ((ci - k, cj - k), (ci + k, cj - k),
+                                                                    (ci - k, cj + k), (ci + k, cj + k))]
+            x0 = math.floor(min(p[0] for p in corners)) - 1
+            x1 = math.floor(max(p[0] for p in corners)) + 2
+            y0 = math.floor(min(p[1] for p in corners)) - 1
+            y1 = math.floor(max(p[1] for p in corners)) + 2
+            return (x0, y0) if x0 >= 0 and y0 >= 0 and x1 < sw and y1 < sh else None
+
+    def pixel_of(x, y):
+        return math.floor((x - oa[0]) / PIX), math.floor((y - oa[1]) / -PIX)
+
+    def inside(x, y):
+        return ox0 <= x <= ox1 and oy0 <= y <= oy1 and (block is None or block(*pixel_of(x, y)) is not None)
+
     patches = []
     places, line_out = [], None
     if line is not None:
@@ -525,7 +651,7 @@ def seam(pixels, ask, limit, truth, line=None):
                 break
             px_, py_ = along(pts, st, bulges)
             total += 1
-            if ox0 <= px_ <= ox1 and oy0 <= py_ <= oy1:
+            if inside(px_, py_):
                 places.append(((px_, py_), st))
             else:
                 outside += 1
@@ -536,21 +662,40 @@ def seam(pixels, ask, limit, truth, line=None):
         while y >= oy0:
             x = ox0
             while x <= ox1:
-                places.append(((x, y), None))
+                if inside(x, y):
+                    places.append(((x, y), None))
                 x += step
             y -= step
+    big = w + 2 * r + 2 * margin
     for (x, y), station in places:
         if True:
-            ci, cj = math.floor((x - oa[0]) / PIX), math.floor((y - oa[1]) / -PIX)
+            ci, cj = pixel_of(x, y)
             at = [oa[0] + (ci + 0.5) * PIX, oa[1] + (cj + 0.5) * -PIX]
-            bi = math.floor((at[0] - ob[0]) / PIX - 0.5 + 0.5)
-            bj = math.floor((at[1] - ob[1]) / -PIX - 0.5 + 0.5)
             first = [float(ra[cj - half + j][ci - half + i]) for j in range(w) for i in range(w)]
             scores = {}
-            for v in range(-r, r + 1):
-                for u in range(-r, r + 1):
-                    second = [float(rb[bj + v - half + j][bi + u - half + i]) for j in range(w) for i in range(w)]
-                    scores[(u, v)] = ncc(first, second)
+            if block is not None:
+                # docs/adr/3660: the second resampled at the first's pixel centres round the place.
+                rx, ry = block(ci, cj)
+                gi, gj = ci - half - r - margin, cj - half - r - margin
+
+                def at_block(u_, v_, gi=gi, gj=gj, rx=rx, ry=ry):
+                    xb, yb = into_second(gi + u_, gj + v_)
+                    return cubic_at(rb, rx, ry, xb - rx, yb - ry)
+
+                values = [at_block(float(i), float(j)) for j in range(big) for i in range(big)]
+                bi, bj = ci, cj
+                for v in range(-r, r + 1):
+                    for u in range(-r, r + 1):
+                        oi, oj = u + r + margin, v + r + margin
+                        second_ = [values[(oj + j) * big + oi + i] for j in range(w) for i in range(w)]
+                        scores[(u, v)] = ncc(first, second_)
+            else:
+                bi = math.floor((at[0] - ob[0]) / PIX - 0.5 + 0.5)
+                bj = math.floor((at[1] - ob[1]) / -PIX - 0.5 + 0.5)
+                for v in range(-r, r + 1):
+                    for u in range(-r, r + 1):
+                        second_ = [float(rb[bj + v - half + j][bi + u - half + i]) for j in range(w) for i in range(w)]
+                        scores[(u, v)] = ncc(first, second_)
             best = None
             for v in range(-r, r + 1):
                 for u in range(-r, r + 1):
@@ -566,12 +711,16 @@ def seam(pixels, ask, limit, truth, line=None):
                     patches.append({"at": at, "correlation": c, "state": "edge", "over": False, **here})
                 else:
                     sc = lambda du, dv: scores[(u + du, v + dv)] if scores[(u + du, v + dv)] is not None else c
-                    if ask.get("subpixel") == "bicubic":
+                    if ask.get("subpixel") == "bicubic" and block is not None:
+                        fu, fv = refine_sampled(first, at_block, float(u + r + margin), float(v + r + margin), w)
+                    elif ask.get("subpixel") == "bicubic":
                         fu, fv = refine_bicubic(first, rb, bi + u - half, bj + v - half, w)
                     else:
                         fu, fv = vertex(sc(-1, 0), c, sc(1, 0)), vertex(sc(0, -1), c, sc(0, 1))
-                    xb = ob[0] + (bi + u + fu + 0.5) * PIX
-                    yb = ob[1] + (bj + v + fv + 0.5) * -PIX
+                    # The match on the block's grid: the second's own, or (resampled) the first's.
+                    gx, gy = (oa if block is not None else ob)
+                    xb = gx + (bi + u + fu + 0.5) * PIX
+                    yb = gy + (bj + v + fv + 0.5) * -PIX
                     dx, dy = xb - at[0], yb - at[1]
                     d = math.hypot(dx, dy)
                     ok_ = ask.get("correlation") is None or c >= ask["correlation"]
@@ -585,6 +734,8 @@ def seam(pixels, ask, limit, truth, line=None):
         out["passed"] = all(not p["over"] for p in patches)
     if line_out is not None:
         out["line"] = line_out
+    if block is not None:
+        out["resampled"] = True
     return out, good
 
 
@@ -600,7 +751,9 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
     pa = (ROWS["dikis-a.tif"], A0)
     pb = (ROWS[second], B0)
     world = None if line is None else (uid(3), [(X0 + x, Y0 + y) for x, y in line], (bulges or [0.0] * len(line))[:len(line) - 1])
-    measured, good = seam((pa, pb), ask, limit, truth, world)
+    # docs/adr/3660: a second of other pixels resampled onto the first's grid.
+    other = (RESAMPLED[second][0], RESAMPLED[second][1]) if second in RESAMPLED and ask.get("resample") else None
+    measured, good = seam((pa, pb), ask, limit, truth, world, other)
     # Places whose window and search stay in the clean texture (off the flat and the changed patches): their error
     # against the known shift, in pixels; held under 0.05 pixel when the case expects the truth.
     reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
@@ -621,6 +774,9 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
         f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
         f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, "
         f"{'görüntünün çift kübik ara değeriyle' if ask.get('subpixel') == 'bicubic' else 'parabolle'}).")
+    if measured.get("resampled"):
+        out["notes"].append("İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi (Keys, a = −1/2); "
+                            "kayma birincinin pikselleriyle ölçüldü.")
     case = {"name": name, "setup": s, "steps": [{"op": "plan", "input": inp, "result": {
         "status": "completed", "output": out, "warnings": []}, "expect": SAME, "within": 1e-9}]}
     return case, measured
@@ -660,11 +816,26 @@ def seam_cases():
     c9, m9 = seam_case("dikiş: çift kübik, 2,7 piksellik kayma", dict(small, search=5, subpixel="bicubic"), "dikis-c.tif",
                        S_C)
     assert m9["ok"] > 0
+    # docs/adr/3660: the second resampled onto the first's grid: finer pixels, a turned image; along a line with the
+    # bicubic refinement; and asked of two images of one grid, nothing changes.
+    for name, (t, size, shift) in RESAMPLED.items():
+        ROWS[name] = image_at(t, size, shift)
+    r1, n1 = seam_case("dikiş: ikinci görüntü 0,08 m pikselli; birincinin ızgarasına yeniden örneklenir",
+                       dict(ask, resample=True), "dikis-d.tif", S_D)
+    assert n1["resampled"] and n1["ok"] > 20 and n1["passed"], (n1["ok"], n1.get("passed"))
+    r2, n2 = seam_case("dikiş: ikinci görüntü 9° dönük; pikselleri yetmeyen yerler örtüşmenin dışında",
+                       dict(ask, resample=True), "dikis-e.tif", S_E)
+    assert n2["resampled"] and n2["ok"] > 5, n2["ok"]
+    r3, n3 = seam_case("dikiş hattı boyunca, dönük ikinci görüntü, çift kübik piksel altı",
+                       dict(small, resample=True, subpixel="bicubic"), "dikis-e.tif", S_E, line=SEAM_LINE)
+    assert n3["resampled"] and n3["ok"] > 2 and n3["line"]["outside"] > 0, (n3["ok"], n3["line"])
+    r4, n4 = seam_case("dikiş: aynı ızgaradaki görüntüde yeniden örnekleme bir şey değiştirmez", dict(ask, resample=True))
+    assert n4 == m1 and "resampled" not in n4
     seam_in = lambda **kw: {"seam": dict(ask, **kw)}
     bad = "invalid_input"
     ss = seam_setup()
     lined = lambda e: seam_setup(extra=(e,))  # noqa: E731
-    return [c1, c2, c3, c4, c5, c6, c7, c8, c9,
+    return [c1, c2, c3, c4, c5, c6, c7, c8, c9, r1, r2, r3, r4,
             refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
                     "seam.step", ss),
             refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
@@ -675,8 +846,11 @@ def seam_cases():
                     "En az korelasyon 0'dan büyük, en çok 1 olmalı; her yer sayılacaksa boş bırakın.", "seam.correlation",
                     ss),
             refused("dikiş: pikseller farklı boyda", seam_in(), bad,
-                    "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; birini "
-                    "öbürünün ızgarasına yeniden örnekleyin.", "seam", seam_setup(pixel=0.08)),
+                    "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini "
+                    "birincinin ızgarasına yeniden örneklemek için resample verin.", "seam", seam_setup(pixel=0.08)),
+            refused("dikiş: yeniden örneklemede birinci görüntü dönük", seam_in(resample=True), bad,
+                    "Yeniden örneklemede ızgara birinci görüntünündür; o kuzeye bakmalı (dönüksüz). Dönük görüntüyü "
+                    "ikinci verin.", "seam.resample", seam_setup(first=resampled_raster("dikis-e.tif"))),
             refused("dikiş: örtüşme yok", seam_in(), bad,
                     "Görüntüler örtüşmüyor ya da örtüşmeleri pencere ve arama için dar; pencereyi ya da aramayı "
                     "küçültün.", "seam", seam_setup(second_origin=(X0 + 900.0, Y0 + 120.0))),
@@ -763,10 +937,12 @@ def main():
            "title": "Ortofoto karşılaştırması",
            "note": "ADR 1780. Bağımsız başvuru scripts/fixtures/orthophoto_compare_cases.py: BÖHHBÜY m. 67(6) "
                    "(±2·YÖA) ve her görüntünün m. 54, 91(2) denetimi elle; KentOS kodu yok. Noktalar sentetiktir. "
-                   "ADR 2460: dikiş ölçümünün görüntüleri burada bayt bayt yazılır, bilinen kayma bağımsız doğrudur.",
+                   "ADR 2460: dikiş ölçümünün görüntüleri burada bayt bayt yazılır, bilinen kayma bağımsız doğrudur. "
+                   "ADR 3660: 0,08 m pikselli ve 9° dönük ikinci görüntü birincinin ızgarasına yeniden örneklenir.",
            "setup": BASE, "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     files = {name: geotiff(ROWS[name], IMAGES[name][0]) for name in IMAGES}
+    files.update({name: geotiff(ROWS[name], (t[0], t[3]), pixel=t[1], affine=t) for name, (t, _, _) in RESAMPLED.items()})
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text and all(
             (FILES / n).exists() and (FILES / n).read_bytes() == b for n, b in files.items())

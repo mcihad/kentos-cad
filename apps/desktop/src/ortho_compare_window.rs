@@ -36,6 +36,8 @@ const SWAP: &str = "Yer değiştir";
 /// The seam line taken from the drawing's selection, and let go (docs/adr/2860).
 const TAKE_LINE: &str = "Seçili çizgiyi al";
 const DROP_LINE: &str = "Hattı kaldır";
+/// docs/adr/3660: the second resampled onto the first's grid.
+const RESAMPLE: &str = "İkinciyi birincinin ızgarasına örnekle";
 /// The ground's layer left out: the images are compared with each other only.
 const NONE: &str = "— yok —";
 
@@ -102,6 +104,9 @@ pub struct State {
     pub seam_line_name: String,
     /// How the peak is refined (docs/adr/3260).
     pub refine: Refine,
+    /// The second resampled onto the first's grid when their pixels differ in size or the second is turned
+    /// (docs/adr/3660).
+    pub resample: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -122,6 +127,8 @@ pub enum Event {
     TakeLine,
     DropLine,
     Refine(Refine),
+    /// The second resampled onto the first's grid, or not (docs/adr/3660).
+    Resample(bool),
     Show(Show),
     Swap,
     Save,
@@ -202,6 +209,7 @@ impl App {
             folder,
             line: (!s.seam_line.is_empty()).then(|| s.seam_line.clone()),
             subpixel: (s.refine == Refine::Bicubic).then_some(OrthoSubpixel::Bicubic),
+            resample: s.resample,
         });
         let input = OrthophotoCompare {
             first: s.first.clone(),
@@ -309,6 +317,7 @@ impl App {
             seam_line: String::new(),
             seam_line_name: String::new(),
             refine: Refine::Parabola,
+            resample: false,
         };
         self.ortho_compare_run();
         self.dialog = Some(Dialog::OrthoCompare);
@@ -343,6 +352,7 @@ impl App {
             Event::Search(v) => s.search = v,
             Event::Correlation(v) => s.correlation = v,
             Event::Refine(v) => s.refine = v,
+            Event::Resample(on) => s.resample = on,
             Event::TakeLine => {
                 // The one line or polyline chosen (docs/adr/2860): its persistent id and words.
                 let chosen = self.selection.ids().to_vec();
@@ -513,6 +523,13 @@ impl App {
                 ),
                 _ => words::text_line(Kind::Warn, format!("{counted} Sayılan yer yok: pencereyi, aramayı ya da korelasyon sınırını değiştirin.")),
             });
+            // docs/adr/3660: the second resampled onto the first's grid.
+            if m.resampled {
+                lines.push(words::text_line(
+                    Kind::Info,
+                    "İkinci görüntü birincinin ızgarasına kübik evrişimle yeniden örneklendi; kayma birincinin pikselleriyle ölçüldü.",
+                ));
+            }
         }
         lines.push(words::text_line(
             Kind::Info,
@@ -637,7 +654,17 @@ impl App {
                 .align_y(Center),
             )
             // Docs/adr/3260: the peak refined by a parabola, or by the second image resampled (cubic convolution).
-            .field("Piksel altı", Segmented::new([Refine::Parabola, Refine::Bicubic], s.refine, |v| msg(Event::Refine(v))));
+            .field("Piksel altı", Segmented::new([Refine::Parabola, Refine::Bicubic], s.refine, |v| msg(Event::Refine(v))))
+            // Docs/adr/3660: a second of other pixels or turned, resampled onto the first's grid.
+            .field(
+                "Yeniden örnekleme",
+                fields::check(
+                    if s.resample { Check::Checked } else { Check::Unchecked },
+                    RESAMPLE.to_owned(),
+                    s.seam.then(|| msg(Event::Resample(!s.resample))),
+                ),
+            )
+            .help("Pikselleri farklı boyda ya da dönük ikinci görüntü kübik evrişimle birincinin ızgarasına örneklenir; birinci kuzeye bakmalı.");
         let (lines, rows) = self.ortho_compare_lines();
         let f = self.format();
         let table = if s.show == Show::Seam {
@@ -694,6 +721,7 @@ impl App {
             Control::Press(SWAP) => Some(msg(Event::Swap)),
             Control::Press(TAKE_LINE) => Some(msg(Event::TakeLine)),
             Control::Press(DROP_LINE) => Some(msg(Event::DropLine)),
+            Control::Check(RESAMPLE, on) => Some(msg(Event::Resample(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

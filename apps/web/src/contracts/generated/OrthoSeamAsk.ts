@@ -9,5 +9,8 @@ import type { OrthoSubpixel } from "./OrthoSubpixel";
  * a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
  * id (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along
  * it from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.
+ * `resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is
+ * resampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every
+ * pixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.
  */
-export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, line?: string, subpixel?: OrthoSubpixel, };
+export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, line?: string, subpixel?: OrthoSubpixel, resample?: boolean, };

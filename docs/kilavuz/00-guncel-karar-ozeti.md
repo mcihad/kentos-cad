@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dikişte ikinci görüntünün yeniden örneklenmesi (9 Kasım 2026; MAP-12, [ADR 3660](../../docs/adr/3660-orthophoto-seam-resampled-onto-the-first-grid.md)).**
+  `cad.orthophoto.compare`'in `seam.resample`'ı: pikselleri farklı boyda ya da dönük ikinci görüntü birincinin ızgarasına
+  kübik evrişimle örneklenir, ölçüm birincinin pikselleriyle; dönük birinci reddedilir. CAD + CBS.
 - **Tarifin katmanları adıyla, çizimin içinde durdurma (9 Kasım 2026; MAP-20, [ADR 3640](../../docs/adr/3640-recipe-layers-and-stop-within-a-drawing.md)).**
   Tarif çizimin katmanının tanımını taşır; Tariften üret katmanı `layers` ile verilen, adıyla bulunan ya da tanımıyla
   eklenen katmana çizer (iki aynı adlı: sorulur); önce önizleme. Koridorun şevli planı durdurmayı kesitler arasında duyar.

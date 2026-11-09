@@ -42,7 +42,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
@@ -1283,6 +1283,15 @@ görüntü kübik evrişimle yeniden örneklenir, tepe 1/8 sonra 1/64 piksellik 
 kaymadan en büyük sapma parabolle 0,108, çift kübikle 0,019 piksel. Yaylı dikiş hattı: yerler yay boyunca, yay boyu
 uzaklık; ret kalktı. 48 ortak durum, MCP, Piksel altı seçimi. Açık: yeniden örnekleme, türeyen nesnenin izi, mozaiğin
 dikiş çokgenleri.
+
+**9 Kasım 2026, altıncı tur — ikinci görüntünün birincinin ızgarasına yeniden örneklenmesi ([ADR 3660](../docs/adr/3660-orthophoto-seam-resampled-onto-the-first-grid.md)).**
+Kapsam: **CAD + CBS** (raster). Dayanak: ArcGIS Pro'nun Resample'ı (CUBIC: en yakın 16 hücre merkezinden düzgün eğri),
+Keys 1981. Kanıtlanan: `seam.resample`: pikselleri farklı boyda ya da dönük ikinci görüntü her yerin bloğunda
+birincinin piksel merkezlerine, dönüşümünün tersiyle taşınıp kübik evrişimle örneklenir; bloğu ikincinin dışına taşan
+yer dışarıda; cevapta `resampled`, notta söylenir; dönük birinci reddedilir. 0,08 m pikselli ve 9° dönük iki yeni
+sentetik GeoTIFF (dönüş ModelTransformationTag'de), temiz yerlerde bilinen kaymadan en büyük sapma 0,047 ve 0,017
+piksel; 53 ortak durum, sıra değişince kaymanın tersine döndüğü bağımsız Python testi, MCP; Ortofoto karşılaştırması'nda
+Yeniden örnekleme kutusu. Açık: türeyen nesnenin izi, mozaiğin dikiş çokgenleri, dönük birinci görüntü.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

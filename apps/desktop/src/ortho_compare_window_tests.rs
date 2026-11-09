@@ -379,3 +379,62 @@ fn subpixel_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/3660: a second image of 0.08 m pixels is refused until Yeniden örnekleme is on; then the shared case's
+/// places (the second resampled onto the first's grid) and the note saying so; the turned image's case too.
+#[test]
+fn yeniden_ornekleme_gives_the_shared_cases_places() {
+    for name in ["dikiş: ikinci görüntü 0,08 m pikselli", "dikiş: ikinci görüntü 9° dönük"] {
+        let c = case(name);
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        let refused = app.ortho_compare.answer.clone().expect("an answer");
+        assert!(refused.as_ref().is_err_and(|why| why.contains("resample")), "{name}: {refused:?}");
+        let _ = app.update(Message::OrthoCompare(C::Resample(true)));
+        let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+        close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], name);
+        assert_eq!(got["seam"]["resampled"], true);
+        let said = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).any(|n| n.starts_with("İkinci görüntü birincinin ızgarasına"));
+        assert!(said, "{name}");
+    }
+}
+
+/// `.run/gui-evidence/yeniden-ornekleme-3660/`: the 0.08 m image resampled, and the turned one.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ortho_compare_window_tests::resample_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn resample_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yeniden-ornekleme-3660");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name, case_name) in [
+        ("light", Size::new(1440.0, 900.0), "ince-piksel-acik-genis", "dikiş: ikinci görüntü 0,08 m pikselli"),
+        ("dark", Size::new(1100.0, 760.0), "donuk-koyu-dar", "dikiş: ikinci görüntü 9° dönük"),
+    ] {
+        let c = case(case_name);
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("raster.compare"));
+        for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into()), C::Resample(true)] {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

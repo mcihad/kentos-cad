@@ -61771,6 +61771,8 @@ class OrthoSeam(_Model):
         edge: Unit: count.
         flat: Unit: count.
         line: The seam line measured along (docs/adr/2860); none: the overlap's grid.
+        resampled: The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
+            is turned, and `resample` was asked.
     """
     patches: list[OrthoPatch]
     ok: int
@@ -61779,6 +61781,7 @@ class OrthoSeam(_Model):
     flat: int
     line: OrthoSeamLine | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
+    resampled: bool | Unset = UNSET
     shift: OrthoStats | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -61792,6 +61795,8 @@ class OrthoSeam(_Model):
             out["line"] = None if self.line is None else self.line.to_json()
         if self.passed is not UNSET:
             out["passed"] = self.passed
+        if self.resampled is not UNSET:
+            out["resampled"] = self.resampled
         if self.shift is not UNSET:
             out["shift"] = None if self.shift is None else self.shift.to_json()
         return out
@@ -61806,6 +61811,7 @@ class OrthoSeam(_Model):
             flat=data["flat"],
             line=UNSET if "line" not in data else None if data["line"] is None else OrthoSeamLine.from_json(data["line"]),
             passed=data.get("passed", UNSET),
+            resampled=data.get("resampled", UNSET),
             shift=UNSET if "shift" not in data else None if data["shift"] is None else OrthoStats.from_json(data["shift"]),
         )
 
@@ -61819,6 +61825,9 @@ class OrthoSeamAsk(_Model):
     a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
     id (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along
     it from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.
+    `resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is
+    resampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every
+    pixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.
     Attributes:
         step: Unit: length.
         window: Unit: count.
@@ -61831,6 +61840,7 @@ class OrthoSeamAsk(_Model):
     correlation: float | None | Unset = UNSET
     folder: str | None | Unset = UNSET
     line: str | None | Unset = UNSET
+    resample: bool | Unset = UNSET
     subpixel: OrthoSubpixel | OrthoSubpixelName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -61844,6 +61854,8 @@ class OrthoSeamAsk(_Model):
             out["folder"] = self.folder
         if self.line is not UNSET:
             out["line"] = self.line
+        if self.resample is not UNSET:
+            out["resample"] = self.resample
         if self.subpixel is not UNSET:
             out["subpixel"] = None if self.subpixel is None else _enum_out(self.subpixel)
         return out
@@ -61857,6 +61869,7 @@ class OrthoSeamAsk(_Model):
             correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
             folder=data.get("folder", UNSET),
             line=data.get("line", UNSET),
+            resample=data.get("resample", UNSET),
             subpixel=UNSET if "subpixel" not in data else None if data["subpixel"] is None else _enum_in(OrthoSubpixel, data["subpixel"]),
         )
 

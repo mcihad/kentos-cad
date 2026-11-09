@@ -241,6 +241,9 @@ pub struct OrthophotoCompare {
 /// a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
 /// id (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along
 /// it from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.
+/// `resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is
+/// resampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every
+/// pixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -266,6 +269,9 @@ pub struct OrthoSeamAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub subpixel: Option<OrthoSubpixel>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub resample: bool,
 }
 
 /// How a place's peak is refined to a fraction of a pixel (docs/adr/3260): `parabola` (none given, docs/adr/2460) through
@@ -364,6 +370,11 @@ pub struct OrthoSeam {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line: Option<OrthoSeamLine>,
+    /// The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
+    /// is turned, and `resample` was asked.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub resampled: bool,
 }
 
 /// A point read on both images: its name, the second's place − the first's in east and north (metres), the distance,

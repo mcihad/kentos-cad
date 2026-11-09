@@ -2,7 +2,8 @@
 //! case's drawing (two synthetic GeoTIFFs of the fixtures, their paths made absolute) opened as a .kcad file over MCP.
 //! `cad.orthophoto.compare` with `seam` gives the case's places, counts and shift; a narrow search leaves every peak
 //! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it;
-//! docs/adr/3260: along a line with an arc, and with the peak refined by the second image resampled (bicubic).
+//! docs/adr/3260: along a line with an arc, and with the peak refined by the second image resampled (bicubic);
+//! docs/adr/3660: a second image of 0.08 m pixels and a turned one resampled onto the first's grid, along a line too.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -29,7 +30,7 @@ fn alike(got: &Value, want: &Value, name: &str) {
             }
         }
     }
-    for key in ["ok", "low", "edge", "flat", "passed"] {
+    for key in ["ok", "low", "edge", "flat", "passed", "resampled"] {
         assert_eq!(got[key], want[key], "{name} {key}");
     }
     // The seam line's length, places and those outside (docs/adr/2860), where one was asked.
@@ -51,6 +52,9 @@ fn the_seam_over_mcp_is_the_cases() {
         "dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır",
         "dikiş hattı yaylı: yerler yay boyunca",
         "dikiş: görüntünün çift kübik ara değeriyle piksel altı",
+        "dikiş: ikinci görüntü 0,08 m pikselli; birincinin ızgarasına yeniden örneklenir",
+        "dikiş: ikinci görüntü 9° dönük; pikselleri yetmeyen yerler örtüşmenin dışında",
+        "dikiş hattı boyunca, dönük ikinci görüntü, çift kübik piksel altı",
     ] {
         let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
         let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();

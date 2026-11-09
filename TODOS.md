@@ -188,6 +188,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-20 / ADR 3640: web'in `road.project.graph` işleyicisinde tarifin `layer`'ı, `road.project.produce`'unda `layers`
   (verilen, adıyla, eklenen; 46 ortak durum) ve web'in İş grafiği'nde Tariften üret önizlemesi; koridor çözümünün web
   işinde kesitler arasında durdurma.
+- MAP-12 / ADR 3660: `cad.orthophoto.compare`'in web işleyicisinde `seam.resample` ve `resampled` (53 ortak durum; iki
+  yeni GeoTIFF) ve web'in Ortofoto karşılaştırması'nda Yeniden örnekleme kutusu.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

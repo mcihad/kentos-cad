@@ -12,4 +12,9 @@ export type OrthoSeam = { patches: Array<OrthoPatch>, ok: number, low: number, e
 /**
  * The seam line measured along (docs/adr/2860); none: the overlap's grid.
  */
-line?: OrthoSeamLine, };
+line?: OrthoSeamLine, 
+/**
+ * The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
+ * is turned, and `resample` was asked.
+ */
+resampled?: boolean, };

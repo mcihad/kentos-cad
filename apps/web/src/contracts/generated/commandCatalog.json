@@ -57986,7 +57986,7 @@
       "id": "cad.orthophoto.compare",
       "version": 1,
       "title": "Ortofoto karşılaştırması",
-      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı; dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası yok).",
+      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok), file_not_found (görüntünün dosyası yok).",
       "aliases": [
         "ortofotokarsilastir",
         "mozaikkayiklik",
@@ -161972,6 +161972,10 @@
           },
           "type": "array"
         },
+        "resampled": {
+          "description": "The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second\nis turned, and `resample` was asked.",
+          "type": "boolean"
+        },
         "shift": {
           "anyOf": [
             {
@@ -161994,7 +161998,7 @@
     },
     "OrthoSeamAsk": {
       "additionalProperties": false,
-      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along\nit from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.",
+      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along\nit from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.\n`resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is\nresampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every\npixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.",
       "properties": {
         "correlation": {
           "format": "double",
@@ -162015,6 +162019,9 @@
             "string",
             "null"
           ]
+        },
+        "resample": {
+          "type": "boolean"
         },
         "search": {
           "format": "uint32",

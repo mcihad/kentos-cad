@@ -14,7 +14,12 @@
 //! - **State:** `flat` when either patch has no texture (no correlation); `edge` when the peak is on the search's edge
 //!   (the true one may lie beyond; no shift); `low` below the correlation asked (its shift said, not counted); else `ok`.
 //!
-//! The two images must have pixels of one size and no turn (north up); resampling one to the other is left for later.
+//! The two images must have pixels of one size and no turn (north up); or (docs/adr/3660, `resample`) the second is
+//! resampled onto the first's grid: at each place, the block of the first's pixel centres its patches and search use
+//! (one pixel more round them for `bicubic`), each centre mapped into the second's pixels by the inverse of its affine
+//! and read there by cubic convolution (Keys, a = −1/2). The first, the grid, must face north. A place whose block
+//! reaches past the second's pixels (the cubic's 4 × 4 included) is outside the overlap. The match, the refinement and
+//! the shift are then the first grid's; `bicubic` samples the second the same way at fractions of the first's pixel.
 //! Nothing is written.
 //!
 //! Along a drawn seam line (`line`, docs/adr/2860): the places are every `step` metres along it from its start (the
@@ -136,14 +141,15 @@ fn bicubic(r: &Region, x: f64, y: f64) -> f64 {
     sum
 }
 
-/// docs/adr/3260: the whole pixel's peak, the second patch's top left at (`x`, `y`) in region `pb`'s pixels, refined by
-/// the second image resampled at fractions of a pixel: the correlation's highest on a grid of 1/8 pixel within half a
-/// pixel, then of 1/64 pixel within 1/8 of it, rows then columns, the first of equals kept. The fraction found.
-fn refine_bicubic(first: &[f64], pb: &Region, w: u32, x: f64, y: f64) -> (f64, f64) {
+/// docs/adr/3260: the whole pixel's peak, the second patch's top left at (`x`, `y`) in the block's pixels, refined by
+/// the second image resampled at fractions of a pixel (`at`: the second's grey at a point of the block, by cubic
+/// convolution): the correlation's highest on a grid of 1/8 pixel within half a pixel, then of 1/64 pixel within 1/8 of
+/// it, rows then columns, the first of equals kept. The fraction found.
+fn refine_bicubic(first: &[f64], at: &dyn Fn(f64, f64) -> f64, w: u32, x: f64, y: f64) -> (f64, f64) {
     let score = |fu: f64, fv: f64| -> Option<f64> {
         let second: Vec<f64> = (0..w)
             .flat_map(|j| (0..w).map(move |i| (i, j)))
-            .map(|(i, j)| bicubic(pb, x + f64::from(i) + fu, y + f64::from(j) + fv))
+            .map(|(i, j)| at(x + f64::from(i) + fu, y + f64::from(j) + fv))
             .collect();
         ncc(first, &second)
     };
@@ -248,17 +254,41 @@ pub(crate) fn measure(
     let (fa, sa) = (first.raster.affine, second.raster.affine);
     let same = |p: f64, q: f64| (p - q).abs() <= 1e-9 * p.abs().max(1.0);
     let unturned = |t: [f64; 6]| t[2] == 0.0 && t[4] == 0.0 && t[1] > 0.0 && t[5] < 0.0;
-    if !(unturned(fa) && unturned(sa) && same(fa[1], sa[1]) && same(fa[5], sa[5])) {
+    let alike = unturned(fa) && unturned(sa) && same(fa[1], sa[1]) && same(fa[5], sa[5]);
+    // docs/adr/3660: the second resampled onto the first's grid, asked; the grid faces north.
+    let resample = !alike && a.resample;
+    let det = sa[1] * sa[5] - sa[2] * sa[4];
+    if !alike && !a.resample {
         return Err(fail(
             codes::INVALID_INPUT,
-            "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; birini öbürünün ızgarasına yeniden örnekleyin.".into(),
+            "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.".into(),
             "seam",
         ));
     }
+    if resample && !unturned(fa) {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Yeniden örneklemede ızgara birinci görüntünündür; o kuzeye bakmalı (dönüksüz). Dönük görüntüyü ikinci verin.".into(),
+            "seam.resample",
+        ));
+    }
+    if resample && !(det.is_finite() && det != 0.0) {
+        return Err(fail(codes::INVALID_INPUT, "İkinci görüntünün piksel dönüşümü tersinir değil; yeniden örneklenemez.".into(), "seam.resample"));
+    }
     let (px, py) = (fa[1], -fa[5]);
     let extent = |t: [f64; 6], w: u32, h: u32| (t[0], t[0] + f64::from(w) * t[1], t[3] + f64::from(h) * t[5], t[3]);
+    // A turned or resized second: the box of its corners (the places then kept where its pixels reach, below).
+    let corners = |t: [f64; 6], w: u32, h: u32| {
+        let pts = [(0.0, 0.0), (f64::from(w), 0.0), (0.0, f64::from(h)), (f64::from(w), f64::from(h))]
+            .map(|(i, j)| (t[0] + i * t[1] + j * t[2], t[3] + i * t[4] + j * t[5]));
+        let (xs, ys) = (pts.map(|p| p.0), pts.map(|p| p.1));
+        let lo = |v: [f64; 4]| v.into_iter().fold(f64::INFINITY, f64::min);
+        let hi = |v: [f64; 4]| v.into_iter().fold(f64::NEG_INFINITY, f64::max);
+        (lo(xs), hi(xs), lo(ys), hi(ys))
+    };
     let (ax0, ax1, ay0, ay1) = extent(fa, first.raster.width, first.raster.height);
-    let (bx0, bx1, by0, by1) = extent(sa, second.raster.width, second.raster.height);
+    let (bx0, bx1, by0, by1) =
+        if resample { corners(sa, second.raster.width, second.raster.height) } else { extent(sa, second.raster.width, second.raster.height) };
     let half = i64::from(a.window / 2);
     let reach = half + i64::from(a.search) + 1;
     let (ox0, ox1) = (ax0.max(bx0) + reach as f64 * px, ax1.min(bx1) - reach as f64 * px);
@@ -270,8 +300,36 @@ pub(crate) fn measure(
             "seam",
         ));
     }
-    // The places: the overlap's grid (north to south, west to east), or every step along the seam line (docs/adr/2860).
-    let inside = |p: [f64; 2]| p[0] >= ox0 && p[0] <= ox1 && p[1] >= oy0 && p[1] <= oy1;
+    // docs/adr/3660: where the first's pixel centre (i, j) falls in the second's pixels (whole numbers: their centres).
+    let into_second = |i: f64, j: f64| -> (f64, f64) {
+        let (x, y) = (fa[0] + (i + 0.5) * fa[1], fa[3] + (j + 0.5) * fa[5]);
+        let (dx, dy) = (x - sa[0], y - sa[3]);
+        ((sa[5] * dx - sa[2] * dy) / det - 0.5, (-sa[4] * dx + sa[1] * dy) / det - 0.5)
+    };
+    let bicubic_asked = a.subpixel == Some(OrthoSubpixel::Bicubic);
+    let margin = i64::from(bicubic_asked);
+    let r = i64::from(a.search);
+    // The block of the first's pixels a place reads (its patch, the search, the cubic's one more), and the second's
+    // pixels it reaches when resampled: none when past them.
+    let block = |ci: i64, cj: i64| -> Option<(i64, i64, u32, u32)> {
+        let k = half + r + margin;
+        let pts = [(ci - k, cj - k), (ci + k, cj - k), (ci - k, cj + k), (ci + k, cj + k)].map(|(i, j)| into_second(i as f64, j as f64));
+        let lo = |v: [f64; 4]| v.into_iter().fold(f64::INFINITY, f64::min);
+        let hi = |v: [f64; 4]| v.into_iter().fold(f64::NEG_INFINITY, f64::max);
+        let (x0, x1) = (lo(pts.map(|p| p.0)).floor() as i64 - 1, hi(pts.map(|p| p.0)).floor() as i64 + 2);
+        let (y0, y1) = (lo(pts.map(|p| p.1)).floor() as i64 - 1, hi(pts.map(|p| p.1)).floor() as i64 + 2);
+        let fits = x0 >= 0 && y0 >= 0 && x1 < i64::from(second.raster.width) && y1 < i64::from(second.raster.height);
+        fits.then(|| (x0, y0, (x1 - x0 + 1) as u32, (y1 - y0 + 1) as u32))
+    };
+    let pixel_of = |p: [f64; 2]| (((p[0] - fa[0]) / fa[1]).floor() as i64, ((p[1] - fa[3]) / fa[5]).floor() as i64);
+    // The places: the overlap's grid (north to south, west to east), or every step along the seam line (docs/adr/2860);
+    // resampled, only those whose block the second's pixels hold.
+    let inside = |p: [f64; 2]| {
+        p[0] >= ox0 && p[0] <= ox1 && p[1] >= oy0 && p[1] <= oy1 && (!resample || {
+            let (ci, cj) = pixel_of(p);
+            block(ci, cj).is_some()
+        })
+    };
     let mut places: Vec<([f64; 2], Option<f64>)> = Vec::new();
     let mut line = None;
     match &a.line {
@@ -311,10 +369,19 @@ pub(crate) fn measure(
             while y >= oy0 {
                 let mut x = ox0;
                 while x <= ox1 {
-                    places.push(([x, y], None));
+                    if inside([x, y]) {
+                        places.push(([x, y], None));
+                    }
                     x += a.step;
                 }
                 y -= a.step;
+            }
+            if places.is_empty() {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Görüntüler örtüşmüyor ya da örtüşmeleri pencere ve arama için dar; pencereyi ya da aramayı küçültün.".into(),
+                    "seam",
+                ));
             }
         }
     }
@@ -326,29 +393,47 @@ pub(crate) fn measure(
             .ok_or_else(|| fail(codes::IMPORT_UNREADABLE, "Ortofotonun pikselleri okunamadı.".into(), path))
     };
     let w = a.window;
-    let r = i64::from(a.search);
     // docs/adr/3260: resampling reads one pixel more round the search (the cubic's reach).
-    let bicubic_asked = a.subpixel == Some(OrthoSubpixel::Bicubic);
-    let margin = i64::from(bicubic_asked);
     let big = w + 2 * a.search + 2 * margin as u32;
     let mut patches = Vec::new();
     for &([x, y], station) in &places {
         {
             // The place: the centre of the first image's pixel it falls in.
-            let (ci, cj) = (((x - fa[0]) / fa[1]).floor() as i64, ((y - fa[3]) / fa[5]).floor() as i64);
+            let (ci, cj) = pixel_of([x, y]);
             let at = [fa[0] + (ci as f64 + 0.5) * fa[1], fa[3] + (cj as f64 + 0.5) * fa[5]];
-            // The second image's pixel whose centre is nearest it.
-            let (bi, bj) = (((at[0] - sa[0]) / sa[1] - 0.5).round() as i64, ((at[1] - sa[3]) / sa[5] - 0.5).round() as i64);
             let pa = read(&mut ia, ci - half, cj - half, w, w, "first")?;
-            let pb = read(&mut ib, bi - half - r - margin, bj - half - r - margin, big, big, "second")?;
             let first_patch: Vec<f64> = (0..w).flat_map(|j| (0..w).map(move |i| (i, j))).map(|(i, j)| grey(&pa, i, j)).collect();
+            // The second's block: its own pixels round the one whose centre is nearest the place, or (docs/adr/3660) its
+            // pixels resampled at the first's pixel centres round the place. `base`: the block's middle pixel; `sample`:
+            // the second's grey at a point of the block (whole numbers: the block's pixels), for the bicubic refinement.
+            let (block_grey, base, sample): (Vec<f64>, (i64, i64), Box<dyn Fn(f64, f64) -> f64>) = if resample {
+                let Some((rx, ry, rw, rh)) = block(ci, cj) else { continue };
+                let pb = read(&mut ib, rx, ry, rw, rh, "second")?;
+                let (gi, gj) = (ci - half - r - margin, cj - half - r - margin);
+                let at_block = move |u: f64, v: f64| {
+                    let (xb, yb) = into_second(gi as f64 + u, gj as f64 + v);
+                    bicubic(&pb, xb - rx as f64, yb - ry as f64)
+                };
+                let values = (0..big).flat_map(|j| (0..big).map(move |i| (i, j))).map(|(i, j)| at_block(f64::from(i), f64::from(j))).collect();
+                (values, (ci, cj), Box::new(at_block))
+            } else {
+                // The second image's pixel whose centre is nearest it.
+                let (bi, bj) = (((at[0] - sa[0]) / sa[1] - 0.5).round() as i64, ((at[1] - sa[3]) / sa[5] - 0.5).round() as i64);
+                let pb = read(&mut ib, bi - half - r - margin, bj - half - r - margin, big, big, "second")?;
+                let values = (0..big).flat_map(|j| (0..big).map(move |i| (i, j))).map(|(i, j)| grey(&pb, i, j)).collect();
+                (values, (bi, bj), Box::new(move |u: f64, v: f64| bicubic(&pb, u, v)))
+            };
+            let (bi, bj) = base;
+            let gb = if resample { fa } else { sa };
             let side = (2 * r + 1) as usize;
             let mut scores: Vec<Option<f64>> = vec![None; side * side];
             for v in -r..=r {
                 for u in -r..=r {
                     let (oi, oj) = ((u + r + margin) as u32, (v + r + margin) as u32);
-                    let second_patch: Vec<f64> =
-                        (0..w).flat_map(|j| (0..w).map(move |i| (i, j))).map(|(i, j)| grey(&pb, oi + i, oj + j)).collect();
+                    let second_patch: Vec<f64> = (0..w)
+                        .flat_map(|j| (0..w).map(move |i| (i, j)))
+                        .map(|(i, j)| block_grey[((oj + j) * big + oi + i) as usize])
+                        .collect();
                     scores[(v + r) as usize * side + (u + r) as usize] = ncc(&first_patch, &second_patch);
                 }
             }
@@ -367,12 +452,13 @@ pub(crate) fn measure(
                         let s = |du: i64, dv: i64| scores[(v + dv + r) as usize * side + (u + du + r) as usize].unwrap_or(c);
                         let (fu, fv) = if bicubic_asked {
                             let (x, y) = ((u + r + margin) as f64, (v + r + margin) as f64);
-                            refine_bicubic(&first_patch, &pb, w, x, y)
+                            refine_bicubic(&first_patch, &*sample, w, x, y)
                         } else {
                             (vertex(s(-1, 0), c, s(1, 0)), vertex(s(0, -1), c, s(0, 1)))
                         };
-                        let xb = sa[0] + ((bi + u) as f64 + fu + 0.5) * sa[1];
-                        let yb = sa[3] + ((bj + v) as f64 + fv + 0.5) * sa[5];
+                        // The match on the block's grid: the second's own, or (resampled) the first's.
+                        let xb = gb[0] + ((bi + u) as f64 + fu + 0.5) * gb[1];
+                        let yb = gb[3] + ((bj + v) as f64 + fv + 0.5) * gb[5];
                         let (dx, dy) = (xb - at[0], yb - at[1]);
                         let d = dx.hypot(dy);
                         let ok = a.correlation.is_none_or(|m| c >= m);
@@ -416,5 +502,6 @@ pub(crate) fn measure(
         passed: (ok > 0).then(|| patches.iter().all(|p| !p.over)),
         patches,
         line,
+        resampled: resample,
     })
 }

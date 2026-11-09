@@ -79,7 +79,7 @@ değeriyle (çift kübik) piksel altı” ve “yaylı dikiş hattı (yay boyunc
 
 ## Sonra
 
-- Farklı piksel boyunda ya da dönük görüntülerde birini öbürünün ızgarasına yeniden örnekleme (ADR 2460 Sonra);
-  kübik evrişim bunun da çekirdeği olabilir.
+- ~~Farklı piksel boyunda ya da dönük görüntülerde birini öbürünün ızgarasına yeniden örnekleme (ADR 2460 Sonra);
+  kübik evrişim bunun da çekirdeği olabilir.~~ ADR 3660 (ikinci, birincinin ızgarasına).
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenlerinden hatlar.
 - Web (TODOS §0.2).
