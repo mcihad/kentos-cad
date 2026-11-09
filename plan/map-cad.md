@@ -35,7 +35,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
@@ -681,6 +681,12 @@ yakınsaması `System::true_north`'tan. Kanıtlanan: `map.survey.edit network`'�
 ağ kabul edilirken her noktanın hata elipsi aynı adımda, büyük ekseni semt − yakınsama yönünde çizilir, kb-N dayanan
 kaydıyla; Ağ dengelemesi'nde Hata elipsleri satırı; 117 ortak durum (4 yeni, yakınsama betikte PROJ'la), MCP, masaüstü
 testi ve resimler. Açık: kotun aralığı ve elips etiketi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
+
+**9 Kasım 2026, altıncı tur — kot yarı aralığının çubukla gösterimi ([ADR 3360](../docs/adr/3360-network-height-bars-drawn.md)).**
+Kapsam: **Harita**. Dayanak: TBC'nin dengeleme resimleri yatay ve düşey hatayı birlikte gösterir. Kanıtlanan:
+`ellipses.heights` ile kabul her noktanın kot yarı aralığını elipsle aynı büyütmede, uçlarında çentikli düşey çubuk
+olarak çizer, elipslerle aynı dayanan kaydında; cevapta `bars`; Ağ dengelemesi'nde Kot çubuğu kutusu. Yeni bağımsız
+durum, MCP, masaüstü. Açık: elipsin etiketi, robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

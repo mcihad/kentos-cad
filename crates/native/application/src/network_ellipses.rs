@@ -3,12 +3,14 @@
 //! layer around the point's object, in the same step as the points. Its major axis runs along the map's direction of
 //! its azimuth: the azimuth is from true north, the map's up is grid north, the meridian's convergence at the point
 //! (`System::true_north`) between them. The ellipses are recorded as made from the points (a use, `kb-N`), so they go
-//! out of date when a point is made again.
+//! out of date when a point is made again. With `heights` (docs/adr/3360) each point's height half-interval is drawn
+//! too: a vertical bar through the point, ± the half-interval magnified as the ellipse, ticks a fifth of it each way at
+//! its ends, recorded with the ellipses.
 
 use std::collections::BTreeMap;
 use std::f64::consts::TAU;
 
-use kentos_commands::{EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, Vec2};
+use kentos_commands::{EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, PathEntity, Vec2};
 use kentos_domain::Document;
 use kentos_geometry_core::jsmath::{cos, sin};
 
@@ -55,6 +57,46 @@ pub(crate) fn ellipse(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &N
         ratio,
         t0: 0.0,
         t1: TAU,
+    })
+}
+
+/// The height bar of `mark`'s region `e` at its object's place `at` (docs/adr/3360): a polyline down the bar's top
+/// tick, the bar itself and its bottom tick, the half-interval u magnified as the ellipse: from (x − u/5, y + u) to
+/// (x + u/5, y + u), back to (x, y + u), down to (x, y − u), and the bottom tick from (x − u/5, y − u) to
+/// (x + u/5, y − u). Its attributes name the mark, the adjustment, the confidence, the half-interval and the
+/// magnification.
+pub(crate) fn height_bar(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &NetworkEllipses) -> Entity {
+    let u = e.up * with.scale;
+    let t = u / 5.0;
+    let p = |dx: f64, dy: f64| Vec2 { x: at.x + dx, y: at.y + dy };
+    let mut attrs = BTreeMap::new();
+    attrs.insert("İşaret".to_owned(), mark.to_owned());
+    attrs.insert("Dengeleme".to_owned(), da.to_owned());
+    attrs.insert("Güven".to_owned(), format!("{}", e.confidence));
+    attrs.insert("Kot yarı aralığı (m)".to_owned(), four(e.up));
+    attrs.insert("Büyütme".to_owned(), format!("{}", with.scale));
+    Entity::Polyline(PathEntity {
+        base: EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: with.layer.clone(),
+            color: None,
+            attrs,
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        },
+        pts: vec![p(-t, u), p(t, u), p(0.0, u), p(0.0, -u), p(-t, -u), p(t, -u)],
+        space_separator: None,
+        bulges: None,
+        holes: None,
+        zs: None,
+        ms: None,
+        parts: None,
+        closed: false,
+        widths: None,
     })
 }
 

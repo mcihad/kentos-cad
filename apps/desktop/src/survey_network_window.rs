@@ -145,9 +145,11 @@ pub struct State {
     pub epoch: String,
     pub known: KnownForm,
     pub answer: Option<Result<MapSurveyNetworked, String>>,
-    /// Kabul et draws each point's error ellipse, magnified this many times (docs/adr/2960).
+    /// Kabul et draws each point's error ellipse, magnified this many times (docs/adr/2960); and its height bar
+    /// (docs/adr/3360).
     pub ellipses: bool,
     pub magnify: f64,
+    pub bars: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -165,6 +167,8 @@ pub enum Event {
     /// The error ellipses drawn by Kabul et, and their magnification (docs/adr/2960).
     Ellipses(bool),
     Magnify(f64),
+    /// The height bars beside the ellipses (docs/adr/3360).
+    Bars(bool),
     Accept,
     Close,
 }
@@ -390,12 +394,14 @@ impl App {
                     self.document.as_ref().map(|d| d.model.layers().active().to_owned()).unwrap_or_default()
                 }),
                 scale: self.survey_network.magnify,
+                heights: self.survey_network.bars,
             }),
         };
         if let Some(out) = self.map_survey_edit(op) {
-            let drawn = match out.ellipses {
-                0 => String::new(),
-                n => format!(", {n} hata elipsi {} kat büyütülerek çizildi", self.survey_network.magnify),
+            let drawn = match (out.ellipses, out.bars) {
+                (0, _) => String::new(),
+                (n, 0) => format!(", {n} hata elipsi {} kat büyütülerek çizildi", self.survey_network.magnify),
+                (n, b) => format!(", {n} hata elipsi ve {b} kot çubuğu {} kat büyütülerek çizildi", self.survey_network.magnify),
             };
             self.say(
                 Level::Success,
@@ -413,6 +419,7 @@ impl App {
                 self.survey_network_run();
             }
             Event::Ellipses(on) => self.survey_network.ellipses = on,
+            Event::Bars(on) => self.survey_network.bars = on,
             Event::Magnify(v) => {
                 if v > 0.0 {
                     self.survey_network.magnify = v;
@@ -532,6 +539,12 @@ impl App {
                         Some(msg(Event::Ellipses(!s.ellipses)))
                     ),
                     NumberInput::new(s.magnify, |v| msg(Event::Magnify(v))).step(100.0).decimals(0).width(110),
+                    // Docs/adr/3360: the height's half-interval as a bar through the point.
+                    fields::check(
+                        if s.bars { Check::Checked } else { Check::Unchecked },
+                        "Kot çubuğu",
+                        s.ellipses.then(|| msg(Event::Bars(!s.bars)))
+                    ),
                     label::caption("kat büyütülmüş; Katmanlar'da seçili katmana, yoksa etkin katmana. 1000 kat: 1 cm, 10 m çizilir.")
                 ]
                 .spacing(10)

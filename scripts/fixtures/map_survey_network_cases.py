@@ -1180,6 +1180,19 @@ def ellipse_entity(mark, da, at, e, with_):
             "ratio": e["minor"] / e["major"] if e["major"] > 0 else 1.0, "t0": 0.0, "t1": 2 * math.pi}
 
 
+def height_bar(mark, da, at, e, with_):
+    """ADR 3360: a point's height half-interval u (magnified as its ellipse) as a bar through the point: a polyline from
+    (x − u/5, y + u) to (x + u/5, y + u), back to (x, y + u), down to (x, y − u), and the bottom tick (x − u/5, y − u) to
+    (x + u/5, y − u)."""
+    u = e["up"] * with_["scale"]
+    t = u / 5.0
+    x, y = at
+    attrs = {"İşaret": mark, "Dengeleme": da, "Güven": rust_number(e["confidence"]),
+             "Kot yarı aralığı (m)": f"{e['up']:.4f}", "Büyütme": rust_number(with_["scale"])}
+    pts = [(x - t, y + u), (x + t, y + u), (x, y + u), (x, y - u), (x - t, y - u), (x + t, y - u)]
+    return {"kind": "polyline", "layerId": with_["layer"], "attrs": attrs, "pts": [{"x": a, "y": b} for a, b in pts]}
+
+
 def accept(m, inp, layer="gnss", ellipses=None):
     """map.survey.edit network: the archive after (da-N, the points), the new and moved objects, the records; with
     `ellipses` ({layer, scale}) each point's error ellipse and the use that records them (ADR 2960)."""
@@ -1255,6 +1268,15 @@ def accept(m, inp, layer="gnss", ellipses=None):
             after.uids[at] = f"$uidOf:{at}"
             uids.append(f"$uidOf:{at}")
             fields[str(at)] = {k: ent[k] for k in ("layerId", "attrs", "c", "major", "ratio", "t0", "t1")}
+            # ADR 3360: the height's half-interval as a bar beside it, recorded with it.
+            if ellipses.get("heights"):
+                bt = max(after.entities) + 1
+                bar = height_bar(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses)
+                bar["id"] = bt
+                after.entities[bt] = bar
+                after.uids[bt] = f"$uidOf:{bt}"
+                uids.append(f"$uidOf:{bt}")
+                fields[str(bt)] = {k: bar[k] for k in ("layerId", "attrs", "pts")}
             p = next(p for p in sv["points"] if p["mark"] == n["mark"])
             points.append({"point": p["id"], "revision": p["result"]["revision"]})
         kb = f"kb-{1 + max([int(u['id'][3:]) for u in sv['uses']] or [0])}"
@@ -1404,6 +1426,14 @@ def edit_cases():
                        write(with_known, after_e, {"op": "network", "ellipses": with_e},
                              {"id": da, "records": records, "ellipses": 3}, "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after_e.entities), "fields": fields}), d=with_known))
+    # ADR 3360: with the height bars, each beside its ellipse, recorded with them.
+    with_h = {"layer": "gnss", "scale": 1000.0, "heights": True}
+    after_h, _, da, records, fields = accept(with_known, {}, ellipses=with_h)
+    out.append(ms.case("Ağı kabul et, hata elipsleri ve kot çubuklarıyla: her noktanın kot yarı aralığı 1000 kat "
+                       "büyütülmüş düşey çubuk, uçlarında çentik; elipslerle aynı dayanan kaydında",
+                       write(with_known, after_h, {"op": "network", "ellipses": with_h},
+                             {"id": da, "records": records, "ellipses": 3, "bars": 3}, "Ağ dengelemesini kabul et",
+                             extra={"ids": sorted(after_h.entities), "fields": fields}), d=with_known))
     # The oblong network's ellipses have directions: the major axis turned by the convergence (ADR 2960).
     oblong = networked(baselines=[record(k + 1, vector(f, t, ERRS[(f, t)], sig=(0.0015, 0.004, 0.005), turn=30.0))
                                   for k, (f, t) in enumerate(PAIRS)])

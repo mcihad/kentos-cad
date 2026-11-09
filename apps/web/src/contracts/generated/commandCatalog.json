@@ -62684,6 +62684,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
         "properties": {
+          "bars": {
+            "description": "The height bars a network drew beside them (docs/adr/3360).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "ellipses": {
             "description": "The error ellipses a network drew (docs/adr/2960).",
             "format": "uint32",
@@ -62752,6 +62759,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `map.survey.edit` v1 (and its plan): the record it made or changed, the accepted point's object and\nrevision, how many positions a session took from its file, how many records a remove took, how many accepted points\nand uses are out of date after, and the drawing's revision.",
         "properties": {
+          "bars": {
+            "description": "The height bars a network drew beside them (docs/adr/3360).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "ellipses": {
             "description": "The error ellipses a network drew (docs/adr/2960).",
             "format": "uint32",
@@ -155352,8 +155366,12 @@
     },
     "NetworkEllipses": {
       "additionalProperties": false,
-      "description": "The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence\nregion magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the\nmap's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.",
+      "description": "The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence\nregion magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the\nmap's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With\n`heights` (docs/adr/3360) each point's height half-interval too, as a bar.",
       "properties": {
+        "heights": {
+          "description": "docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the\nellipse, with ticks at its ends.",
+          "type": "boolean"
+        },
         "layer": {
           "type": "string"
         },

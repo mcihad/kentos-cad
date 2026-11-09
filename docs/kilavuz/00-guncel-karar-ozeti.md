@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Kot çubuğu (9 Kasım 2026; MAP-05, [ADR 3360](../../docs/adr/3360-network-height-bars-drawn.md)).** Ağ kabulünde
+  elipslerle birlikte her noktanın kot yarı aralığı, elipsle aynı büyütmede çentikli düşey çubuk (`ellipses.heights`).
+  Harita.
 - **Detay eşleştirmede yaylı aday (9 Kasım 2026; MAP-04, [ADR 3340](../../docs/adr/3340-reconcile-arc-candidates.md)).**
   Çoklu çizginin yayları yay olarak ölçülür (Hausdorff'a yayın sekizde birleri, yaya kesin uzaklık); kutular yayın
   şişkinliğini tutar. Harita.

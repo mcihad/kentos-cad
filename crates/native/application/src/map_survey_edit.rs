@@ -662,6 +662,10 @@ fn network(
             let at = Vec2 { x: placed.x, y: placed.y };
             let turn = crate::network_ellipses::convergence(doc, at, &n.mark)?;
             change.drawn.push(crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn));
+            // Docs/adr/3360: and its height's half-interval as a bar, recorded with it.
+            if with.heights {
+                change.drawn.push(crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
+            }
             if let Some(p) = next.points.iter().find(|p| p.mark == n.mark) {
                 points.push(PointRevision { point: p.id.clone(), revision: p.result.revision });
             }
@@ -1503,7 +1507,8 @@ fn output(doc: &Document, c: &Change, uid: Option<String>, revision: String) -> 
         point_revision: c.point_revision,
         observations: c.observations,
         removed: c.removed,
-        ellipses: c.drawn.len() as u32,
+        ellipses: c.drawn.iter().filter(|e| matches!(e, Entity::Ellipse(_))).count() as u32,
+        bars: c.drawn.iter().filter(|e| matches!(e, Entity::Polyline(_))).count() as u32,
         stale: stale_count(doc, &c.survey),
         records: c.records.clone(),
         revision,

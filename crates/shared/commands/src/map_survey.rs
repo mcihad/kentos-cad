@@ -731,6 +731,11 @@ pub struct MapSurveyEdited {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub ellipses: u32,
+    /// The height bars a network drew beside them (docs/adr/3360).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub bars: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
     /// The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -1040,7 +1045,8 @@ pub struct NetworkStation {
 
 /// The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
 /// region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
-/// map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.
+/// map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With
+/// `heights` (docs/adr/3360) each point's height half-interval too, as a bar.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -1050,6 +1056,11 @@ pub struct NetworkEllipses {
     pub layer: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
     pub scale: f64,
+    /// docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the
+    /// ellipse, with ticks at its ends.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub heights: bool,
 }
 
 /// The magnifications an ellipse may be drawn at.

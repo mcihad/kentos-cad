@@ -71,7 +71,7 @@ print(r.id, r.ellipses)
 
 ## Sonra
 
-- Kotun aralığının çizimde gösterimi (düşey çubuk ya da etiket).
+- ~~Kotun aralığının çizimde gösterimi (düşey çubuk ya da etiket).~~ ADR 3360 (çubuk).
 - Elipsin etiketi (yarı eksenler mm).
 - Robust kestirim; seyrek çözüm; ağırlıklı benzerlik (MAP-05'in kalanı).
 - Web (TODOS §0.2).

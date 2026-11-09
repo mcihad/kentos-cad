@@ -53697,6 +53697,7 @@ class MapSurveyEdited(_Model):
     and uses are out of date after, and the drawing's revision.
     Attributes:
         stale: Unit: count.
+        bars: The height bars a network drew beside them (docs/adr/3360). Unit: count.
         ellipses: The error ellipses a network drew (docs/adr/2960). Unit: count.
         observations: Unit: count.
         point_revision: Unit: version.
@@ -53705,6 +53706,7 @@ class MapSurveyEdited(_Model):
     """
     stale: int
     revision: str
+    bars: int | Unset = UNSET
     ellipses: int | Unset = UNSET
     id: str | None | Unset = UNSET
     observations: int | Unset = UNSET
@@ -53717,6 +53719,8 @@ class MapSurveyEdited(_Model):
         out: dict[str, Any] = {}
         out["stale"] = self.stale
         out["revision"] = self.revision
+        if self.bars is not UNSET:
+            out["bars"] = self.bars
         if self.ellipses is not UNSET:
             out["ellipses"] = self.ellipses
         if self.id is not UNSET:
@@ -53738,6 +53742,7 @@ class MapSurveyEdited(_Model):
         return cls(
             stale=data["stale"],
             revision=data["revision"],
+            bars=data.get("bars", UNSET),
             ellipses=data.get("ellipses", UNSET),
             id=data.get("id", UNSET),
             observations=data.get("observations", UNSET),
@@ -57093,17 +57098,23 @@ class NetworkDefined(_Model):
 class NetworkEllipses(_Model):
     """The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
     region magnified `scale` times (1 to 100 000; 1000 draws a centimetre as ten metres), its major axis along the
-    map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points.
+    map's direction of its azimuth (the meridian's convergence taken off), recorded as made from the points. With
+    `heights` (docs/adr/3360) each point's height half-interval too, as a bar.
     Attributes:
         scale: Unit: scale.
+        heights: docs/adr/3360: each point's height half-interval drawn too, a vertical bar through the point magnified as the
+            ellipse, with ticks at its ends.
     """
     layer: str
     scale: float
+    heights: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layer"] = self.layer
         out["scale"] = float(self.scale)
+        if self.heights is not UNSET:
+            out["heights"] = self.heights
         return out
 
     @classmethod
@@ -57111,6 +57122,7 @@ class NetworkEllipses(_Model):
         return cls(
             layer=data["layer"],
             scale=float(data["scale"]),
+            heights=data.get("heights", UNSET),
         )
 
 

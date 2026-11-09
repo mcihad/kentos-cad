@@ -110,3 +110,78 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/3360: Kot çubuğu ticked beside the ellipses draws each point's height half-interval as a bar through the
+/// point, magnified as the ellipse (the bar's half-length the attribute's half-interval times the magnification), in
+/// the same use; the message counts both.
+#[test]
+fn kot_cubugu_draws_the_height_bars_with_the_ellipses() {
+    let mut app = opened();
+    app.selected_layer = Some("gnss".into());
+    let _ = app.update(Message::Run("map.survey.adjustment"));
+    let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
+    let _ = app.update(Message::SurveyNetwork(N::Magnify(2000.0)));
+    let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
+    let _ = app.update(Message::SurveyNetwork(N::Accept));
+    let doc = app.document.as_ref().expect("a drawing");
+    let bars: Vec<&kentos_commands::PathEntity> = doc
+        .model
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Polyline(p) if p.base.attrs.contains_key("Kot yarı aralığı (m)") => Some(p),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(bars.len(), 3);
+    for b in &bars {
+        let half: f64 = b.base.attrs["Kot yarı aralığı (m)"].parse().expect("a number");
+        let length = b.pts[2].y - b.pts[3].y;
+        assert!((length - 2.0 * half * 2000.0).abs() < 2.0 * 0.0001 * 2000.0, "{length} {half}");
+        assert_eq!(b.pts.len(), 6, "the bar and its two ticks");
+    }
+    let survey = doc.model.map_survey().cloned().expect("an archive");
+    let used = survey.uses.iter().find(|u| u.operation == "Hata elipsleri (da-1)").expect("recorded");
+    assert_eq!(used.uids.len(), 6, "three ellipses and three bars");
+    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains("3 hata elipsi ve 3 kot çubuğu 2000 kat büyütülerek çizildi"), "{said}");
+}
+
+/// The network accepted with ellipses and height bars 50 000 times, fitted, `.run/gui-evidence/kot-cubugu-3360/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib network_ellipses_tests::bar_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn bar_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kot-cubugu-3360");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.selected_layer = Some("gnss".into());
+        let _ = app.update(Message::Run("map.survey.adjustment"));
+        let _ = app.update(Message::SurveyNetwork(N::Ellipses(true)));
+        let _ = app.update(Message::SurveyNetwork(N::Magnify(50_000.0)));
+        let _ = app.update(Message::SurveyNetwork(N::Bars(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::SurveyNetwork(N::Accept));
+        app.dialog = None;
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("cubuklar-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}

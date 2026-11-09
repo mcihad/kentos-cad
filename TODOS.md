@@ -158,6 +158,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (`surveyStakeout`'un `stationZ`, `targetZs`, `undulations`'ı; `groundSurvey.wasm.test.ts` yeni durumları okur).
 - MAP-03 / ADR 3320: web'in GNSS arşivi panelinde bazın satırından haritada bazın geçici çizgisi.
 - MAP-04 / ADR 3340: web'in Detay eşleştirme penceresi komutu çağırır; yaylı adaylar için pencere değişmez (komut ortak).
+- MAP-05 / ADR 3360: web'in Ağ dengelemesi penceresinde Kot çubuğu kutusu (`ellipses.heights`).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,
