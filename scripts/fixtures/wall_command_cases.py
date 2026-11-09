@@ -540,7 +540,7 @@ def create_cases():
         ("KentOS'un dış duvar stili kimliğiyle: bileşenleri, dolgusu ve 25 cm'si gelir, stil projeye eklenir", dict(pts=[P(0, 40), P(8, 40)], style="kentos-dis-duvar-25")),
         ("KentOS'un stili adıyla (büyük küçük harf ayrımsız) ve verilen genişlikle: kalan bileşen genişliğin kalanını alır", dict(pts=[P(0, 40), P(8, 40)], style="gazbeton 20", width=0.3)),
         ("projenin stili adıyla: proje stili eklenmez; bütün bileşenleri belli olduğundan genişlik toplamdır", dict(pts=[P(0, 40), P(8, 40)], style="Perde 20")),
-        ("açık uçlar, yükseklik ve mimari bilgi: kat, evre, durum, disiplin", dict(pts=[P(0, 40), P(5, 40)], caps="open", height=2.8,
+        ("açık uçlar, yükseklik ve mimari bilgi: kat, tadilat durumu, yapım durumu, disiplin", dict(pts=[P(0, 40), P(5, 40)], caps="open", height=2.8,
                                                                                    arch={"level": "kat-1", "phase": "new", "status": "proposed", "discipline": "architecture"})),
         ("öznitelik ve etiket duvarın kendisinindir", dict(pts=[P(0, 40), P(5, 40)], attrs={"kod": "D-12"}, label="D-12")),
     ]:
@@ -1000,7 +1000,7 @@ def edit(settings, inp, conflict=False):
         if BY_ID[i]["kind"] != "wall":
             return refusal("not_a_wall", "Nesne duvar değil; Duvarı düzenle yalnız duvarları değiştirir.", f"uids[{at}]"), None, None
     if not ch:
-        return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.", "operation"), None, None
+        return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.", "operation"), None, None
     for key, name in (("width", "Genişlik"), ("offset", "Öteleme"), ("height", "Yükseklik")):
         if ch.get(key) is not None and not math.isfinite(ch[key]):
             return not_finite(name, f"operation.{key}"), None, None
@@ -1074,7 +1074,7 @@ def edit_cases():
         ("uçlar açılır", {"uids": [uid_of(12)], "operation": op(caps="open")}, {}),
         ("dolgu kaldırılır", {"uids": [uid_of(13)], "operation": op(fill=None)}, {}),
         ("yükseklik verilir", {"uids": [uid_of(12)], "operation": op(height=2.7)}, {}),
-        ("kat değişir, evre, durum ve disiplin verilir", {"uids": [uid_of(13)], "operation": op(level="kat-1", phase="demolish", status="built", discipline="structure")}, {}),
+        ("kat değişir, tadilat durumu, yapım durumu ve disiplin verilir", {"uids": [uid_of(13)], "operation": op(level="kat-1", phase="demolish", status="built", discipline="structure")}, {}),
         ("kat kaldırılınca mimari bilgi de kalkar", {"uids": [uid_of(13)], "operation": op(level=None)}, {}),
         ("iki duvar birlikte: ikisi de değişir", {"uids": [uid_of(12), uid_of(22)], "operation": op(width=0.15, phase="new")}, {}),
         ("plan yazmadan değişmiş duvarları gösterir", {"uids": [uid_of(12)], "operation": op(width=0.3)}, {"op": "plan"}),

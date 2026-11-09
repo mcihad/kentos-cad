@@ -840,7 +840,7 @@ fn plain_walls(
     }
     if separators > 0 {
         report.note_n("Mahal ayırıcı",
-            "KentOS verisi kapalı: ayırıcılar analitik çoklu çizgi olarak yazıldı; mahal ayırıcı rolü ve kat/evre bilgisi geri okunmaz",
+            "KentOS verisi kapalı: ayırıcılar analitik çoklu çizgi olarak yazıldı; mahal ayırıcı rolü, kat ve tadilat durumu geri okunmaz",
             0, u32::try_from(separators).unwrap_or(u32::MAX));
     }
     if elements > 0 {

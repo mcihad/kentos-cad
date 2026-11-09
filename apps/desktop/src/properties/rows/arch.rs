@@ -75,7 +75,7 @@ fn railings_row(
     Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
 }
 
-/// Kat and Evre, as a wall's and a space's.
+/// Kat and Tadilat durumu, as a wall's and a space's.
 pub(super) fn arch_rows(
     doc: &Document,
     slot: Slot,
@@ -159,7 +159,7 @@ pub(super) fn arch_rows(
     }));
     vec![
         Row::text("Kat", level_name.clone()).editor(edit(select(level_name, items))),
-        Row::text("Evre", phase).editor(edit(select(phase.to_owned(), phases))),
+        Row::text("Tadilat durumu", phase).editor(edit(select(phase.to_owned(), phases))),
     ]
 }
 

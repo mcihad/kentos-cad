@@ -819,7 +819,7 @@ impl App {
             s.settings.arch.as_ref(),
         )
         .unwrap_or_default();
-        // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
+        // The phase view is Mimari › Tadilat's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         // So are Denetim's exceptions (docs/adr/0732 §3).
         arch.audit_exceptions = s

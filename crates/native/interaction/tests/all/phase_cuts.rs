@@ -22,7 +22,7 @@ fn run(b: &mut Bench, name: &str, input: Value) -> Value {
     answer
 }
 
-/// An existing 6 m wall, 30 cm thick; a 90 cm door at 1.5 m, new; a 120 cm window at 4 m, closed up (Kapatılacak).
+/// An existing 6 m wall, 30 cm thick; a 90 cm door at 1.5 m, new; a 120 cm window at 4 m, closed up (İptal).
 fn renovation() -> (Bench, Slot) {
     let mut b = Bench::new("line");
     b.session.exit();

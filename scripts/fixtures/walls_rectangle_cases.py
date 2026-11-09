@@ -254,7 +254,7 @@ def cases():
                        rectangle(style="bolme-15")))
     out.append(success("Esnek stil 0.3 m genişlik alır, bileşen kaynağı korunur",
                        rectangle(style="BÖLME 15", width=0.3)))
-    out.append(success("Yükseklik, kat/evre/durum, etiket, öznitelik ve nesnenin görünüşü saklanır",
+    out.append(success("Yükseklik, kat, tadilat ve yapım durumu, etiket, öznitelik ve nesnenin görünüşü saklanır",
                        rectangle(width=0.25, height=2.8, arch={"level": "zemin", "phase": "new",
                                  "status": "proposed", "discipline": "architecture"},
                                  attrs={"kod": "D01"}, label="D01", color="#7F7F7F", lineWeight=0.5,

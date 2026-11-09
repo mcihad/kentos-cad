@@ -546,7 +546,7 @@
       ]
     },
     {
-      "name": "Değiştir: kat, evre ve yükseklik",
+      "name": "Değiştir: kat, tadilat durumu ve yükseklik",
       "steps": [
         {
           "op": "execute",
@@ -5592,7 +5592,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.",
+              "message": "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik ya da kaplamalardan birini verin.",
               "path": "operation"
             }
           },

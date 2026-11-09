@@ -541,7 +541,7 @@ impl App {
         if w.of == ScheduleOf::Units {
             filter = self.schedule_unit_filter(w, filter);
         } else {
-            filter = filter.push(label::caption("Evre (hiçbiri: hepsi)"));
+            filter = filter.push(label::caption("Tadilat durumu (hiçbiri: hepsi)"));
             for p in PHASES {
                 let on = w.filter.phases.as_ref().is_some_and(|l| l.contains(&p));
                 filter = filter.push(words::check(on, p.label(), Some(msg(Event::Phase(p)))));

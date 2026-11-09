@@ -217,13 +217,13 @@ def cases():
         ("zemin kat süzgeci: kata bağlı düz ve U", {"levels": ["zemin"]}),
         ("1. kat süzgeci: L, merkez direkli döner ve kilitli", {"levels": ["kat-1"]}),
         ("iki kat birden: katsız merdivenler dışarıda", {"levels": ["zemin", "kat-1"]}),
-        ("evre süzgeci: yeni", {"phases": ["new"]}),
-        ("evre süzgeci: var olan", {"phases": ["existing"]}),
+        ("tadilat süzgeci: ilave", {"phases": ["new"]}),
+        ("tadilat süzgeci: mevcut", {"phases": ["existing"]}),
         ("katman süzgeci: merdiven katmanı", {"layers": ["merdiven"]}),
         ("katman süzgeci: kilitli katmanın merdiveni de ölçülür", {"layers": ["kilitli"]}),
         ("katman süzgeci: gizli katmanın katsız merdiveni", {"layers": ["gizli"]}),
         ("kullanım süzgeci merdivenleri almaz", {"usages": ["Islak"]}),
-        ("kat ve evre birlikte: var olan U", {"levels": ["zemin"], "phases": ["existing"]}),
+        ("kat ve tadilat birlikte: mevcut U", {"levels": ["zemin"], "phases": ["existing"]}),
         ("katsız çizginin katmanı: hiçbir merdiven yok", {"layers": ["cizim"]}),
     ]:
         add(name, [query(Drawing(), inp)])

@@ -1872,7 +1872,7 @@ pub(super) fn object(
             // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
             "arch" => {
                 let what = if kind == Kind::Insert {
-                    "yerleştirmenin katı ve evresi"
+                    "yerleştirmenin katı ve tadilat durumu"
                 } else {
                     "duvarın mimari bilgisi"
                 };
@@ -2542,7 +2542,7 @@ pub(super) fn object(
     if matches!(&entity, Entity::Opening(o) if o.opening.phase.is_some()) && !has.opening_phases {
         return Err(r.fail(
             Code::UnknownField,
-            "kapı ve pencerenin kendi evresi (phase) şema 218 ister",
+            "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
         ));
     }
     // Schema 216 (docs/adr/3038): the room list's finishes and a spaces schedule's room list columns.

@@ -171,7 +171,7 @@ fn quantities_transitions(app: &mut App) {
 }
 
 /// The balcony selected, Öznitelikler scrolled to its slab rows: Tür, Kalınlık, Kot farkı, Üst kot, Kenar, Kenar eni,
-/// Kenar uzunluğu, Malzeme, Kat, Evre, Metraj, Alan, Çevre, Hacim.
+/// Kenar uzunluğu, Malzeme, Kat, Tadilat durumu, Metraj, Alan, Çevre, Hacim.
 pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
     vec![("doseme-oznitelik", written, |s, app| {
         let mut update = |app: &mut App, message: Message| {

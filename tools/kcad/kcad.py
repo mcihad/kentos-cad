@@ -9032,7 +9032,7 @@ class _Schema:
         # A units schedule's (docs/adr/0795): its filter its groups', its rows' units beside their members.
         flt_keys = set(d.get("filter", {}))
         if d["of"] == "units" and flt_keys & {"phases", "forms", "layers", "types"}:
-            self.fail("bad_value", "bölüm çizelgesi evre, biçim, katman ve tür adıyla süzülmez")
+            self.fail("bad_value", "bölüm çizelgesi tadilat durumu, biçim, katman ve tür adıyla süzülmez")
         if d.get("byLevel") and d["of"] != "units":
             self.fail("bad_value", "kat kat satırlar yalnız bölüm çizelgesindedir")
         if d["of"] != "units" and flt_keys & {"buildings", "wings", "kinds"}:

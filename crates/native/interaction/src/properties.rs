@@ -169,7 +169,7 @@ pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_commands:
 /// `cad.arch.edit`; what to say.
 pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::ArchOperation) -> Vec<String> {
     if let Some(mut info)=doc.get(slot).and_then(kentos_domain::space_follow::separator_path).and_then(|p|p.space_separator.clone()) {
-        let kentos_commands::ArchOperation::Set(change)=operation else{return vec!["Mahal ayırıcıda yalnız kat ve evre alanları bu menüden değişir.".into()]};
+        let kentos_commands::ArchOperation::Set(change)=operation else{return vec!["Mahal ayırıcıda yalnız kat ve tadilat durumu bu menüden değişir.".into()]};
         let allowed=kentos_commands::ArchChange {level:change.level.clone(),phase:change.phase,..Default::default()};
         if *change!=allowed {return vec!["Bu mimari alan mahal ayırıcıda yok.".into()];}
         if let Some(level)=change.level {info.level=level;}

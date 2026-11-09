@@ -2437,7 +2437,7 @@
       ]
     },
     {
-      "name": "açık uçlar, yükseklik ve mimari bilgi: kat, evre, durum, disiplin",
+      "name": "açık uçlar, yükseklik ve mimari bilgi: kat, tadilat durumu, yapım durumu, disiplin",
       "steps": [
         {
           "op": "execute",

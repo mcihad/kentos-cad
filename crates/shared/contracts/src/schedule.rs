@@ -274,7 +274,7 @@ impl ScheduleField {
             ScheduleField::Head => "Lento",
             ScheduleField::Wall => "Duvar",
             ScheduleField::Level => "Kat",
-            ScheduleField::Phase => "Evre",
+            ScheduleField::Phase => "Tadilat durumu",
             ScheduleField::Count => "Adet",
             ScheduleField::Area => "Alan",
             ScheduleField::Perimeter => "Çevre",
@@ -835,7 +835,7 @@ pub fn schedule_problem(
             if let Some((k, _)) = objects_only.iter().find(|(_, on)| *on) {
                 return Some((
                     format!("filter.{k}"),
-                    "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; evre, biçim, katman ve tür adı süzgeci \
+                    "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; tadilat durumu, biçim, katman ve tür adı süzgeci \
                      nesne çizelgelerindedir."
                         .into(),
                 ));

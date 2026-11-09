@@ -649,14 +649,14 @@ impl App {
                     .push(words::field(
                         "Şablondan",
                         kentos_ui::label::muted(recipe_caption(self, &t.recipe)),
-                        Some("Evre, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
+                        Some("Tadilat görünümü, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
                     ));
             }
             None => {
                 body = body
                     .push(
                         row![
-                            cell("Evre", phase.into()),
+                            cell("Tadilat görünümü", phase.into()),
                             cell("Katman durumu", state.into()),
                             cell("Ölçek", scale.into())
                         ]

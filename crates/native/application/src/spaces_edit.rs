@@ -150,7 +150,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             if c == &SpaceChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik ya da kaplamalardan birini verin.".into(),
                     "operation",
                 ));
             }

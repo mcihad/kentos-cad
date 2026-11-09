@@ -3601,7 +3601,7 @@
       ]
     },
     {
-      "name": "Oku: Evre süzgeci",
+      "name": "Oku: Tadilat süzgeci",
       "steps": [
         {
           "op": "execute",

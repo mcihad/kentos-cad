@@ -2812,7 +2812,7 @@
       ]
     },
     {
-      "name": "evre verilir",
+      "name": "tadilat durumu verilir",
       "steps": [
         {
           "op": "execute",
@@ -5383,7 +5383,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, evre, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.",
+              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.",
               "path": "operation"
             }
           },

@@ -3199,7 +3199,7 @@
       ]
     },
     {
-      "name": "yalnız yıkılacak duvarın açıklıkları (evre süzgeci)",
+      "name": "yalnız iptal edilen duvarın açıklıkları (tadilat süzgeci)",
       "steps": [
         {
           "op": "execute",
@@ -3369,7 +3369,7 @@
       ]
     },
     {
-      "name": "yalnız yeni mahaller (evre süzgeci)",
+      "name": "yalnız ilave mahaller (tadilat süzgeci)",
       "steps": [
         {
           "op": "execute",
@@ -5259,7 +5259,7 @@
       ]
     },
     {
-      "name": "evresi geçici olan mahal yoksa reddedilir",
+      "name": "tadilat durumu geçici olan mahal yoksa reddedilir",
       "steps": [
         {
           "op": "execute",

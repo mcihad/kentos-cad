@@ -277,7 +277,7 @@ impl App {
                  (PAİY 57/10) buradan okur. Yıldızlı alanlar zorunludur; boş kalırsa paftada ‹ad?› yazılır ve yayın \
                  bekler. Arsa alanı, emsal, kat adedi ve bağımsız bölümler çizimden okunur.",
             ),
-            label::caption("Evre ve planların ölçeği"),
+            label::caption("Proje aşaması ve planların ölçeği"),
             phases,
         ]
         .spacing(8);

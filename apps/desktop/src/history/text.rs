@@ -522,7 +522,7 @@ fn field_name(key: &str) -> Option<&'static str> {
         "parts" => "Parçalar",
         "usage" | "usages" => "Kullanım",
         "levels" => "Katlar",
-        "phases" => "Evreler",
+        "phases" => "Tadilat durumları",
         "bothSides" => "İki yana",
         "boundaries" => "Sınırlar",
         "boundaryLayer" => "Sınır katmanı",

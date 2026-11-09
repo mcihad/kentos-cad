@@ -42,7 +42,7 @@ CREATE, EDIT, QUERY = "cad.schedules.create", "cad.schedules.edit", "cad.schedul
 
 LEVELS = [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
           {"id": "kat-1", "name": "1. kat", "elevation": 3.0, "height": 3.0}]
-PHASES = {"existing": "Mevcut", "demolish": "Yıkılacak", "new": "Yeni", "temporary": "Geçici"}
+PHASES = {"existing": "Mevcut", "demolish": "İptal", "new": "İlave", "temporary": "Geçici"}
 B_KOLTUK, B_LAVABO, B_ANTET = ("0192f5a1-7330-7000-8000-0000000000b1", "0192f5a1-7330-7000-8000-0000000000b2",
                                "0192f5a1-7330-7000-8000-0000000000b3")
 
@@ -105,7 +105,7 @@ SETUP = {
 }
 BLOCKS = {b["id"]: b for b in SETUP["blocks"]}
 
-TITLES = {"type": "Tür", "category": "Kategori", "space": "Mahal", "level": "Kat", "phase": "Evre", "count": "Adet",
+TITLES = {"type": "Tür", "category": "Kategori", "space": "Mahal", "level": "Kat", "phase": "Tadilat durumu", "count": "Adet",
           "number": "No", "name": "Ad", "usage": "Kullanım", "floorFinish": "Döşeme", "baseFinish": "Süpürgelik",
           "wallFinish": "Duvar kaplaması", "ceilingFinish": "Tavan", "area": "Alan", "perimeter": "Çevre",
           "baseboard": "Süpürgelik boyu",
@@ -507,7 +507,7 @@ def create_cases():
           [create({**SP, "columns": ROOM_LIST, "sort": [{"column": 0, "header": True}, {"column": 1}]})])
     c.add("Donatı çizelgesi: tür süzgeci Koltuk", [create({**FX, "filter": {"types": ["Koltuk"]}})])
     c.add("Donatı çizelgesi: tür süzgeci iki tür", [create({**FX, "filter": {"types": ["Lavabo", "Antet"]}})])
-    c.add("Donatı çizelgesi: evre Yeni", [create({**FX, "filter": {"phases": ["new"]}})])
+    c.add("Donatı çizelgesi: tadilat durumu İlave", [create({**FX, "filter": {"phases": ["new"]}})])
     c.add("Donatı çizelgesi: mahale göre grup başlığı",
           [create({**FX, "columns": BY_SPACE, "sort": [{"column": 0, "header": True}]})])
     c.add("Donatı çizelgesi: mahale göre ara toplam ve genel toplam",
@@ -655,7 +655,7 @@ def query_cases():
         ("Mahal çizelgesi, gruplu kullanım", {**SP, "columns": [{"field": "usage"}, {"field": "count"}, {"field": "area"}], "group": True}),
         ("Başlıklı sütun", {**FX, "columns": [{"field": "type", "title": "Donatı"}, {"field": "count", "title": "Sayı"}]}),
         ("Azalan sıra ve ara toplam", {**FX, "columns": BY_SPACE, "sort": [{"column": 0, "descending": True, "footer": True}]}),
-        ("Evre süzgeci", {**FX, "filter": {"phases": ["new"]}}),
+        ("Tadilat süzgeci", {**FX, "filter": {"phases": ["new"]}}),
         ("Katmana göre süzgeç", {**FX, "filter": {"layers": ["kilitli"]}}),
     ]:
         c.add(f"Oku: {name}", [made(inp), query(inp)])

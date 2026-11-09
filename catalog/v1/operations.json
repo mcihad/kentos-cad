@@ -2902,7 +2902,7 @@
       "via": [
         "cad.modules.edit"
       ],
-      "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4)."
+      "note": "Tıklanan nokta, açı, ayna, kat, tadilat durumu, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4)."
     },
     "cad.inspect": {
       "level": "semantic",

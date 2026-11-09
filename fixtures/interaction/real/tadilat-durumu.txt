@@ -1,7 +1,8 @@
 # M39 part 1 (docs/adr/3039): the acceptance flat as a survey (every wall Mevcut: its walls' arch.phase written
-# existing by the reference writer); in the window: the wall between the bedrooms Yıkılacak, a new door between Salon
-# and Yatak odası 1 (Evre: Yeni), Salon's west window Kapatılacak; then Mevcut durum, Yıkım planı and Yeni durum.
-# BEFORE (M38) runs the same steps without the openings' Evre rows (they had none).
+# existing by the reference writer); in the window: the wall between the bedrooms İptal, a new door between Salon and
+# Yatak odası 1 (Tadilat durumu: İlave), Salon's west window İptal; then Mevcut durum, Yıkım planı and Yeni durum.
+# BEFORE (M38) runs the same steps without the openings' rows (they had none). The rows' choices keep their places:
+# a wall's Yok, Mevcut, İptal, İlave, Geçici; an opening's Duvarınki, Mevcut, İptal, İlave, Geçici.
 fit KentOS Mimari — Daire
 wait 3000
 click 800 500 middle
@@ -11,9 +12,9 @@ drag 1700 633 1700 250
 wait 800
 click 589 600   # the wall between the bedrooms
 wait 1200
-click 1800 537  # Evre
+click 1800 537  # Tadilat durumu
 wait 800
-click 1755 628  # Yıkılacak
+click 1755 628  # İptal
 wait 1200
 key Escape
 wait 500
@@ -31,25 +32,25 @@ wait 500
 click 384 531
 wait 1200
 shot sonra-kapi-secili
-click 1800 479  # Evre
+click 1800 479  # Tadilat durumu
 wait 800
-shot sonra-kapi-evre
-click 1785 598  # Yeni
+shot sonra-kapi-tadilat
+click 1785 598  # İlave
 wait 1200
 key Escape
 wait 500
 click 126 444   # Salon's west window
 wait 1200
-click 1800 479  # Evre
+click 1800 479  # Tadilat durumu
 wait 800
-click 1785 570  # Kapatılacak
+click 1785 570  # İptal
 wait 1200
-shot sonra-pencere-kapatilacak
+shot sonra-pencere-iptal
 key Escape
 wait 500
 click 1640 20
 wait 600
-type evre: mevcut durum
+type tadilat: mevcut durum
 wait 1200
 key Return
 wait 2000
@@ -58,7 +59,7 @@ wait 500
 shot sonra-mevcut-durum
 click 1640 20
 wait 600
-type evre: yıkım planı
+type tadilat: yıkım planı
 wait 1200
 key Return
 wait 2000
@@ -67,7 +68,7 @@ wait 500
 shot sonra-yikim-plani
 click 1640 20
 wait 600
-type evre: yeni durum
+type tadilat: yeni durum
 wait 1200
 key Return
 wait 2000

@@ -129,7 +129,7 @@ const SCENES: [Scene; 52] = [
     scene("mimari-isaret", Some("Mimari"), "İşaret", Open::Arrow),
     scene("mimari-belgele", Some("Mimari"), "Belgele", Open::Caption),
     scene("mimari-kat", Some("Mimari"), "Kat", Open::Caption),
-    scene("mimari-evre", Some("Mimari"), "Evre", Open::Caption),
+    scene("mimari-tadilat", Some("Mimari"), "Tadilat", Open::Caption),
     scene("mimari-proje", Some("Mimari"), "Proje", Open::Caption),
 ];
 

@@ -3670,10 +3670,10 @@ fn geometry(
             };
             let arch = if has(5) {
                 let text = c.text(|| place("arch"))?;
-                let arch: kentos_contracts::ArchInfo =
-                    serde_json::from_str(&text).map_err(|_| broken("yerleştirmenin katı ve evresi okunamadı"))?;
+                let arch: kentos_contracts::ArchInfo = serde_json::from_str(&text)
+                    .map_err(|_| broken("yerleştirmenin katı ve tadilat durumu okunamadı"))?;
                 if arch.is_empty() {
-                    return Err(broken("boş kat ve evre"));
+                    return Err(broken("boş kat ve tadilat durumu"));
                 }
                 arch
             } else {

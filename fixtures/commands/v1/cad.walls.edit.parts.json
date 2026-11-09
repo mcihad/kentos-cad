@@ -2055,7 +2055,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.",
+              "message": "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.",
               "path": "operation"
             }
           },

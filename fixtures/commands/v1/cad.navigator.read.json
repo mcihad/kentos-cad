@@ -7467,7 +7467,7 @@
       ]
     },
     {
-      "name": "Yıkılacak kolon: yeni durum görünümünde ve haritasında yok",
+      "name": "İptal edilen kolon: yeni durum görünümünde ve haritasında yok",
       "steps": [
         {
           "op": "execute",

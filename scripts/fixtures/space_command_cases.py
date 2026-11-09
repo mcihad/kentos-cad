@@ -731,7 +731,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik ya da kaplamalardan birini verin.", "operation"), None
         if ch.get("height") is not None and not math.isfinite(ch["height"]):
             return not_finite("Yükseklik", "operation.height"), None
         for at, i in found:
@@ -920,7 +920,7 @@ def create_cases():
     for name, inp in [
         ("sağ oda duvar ekseninden", one(seed=RIGHT, method="centerline")),
         ("sağ oda dış yüzlerden (brüt)", one(seed=RIGHT, method="gross")),
-        ("sol oda kat, evre, yükseklik, kaplamalar ve kullanımla", one(seed=LEFT, usage="Oturma", arch={"level": "zemin", "phase": "new"},
+        ("sol oda kat, tadilat durumu, yükseklik, kaplamalar ve kullanımla", one(seed=LEFT, usage="Oturma", arch={"level": "zemin", "phase": "new"},
                                                                      height=2.8, finishes={"floor": "Parke", "ceiling": "Alçı"})),
         ("başka katın duvarları açık kat seçiminin mahali kapatmaz", one(seed=LEFT, arch={"level":"kat-1"})),
         ("çizilmiş sınır olduğu gibi saklanır", one(parts=[box_json(20, 0, 24, 3)], name="Depo")),
@@ -975,7 +975,7 @@ def edit_cases():
     first = NEW
     for name, op in [
         ("Değiştir: numara, ad ve kullanım", {"kind": "set", "number": "Z-02", "name": "Yatak odası", "usage": "Yatak"}),
-        ("Değiştir: kat, evre ve yükseklik", {"kind": "set", "level": "zemin", "phase": "existing", "height": 2.7}),
+        ("Değiştir: kat, tadilat durumu ve yükseklik", {"kind": "set", "level": "zemin", "phase": "existing", "height": 2.7}),
         ("Değiştir: kaplamalar", {"kind": "set", "floor": "Seramik", "wall": "Fayans", "ceiling": "Asma tavan"}),
         ("Değiştir: yöntem duvar ekseni, sınır duvarlardan yeniden", {"kind": "set", "method": "centerline"}),
         ("Değiştir: yöntem brüt", {"kind": "set", "method": "gross"}),
@@ -1089,13 +1089,13 @@ def quantities_cases():
         ("bütün çizim: mahaller, duvarlar, toplamlar", {}),
         ("zemin katı süzgeci", {"levels": ["zemin"]}),
         ("1. kat süzgeci", {"levels": ["kat-1"]}),
-        ("evre süzgeci: yeni", {"phases": ["new"]}),
+        ("tadilat süzgeci: ilave", {"phases": ["new"]}),
         ("kullanım süzgeci yalnız mahalleri verir", {"usages": ["Islak", "Depo"]}),
         ("katman süzgeci: yalnız duvar katmanı", {"layers": ["duvar"]}),
         ("katman süzgeci: kilitli katmanın duvarı yüksekliksiz", {"layers": ["kilitli"]}),
         ("katman süzgeci: yalnız mahaller", {"layers": ["mahal"]}),
         ("iki kat birden", {"levels": ["zemin", "kat-1"]}),
-        ("evre süzgeci: var olan (hiçbiri)", {"phases": ["existing"]}),
+        ("tadilat süzgeci: mevcut (hiçbiri)", {"phases": ["existing"]}),
         ("kullanım süzgeci: tek kullanım", {"usages": ["Oturma"]}),
         ("kat ve kullanım birlikte", {"levels": ["zemin"], "usages": ["Islak", "Oturma"]}),
         ("boş katman: hiçbir satır, toplamlar sıfır", {"layers": ["sinir"]}),
@@ -1126,7 +1126,7 @@ def quantities_cases():
     c.add("bir duvarda kapı ve pencere: ikisi de düşülür, toplamda iki açıklık",
           [made, opening(d, 1, 1.5), opening(d, 1, 6.5, "window"), quant_step(d)])
     d, made = drawn()
-    c.add("ara duvarın kapısı: evre süzgeciyle açıklık da süzülür",
+    c.add("ara duvarın kapısı: tadilat süzgeciyle açıklık da süzülür",
           [made, opening(d, 5, 2.5), opening(d, 1, 6.5), quant_step(d, {"phases": ["new"]})])
     d, made = drawn()
     c.add("kullanım süzgecinde açıklık yok", [made, opening(d, 1, 2.0), quant_step(d, {"usages": ["Oturma"]})])
@@ -1164,7 +1164,7 @@ def files():
     return {
         "cad.spaces.create.json": document(CREATE, "Mahal oluştur: duvarlardan ya da çizilmiş sınır, yöntem, bilgiler; doğrulama, plan, yazma, geri alma, retler", note, create_cases()),
         "cad.spaces.edit.json": document(EDIT, "Mahali düzenle ve duvarla güncellenmek: değiştir, birleştir, böl, duvarlardan bul; retler", note, edit_cases()),
-        "cad.spaces.quantities.json": document(QUANT, "Metraj: mahaller, duvarlar, açıklıklar; kat, evre, kullanım ve katman süzgeçleri; retler", note, quantities_cases()),
+        "cad.spaces.quantities.json": document(QUANT, "Metraj: mahaller, duvarlar, açıklıklar; kat, tadilat, kullanım ve katman süzgeçleri; retler", note, quantities_cases()),
     }
 
 

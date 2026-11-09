@@ -1803,7 +1803,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(
                         Code::UnknownField,
                         at,
-                        "projenin evre görünümü şema 82'den beri yazılır",
+                        "projenin tadilat görünümü şema 82'den beri yazılır",
                     ));
                 }
                 if !has.spaces && a.space_method.is_some() {

@@ -429,7 +429,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.".into(),
                     "operation",
                 ));
             }

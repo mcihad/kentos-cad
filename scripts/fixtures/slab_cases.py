@@ -425,7 +425,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, evre, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.", "operation"), None
         for key, name in (("thickness", "Kalınlık"), ("offset", "Kot farkı")):
             if key in ch and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None
@@ -644,7 +644,7 @@ def edit_cases():
         ("kenar kaldırılır", {"parts": [BALCONY], "role": "balcony", "edge": {"kind": "railing"}}, {"kind": "set", "edge": None}),
         ("başka kata alınan balkonun korkuluğu dört yanı izler", {"parts": [BALCONY], "edge": {"kind": "railing"}, "arch": {"level": "zemin"}},
          {"kind": "set", "level": "kat-1"}),
-        ("evre verilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "set", "phase": "new"}),
+        ("tadilat durumu verilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "set", "phase": "new"}),
         ("kenar 25 cm dışa ötelenir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "offset", "distance": 0.25}),
         ("delik açılır", {"parts": [box_json(20, 0, 30, 8)]}, {"kind": "subtract", "parts": [box_json(23, 3, 27, 5)]}),
         ("kenardan girinti kesilir", {"parts": [box_json(20, 0, 30, 8)]}, {"kind": "subtract", "parts": [box_json(24, 6, 26, 9)]}),

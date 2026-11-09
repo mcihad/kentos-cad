@@ -247,7 +247,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             if c == &OpeningChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da evre verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da tadilat durumu verin.".into(),
                     "operation",
                 ));
             }

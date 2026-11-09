@@ -106,7 +106,7 @@
  ],
  "objects": [
   {
-   "name": "yıkılacak duvar Yıkım planında kesikli",
+   "name": "iptal edilen duvar Yıkım planında kesikli",
    "view": "demolition",
    "entity": {
     "kind": "wall",
@@ -154,7 +154,7 @@
    }
   },
   {
-   "name": "yıkılacak duvarın kendi deseni kesikliye bırakır",
+   "name": "iptal edilen duvarın kendi deseni kesikliye bırakır",
    "view": "demolition",
    "entity": {
     "kind": "wall",
@@ -424,7 +424,7 @@
    }
   },
   {
-   "name": "evresiz duvar her görünümde olduğu gibi",
+   "name": "tadilat durumu olmayan duvar her görünümde olduğu gibi",
    "view": "demolition",
    "entity": {
     "kind": "wall",

@@ -1,5 +1,5 @@
 //! Mimari › Proje's template and phase view (docs/adr/0346): Mimari şablonu applies the KentOS work template through
-//! `cad.templates.apply`; Evre's four views are the project's `arch.phaseView`, written through `cad.settings.set`.
+//! `cad.templates.apply`; Tadilat's four views are the project's `arch.phaseView`, written through `cad.settings.set`.
 
 use kentos_commands::{PhaseView, SettingsSet};
 use kentos_interaction::Level;
@@ -16,7 +16,7 @@ impl App {
             .unwrap_or_default()
     }
 
-    /// Evre ▸ `name` (`arch.phase.all` …).
+    /// Tadilat ▸ `name` (`arch.phase.all` …).
     pub(crate) fn set_phase_view(&mut self, name: &str) {
         let Some(view) = PhaseView::ALL.into_iter().find(|v| v.name() == name) else {
             return;
@@ -35,7 +35,7 @@ impl App {
             },
         );
         if self.answered(result).is_some() {
-            self.say(Level::Info, format!("Evre: {}.", view.label()));
+            self.say(Level::Info, format!("Tadilat görünümü: {}.", view.label()));
         }
     }
 }

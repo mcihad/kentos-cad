@@ -1663,7 +1663,7 @@
       ]
     },
     {
-      "name": "Değiştir: kat ve evre her türde, null kaldırır",
+      "name": "Değiştir: kat ve tadilat durumu her türde, null kaldırır",
       "steps": [
         {
           "op": "execute",

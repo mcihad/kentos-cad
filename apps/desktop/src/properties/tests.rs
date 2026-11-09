@@ -1310,11 +1310,11 @@ fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
 
 // ── docs/adr/3039: an opening's own phase ─────────────────────────────
 
-/// A door's or window's own phase (docs/adr/3039 §1): Evre ▾ says its wall's while it has none (“Duvarınki (Mevcut)”),
-/// picked writes its own through `cad.openings.edit` in one step, says an opening's own demolition “Kapatılacak” (its
-/// hole closed up, Mimarlar Odası's “iptal”), and Duvarınki gives it its wall's again.
+/// A door's or window's own phase (docs/adr/3039 §1): Tadilat durumu ▾ says its wall's while it has none (“Duvarınki
+/// (Mevcut)”), picked writes its own through `cad.openings.edit` in one step (İptal: its hole closed up, Mimarlar
+/// Odası's word), and Duvarınki gives it its wall's again.
 #[test]
-fn an_openings_evre_row_writes_its_own_phase() {
+fn an_openings_renovation_row_writes_its_own_phase() {
     use kentos_commands::{ArchPhase, Workspace};
     use serde_json::json;
     let mut app = objects();
@@ -1349,12 +1349,12 @@ fn an_openings_evre_row_writes_its_own_phase() {
     );
     select(&mut app, &[window]);
     // The row, its value and its choices' words with what each sends.
-    let evre = |app: &App| -> (String, Vec<(String, bool, Message)>) {
+    let row = |app: &App| -> (String, Vec<(String, bool, Message)>) {
         let r = rows(app)
             .into_iter()
             .flat_map(|(_, rows)| rows)
-            .find(|r| r.label == "Evre")
-            .expect("Evre");
+            .find(|r| r.label == "Tadilat durumu")
+            .expect("Tadilat durumu");
         let Some(Editor::Select { items, .. }) = r.editor else {
             panic!("a choice")
         };
@@ -1376,31 +1376,25 @@ fn an_openings_evre_row_writes_its_own_phase() {
         Entity::Opening(o) => o.opening.phase,
         _ => panic!("an opening"),
     };
-    let (shown, picks) = evre(&app);
+    let (shown, picks) = row(&app);
     assert_eq!(shown, "Duvarınki (Mevcut)");
     let words: Vec<&str> = picks.iter().map(|p| p.0.as_str()).collect();
     assert_eq!(
         words,
-        [
-            "Duvarınki (Mevcut)",
-            "Mevcut",
-            "Kapatılacak",
-            "Yeni",
-            "Geçici"
-        ]
+        ["Duvarınki (Mevcut)", "Mevcut", "İptal", "İlave", "Geçici"]
     );
     assert!(picks[0].1, "its wall's chosen");
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    // Kapatılacak: its own phase, one step.
+    // İptal: its own phase, one step.
     let _ = app.update(picks[2].2.clone());
     assert_eq!(phase(&app), Some(ArchPhase::Demolish), "{:?}", warned(&app));
-    let (shown, picks) = evre(&app);
-    assert_eq!(shown, "Kapatılacak");
+    let (shown, picks) = row(&app);
+    assert_eq!(shown, "İptal");
     assert!(picks[2].1);
     // Duvarınki: its wall's again.
     let _ = app.update(picks[0].2.clone());
     assert_eq!(phase(&app), None);
-    assert_eq!(evre(&app).0, "Duvarınki (Mevcut)");
+    assert_eq!(row(&app).0, "Duvarınki (Mevcut)");
     assert!(undo_label(&mut app).is_some());
     assert!(undo_label(&mut app).is_some());
     assert_eq!(
@@ -3259,27 +3253,55 @@ fn a_maps_polyline_has_no_space_separator_row() {
 
 #[test]
 fn virtual_separator_property_role_phase_lock_and_single_undo_use_the_semantic_command() {
-    let mut app=objects();
-    let doc=&mut app.document.as_mut().unwrap().model;
-    let mut settings=doc.settings().clone();settings.workspace=Some(kentos_commands::Workspace::Cad);doc.set_settings(settings);
-    let id=path_z(&mut app,None);select(&mut app,&[id]);
-    assert_eq!(value(&app,"Geometri","Mahal ayırıcı"),"Hayır");
-    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app,Event::SpaceSeparator(Slot(id),true));
-    assert_eq!(value(&app,"Geometri","Mahal ayırıcı"),"Evet");
-    assert!(!row_editable(&app,"Geometri","Genişlik"));assert!(!row_editable(&app,"Geometri","Kot"));
-    assert!(has_row(&app,"Geometri","Kat")&&has_row(&app,"Geometri","Evre"));
-    assert_eq!(undo_label(&mut app).as_deref(),Some("Mahal ayırıcı"));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
-    event(&mut app,Event::SpaceSeparator(Slot(id),true));
-    let role=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app,Event::Arch(Slot(id),serde_json::from_value(serde_json::json!({"kind":"set","phase":"existing"})).unwrap()));
-    let Entity::Polyline(p)=entity(&app,id)else{panic!()};assert_eq!(p.space_separator.unwrap().phase,Some(kentos_commands::ArchPhase::Existing));
-    assert_eq!(undo_label(&mut app).as_deref(),Some("Mahal ayırıcı"));assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),role);
-    app.document.as_mut().unwrap().model.set_layer_locked("cizim",true);
-    let locked=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    assert!(!row_editable(&app,"Geometri","Mahal ayırıcı"));
-    event(&mut app,Event::SpaceSeparator(Slot(id),false));assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),locked);
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
+    doc.set_settings(settings);
+    let id = path_z(&mut app, None);
+    select(&mut app, &[id]);
+    assert_eq!(value(&app, "Geometri", "Mahal ayırıcı"), "Hayır");
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(&mut app, Event::SpaceSeparator(Slot(id), true));
+    assert_eq!(value(&app, "Geometri", "Mahal ayırıcı"), "Evet");
+    assert!(!row_editable(&app, "Geometri", "Genişlik"));
+    assert!(!row_editable(&app, "Geometri", "Kot"));
+    assert!(has_row(&app, "Geometri", "Kat") && has_row(&app, "Geometri", "Tadilat durumu"));
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Mahal ayırıcı"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    event(&mut app, Event::SpaceSeparator(Slot(id), true));
+    let role = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    event(
+        &mut app,
+        Event::Arch(
+            Slot(id),
+            serde_json::from_value(serde_json::json!({"kind":"set","phase":"existing"})).unwrap(),
+        ),
+    );
+    let Entity::Polyline(p) = entity(&app, id) else {
+        panic!()
+    };
+    assert_eq!(
+        p.space_separator.unwrap().phase,
+        Some(kentos_commands::ArchPhase::Existing)
+    );
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Mahal ayırıcı"));
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), role);
+    app.document
+        .as_mut()
+        .unwrap()
+        .model
+        .set_layer_locked("cizim", true);
+    let locked = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    assert!(!row_editable(&app, "Geometri", "Mahal ayırıcı"));
+    event(&mut app, Event::SpaceSeparator(Slot(id), false));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        locked
+    );
 }
 
 /// A Kot's rows (docs/adr/0721 §2): Kot, Kat ▾ (Yok or a level of the project) and, while bound, Fark; the value

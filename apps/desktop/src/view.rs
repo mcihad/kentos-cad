@@ -454,7 +454,7 @@ impl App {
                 let ids = panel.overflow.clone();
                 let checked = self.checks(&ids);
                 let heads = self.overflow_heads(&ids);
-                group = group.more(move || headed_menu_of(&ids, &checked, &heads));
+                group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
             }
             return Some(group);
         }
@@ -510,7 +510,7 @@ impl App {
             let ids = panel.overflow.clone();
             let checked = self.checks(&ids);
             let heads = self.overflow_heads(&ids);
-            group = group.more(move || headed_menu_of(&ids, &checked, &heads));
+            group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
         }
         if let Some(launcher) = &panel.launcher
             && let Some(message) = launch(launcher)
@@ -706,7 +706,8 @@ impl App {
                     let menu = move || checklist_of(&blocks, &checked);
                     return Some(with_family(button, ids, label, menu));
                 }
-                let menu = move || menu_of(&members, &checked);
+                let name = *label;
+                let menu = move || menu_of(&members, &checked, Some(name));
                 Some(with_family(button, ids, label, menu))
             }
             Item::Builtin(_) => None,
@@ -2265,15 +2266,27 @@ fn is_choice(id: &str) -> bool {
 /// A drop-down's commands (the web's `commandItem`): a toggle shows its
 /// check instead of its icon, a choice its dot beside its icon, a tool and a
 /// plain command their icon.
-fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
-    headed_menu_of(ids, checked, &[])
+fn menu_of(ids: &[&'static str], checked: &[Option<bool>], menu: Option<&str>) -> Menu<Message> {
+    headed_menu_of(ids, checked, &[], menu)
 }
 
-/// [`menu_of`] with a header (a category's name) before the rows `heads` names (docs/adr/0221 §9).
+/// A menu row's words: its command's title without the menu's own name before it. Under Tadilat ▾ “Tadilat: Mevcut
+/// durum” is “Mevcut durum”, under Kat görünümü ▾ “Kat görünümü: Bütün katlar” is “Bütün katlar”; Menülerde ara still
+/// finds and shows the whole title.
+pub(crate) fn row_title<'a>(title: &'a str, menu: Option<&str>) -> &'a str {
+    menu.and_then(|m| title.strip_prefix(m))
+        .and_then(|rest| rest.strip_prefix(": "))
+        .filter(|rest| !rest.is_empty())
+        .unwrap_or(title)
+}
+
+/// [`menu_of`] with a header (a category's name) before the rows `heads` names (docs/adr/0221 §9); `menu`: the
+/// drop-down's own name, which its rows do not say again ([`row_title`]).
 fn headed_menu_of(
     ids: &[&'static str],
     checked: &[Option<bool>],
     heads: &[Option<&'static str>],
+    menu_name: Option<&str>,
 ) -> Menu<Message> {
     let mut menu = Menu::new();
     let ticks = checked.iter().copied().chain(std::iter::repeat(None));
@@ -2284,16 +2297,13 @@ fn headed_menu_of(
         let Some(command) = catalog().get(id) else {
             continue;
         };
+        let title = row_title(command.title, menu_name);
         menu = match checked {
-            Some(on) if is_choice(command.id) => menu
-                .radio(command.title, on, enabled(command))
-                .icon(command.icon),
-            Some(on) if !command.id.starts_with("tool.") => {
-                menu.check(command.title, on, enabled(command))
+            Some(on) if is_choice(command.id) => {
+                menu.radio(title, on, enabled(command)).icon(command.icon)
             }
-            _ => menu
-                .item(command.title, enabled(command))
-                .icon(command.icon),
+            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, enabled(command)),
+            _ => menu.item(title, enabled(command)).icon(command.icon),
         };
         if let Some(keys) = command.shortcuts.first() {
             menu = menu.shortcut(*keys);

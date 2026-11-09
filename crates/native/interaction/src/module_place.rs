@@ -458,7 +458,7 @@ impl Tool for ModulePlace {
             .iter()
             .map(|(a, b)| (a.as_str(), b.as_str()))
             .collect();
-        rows.push(Setting::choice("E", "Evre", choices(&refs, &phase)));
+        rows.push(Setting::choice("E", "Tadilat durumu", choices(&refs, &phase)));
         rows.push(Setting::text(
             "P",
             "Numara öneki",

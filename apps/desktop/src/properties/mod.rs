@@ -105,7 +105,7 @@ pub enum Event {
     EmbedImage(Slot),
     /// Kaynak ▾'s Göm of a linked raster (docs/adr/0204 §8).
     EmbedRaster(Slot),
-    /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Evre): written through `cad.walls.edit` (docs/adr/0339 §6).
+    /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Tadilat durumu): written through `cad.walls.edit` (docs/adr/0339 §6).
     Wall(Slot, kentos_commands::WallChange),
     /// A wall's joins (docs/adr/0340 §6).
     WallOp(Slot, kentos_commands::WallsOperation),
@@ -119,10 +119,10 @@ pub enum Event {
     Module(kentos_commands::ModulesOperation),
     /// A derived interior elevation's action (docs/adr/0799 §5): written through `cad.elevations.edit`.
     Elevation(kentos_commands::ElevationsOperation),
-    /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
+    /// A space's own field chosen (Yöntem, Kat, Tadilat durumu) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, Box<kentos_commands::SpacesOperation>),
-    /// A slab's own field chosen (Tür, Kenar, Kat, Evre, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
+    /// A slab's own field chosen (Tür, Kenar, Kat, Tadilat durumu, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
     Slab(Slot, kentos_commands::SlabsOperation),
     SpaceSeparator(Slot, bool),
     /// Kat ▾ of several architectural objects (docs/adr/0717 §2): through `cad.levels.assign`.

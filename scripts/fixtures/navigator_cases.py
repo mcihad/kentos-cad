@@ -197,7 +197,7 @@ def cases():
     add("Tarama: taramayı gizleyen zemin görünümünde ve haritasında yok", [step(Nav(), 4)])
     add("Uzaktaki kolon: yalnız alanı onu kapsayan görünümlerde, hiçbir haritada", [step(Nav(), 5)])
     add("Projede olmayan katın kolonu: katı yok, her görünümde", [step(Nav(), 6)])
-    add("Yıkılacak kolon: yeni durum görünümünde ve haritasında yok", [step(Nav(), 7)])
+    add("İptal edilen kolon: yeni durum görünümünde ve haritasında yok", [step(Nav(), 7)])
     add("Yeni kolon: yıkım planında yok", [step(Nav(), 8)])
     add("Etiket: nesnesinin katında, etiketler kategorisi", [step(Nav(), 9)])
     add("Dönük görünüm: kutusu dar, yanındaki kolonu çizmez", [step(Nav(), 10)])

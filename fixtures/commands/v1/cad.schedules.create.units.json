@@ -7456,7 +7456,7 @@
    ]
   },
   {
-   "name": "Ret: bölüm çizelgesi evre okumaz",
+   "name": "Ret: bölüm çizelgesi tadilat durumu okumaz",
    "steps": [
     {
      "op": "execute",
@@ -7481,7 +7481,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_schedule",
-       "message": "“Evre” bölüm çizelgesinde okunmaz.",
+       "message": "“Tadilat durumu” bölüm çizelgesinde okunmaz.",
        "path": "columns[1].field"
       }
      },
@@ -7525,7 +7525,7 @@
    ]
   },
   {
-   "name": "Ret: bölüm çizelgesinde evre süzgeci",
+   "name": "Ret: bölüm çizelgesinde tadilat süzgeci",
    "steps": [
     {
      "op": "execute",
@@ -7547,7 +7547,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_schedule",
-       "message": "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; evre, biçim, katman ve tür adı süzgeci nesne çizelgelerindedir.",
+       "message": "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; tadilat durumu, biçim, katman ve tür adı süzgeci nesne çizelgelerindedir.",
        "path": "filter.phases"
       }
      },

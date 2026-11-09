@@ -993,10 +993,10 @@ fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
 /// The rows a building element's own section starts with, in this order (docs/adr/3005, plan ADV-09): what makes it
 /// the element it is, then where it stands.
-const BUILDING_MAIN: [&str; 10] = ["Numara", "Ad", "Tür", "Kalınlık", "Genişlik", "Stil", "Yükseklik", "Hiza", "Kat", "Evre"];
+const BUILDING_MAIN: [&str; 10] = ["Numara", "Ad", "Tür", "Kalınlık", "Genişlik", "Stil", "Yükseklik", "Hiza", "Kat", "Tadilat durumu"];
 
 /// A building element's own section comes first, named for it, its main rows at its top. A wall's Kalınlık, Stil,
-/// Yükseklik, Hiza, Kat and Evre were under the eight rows every object has (Tür, Katman, Renk, Çizgi kalınlığı …) and
+/// Yükseklik, Hiza, Kat and Tadilat durumu were under the eight rows every object has (Tür, Katman, Renk, Çizgi kalınlığı …) and
 /// further down their own section, below the joins: at 1100 × 650 and 18 px only Tür showed (plan S18). The general
 /// rows follow, as they were.
 fn building_first(e: &Entity, sections: &mut Vec<Section>) {
@@ -1538,7 +1538,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     None,
                 )
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
@@ -1732,7 +1732,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     None,
                 )
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
             let level_height = x
                 .arch
                 .level
@@ -1956,7 +1956,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
                 pick(p.label().to_owned(), x.arch.phase == Some(p), set(SlabChange { phase: Some(Some(p)), ..Default::default() }), None)
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
             let summed = if x.excluded { "Dışında" } else { "Toplamda" };
             let sums = [(false, "Toplamda"), (true, "Dışında")]
                 .into_iter()
@@ -2060,7 +2060,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             );
             let phase_name = x
                 .phase
-                .map_or_else(|| walls.clone(), |p| p.opening_label().to_owned());
+                .map_or_else(|| walls.clone(), |p| p.label().to_owned());
             let mut phases = vec![pick(
                 walls,
                 x.phase.is_none(),
@@ -2076,13 +2076,13 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     ..Default::default()
                 });
                 pick(
-                    p.opening_label().to_owned(),
+                    p.label().to_owned(),
                     x.phase == Some(p),
                     change,
                     None,
                 )
             }));
-            geo.push(Row::text("Evre", phase_name.clone()).editor(select(phase_name, phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name.clone()).editor(select(phase_name, phases)));
             // A niche's or flue's face, depth and a flue's distance from its face (docs/adr/0719).
             if x.form.is_recess() {
                 let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]

@@ -2,7 +2,7 @@
  "format": "kentos.acceptance",
  "version": 1,
  "id": "renovation",
- "title": "Tadilat: GDAL'ın yazdığı DXF altlığından var olan duvarlar, yıkım, yeni bölme, evrelere göre mahal ve metraj",
+ "title": "Tadilat: GDAL'ın yazdığı DXF altlığından var olan duvarlar, yıkım, yeni bölme, tadilat durumuna göre mahal ve metraj",
  "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798",
  "project": {
   "name": "Tadilat",
@@ -565,7 +565,7 @@
    }
   },
   {
-   "name": "Metraj: yıkılacaklar",
+   "name": "Metraj: iptal edilenler",
    "query": "cad.spaces.quantities",
    "input": {
     "phases": [
@@ -599,7 +599,7 @@
    }
   },
   {
-   "name": "Evre görünümü: Yeni durum",
+   "name": "Tadilat görünümü: Yeni durum",
    "command": "cad.settings.set",
    "input": {
     "arch": {

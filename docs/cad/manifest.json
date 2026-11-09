@@ -503,7 +503,7 @@
   {
    "id": "arch.phase.all",
    "kind": "command",
-   "title": "Evre: Tümü",
+   "title": "Tadilat: Tümü",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -519,7 +519,7 @@
   {
    "id": "arch.phase.demolition",
    "kind": "command",
-   "title": "Evre: Yıkım planı",
+   "title": "Tadilat: Yıkım planı",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -535,7 +535,7 @@
   {
    "id": "arch.phase.existing",
    "kind": "command",
-   "title": "Evre: Mevcut durum",
+   "title": "Tadilat: Mevcut durum",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -551,7 +551,7 @@
   {
    "id": "arch.phase.proposed",
    "kind": "command",
-   "title": "Evre: Yeni durum",
+   "title": "Tadilat: Yeni durum",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -12766,7 +12766,7 @@
    "operation": null,
    "python": "kentos.cad.modules.edit",
    "mcp": "cad.modules.edit",
-   "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
+   "note": "Tıklanan nokta, açı, ayna, kat, tadilat durumu, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

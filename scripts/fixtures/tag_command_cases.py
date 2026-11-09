@@ -121,7 +121,7 @@ SETUP = {
 }
 OPENING_TYPES = TYPES_OF
 FORMS = {"door": "Kapı", "window": "Pencere", "opening": "Boşluk"}
-PHASES = {"existing": "Mevcut", "demolish": "Yıkılacak", "new": "Yeni", "temporary": "Geçici"}
+PHASES = {"existing": "Mevcut", "demolish": "İptal", "new": "İlave", "temporary": "Geçici"}
 
 # ── The drawing as the steps leave it ──────────────────────────────────────────────────────────────────────────
 
@@ -706,8 +706,8 @@ def tag_create_cases():
         ("bütün mahaller etiketlenir", {"layerId": "etiket", "all": {"kinds": ["space"]}}),
         ("bütün açıklıklar: etiketli olan atlanır", {"layerId": "etiket", "all": {"kinds": ["opening"]}}),
         ("bütün kolonlar, yalnız Kolon katmanında", {"layerId": "etiket", "all": {"kinds": ["column"], "layers": ["kolon"]}}),
-        ("yalnız yıkılacak duvarın açıklıkları (evre süzgeci)", {"layerId": "etiket", "all": {"kinds": ["opening"], "phases": ["demolish"]}}),
-        ("yalnız yeni mahaller (evre süzgeci)", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["new"]}}),
+        ("yalnız iptal edilen duvarın açıklıkları (tadilat süzgeci)", {"layerId": "etiket", "all": {"kinds": ["opening"], "phases": ["demolish"]}}),
+        ("yalnız ilave mahaller (tadilat süzgeci)", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["new"]}}),
         ("etiketler ve türler birlikte: aynı nesne iki kez etiketlenmez", {"layerId": "etiket", "tags": [{"of": uid_of(13)}], "all": {"kinds": ["opening"], "shape": "circle"}}),
         ("renkli ve kalın etiket", {"layerId": "etiket", "tags": [{"of": uid_of(5)}], "color": "#cc0000", "lineWeight": 0.35}),
     ]:
@@ -725,7 +725,7 @@ def tag_create_cases():
         ("türsüz toplu etiket reddedilir", {"layerId": "etiket", "all": {"kinds": []}}, {}),
         ("etiketsiz nesnesi olmayan tür reddedilir", {"layerId": "etiket", "all": {"kinds": ["stair"]}}, {}),
         ("toplu etiketin olmayan katmanı reddedilir", {"layerId": "etiket", "all": {"kinds": ["space"], "layers": ["yok"]}}, {}),
-        ("evresi geçici olan mahal yoksa reddedilir", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["temporary"]}}, {}),
+        ("tadilat durumu geçici olan mahal yoksa reddedilir", {"layerId": "etiket", "all": {"kinds": ["space"], "phases": ["temporary"]}}, {}),
         ("olmayan katman reddedilir", {**one, "layerId": "yok"}, {}),
         ("katman grubu reddedilir", {**one, "layerId": "pafta"}, {}),
         ("kilitli katman reddedilir", {**one, "layerId": "kilitli"}, {}),
@@ -1198,7 +1198,7 @@ def tedit_cases():
 
 
 TITLES = {"number": "No", "type": "Tür", "form": "Biçim", "width": "Genişlik", "height": "Yükseklik", "sill": "Denizlik",
-          "head": "Lento", "wall": "Duvar", "level": "Kat", "phase": "Evre", "count": "Adet", "area": "Alan",
+          "head": "Lento", "wall": "Duvar", "level": "Kat", "phase": "Tadilat durumu", "count": "Adet", "area": "Alan",
           "perimeter": "Çevre", "volume": "Hacim", "name": "Ad", "usage": "Kullanım", "tag": "Etiket", "place": "Konum",
           "length": "Uzunluk", "thickness": "Kalınlık", "attr": "Öznitelik"}
 LENGTHS = {"width", "height", "sill", "head", "perimeter", "length", "thickness"}

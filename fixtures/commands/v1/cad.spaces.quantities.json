@@ -3,7 +3,7 @@
   "version": 1,
   "command": "cad.spaces.quantities",
   "commandVersion": 1,
-  "title": "Metraj: mahaller, duvarlar, açıklıklar; kat, evre, kullanım ve katman süzgeçleri; retler",
+  "title": "Metraj: mahaller, duvarlar, açıklıklar; kat, tadilat, kullanım ve katman süzgeçleri; retler",
   "note": "ADR 0342 §1–§4. Beklenenler scripts/fixtures/space_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan; duvarlardan bulunan sınır space_cases.py'nin kesirli yüz bulmasından, ölçüleri Metraj adımıyla. Kurulumdaki çizimde 7 nesne var; yeni nesne 8'den başlar.",
   "setup": {
     "format": "kentos.document",
@@ -1091,7 +1091,7 @@
       ]
     },
     {
-      "name": "evre süzgeci: yeni",
+      "name": "tadilat süzgeci: ilave",
       "steps": [
         {
           "op": "execute",
@@ -2532,7 +2532,7 @@
       ]
     },
     {
-      "name": "evre süzgeci: var olan (hiçbiri)",
+      "name": "tadilat süzgeci: mevcut (hiçbiri)",
       "steps": [
         {
           "op": "execute",
@@ -4408,7 +4408,7 @@
       ]
     },
     {
-      "name": "ara duvarın kapısı: evre süzgeciyle açıklık da süzülür",
+      "name": "ara duvarın kapısı: tadilat süzgeciyle açıklık da süzülür",
       "steps": [
         {
           "op": "execute",

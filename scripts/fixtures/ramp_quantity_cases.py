@@ -176,14 +176,14 @@ def cases():
         ("zemin kat süzgeci", {"levels": ["zemin"]}),
         ("1. kat süzgeci: kata bağlı ve kendi kotlu rampa", {"levels": ["kat-1"]}),
         ("iki kat birden: katsız rampa dışarıda", {"levels": ["zemin", "kat-1"]}),
-        ("evre süzgeci: yeni", {"phases": ["new"]}),
-        ("evre süzgeci: var olan", {"phases": ["existing"]}),
+        ("tadilat süzgeci: ilave", {"phases": ["new"]}),
+        ("tadilat süzgeci: mevcut", {"phases": ["existing"]}),
         ("katman süzgeci: rampa katmanı", {"layers": ["rampa"]}),
         ("katman süzgeci: kilitli katmanın rampası da ölçülür", {"layers": ["kilitli"]}),
         ("katman süzgeci: gizli katmanın katsız rampası", {"layers": ["gizli"]}),
         ("kullanım süzgeci rampaları almaz", {"usages": ["Islak"]}),
-        ("kat ve evre birlikte: inen U rampa", {"levels": ["zemin"], "phases": ["existing"]}),
-        ("katman ve evre: var olan rampalar", {"layers": ["rampa"], "phases": ["existing"]}),
+        ("kat ve tadilat birlikte: inen U rampa", {"levels": ["zemin"], "phases": ["existing"]}),
+        ("katman ve tadilat: mevcut rampalar", {"layers": ["rampa"], "phases": ["existing"]}),
         ("katsız çizginin katmanı: hiçbir rampa yok", {"layers": ["cizim"]}),
     ]:
         add(name, [query(Drawing(), inp)])

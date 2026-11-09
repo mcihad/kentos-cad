@@ -1535,7 +1535,7 @@ def grid_cases():
         ("seri Z'den AA'ya geçer", {"layerId": "aks", "series": {"from": P(40, 0), "to": P(40, 10), "spacings": [5.0], "start": "Z"}}),
         ("başında balonlu, 10 mm balonlu aks", {"layerId": "aks", "grids": [{"pts": [P(0, 30), P(10, 30)], "label": "X1", "bubbles": "start", "bubbleSize": 10.0}]}),
         ("yaylı aks (büküm 0.5)", {"layerId": "aks", "grids": [{"pts": [P(-5, 40), P(5, 40)], "bulges": [0.5, 0.0], "label": "R"}]}),
-        ("katı ve evresiyle aks, rengi ve kalınlığıyla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "grids": [{"pts": [P(0, 50), P(10, 50)], "label": "Z1", "arch": {"level": "zemin", "phase": "new"}}]}),
+        ("katı ve tadilat durumuyla aks, rengi ve kalınlığıyla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "grids": [{"pts": [P(0, 50), P(10, 50)], "label": "Z1", "arch": {"level": "zemin", "phase": "new"}}]}),
         ("aksla seri birlikte: seri aksın ardından sürer", {"layerId": "aks", "grids": [{"pts": [P(50, 0), P(50, 10)], "label": "M"}], "series": {"from": P(52, 0), "to": P(52, 10), "spacings": [2.0]}}),
     ]:
         c.add(name, [create_step(Drawing(), GRIDS, "execute", inp)])
@@ -1574,7 +1574,7 @@ def system_cases():
         ("tek akslı iki aile: iki uzatma boyu aks", {"layerId": "aks", "system": {"origin": P(40, 30), "extension": 2.0}}),
         ("uzatma 0.5, başında balon, 10 mm balon", {"layerId": "aks", "system": {**base, "extension": 0.5, "bubbles": "start", "bubbleSize": 10.0}}),
         ("uzatma sıfırken akslar en dış akslarda biter", {"layerId": "aks", "system": {**base, "extension": 0.0}}),
-        ("katı ve evresiyle ağ, renk ve kalınlıkla; kolonlar katla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "system": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"width": 0.3}}}),
+        ("katı ve tadilat durumuyla ağ, renk ve kalınlıkla; kolonlar katla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "system": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"width": 0.3}}}),
         ("aks ve seriyle birlikte: ağ en sonda", {"layerId": "aks", "grids": [{"pts": [P(50, 0), P(50, 10)], "label": "M"}], "series": {"from": P(52, 0), "to": P(52, 10), "spacings": [2.0]}, "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}}),
         ("y ailesi H'den: I harfi atlanır", {"layerId": "aks", "system": {"origin": P(0, 60), "x": [5.0], "y": [3.0, 3.0, 3.0], "yStart": "H"}}),
         ("eğik başlangıç ve -90° dönüş", {"layerId": "aks", "system": {"origin": P(7.25, -3.5), "angle": -math.pi / 2, "x": [4.0], "y": [2.5, 2.5]}}),
@@ -1617,7 +1617,7 @@ def radial_cases():
         ("ilk adlar verilir, başında balon, 10 mm balon", {"layerId": "aks", "radial": {**base, "radialStart": "R1", "arcStart": "H", "bubbles": "start", "bubbleSize": 10.0}}),
         ("kesik eğrisel ağ: akslar uçlarında 12 mm", {"layerId": "aks", "radial": {**base, "ends": 12.0}}),
         ("kolonlar radyal aksın yönüyle, üstüne verilen dönüşle", {"layerId": "kolon", "radial": {**base, "columns": {"width": 0.4, "rotation": 0.25}}}),
-        ("yuvarlak kolonlar, katı ve evresiyle ağ", {"layerId": "aks", "radial": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"shape": "round", "width": 0.5}}}),
+        ("yuvarlak kolonlar, katı ve tadilat durumuyla ağ", {"layerId": "aks", "radial": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"shape": "round", "width": 0.5}}}),
         ("L kolonlar sol alt köşeleriyle kesişimde", {"layerId": "kolon", "radial": {**base, "columns": {"shape": "lShape", "width": 0.6, "depth": 0.6, "legs": [0.25, 0.25], "anchor": "bottomLeft"}}}),
         ("aks ağıyla birlikte: eğrisel ağ en sonda", {"layerId": "aks", "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}, "radial": {"center": P(80, 0), "turns": [0.4], "radius": 5.0}}),
         ("kesik aks: uçlarında 15 mm, ortası boş", {"layerId": "aks", "grids": [{"pts": [P(0, 60), P(20, 60)], "label": "K1", "ends": 15.0}]}),
@@ -2502,7 +2502,7 @@ def edit_cases():
     d = Drawing()
     c.add("Değiştir: aksa korkuluk reddedilir", [one(d, [uid_of(1)], {"kind": "set", "railings": "right"})])
     d = Drawing()
-    c.add("Değiştir: kat ve evre her türde, null kaldırır", [one(d, [uid_of(1), uid_of(8)], {"kind": "set", "level": "kat-1", "phase": "new"}),
+    c.add("Değiştir: kat ve tadilat durumu her türde, null kaldırır", [one(d, [uid_of(1), uid_of(8)], {"kind": "set", "level": "kat-1", "phase": "new"}),
                                                              one(d, [uid_of(1)], {"kind": "set", "level": None})])
     d = Drawing()
     c.add("Numarala: akslar verilen sırayla", [one(d, [uid_of(2), uid_of(1), uid_of(7)], {"kind": "renumber", "start": "1"})])

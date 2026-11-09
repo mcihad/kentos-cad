@@ -485,7 +485,7 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         return Some("Görünüş tarifinin sürümü en az 1 olur.".into());
     }
     if r.is_empty() {
-        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
+        return Some("Görünüş tarifi boş: kat, tadilat görünümü, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
     }
     if let Some(why) = crate::option_choices_problem(&r.options) {
         return Some(why);

@@ -2394,7 +2394,7 @@
       ]
     },
     {
-      "name": "kat değişir, evre, durum ve disiplin verilir",
+      "name": "kat değişir, tadilat durumu, yapım durumu ve disiplin verilir",
       "steps": [
         {
           "op": "execute",
@@ -3390,7 +3390,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.",
+              "message": "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.",
               "path": "operation"
             }
           },

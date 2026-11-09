@@ -298,10 +298,10 @@ class _WallsCreate(LocalCommand[WallsCreate, WallsCreated, WallsPlan]):
     toplamıdır, biri kalınlıksızsa genişliğin kalanını o alır. Duvarın yüzleri, uçları,
     bileşen çizgileri ve taramaları yoldan çizilir, saklanmaz; ayrıntısı çizimin
     ölçeğine göredir. Yayı duvarın yüzünden dar olan duvar yazılmaz (wall_collapses).
-    arch duvarın katını (projenin katlarından), evresini, yapım durumunu ve disiplinini
-    taşır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana
-    uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz. Plan yazmadan duvarları gösterir.
+    arch duvarın katını (projenin katlarından), tadilat durumunu, yapım durumunu ve
+    disiplinini taşır. Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli
+    katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz. Plan yazmadan duvarları gösterir.
     """
     __slots__ = ()
     id = "cad.walls.create"
@@ -337,10 +337,10 @@ class _WallsCreate(LocalCommand[WallsCreate, WallsCreated, WallsPlan]):
         kalınlıksızsa genişliğin kalanını o alır. Duvarın yüzleri, uçları, bileşen çizgileri
         ve taramaları yoldan çizilir, saklanmaz; ayrıntısı çizimin ölçeğine göredir. Yayı
         duvarın yüzünden dar olan duvar yazılmaz (wall_collapses). arch duvarın katını
-        (projenin katlarından), evresini, yapım durumunu ve disiplinini taşır. Katman
-        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
-        yazmadan duvarları gösterir.
+        (projenin katlarından), tadilat durumunu, yapım durumunu ve disiplinini taşır.
+        Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla
+        yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz.
+        Plan yazmadan duvarları gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -574,36 +574,37 @@ class _WallsEdit(LocalCommand[WallsEdit, WallsEdited, WallsEdited]):
     """``cad.walls.edit`` v1. Duvarı düzenle: Kalıcı kimlikleriyle verilen duvarların kendi
     alanlarını değiştirir; tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri.
     operation.kind set: genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz
-    tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım
-    durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin bileşenleri
-    duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen
-    duvar yazılmaz. split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye;
-    nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end);
-    kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları
-    aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin kimliğiyle (ters yöndeki
-    gövdesi yerinde çevrilir; walls_not_touching, walls_differ); uçları buluşursa
-    kapanır. extend (Uzat): her duvarın ucu (end, verilmezse to duvarına yakın olanı)
-    son kenarının doğrultusunda to duvarının yoluna dek; trim (Buda): her duvar to
-    duvarının yolunu kestiği yerde kısalır, keep noktasına en yakın parça (verilmezse
-    uzun olanı) kalır (wall_misses, wall_closed). flip (Çevir): yol ters döner, gövde
-    yolun öbür yanına aynalanır, uçların birleşimi yer değiştirir. replaceStyle (Stili
-    değiştir): from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini
-    alır (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none,
-    miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala
-    döndürür. shift (Kaydır, docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0)
-    kendine dik by metre kayar (yolun soluna artı, sağına eksi); yanındaki köşeler
-    bitişik kenarlar boyunca, yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın
-    ucu da aynı noktaya), saplandığı duvar boyunca ya da serbestse dik kayar; kenara T
-    ile saplanan duvarların uçları kendi doğrultularında izler; açıklıklar yerinde
-    kalır, izleyen duvarlar çıktının joined'ındadır. distance (Mesafe): side (left ya da
-    right) yanındaki en yakın paralel duvara net mesafe distance olacak kadar Kaydır
-    (cad.walls.distances aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı
-    doğrultudaki bitişik kenar ya da uç uca duvar, köşede birden çok duvar, kenarı yok
-    eden ya da ters çeviren kaydırma invalid_wall; sıfır kaydırma nothing_to_set;
-    izleyen duvar kilitli katmandaysa layer_locked. Birleşimler duvarlardan çizilir,
-    aynı adımda izler; düzenlemeden sonra birleşmeyen duvarlar uyarıda onaran öneriyle
-    söylenir (wall_join_overlap, wall_join_crowded, wall_join_acute,
-    wall_join_unresolved). Plan yazmadan duvarları gösterir.
+    tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), tadilat
+    durumu, yapım durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin
+    bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte
+    çizilemeyen duvar yazılmaz. split (Böl): her duvar yolunun at noktasına en yakın
+    yerinde ikiye; nokta duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz
+    (split_at_end); kapalı duvar orada açılır. join (Birleştir): uçları 1 mm içinde
+    buluşan, alanları aynı iki ya da daha çok duvar tek duvar olur, ilk verilenin
+    kimliğiyle (ters yöndeki gövdesi yerinde çevrilir; walls_not_touching,
+    walls_differ); uçları buluşursa kapanır. extend (Uzat): her duvarın ucu (end,
+    verilmezse to duvarına yakın olanı) son kenarının doğrultusunda to duvarının yoluna
+    dek; trim (Buda): her duvar to duvarının yolunu kestiği yerde kısalır, keep
+    noktasına en yakın parça (verilmezse uzun olanı) kalır (wall_misses, wall_closed).
+    flip (Çevir): yol ters döner, gövde yolun öbür yanına aynalanır, uçların birleşimi
+    yer değiştirir. replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa
+    çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim):
+    başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen
+    temizliği (cleanup); resetJoins ikisini de kurala döndürür. shift (Kaydır,
+    docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0) kendine dik by metre
+    kayar (yolun soluna artı, sağına eksi); yanındaki köşeler bitişik kenarlar boyunca,
+    yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın ucu da aynı noktaya),
+    saplandığı duvar boyunca ya da serbestse dik kayar; kenara T ile saplanan duvarların
+    uçları kendi doğrultularında izler; açıklıklar yerinde kalır, izleyen duvarlar
+    çıktının joined'ındadır. distance (Mesafe): side (left ya da right) yanındaki en
+    yakın paralel duvara net mesafe distance olacak kadar Kaydır (cad.walls.distances
+    aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı doğrultudaki bitişik kenar ya da
+    uç uca duvar, köşede birden çok duvar, kenarı yok eden ya da ters çeviren kaydırma
+    invalid_wall; sıfır kaydırma nothing_to_set; izleyen duvar kilitli katmandaysa
+    layer_locked. Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra
+    birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap,
+    wall_join_crowded, wall_join_acute, wall_join_unresolved). Plan yazmadan duvarları
+    gösterir.
     """
     __slots__ = ()
     id = "cad.walls.edit"
@@ -628,9 +629,9 @@ class _WallsEdit(LocalCommand[WallsEdit, WallsEdited, WallsEdited]):
         """Duvarı düzenle: Kalıcı kimlikleriyle verilen duvarların kendi alanlarını değiştirir;
         tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri. operation.kind set:
         genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz tek gövde), uçlar,
-        şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım durumu ve
-        disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin bileşenleri duvara geçer;
-        bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar
+        şematik dolgu, yükseklik, kat (projenin katlarından), tadilat durumu, yapım durumu
+        ve disiplin; verilmeyenler kalır, null olanlar kalkar. Stilin bileşenleri duvara
+        geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar
         yazılmaz. split (Böl): her duvar yolunun at noktasına en yakın yerinde ikiye; nokta
         duvarın iki yüzü arasında olmalı (point_off_wall), uçta olmaz (split_at_end); kapalı
         duvar orada açılır. join (Birleştir): uçları 1 mm içinde buluşan, alanları aynı iki

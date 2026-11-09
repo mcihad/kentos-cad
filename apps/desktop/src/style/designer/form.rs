@@ -272,7 +272,7 @@ fn wave<'a>(env: &Env<'_>) -> Element<'a, Message> {
             ),
         ));
         let phase = fields::labelled(
-            "Evre",
+            "Başlangıç",
             fields::check(
                 from_start.into(),
                 "Çizgi başından",

@@ -55,14 +55,14 @@ def build():
     table = [{"view": v, "phase": p, "look": look(v, p)} for v in VIEWS for p in PHASES]
     objects = []
     for name, e, view in [
-        ("yıkılacak duvar Yıkım planında kesikli", wall("demolish"), "demolition"),
-        ("yıkılacak duvarın kendi deseni kesikliye bırakır", wall("demolish", linePattern="Sınır"), "demolition"),
+        ("iptal edilen duvar Yıkım planında kesikli", wall("demolish"), "demolition"),
+        ("iptal edilen duvarın kendi deseni kesikliye bırakır", wall("demolish", linePattern="Sınır"), "demolition"),
         ("mevcut duvar Yeni durumda soluk", wall("existing"), "proposed"),
         ("kendi saydamlığı daha çok olan soluk kalır", wall("existing", transparency=0.8), "proposed"),
         ("az saydam mevcut duvar soluklaşır", wall("existing", transparency=0.2), "proposed"),
         ("yeni duvar Mevcut durumda gizli", wall("new"), "existing"),
         ("geçici duvar Yeni durumda kesikli", wall("temporary"), "proposed"),
-        ("evresiz duvar her görünümde olduğu gibi", wall(None), "demolition"),
+        ("tadilat durumu olmayan duvar her görünümde olduğu gibi", wall(None), "demolition"),
         ("yeni duvar Tümü'nde olduğu gibi", wall("new"), "all"),
     ]:
         lk = look(view, e.get("arch", {}).get("phase"))
@@ -81,7 +81,7 @@ def main():
         if not OUT.exists() or OUT.read_text() != text:
             print(f"{OUT.relative_to(ROOT)} başvurudan farklı; --check'siz yeniden yazın ve farkı okuyun.")
             return 1
-        print("evreler: tablo ve görünüşler başvuruyla aynı.")
+        print("tadilat: tablo ve görünüşler başvuruyla aynı.")
         return 0
     OUT.write_text(text)
     print(f"{OUT.relative_to(ROOT)} yazıldı.")

@@ -3275,7 +3275,7 @@
       "title": "Ruhsat takımı",
       "short": "Ruhsat takımı",
       "icon": "permitSet",
-      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen evrenin pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 3037).",
+      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 3037).",
       "aliases": [
         "RUHSAT",
         "RUHSATTAKIMI",
@@ -3379,10 +3379,10 @@
     },
     {
       "id": "arch.phase.all",
-      "title": "Evre: Tümü",
+      "title": "Tadilat: Tümü",
       "short": "Tümü",
       "icon": "phaseAll",
-      "description": "Bütün evreler olduğu gibi çizilir.",
+      "description": "Bütün tadilat durumları olduğu gibi çizilir.",
       "aliases": [
         "EVRETUMU"
       ],
@@ -3392,10 +3392,10 @@
     },
     {
       "id": "arch.phase.existing",
-      "title": "Evre: Mevcut durum",
+      "title": "Tadilat: Mevcut durum",
       "short": "Mevcut",
       "icon": "phaseExisting",
-      "description": "Mevcut ve yıkılacak nesneler çizilir; yeni ve geçici olanlar gizlenir (seçilmez, kenetlenmez, paftada da).",
+      "description": "Mevcut ve iptal edilecek nesneler çizilir; ilave ve geçici olanlar gizlenir (seçilmez, kenetlenmez, paftada da).",
       "aliases": [
         "EVREMEVCUT"
       ],
@@ -3405,10 +3405,10 @@
     },
     {
       "id": "arch.phase.demolition",
-      "title": "Evre: Yıkım planı",
+      "title": "Tadilat: Yıkım planı",
       "short": "Yıkım",
       "icon": "phaseDemolition",
-      "description": "Mevcut nesneler olduğu gibi, yıkılacaklar kesikli çizilir; yeni ve geçici olanlar gizlenir.",
+      "description": "Mevcut nesneler olduğu gibi, iptal edilecekler kesikli çizilir; ilave ve geçici olanlar gizlenir.",
       "aliases": [
         "EVREYIKIM"
       ],
@@ -3418,10 +3418,10 @@
     },
     {
       "id": "arch.phase.proposed",
-      "title": "Evre: Yeni durum",
+      "title": "Tadilat: Yeni durum",
       "short": "Yeni",
       "icon": "phaseProposed",
-      "description": "Yeni nesneler olduğu gibi, mevcutlar soluk, geçiciler kesikli çizilir; yıkılacaklar gizlenir.",
+      "description": "İlave nesneler olduğu gibi, mevcutlar soluk, geçiciler kesikli çizilir; iptal edilecekler gizlenir.",
       "aliases": [
         "EVREYENI"
       ],
@@ -4891,7 +4891,7 @@
       "id": "tool.modulePlace",
       "title": "Modül yerleştir",
       "icon": "modulePlace",
-      "description": "Oda modülünü bağlı yeni örnek olarak yerleştirir: modül, açı, aynalı, kat, evre ve numara öneki/soneki görünür ayarlardadır; örnek imleçle gelir, tıklama tek geri alma adımında yerleştirir. Kapının duvarı, mahalin duvarları, etiketin mahali ve ölçünün duvarı örneğin kendi nesneleridir.",
+      "description": "Oda modülünü bağlı yeni örnek olarak yerleştirir: modül, açı, aynalı, kat, tadilat durumu ve numara öneki/soneki görünür ayarlardadır; örnek imleçle gelir, tıklama tek geri alma adımında yerleştirir. Kapının duvarı, mahalin duvarları, etiketin mahali ve ölçünün duvarı örneğin kendi nesneleridir.",
       "aliases": [
         "MODULYERLESTIR",
         "MODULEPLACE"
@@ -6670,7 +6670,7 @@
         "cad"
       ],
       "tab": "arch",
-      "label": "Evre",
+      "label": "Tadilat",
       "icon": "phaseDemolition",
       "items": [
         {
