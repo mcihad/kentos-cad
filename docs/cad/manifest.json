@@ -11928,6 +11928,23 @@
    "tests": 1
   },
   {
+   "id": "tool.escapeRoutes",
+   "kind": "command",
+   "title": "Kaçış yolları",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Kaçış yolları: Mevzuat grubunun yangın kurallarının ölçtüğü yollar (BYKHY 32/6, 4/i, 48/2, 48/4, Ek-5/B) etkin katta çizgi, ok başı ve sınırıyla yazı olarak çizime; Kaçış özniteliği taşıyan eski yollar silinir (ADR 3035 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.explode",
    "kind": "tool",
    "title": "Patlat",

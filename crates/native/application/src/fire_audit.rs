@@ -311,8 +311,34 @@ fn level_height(levels: &[&kentos_commands::ArchLevel], i: usize) -> f64 {
     levels[i].height.or(next).unwrap_or(3.0)
 }
 
+/// A walk the fire rules measured (docs/adr/3035 §2): its points from the start, its length, the measure read against
+/// its limit (the whole walk, its one-way part or a corridor's dead end) and whether it breaks it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Walk {
+    pub level: Option<String>,
+    pub path: Vec<V>,
+    pub length: f64,
+    pub measure: f64,
+    /// The limit, m; none where the regulation does not ask it (a small dwelling building, 48/1).
+    pub limit: Option<f64>,
+    /// What the measure is: “tek yön”, “tek yönlü kısım”, “iki yön”, “çıkmaz koridor”, “daire içi”.
+    pub words: &'static str,
+    pub over: bool,
+}
+
 /// The fire rules' findings (docs/adr/3035), each said through `push(said, slots, at)`.
 pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V)) {
+    assess(doc, push, &mut Vec::new());
+}
+
+/// The walks the fire rules measure, every storey's (docs/adr/3035 §2).
+pub fn walks(doc: &Document) -> Vec<Walk> {
+    let mut out = Vec::new();
+    assess(doc, &mut |_, _, _| {}, &mut out);
+    out
+}
+
+fn assess(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V), walks: &mut Vec<Walk>) {
     let program = doc.program();
     let arch = doc.settings().arch.clone().unwrap_or_default();
     let sprinklers = arch.sprinklers;
@@ -455,57 +481,64 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
     let escape = kentos_domain::escape::escape(doc);
     let room_of = |slot: Slot| rooms.iter().find(|r| r.slot == slot);
     let m = metres;
-    // A walk's finding: one-way part and, with two exits or more, the whole.
-    let walk = |who: &str, to: &str, e: &ExitRoute, u: Use, article: Article| -> Option<Said> {
+    // A walk against Ek-5/B: the measure, the limit, their words and whether it is broken — the whole walk with one
+    // exit, else its one-way part, then the whole against two ways.
+    let judge = |e: &ExitRoute, u: Use| -> (f64, f64, &'static str, bool) {
         let [one, two] = u.walks();
         let (one, two) = (one[col], two[col]);
-        let route = &e.route;
-        if e.exits <= 1 && route.length > one + 1e-6 {
-            Some(Said {
-                code: codes::BYKHY_ESCAPE_DISTANCE_OVER,
-                message: format!(
-                    "{who} {to} {} > {} ({}, tek yön{wet}) — {}",
-                    m(route.length),
-                    m(one),
-                    u.label(),
-                    article.short()
-                ),
-                repair: "İkinci bir kaçış yolu (merdiven ya da çıkış) açın ya da yolu kısaltın."
-                    .into(),
-                rule: article.named(),
-                binding: None,
-            })
-        } else if e.exits > 1 && e.one_way > one + 1e-6 {
-            Some(Said {
-                code: codes::BYKHY_ESCAPE_DISTANCE_OVER,
-                message: format!(
-                    "{who} {to} yolun tek yönlü kısmı {} > {} ({}{wet}) — {}",
-                    m(e.one_way),
-                    m(one),
-                    u.label(),
-                    article.short()
-                ),
-                repair: "İki çıkışa giden yollar daha erken ayrılmalı: kapıyı ya da koridoru yeniden düzenleyin.".into(),
-                rule: article.named(),
-                binding: None,
-            })
-        } else if e.exits > 1 && route.length > two + 1e-6 {
-            Some(Said {
-                code: codes::BYKHY_ESCAPE_DISTANCE_OVER,
-                message: format!(
-                    "{who} {to} {} > {} ({}, iki yön{wet}) — {}",
-                    m(route.length),
-                    m(two),
-                    u.label(),
-                    article.short()
-                ),
-                repair: "Çıkışı yaklaştırın ya da yeni bir kaçış merdiveni ekleyin.".into(),
-                rule: article.named(),
-                binding: None,
-            })
+        if e.exits <= 1 {
+            (e.route.length, one, "tek yön", e.route.length > one + 1e-6)
+        } else if e.one_way > one + 1e-6 {
+            (e.one_way, one, "tek yönlü kısım", true)
         } else {
-            None
+            (e.route.length, two, "iki yön", e.route.length > two + 1e-6)
         }
+    };
+    // A walk's finding.
+    let walk = |who: &str, to: &str, e: &ExitRoute, u: Use, article: Article| -> Option<Said> {
+        let (measure, most, words, over) = judge(e, u);
+        if !over {
+            return None;
+        }
+        let (message, repair) = match words {
+            "tek yönlü kısım" => (
+                format!(
+                    "{who} {to} yolun tek yönlü kısmı {} > {} ({}{wet}) — {}",
+                    m(measure),
+                    m(most),
+                    u.label(),
+                    article.short()
+                ),
+                "İki çıkışa giden yollar daha erken ayrılmalı: kapıyı ya da koridoru yeniden düzenleyin.",
+            ),
+            "tek yön" => (
+                format!(
+                    "{who} {to} {} > {} ({}, tek yön{wet}) — {}",
+                    m(measure),
+                    m(most),
+                    u.label(),
+                    article.short()
+                ),
+                "İkinci bir kaçış yolu (merdiven ya da çıkış) açın ya da yolu kısaltın.",
+            ),
+            _ => (
+                format!(
+                    "{who} {to} {} > {} ({}, iki yön{wet}) — {}",
+                    m(measure),
+                    m(most),
+                    u.label(),
+                    article.short()
+                ),
+                "Çıkışı yaklaştırın ya da yeni bir kaçış merdiveni ekleyin.",
+            ),
+        };
+        Some(Said {
+            code: codes::BYKHY_ESCAPE_DISTANCE_OVER,
+            message,
+            repair: repair.into(),
+            rule: article.named(),
+            binding: None,
+        })
     };
     let start = |r: &Route| r.path.first().copied().unwrap_or(V::new(0.0, 0.0));
     // Kaçış uzaklıkları.
@@ -516,9 +549,6 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
             continue;
         };
         if room.dwelling {
-            if small_dwelling {
-                continue;
-            }
             match &e.entrance {
                 Some(r) => {
                     let key = (room.unit.clone().unwrap_or_default(), e.level.clone());
@@ -526,7 +556,7 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
                         worst.insert(key, (r.length, room.slot, r.clone()));
                     }
                 }
-                None if e.has_entrance => push(
+                None if e.has_entrance && !small_dwelling => push(
                     Said {
                         code: codes::BYKHY_ESCAPE_NO_ROUTE,
                         message: format!(
@@ -554,7 +584,17 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
             // part.
             Some(x) if room.corridor => {
                 let most = u.dead_end()[col];
-                if x.one_way > most + 1e-6 {
+                let over = x.one_way > most + 1e-6;
+                walks.push(Walk {
+                    level: e.level.clone(),
+                    path: x.route.path.clone(),
+                    length: x.route.length,
+                    measure: x.one_way,
+                    limit: Some(most),
+                    words: "çıkmaz koridor",
+                    over,
+                });
+                if over {
                     push(
                         Said {
                             code: codes::BYKHY_ESCAPE_DISTANCE_OVER,
@@ -576,6 +616,16 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
                 }
             }
             Some(x) => {
+                let (measure, most, words, over) = judge(x, u);
+                walks.push(Walk {
+                    level: e.level.clone(),
+                    path: x.route.path.clone(),
+                    length: x.route.length,
+                    measure,
+                    limit: Some(most),
+                    words,
+                    over,
+                });
                 if let Some(s) = walk(
                     &format!("{} en uzak noktasından", room.name),
                     "kat çıkışına",
@@ -603,8 +653,18 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
         }
     }
     let limit = 20.0 + 10.0 * col as f64;
-    for ((unit, _), (length, slot, route)) in &worst {
-        if *length > limit + 1e-6 {
+    for ((unit, level), (length, slot, route)) in &worst {
+        let over = !small_dwelling && *length > limit + 1e-6;
+        walks.push(Walk {
+            level: level.clone(),
+            path: route.path.clone(),
+            length: *length,
+            measure: *length,
+            limit: (!small_dwelling).then_some(limit),
+            words: "daire içi",
+            over,
+        });
+        if over {
             let number = program
                 .unit(unit)
                 .map_or(unit.as_str(), |u| u.number.as_str());
@@ -628,23 +688,34 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
             );
         }
     }
-    if !small_dwelling {
-        let mut said_units = std::collections::BTreeSet::new();
-        for d in &escape.doors {
-            let Some(x) = &d.exit else { continue };
-            let number = program
-                .unit(&d.unit)
-                .map_or(d.unit.as_str(), |u| u.number.as_str());
-            if let Some(s) = walk(
-                &format!("“{number}” bölümünün kapısından"),
-                "kat çıkışına",
-                x,
-                Use::Dwelling,
-                DOOR_ARTICLE,
-            ) && said_units.insert((d.unit.clone(), d.level.clone()))
-            {
-                push(s, vec![d.door], d.at);
-            }
+    let mut said_units = std::collections::BTreeSet::new();
+    for d in &escape.doors {
+        let Some(x) = &d.exit else { continue };
+        let (measure, most, words, over) = judge(x, Use::Dwelling);
+        walks.push(Walk {
+            level: d.level.clone(),
+            path: x.route.path.clone(),
+            length: x.route.length,
+            measure,
+            limit: (!small_dwelling).then_some(most),
+            words,
+            over: over && !small_dwelling,
+        });
+        if small_dwelling {
+            continue;
+        }
+        let number = program
+            .unit(&d.unit)
+            .map_or(d.unit.as_str(), |u| u.number.as_str());
+        if let Some(s) = walk(
+            &format!("“{number}” bölümünün kapısından"),
+            "kat çıkışına",
+            x,
+            Use::Dwelling,
+            DOOR_ARTICLE,
+        ) && said_units.insert((d.unit.clone(), d.level.clone()))
+        {
+            push(s, vec![d.door], d.at);
         }
     }
     // Kişi yükü, çıkış genişliği ve sayısı (33/1, 39/2).

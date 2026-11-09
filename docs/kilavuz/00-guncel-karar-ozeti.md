@@ -188,6 +188,8 @@
     - `fire_audit.rs` (application): `Use` (Ek-5/B satırı: `walks`, `dead_end`, `per_unit`), `use_of`, `load_of`
       (Ek-5/A), kurallar `bykhy_*`; Mevzuat grubunun sonunda çağrılır. `ArchSettings.sprinklers` (KCAD 214), Proje
       ayarları › Yangın güvenliği.
+    - `fire_audit::walks` (ölçülen yollar, sınırlarıyla) → `fire_marks::draw` (çizgi + ok başı + "tek yön 28,07 m >
+      15,00 m"; `MARK_ATTR` = `Kaçış`, yeniden çizimde eskiler silinir) → `tool.escapeRoutes` (`escape_tool.rs`, Proje ▾).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

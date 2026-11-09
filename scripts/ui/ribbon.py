@@ -471,7 +471,8 @@ CAD = [
           # the navigator: a view's area edited on the model.
           # Parsel ve bahçe mesafeleri (docs/adr/3032) beside Program: the site plan's parcel, the project's as the
           # program is.
-          overflow=["arch.program", "tool.siteParcel", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
+          # Kaçış yolları (docs/adr/3035 §2) beside them: the fire rules' walks drawn on the storey.
+          overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),

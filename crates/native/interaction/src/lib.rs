@@ -217,6 +217,7 @@ pub mod reshape;
 pub mod reshape_by;
 pub mod opening_codes_tool;
 pub mod parcel_tool;
+pub mod escape_tool;
 pub mod plan_dimensions;
 pub mod revcloud;
 pub mod room_grip;

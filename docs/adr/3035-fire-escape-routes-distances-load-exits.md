@@ -1,6 +1,6 @@
 # 3035 — Yangın kaçışı: kaçış yolları, uzaklıklar, kişi yükü ve çıkışlar
 
-Tarih: 2026-11-09. Durum: kabul (M35, 1. bölüm; ADV-23; plan S23).
+Tarih: 2026-11-09. Durum: kabul (M35, iki bölüm; ADV-23; plan S23).
 
 ## Sorun
 
@@ -139,6 +139,27 @@ Maddeler:
 - **Yeni kodlar** (uyarı): `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
   `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below`.
 
+### §2 Kaçış yollarının planda çizimi (M35 2. bölüm)
+
+- **Kaçış yolları** (`tool.escapeRoutes`; Mimari › Proje ▾, Parsel'in yanında; KACIS, KAÇIŞYOLU, YANGINKACISI):
+  - Etkin katın yollarını çizer ve biter (`escape_tool.rs`, `fire_marks::draw`). Tek geri alma adımıdır.
+  - Yollar Mevzuat grubunun ölçtüğü yollardır (`fire_audit::walks`): bulgu ile çizim aynı ölçümden gelir.
+- **Her yol:**
+  - Çizgisi en uzak noktadan çıkışa uzanır; sonunda ok başı vardır (iki çizgi, son kola 25° açıyla).
+  - Başında, yolun gittiği yöne ve mahalin içine doğru yazısı durur: ölçtüğü ve sınırı ("tek yön 28,07 m > 15,00 m",
+    "daire içi 12,40 m ≤ 20,00 m", "çıkmaz koridor 26,80 m > 15,00 m").
+  - Yazı ilk sürümde ortalıydı; komşu odaların köşedeki yazıları üst üste biniyordu.
+  - Sınırı aşan kırmızı (#d32f2f), uyan yeşil (#2e7d32) çizilir. Yönetmeliğin aramadığı yol (48/1) gri çizilir ve
+    yalnız uzunluğunu yazar.
+- **Ölçülen yollar:**
+  - Konut olmayan mahallerin yolu ve koridorların çıkmaz ucu.
+  - Her dairenin kat kat en uzak yolu (48/2) ve her daire kapısının yolu (48/4).
+  - Kapısız mahalin yolu yoktur; Denetim "ulaşmıyor" der.
+- **Yeniden çizim:** her işaret `Kaçış` özniteliğini taşır. Yeniden çalışınca bütün katların eski işaretleri silinir,
+  yalnız etkin katınki çizilir; plan bir anda tek katın yollarını gösterir. İşaretler çizgi ve yazıdır, çizimi izlemez:
+  değişiklikten sonra araç yeniden çalıştırılır.
+- **Yeni ikon `escapeRoutes`:** kapısı açık bir oda, içinden kesikli yol ve kapıdan çıkan ok.
+
 ## Ölçüm
 
 - **Test** (`escape::tests`):
@@ -174,11 +195,22 @@ Maddeler:
     `m35-kaynaklar.png`.
 - **KCAD:** `sprinklers.kcad`; kırık `sprinklers-in-schema-213`; 245 geçerli dosya, 1711 dosya Python okuyucusuyla
   tutarlı.
+- **Test, §2** (`fire_escape_tests::the_escape_routes_tool_draws_the_storey_s_walks_with_their_limits`): 8 katlı
+  konutun zemin katında `tool.escapeRoutes`.
+  - "daire içi 22,00 m > 20,00 m" ve "tek yön 26,15 m > 15,00 m" kırmızı yazılır; "2" dairesinin içi yeşildir.
+  - Her yazı için bir çizgi ve bir ok başı çizilir.
+  - Yeniden çalışınca aynı sayıda işaret kalır. İlk geri alma ilk çizimi geri getirir, ikincisi hepsini kaldırır.
+  - `fire_marks::tests`: yazı biçimleri.
+- **Gerçek pencere, §2** (1920 × 1080):
+  - `fixtures/interaction/real/kacis-yollari.txt`: Menülerde ara "kaçış yolları", Enter. Konutta 4 yol çizildi,
+    2'si kırmızı; durum çubuğu "4 kaçış yolu çizildi (“Zemin kat”); 2 tanesi sınırı aşıyor (kırmızı)" der.
+  - `fixtures/interaction/real/kacis-yollari-buro.txt`: Kat › 1. kat, sonra araç. Büroda 6 yol çizildi, 5'i kırmızı.
+  - Resim: `.run/gui-evidence/mimari-m35/m35-kacis-yollari.png`, ikon `m35-simge.png`.
 - **Fikstürler:** 19 280 komut vakası değişmedi.
 
 ## Sonraki adımlar
 
-- **2. bölüm:** kaçış yollarını plana çizen araç (en uzak noktadan çıkışa çizgi, uzunluk yazısı, sınırı aşan kırmızı).
+- Kaçış yolu işaretlerinin kat bilgisi taşıması ve çizimi izlemesi; yangın kaçış paftası (ADV-24).
 - Kapının açılış yönü (47/2: 50 kişiyi aşan mekânda kaçış yönüne), korunumlu merdiven ve hol nesneleri, yangın dayanımı.
 - İki çıkış arasındaki uzaklık (39/3–4: köşegenin 1/2'si, 1/3'ü) ve kaçış merdivenlerinin birbirine alternatif
   konumu (40).

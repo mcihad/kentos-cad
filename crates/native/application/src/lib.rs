@@ -523,6 +523,7 @@ pub mod spaces_edit;
 pub mod program_check;
 pub mod regulation_audit;
 pub mod fire_audit;
+pub mod fire_marks;
 pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;

@@ -90,6 +90,8 @@ pub const TOOLS: &[&str] = &[
     // Doğrama kodları (docs/adr/3028).
     crate::opening_codes_tool::ID,
     crate::parcel_tool::ID,
+    // Kaçış yolları (docs/adr/3035 §2).
+    crate::escape_tool::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
@@ -508,6 +510,8 @@ impl Session {
             }
             // Parsel (docs/adr/3032).
             crate::parcel_tool::ID => Box::new(crate::parcel_tool::ParcelTool::new()),
+            // Kaçış yolları (docs/adr/3035 §2).
+            crate::escape_tool::ID => Box::new(crate::escape_tool::EscapeRoutes::new()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }

@@ -293,8 +293,8 @@ fn an_office_storey_s_distances_people_exits_and_corridor_are_said() {
 /// farthest point some 22 m from the flat's door (20 m asked, 48/2); the door is some 26 m from the stair's room along
 /// a common corridor with one exit (15 m one way, 48/4 and Ek-5/B); one stair where two are asked (48/5-b); a high
 /// building's corridor narrower than 1.20 m (33/2). With a sprinkler system the walks may be 30 m.
-#[test]
-fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
+/// The tall dwelling building of `a_tall_dwelling_building_s_walks_and_stairs_are_said`.
+fn tall_dwelling() -> App {
     let mut app = blank();
     let levels: Vec<Value> = (0..8)
         .map(|i| {
@@ -369,6 +369,12 @@ fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
         json!({"layerId": layer, "stairs": [{"pts": [p(28.7, 0.6), p(28.7, 4.7), p(31.4, 4.7)], "width": 1.2,
             "risers": 18, "riserHeight": 0.1667, "tread": 0.27, "railings": "both", "arch": {"level": "zemin"}}]}),
     );
+    app
+}
+
+#[test]
+fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
+    let mut app = tall_dwelling();
     let found = fire(&mut app);
     let messages: Vec<&str> = found.iter().map(|(_, m)| m.as_str()).collect();
     assert!(
@@ -434,4 +440,61 @@ fn a_tall_dwelling_building_s_walks_and_stairs_are_said() {
         std::fs::write(std::path::Path::new(&out).join("konut-yangin.kcad"), bytes)
             .expect("written");
     }
+}
+
+/// Kaçış yolları (docs/adr/3035 §2) on the tall dwelling building's ground storey: each walk a line and an arrowhead
+/// with what it measured against its limit — flat “1” 22,00 m inside (20 m) and 26,15 m from its door (15 m one way)
+/// red, flat “2”'s walks green; run again, the same marks, not twice; one undo step takes them away.
+#[test]
+fn the_escape_routes_tool_draws_the_storey_s_walks_with_their_limits() {
+    let mut app = tall_dwelling();
+    let _ = app.update(Message::ActiveLevel(Some("zemin".into())));
+    let marks = |app: &App| -> Vec<(String, Option<String>, Option<String>)> {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        doc.entities()
+            .filter(|e| e.base().attrs.contains_key("Kaçış"))
+            .map(|e| {
+                let text = match e {
+                    kentos_commands::Entity::Text(t) => Some(t.text.clone()),
+                    _ => None,
+                };
+                (e.kind().to_owned(), e.base().color.clone(), text)
+            })
+            .collect()
+    };
+    let _ = app.update(Message::Run("tool.escapeRoutes"));
+    let first = marks(&app);
+    let texts: Vec<(&str, &str)> = first
+        .iter()
+        .filter_map(|(_, c, t)| Some((t.as_deref()?, c.as_deref().unwrap_or_default())))
+        .collect();
+    assert!(
+        texts.contains(&("daire içi 22,00 m > 20,00 m", "#d32f2f")),
+        "{texts:#?}"
+    );
+    assert!(
+        texts.contains(&("tek yön 26,15 m > 15,00 m", "#d32f2f")),
+        "{texts:#?}"
+    );
+    assert!(
+        texts.iter().any(|(t, c)| t.starts_with("daire içi ")
+            && t.ends_with("≤ 20,00 m")
+            && *c == "#2e7d32"),
+        "flat 2's walk inside: {texts:#?}"
+    );
+    // Each walk: its line, its arrowhead and its words.
+    let lines = first.iter().filter(|(k, ..)| k == "polyline").count();
+    assert_eq!(lines, 2 * texts.len(), "{first:#?}");
+    // Run again: the old walks taken away first.
+    let _ = app.update(Message::Run("tool.escapeRoutes"));
+    assert_eq!(marks(&app).len(), first.len());
+    // One undo step.
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(
+        marks(&app).len(),
+        first.len(),
+        "undo gives back the first drawing's marks"
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert!(marks(&app).is_empty(), "{:#?}", marks(&app));
 }

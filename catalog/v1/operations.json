@@ -2288,6 +2288,14 @@
       ],
       "note": "Vaziyet planı: parsel (kapalı çizginin ya da alanın kimliği), kenar türleri ve kendi mesafeleri ayarlara (arch.site), yapı yaklaşma sınırı kesikli kapalı çizgi olarak çizime; sınırı belge her adımda yeniden yazar (ADR 3032)."
     },
+    "tool.escapeRoutes": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create",
+        "cad.entities.delete"
+      ],
+      "note": "Kaçış yolları: Mevzuat grubunun yangın kurallarının ölçtüğü yollar (BYKHY 32/6, 4/i, 48/2, 48/4, Ek-5/B) etkin katta çizgi, ok başı ve sınırıyla yazı olarak çizime; Kaçış özniteliği taşıyan eski yollar silinir (ADR 3035 §2)."
+    },
     "arch.zoningTable": {
       "level": "semantic",
       "via": [
