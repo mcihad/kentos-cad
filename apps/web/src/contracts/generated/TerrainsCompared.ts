@@ -3,12 +3,16 @@ import type { TerrainAdjusted } from "./TerrainAdjusted";
 import type { TerrainDifferenceAt } from "./TerrainDifferenceAt";
 import type { TerrainDifferenceBand } from "./TerrainDifferenceBand";
 import type { TerrainVolumes } from "./TerrainVolumes";
+import type { TerrainZoneRest } from "./TerrainZoneRest";
+import type { TerrainZoneVolumes } from "./TerrainZoneVolumes";
 
 /**
  * Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net
  * (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
  * the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
  * With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
- * factor: the adjusted volumes.
+ * factor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all
+ * (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
+ * comparison's).
  */
-export type TerrainsCompared = { base: string, comparison: string, cut: number, fill: number, net: number, cutArea: number, fillArea: number, covered: number, uncovered: number, least?: TerrainDifferenceAt, largest?: TerrainDifferenceAt, bands?: Array<TerrainDifferenceBand>, outsideArea?: number, cell?: number, exact?: TerrainVolumes, adjusted?: TerrainAdjusted, };
+export type TerrainsCompared = { base: string, comparison: string, cut: number, fill: number, net: number, cutArea: number, fillArea: number, covered: number, uncovered: number, least?: TerrainDifferenceAt, largest?: TerrainDifferenceAt, bands?: Array<TerrainDifferenceBand>, outsideArea?: number, cell?: number, exact?: TerrainVolumes, adjusted?: TerrainAdjusted, zones?: Array<TerrainZoneVolumes>, rest?: TerrainZoneRest, zoned?: TerrainVolumes, };

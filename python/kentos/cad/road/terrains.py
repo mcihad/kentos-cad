@@ -15,6 +15,7 @@ from ..types import (  # noqa: F401
     CloudReturnsName,
     CompareMethod,
     CompareMethodName,
+    CompareZone,
     ContourRules,
     HeightReference,
     SheetSlopes,
@@ -515,13 +516,20 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
     yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı
     (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki
     yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve
-    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR
-    1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey
-    sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
+    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Malzeme
+    bölgeleri (zones, ADR 3540; Civil 3D'nin sınırlı hacimleri): her biri bir malzemenin
+    yeri olan kapalı nesne (düz kenarlı tek parçalı kapalı çoklu çizgi ya da alan,
+    delikli olabilir), adı ve kendi kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o
+    da yoksa 1); her bölgenin içinde kesin TIN–TIN farkı (alan, örtülen alan, kazı,
+    dolgu, net, katsayılı), bölgelerin dışı (rest, karşılaştırmanın katsayılarıyla) ve
+    malzemeye göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara
+    yönteminde istenmez; iki yüzeyin dışına taşan bölge uyarıyla (compare_uncovered).
+    Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki
+    düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
     gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
     taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
     heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
-    unknown_terrain, unproven_heights, terrain_unbuildable.
+    unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.
     """
     __slots__ = ()
     id = "road.terrains.compare"
@@ -545,6 +553,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         fill_factor: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        zones: Sequence[CompareZone] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TerrainsCompared:
@@ -554,13 +563,20 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında)
         ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın
         dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın
-        aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları
-        (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin
-        dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret,
-        assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen
-        iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered.
-        Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights,
-        terrain_unbuildable.
+        aralıklarının plan alanı ve aralık dışı. Malzeme bölgeleri (zones, ADR 3540; Civil
+        3D'nin sınırlı hacimleri): her biri bir malzemenin yeri olan kapalı nesne (düz
+        kenarlı tek parçalı kapalı çoklu çizgi ya da alan, delikli olabilir), adı ve kendi
+        kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o da yoksa 1); her bölgenin içinde
+        kesin TIN–TIN farkı (alan, örtülen alan, kazı, dolgu, net, katsayılı), bölgelerin
+        dışı (rest, karşılaştırmanın katsayılarıyla) ve malzemeye göre katsayılı toplam
+        (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara yönteminde istenmez; iki yüzeyin
+        dışına taşan bölge uyarıyla (compare_uncovered). Kotlar (ADR 1029): iki yüzeyin
+        kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan
+        alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri
+        bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır
+        (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
+        heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
+        unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
@@ -572,6 +588,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             fill_factor: Unit: 1.
             method:
             ranges: Unit: m.
+            zones:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -593,6 +610,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             fill_factor=fill_factor,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            zones=_opt(zones, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -608,6 +626,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         fill_factor: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        zones: Sequence[CompareZone] | Unset = UNSET,
     ) -> TerrainsCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -621,6 +640,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             fill_factor=fill_factor,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            zones=_opt(zones, lambda x: list(x)),
         ))
 
     def validate(
@@ -636,6 +656,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         fill_factor: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        zones: Sequence[CompareZone] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -649,6 +670,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             fill_factor=fill_factor,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            zones=_opt(zones, lambda x: list(x)),
         ))
 
     def answer(
@@ -664,6 +686,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         fill_factor: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        zones: Sequence[CompareZone] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -682,6 +705,7 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             fill_factor=fill_factor,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            zones=_opt(zones, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

@@ -2212,7 +2212,7 @@ const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.terrains.compare",
-        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "unproven_heights", "terrain_unbuildable"]],
+        refusals: &[&["not_a_road_project", "invalid_analysis", "unknown_terrain", "entity_not_found", "unproven_heights", "terrain_unbuildable"]],
         warnings: &["heights_assumed", "compare_uncovered"],
         targets: none,
     },

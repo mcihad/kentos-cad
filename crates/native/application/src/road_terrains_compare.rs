@@ -1,15 +1,17 @@
 //! `road.terrains.compare` v1 (plan/road.md Y18.3, docs/adr/0916 §3): the difference of two terrain surfaces over the
 //! comparison's plan (Civil 3D's TIN volume surface), read now with `kentos_road::volume::difference`: cut, fill and
-//! net volumes, their areas, the extremes and the ranges' areas. Nothing is written. The shared cases are
-//! `fixtures/commands/v1/road.terrains.compare.json`.
+//! net volumes, their areas, the extremes and the ranges' areas; with material zones (docs/adr/3540,
+//! `kentos_road::volume_materials`) each zone's part, the rest and the adjusted volumes by material. Nothing is
+//! written. The shared cases are `fixtures/commands/v1/road.terrains.compare.json` and `….compare.zones.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, MOST_COMPARE_CELLS, TerrainAdjusted, TerrainDifferenceAt, TerrainDifferenceBand,
-    CompareMethod, TerrainVolumes, TerrainsCompare, TerrainsCompared,
+    CommandResult, CommandWarning, CompareMethod, CompareZone, MOST_COMPARE_CELLS, TerrainAdjusted, TerrainDifferenceAt,
+    TerrainDifferenceBand, TerrainVolumes, TerrainZoneRest, TerrainZoneVolumes, TerrainsCompare, TerrainsCompared,
 };
 use kentos_domain::Document;
-use kentos_road::surface::Surface;
+use kentos_road::surface::{Region, Surface};
 use kentos_road::volume::{self, Triangle};
+use kentos_road::volume_materials;
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
@@ -22,6 +24,45 @@ fn invalid(message: &str, path: &str) -> Stop {
 
 fn triangles(s: &Surface) -> Vec<Triangle> {
     s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
+}
+
+/// The volumes adjusted by a cut and a fill factor.
+fn adjust(cut: f64, fill: f64, cut_factor: f64, fill_factor: f64) -> TerrainAdjusted {
+    TerrainAdjusted { cut_factor, fill_factor, cut: cut * cut_factor, fill: fill * fill_factor, net: fill * fill_factor - cut * cut_factor }
+}
+
+/// The zones' boundaries (docs/adr/3540), each a closed object of the drawing, no two sharing more than 1 mm².
+fn zone_regions(doc: &Document, zones: &[CompareZone]) -> Result<Vec<Region>, Stop> {
+    let mut out: Vec<Region> = Vec::with_capacity(zones.len());
+    for (k, z) in zones.iter().enumerate() {
+        let path = format!("zones[{k}].boundary");
+        // The coverage's rule for a boundary, its refusal said at the zone (an analysis's input here).
+        let region = crate::road_terrains_coverage::boundary_of(doc, &z.boundary).map_err(|stop| match stop {
+            Stop::Failed(mut e) => {
+                if e.code == codes::INVALID_COVERAGE {
+                    e.code = codes::INVALID_ANALYSIS.into();
+                }
+                e.path = Some(path.clone());
+                Stop::Failed(e)
+            }
+            other => other,
+        })?;
+        for (j, earlier) in out.iter().enumerate() {
+            let shared = volume_materials::overlap(earlier, &region);
+            if shared > volume_materials::OVERLAP {
+                return Err(invalid(
+                    &format!(
+                        "“{}” ile “{}” bölgeleri üst üste biniyor ({shared:.2} m²): bir yer tek malzemenin olur; sınırları ayırın.",
+                        zones[j].name.trim(),
+                        z.name.trim()
+                    ),
+                    &path,
+                ));
+            }
+        }
+        out.push(region);
+    }
+    Ok(out)
 }
 
 /// The comparison now, and its warnings.
@@ -48,10 +89,29 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
                 "ranges",
             ));
         }
+        if !input.zones.is_empty() {
+            return Err(invalid(
+                "Malzeme bölgeleri TIN yöntemiyle ölçülür; ızgara yönteminde bölge istenmez.",
+                "zones",
+            ));
+        }
     }
+    const FACTOR: &str = "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).";
+    let bad = |v: Option<f64>| v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0));
     for (path, v) in [("cutFactor", input.cut_factor), ("fillFactor", input.fill_factor)] {
-        if v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0)) {
-            return Err(invalid("Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).", path));
+        if bad(v) {
+            return Err(invalid(FACTOR, path));
+        }
+    }
+    // Material zones (docs/adr/3540): each named, its factors in the comparison's range.
+    for (k, z) in input.zones.iter().enumerate() {
+        if z.name.trim().is_empty() {
+            return Err(invalid("Malzeme bölgesinin adı boş olamaz; malzemeyi yazın (ör. Kaya).", &format!("zones[{k}].name")));
+        }
+        for (key, v) in [("cutFactor", z.cut_factor), ("fillFactor", z.fill_factor)] {
+            if bad(v) {
+                return Err(invalid(FACTOR, &format!("zones[{k}].{key}")));
+            }
         }
     }
     let base = crate::road_profiles::surface_id(doc, &input.base, "base")?;
@@ -59,6 +119,7 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
     if base == comparison {
         return Err(invalid("Taban ile karşılaştırma aynı yüzey; iki ayrı yüzey verin.", "comparison"));
     }
+    let regions = zone_regions(doc, &input.zones)?;
     let def = |id: &str| terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled);
     let (b, c) = (def(&base)?, def(&comparison)?);
     // Docs/adr/1029: the two grounds' heights on one vertical system, or taken as one by the call.
@@ -100,6 +161,55 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
             path: Some("comparison".into()),
         });
     }
+    // The zones' parts (docs/adr/3540): each zone's own factors, else the comparison's, else 1; the rest is the exact
+    // difference less the zones' (they do not overlap) with the comparison's factors.
+    let (cf, ff) = (input.cut_factor.unwrap_or(1.0), input.fill_factor.unwrap_or(1.0));
+    let measured_zones = volume_materials::measure(&triangles(sc), &triangles(sb), &regions);
+    let zones: Vec<TerrainZoneVolumes> = input
+        .zones
+        .iter()
+        .zip(&measured_zones)
+        .map(|(z, m)| TerrainZoneVolumes {
+            name: z.name.trim().to_owned(),
+            boundary: z.boundary.clone(),
+            area: m.area,
+            covered: m.covered,
+            cut: m.cut,
+            fill: m.fill,
+            net: m.fill - m.cut,
+            cut_area: m.cut_area,
+            fill_area: m.fill_area,
+            adjusted: adjust(m.cut, m.fill, z.cut_factor.unwrap_or(cf), z.fill_factor.unwrap_or(ff)),
+        })
+        .collect();
+    for (k, z) in zones.iter().enumerate() {
+        let off = z.area - z.covered;
+        if off > 1e-6 * z.area.max(1.0) {
+            warnings.push(CommandWarning {
+                code: codes::COMPARE_UNCOVERED.into(),
+                message: format!("“{}” bölgesinin {off:.2} m²'si iki yüzeyin ortak alanının dışında; o kısım bölgenin hacmine girmedi.", z.name),
+                path: Some(format!("zones[{k}].boundary")),
+            });
+        }
+    }
+    let rest = (!zones.is_empty()).then(|| {
+        let sum = |f: fn(&TerrainZoneVolumes) -> f64| zones.iter().map(f).sum::<f64>();
+        let (cut, fill) = (d.volumes.cut - sum(|z| z.cut), d.volumes.fill - sum(|z| z.fill));
+        TerrainZoneRest {
+            covered: d.volumes.covered - sum(|z| z.covered),
+            cut,
+            fill,
+            net: fill - cut,
+            cut_area: d.volumes.cut_area - sum(|z| z.cut_area),
+            fill_area: d.volumes.fill_area - sum(|z| z.fill_area),
+            adjusted: adjust(cut, fill, cf, ff),
+        }
+    });
+    let zoned = rest.as_ref().map(|r| {
+        let cut = zones.iter().map(|z| z.adjusted.cut).sum::<f64>() + r.adjusted.cut;
+        let fill = zones.iter().map(|z| z.adjusted.fill).sum::<f64>() + r.adjusted.fill;
+        TerrainVolumes { cut, fill, net: fill - cut }
+    });
     let at = |e: Option<(f64, [f64; 2])>| e.map(|(difference, at)| TerrainDifferenceAt { difference, at });
     let out = TerrainsCompared {
         base,
@@ -121,10 +231,10 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCompare) -> Result<(Terrain
             fill: d.volumes.fill,
             net: d.volumes.fill - d.volumes.cut,
         }),
-        adjusted: (input.cut_factor.is_some() || input.fill_factor.is_some()).then(|| {
-            let (cf, ff) = (input.cut_factor.unwrap_or(1.0), input.fill_factor.unwrap_or(1.0));
-            TerrainAdjusted { cut_factor: cf, fill_factor: ff, cut: v.cut * cf, fill: v.fill * ff, net: v.fill * ff - v.cut * cf }
-        }),
+        adjusted: (input.cut_factor.is_some() || input.fill_factor.is_some()).then(|| adjust(v.cut, v.fill, cf, ff)),
+        zones,
+        rest,
+        zoned,
     };
     Ok((out, warnings))
 }

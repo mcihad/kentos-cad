@@ -68,6 +68,8 @@ pub struct RoadDialog<'a> {
     head: Option<Element<'a, Message>>,
     /// Shown under the result (the window's output row).
     tail: Option<Element<'a, Message>>,
+    /// Shown over the result: its tabs (Yüzey analizi's Grafik | İçerik).
+    over: Option<Element<'a, Message>>,
 }
 
 // `status`, `secondary` and `width` are the other road windows' as they move onto this layout (docs/adr/0975 §4).
@@ -94,6 +96,7 @@ impl<'a> RoadDialog<'a> {
             form_width: FORM,
             head: None,
             tail: None,
+            over: None,
         }
     }
 
@@ -192,9 +195,18 @@ impl<'a> RoadDialog<'a> {
         self
     }
 
+    /// Something over the result: the result's tabs, one shown at a time.
+    pub fn over(mut self, over: impl Into<Element<'a, Message>>) -> Self {
+        self.over = Some(over.into());
+        self
+    }
+
     pub fn view(self) -> Element<'a, Message> {
         let muted = |t: &iced::Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
         let mut result = Grows::new().spacing(10.0).width(Fill);
+        if let Some(over) = self.over {
+            result = result.push(over);
+        }
         let has_result = !self.figures.is_empty() || self.detail.is_some();
         if let Some((picture, height)) = self.picture {
             let name = self.picture_name.unwrap_or_else(|| self.title.to_owned());

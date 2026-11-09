@@ -45,7 +45,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
@@ -1570,6 +1570,15 @@ verilen kot; yüzeyin üçgenleri sınırın halkalarıyla kırpılır, farkın 
 yeni ret kodu `invalid_stockpile`, uyarı `terrain_no_data`; 25 ortak durum (kesin kesirli başvuru), Python, MCP;
 masaüstünde Arazi › Analiz › Stok hacmi. Açık: üçgenlenmiş taban, çizimde gösterim, hacmin hata tahmini, malzeme bölgesi,
 kesit yöntemi.
+
+**9 Kasım 2026, altıncı tur — malzeme bölgeleri ([ADR 3540](../docs/adr/3540-material-zones-in-a-surface-comparison.md)).**
+Kapsam: **Harita + Yol**. Araştırma: Civil 3D Volumes Dashboard'un sınırlı hacimleri (Add Bounded Volume: sınır nesnesi,
+satırında kazı/dolgu katsayısı ve düzeltilmiş hacim); katsayı ve malzeme adı kullanıcının. Kanıtlanan:
+`road.terrains.compare`'e `zones` (ad, kapalı sınır, kendi katsayıları): bindirme parçalarının üçgenleri bölgeyi kırpar,
+fark momentlerle kesin tümlenir; bölgeler 1 mm²'den çok örtüşemez; `zones`, `rest` (bölge dışı) ve `zoned` (malzemeye
+göre katsayılı toplam); taşan bölgeye uyarı; 24 durumluk ayrı dosya (shapely'li başvuru), Python, MCP; Fark'ta Malzeme
+bölgeleri satırı (katmanın kapalı nesneleri, ad ve katsayılar öznitelikten), tablo ve çubuklar. Açık: kesit yöntemi,
+üçgenlenmiş taban, bölgelerin çizime yazılması.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

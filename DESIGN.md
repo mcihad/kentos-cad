@@ -605,8 +605,15 @@ pencereleri tek iskeleti kullanır (`apps/desktop/src/road_dialog.rs`,
   yalnız kesit takımında görünür.
 - Taşınan pencereler: Kırmızı kot önerisi (Y26.0), Kübaj ve Enkesit'in tip kesit düzenleyicisi (Y26.3), Görüş mesafesi,
   Platform suyu, Taşıma planı ve Tasarım denetimi (Y26.4), Dever (Y27.3), Genişletme önerisi (Y28.3), Düşey kurp
-  boyu (Y31.3). Öbürleri sırayla
+  boyu (Y31.3), Yüzey analizi ([ADR 3540](docs/adr/3540-material-zones-in-a-surface-comparison.md)). Öbürleri sırayla
   taşınır.
+- **Grafik ve içerik ayrı sekmede:** sahibin sözü: “Daha derli toplu zarif hale getir formu, grafik ve içerik ayrı
+  sekmelerde olsun.” Grafiği ve çok tablosu olan pencere sonucun üstüne parçalı seçim koyar (`RoadDialog::over`):
+  **Grafik** çizimi ve altındaki tek satırlık açıklamayı, **İçerik** en çok dört göstergeyi ve tek tabloyu gösterir;
+  hangi tablo olduğunu tablonun üstündeki ikinci parçalı seçim belirler (Özet | Malzemeler). Notlar iki sekmede de
+  görünür. Yazan işler formda değil alt çubuktadır; kipin son yazan işi birincil düğmedir. Ölçüm: Yüzey analizi'nin
+  Fark'ında 430 px'lik yan sütuna sığmayan malzeme tablosu yana kayıyordu, solda resim alanı boş kalıyordu; şimdi
+  grafik bütün genişlikte, tablo İçerik'te sığıyor.
 - **Uyarı kendi denetiminin yanında:** bir onay kutusunun nedeni (Kesişen kolları kırp → kaç çift kesişiyor) onun
   satırında yazar, pencerenin altında değil (Enkesit, Y29.3).
 - **Düğmeler alt çubukta:** pencerenin düğmeleri `Dialog::action`/`aside` ile verilir, gövdenin içine konmaz. Kutu

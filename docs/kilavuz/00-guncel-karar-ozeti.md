@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Yüzey farkında malzeme bölgeleri (9 Kasım 2026; MAP-15, [ADR 3540](../../docs/adr/3540-material-zones-in-a-surface-comparison.md)).**
+  `road.terrains.compare`'e `zones` (malzemenin adı, kapalı sınır, kendi kazı/dolgu katsayıları): her bölgede kesin TIN–TIN
+  farkı, bölge dışı ve malzemeye göre katsayılı toplam; bölgeler örtüşemez. Harita + Yol.
 - **Pafta eğrilerinde seçilen noktaların kotları (9 Kasım 2026; MAP-14, [ADR 3520](../../docs/adr/3520-sheet-chosen-point-heights.md)).**
   `road.terrains.sheetcontours`'a `points` (m. 78(1)(ğ)'nin “gerekli görülen diğer noktalar”ı): kendi kotu varsa o,
   yoksa yüzeyden; yalnız kot yazısı; not en büyük ölçü–yüzey farkını söyler. Harita + Yol.

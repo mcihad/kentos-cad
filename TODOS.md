@@ -175,6 +175,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   öznitelikleri (araç yerel; web'in işlem kayıt defteri aynı parametreyi göstermeli).
 - MAP-14 / ADR 3520: `road.terrains.sheetcontours`'un web işleyicisinde `points` ve `SheetSpot.surface` (49 ortak durum)
   ve web'in Pafta eğrileri penceresinde Seçilen noktalar (ğ) satırı.
+- MAP-15 / ADR 3540: `road.terrains.compare`'in web işleyicisinde `zones`, `rest`, `zoned` (24 ortak durum, ayrı dosya) ve web'in
+  Yüzey analizi › Fark'ında Malzeme bölgeleri satırı, tablosu ve çubukları.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

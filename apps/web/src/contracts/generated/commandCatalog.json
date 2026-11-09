@@ -50179,7 +50179,7 @@
       "id": "road.terrains.compare",
       "version": 1,
       "title": "Yüzeyleri karşılaştır",
-      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, unproven_heights, terrain_unbuildable.",
+      "summary": "İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Malzeme bölgeleri (zones, ADR 3540; Civil 3D'nin sınırlı hacimleri): her biri bir malzemenin yeri olan kapalı nesne (düz kenarlı tek parçalı kapalı çoklu çizgi ya da alan, delikli olabilir), adı ve kendi kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o da yoksa 1); her bölgenin içinde kesin TIN–TIN farkı (alan, örtülen alan, kazı, dolgu, net, katsayılı), bölgelerin dışı (rest, karşılaştırmanın katsayılarıyla) ve malzemeye göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara yönteminde istenmez; iki yüzeyin dışına taşan bölge uyarıyla (compare_uncovered). Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis, unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.",
       "aliases": [
         "yuzeyfarki",
         "yuzeykarsilastir",
@@ -50198,7 +50198,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over\n0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:\nthe two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the\ndifference is a draft (`heights_assumed`).",
+        "description": "Input of `road.terrains.compare` v1: the difference of `comparison` over `base` (each a surface's id or name;\nCivil 3D's TIN volume surface), over the comparison's plan; with `ranges` (m, increasing, at least two) the plan\narea of the difference between each pair. `method` (docs/adr/1600): `tin` (none: the exact TIN–TIN prisms) or\n`grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result\nbeside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's\ncompaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.\n`zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with\nits own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted\nvolumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.\n\nRefusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not\nincreasing; grid without a cell, a cell not over 0, ranges or zones with grid; a factor not over 0 or over 10, the\ncomparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),\n`entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed\npolyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'\nheights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a\ndraft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:\n`compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).",
         "properties": {
           "assumeHeights": {
             "type": "boolean"
@@ -50253,6 +50253,12 @@
               "null"
             ],
             "x-unit": "m"
+          },
+          "zones": {
+            "items": {
+              "$ref": "#/$defs/CompareZone"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -50264,7 +50270,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes.",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all\n(`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the\ncomparison's).",
         "properties": {
           "adjusted": {
             "anyOf": [
@@ -50364,10 +50370,36 @@
             ],
             "x-unit": "area"
           },
+          "rest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainZoneRest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "uncovered": {
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "zoned": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainVolumes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "zones": {
+            "items": {
+              "$ref": "#/$defs/TerrainZoneVolumes"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -50386,7 +50418,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes.",
+        "description": "Output of `road.terrains.compare` v1: the surfaces' ids; the cut (comparison below base) and fill volumes, the net\n(fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;\nthe least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.\nWith `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a\nfactor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all\n(`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the\ncomparison's).",
         "properties": {
           "adjusted": {
             "anyOf": [
@@ -50486,10 +50518,36 @@
             ],
             "x-unit": "area"
           },
+          "rest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainZoneRest"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "uncovered": {
             "format": "double",
             "type": "number",
             "x-unit": "area"
+          },
+          "zoned": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/TerrainVolumes"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "zones": {
+            "items": {
+              "$ref": "#/$defs/TerrainZoneVolumes"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -50511,6 +50569,7 @@
           "not_a_road_project",
           "invalid_analysis",
           "unknown_terrain",
+          "entity_not_found",
           "unproven_heights",
           "terrain_unbuildable"
         ],
@@ -121703,6 +121762,38 @@
         "grid"
       ],
       "type": "string"
+    },
+    "CompareZone": {
+      "description": "A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is\nguessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and\nits cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).",
+      "properties": {
+        "boundary": {
+          "type": "string"
+        },
+        "cutFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "fillFactor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "boundary"
+      ],
+      "type": "object"
     },
     "ComponentEdge": {
       "additionalProperties": false,
@@ -201198,6 +201289,116 @@
         "closed",
         "length",
         "points"
+      ],
+      "type": "object"
+    },
+    "TerrainZoneRest": {
+      "description": "The difference outside every material zone (docs/adr/3540): the area both surfaces cover there, the cut, fill and\nnet volumes and their plan areas (the exact TIN–TIN less the zones'), adjusted by the comparison's factors (none: 1).",
+      "properties": {
+        "adjusted": {
+          "$ref": "#/$defs/TerrainAdjusted"
+        },
+        "covered": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "net": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "covered",
+        "cut",
+        "fill",
+        "net",
+        "cutArea",
+        "fillArea",
+        "adjusted"
+      ],
+      "type": "object"
+    },
+    "TerrainZoneVolumes": {
+      "description": "A material zone's part of the difference (docs/adr/3540): its name and boundary, its plan area and the part of it\nboth surfaces cover, the cut, fill and net volumes and their plan areas there (the exact TIN–TIN), and the volumes\nadjusted by its factors.",
+      "properties": {
+        "adjusted": {
+          "$ref": "#/$defs/TerrainAdjusted"
+        },
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "boundary": {
+          "type": "string"
+        },
+        "covered": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "cut": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "cutArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "fill": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        },
+        "fillArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "name": {
+          "type": "string"
+        },
+        "net": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "name",
+        "boundary",
+        "area",
+        "covered",
+        "cut",
+        "fill",
+        "net",
+        "cutArea",
+        "fillArea",
+        "adjusted"
       ],
       "type": "object"
     },

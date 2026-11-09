@@ -111,13 +111,13 @@ pub struct Measured {
 
 type P = [f64; 2];
 
-fn signed_area(ring: &[P]) -> f64 {
+pub(crate) fn signed_area(ring: &[P]) -> f64 {
     let n = ring.len();
     (0..n).map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]).sum::<f64>() / 2.0
 }
 
 /// A ring turned counterclockwise (`ccw`) or clockwise.
-fn oriented(mut ring: Vec<P>, ccw: bool) -> Vec<P> {
+pub(crate) fn oriented(mut ring: Vec<P>, ccw: bool) -> Vec<P> {
     if (signed_area(&ring) > 0.0) != ccw {
         ring.reverse();
     }
@@ -125,7 +125,7 @@ fn oriented(mut ring: Vec<P>, ccw: bool) -> Vec<P> {
 }
 
 /// The area and first moments (∫x, ∫y) of a polygon, signed by its turn.
-fn moments(poly: &[P]) -> (f64, f64, f64) {
+pub(crate) fn moments(poly: &[P]) -> (f64, f64, f64) {
     let n = poly.len();
     let (mut a, mut sx, mut sy) = (0.0, 0.0, 0.0);
     for i in 0..n {
@@ -139,7 +139,7 @@ fn moments(poly: &[P]) -> (f64, f64, f64) {
 }
 
 /// The part of `poly` where `f ≥ 0` (Sutherland–Hodgman against one half-plane), `f` linear.
-fn keep(poly: &[P], f: &dyn Fn(P) -> f64) -> Vec<P> {
+pub(crate) fn keep(poly: &[P], f: &dyn Fn(P) -> f64) -> Vec<P> {
     let n = poly.len();
     let mut out = Vec::with_capacity(n + 2);
     for i in 0..n {

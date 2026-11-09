@@ -459,6 +459,15 @@ fn screens_robust() {
         let file = out.join(format!("y39-kontrol-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
         println!("{}", file.display());
+        // The content tab's tables, one at a time (docs/adr/3540: the chart and the content apart).
+        for (list, which) in [("Kontrol noktaları", "kontrol"), ("Sağlam ölçüler", "saglam")] {
+            send(&mut app, W::Tab(crate::surface_analysis_window::Tab::Content));
+            send(&mut app, W::List(list));
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("y39-icerik-{which}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        }
     }
 }
 
@@ -715,7 +724,9 @@ fn fark_draws_the_cut_and_fill_zones_in_one_step() {
     let kept = doc.settings().road.as_ref().map(|r| r.drawings.iter().filter(|d| d.command == "road.terrains.cutfill").count());
     assert_eq!(kept, Some(1), "the drawing kept with its surfaces");
     let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("saves");
-    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xcd"), "schema 205");
+    // The kept drawing's record carries the version that drew it and its write's revision (docs/adr/2840): schema 209.
+    let mark = [b"\x67version\x18".as_slice(), &[kentos_kcad::SCHEMA_WITH_DRAWING_PROVENANCE as u8]].concat();
+    assert!(bytes.windows(mark.len()).any(|w| w == mark.as_slice()), "schema 209");
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Kazı ve dolgu bölgeleri"));
 }

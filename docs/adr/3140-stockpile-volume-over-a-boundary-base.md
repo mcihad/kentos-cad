@@ -100,5 +100,6 @@ sahası”.
 - Üçgenlenmiş taban (köşelerden üçgenlenmiş yüzey, Pix4D'nin önerdiği).
 - Tabanın ve hacmin çizimde gösterimi; CSV.
 - Hacmin hata tahmini (yüzeyin nokta yoğunluğundan).
-- Malzeme bölgesi; kesit yöntemiyle hacim (MAP-15'in öbür maddeleri).
+- ~~Malzeme bölgesi~~ ([ADR 3540](3540-material-zones-in-a-surface-comparison.md)); kesit yöntemiyle hacim (MAP-15'in
+  öbür maddeleri).
 - Web (TODOS §0.2).

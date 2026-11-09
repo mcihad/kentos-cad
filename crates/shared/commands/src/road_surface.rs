@@ -168,13 +168,18 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 /// `grid` on `cell`-metre cells whose corners are multiples of `cell` (the midpoint rule, docs/adr/0974), its result
 /// beside the exact one; `cutFactor` and `fillFactor` (Civil 3D's Volumes Dashboard: the cut's swell, the fill's
 /// compaction; none: 1, no adjustment, no soil's value guessed) give the adjusted volumes apart from the geometric.
+/// `zones` (docs/adr/3540; Civil 3D's bounded volumes): material zones, each a closed object bounding one material with
+/// its own factors (none: the comparison's, else 1); the difference inside each, outside them all, and the adjusted
+/// volumes summed by material. Zones do not overlap; they are measured by the exact TIN–TIN alone.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
-/// increasing; grid without a cell, a cell not over 0, more than 4 000 000 cells, ranges with grid; a factor not over
-/// 0 or over 10), `unknown_terrain`, `invalid_analysis` (the same surface twice), `terrain_unbuildable`. Warnings:
-/// `compare_uncovered` (part of the comparison is off the base and left out). Then `unproven_heights` (docs/adr/1029:
-/// the two surfaces' heights are not shown to rest on one vertical system); `assumeHeights` takes them as one and the
-/// difference is a draft (`heights_assumed`).
+/// increasing; grid without a cell, a cell not over 0, ranges or zones with grid; a factor not over 0 or over 10, the
+/// comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
+/// `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
+/// polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
+/// heights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a
+/// draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
+/// `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -205,6 +210,81 @@ pub struct TerrainsCompare {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub assume_heights: bool,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CompareZone>>", optional))]
+    pub zones: Vec<CompareZone>,
+}
+
+/// A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is
+/// guessed), the closed object bounding it (a straight-edged, single-part closed polyline or area, holes allowed) and
+/// its cut and fill factors (none: the comparison's, else 1; more than 0, at most 10).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CompareZone {
+    pub name: String,
+    pub boundary: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub cut_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub fill_factor: Option<f64>,
+}
+
+/// A material zone's part of the difference (docs/adr/3540): its name and boundary, its plan area and the part of it
+/// both surfaces cover, the cut, fill and net volumes and their plan areas there (the exact TIN–TIN), and the volumes
+/// adjusted by its factors.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainZoneVolumes {
+    pub name: String,
+    pub boundary: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
+    pub adjusted: TerrainAdjusted,
+}
+
+/// The difference outside every material zone (docs/adr/3540): the area both surfaces cover there, the cut, fill and
+/// net volumes and their plan areas (the exact TIN–TIN less the zones'), adjusted by the comparison's factors (none: 1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerrainZoneRest {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub covered: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub net: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
+    pub adjusted: TerrainAdjusted,
 }
 
 /// How two surfaces' volume is measured (docs/adr/1600): the exact TIN–TIN prisms, or a grid's cells.
@@ -289,7 +369,9 @@ pub struct TerrainDifferenceBand {
 /// (fill − cut), their plan areas, the area both cover and the comparison's area off the base, by the method asked;
 /// the least and the largest difference (always the exact TIN's); with ranges, their areas and the area outside them.
 /// With `grid`: the cell and the exact TIN–TIN volumes beside (`exact`; the method's difference is theirs); with a
-/// factor: the adjusted volumes.
+/// factor: the adjusted volumes. With zones (docs/adr/3540): each zone's part (`zones`), the part outside them all
+/// (`rest`) and the adjusted volumes summed by material (`zoned`: the zones' with their factors, the rest's with the
+/// comparison's).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -335,6 +417,15 @@ pub struct TerrainsCompared {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub adjusted: Option<TerrainAdjusted>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainZoneVolumes>>", optional))]
+    pub zones: Vec<TerrainZoneVolumes>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rest: Option<TerrainZoneRest>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zoned: Option<TerrainVolumes>,
 }
 
 pub const ROAD_TERRAINS_ZEROLINE: &str = "road.terrains.zeroline";
