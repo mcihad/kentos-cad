@@ -43,7 +43,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
@@ -1473,6 +1473,12 @@ satır satır; öteleme tersin satırlarıyla), Dönüşüm uygula'da Tersini uy
 dosyası) ve Dönüşümler (uygulanan matrisler, en yenisi sonda) özniteliklerini taşır. Üç yeni ortak durum (noktalar bayt
 bayt; 44 durum), Python, MCP (zincirlenen geçmiş), masaüstü (geri gelen tarama) ve resim. Açık: çoklu tarama demeti,
 eksen-açı ya da Euler girişi, dönüşümün dosyasız nesnede tutulması, gerçek veri ölçümü.
+
+**9 Kasım 2026, yedinci tur — son dönüşümü geri alma ([ADR 3900](../docs/adr/3900-point-cloud-undo-last-transform.md)).**
+Kapsam: **Harita + CBS**. Dayanak: CloudCompare'in geçmiş matrisinin tersiyle eski yere dönmesi. Kanıtlanan: Dönüşüm
+uygula'nın Son dönüşümü geri al'ı bulutun geçmişindeki son matrisin tersini uygular, matris yazılmaz; o adım geçmişten
+düşer (kalmazsa Dönüşümler yazılmaz); geçmişsiz bulutta ret. 3 yeni bağımsız durum (47; noktalar bayt bayt), Python,
+MCP, masaüstü ve resimler. Açık: çoklu tarama demeti, eksen-açı/Euler girişi, gerçek veri ölçümü.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

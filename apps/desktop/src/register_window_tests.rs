@@ -327,6 +327,110 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
     let _ = moving;
 }
 
+/// docs/adr/3900: the fit applied, then Son dönüşümü geri al on the moved scan: no matrix typed, the history's last
+/// step taken back; the new cloud keeps the first file and no history, and Tarama kaydı finds the first fit's RMS before
+/// again.
+#[test]
+fn son_donusumu_geri_al_takes_the_last_step_back() {
+    use crate::processing::{Event as P, RunStatus};
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let r = app.register.answer.clone().expect("an answer").expect("registered");
+    let fixed = app.register.fixed.clone();
+    let _ = app.update(Message::Register(R::Apply));
+    let dir = crate::files_testing::scratch("son-donusum");
+    let run = |app: &mut App, file: &str| {
+        let out = dir.join(file);
+        let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(out.to_string_lossy().into_owned()))));
+        let task = app.update(Message::Processing(P::Run));
+        crate::files_testing::drive(app, task);
+        let status = app.processing.dialog.as_ref().map(|w| w.status.clone());
+        assert!(matches!(status, Some(RunStatus::Ok { .. })), "{status:?}");
+    };
+    run(&mut app, "kayitli.laz");
+    let last_on = |app: &App, name: &str| -> (String, std::collections::BTreeMap<String, String>) {
+        let doc = &app.document.as_ref().expect("open").model;
+        let layer = doc.layers().leaves().into_iter().find(|l| l.name == name).expect("the layer").id.clone();
+        doc.entities_with_uids()
+            .filter(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+            .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
+            .last()
+            .expect("a cloud")
+    };
+    let (moved_uid, moved_attrs) = last_on(&app, "Kaydedilmiş bulut");
+    let _ = app.update(Message::Processing(P::Close));
+    let slot = |app: &App, uid: &str| {
+        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+    };
+    app.selection.set([slot(&app, &moved_uid)]);
+    let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+    let _ = app.update(Message::Processing(P::Value("undoLast".into(), Value::Bool(true))));
+    let _ = app.update(Message::Processing(P::Value("layer".into(), serde_json::json!({"newName": "Kaydedilmiş bulut"}))));
+    run(&mut app, "geri-alinan.laz");
+    let (back_uid, back_attrs) = last_on(&app, "Kaydedilmiş bulut");
+    assert_eq!(back_attrs.get("Kaynak"), moved_attrs.get("Kaynak"), "the first file kept");
+    assert!(!back_attrs.contains_key("Dönüşümler"), "no step left: {back_attrs:?}");
+    let _ = app.update(Message::Processing(P::Close));
+    app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let again = app.register.answer.clone().expect("an answer").expect("registered");
+    assert!((again.rms_before - r.rms_before).abs() < 0.001, "{} vs {}", again.rms_before, r.rms_before);
+}
+
+/// docs/adr/3900: Dönüşüm uygula on the moved scan with Son dönüşümü geri al ticked (the matrix and Tersini uygula
+/// hidden), then after its run; `.run/gui-evidence/son-donusum-geri-3900/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib register_window_tests::undo_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn undo_screens() {
+    use crate::processing::Event as P;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/son-donusum-geri-3900");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("pointcloud.register"));
+    let _ = app.update(Message::Register(R::Apply));
+    let dir = crate::files_testing::scratch("son-donusum-resim");
+    let run = |app: &mut App, file: &str| {
+        let out = dir.join(file);
+        let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(out.to_string_lossy().into_owned()))));
+        let task = app.update(Message::Processing(P::Run));
+        crate::files_testing::drive(app, task);
+    };
+    run(&mut app, "kayitli.laz");
+    let _ = app.update(Message::Processing(P::Close));
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("the layer").id.clone();
+    let moved = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .last()
+        .expect("the moved scan");
+    app.selection.set([moved]);
+    let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+    let _ = app.update(Message::Processing(P::Value("undoLast".into(), Value::Bool(true))));
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("1-pencere-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+    run(&mut app, "geri-alinan.laz");
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("2-sonuc-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+}
+
 #[test]
 fn harita_and_gis_offer_it() {
     for module in [Module::Map, Module::Gis] {

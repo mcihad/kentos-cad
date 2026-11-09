@@ -119,9 +119,12 @@ LAYERS = [
     ("koy", "Köy (LiDAR)", "#5B8FCF"),
     ("ikinci", "İkinci bulut", "#5B8FCF"),
     ("sinir", "Sınır bulutu", "#5B8FCF"),
+    # docs/adr/3900: koy.laz under a history of one step and of two (the matrices as if applied before).
+    ("gecmis1", "Bir adımlı geçmiş", "#5B8FCF"),
+    ("gecmis2", "İki adımlı geçmiş", "#5B8FCF"),
 ]
 # Entity ids in the drawing's order.
-IDS = {"Dikdörtgen": 1, "Daire": 2, "Delikli": 3, "koy": 4, "ikinci": 5, "sinir": 6}
+IDS = {"Dikdörtgen": 1, "Daire": 2, "Delikli": 3, "koy": 4, "ikinci": 5, "sinir": 6, "gecmis1": 7, "gecmis2": 8}
 
 
 def drawing():
@@ -136,6 +139,12 @@ def drawing():
     entities.append({**cloud_entity("ikinci.laz", IKINCI, SRID, GREY_STYLE), "id": 5, "layerId": "ikinci", "attrs": {}})
     # Sınır çıkar's small cloud is in a local frame: no system.
     entities.append({**cloud_entity("sinir.laz", SINIR, 0, GREY_STYLE), "id": 6, "layerId": "sinir", "attrs": {}})
+    # docs/adr/3900: Son dönüşümü geri al's clouds: koy.laz with a history written on it.
+    entities.append({**cloud_entity("koy.laz", KOY, SRID, KOY_STYLE), "id": 7, "layerId": "gecmis1",
+                     "attrs": {"Kaynak": "koy.laz", "Dönüşümler": matrix_words(ROTATED)}})
+    entities.append({**cloud_entity("koy.laz", KOY, SRID, KOY_STYLE), "id": 8, "layerId": "gecmis2",
+                     "attrs": {"Kaynak": "koy.laz",
+                               "Dönüşümler": f"{matrix_words(ROTATED)} | {matrix_words(MOVED_ONLY)}"}})
     return {
         "format": "kentos.document",
         "version": 1,
@@ -609,11 +618,12 @@ IKINCI_TURNED = about(mul(rz(-0.0015), rx(0.0002)), middle(IKINCI), [0.05, 0.02,
 
 
 def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=True, style=KOY_STYLE, srid=SRID,
-                     text=None, invert=False):
+                     text=None, invert=False, undo=None):
+    """`undo` (docs/adr/3900): Son dönüşümü geri al on a cloud whose history ends with `m`; the history left."""
     kind, ext = FORMAT[fmt]
     path = (output + ext) if output else f"{file}-donusmus{ext}"
     given = m
-    if invert:
+    if invert or undo is not None:
         m = inverse(m)
     X, Y, Z = moved(c, m)
     triples = list(zip(X.tolist(), Y.tolist(), Z.tolist()))
@@ -625,6 +635,8 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
     values = {"input": on(lid), "matrix": text if text is not None else matrix_text(given)}
     if invert:
         values["invert"] = True
+    if undo is not None:
+        values = {"input": on(lid), "undoLast": True}
     if fmt != "laz":
         values["format"] = fmt
     if output:
@@ -652,6 +664,8 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
         b = [float(nx.min()), float(ny.min()), float(nz.min()), float(nx.max()), float(ny.max()), float(nz.max())]
         # docs/adr/3500: the history: the source's file and the matrix applied (the inverse when asked).
         history = {"Kaynak": f"{file}.laz", "Dönüşümler": matrix_words(m)}
+        if undo is not None:
+            history = {"Kaynak": f"{file}.laz", **({"Dönüşümler": undo} if undo else {})}
         expect.update({"undo": "Dönüşüm uygula", "layers": [layer], "added": [
             {"kind": "pointcloud", "layerId": layer["id"], "attrs": history,
              "sources": [{"file": path, "format": kind, "count": c.n, "bounds": b}],
@@ -691,6 +705,15 @@ def transform_cases():
                          "bulut eski yerine", KOY, "koy", "koy", REGISTERED, invert=True, fmt="las"),
         transformed_case("transform-inverse-translation", "Tersini uygula: yalnız ötelemenin tersi, tam sayılar tam "
                          "geri kayar", KOY, "koy", "koy", MOVED_ONLY, invert=True, fmt="las", output="geri"),
+        # docs/adr/3900: Son dönüşümü geri al: the last matrix's inverse, the step gone from the history.
+        transformed_case("transform-undo-last", "Son dönüşümü geri al: tek adımlı geçmişin dönen matrisinin tersi; "
+                         "geçmiş boşalır, kaynak kalır", KOY, "gecmis1", "koy", ROTATED, undo=""),
+        transformed_case("transform-undo-second", "Son dönüşümü geri al: iki adımlı geçmişte yalnız son öteleme geri "
+                         "alınır, ilk adım geçmişte kalır", KOY, "gecmis2", "koy", MOVED_ONLY, undo=matrix_words(ROTATED),
+                         output="geri-alinmis"),
+        case("transform-undo-none", "Son dönüşümü geri al: geçmişi olmayan bulutta ret", "pointcloud.transform",
+             {"input": on("koy"), "undoLast": True},
+             {"status": "error", "message": "Bulutun dönüşüm geçmişi (Dönüşümler) yok; geri alınacak adım yok."}),
         refused("transform-count", "Dönüşüm uygula, 12 sayı: ret", "1 0 0 0\n0 1 0 0\n0 0 1 0",
                 "Matris 16 sayıdır (4 satır, 4 sütun, satır satır); 12 sayı verildi."),
         refused("transform-word", "Dönüşüm uygula, sayı olmayan söz: ret", "1 0 0 a\n0 1 0 0\n0 0 1 0\n0 0 0 1",

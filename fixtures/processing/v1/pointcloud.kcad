@@ -71,6 +71,34 @@
     "lineWeight": 0.25
    },
    "children": []
+  },
+  {
+   "id": "gecmis1",
+   "name": "Bir adımlı geçmiş",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B8FCF",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "gecmis2",
+   "name": "İki adımlı geçmiş",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#5B8FCF",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
   }
  ],
  "activeLayer": "alanlar",
@@ -268,6 +296,86 @@
    "id": 6,
    "layerId": "sinir",
    "attrs": {}
+  },
+  {
+   "kind": "pointcloud",
+   "sources": [
+    {
+     "file": "koy.laz",
+     "format": "laz",
+     "count": 71212,
+     "bounds": [
+      487600.0,
+      4420300.0,
+      838.991,
+      487719.838,
+      4420389.999,
+      862.618
+     ]
+    }
+   ],
+   "bounds": [
+    487600.0,
+    4420300.0,
+    838.991,
+    487719.838,
+    4420389.999,
+    862.618
+   ],
+   "count": 71212,
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "min": 842.0,
+    "max": 858.0,
+    "size": 3
+   },
+   "id": 7,
+   "layerId": "gecmis1",
+   "attrs": {
+    "Kaynak": "koy.laz",
+    "Dönüşümler": "0.9999980000006666 -0.0019999986666669333 0 8842.009424720716 0.0019999986666669333 0.9999980000006666 0 -966.6785007352009 0 0 1 0.049999999999954525 0 0 0 1"
+   }
+  },
+  {
+   "kind": "pointcloud",
+   "sources": [
+    {
+     "file": "koy.laz",
+     "format": "laz",
+     "count": 71212,
+     "bounds": [
+      487600.0,
+      4420300.0,
+      838.991,
+      487719.838,
+      4420389.999,
+      862.618
+     ]
+    }
+   ],
+   "bounds": [
+    487600.0,
+    4420300.0,
+    838.991,
+    487719.838,
+    4420389.999,
+    862.618
+   ],
+   "count": 71212,
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "min": 842.0,
+    "max": 858.0,
+    "size": 3
+   },
+   "id": 8,
+   "layerId": "gecmis2",
+   "attrs": {
+    "Kaynak": "koy.laz",
+    "Dönüşümler": "0.9999980000006666 -0.0019999986666669333 0 8842.009424720716 0.0019999986666669333 0.9999980000006666 0 -966.6785007352009 0 0 1 0.049999999999954525 0 0 0 1 | 1 0 0 12.5 0 1 0 -3.25 0 0 1 0 0 0 0 1"
+   }
   }
  ],
  "styles": {

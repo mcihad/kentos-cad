@@ -56,10 +56,16 @@ pub fn tool() -> Tool {
                     allow_empty: false,
                 },
             )
-            .describe("Satır satır 16 sayı: dönüklük ve öteleme, son satır 0 0 0 1 (Tarama kaydı'nın matrisi)."),
+            .describe("Satır satır 16 sayı: dönüklük ve öteleme, son satır 0 0 0 1 (Tarama kaydı'nın matrisi).")
+            .shown_when(not_undoing),
             ParamDef::new("invert", "Tersini uygula", ParamKind::Boolean)
                 .default_value(json!(false))
-                .describe("Matrisin tersi uygulanır: kaydın taşıdığı bulut eski yerine döner."),
+                .describe("Matrisin tersi uygulanır: kaydın taşıdığı bulut eski yerine döner.")
+                .shown_when(not_undoing),
+            // docs/adr/3900: the last step of the cloud's history taken back.
+            ParamDef::new("undoLast", "Son dönüşümü geri al", ParamKind::Boolean)
+                .default_value(json!(false))
+                .describe("Bulutun geçmişindeki son matrisin tersi uygulanır; o adım geçmişten düşer."),
             format_param(),
             output_param(SUFFIX, &[".laz", ".las"]),
             add_param(),
@@ -77,17 +83,41 @@ pub fn tool() -> Tool {
     }
 }
 
+/// Whether Son dönüşümü geri al is off: the matrix and Tersini uygula are asked only then.
+fn not_undoing(v: &crate::types::Values) -> bool {
+    v.get("undoLast").and_then(serde_json::Value::as_bool) != Some(true)
+}
+
+/// Son dönüşümü geri al (docs/adr/3900): the inverse of the last matrix of the cloud's history, and the history without
+/// it (empty when it was the only one); refused without a history.
+fn undone(cloud: &kentos_commands::PointCloudEntity) -> Result<(Affine, String), String> {
+    let had = cloud.base.attrs.get(HISTORY).map(|h| h.trim()).unwrap_or_default();
+    let steps: Vec<&str> = had.split(" | ").map(str::trim).filter(|t| !t.is_empty()).collect();
+    let Some((last, before)) = steps.split_last() else {
+        return Err("Bulutun dönüşüm geçmişi (Dönüşümler) yok; geri alınacak adım yok.".to_owned());
+    };
+    let affine = Affine::parse(last).map_err(|e| format!("Geçmişin son matrisi okunmadı: {}", e.0))?;
+    Ok((affine.inverse(), before.join(" | ")))
+}
+
 fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     let (files, cloud) = match (files_of(feedback), one_cloud(r)) {
         (Ok(f), Ok(c)) => (f, c),
         (Err(e), _) | (_, Err(e)) => return *e,
     };
-    let affine = match Affine::parse(r.text("matrix")) {
-        Ok(a) if r.flag("invert") => a.inverse(),
-        Ok(a) => a,
-        Err(e) => return RunResult::refused(e.0),
+    let (affine, history) = if r.flag("undoLast") {
+        match undone(cloud) {
+            Ok((a, h)) => (a, Some(h)),
+            Err(why) => return RunResult::refused(why),
+        }
+    } else {
+        match Affine::parse(r.text("matrix")) {
+            Ok(a) if r.flag("invert") => (a.inverse(), None),
+            Ok(a) => (a, None),
+            Err(e) => return RunResult::refused(e.0),
+        }
     };
-    match go(&*files, r, cloud, &affine, feedback) {
+    match go(&*files, r, cloud, &affine, history, feedback) {
         Ok(result) => result,
         Err(why) => broke(why),
     }
@@ -114,6 +144,7 @@ fn go(
     r: &Resolved<'_>,
     cloud: &kentos_commands::PointCloudEntity,
     affine: &Affine,
+    undone: Option<String>,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let sources = &cloud.cloud.sources;
@@ -180,13 +211,19 @@ fn go(
     // The history (docs/adr/3500): the chain's first file and the matrices applied from it, this one last.
     let had = |k: &str| cloud.base.attrs.get(k).cloned();
     let origin = had(ORIGIN).or_else(|| sources.first().and_then(|s| s.file.clone())).unwrap_or_default();
-    let history = match had(HISTORY) {
-        Some(h) if !h.trim().is_empty() => format!("{h} | {}", affine.text()),
-        _ => affine.text(),
+    // Son dönüşümü geri al (docs/adr/3900): the history without its last step; none left, no Dönüşümler.
+    let history = match undone {
+        Some(before) => before,
+        None => match had(HISTORY) {
+            Some(h) if !h.trim().is_empty() => format!("{h} | {}", affine.text()),
+            _ => affine.text(),
+        },
     };
     let attrs = &mut object.base_mut().attrs;
     attrs.insert(ORIGIN.to_owned(), origin);
-    attrs.insert(HISTORY.to_owned(), history);
+    if !history.is_empty() {
+        attrs.insert(HISTORY.to_owned(), history);
+    }
     let turned = angle.map_or_else(String::new, |a| format!(", dönüklük {}°", comma(a, 4)));
     let mut result = written(
         r,

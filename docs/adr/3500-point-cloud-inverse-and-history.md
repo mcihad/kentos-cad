@@ -73,6 +73,7 @@ nesnenin dönüşüm geçmişi”.
 ## Sonra
 
 - Çoklu tarama demeti (MAP-13'ün öbür maddesi).
-- Geçmişten bir adımı geri alma (son matrisin tersini kendiliğinden uygulama).
+- ~~Geçmişten bir adımı geri alma (son matrisin tersini kendiliğinden uygulama).~~
+  [ADR 3900](3900-point-cloud-undo-last-transform.md).
 - Gerçek veride süre ve bellek ölçümü.
 - Web (TODOS §0.2).
