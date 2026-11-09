@@ -446,6 +446,8 @@ pub enum Dialog {
     Register,
     /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
     SheetContours,
+    /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `App::stockpile`.
+    Stockpile,
     /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
     XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
@@ -883,6 +885,7 @@ pub enum Message {
     Overlap(crate::overlap_window::Event),
     Register(crate::register_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
+    Stockpile(crate::stockpile_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
     /// The card of a write the bonds refused (bond_notice.rs, docs/adr/0790 §2).
     BondNotice(crate::bond_notice::Event),
@@ -1565,6 +1568,7 @@ pub struct App {
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
+    pub(crate) stockpile: crate::stockpile_window::State,
     /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
     pub(crate) impact_stamps: crate::impact_window::Stamps,
     /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
@@ -2035,6 +2039,7 @@ impl App {
             overlap: Default::default(),
             register: Default::default(),
             sheet_contours: Default::default(),
+            stockpile: Default::default(),
             impact_stamps: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
@@ -2834,6 +2839,7 @@ impl App {
             Message::Overlap(event) => return self.overlap_event(event),
             Message::Register(event) => return self.register_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
+            Message::Stockpile(event) => return self.stockpile_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::BondNotice(event) => return self.bond_notice_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
@@ -3710,6 +3716,7 @@ impl App {
             "pointcloud.overlap" => return self.open_overlap(),
             "pointcloud.register" => return self.open_register(),
             "terrain.sheetContours" => return self.open_sheet_contours(),
+            "terrain.stockpile" => return self.open_stockpile(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).
             "map.workSource" => {
                 self.map_work_show_source();

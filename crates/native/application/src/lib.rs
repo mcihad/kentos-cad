@@ -388,6 +388,7 @@ pub mod road_terrains_analysis;
 pub mod road_terrains_coverage;
 pub mod road_terrains_coverage_draw;
 pub mod road_terrains_density;
+pub mod road_terrains_stockpile;
 pub mod road_terrains_sparse;
 pub mod road_terrains_compare;
 pub mod road_terrains_quality;
@@ -1450,6 +1451,7 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::ROAD_TERRAINS_COVERAGE, kentos_commands::ROAD_TERRAINS_COVERAGE_VERSION),
     (kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW, kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION),
     (kentos_commands::ROAD_TERRAINS_DENSITY, kentos_commands::ROAD_TERRAINS_DENSITY_VERSION),
+    (kentos_commands::ROAD_TERRAINS_STOCKPILE, kentos_commands::ROAD_TERRAINS_STOCKPILE_VERSION),
     (kentos_commands::ROAD_TERRAINS_SPARSE_DRAW, kentos_commands::ROAD_TERRAINS_SPARSE_DRAW_VERSION),
     (kentos_commands::ROAD_PLATFORMS_QUERY, kentos_commands::ROAD_PLATFORMS_QUERY_VERSION),
     (kentos_commands::ROAD_PLATFORMS_DRAW, kentos_commands::ROAD_PLATFORMS_DRAW_VERSION),

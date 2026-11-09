@@ -3835,6 +3835,8 @@ __all__ = [
     "TerrainsSheetContoured",
     "TerrainsSheetContours",
     "TerrainsSparseDraw",
+    "TerrainsStockpile",
+    "TerrainsStockpiled",
     "TerrainsWritten",
     "TerrainsZeroLine",
     "TerrainsZeroLined",

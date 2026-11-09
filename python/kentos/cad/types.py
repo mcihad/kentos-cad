@@ -100698,6 +100698,114 @@ class TerrainsSparseDraw(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerrainsStockpile(_Model):
+    """Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object
+    as in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or
+    `average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them
+    (the least squares of the vertical differences), `elevation` level at `elevation`. Above the base is cut (the
+    pile), below it fill (Pix4D's words). Reads only.
+
+    Refusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),
+    `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
+    that is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a
+    line for `fit`). Warnings: `terrain_no_data` (the surface does not cover the whole boundary).
+    Attributes:
+        elevation: Unit: elevation.
+    """
+    surface: str
+    boundary: str
+    base: str
+    elevation: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["boundary"] = self.boundary
+        out["base"] = self.base
+        if self.elevation is not UNSET:
+            out["elevation"] = None if self.elevation is None else float(self.elevation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsStockpile:
+        return cls(
+            surface=data["surface"],
+            boundary=data["boundary"],
+            base=data["base"],
+            elevation=UNSET if "elevation" not in data else None if data["elevation"] is None else float(data["elevation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TerrainsStockpiled(_Model):
+    """Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and
+    b zero), the outer corners' heights on the surface (none when a level base is given and a corner is off it), the
+    boundary's plan area, the part over the surface and the rest, the cut (above the base) and fill (below it) volumes
+    and their total (Pix4D's: cut + fill), the plan areas of cut and fill, and notes.
+    Attributes:
+        plane: Unit: value.
+        area: Unit: area.
+        covered: Unit: area.
+        uncovered: Unit: area.
+        cut: Unit: volume.
+        fill: Unit: volume.
+        total: Unit: volume.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        corners: Unit: elevation.
+    """
+    surface: str
+    base: str
+    plane: list[float]
+    area: float
+    covered: float
+    uncovered: float
+    cut: float
+    fill: float
+    total: float
+    cut_area: float
+    fill_area: float
+    notes: list[str]
+    corners: list[float] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["base"] = self.base
+        out["plane"] = [float(e0) for e0 in self.plane]
+        out["area"] = float(self.area)
+        out["covered"] = float(self.covered)
+        out["uncovered"] = float(self.uncovered)
+        out["cut"] = float(self.cut)
+        out["fill"] = float(self.fill)
+        out["total"] = float(self.total)
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        out["notes"] = list(self.notes)
+        if self.corners is not UNSET:
+            out["corners"] = [float(e0) for e0 in self.corners]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerrainsStockpiled:
+        return cls(
+            surface=data["surface"],
+            base=data["base"],
+            plane=[float(e0) for e0 in data["plane"]],
+            area=float(data["area"]),
+            covered=float(data["covered"]),
+            uncovered=float(data["uncovered"]),
+            cut=float(data["cut"]),
+            fill=float(data["fill"]),
+            total=float(data["total"]),
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            notes=list(data["notes"]),
+            corners=[float(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerrainsWritten(_Model):
     """Output of `road.terrains.create` and `.edit` v1, and their plan: the project's surfaces as the write leaves them,
     the one written or accepted as its sources give it (none for a remove), and the revision after it (a plan: before).
@@ -133103,6 +133211,8 @@ __all__ = [
     "TerrainsSheetContoured",
     "TerrainsSheetContours",
     "TerrainsSparseDraw",
+    "TerrainsStockpile",
+    "TerrainsStockpiled",
     "TerrainsWritten",
     "TerrainsZeroLine",
     "TerrainsZeroLined",

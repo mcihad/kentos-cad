@@ -49,5 +49,7 @@ yeri ve derinliği (çekirdeğin parça köşelerinden)”.
 
 ## Sonra
 
-- Malzeme bölgesi, stok sahası; kesit yöntemiyle hacim karşılaştırması (MAP-15'in öbür maddeleri).
+- Stok sahası yapıldı: [ADR 3140](3140-stockpile-volume-over-a-boundary-base.md) (yığının hacmi sınırından çizilen
+  tabana göre).
+- Malzeme bölgesi; kesit yöntemiyle hacim karşılaştırması (MAP-15'in öbür maddeleri).
 - Web (TODOS §0.2).

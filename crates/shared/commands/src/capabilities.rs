@@ -2256,6 +2256,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["terrain_density_short"],
         targets: none,
     },
+    // A stockpile's volume over a base from its boundary (plan/map-cad.md MAP-15, docs/adr/3140).
+    Entry {
+        id: "road.terrains.stockpile",
+        refusals: &[&["invalid_stockpile", "not_a_road_project", "unknown_terrain", "terrain_unbuildable", "entity_not_found", "invalid_coverage"]],
+        warnings: &["terrain_no_data"],
+        targets: none,
+    },
     Entry {
         id: "road.terrains.sparse",
         refusals: &[

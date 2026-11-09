@@ -10329,6 +10329,22 @@
    "tests": 0
   },
   {
+   "id": "terrain.stockpile",
+   "kind": "command",
+   "title": "Stok hacmi…",
+   "level": "query",
+   "via": [
+    "road.terrains.stockpile"
+   ],
+   "operation": null,
+   "python": "Connection: road.terrains.stockpile",
+   "mcp": "road.terrains.stockpile",
+   "note": "Pencere yığının hacmini road.terrains.stockpile ile sınırından çizilen tabana göre gösterir (salt okunur; ADR 3140).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "terrain.surfaces",
    "kind": "command",
    "title": "Arazi yüzeyleri…",

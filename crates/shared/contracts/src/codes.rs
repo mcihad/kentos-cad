@@ -1068,6 +1068,9 @@ codes! {
     INVALID_POINT_DENSITY = "invalid_point_density", Failed, false, "Nokta yoğunluğu sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: fewer of the density grid's cells hold a point than the share asked (docs/adr/0920 §6).
     TERRAIN_DENSITY_SHORT = "terrain_density_short", Warning, false, "Noktası olan hücrelerin payı istenenin altında.";
+    /// A stockpile volume asked that is not right: a base not known, an elevation missing, a corner off the surface, the
+    /// corners on a line for a fitted plane (docs/adr/3140).
+    INVALID_STOCKPILE = "invalid_stockpile", Failed, false, "Stok hacmi sorusu geçerli değil; ileti nedenini söyler.";
     INVALID_SWEPT = "invalid_swept", Failed, false, "Araç izi sorusu geçerli değil; ileti nedenini söyler.";
     /// A warning: a vehicle's body meets an obstacle somewhere on its path (docs/adr/0915 §2).
     SWEPT_TOUCHES = "swept_touches", Warning, false, "Aracın gövdesi yolunun bir yerinde bir engele değiyor.";

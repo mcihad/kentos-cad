@@ -479,6 +479,10 @@
        {
         "command": "terrain.analysis",
         "size": "large"
+       },
+       {
+        "command": "terrain.stockpile",
+        "size": "large"
        }
       ]
      },

@@ -55,6 +55,7 @@ pub mod protected;
 pub mod route;
 pub mod section;
 pub mod sources;
+pub mod stockpile;
 pub mod superelevation;
 pub mod superelevation_physics;
 pub mod superelevation_pi;

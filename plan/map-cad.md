@@ -45,7 +45,7 @@ sırayla alır.
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740 | malzeme bölgesi; stok sahası; kesit yöntemi | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
@@ -1451,6 +1451,15 @@ aralıklı hacim yüzeyi. Kanıtlanan: çekirdek her bölgenin en derin yerini p
 eşitse en batı, sonra en güney); `road.terrains.cutfill`'de `deepest`/`depth` ve istenince `depths` (nokta ve
 “derinlik/yükseklik” yazısı); 44 ortak durum (shapely'li başvuru), MCP; Fark'ta En derin yer kutusu. Açık: malzeme
 bölgesi, stok sahası, kesit yöntemi.
+
+**9 Kasım 2026, beşinci tur — stok hacmi ([ADR 3140](../docs/adr/3140-stockpile-volume-over-a-boundary-base.md)).**
+Kapsam: **Harita + Yol**. Araştırma: Pix4D'nin hacim tabanları (üçgenlenmiş, eğimli düzlem, ortalama, en alçak, en yüksek,
+verilen kot; kazı tabanın üstü, dolgu altı, toplam ikisi) ve taban seçimi önerisi. Kanıtlanan: `road.terrains.stockpile`
+(salt okunur): sınırın dış köşelerinin yüzeydeki kotlarından yatay ya da eğimli (düşey en küçük kareler) taban ya da
+verilen kot; yüzeyin üçgenleri sınırın halkalarıyla kırpılır, farkın sıfırında bölünür, doğrusal fark kesin tümlenir;
+yeni ret kodu `invalid_stockpile`, uyarı `terrain_no_data`; 25 ortak durum (kesin kesirli başvuru), Python, MCP;
+masaüstünde Arazi › Analiz › Stok hacmi. Açık: üçgenlenmiş taban, çizimde gösterim, hacmin hata tahmini, malzeme bölgesi,
+kesit yöntemi.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

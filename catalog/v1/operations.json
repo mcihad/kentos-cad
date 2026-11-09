@@ -3198,6 +3198,13 @@
         "road.terrains.sheetcontours"
       ],
       "note": "Pencere yüzeyin pafta eğrilerini road.terrains.sheetcontours'un planıyla gösterir, Çiz tek adımda yazar (BÖHHBÜY m. 78; ADR 1820)."
+    },
+    "terrain.stockpile": {
+      "level": "query",
+      "via": [
+        "road.terrains.stockpile"
+      ],
+      "note": "Pencere yığının hacmini road.terrains.stockpile ile sınırından çizilen tabana göre gösterir (salt okunur; ADR 3140)."
     }
   },
   "tools": {

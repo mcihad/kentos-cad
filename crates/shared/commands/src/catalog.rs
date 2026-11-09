@@ -8846,6 +8846,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Stok hacmi (plan/map-cad.md MAP-15, docs/adr/3140).
+        CommandDescriptor {
+            id: crate::ROAD_TERRAINS_STOCKPILE.into(),
+            version: crate::ROAD_TERRAINS_STOCKPILE_VERSION,
+            title: "Stok hacmi".into(),
+            summary: "Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli düzlem; elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. \
+                      Yüzeyin her üçgeni sınırın halkalarıyla kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları. \
+                      Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage."
+                .into(),
+            aliases: vec!["stokhacmi".into(), "yiginhacmi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TerrainsStockpile>(),
+            output: schema::<crate::TerrainsStockpiled>(),
+            plan: Some(schema::<crate::TerrainsStockpiled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yığının tabanı sınır köşelerine oturan eğimli düzlem".into(),
+                input: json!({ "surface": "Mevcut zemin", "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124", "base": "fit" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::ROAD_TERRAINS_SPARSE_DRAW.into(),
             version: crate::ROAD_TERRAINS_SPARSE_DRAW_VERSION,
@@ -16492,6 +16519,7 @@ mod tests {
                     crate::ROAD_TERRAINS_COVERAGE => serde_json::from_value::<crate::TerrainsCoverage>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_DENSITY => serde_json::from_value::<crate::TerrainsDensity>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_TERRAINS_STOCKPILE => serde_json::from_value::<crate::TerrainsStockpile>(e.input.clone()).map(|_| ()),
                     crate::ROAD_TERRAINS_SPARSE_DRAW => serde_json::from_value::<crate::TerrainsSparseDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_SWEPT_DRAW => serde_json::from_value::<crate::SweptDraw>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQuery>(e.input.clone()).map(|_| ()),
@@ -17465,6 +17493,7 @@ mod tests {
                         crate::ROAD_TERRAINS_COVERAGE => serde_json::from_value::<crate::TerrainsCovered>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_DENSITY => serde_json::from_value::<crate::TerrainsDensityRead>(output.clone()).map(|_| ()),
+                        crate::ROAD_TERRAINS_STOCKPILE => serde_json::from_value::<crate::TerrainsStockpiled>(output.clone()).map(|_| ()),
                         crate::ROAD_TERRAINS_SPARSE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_SWEPT_DRAW => serde_json::from_value::<crate::SweptDrawn>(output.clone()).map(|_| ()),
                         crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
