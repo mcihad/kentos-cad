@@ -877,8 +877,9 @@ pub(crate) fn checked(
         }
         if !row.void {
             match u.kind {
-                UnitKind::Unit if row.outdoor => totals.unit_outdoor += row.area,
-                UnitKind::Unit => totals.units += row.area,
+                // An annex (docs/adr/3031) is its unit's own: its rooms count with the units'.
+                UnitKind::Unit | UnitKind::Annex if row.outdoor => totals.unit_outdoor += row.area,
+                UnitKind::Unit | UnitKind::Annex => totals.units += row.area,
                 UnitKind::Common => totals.common += row.area,
                 UnitKind::Outdoor => totals.outdoor += row.area,
             }

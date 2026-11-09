@@ -6330,6 +6330,11 @@ class ScheduleField(_StrEnum):
     - ``paiyGross``
     - ``paiyShare``
     - ``generalGross``
+    - ``annexNet``
+    - ``annexGross``
+    - ``annexes``
+    - ``totalGross``
+    - ``landShare``
     - ``code``: An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
@@ -6346,6 +6351,7 @@ class ScheduleField(_StrEnum):
     - ``tracks``: A three- or four-leaf sliding door's or window's tracks and its leaves' layout, fixed O and sliding X from its
     - ``unitKind``: A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
     - ``paiyNet``: Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its
+    - ``nature``: Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
     """
     NUMBER = "number"
     TYPE = "type"
@@ -6384,6 +6390,11 @@ class ScheduleField(_StrEnum):
     PAIY_GROSS = "paiyGross"
     PAIY_SHARE = "paiyShare"
     GENERAL_GROSS = "generalGross"
+    ANNEX_NET = "annexNet"
+    ANNEX_GROSS = "annexGross"
+    ANNEXES = "annexes"
+    TOTAL_GROSS = "totalGross"
+    LAND_SHARE = "landShare"
     CODE = "code"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
@@ -6400,9 +6411,10 @@ class ScheduleField(_StrEnum):
     TRACKS = "tracks"
     UNIT_KIND = "unitKind"
     PAIY_NET = "paiyNet"
+    NATURE = "nature"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "paiyGross", "paiyShare", "generalGross", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind", "paiyNet"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "paiyGross", "paiyShare", "generalGross", "annexNet", "annexGross", "annexes", "totalGross", "landShare", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind", "paiyNet", "nature"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -7881,13 +7893,15 @@ class UnitKind(_StrEnum):
     - ``unit``: Bağımsız bölüm: a flat, a shop, an office; its own spaces summed for it alone.
     - ``common``: Ortak alan: a shared corridor, stairs, a shaft; summed apart, never into a unit's total.
     - ``outdoor``: Dış alan: a garden, a car park; summed apart.
+    - ``annex``: Eklenti (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
     """
     UNIT = "unit"
     COMMON = "common"
     OUTDOOR = "outdoor"
+    ANNEX = "annex"
 
 
-UnitKindName = Literal["unit", "common", "outdoor"]
+UnitKindName = Literal["unit", "common", "outdoor", "annex"]
 """The names of :class:`UnitKind`, for a plain string."""
 
 
@@ -19724,12 +19738,15 @@ class Bounds(_Model):
 class BuildingProgram(_Model):
     """A building's program (docs/adr/0773, `.kcad` schema 138).
     Attributes:
+        land_total: Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the
+            parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed. Unit: count.
         share_rule: How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
         version: The brief's own name and version (“Ofis konut brief'i 2026-1”), said with its findings.
     """
     briefs: list[SpaceBrief] | Unset = UNSET
     buildings: list[ProgramBuilding] | Unset = UNSET
     clearances: list[FixtureClearance] | Unset = UNSET
+    land_total: int | None | Unset = UNSET
     share_rule: ShareRule | ShareRuleName | None | Unset = UNSET
     units: list[ProgramUnit] | Unset = UNSET
     version: str | None | Unset = UNSET
@@ -19742,6 +19759,8 @@ class BuildingProgram(_Model):
             out["buildings"] = [e0.to_json() for e0 in self.buildings]
         if self.clearances is not UNSET:
             out["clearances"] = [e0.to_json() for e0 in self.clearances]
+        if self.land_total is not UNSET:
+            out["landTotal"] = self.land_total
         if self.share_rule is not UNSET:
             out["shareRule"] = None if self.share_rule is None else _enum_out(self.share_rule)
         if self.units is not UNSET:
@@ -19756,6 +19775,7 @@ class BuildingProgram(_Model):
             briefs=[SpaceBrief.from_json(e0) for e0 in data["briefs"]] if "briefs" in data else UNSET,
             buildings=[ProgramBuilding.from_json(e0) for e0 in data["buildings"]] if "buildings" in data else UNSET,
             clearances=[FixtureClearance.from_json(e0) for e0 in data["clearances"]] if "clearances" in data else UNSET,
+            land_total=data.get("landTotal", UNSET),
             share_rule=UNSET if "shareRule" not in data else None if data["shareRule"] is None else _enum_in(ShareRule, data["shareRule"]),
             units=[ProgramUnit.from_json(e0) for e0 in data["units"]] if "units" in data else UNSET,
             version=data.get("version", UNSET),
@@ -70659,6 +70679,11 @@ class ProgramUnit(_Model):
     """A group of spaces: an independent unit, a common area or an outdoor area.
     Attributes:
         number: Its number, as the project writes it (“D1”, “1”, “Ortak”); one per group.
+        annex_of: An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.
+        land_factor: An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by
+            location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
+        nature: Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
+            what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
         recorded_area: Its recorded (official) area, m², as the user gave it (a deed's, a permit's): read beside the measured one,
             never written by a measurement. Unit: area.
         share_weight: Its weight in the common areas' shares when the program shares them by weight (docs/adr/0784 §2): a decimal
@@ -70666,9 +70691,12 @@ class ProgramUnit(_Model):
     """
     id: str
     number: str
+    annex_of: str | None | Unset = UNSET
     building: str | None | Unset = UNSET
     kind: UnitKind | UnitKindName | Unset = UNSET
+    land_factor: str | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    nature: str | None | Unset = UNSET
     recorded_area: float | None | Unset = UNSET
     share_weight: str | None | Unset = UNSET
     wing: str | None | Unset = UNSET
@@ -70677,12 +70705,18 @@ class ProgramUnit(_Model):
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["number"] = self.number
+        if self.annex_of is not UNSET:
+            out["annexOf"] = self.annex_of
         if self.building is not UNSET:
             out["building"] = self.building
         if self.kind is not UNSET:
             out["kind"] = _enum_out(self.kind)
+        if self.land_factor is not UNSET:
+            out["landFactor"] = self.land_factor
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.nature is not UNSET:
+            out["nature"] = self.nature
         if self.recorded_area is not UNSET:
             out["recordedArea"] = None if self.recorded_area is None else float(self.recorded_area)
         if self.share_weight is not UNSET:
@@ -70696,9 +70730,12 @@ class ProgramUnit(_Model):
         return cls(
             id=data["id"],
             number=data["number"],
+            annex_of=data.get("annexOf", UNSET),
             building=data.get("building", UNSET),
             kind=_enum_in(UnitKind, data["kind"]) if "kind" in data else UNSET,
+            land_factor=data.get("landFactor", UNSET),
             name=data.get("name", UNSET),
+            nature=data.get("nature", UNSET),
             recorded_area=UNSET if "recordedArea" not in data else None if data["recordedArea"] is None else float(data["recordedArea"]),
             share_weight=data.get("shareWeight", UNSET),
             wing=data.get("wing", UNSET),

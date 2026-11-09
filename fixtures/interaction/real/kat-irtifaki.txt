@@ -1,0 +1,62 @@
+# M31 (docs/adr/3031): Kat irtifakı in the real window at 1440 × 900, on the two-storey building paiy_area_tests keeps
+# (irtifak.kcad: flats 1, 2, 3 (Daire; 3 worth 1.2), the east room upstairs flat 1's annex Depo, the hall common, a
+# 450 m² parcel). Bina programı shows Niteliği, Bölümü, Değer katsayısı and Arsa payı paydası; Metraj ▾ › Kat irtifakı
+# tablosu lists the flats with their annexes and land shares 214/450, 107/450, 129/450.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 700 600
+wait 500
+shot m31-10-once
+click 1165 20   # Menülerde ara
+wait 500
+type bina programı
+wait 1000
+key Return
+wait 2000
+shot m31-11-program
+click 1133 795  # Vazgeç
+wait 1000
+click 1003 110  # Metraj ▾
+wait 900
+shot m31-12-metraj-menusu
+key Escape
+wait 500
+click 1165 20
+wait 500
+type kat irtifakı
+wait 1000
+key Return
+wait 1500
+move 60 720
+wait 1200
+shot m31-13-yerlestirme
+click 60 720
+wait 1500
+key Escape
+wait 500
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 1040 860
+wait 600
+shot m31-14-tablo
+click 1165 20
+wait 500
+type bina programı
+wait 1000
+key Return
+wait 2000
+click 947 170   # Arsa payı paydası
+type 1000
+wait 400
+shot m31-15-payda
+click 1209 795  # Kaydet: the window stays open to go on
+wait 2000
+click 1133 795  # Vazgeç: nothing left unsaved, the window closes
+wait 1500
+move 1040 860
+wait 800
+shot m31-16-payda-1000

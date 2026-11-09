@@ -144,6 +144,12 @@ pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
             if *by_level || columns.iter().any(|c| c.field.is_paiy())))
 }
 
+/// Whether `e` is a units schedule with one of kat irtifakı's fields (docs/adr/3031): KCAD schema 211.
+pub fn needs_land_shares(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Table(t) if matches!(&t.source,
+        Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_land())))
+}
+
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.
 pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)

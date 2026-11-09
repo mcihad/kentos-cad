@@ -13681,6 +13681,22 @@
    "tests": 0
   },
   {
+   "id": "tool.scheduleLandShares",
+   "kind": "command",
+   "title": "Kat irtifakı tablosu",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Bölüm çizelgesi, yalnız bağımsız bölümler: numara, kat, nitelik, BB net ve brüt, eklentiler, eklenti net, BB toplam ve genel brüt, arsa payı sütunları; yer imleçten, toplam satırıyla (ADR 3031).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.scheduleOpenings",
    "kind": "command",
    "title": "Kapı ve pencere çizelgesi",

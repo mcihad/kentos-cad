@@ -2654,6 +2654,17 @@ def document(d):
                    for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
         # The parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu (docs/adr/3030).
         schema = max(schema, 210)
+    program = (d.get("settings", {}).get("arch") or {}).get("program") or {}
+    if ("landTotal" in program
+            or any(u.get("kind") == "annex" or any(k in u for k in ("nature", "annexOf", "landFactor"))
+                   for u in program.get("units", []))
+            or any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "schedule"
+                   and any(isinstance(c, dict) and c.get("field") in ("nature", "annexNet", "annexGross", "annexes",
+                                                                       "totalGross", "landShare")
+                           for c in e["source"].get("columns", []))
+                   for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
+        # Kat irtifakı: annexes, a unit's nature and value factor, the land shares' whole, their columns (docs/adr/3031).
+        schema = max(schema, 211)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3529,7 +3540,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-211.kcad"] = container(root(cmap(parts), version=uint(211)))
+    files["schema-version-212.kcad"] = container(root(cmap(parts), version=uint(212)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6303,6 +6314,14 @@ def build():
     bare = document(bare)
     assert bare.count(b"\x67version\x18\xd2") == 1, "the zoning table is schema 210"
     out["broken/zoning-table-in-schema-209.kcad"] = container(bare.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
+    # Schema 211 (docs/adr/3031): kat irtifakı; schema 210 refuses it as unknown, an annex without its unit too.
+    land = document(load("land-shares.json"))
+    assert land.count(b"\x67version\x18\xd3") == 1, "kat irtifakı is schema 211"
+    out["land-shares.kcad"] = container(land)
+    out["broken/land-shares-in-schema-210.kcad"] = container(land.replace(b"\x67version\x18\xd3", b"\x67version\x18\xd2"))
+    loose = load("land-shares.json")
+    del loose["settings"]["arch"]["program"]["units"][-1]["annexOf"]
+    out["broken/land-shares-annex-without-unit.kcad"] = container(document(loose))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

@@ -174,10 +174,19 @@ pub enum ScheduleField {
     PaiyGross,
     PaiyShare,
     GeneralGross,
+    /// Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
+    /// daire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),
+    /// its total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).
+    Nature,
+    AnnexNet,
+    AnnexGross,
+    Annexes,
+    TotalGross,
+    LandShare,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 53] = [
+    pub const ALL: [ScheduleField; 59] = [
         ScheduleField::Number,
         ScheduleField::Code,
         ScheduleField::Type,
@@ -231,6 +240,12 @@ impl ScheduleField {
         ScheduleField::PaiyGross,
         ScheduleField::PaiyShare,
         ScheduleField::GeneralGross,
+        ScheduleField::Nature,
+        ScheduleField::AnnexNet,
+        ScheduleField::AnnexGross,
+        ScheduleField::Annexes,
+        ScheduleField::TotalGross,
+        ScheduleField::LandShare,
     ];
 
     /// Its heading when the column gives none.
@@ -290,6 +305,12 @@ impl ScheduleField {
             ScheduleField::PaiyGross => "BB brüt alanı",
             ScheduleField::PaiyShare => "Ortak alan payı",
             ScheduleField::GeneralGross => "BB genel brüt alanı",
+            ScheduleField::Nature => "Niteliği",
+            ScheduleField::AnnexNet => "Eklenti net alanı",
+            ScheduleField::AnnexGross => "Eklenti brüt alanı",
+            ScheduleField::Annexes => "Eklentiler",
+            ScheduleField::TotalGross => "BB toplam brüt alanı",
+            ScheduleField::LandShare => "Arsa payı",
         }
     }
 
@@ -348,6 +369,12 @@ impl ScheduleField {
             ScheduleField::PaiyGross => "paiyGross",
             ScheduleField::PaiyShare => "paiyShare",
             ScheduleField::GeneralGross => "generalGross",
+            ScheduleField::Nature => "nature",
+            ScheduleField::AnnexNet => "annexNet",
+            ScheduleField::AnnexGross => "annexGross",
+            ScheduleField::Annexes => "annexes",
+            ScheduleField::TotalGross => "totalGross",
+            ScheduleField::LandShare => "landShare",
         }
     }
 
@@ -377,12 +404,19 @@ impl ScheduleField {
                     | PaiyGross
                     | PaiyShare
                     | GeneralGross
+                    | Nature
+                    | AnnexNet
+                    | AnnexGross
+                    | Annexes
+                    | TotalGross
+                    | LandShare
             );
         }
         match self {
             Count | Level | Phase | Attr => true,
             UnitKind | Building | Wing | RecordedArea | ShareWeight => false,
             PaiyNet | PaiyGross | PaiyShare | GeneralGross => false,
+            Nature | AnnexNet | AnnexGross | Annexes | TotalGross | LandShare => false,
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
@@ -440,7 +474,9 @@ impl ScheduleField {
     pub fn edits_in(self, of: ScheduleOf) -> bool {
         use ScheduleField::*;
         match of {
-            ScheduleOf::Units => matches!(self, Number | Name | RecordedArea | ShareWeight),
+            ScheduleOf::Units => {
+                matches!(self, Number | Name | RecordedArea | ShareWeight | Nature)
+            }
             _ => self.editable() && !(of == ScheduleOf::Fixtures && self == Type),
         }
     }
@@ -459,7 +495,16 @@ impl ScheduleField {
             || (of == ScheduleOf::Units
                 && matches!(
                     self,
-                    Share | Gross | RecordedArea | PaiyNet | PaiyGross | PaiyShare | GeneralGross
+                    Share
+                        | Gross
+                        | RecordedArea
+                        | PaiyNet
+                        | PaiyGross
+                        | PaiyShare
+                        | GeneralGross
+                        | AnnexNet
+                        | AnnexGross
+                        | TotalGross
                 ))
     }
 
@@ -514,6 +559,15 @@ impl ScheduleField {
     pub fn is_paiy(self) -> bool {
         use ScheduleField::*;
         matches!(self, PaiyNet | PaiyGross | PaiyShare | GeneralGross)
+    }
+
+    /// Whether it is one of kat irtifakı's fields (docs/adr/3031, `.kcad` schema 211).
+    pub fn is_land(self) -> bool {
+        use ScheduleField::*;
+        matches!(
+            self,
+            Nature | AnnexNet | AnnexGross | Annexes | TotalGross | LandShare
+        )
     }
 
     /// Whether it is an opening's type's joinery code (docs/adr/3028, `.kcad` schema 208).

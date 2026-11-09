@@ -3006,6 +3006,24 @@
       "status": "implemented"
     },
     {
+      "id": "tool.scheduleLandShares",
+      "title": "Kat irtifakı tablosu",
+      "short": "Kat irtifakı",
+      "icon": "scheduleLandShares",
+      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
+      "aliases": [
+        "KATIRTIFAKI",
+        "KATİRTİFAKI",
+        "ARSAPAYI",
+        "PAYLASIMTABLOSU",
+        "PAYLAŞIMTABLOSU",
+        "LANDSHARES"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "edit.selectFilter.tag",
       "title": "Seçim süzgecinde Etiket",
       "short": "Etiket",
@@ -5112,6 +5130,7 @@
     "scheduleFixtures": "<rect x=\"2.2\" y=\"3.5\" width=\"7.1\" height=\"3\" rx=\"0.7\"/><ellipse cx=\"5.75\" cy=\"11.6\" rx=\"3.1\" ry=\"4.4\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleAreas": "<path d=\"M2 4h6.5v12H2z\"/><path d=\"M2 8h6.5M2 12h6.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8h6.5M11.5 11.5h6.5\" stroke-width=\"1\"/><path d=\"M11.5 15.8h6.5\" stroke-width=\"2\"/>",
     "zoningTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 5.5h6v7H5z\"/><path d=\"M13 6.5h2.5M13 9.5h2.5M13 12.5h2.5\" stroke-width=\"1\"/>",
+    "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
     "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2\" y=\"4.5\" width=\"7.5\" height=\"11\" rx=\"0.8\"/><path d=\"M4 10h3.5\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "viewSection": "<path d=\"M2.5 12.5h15\" stroke-dasharray=\"3.2 1.4 0.8 1.4\"/><circle cx=\"4\" cy=\"7\" r=\"2.3\"/><circle cx=\"16\" cy=\"7\" r=\"2.3\"/><path d=\"M1.7 7h4.6M13.7 7h4.6\" stroke-width=\"0.9\"/><path d=\"M4 9.3v3.2M16 9.3v3.2\" stroke-width=\"1.6\"/>",

@@ -45,6 +45,8 @@ pub const SCHEDULE_FIXTURES_ID: &str = "scheduleFixtures";
 pub const SCHEDULE_UNITS_ID: &str = "scheduleUnits";
 /// Metrekare cetveli (docs/adr/3029): a units schedule storey by storey with the regulation's gross.
 pub const SCHEDULE_AREAS_ID: &str = "scheduleAreas";
+/// Kat irtifakı tablosu (docs/adr/3031): the independent units with their natures, areas, annexes and land shares.
+pub const SCHEDULE_LAND_SHARES_ID: &str = "scheduleLandShares";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -862,10 +864,13 @@ pub enum SchedulePreset {
     /// Metrekare cetveli (docs/adr/3029; PAİY 57/2-a): the units storey by storey, each with the storey's part of its
     /// regulation gross and net, the total the building's.
     AreaTable,
+    /// Kat irtifakı tablosu (docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/2-a, 57/3): the independent units alone,
+    /// each with its storey, nature, net and gross areas, annexes, total and general gross and land share.
+    LandShares,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 8] = [
+    pub const ALL: [SchedulePreset; 9] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
@@ -874,6 +879,7 @@ impl SchedulePreset {
         SchedulePreset::Fixtures,
         SchedulePreset::Units,
         SchedulePreset::AreaTable,
+        SchedulePreset::LandShares,
     ];
 
     pub fn of(self) -> ScheduleOf {
@@ -883,7 +889,9 @@ impl SchedulePreset {
             SchedulePreset::Columns => ScheduleOf::Columns,
             SchedulePreset::Walls => ScheduleOf::Walls,
             SchedulePreset::Fixtures => ScheduleOf::Fixtures,
-            SchedulePreset::Units | SchedulePreset::AreaTable => ScheduleOf::Units,
+            SchedulePreset::Units | SchedulePreset::AreaTable | SchedulePreset::LandShares => {
+                ScheduleOf::Units
+            }
         }
     }
 
@@ -891,6 +899,7 @@ impl SchedulePreset {
         match self {
             SchedulePreset::Finishes => "Mahal kaplama çizelgesi",
             SchedulePreset::AreaTable => "Metrekare cetveli",
+            SchedulePreset::LandShares => "Kat irtifakı tablosu",
             other => other.of().label(),
         }
     }
@@ -905,6 +914,7 @@ impl SchedulePreset {
             SchedulePreset::Fixtures => "fixtures",
             SchedulePreset::Units => "units",
             SchedulePreset::AreaTable => "areas",
+            SchedulePreset::LandShares => "landShares",
         }
     }
 
@@ -917,6 +927,19 @@ impl SchedulePreset {
             }
             // The metrekare cetveli: storey, unit, its kind, the storey's part of its gross and net.
             (SchedulePreset::AreaTable, _) => &[Level, Number, Name, UnitKind, PaiyGross, PaiyNet],
+            // Kat irtifakı tablosu (KMK 12/a: number and nature, the areas, annexes, land share; PAİY 57/3's areas).
+            (SchedulePreset::LandShares, _) => &[
+                Number,
+                Level,
+                Nature,
+                PaiyNet,
+                PaiyGross,
+                Annexes,
+                AnnexNet,
+                TotalGross,
+                GeneralGross,
+                LandShare,
+            ],
             // A door and window schedule starts with its number and its type's joinery code (docs/adr/3028);
             // grouped, by code: the joinery list.
             (SchedulePreset::Openings, false) => {
@@ -963,6 +986,52 @@ impl SchedulePreset {
     }
 }
 
+/// What Kat irtifakı tablosu's message adds (docs/adr/3031): the land shares' whole, why they could not be given, the
+/// units numbered otherwise than 1, 2, 3 … (Kat Mülkiyeti Kanunu 12/a: "birden başlayıp sırayla giden numarası") and the
+/// units without a nature; each a sentence after a space, none when all hold.
+pub fn land_share_notes(doc: &kentos_domain::Document) -> String {
+    let program = doc.program();
+    let units: Vec<&kentos_commands::ProgramUnit> = program
+        .units
+        .iter()
+        .filter(|u| u.kind == kentos_commands::UnitKind::Unit)
+        .collect();
+    let mut out = String::new();
+    match doc.land_shares() {
+        Ok(Some(l)) => out.push_str(&format!(" Arsa payı paydası {}.", l.total)),
+        Ok(None) => out.push_str(" Bina programında bağımsız bölüm yok: arsa payı yazılmadı."),
+        Err(why) => out.push_str(&format!(" {why}")),
+    }
+    let mut numbers: Vec<u64> = units.iter().filter_map(|u| u.number.parse().ok()).collect();
+    numbers.sort_unstable();
+    let ordinal =
+        numbers.len() == units.len() && numbers.iter().enumerate().all(|(i, n)| *n == i as u64 + 1);
+    if !units.is_empty() && !ordinal {
+        let said: Vec<&str> = units.iter().take(4).map(|u| u.number.as_str()).collect();
+        out.push_str(&format!(
+            " Bölüm numaraları ({}{}) 1'den başlayıp sırayla gitmiyor; Kat Mülkiyeti Kanunu 12/a böyle ister: Bina \
+             programında 1, 2, 3 … yapın.",
+            said.join(", "),
+            if units.len() > 4 { ", …" } else { "" }
+        ));
+    }
+    let bare: Vec<&str> = units
+        .iter()
+        .filter(|u| u.nature.is_none())
+        .map(|u| u.number.as_str())
+        .collect();
+    if !bare.is_empty() {
+        out.push_str(&format!(
+            " {} bölümünün niteliği yok (daire, dükkân, iş bürosu …): Bina programında yazın.",
+            bare.iter()
+                .map(|n| format!("“{n}”"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    out
+}
+
 /// Çizelge: a schedule placed from the cursor; its settings visible (docs/adr/0733 §5).
 #[derive(Clone, Debug)]
 pub struct ScheduleTool {
@@ -1005,7 +1074,10 @@ impl ScheduleTool {
             group: preset == SchedulePreset::Fixtures,
             total: preset != SchedulePreset::Openings,
             // A units schedule keeps the program's order (docs/adr/0795), a metrekare cetveli the storeys'.
-            sorted: !matches!(preset, SchedulePreset::Units | SchedulePreset::AreaTable),
+            sorted: !matches!(
+                preset,
+                SchedulePreset::Units | SchedulePreset::AreaTable | SchedulePreset::LandShares
+            ),
             subtotals: false,
             active_level: false,
             table: None,
@@ -1024,9 +1096,14 @@ impl ScheduleTool {
             at: points::wire(at),
             of: self.preset.of(),
             columns: self.preset.columns(self.group),
-            filter: level.map(|l| kentos_commands::ScheduleFilter {
-                levels: Some(vec![l.to_owned()]),
-                ..Default::default()
+            // Kat irtifakı tablosu lists the independent units alone; their annexes are in their rows.
+            filter: (level.is_some() || self.preset == SchedulePreset::LandShares).then(|| {
+                kentos_commands::ScheduleFilter {
+                    levels: level.map(|l| vec![l.to_owned()]),
+                    kinds: (self.preset == SchedulePreset::LandShares)
+                        .then(|| vec![kentos_commands::UnitKind::Unit]),
+                    ..Default::default()
+                }
             }),
             sort: if self.sorted || self.subtotals {
                 vec![ScheduleSort {
@@ -1123,10 +1200,15 @@ impl ScheduleTool {
             self.done = true;
             self.ghost = Preview::default();
             cx.selection.set([Slot(out.id)]);
+            let notes = if self.preset == SchedulePreset::LandShares {
+                land_share_notes(cx.doc)
+            } else {
+                String::new()
+            };
             cx.say(
                 Level::Success,
                 format!(
-                    "{}: {} satır. Kaynakları değişince satırları da değişir.",
+                    "{}: {} satır. Kaynakları değişince satırları da değişir.{notes}",
                     self.preset.label(),
                     out.rows
                 ),
@@ -1155,6 +1237,7 @@ impl Tool for ScheduleTool {
             SchedulePreset::Fixtures => SCHEDULE_FIXTURES_ID,
             SchedulePreset::Units => SCHEDULE_UNITS_ID,
             SchedulePreset::AreaTable => SCHEDULE_AREAS_ID,
+            SchedulePreset::LandShares => SCHEDULE_LAND_SHARES_ID,
             _ => SCHEDULE_ID,
         }
     }

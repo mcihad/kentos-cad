@@ -155,6 +155,13 @@
     - `zoning_badge` (durum çubuğu: sınırlı, sınırsız, ikon + "!"; sürüm başına önbellek), Öznitelikler › İmar durumu.
     - `TableSource::Zoning {}` = `arch.zoningTable` "Emsal ve TAKS tablosu" (`zoning_table`: 57/3 satırları, kat kat,
       aşım `OVER_COLOR`); `follow_tables` mahal değişince, `refresh_zoning_tables` ayar/geri alma sonrasında adımsız.
+  - **Kat irtifakı (M31, [ADR 3031](../adr/3031-condominium-units-annexes-and-land-shares.md)):**
+    - `UnitKind::Annex` + `annexOf`, `nature`, `landFactor`, `BuildingProgram.landTotal` (KCAD 211). `PaiyGroup`
+      `annex_gross/net`, `total()` (4/ğ-4), `general()` = toplam + pay; pay tartısı toplam brüt.
+    - `kentos_contracts::land_shares` (`kentos.land/1`: toplam brüt × katsayı, payda program/parsel/toplam, en büyük
+      kalan); `Document::land_shares`. Sütunlar `Nature`, `AnnexNet`, `AnnexGross`, `Annexes`, `TotalGross`,
+      `LandShare`; hazır `SchedulePreset::LandShares` = `tool.scheduleLandShares` (`land_share_notes`: payda, KMK 12/a
+      numara, niteliksiz bölüm).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -451,3 +451,188 @@ fn an_emsal_and_taks_table_follows_the_zoning_and_the_rooms() {
         std::fs::write(std::path::Path::new(&out).join("imar.kcad"), bytes).expect("written");
     }
 }
+
+/// Kat irtifakı tablosu (M31, docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/3): the two storeys of the metrekare
+/// cetveli, the east room upstairs flat 1's annex (Depo), flat 3 worth 1.2 for its place, the hall one common area
+/// shared equally, a 450 m² parcel. Flat 1's total gross is its 30 m² and the Depo's 30, its general gross 80 with its
+/// 20 of the hall; the land shares are 60 : 30 : 36 of 450: 214, 107 and 129 (the one left to the largest remainder).
+#[test]
+fn a_kat_irtifaki_table_lists_the_units_with_their_annexes_and_land_shares() {
+    kentos_postgis::connections::keep_in_memory();
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
+    app.hand_over = |m, _| Ok(m.program().to_owned());
+    let task = app.update(Message::Run("file.new"));
+    drive(&mut app, task);
+    command(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": [
+            { "id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0 },
+            { "id": "k1", "name": "1. kat", "elevation": 3.0, "height": 3.0 } ],
+            "zoning": { "parcelArea": 450.0, "far": 1.5, "coverage": 0.4 } } }),
+    );
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    for level in ["zemin", "k1"] {
+        let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": level}});
+        command(
+            &mut app,
+            "cad.walls.create",
+            json!({"layerId": layer, "walls": [
+                wall((0.125, 0.125), (14.875, 0.125), 0.25), wall((14.875, 0.125), (14.875, 5.875), 0.25),
+                wall((14.875, 5.875), (0.125, 5.875), 0.25), wall((0.125, 5.875), (0.125, 0.125), 0.25),
+                wall((5.0, 0.125), (5.0, 5.875), 0.15), wall((10.0, 0.125), (10.0, 5.875), 0.15)
+            ]}),
+        );
+    }
+    // An annex without its unit is refused by the program's own rule.
+    let doc = app.document.as_mut().expect("a drawing");
+    let refused = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.program.edit",
+        kentos_commands::CallOp::Execute,
+        json!({"program": {"units": [{"id": "e1", "number": "E1", "kind": "annex"}]}}),
+    )
+    .expect("answers");
+    assert_ne!(refused["status"], "completed", "{refused}");
+    assert!(
+        refused
+            .to_string()
+            .contains("hangi bağımsız bölüme ait olduğu seçilmeli"),
+        "{refused}"
+    );
+    command(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "nature": "Daire"}, {"id": "d2", "number": "2", "nature": "Daire"},
+            {"id": "d3", "number": "3", "nature": "Daire", "landFactor": "1.2"},
+            {"id": "e1", "number": "E1", "kind": "annex", "nature": "Depo", "annexOf": "d1"},
+            {"id": "ortak", "number": "O", "name": "Merdiven evi", "kind": "common"}
+        ], "shareRule": "equal"}}),
+    );
+    let room = |x: f64, level: &str, unit: &str| json!({"seed": p(x, 3.0), "arch": {"level": level}, "unit": unit});
+    command(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            room(2.5, "zemin", "d1"), room(7.5, "zemin", "ortak"), room(12.5, "zemin", "d2"),
+            room(2.5, "k1", "d3"), room(7.5, "k1", "ortak"), room(12.5, "k1", "e1")
+        ]}),
+    );
+    let _ = app.update(Message::Run("tool.scheduleLandShares"));
+    assert_eq!(app.session.tool_id(), "scheduleLandShares");
+    let _ = app.submit_line("20,0");
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.starts_with("Kat irtifakı tablosu:") && said.contains("Arsa payı paydası 450."),
+        "{said}"
+    );
+    assert!(
+        !said.contains("sırayla gitmiyor") && !said.contains("niteliği yok"),
+        "{said}"
+    );
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let cells = doc
+        .entities()
+        .find_map(|e| match e {
+            kentos_commands::Entity::Table(t) => Some(t.cells.clone()),
+            _ => None,
+        })
+        .expect("the table");
+    let rows: Vec<Vec<&str>> = cells
+        .iter()
+        .map(|r| r.iter().map(String::as_str).collect())
+        .collect();
+    assert_eq!(
+        rows,
+        vec![
+            vec![
+                "No",
+                "Kat",
+                "Niteliği",
+                "BB net alanı (m²)",
+                "BB brüt alanı (m²)",
+                "Eklentiler",
+                "Eklenti net alanı (m²)",
+                "BB toplam brüt alanı (m²)",
+                "BB genel brüt alanı (m²)",
+                "Arsa payı",
+            ],
+            vec![
+                "1",
+                "Zemin kat",
+                "Daire",
+                "25.71",
+                "30.00",
+                "Depo 30.00 m²",
+                "25.71",
+                "60.00",
+                "80.00",
+                "214/450"
+            ],
+            vec![
+                "2",
+                "Zemin kat",
+                "Daire",
+                "25.71",
+                "30.00",
+                "",
+                "",
+                "30.00",
+                "50.00",
+                "107/450"
+            ],
+            vec![
+                "3", "1. kat", "Daire", "25.71", "30.00", "", "", "30.00", "50.00", "129/450"
+            ],
+            vec![
+                "Toplam", "", "", "77.14", "90.00", "", "25.71", "120.00", "180.00", ""
+            ],
+        ],
+        "{cells:?}"
+    );
+    // Numbers other than 1, 2, 3 … and a unit without its nature are said (KMK 12/a).
+    command(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "D1", "nature": "Daire"}, {"id": "d2", "number": "D2"},
+            {"id": "d3", "number": "D3", "nature": "Daire", "landFactor": "1.2"},
+            {"id": "e1", "number": "E1", "kind": "annex", "nature": "Depo", "annexOf": "d1"},
+            {"id": "ortak", "number": "O", "name": "Merdiven evi", "kind": "common"}
+        ], "shareRule": "equal"}}),
+    );
+    let notes = kentos_interaction::tag_tools::land_share_notes(
+        &app.document.as_ref().expect("a drawing").model,
+    );
+    assert!(
+        notes.contains("Bölüm numaraları (D1, D2, D3) 1'den başlayıp sırayla gitmiyor"),
+        "{notes}"
+    );
+    assert!(notes.contains("“D2” bölümünün niteliği yok"), "{notes}");
+    if let Some(out) = std::env::var_os("KENTOS_PAIY_OUT") {
+        // The real window's drawing (fixtures/interaction/real/kat-irtifaki.txt): the program back as the table had it,
+        // the table taken away.
+        let _ = app.update(Message::Run("edit.undo"));
+        let _ = app.update(Message::Run("edit.undo"));
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
+        std::fs::write(std::path::Path::new(&out).join("irtifak.kcad"), bytes).expect("written");
+    }
+}

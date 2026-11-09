@@ -113624,6 +113624,17 @@
           },
           "type": "array"
         },
+        "landTotal": {
+          "description": "Arsa payı paydası (docs/adr/3031; `.kcad` schema 211): the whole the land shares are written over; none: the\nparcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.",
+          "format": "uint64",
+          "maximum": 100000000,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
         "shareRule": {
           "anyOf": [
             {
@@ -169583,6 +169594,13 @@
       "additionalProperties": false,
       "description": "A group of spaces: an independent unit, a common area or an outdoor area.",
       "properties": {
+        "annexOf": {
+          "description": "An annex's independent unit (docs/adr/3031): the id of the group of kind `unit` it is allocated to.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "building": {
           "type": [
             "string",
@@ -169595,7 +169613,22 @@
         "kind": {
           "$ref": "#/$defs/UnitKind"
         },
+        "landFactor": {
+          "description": "An independent unit's value factor in the land shares (docs/adr/3031; Kat Mülkiyeti Kanunu 3: values by\nlocation and size): a decimal as written (“1.15”), read exactly; 1 when absent.",
+          "pattern": "^[0-9]{1,12}(\\.[0-9]{1,6})?$",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "nature": {
+          "description": "Niteliği (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 12/a: \"kat, daire, iş bürosu gibi nevi\"):\nwhat the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).",
           "type": [
             "string",
             "null"
@@ -177074,7 +177107,12 @@
             "shareWeight",
             "paiyGross",
             "paiyShare",
-            "generalGross"
+            "generalGross",
+            "annexNet",
+            "annexGross",
+            "annexes",
+            "totalGross",
+            "landShare"
           ],
           "type": "string"
         },
@@ -177156,6 +177194,11 @@
         {
           "const": "paiyNet",
           "description": "Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its\nnet area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common\nareas' gross and its general gross (gross and part).",
+          "type": "string"
+        },
+        {
+          "const": "nature",
+          "description": "Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:\ndaire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),\nits total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).",
           "type": "string"
         }
       ]
@@ -197145,6 +197188,11 @@
         {
           "const": "outdoor",
           "description": "Dış alan: a garden, a car park; summed apart.",
+          "type": "string"
+        },
+        {
+          "const": "annex",
+          "description": "Eklenti (docs/adr/3031; `.kcad` schema 211; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,\nallocated to it (a storage room, a garage, a coal room; `annexOf`); its gross counts into its unit's total gross\n(PAİY 4/ğ-4), never into the common areas.",
           "type": "string"
         }
       ]

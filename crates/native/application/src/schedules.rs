@@ -404,7 +404,7 @@ fn written(
 }
 
 /// `program` with `value` written to its groups `ids`' field `field` (docs/adr/0795): a number, a name, a recorded area
-/// in the project's area unit, a share weight; refused by the program's own rule.
+/// in the project's area unit, a share weight, a nature (docs/adr/3031); refused by the program's own rule.
 fn program_written(
     doc: &Document,
     mut program: kentos_commands::BuildingProgram,
@@ -435,6 +435,8 @@ fn program_written(
             ScheduleField::Name => u.name = text.clone(),
             ScheduleField::RecordedArea => u.recorded_area = area,
             ScheduleField::ShareWeight => u.share_weight = text.as_ref().map(|t| t.replace(',', ".")),
+            // Niteliği (docs/adr/3031): the program's, written to it.
+            ScheduleField::Nature => u.nature = text.clone(),
             _ => {
                 return Err(fail(
                     codes::CELL_COMPUTED,

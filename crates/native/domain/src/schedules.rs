@@ -78,6 +78,9 @@ pub fn numeric(f: ScheduleField) -> bool {
                 | ScheduleField::PaiyGross
                 | ScheduleField::PaiyShare
                 | ScheduleField::GeneralGross
+                | ScheduleField::AnnexNet
+                | ScheduleField::AnnexGross
+                | ScheduleField::TotalGross
         )
 }
 
@@ -189,7 +192,10 @@ impl Document {
                 | ScheduleField::PaiyNet
                 | ScheduleField::PaiyGross
                 | ScheduleField::PaiyShare
-                | ScheduleField::GeneralGross => Some(match s.area_unit {
+                | ScheduleField::GeneralGross
+                | ScheduleField::AnnexNet
+                | ScheduleField::AnnexGross
+                | ScheduleField::TotalGross => Some(match s.area_unit {
                     kentos_contracts::AreaUnit::M2 => "m²",
                     kentos_contracts::AreaUnit::Donum => "dönüm",
                     kentos_contracts::AreaUnit::Ha => "ha",
@@ -304,6 +310,7 @@ impl Document {
                         }
                         ScheduleField::Number => Some(ArchValue::Text(u.number.clone())),
                         ScheduleField::Name => u.name.clone().map(ArchValue::Text),
+                        ScheduleField::Nature => u.nature.clone().map(ArchValue::Text),
                         ScheduleField::UnitKind => Some(ArchValue::Text(u.kind.label().to_owned())),
                         ScheduleField::Building => {
                             building.map(|b| ArchValue::Text(b.name.clone()))
@@ -408,11 +415,22 @@ impl Document {
                 }
             }
         }
-        // Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029), worked out once when a column asks.
+        // Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/3029) and kat irtifakı's (docs/adr/3031), worked out once
+        // when a column asks; the land shares too.
         let paiy = columns
             .iter()
-            .any(|c| c.field.is_paiy())
+            .any(|c| c.field.is_paiy() || c.field.is_land())
             .then(|| self.paiy_areas());
+        let land = columns
+            .iter()
+            .any(|c| c.field == ScheduleField::LandShare)
+            .then(|| self.land_shares().ok().flatten())
+            .flatten();
+        let paiy_of = |id: &str| {
+            paiy.as_ref()
+                .and_then(|v| v.iter().find(|(u, _)| u == id))
+                .map(|(_, g)| g)
+        };
         let mut rows = Vec::new();
         for u in &program.units {
             let mine = of.iter().find(|(id, _)| *id == u.id).map(|(_, g)| g);
@@ -490,6 +508,46 @@ impl Document {
                     }
                     ScheduleField::GeneralGross if u.kind == UnitKind::Unit => {
                         pa.and_then(|g| g.general()).map(ArchValue::Area)
+                    }
+                    // Kat irtifakı (docs/adr/3031): the nature, the annexes and the total gross, the land share.
+                    ScheduleField::Nature => u.nature.clone().map(ArchValue::Text),
+                    // A unit without annexes leaves their areas empty, not 0.
+                    ScheduleField::AnnexNet
+                        if u.kind == UnitKind::Unit && !program.annexes_of(&u.id).is_empty() =>
+                    {
+                        pa.map(|g| ArchValue::Area(g.annex_net))
+                    }
+                    ScheduleField::AnnexGross
+                        if u.kind == UnitKind::Unit && !program.annexes_of(&u.id).is_empty() =>
+                    {
+                        pa.map(|g| ArchValue::Area(g.annex_gross))
+                    }
+                    ScheduleField::TotalGross if u.kind == UnitKind::Unit => {
+                        pa.map(|g| ArchValue::Area(g.total()))
+                    }
+                    ScheduleField::Annexes if u.kind == UnitKind::Unit => {
+                        let said: Vec<String> = program
+                            .annexes_of(&u.id)
+                            .iter()
+                            .map(|a| {
+                                let what = a
+                                    .nature
+                                    .clone()
+                                    .or_else(|| a.name.clone())
+                                    .unwrap_or_else(|| a.number.clone());
+                                match paiy_of(&a.id) {
+                                    Some(g) => format!(
+                                        "{what} {}",
+                                        self.arch_value_text(&ArchValue::Area(g.gross), true)
+                                    ),
+                                    None => what,
+                                }
+                            })
+                            .collect();
+                        (!said.is_empty()).then(|| ArchValue::Text(said.join("; ")))
+                    }
+                    ScheduleField::LandShare if u.kind == UnitKind::Unit => {
+                        land.as_ref().and_then(|l| l.of(&u.id)).map(ArchValue::Text)
                     }
                     _ => None,
                 })
@@ -657,7 +715,8 @@ impl Document {
             aligns: columns
                 .iter()
                 .map(|c| {
-                    if numeric(c.field) {
+                    // A land share (“225/450”) is written to the right as the areas beside it.
+                    if numeric(c.field) || c.field == ScheduleField::LandShare {
                         TableAlign::Right
                     } else {
                         TableAlign::Left

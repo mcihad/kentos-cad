@@ -425,6 +425,8 @@ pub(super) struct Features {
     pub(super) opening_codes: bool,
     pub(super) paiy_areas: bool,
     pub(super) zoning: bool,
+    /// Schema 211 (docs/adr/3031): kat irtifakı's program fields and schedule columns.
+    pub(super) land_shares: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -709,6 +711,7 @@ impl Features {
             opening_codes: schema >= crate::SCHEMA_WITH_OPENING_CODES,
             paiy_areas: schema >= crate::SCHEMA_WITH_PAIY_AREAS,
             zoning: schema >= crate::SCHEMA_WITH_ZONING,
+            land_shares: schema >= crate::SCHEMA_WITH_LAND_SHARES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2500,6 +2503,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 211 (docs/adr/3031): a units schedule's kat irtifakı fields; before it none was a field.
+    if kentos_contracts::needs_land_shares(&entity) && !has.land_shares {
+        return Err(r.fail(
+            Code::UnknownField,
+            "çizelgenin kat irtifakı sütunları (nature, annexNet, annexGross, annexes, totalGross, landShare) şema 211 ister",
         ));
     }
     // Schema 209 (docs/adr/3029): a units schedule's regulation areas; before it none was a field.

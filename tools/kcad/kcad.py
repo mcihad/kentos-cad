@@ -455,6 +455,7 @@ SCHEDULE_SIZED_FIELDS = ("roughWidth", "unitWidth", "leafWidth", "clearWidth")
 SCHEDULE_CODE_FIELDS = ("code",)
 # Schema 209 (docs/adr/3029): a units schedule's regulation areas.
 SCHEDULE_PAIY_FIELDS = ("paiyNet", "paiyGross", "paiyShare", "generalGross")
+SCHEDULE_LAND_FIELDS = ("nature", "annexNet", "annexGross", "annexes", "totalGross", "landShare")
 # Schema 140 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
 # clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
 # when the project or a space has one.
@@ -582,6 +583,9 @@ SCHEMA_WITH_OPENING_CODES = 208
 SCHEMA_WITH_PAIY_AREAS = 209
 # Docs/adr/3030: the parcel's zoning (arch.zoning) and a brief's floor area ratio count (briefs[].emsal).
 SCHEMA_WITH_ZONING = 210
+# Docs/adr/3031: kat irtifakı: annexes (kind annex, annexOf), a unit's nature and value factor (landFactor), the land
+# shares' whole (program.landTotal) and a units schedule's kat irtifakı fields.
+SCHEMA_WITH_LAND_SHARES = 211
 # The plan cut height's range in metres (docs/adr/3012).
 CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
@@ -956,7 +960,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3611,6 +3615,7 @@ class _Schema:
         self.opening_codes = version >= SCHEMA_WITH_OPENING_CODES
         self.paiy_areas = version >= SCHEMA_WITH_PAIY_AREAS
         self.zoning = version >= SCHEMA_WITH_ZONING
+        self.land_shares = version >= SCHEMA_WITH_LAND_SHARES
         self.section_breaks = version >= SCHEMA_WITH_SECTION_BREAKS
         self.volume_curve = version >= SCHEMA_WITH_VOLUME_CURVE
         self.corridor_sampling = version >= SCHEMA_WITH_CORRIDOR_SAMPLING
@@ -8943,7 +8948,8 @@ class _Schema:
                 self.fail("bad_value", "tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir")
             return t
         later = {**{f: ("şema 208", self.opening_codes) for f in SCHEDULE_CODE_FIELDS},
-                 **{f: ("şema 209", self.paiy_areas) for f in SCHEDULE_PAIY_FIELDS}}
+                 **{f: ("şema 209", self.paiy_areas) for f in SCHEDULE_PAIY_FIELDS},
+                 **{f: ("şema 211", self.land_shares) for f in SCHEDULE_LAND_FIELDS}}
 
         def field_of(read):
             # A field a later schema brought is unknown before it (docs/adr/3028, 3029), as the Rust reader says.
@@ -8960,13 +8966,14 @@ class _Schema:
                                                   + (SCHEDULE_MULTI_SLIDE_FIELDS if self.multi_slide else ())
                                                   + (SCHEDULE_UNIT_FIELDS if self.unit_schedules else ())
                                                   + (SCHEDULE_CODE_FIELDS if self.opening_codes else ())
-                                                  + (SCHEDULE_PAIY_FIELDS if self.paiy_areas else ()))), True),
+                                                  + (SCHEDULE_PAIY_FIELDS if self.paiy_areas else ())
+                                                  + (SCHEDULE_LAND_FIELDS if self.land_shares else ()))), True),
                               "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
                            "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),
                            **({"types": (self.array(type_name), False)} if extra else {}),
                            **({"buildings": (self.array(self.text), False), "wings": (self.array(self.text), False),
-                               "kinds": (self.array(self.enum(UNIT_KINDS)), False)} if self.unit_schedules else {})})
+                               "kinds": (self.array(self.enum(UNIT_KINDS + (("annex",) if self.land_shares else ()))), False)} if self.unit_schedules else {})})
         sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False),
                             **({"header": (true_only, False), "footer": (true_only, False)} if extra else {})})
         kinds = (("openings", "spaces", "columns", "walls") + (("fixtures",) if extra else ())
@@ -10308,10 +10315,24 @@ class _Schema:
         spans = {"levels": (levels, False)} if self.program_shares else {}
         wing = self.fields({"id": (word, True), "name": (word, True), **spans})
         building = self.fields({"id": (word, True), "name": (word, True), "wings": (self.array(wing), False), **spans})
+        def factor(x):
+            t = weight(x)
+            if not re.search(r"[1-9]", t):
+                self.fail("bad_value", "değer katsayısı sıfırdan büyük olmalı")
+            return t
+
+        def land_total(x):
+            n = self.uint(64)(x)
+            if not 1 <= n <= 100_000_000:
+                self.fail("bad_value", "arsa payı paydası 1 ile 100000000 arasında bir tam sayıdır")
+            return n
+        # Schema 211 (docs/adr/3031): an annex and its unit, a unit's nature and value factor, the land shares' whole.
+        land = self.land_shares
         unit = self.fields({"id": (word, True), "number": (word, True), "name": (word, False),
-                            "kind": (self.enum(("common", "outdoor")), False), "building": (word, False),
-                            "wing": (word, False), "recordedArea": (positive, False),
-                            **({"shareWeight": (weight, False)} if self.program_shares else {})})
+                            "kind": (self.enum(("common", "outdoor") + (("annex",) if land else ())), False),
+                            "building": (word, False), "wing": (word, False), "recordedArea": (positive, False),
+                            **({"shareWeight": (weight, False)} if self.program_shares else {}),
+                            **({"nature": (word, False), "annexOf": (word, False), "landFactor": (factor, False)} if land else {})})
         brief = self.fields({"usage": (word, True), "areaMin": (positive, False), "areaMax": (positive, False),
                              "minWidth": (positive, False), "minPassage": (positive, False),
                              "adjacent": (self.array(word), False), "reach": (self.array(word), False),
@@ -10322,7 +10343,8 @@ class _Schema:
         p = self.fields({"buildings": (self.array(building), False), "units": (self.array(unit), False),
                          "briefs": (self.array(brief), False), "clearances": (self.array(clearance), False),
                          "version": (word, False),
-                         **({"shareRule": (self.enum(SHARE_RULES), False)} if self.program_shares else {})})(v)
+                         **({"shareRule": (self.enum(SHARE_RULES), False)} if self.program_shares else {}),
+                         **({"landTotal": (land_total, False)} if land else {})})(v)
         if not p:
             self.fail("bad_value", "boş bina programı yazılmaz")
         for b in p.get("buildings", []):
@@ -10346,6 +10368,17 @@ class _Schema:
                 self.fail("bad_value", "bölümün binası programda yok")
             if "wing" in u and (b is None or u["wing"] not in [w["id"] for w in b.get("wings", [])]):
                 self.fail("bad_value", "bölümün kanadı binasının değil")
+            # Docs/adr/3031: an annex names its independent unit; only an annex does; a value factor is a unit's.
+            annex = u.get("kind") == "annex"
+            if annex and "annexOf" not in u:
+                self.fail("bad_value", "eklentinin ait olduğu bağımsız bölüm yazılmalı")
+            if not annex and "annexOf" in u:
+                self.fail("bad_value", "ait olduğu bölüm yalnız eklentide yazılır")
+            if "landFactor" in u and "kind" in u:
+                self.fail("bad_value", "değer katsayısı yalnız bağımsız bölümde yazılır")
+        for u in units:
+            if "annexOf" in u and not any(x["id"] == u["annexOf"] and "kind" not in x for x in units):
+                self.fail("bad_value", "eklentinin ait olduğu bölüm programda bir bağımsız bölüm değil")
         usages = [b["usage"] for b in p.get("briefs", [])]
         if len(usages) != len(set(usages)):
             self.fail("bad_value", "bir kullanımın hedefi bir kez yazılır")

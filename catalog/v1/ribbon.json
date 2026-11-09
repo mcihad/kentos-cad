@@ -2204,6 +2204,11 @@
           "command": "arch.zoningTable",
           "title": "Metraj",
           "label": "Emsal ve TAKS tablosu"
+         },
+         {
+          "command": "tool.scheduleLandShares",
+          "title": "Metraj",
+          "label": "Kat irtifakı tablosu"
          }
         ]
        },

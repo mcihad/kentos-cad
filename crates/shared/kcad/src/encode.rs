@@ -2270,10 +2270,22 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 211 (docs/adr/3031): kat irtifakı's program fields and schedule columns.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_land_shares())
+        || objs.iter().any(kentos_contracts::needs_land_shares)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_land_shares))
+    {
+        return crate::SCHEMA_WITH_LAND_SHARES;
+    }
     // Schema 210 (docs/adr/3030): the parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu.
-    let zoning_table = |e: &Entity| {
-        matches!(e, Entity::Table(t) if matches!(t.source, Some(kentos_contracts::TableSource::Zoning {})))
-    };
+    let zoning_table = |e: &Entity| matches!(e, Entity::Table(t) if matches!(t.source, Some(kentos_contracts::TableSource::Zoning {})));
     if doc
         .settings
         .arch

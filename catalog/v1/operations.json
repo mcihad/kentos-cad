@@ -2288,6 +2288,13 @@
       "operation": "table",
       "note": "Emsal ve TAKS tablosu (kaynağı zoning): parsel, emsal, TAKS, izin verilen ve projedeki alanlar, kat kat emsale dahil ve harici alan; satırlarını belge her adımda ve Proje ayarları değişince kendisi yazar (ADR 3030)."
     },
+    "tool.scheduleLandShares": {
+      "level": "semantic",
+      "via": [
+        "cad.schedules.create"
+      ],
+      "note": "Bölüm çizelgesi, yalnız bağımsız bölümler: numara, kat, nitelik, BB net ve brüt, eklentiler, eklenti net, BB toplam ve genel brüt, arsa payı sütunları; yer imleçten, toplam satırıyla (ADR 3031)."
+    },
     "tool.scheduleAreas": {
       "level": "semantic",
       "via": [

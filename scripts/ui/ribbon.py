@@ -440,6 +440,8 @@ CAD = [
                 {"command": "arch.quantities", "title": "Metraj", "label": "Metraj"},
                 {"command": "tool.scheduleAreas", "title": "Metraj", "label": "Metrekare cetveli"},
                 {"command": "arch.zoningTable", "title": "Metraj", "label": "Emsal ve TAKS tablosu"},
+                # Kat irtifakı tablosu (docs/adr/3031): the deed's sharing table.
+                {"command": "tool.scheduleLandShares", "title": "Metraj", "label": "Kat irtifakı tablosu"},
             ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
