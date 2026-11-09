@@ -1,0 +1,61 @@
+{
+  "nodes": [
+    {
+      "kind": "surface",
+      "id": "t-5",
+      "name": "Teras",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "t-9",
+      "name": "Set",
+      "state": "current"
+    },
+    {
+      "kind": "drawing",
+      "id": "cz-1",
+      "name": "Sıfır hattı",
+      "state": "current",
+      "recipe": {
+        "command": "road.terrains.zeroline",
+        "version": 1,
+        "input": {
+          "base": "t-5",
+          "comparison": "t-9",
+          "layerId": "sifir"
+        },
+        "written": 2,
+        "objects": 2,
+        "digest": "0123456789abcdef",
+        "made": 1,
+        "revision": "7"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 0,
+      "to": 2,
+      "kind": "source",
+      "main": true,
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "kind": "source",
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    }
+  ],
+  "drawings": 1,
+  "outdated": 0,
+  "sheets": 0,
+  "blocked": 0,
+  "epsg": "EPSG:5254",
+  "system": "TUREF / TM30",
+  "deep": false,
+  "revision": "9"
+}

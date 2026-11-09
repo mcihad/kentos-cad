@@ -9414,6 +9414,32 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Tariften üret (plan/map-cad.md MAP-20, docs/adr/3240).
+        CommandDescriptor {
+            id: crate::ROAD_PROJECT_PRODUCE.into(),
+            version: crate::ROAD_PROJECT_PRODUCE_VERSION,
+            title: "Tariften üret".into(),
+            summary: "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur, katman kimliğiyle kalır. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. \
+                      Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing ve çizim komutlarının retleri."
+                .into(),
+            aliases: vec!["tariftenuret".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoadProjectProduce>(),
+            output: schema::<crate::RoadProjectProduced>(),
+            plan: Some(schema::<crate::RoadProjectProduced>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kayıtlı tarifin bütün çizimleri".into(),
+                input: json!({ "path": "/proje/tarifler/sifir-hatlari.json" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::ROAD_PROJECT_EDIT.into(),
             version: crate::ROAD_PROJECT_EDIT_VERSION,
@@ -16545,6 +16571,7 @@ mod tests {
                     crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_GRAPH => serde_json::from_value::<crate::RoadProjectGraphQuery>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuild>(e.input.clone()).map(|_| ()),
+                    crate::ROAD_PROJECT_PRODUCE => serde_json::from_value::<crate::RoadProjectProduce>(e.input.clone()).map(|_| ()),
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
@@ -17519,6 +17546,7 @@ mod tests {
                         crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_GRAPH => serde_json::from_value::<crate::RoadProjectGraph>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
+                        crate::ROAD_PROJECT_PRODUCE => serde_json::from_value::<crate::RoadProjectProduced>(output.clone()).map(|_| ()),
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),

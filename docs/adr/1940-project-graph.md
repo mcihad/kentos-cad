@@ -135,6 +135,6 @@ MCP: `{"tool": "road.project.graph", "arguments": {"drawing": "…"}}`.
 - Çizim kaydında işlem sürümü ve çıktı revizyonu (şema 206). Yapıldı, şema 209:
   [ADR 2840](2840-drawing-record-version-and-revision.md).
 - Ölçüm arşivi ve dengeleme kaydının zincire bağlanması.
-- Tariften başka bir projede yeniden üretim.
+- ~~Tariften başka bir projede yeniden üretim.~~ ADR 3240 (Tariften üret).
 - Atlas sayfalarının denetimi.
 - Ağır işlerde ilerleme ve iptal.

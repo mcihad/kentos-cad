@@ -50,7 +50,7 @@ sırayla alır.
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840 | tariften başka projede üretim; bütçe; çizimin kendi hesabının içinde durdurma | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240 | bütçe; çizimin kendi hesabının içinde durdurma; katmanların adla eşlenmesi | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -1866,6 +1866,15 @@ tutar (adımın kendi revizyonu, ikinci yazım yok); eski kayıt için tahmin yo
 bağımsız okuyucu ve başvuru yazıcısı; örnek, üç bozuk dosya, 1701 dosya aynı); İş grafiği'nin tarifinde `made` ve
 `revision`, masaüstünde Revizyon sütunu; grafik durumları yakalanan revizyonlarla, MCP. Açık: tariften başka projede
 üretim, bellek/CPU bütçesi, çizimin kendi hesabının içinde durdurma.
+
+**9 Kasım 2026, beşinci tur — tariften başka projede üretim ([ADR 3240](../docs/adr/3240-produce-a-recipe-in-another-project.md)).**
+Kapsam: **Harita + Yol**. Dayanak: QGIS modelleyicisinde model dosyası ve çalıştırırken verilen girdiler; ArcGIS Pro'nun
+geçmişi projesiyle saklanır, başka yerde betik ya da model olur. Kanıtlanan: `road.project.produce` (Tariften üret)
+İş grafiği'nin kaydettiği tarifin çizimlerini bu projede tek adımda çizer: tarifin kaynak kimlikleri adlarına çevrilir,
+katman kimliğiyle kalır; var olan çizim (aynı komut, kaynak, katman) bırakılır; adıyla istenenler hepsi ya da hiçbiri,
+hepsi istenince çizilmeyen nedeniyle bırakılır; sürüm denetimi, başka sistem uyarısı, ilerleme ve durdurma. 31 bağımsız
+durum (tarifler elle, sıfır hatları başvurusundan), Python'da iki projenin aynı çizgileri, MCP, İş grafiği'nde
+Tariften üret…. Açık: bütçe, çizimin kendi hesabının içinde durdurma, katmanların adla eşlenmesi.
 
 ## Uygulama sırası ve sahiplik
 

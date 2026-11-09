@@ -68,6 +68,6 @@ ve çıktı revizyonu kaydedilsin.”
 
 ## Sonra
 
-- Tariften başka projede üretim; bellek ve CPU bütçesi (MAP-20'nin öbür maddeleri).
+- ~~Tariften başka projede üretim~~ (ADR 3240); bellek ve CPU bütçesi (MAP-20'nin öbür maddeleri).
 - Bir çizim komutu v2 olduğunda eski sürümle çizilmiş kaydın “sürümü eski” diye işaretlenmesi.
 - Web (TODOS §0.2).

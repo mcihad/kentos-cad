@@ -3,6 +3,8 @@
 //! write run (they refuse what no longer draws: a layer gone or locked, a source that does not build), the drawing kept
 //! anew with its sources' stamps and objects. The shared cases are `fixtures/commands/v1/road.project.rebuild.json`.
 
+use std::collections::BTreeMap;
+
 use kentos_commands::{
     CommandResult, CommandWarning, RoadDrawingDef, RoadDrawingLeft, RoadDrawingRebuilt, RoadNodeState as S,
     RoadProjectRebuild, RoadProjectRebuilt,
@@ -16,39 +18,41 @@ use crate::codes;
 use crate::road_drawings;
 use crate::trim::relay;
 
-type Refused = Box<CommandResult<()>>;
+pub(crate) type Refused = Box<CommandResult<()>>;
 
-/// Draws `d` again in the step it runs in. Answers what it did and the command's warnings, or the command's refusal
-/// (nothing written: the check runs before the objects go).
-pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Result<(RoadDrawingRebuilt, Vec<CommandWarning>), Refused> {
-    let Some(main) = road_drawings::main_of(&d.command) else {
-        return Err(Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{}” çiziminin komutu yeniden üretilemez.", d.id), None)).into()));
+/// Runs drawing command `command` on `input` (a drawing's or, docs/adr/3240, a recipe's; `id` names it in a refusal):
+/// its check, the objects `remove` removed (a drawing drawn again: its own; a new one: none), then its write in the step
+/// it runs in. Answers the objects written and the command's warnings, or its refusal (nothing written: the check runs
+/// before the objects go). A refusal says whether it came after the check, when the step may hold a part of the write.
+pub(crate) fn run_drawing(
+    cx: &mut ExecutionContext<'_>,
+    id: &str,
+    command: &str,
+    input: &BTreeMap<String, Value>,
+    remove: &[kentos_domain::Slot],
+) -> Result<(Vec<String>, Vec<CommandWarning>), (Refused, bool)> {
+    let value = Value::Object(input.clone().into_iter().collect());
+    let bad = |e: serde_json::Error| -> (Refused, bool) {
+        (Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{id}” çiziminin girdisi okunamadı: {e}."), None)).into()), false)
     };
-    let value = Value::Object(d.input.clone().into_iter().collect());
-    let bad = |e: serde_json::Error| -> Refused {
-        Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{}” çiziminin girdisi okunamadı: {e}.", d.id), None)).into())
-    };
-    let present: Vec<kentos_domain::Slot> = d
-        .uids
-        .iter()
-        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| cx.doc.slot_of(u)))
-        .collect();
     macro_rules! again {
         ($m:ident, $t:ty) => {{
             let input: $t = serde_json::from_value(value).map_err(bad)?;
             match crate::$m::validate(cx, &input) {
                 CommandResult::Completed { .. } => {}
-                other => return Err(Box::new(relay(other))),
+                other => return Err((Box::new(relay(other)), false)),
             }
-            cx.doc.remove(&present);
+            if !remove.is_empty() {
+                cx.doc.remove(remove);
+            }
             match crate::$m::draw(cx, &input) {
                 CommandResult::Completed { output, warnings } => (output.uids, warnings),
-                other => return Err(Box::new(relay(other))),
+                other => return Err((Box::new(relay(other)), true)),
             }
         }};
     }
     use kentos_commands as k;
-    let (uids, warnings) = match d.command.as_str() {
+    Ok(match command {
         "road.alignments.label" => again!(road_alignments_label, k::AlignmentsLabel),
         "road.profiles.draw" => again!(road_profiles_draw, k::ProfilesDraw),
         "road.sections.draw" => again!(road_sections_draw, k::SectionsDraw),
@@ -61,7 +65,21 @@ pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Resul
         "road.terrains.zeroline" => again!(road_terrains_zeroline, k::TerrainsZeroLine),
         "road.terrains.cutfill" => again!(road_terrains_cutfill, k::TerrainsCutFill),
         _ => again!(road_terrains_contours, k::TerrainsContours),
+    })
+}
+
+/// Draws `d` again in the step it runs in. Answers what it did and the command's warnings, or the command's refusal
+/// (nothing written: the check runs before the objects go).
+pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Result<(RoadDrawingRebuilt, Vec<CommandWarning>), Refused> {
+    let Some(main) = road_drawings::main_of(&d.command) else {
+        return Err(Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{}” çiziminin komutu yeniden üretilemez.", d.id), None)).into()));
     };
+    let present: Vec<kentos_domain::Slot> = d
+        .uids
+        .iter()
+        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| cx.doc.slot_of(u)))
+        .collect();
+    let (uids, warnings) = run_drawing(cx, &d.id, &d.command, &d.input, &present).map_err(|(refused, _)| refused)?;
     road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id)).map_err(|stop| Box::new(stop.into()))?;
     Ok((
         RoadDrawingRebuilt {

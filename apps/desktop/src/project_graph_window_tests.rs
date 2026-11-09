@@ -161,3 +161,96 @@ fn provenance_screens() {
         println!("{}", file.display());
     }
 }
+
+/// The recipe of the map project's zero line, saved by Tarifi kaydet… to a scratch folder.
+fn saved_recipe(dir: &std::path::Path) -> std::path::PathBuf {
+    let mut a = app();
+    let _ = a.update(Message::ProjectGraph(G::Open));
+    std::fs::create_dir_all(dir).expect("a folder");
+    let file = dir.join("tarif.json");
+    a.project_graph_save(file.clone());
+    file
+}
+
+/// The shared cases' Yol project of `road.project.produce` (road_terrain_zeroline_cases.py's: Düz, Tümsek, `sifir`)
+/// opened, without drawings.
+fn other_project() -> App {
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.project.produce.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(kentos_launch::Module::Road);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/3240: the map project's recipe (its zero line, Tümsek over Düz) saved, then Tariften üret in another
+/// project: the zero line is drawn there as its own drawing, current, with its recipe; the window says it above the
+/// table; one undo takes it back; a second time it is left, the project has it.
+#[test]
+fn tariften_uret_draws_the_recipe_in_another_project() {
+    use crate::exchange::words::Kind;
+    use crate::project_graph_window::produced_lines;
+    let dir = std::env::temp_dir().join(format!("kentos-tariften-uret-{}", std::process::id()));
+    let file = saved_recipe(&dir);
+    let mut b = other_project();
+    let _ = b.update(Message::ProjectGraph(G::Open));
+    assert_eq!(b.project_graph.answer.as_ref().and_then(|a| a.as_ref().ok()).map(|g| g.drawings), Some(0));
+    b.project_graph_produce(file.clone());
+    let out = b.project_graph.produced.clone().expect("produced");
+    assert_eq!(out.produced.len(), 1);
+    assert_eq!((out.produced[0].source.id.as_str(), out.produced[0].source.name.as_str()), ("t-5", "Düz"));
+    assert_eq!(produced_lines(&out), [(Kind::Ok, "Tariften üretildi: 1 çizim, 1 nesne: cz-1 (Düz).".to_owned())]);
+    let g = b.project_graph.answer.as_ref().expect("an answer").as_ref().expect("read").clone();
+    assert_eq!((g.drawings, g.outdated), (1, 0), "drawn here, current");
+    assert_eq!(drawing_rows(&g, false)[0][1], "zeroline v1");
+    let said = b.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
+    assert!(said.contains("1 çizim tariften üretildi"), "{said}");
+    // Once more: the project has it.
+    b.project_graph_produce(file.clone());
+    let again = b.project_graph.produced.clone().expect("answered");
+    assert!(again.produced.is_empty());
+    assert_eq!(
+        produced_lines(&again)[1],
+        (Kind::Info, "Tarifin cz-1 çizimi bırakıldı: Projede bu çizim var (aynı komut, ana kaynak ve katman); Yeniden üret ile güncellenir.".to_owned())
+    );
+    // One undo takes the drawing back.
+    let _ = b.update(Message::ProjectGraph(G::Close));
+    let _ = b.update(Message::Run("edit.undo"));
+    let _ = b.update(Message::ProjectGraph(G::Open));
+    assert_eq!(b.project_graph.answer.as_ref().and_then(|a| a.as_ref().ok()).map(|g| g.drawings), Some(0));
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+/// `.run/gui-evidence/tariften-uret-3240/`: İş grafiği in the other project after Tariften üret…
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib project_graph_window_tests::produce_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn produce_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tariften-uret-3240");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let recipe = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/recipes/v1/eksik-kaynakli.json");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = other_project();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::ProjectGraph(G::Open));
+        app.project_graph_produce(recipe.clone());
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-tariften-uret-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

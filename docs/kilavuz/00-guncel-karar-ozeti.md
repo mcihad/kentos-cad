@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Tariften üret (9 Kasım 2026; MAP-20, [ADR 3240](../../docs/adr/3240-produce-a-recipe-in-another-project.md)).**
+  `road.project.produce` İş grafiği'nin tarifini başka projede çizer: kaynaklar adlarıyla, katman kimliğiyle; var olan
+  çizim bırakılır; adıyla istenenler hepsi ya da hiçbiri. İş grafiği'nde Tariften üret…. Harita + Yol.
 - **Saha paketinin yüzeyi (9 Kasım 2026; MAP-19, [ADR 3220](../../docs/adr/3220-field-package-surface.md)).** Paket
   yüzeyin kendisini `yuzey.xml` (LandXML TIN, SHA-256'sı bildirgede) olarak taşır; paketin tasarımıyla kontrolde yüzey
   farkı paketin yüzeyiyle, `surfaceChanged` çizimin yüzeyinin değiştiğini söyler. Harita + Yol + CBS.

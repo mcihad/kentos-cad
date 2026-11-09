@@ -2430,6 +2430,18 @@ const ENTRIES: &[Entry] = &[
         warnings: &["corridor_unsolved"],
         targets: none,
     },
+    // A recipe's drawings drawn in another project (plan/map-cad.md MAP-20, docs/adr/3240): the drawing commands'
+    // refusals come through with the recipe's drawing named.
+    Entry {
+        id: "road.project.produce",
+        refusals: &[
+            &["not_a_road_project", "invalid_file_path", "file_not_found", "invalid_project_recipe", "unknown_drawing"],
+            &["unknown_terrain", "layer_not_found", "layer_locked", "not_a_layer"],
+            REVISION,
+        ],
+        warnings: &["recipe_other_system", "layer_hidden"],
+        targets: none,
+    },
     Entry {
         id: "road.project.edit",
         refusals: &[&["not_a_road_project", "nothing_to_set"], REVISION],

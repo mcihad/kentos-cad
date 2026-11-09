@@ -4,13 +4,18 @@
 //! sources (a source changed since it was drawn, or gone, said by name), its objects written and there now, its state
 //! and the sheets whose maps show it (Güncel olmayanlar: only the drawings not up to date). Tarifi kaydet writes the
 //! graph as JSON: every drawing's recipe (command, version, input), its sources' stamps then and now, the system.
+//! Tariften üret (docs/adr/3240; `road.project.produce`) draws a saved recipe's drawings in this project, one undo
+//! step: what it drew and what it left (a drawing the project has, one that does not draw here) are said above the
+//! table, which is read again.
 
 use std::path::PathBuf;
 
 use iced::{Element, Task};
-use kentos_commands::{RoadEdgeKind as E, RoadGraphKind as G, RoadNodeState as S, RoadProjectGraph};
+use kentos_commands::{
+    RoadEdgeKind as E, RoadGraphKind as G, RoadNodeState as S, RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
+};
 use kentos_interaction::Level;
-use kentos_native_application::road_project_graph;
+use kentos_native_application::{ExecutionContext, road_project_graph, road_project_produce};
 use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::{Dialog as Frame, Segmented};
 
@@ -24,6 +29,7 @@ pub const TITLE: &str = "İş grafiği";
 pub const OPEN: &str = "İş grafiği…";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "Tarifi kaydet…";
+const PRODUCE: &str = "Tariften üret…";
 
 /// Which drawings the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -46,6 +52,8 @@ impl std::fmt::Display for Show {
 pub struct State {
     pub show: Show,
     pub answer: Option<Result<RoadProjectGraph, String>>,
+    /// The last Tariften üret's answer (docs/adr/3240).
+    pub produced: Option<RoadProjectProduced>,
 }
 
 #[derive(Clone, Debug)]
@@ -54,6 +62,8 @@ pub enum Event {
     Show(Show),
     Save,
     Saved(Option<PathBuf>),
+    Produce,
+    Picked(Option<PathBuf>),
     Close,
 }
 
@@ -64,6 +74,26 @@ fn msg(e: Event) -> Message {
 /// Whether a drawing's state is one the print check stops: stale, missing, edited, gone.
 fn outdated(s: S) -> bool {
     matches!(s, S::Stale | S::Missing | S::Edited | S::Gone)
+}
+
+/// What Tariften üret did (docs/adr/3240): the drawings drawn (each kept here, from its main source by name) and those
+/// left with why.
+pub fn produced_lines(out: &RoadProjectProduced) -> Vec<(Kind, String)> {
+    let mut lines = Vec::new();
+    if out.produced.is_empty() {
+        lines.push((Kind::Info, "Tariften üretilecek yeni çizim yok.".to_owned()));
+    } else {
+        let list: Vec<String> = out.produced.iter().map(|p| format!("{} ({})", p.drawing, p.source.name)).collect();
+        let objects: usize = out.produced.iter().map(|p| p.uids.len()).sum();
+        lines.push((
+            Kind::Ok,
+            format!("Tariften üretildi: {} çizim, {objects} nesne: {}.", out.produced.len(), list.join(", ")),
+        ));
+    }
+    for l in &out.left {
+        lines.push((Kind::Info, format!("Tarifin {} çizimi bırakıldı: {}", l.drawing, l.message)));
+    }
+    lines
 }
 
 /// A drawing's table row: its name, its sources (each changed or gone source said), its objects, state and sheets.
@@ -151,6 +181,22 @@ impl App {
         }
     }
 
+    /// Tariften üret (docs/adr/3240): the recipe's drawings drawn in this project, one undo step; the graph read again.
+    pub(crate) fn project_graph_produce(&mut self, path: PathBuf) {
+        let Some(doc) = self.document.as_mut() else { return };
+        let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, expected_revision: None };
+        let result = road_project_produce::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            let left = if out.left.is_empty() { String::new() } else { format!("; {} çizim bırakıldı", out.left.len()) };
+            self.say(
+                if out.produced.is_empty() { Level::Info } else { Level::Success },
+                format!("{TITLE}: {} çizim tariften üretildi{left} ({}).", out.produced.len(), path.display()),
+            );
+            self.project_graph.produced = Some(out);
+            self.project_graph_read();
+        }
+    }
+
     pub(crate) fn project_graph_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open => return self.open_project_graph(),
@@ -171,6 +217,21 @@ impl App {
             }
             Event::Saved(Some(path)) => self.project_graph_save(path),
             Event::Saved(None) => {}
+            Event::Produce => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title(PRODUCE.trim_end_matches('…'))
+                            .add_filter("JSON", &["json"])
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |p| msg(Event::Picked(p)),
+                );
+            }
+            Event::Picked(Some(path)) => self.project_graph_produce(path),
+            Event::Picked(None) => {}
             Event::Close => {
                 self.project_graph = State::default();
                 self.dialog = None;
@@ -185,6 +246,9 @@ impl App {
         let mut rows = Vec::new();
         match &s.answer {
             Some(Ok(g)) => {
+                for (kind, said) in s.produced.iter().flat_map(produced_lines) {
+                    lines.push(words::text_line(kind, said));
+                }
                 let fine = g.outdated == 0 && g.blocked == 0;
                 lines.push(words::text_line(
                     if fine { Kind::Ok } else { Kind::Warn },
@@ -236,6 +300,7 @@ impl App {
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
+            .aside(words::secondary(PRODUCE, ready.then(|| msg(Event::Produce))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -245,6 +310,7 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
+            Control::Press(PRODUCE) => Some(msg(Event::Produce)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

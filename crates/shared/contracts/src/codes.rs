@@ -936,6 +936,12 @@ codes! {
     UNKNOWN_DRAWING = "unknown_drawing", Failed, false, "Yol çizimi projede yok.";
     /// A road drawing whose main source is gone; it is not drawn again (docs/adr/0911 §3).
     DRAWING_SOURCE_GONE = "drawing_source_gone", Failed, false, "Yol çiziminin kaynağı projede yok; yeniden üretilemez.";
+    /// A recipe that cannot be produced: not İş grafiği's recipe, no drawing in it, a drawing's command not one that
+    /// draws or its version not this one's (docs/adr/3240).
+    INVALID_PROJECT_RECIPE = "invalid_project_recipe", Failed, false, "Tariften üretilemez; ileti nedenini söyler.";
+    /// A warning: the recipe was saved in a project of another coordinate system; its inputs are taken as they are
+    /// (docs/adr/3240).
+    RECIPE_OTHER_SYSTEM = "recipe_other_system", Warning, false, "Tarif başka koordinat sistemindeki bir projede kaydedilmiş.";
     /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
     /// warning (docs/adr/0911 §3).
     DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";

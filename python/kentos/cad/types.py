@@ -80635,6 +80635,37 @@ class RoadDrawingLeft(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RoadDrawingProduced(_Model):
+    """A recipe's drawing drawn here: its id in the recipe (`from`), the drawing kept here, its command, its main source
+    here and the objects written (a plan: none).
+    """
+    from_: str
+    drawing: str
+    command: str
+    source: RoadProducedSource
+    uids: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["drawing"] = self.drawing
+        out["command"] = self.command
+        out["source"] = self.source.to_json()
+        out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadDrawingProduced:
+        return cls(
+            from_=data["from"],
+            drawing=data["drawing"],
+            command=data["command"],
+            source=RoadProducedSource.from_json(data["source"]),
+            uids=list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoadDrawingRebuilt(_Model):
     """A drawing drawn again: its id and command, how many objects it removed and the new ones.
     Attributes:
@@ -80862,6 +80893,29 @@ class RoadNode(_Model):
             objects=data.get("objects", UNSET),
             parent=data.get("parent", UNSET),
             why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProducedSource(_Model):
+    """The main source a produced drawing was drawn from in this project: its kind, id and name."""
+    kind: RoadSourceKind | RoadSourceKindName
+    id: str
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["id"] = self.id
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProducedSource:
+        return cls(
+            kind=_enum_in(RoadSourceKind, data["kind"]),
+            id=data["id"],
+            name=data["name"],
         )
 
 
@@ -81230,6 +81284,65 @@ class RoadProjectGraphQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> RoadProjectGraphQuery:
         return cls(
             deep=data.get("deep", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectProduce(_Model):
+    """Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
+    `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
+    `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
+    that draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the
+    recipe's); and a drawing command's own refusal (a source not in this project, a layer not here, gone or locked), the
+    recipe's drawing named in its words: nothing is written.
+    """
+    path: str
+    drawings: list[str] | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.drawings is not UNSET:
+            out["drawings"] = None if self.drawings is None else list(self.drawings)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectProduce:
+        return cls(
+            path=data["path"],
+            drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProjectProduced(_Model):
+    """Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:
+    this project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).
+    """
+    produced: list[RoadDrawingProduced]
+    revision: str
+    left: list[RoadDrawingLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["produced"] = [e0.to_json() for e0 in self.produced]
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProjectProduced:
+        return cls(
+            produced=[RoadDrawingProduced.from_json(e0) for e0 in data["produced"]],
+            revision=data["revision"],
+            left=[RoadDrawingLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
 
@@ -132509,6 +132622,7 @@ __all__ = [
     "RingGeometry",
     "RoadDrawingDef",
     "RoadDrawingLeft",
+    "RoadDrawingProduced",
     "RoadDrawingRebuilt",
     "RoadDrawingRecipe",
     "RoadDrawingSource",
@@ -132527,6 +132641,7 @@ __all__ = [
     "RoadNodeKindName",
     "RoadNodeState",
     "RoadNodeStateName",
+    "RoadProducedSource",
     "RoadProfileLengths",
     "RoadProfileListed",
     "RoadProfilesCheck",
@@ -132536,6 +132651,8 @@ __all__ = [
     "RoadProjectEdited",
     "RoadProjectGraph",
     "RoadProjectGraphQuery",
+    "RoadProjectProduce",
+    "RoadProjectProduced",
     "RoadProjectQuery",
     "RoadProjectRebuild",
     "RoadProjectRebuilt",

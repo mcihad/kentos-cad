@@ -1,0 +1,294 @@
+#!/usr/bin/env python3
+"""The shared cases of `road.project.produce` (Tariften üret; plan/map-cad.md MAP-20, docs/adr/3240): a recipe's
+drawings drawn in another project.
+
+The project is road_terrain_zeroline_cases.py's Yol project (TUREF / TM30, its surfaces Düz t-5, Teras t-6, Set t-9,
+Tümsek t-10 …, the layer `sifir`); its Harita project, without Teras and Set, for one case. The recipes are İş grafiği's graphs (road.project.graph v1's answer as
+Tarifi kaydet… writes it, docs/adr/1940) of another project, written here by hand under fixtures/recipes/v1: its
+surfaces have their own ids there (a-5 Düz, a-10 Tümsek, a-6 Teras, a-9 Set) and the names this project has. The
+rules, by hand:
+
+- a text of a drawing's input that is the id of one of the recipe's sources is that source's name; a layer's id
+  (`layerId`) stays; the command finds the name here (case aside);
+- each drawing is the command's own: a zero line's lines are road_terrain_zeroline_cases.py's, one object each (Düz
+  under Tümsek: one closed line; Teras under Set: two open lines);
+- the drawings are kept as this project's, numbered cz-1, cz-2 … after those it has;
+- a drawing this project has (the same command, main source and layer) is left (`exists`);
+- named drawings are all drawn or none, a command's refusal with the recipe's drawing named; every drawing asked, one
+  the command refuses here is left with its words (`refused`);
+- a recipe saved in a project of another system is warned; its inputs are taken as they are;
+- the file, the recipe and the names asked are checked before anything is drawn.
+
+No KentOS code.
+
+    python3 scripts/fixtures/road_project_produce_cases.py [--check]
+"""
+
+import copy
+import json
+import sys
+from pathlib import Path
+
+sys.dont_write_bytecode = True
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import road_terrain_zeroline_cases as zc  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "fixtures/commands/v1/road.project.produce.json"
+RECIPES = ROOT / "fixtures/recipes/v1"
+ANY = "$any"
+W = 1e-6
+UNCHANGED = {"canUndo": False, "canRedo": False, "dirty": False, "revision": "same"}
+STEPPED = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
+SAME = {"revision": "same"}
+ZERO = "road.terrains.zeroline"
+WORDS = {ZERO: "Sıfır hattı"}
+# The recipe's project's surfaces: their ids there, the names this project has.
+SOURCES = [("a-5", "Düz"), ("a-10", "Tümsek"), ("a-6", "Teras"), ("a-9", "Set")]
+# This project's surfaces by name (road_terrain_zeroline_cases.py's).
+HERE = {n.lower(): i for i, n in zc.NAMES.items()}
+EXISTS = "Projede bu çizim var (aynı komut, ana kaynak ve katman); Yeniden üret ile güncellenir."
+NOT_ROAD = {"status": "failed", "error": {"code": "not_a_road_project", "message": "Proje ağacı yol ve harita projesinde "
+                                          "(KentOS Yol, KentOS Harita) olur; bu çizim ikisinden biri değil."}}
+
+
+def drawing(id_, inp, command=ZERO, version=1, objects=1):
+    return (id_, command, version, inp, objects)
+
+
+TWO = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "sifir"}),
+       drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "sifir"}, objects=2)]
+
+
+def recipe(drawings, sources=SOURCES, epsg="EPSG:5254", system="TUREF / TM30"):
+    """The graph as Tarifi kaydet… writes it: the recipe's project's surfaces, then its drawings with their recipes and
+    their sources' edges (the main one first, its stamp then and now)."""
+    nodes = [{"kind": "surface", "id": sid, "name": name, "state": "current"} for sid, name in sources]
+    edges = []
+    for id_, command, version, inp, objects in drawings:
+        k = len(nodes)
+        nodes.append({"kind": "drawing", "id": id_, "name": WORDS.get(command, "Yol çizimi"), "state": "current",
+                      "recipe": {"command": command, "version": version, "input": inp, "written": objects,
+                                 "objects": objects, "digest": "0123456789abcdef", "made": 1, "revision": "7"}})
+        for field, main in (("base", True), ("comparison", False)):
+            at = next((i for i, n in enumerate(nodes[:len(sources)]) if n["id"] == inp.get(field)), None)
+            if at is not None:
+                edges.append({"from": at, "to": k, "kind": "source", **({"main": True} if main else {}),
+                              "kept": "0123456789abcdef", "now": "0123456789abcdef"})
+    out = {"nodes": nodes, "edges": edges, "drawings": len(drawings), "outdated": 0, "sheets": 0, "blocked": 0}
+    if epsg is not None:
+        out.update({"epsg": epsg, "system": system})
+    out.update({"deep": False, "revision": "9"})
+    return out
+
+
+# The recipe files: name → graph (or text: a file that is not a recipe).
+FILES = {
+    "sifir-hatlari.json": recipe(TWO),
+    "baska-sistem.json": recipe(TWO, epsg="EPSG:5256", system="TUREF / TM36"),
+    "yerel-proje.json": recipe(TWO, epsg=None),
+    # The recipe's ids are this project's ids of other surfaces: the names decide.
+    "kimlik-cakisan.json": recipe([drawing("cz-1", {"base": "t-5", "comparison": "t-9", "layerId": "sifir"}, objects=2)],
+                                  sources=[("t-5", "Teras"), ("t-9", "Set")]),
+    "buyuk-harfli.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "sifir"})],
+                                sources=[("a-5", "DÜZ"), ("a-10", "tümsek")]),
+    "eksik-kaynakli.json": recipe(TWO + [drawing("cz-3", {"base": "a-1", "comparison": "a-5", "layerId": "sifir"})],
+                                  sources=SOURCES + [("a-1", "Ova")]),
+    "eksik-katmanli.json": recipe([TWO[0], drawing("cz-4", {"base": "a-6", "comparison": "a-9", "layerId": "sifir-a"},
+                                                   objects=2)]),
+    "baska-katmanli.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "drenaj"})]),
+    "gizli-katmanli.json": recipe([drawing("cz-1", {"base": "a-6", "comparison": "a-9", "layerId": "gizli"}, objects=2)]),
+    "kilitli-katmanli.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "kilitli"})]),
+    "grup-katmanli.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "grup"})]),
+    "cizmeyen-komut.json": recipe([drawing("cz-1", {"surface": "a-5"}, command="road.terrains.query")]),
+    "baska-surum.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "sifir"}, version=2)]),
+    "cizimsiz.json": recipe([]),
+    "tarif-degil.json": {"format": "kentos.field-package", "version": 1},
+}
+
+
+def fx(name):
+    return f"$fixture:recipes/v1/{name}"
+
+
+def lines(base, comparison):
+    """How many lines the zero line of `comparison` over `base` has here (road_terrain_zeroline_cases.py's)."""
+    return len(zc.answer({"base": base, "comparison": comparison})["lines"])
+
+
+def produced(from_, drawing_id, base, comparison, written=True):
+    sid = HERE[base.lower()]
+    n = lines(base, comparison)
+    return {"from": from_, "drawing": drawing_id, "command": ZERO,
+            "source": {"kind": "surface", "id": sid, "name": zc.NAMES[sid]}, "uids": [ANY] * n if written else []}
+
+
+def done(out, warnings=()):
+    return {"status": "completed", "output": out, "warnings": list(warnings)}
+
+
+def failed(code, message, path=None):
+    err = {"code": code, "message": message}
+    if path is not None:
+        err["path"] = path
+    return {"status": "failed", "error": err}
+
+
+def step(inp, result, op="execute", expect=None):
+    s = {"op": op, "input": inp, "result": result}
+    s["expect"] = expect if expect is not None else (STEPPED if op == "execute" and result["status"] == "completed"
+                                                     else UNCHANGED)
+    if result["status"] == "completed":
+        s["within"] = W
+    return s
+
+
+def case(name, *steps, setup=None, note=None):
+    c = {"name": name}
+    if note:
+        c["note"] = note
+    c["steps"] = list(steps)
+    if setup is not None:
+        c["setup"] = setup
+    return c
+
+
+def both(written=True, first="cz-1", second="cz-2"):
+    return [produced("cz-1", first, "Düz", "Tümsek", written), produced("cz-2", second, "Teras", "Set", written)]
+
+
+def cases():
+    out = []
+    path = fx("sifir-hatlari.json")
+    two = {"produced": both(), "revision": "$current"}
+    out.append(case("Tarifin iki sıfır hattı bu projede: kaynaklar adlarıyla", step({"path": path}, done(two)),
+                    note="a-5 Düz → t-5, a-10 Tümsek → t-10 (bir kapalı çizgi); a-6 Teras → t-6, Set adıyla (iki açık "
+                         "çizgi)"))
+    out.append(case("Plan yazmaz", step({"path": path}, done({"produced": both(False), "revision": "$current"}),
+                                       op="plan")))
+    out.append(case("Doğrulama yazmaz", step({"path": path}, done(None), op="validate")))
+    out.append(case("Yalnız biri", step({"path": path, "drawings": ["cz-2"]},
+                                       done({"produced": [produced("cz-2", "cz-1", "Teras", "Set")],
+                                             "revision": "$current"}))))
+    left_both = [{"drawing": "cz-1", "why": "exists", "message": EXISTS},
+                 {"drawing": "cz-2", "why": "exists", "message": EXISTS}]
+    out.append(case("İkinci kez: ikisi de projede var, hiçbir şey yazılmaz", step({"path": path}, done(two)),
+                    step({"path": path}, done({"produced": [], "left": left_both, "revision": "$current"}),
+                         expect=SAME)))
+    direct = {"op": "execute", "command": ZERO, "input": {"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"},
+              "result": {"status": "completed", "output": ANY, "warnings": []}}
+    out.append(case("Projede aynı çizim var: bırakılır, öbürü üretilir", direct,
+                    step({"path": path}, done({"produced": [produced("cz-2", "cz-2", "Teras", "Set")],
+                                               "left": [left_both[0]], "revision": "$current"}))))
+    elsewhere = dict(direct, input={"base": "Düz", "comparison": "Tümsek", "layerId": "drenaj"})
+    out.append(case("Başka katmandaki aynı çizim: yine üretilir", elsewhere,
+                    step({"path": path}, done({"produced": both(first="cz-2", second="cz-3"),
+                                               "revision": "$current"}))))
+    out.append(case("Tarifin katmanı başka: o katmana", step({"path": fx("baska-katmanli.json")},
+                                                         done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                                                               "revision": "$current"}))))
+    out.append(case("Harita projesinde de", step({"path": path, "drawings": ["cz-1"]},
+                                                 done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                                                       "revision": "$current"})), setup="$harita"))
+    other = {"code": "recipe_other_system", "message": "Tarif TUREF / TM36 (EPSG:5256) projesinde kaydedilmiş; bu proje "
+             "TUREF / TM30 (EPSG:5254). Girdiler aynen alınır.", "path": "path"}
+    out.append(case("Başka sistemde kaydedilmiş tarif: uyarıyla", step({"path": fx("baska-sistem.json")},
+                                                                      done(two, [other]))))
+    local = dict(other, message="Tarif yerel (koordinat sistemi yok) projesinde kaydedilmiş; bu proje TUREF / TM30 "
+                                "(EPSG:5254). Girdiler aynen alınır.")
+    out.append(case("Yerel projede kaydedilmiş tarif: uyarıyla", step({"path": fx("yerel-proje.json")},
+                                                                     done(two, [local]))))
+    out.append(case("Tarifin kimlikleri bu projede başka yüzeylerin: adlar seçer",
+                    step({"path": fx("kimlik-cakisan.json")},
+                         done({"produced": [produced("cz-1", "cz-1", "Teras", "Set")], "revision": "$current"})),
+                    note="tarifte t-5 Teras, t-9 Set; burada t-5 Düz: kimlikle çizilseydi Düz ile Set"))
+    out.append(case("Adlar büyük küçük harf farkıyla", step({"path": fx("buyuk-harfli.json")},
+                                                         done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                                                               "revision": "$current"}))))
+    ova = "“Ova” kimlikli ya da adlı yüzey projede yok."
+    out.append(case("Bütün çizimler: projede olmayan yüzeyin çizimi bırakılır",
+                    step({"path": fx("eksik-kaynakli.json")},
+                         done({"produced": both(), "left": [{"drawing": "cz-3", "why": "refused", "message": ova}],
+                               "revision": "$current"}))))
+    out.append(case("Adıyla istenen çizimin yüzeyi projede yok: ret",
+                    step({"path": fx("eksik-kaynakli.json"), "drawings": ["cz-1", "cz-3"]},
+                         failed("unknown_terrain", f"Tarifin “cz-3” çizimi (Sıfır hattı): {ova}", "base"))))
+    out.append(case("Adıyla istenen ikinci çizimin katmanı yok: hiçbiri yazılmaz",
+                    step({"path": fx("eksik-katmanli.json"), "drawings": ["cz-1", "cz-4"]},
+                         failed("layer_not_found", "Tarifin “cz-4” çizimi (Sıfır hattı): “sifir-a” kimlikli katman "
+                                "çizimde yok. Var olan bir katmanın kimliğini verin.", "layerId"))))
+    out.append(case("Bütün çizimler: katmanı olmayan bırakılır",
+                    step({"path": fx("eksik-katmanli.json")},
+                         done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                               "left": [{"drawing": "cz-4", "why": "refused", "message": "“sifir-a” kimlikli katman "
+                                         "çizimde yok. Var olan bir katmanın kimliğini verin."}],
+                               "revision": "$current"}))))
+    hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
+    out.append(case("Gizli katmana: komutun uyarısıyla", step({"path": fx("gizli-katmanli.json")},
+                                                          done({"produced": [produced("cz-1", "cz-1", "Teras", "Set")],
+                                                                "revision": "$current"}, [hidden]))))
+    out.append(case("Adıyla istenen çizimin katmanı kilitli: ret",
+                    step({"path": fx("kilitli-katmanli.json"), "drawings": ["cz-1"]},
+                         failed("layer_locked", "Tarifin “cz-1” çizimi (Sıfır hattı): “Kilitli” katmanı kilitli. Kilidi "
+                                "Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))))
+    out.append(case("Adıyla istenen çizimin katmanı bir grup: ret",
+                    step({"path": fx("grup-katmanli.json"), "drawings": ["cz-1"]}, failed("not_a_layer", ANY, "layerId"))))
+    # The file and the recipe.
+    out.append(case("Tarifte olmayan çizim", step({"path": path, "drawings": ["cz-9"]},
+                                                 failed("unknown_drawing", "Tarifte “cz-9” kimlikli çizim yok.",
+                                                        "drawings"))))
+    out.append(case("Göreli yol", step({"path": "tarifler/sifir-hatlari.json"},
+                                       failed("invalid_file_path", "Tarifin yolu boş ya da göreli; mutlak bir .json "
+                                              "yolu verin.", "path"))))
+    out.append(case(".json olmayan dosya", step({"path": "$fixture:asbuilt/v1/files/saha-paketi.zip"},
+                                               failed("invalid_file_path", "“$fixture:asbuilt/v1/files/saha-paketi.zip” "
+                                                      "bir .json dosyası değil (İş grafiği'nin tarifi).", "path"))))
+    out.append(case("Olmayan dosya", step({"path": fx("yok.json")},
+                                          failed("file_not_found", f"“{fx('yok.json')}” tarifi yok; İş grafiği'nin "
+                                                 "Tarifi kaydet… ile yazdığı .json dosyasını seçin.", "path"))))
+    out.append(case("Tarif olmayan JSON", step({"path": fx("tarif-degil.json")}, failed("invalid_project_recipe", ANY, "path"))))
+    out.append(case("Çizimi olmayan tarif", step({"path": fx("cizimsiz.json")},
+                                                failed("invalid_project_recipe", "“cizimsiz.json” tarifinde üretilecek çizim "
+                                                       "yok.", "path"))))
+    out.append(case("Çizmeyen komut", step({"path": fx("cizmeyen-komut.json")},
+                                          failed("invalid_project_recipe", "Tarifteki “cz-1” çiziminin komutu "
+                                                 "(road.terrains.query) çizen bir komut değil.", "path"))))
+    out.append(case("Başka sürümün tarifi", step({"path": fx("baska-surum.json")},
+                                                failed("invalid_project_recipe", "Tarifteki “cz-1” çizimi road.terrains.zeroline "
+                                                       "v2 ile; bu KentOS v1 ile çizer.", "path"))))
+    out.append(case("Mimari proje", step({"path": path}, NOT_ROAD), setup="$mimari"))
+    out.append(case("Geçersiz beklenen sürüm", step({"path": path, "expectedRevision": "on"}, zc.BAD_REVISION)))
+    out.append(case("Eski sürüme göre hazırlanmış", step({"path": path, "expectedRevision": "41"}, zc.CONFLICT)))
+    return out
+
+
+def main():
+    found = cases()
+    for c in found:
+        if c.get("setup") == "$mimari":
+            c["setup"] = zc.setup(work="architecture")
+        elif c.get("setup") == "$harita":
+            c["setup"] = zc.setup(work="map")
+    doc = {"format": "kentos.command-cases", "version": 1, "command": "road.project.produce", "commandVersion": 1,
+           "title": "Tariften üret",
+           "note": "ADR 3240. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
+                   "graf biçimi) fixtures/recipes/v1 altında elle yazılır; sıfır hatlarının çizgi sayısı "
+                   "road_terrain_zeroline_cases.py'den; KentOS kodu yok.",
+           "setup": zc.setup(work="road"), "cases": found}
+    text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+    files = {n: (json.dumps(v, ensure_ascii=False, indent=2) + "\n") for n, v in FILES.items()}
+    if "--check" in sys.argv[1:]:
+        ok = OUT.exists() and OUT.read_text("utf-8") == text and all(
+            (RECIPES / n).exists() and (RECIPES / n).read_text("utf-8") == t for n, t in files.items())
+        print("Tariften üret ortak durumları güncel." if ok else f"{OUT.relative_to(ROOT)} güncel değil.")
+        return 0 if ok else 1
+    RECIPES.mkdir(parents=True, exist_ok=True)
+    for n, t in files.items():
+        (RECIPES / n).write_text(t, "utf-8")
+    OUT.write_text(text, "utf-8")
+    print(f"yazıldı: {OUT.relative_to(ROOT)} ({len(found)} durum)")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

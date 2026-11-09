@@ -55946,6 +55946,137 @@
       ]
     },
     {
+      "id": "road.project.produce",
+      "version": 1,
+      "title": "Tariften üret",
+      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur, katman kimliğiyle kalır. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing ve çizim komutlarının retleri.",
+      "aliases": [
+        "tariftenuret"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);\n`drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,\n`file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one\nthat draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the\nrecipe's); and a drawing command's own refusal (a source not in this project, a layer not here, gone or locked), the\nrecipe's drawing named in its words: nothing is written.",
+        "properties": {
+          "drawings": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "RoadProjectProduce",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:\nthis project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).",
+        "properties": {
+          "left": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingLeft"
+            },
+            "type": "array"
+          },
+          "produced": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingProduced"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "produced",
+          "revision"
+        ],
+        "title": "RoadProjectProduced",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:\nthis project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).",
+        "properties": {
+          "left": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingLeft"
+            },
+            "type": "array"
+          },
+          "produced": {
+            "items": {
+              "$ref": "#/$defs/RoadDrawingProduced"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "produced",
+          "revision"
+        ],
+        "title": "RoadProjectProduced",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_a_road_project",
+          "invalid_file_path",
+          "file_not_found",
+          "invalid_project_recipe",
+          "unknown_drawing",
+          "unknown_terrain",
+          "layer_not_found",
+          "layer_locked",
+          "not_a_layer",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "recipe_other_system",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Kayıtlı tarifin bütün çizimleri",
+          "input": {
+            "path": "/proje/tarifler/sifir-hatlari.json"
+          }
+        }
+      ]
+    },
+    {
       "id": "road.project.edit",
       "version": 1,
       "title": "Kendiliğinden yeniden üret",
@@ -103499,6 +103630,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Yol çiziminin kaynağı projede yok; yeniden üretilemez."
+    },
+    {
+      "code": "invalid_project_recipe",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tariften üretilemez; ileti nedenini söyler."
+    },
+    {
+      "code": "recipe_other_system",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tarif başka koordinat sistemindeki bir projede kaydedilmiş."
     },
     {
       "code": "drawing_edited",
@@ -182171,6 +182314,37 @@
       ],
       "type": "object"
     },
+    "RoadDrawingProduced": {
+      "description": "A recipe's drawing drawn here: its id in the recipe (`from`), the drawing kept here, its command, its main source\nhere and the objects written (a plan: none).",
+      "properties": {
+        "command": {
+          "type": "string"
+        },
+        "drawing": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/RoadProducedSource"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "from",
+        "drawing",
+        "command",
+        "source",
+        "uids"
+      ],
+      "type": "object"
+    },
     "RoadDrawingRebuilt": {
       "description": "A drawing drawn again: its id and command, how many objects it removed and the new ones.",
       "properties": {
@@ -182536,6 +182710,26 @@
         "gone"
       ],
       "type": "string"
+    },
+    "RoadProducedSource": {
+      "description": "The main source a produced drawing was drawn from in this project: its kind, id and name.",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/RoadSourceKind"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "name"
+      ],
+      "type": "object"
     },
     "RoadProfileListed": {
       "description": "A profile in the project's list.",
