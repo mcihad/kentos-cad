@@ -621,3 +621,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PipesCheck) -> CommandResult<Pipe
 pub fn execute(cx: &mut ExecutionContext<'_>, input: PipesCheck) -> CommandResult<PipesChecked> {
     plan(cx, &input)
 }
+
+/// The check for a window's marks (docs/adr/3160), or why it does not read.
+pub fn preview(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, String> {
+    run(doc, input).map_err(crate::road_corridors::words)
+}

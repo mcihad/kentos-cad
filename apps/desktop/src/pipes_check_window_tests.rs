@@ -401,6 +401,57 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
 }
 
+/// docs/adr/3160: Kesişimleri göster with the case's clearances (0.5 m vertical with the water above, 3 m horizontal)
+/// marks every crossing with the command's verdict at its place and the near pass; the window closes; a water pipe
+/// moved away changes the marks (the same input, the drawing as it is); İşareti kaldır takes them away.
+#[test]
+fn the_crossings_are_marked_on_the_drawing() {
+    use crate::pipes_marks::Verdict;
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    with_case_limits(&mut app);
+    for e in [P::Other("su".into()), P::Vertical("0,5".into()), P::Horizontal("3".into()), P::Above(Above::Other)] {
+        let _ = app.update(Message::PipesCheck(e));
+    }
+    let r = app.pipes_check.answer.clone().expect("an answer").expect("checked");
+    let _ = app.update(Message::PipesCheck(P::Mark));
+    assert_eq!(app.dialog, None, "the window closes");
+    let m = app.pipes_marks().expect("marked");
+    assert_eq!(m.crossings.len(), r.crossings.len());
+    assert_eq!(m.near.len(), r.near.len());
+    for (mark, c) in m.crossings.iter().zip(&r.crossings) {
+        assert_eq!(mark.at, c.at);
+        let fails = r.findings.iter().any(|f| ["clash", "closeCrossing", "wrongSide"].contains(&f.kind.as_str()) && f.at == c.at);
+        let want = if fails { Verdict::Fails } else if c.clearance.is_none() { Verdict::Unknown } else { Verdict::Holds };
+        assert_eq!(mark.verdict, want, "{c:?}");
+    }
+    assert!(m.crossings.iter().any(|c| c.verdict == Verdict::Fails), "the case has a failing crossing");
+    assert!(app.offers("data.unmark"));
+    // The water network's pipes moved far away: no crossing, no mark.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let moved: Vec<(kentos_domain::Slot, kentos_commands::Entity)> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| e.base().layer_id == "su")
+        .filter_map(|(u, e)| {
+            let mut e = e.clone();
+            match &mut e {
+                kentos_commands::Entity::Polyline(p) => p.pts.iter_mut().for_each(|v| v.y += 10_000.0),
+                kentos_commands::Entity::Line(l) => {
+                    l.a.y += 10_000.0;
+                    l.b.y += 10_000.0;
+                }
+                _ => return None,
+            }
+            doc.slot_of(u).map(|s| (s, e))
+        })
+        .collect();
+    assert!(!moved.is_empty());
+    doc.update_many(moved, "Taşı");
+    assert!(app.pipes_marks().is_none(), "nothing crosses any more");
+    let _ = app.update(Message::Run("data.unmark"));
+    assert!(app.pipes_shown_marks.is_none());
+}
+
 #[test]
 fn a_clearance_that_is_no_number_is_said() {
     let mut app = opened(Some(Module::Map));
@@ -408,6 +459,47 @@ fn a_clearance_that_is_no_number_is_said() {
     let _ = app.update(Message::PipesCheck(P::Other("su".into())));
     let _ = app.update(Message::PipesCheck(P::Horizontal("üç".into())));
     assert_eq!(app.pipes_check.answer, Some(Err("En az yatay açıklık “üç” bir sayı değil.".into())));
+}
+
+/// `.run/gui-evidence/kesisimler-3160/`: the window with Kesişimleri göster, and the crossings and the near pass marked
+/// on the drawing, light and wide, dark and narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib pipes_check_window_tests::marks_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn marks_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisimler-3160");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        with_case_limits(&mut app);
+        for e in [P::Other("su".into()), P::Vertical("0,5".into()), P::Horizontal("3".into()), P::Above(Above::Other), P::Show(Show::Crossings)] {
+            let _ = app.update(Message::PipesCheck(e));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::PipesCheck(P::Mark));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// `.run/gui-evidence/boru-acikligi-2360/`:

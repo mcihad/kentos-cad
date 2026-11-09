@@ -264,6 +264,9 @@
 - **Stok hacmi (9 Kasım 2026; MAP-15, [ADR 3140](../../docs/adr/3140-stockpile-volume-over-a-boundary-base.md)).**
   `road.terrains.stockpile` (salt okunur): yığının hacmi sınırının köşelerinden çizilen tabana göre (en alçak, en yüksek,
   ortalama, eğimli düzlem, kot; Pix4D'nin tabanları); Arazi › Analiz › Stok hacmi. Geometrik hacimdir. Harita + Yol.
+- **Boru kesişimleri planda (9 Kasım 2026; MAP-16, [ADR 3160](../../docs/adr/3160-pipe-crossings-on-the-drawing.md)).**
+  Boru hattı denetimi'nde Kesişimleri göster: kesişimler ve yakın geçişler açıklıklarıyla, komutun bulgusunun renginde;
+  İşareti kaldır'a dek kalır, çizim değişince yeniden hesaplanır. Komut değişmedi. Harita + Yol + CBS.
 - **Yeniden üretim bir iş (8 Kasım 2026; MAP-20, [ADR 2440](../../docs/adr/2440-rebuild-as-a-job-progress-and-stop.md)).**
   `road.project.rebuild` iş olarak ilerler ve durur (durdurulan hiçbir şey yazmaz); proje ağacında ilerleme çubuğu ve
   Durdur; GUI, Python ve MCP aynı sonucu verir. Harita + Yol.

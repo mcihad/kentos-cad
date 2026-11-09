@@ -8,7 +8,8 @@
 //! Diğer ağ (docs/adr/2360) measures the clearances to another utility network's pipes: where they cross, the vertical
 //! clearance and which is above; where they pass, the horizontal one. The least clearances and the side that must be
 //! above are the user's; Kesişim and Yakın geçiş list them. With it, Hat profili draws its pipes crossing the run too
-//! (kesişen borular, docs/adr/2760).
+//! (kesişen borular, docs/adr/2760). Kesişimleri göster (docs/adr/3160) leaves the crossings and near passes marked on
+//! the drawing, coloured by the check's verdict, until İşareti kaldır; the window closes.
 
 use std::path::PathBuf;
 
@@ -35,6 +36,7 @@ pub const TITLE: &str = "Boru hattı denetimi";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "CSV kaydet…";
 const SELECT: &str = "Bulgulu boruları seç";
+const SHOW: &str = "Kesişimleri göster";
 /// The run from the pipe chosen drawn as a longitudinal profile (`cad.pipes.profile`, docs/adr/1860).
 const DRAW_PROFILE: &str = "Hat profilini çiz";
 /// Diğer ağ's pipes crossing the run drawn in the profile too (docs/adr/2760).
@@ -191,6 +193,8 @@ pub enum Event {
     Horizontal(String),
     Above(Above),
     Select,
+    /// docs/adr/3160: the crossings and near passes marked on the drawing.
+    Mark,
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -589,6 +593,23 @@ impl App {
             Event::Vertical(v) => s.vertical = v,
             Event::Horizontal(v) => s.horizontal = v,
             Event::Above(v) => s.above = v,
+            Event::Mark => {
+                let (Ok(input), Some(Ok(r))) = (self.pipes_check_input(), &self.pipes_check.answer) else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(m) = crate::pipes_marks::of(r) else { return Task::none() };
+                let fails = m.crossings.iter().filter(|c| c.verdict == crate::pipes_marks::Verdict::Fails).count();
+                let unknown = m.crossings.iter().filter(|c| c.verdict == crate::pipes_marks::Verdict::Unknown).count();
+                let text = format!(
+                    "{TITLE}: {} kesişim ({fails} sorunlu, {unknown} açıklığı bilinmeyen) ve {} yakın geçiş çizimde işaretlendi; İşareti kaldır'a dek kalır.",
+                    m.crossings.len(),
+                    m.near.len()
+                );
+                self.pipes_shown_marks = Some(crate::pipes_marks::Shown::new(doc.session, input));
+                self.pipes_check = State::default();
+                self.dialog = None;
+                self.say(Level::Info, text);
+                return Task::none();
+            }
             Event::Select => {
                 let Some(Ok(r)) = &self.pipes_check.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -754,6 +775,8 @@ impl App {
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let mut found = 0;
+        // docs/adr/3160: Kesişimleri göster while there is a crossing or a near pass.
+        let crossed = matches!(&s.answer, Some(Ok(r)) if !r.crossings.is_empty() || !r.near.is_empty());
         match &s.answer {
             Some(Ok(r)) => {
                 found = r.pipes.iter().filter(|p| !p.findings.is_empty()).count();
@@ -889,6 +912,7 @@ impl App {
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .aside(words::secondary(SELECT, (found > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(SHOW, crossed.then(|| msg(Event::Mark))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -899,6 +923,7 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(SHOW) => Some(msg(Event::Mark)),
             Control::Press(DRAW_PROFILE) => Some(msg(Event::DrawProfile)),
             Control::Check(PROFILE_CROSSINGS, on) => Some(msg(Event::ProfileCrossings(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

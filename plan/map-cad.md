@@ -46,7 +46,7 @@ sırayla alır.
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760 | profilin canlı güncellenmesi; yüzey kaplaması; kesişimlerin planda gösterilmesi; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketin ızgara bilgisi | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi; notun kırpma şekliyle sınırlanması | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
@@ -1531,6 +1531,14 @@ akarı bilinen her biri akarından yukarı çap genişliğinde, çap × abartı 
 ve akar kotu; kotsuz boru listede kalır, çizilmez; 47 ortak durum (mpmath), MCP; Boru hattı denetimi'nde Diğer ağ
 seçilince Hat profili satırında kesişen borular kutusu. Açık: kesişen borunun dış duvarı ve taraması (et kalınlığı),
 kesişimlerin planda gösterilmesi, yüzey kaplaması, profilin canlı güncellenmesi.
+
+**9 Kasım 2026, beşinci tur — kesişimlerin planda gösterilmesi ([ADR 3160](../docs/adr/3160-pipe-crossings-on-the-drawing.md)).**
+Kapsam: **Harita + Yol + CBS**. Araştırma: Civil 3D'nin girişim denetimi (stil tabanlı işaret ya da 3B; ağ değişince
+“eski”, elle yeniden çalıştırılır). Kanıtlanan: Boru hattı denetimi'nde Kesişimleri göster: her kesişim çift halka ve
+düşey açıklığıyla, her yakın geçiş kesikli çizgi ve açıklığıyla; renk komutun o yerdeki bulgusu (çakışma, yakın kesişim,
+yanlış taraf kırmızı; bilinmeyen turuncu; öbürü yeşil); İşareti kaldır'a dek kalır, çizim değişince yeniden hesaplanır
+(eskimez). Komut değişmedi. Açık: kesişen borunun dış duvarı, seçili satırın öne çıkarılması, yüzey kaplaması, profilin
+canlı güncellenmesi.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 
