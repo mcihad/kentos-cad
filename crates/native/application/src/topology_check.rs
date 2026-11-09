@@ -15,7 +15,7 @@ use kentos_commands::{
     TopologyFixChange, TopologyFixPreview, TopologyFixSource, TopologyGap, TopologySourceStamp,
     TopologyStamp, Vec2, rule_digest,
 };
-use kentos_domain::{Document, Slot};
+use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_bounds, entity_length};
 use kentos_geometry_core::ops::topology_rules::{
     self as core, Checked, Exception, Finding, Kind, Objects, Rule, fix, incremental,
@@ -521,6 +521,39 @@ pub fn preview(
     })
 }
 
+/// The objects `uids` asks the findings of (docs/adr/3800), each in the drawing; none when it asks every finding.
+fn objects_asked(doc: &Document, uids: Option<&[String]>) -> Result<Option<Vec<Uuid>>, Stop> {
+    let Some(uids) = uids else { return Ok(None) };
+    if uids.is_empty() {
+        return Err(Stop::failed(error(
+            codes::INVALID_INPUT,
+            "Nesne listesi (uids) boş: bulguları istenen nesnelerin kalıcı kimliklerini verin ya da uids'i hiç vermeyin.".into(),
+            Some("uids".into()),
+        )));
+    }
+    let mut of = Vec::with_capacity(uids.len());
+    for (i, id) in uids.iter().enumerate() {
+        if !crate::checks::is_uid_text(id) {
+            return Err(Stop::failed(error(
+                codes::INVALID_UID,
+                format!("“{id}” geçerli bir nesne kimliği değil."),
+                Some(format!("uids[{i}]")),
+            )));
+        }
+        match Uuid::parse_str(id).ok().filter(|u| doc.slot_of(*u).is_some()) {
+            Some(u) => of.push(u),
+            None => {
+                return Err(Stop::failed(error(
+                    codes::ENTITY_NOT_FOUND,
+                    format!("“{id}” kimlikli nesne çizimde yok."),
+                    Some(format!("uids[{i}]")),
+                )));
+            }
+        }
+    }
+    Ok(Some(of))
+}
+
 /// What the command answers; why not.
 fn check_in(
     doc: &Document,
@@ -552,6 +585,7 @@ fn check_in(
             }
         }
     }
+    let of = objects_asked(doc, input.uids.as_deref())?;
     let g = gather(doc, input.rules.as_deref());
     let found = run_watched(&g, watch).ok_or(Stop::Cancelled)?;
     let preview = match &input.preview {
@@ -578,23 +612,34 @@ fn check_in(
             Some(p)
         }
     };
-    let findings: Vec<TopologyFinding> =
-        found.findings.iter().map(|f| finding_out(&g, f)).collect();
-    let exceptions = findings.iter().filter(|f| f.exception).count();
-    let lapsed = findings.iter().filter(|f| f.lapsed).count();
-    let errors = findings
-        .iter()
-        .filter(|f| f.state == TopologyFindingState::Error)
-        .count();
-    // Of the lapsed, those whose objects' geometry is the same: their rule changed.
-    let by_rule = found
+    // The findings asked for (docs/adr/3800): every one, or those naming one of `uids`' objects.
+    let kept: Vec<(&Finding, TopologyFinding)> = found
         .findings
         .iter()
-        .filter(|f| {
+        .map(|f| (f, finding_out(&g, f)))
+        .filter(|(_, out)| {
+            of.as_ref().is_none_or(|of| {
+                out.uids
+                    .iter()
+                    .any(|u| Uuid::parse_str(u).is_ok_and(|u| of.contains(&u)))
+            })
+        })
+        .collect();
+    let exceptions = kept.iter().filter(|(_, f)| f.exception).count();
+    let lapsed = kept.iter().filter(|(_, f)| f.lapsed).count();
+    let errors = kept
+        .iter()
+        .filter(|(_, f)| f.state == TopologyFindingState::Error)
+        .count();
+    // Of the lapsed, those whose objects' geometry is the same: their rule changed.
+    let by_rule = kept
+        .iter()
+        .filter(|(f, _)| {
             g.state(f) == TopologyFindingState::Lapsed
                 && g.review(f).is_some_and(|r| r.lapse == Some(Lapse::Rule))
         })
         .count();
+    let findings: Vec<TopologyFinding> = kept.into_iter().map(|(_, f)| f).collect();
     let total = findings.len();
     let neighbours = g.shapes.len() - g.drawn;
     let mut warnings: Vec<CommandWarning> = g

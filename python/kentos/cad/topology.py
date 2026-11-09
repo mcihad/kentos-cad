@@ -74,6 +74,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
         limit: int | None | Unset = UNSET,
         preview: TopologyFixAsk | None | Unset = UNSET,
         rules: Sequence[str] | None | Unset = UNSET,
+        uids: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TopologyChecked:
@@ -107,6 +108,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
             limit: Unit: count.
             preview:
             rules:
+            uids: Only the findings naming one of these objects, by their persistent ids (docs/adr/3800); none: every finding.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -123,6 +125,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
             limit=limit,
             preview=preview,
             rules=_opt(rules, lambda x: list(x)),
+            uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -133,6 +136,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
         limit: int | None | Unset = UNSET,
         preview: TopologyFixAsk | None | Unset = UNSET,
         rules: Sequence[str] | None | Unset = UNSET,
+        uids: Sequence[str] | None | Unset = UNSET,
     ) -> TopologyChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -141,6 +145,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
             limit=limit,
             preview=preview,
             rules=_opt(rules, lambda x: list(x)),
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def validate(
@@ -151,6 +156,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
         limit: int | None | Unset = UNSET,
         preview: TopologyFixAsk | None | Unset = UNSET,
         rules: Sequence[str] | None | Unset = UNSET,
+        uids: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -159,6 +165,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
             limit=limit,
             preview=preview,
             rules=_opt(rules, lambda x: list(x)),
+            uids=_opt(uids, lambda x: list(x)),
         ))
 
     def answer(
@@ -169,6 +176,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
         limit: int | None | Unset = UNSET,
         preview: TopologyFixAsk | None | Unset = UNSET,
         rules: Sequence[str] | None | Unset = UNSET,
+        uids: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -182,6 +190,7 @@ class _TopologyCheck(LocalCommand[TopologyCheck, TopologyChecked, TopologyChecke
             limit=limit,
             preview=preview,
             rules=_opt(rules, lambda x: list(x)),
+            uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

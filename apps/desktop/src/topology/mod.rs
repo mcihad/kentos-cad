@@ -21,12 +21,15 @@
 //! A check of many objects goes to its own thread (docs/adr/0756, `running.rs`): the bar under the tab's bar moves on
 //! smoothly as it goes and Durdur ends it; the drawing is not held meanwhile.
 
+pub(crate) mod object;
 mod plan;
 mod review;
 pub(crate) mod rules;
 mod running;
 mod view;
 
+#[cfg(test)]
+mod object_tests;
 #[cfg(test)]
 mod tests;
 
@@ -163,6 +166,8 @@ pub enum Event {
     Stop,
     /// A frame while a check goes on: the bar moves.
     Frame,
+    /// A finding by its lasting key, from Öznitelikler or Formla düzenle (docs/adr/3800): the tab opened on it.
+    Show(String),
 }
 
 impl App {
@@ -504,6 +509,7 @@ impl App {
             Event::Recipe => self.topology_plan_recipe(),
             Event::Apply => return self.topology_apply_recipe(),
             Event::Drop => self.topology.recipe = None,
+            Event::Show(key) => self.topology_open_finding(&key),
         }
         Task::none()
     }

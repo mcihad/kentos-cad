@@ -79,6 +79,6 @@ köşe durumlarında kısmi tutarsız veri yerine açıklanabilir ret/önizleme 
 - Tutamaç, Köşe tablosu ve Esnet'in köşe taşımasında da kenar içindeki komşu köşe (kenar döner; köşenin kenar üstündeki
   yeri oranla korunmalı). Yapıldı: [ADR 3400](3400-inner-vertices-follow-a-changed-edge.md).
 - Yaylı ortak kenarda içteki köşenin eş merkezli taşınması (bugün ret).
-- Topoloji denetiminin veri formu yolu; taşınmaların sahnede işaretlenmesi (MAP-07'nin öbür maddeleri). İşaret yapıldı:
+- ~~Topoloji denetiminin veri formu yolu~~ (ADR 3800); taşınmaların sahnede işaretlenmesi (MAP-07'nin öbür maddeleri). İşaret yapıldı:
   [ADR 3000](3000-shift-preview-marks-carried-vertices.md).
 - Web (TODOS §0.2).

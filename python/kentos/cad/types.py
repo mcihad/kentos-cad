@@ -102987,19 +102987,24 @@ class TopologyCheck(_Model):
     """Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of
     the layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as
     neighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the
-    rules' order; `preview` previews one fix of one finding without writing it.
+    rules' order; `preview` previews one fix of one finding without writing it. `uids` (docs/adr/3800) keeps only the
+    findings naming one of those objects: the counts (`total`, `open`, `exceptions`, `lapsed`, `errors`) and the lapsed
+    warnings are theirs, the rest (`rules`, `objects`, `complete`, the stamp) the whole check's.
 
     Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),
-    `finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has
-    no answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could
+    `invalid_input` (`uids` empty), `invalid_uid` and `entity_not_found` (`uids[i]`), `finding_not_found`
+    (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has no answer, or it would
+    change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could
     not all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception
     whose objects' geometry changed: its finding is open again).
     Attributes:
         limit: Unit: count.
+        uids: Only the findings naming one of these objects, by their persistent ids (docs/adr/3800); none: every finding.
     """
     limit: int | None | Unset = UNSET
     preview: TopologyFixAsk | None | Unset = UNSET
     rules: list[str] | None | Unset = UNSET
+    uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -103009,6 +103014,8 @@ class TopologyCheck(_Model):
             out["preview"] = None if self.preview is None else self.preview.to_json()
         if self.rules is not UNSET:
             out["rules"] = None if self.rules is None else list(self.rules)
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
         return out
 
     @classmethod
@@ -103017,6 +103024,7 @@ class TopologyCheck(_Model):
             limit=data.get("limit", UNSET),
             preview=UNSET if "preview" not in data else None if data["preview"] is None else TopologyFixAsk.from_json(data["preview"]),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else list(data["rules"]),
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
 
 

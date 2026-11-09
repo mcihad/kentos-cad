@@ -611,10 +611,65 @@ impl App {
     fn add_live_sections(&self, panel: &mut Panel) {
         // Attachment tasks may finish without editing geometry. Never freeze their actions in the cache.
         if let [slot] = self.selection.ids() {
+            // The object's findings of the Topoloji tab's last check (docs/adr/3800): a check changes no drawing, so
+            // the section is not cached with the object's rows. Under Geometri.
+            if self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology)
+                && let Some(section) = self.topology_section(*slot)
+            {
+                let at = panel.sections.iter().position(|s| s.id == "geometry").map_or(panel.sections.len(), |i| i + 1);
+                panel.sections.insert(at, section);
+            }
             panel
                 .sections
                 .extend(rows::attachments::sections(self, *slot));
         }
+    }
+
+    /// Topoloji (docs/adr/3800): each finding its problem and its measure, its place in its life cycle and its rule in
+    /// a quiet line under it, and a button that opens the Topoloji tab on it; a word when the drawing was not checked,
+    /// when the check found nothing of the object, or when the drawing changed since.
+    fn topology_section(&self, slot: Slot) -> Option<rows::Section> {
+        use crate::topology::object::ObjectFindings;
+        let (rows, n) = match self.object_findings(slot)? {
+            ObjectFindings::NotChecked => (vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")], 0),
+            ObjectFindings::Checked { findings, old } => {
+                let n = findings.len();
+                let mut rows = Vec::new();
+                for f in findings {
+                    // The cell holds the short measure (the state when there is none); the state and the rule go in
+                    // the quiet line under it, which wraps.
+                    let (value, note) = if f.measure.is_empty() {
+                        (f.state, format!("Kural: {}", f.rule))
+                    } else {
+                        (f.measure, format!("{} · kural: {}", f.state, f.rule))
+                    };
+                    rows.push(Row {
+                        thumb: Some(rows::Thumb {
+                            key: None,
+                            icon: "zoomSelection",
+                            title: "Topoloji sekmesinde göster".into(),
+                            open: Message::Topology(crate::topology::Event::Show(f.key)),
+                        }),
+                        ..Row::text(f.problem, value)
+                    });
+                    rows.push(Row::note(&note));
+                }
+                if n == 0 {
+                    rows.push(Row::note("Son denetimde bulgusu yok."));
+                }
+                if old {
+                    let mut stale = Row::note("Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.");
+                    stale.warn = true;
+                    rows.push(stale);
+                }
+                (rows, n)
+            }
+        };
+        Some(rows::Section {
+            id: "topology".into(),
+            title: if n > 0 { format!("Topoloji ({n})").into() } else { "Topoloji".into() },
+            rows,
+        })
     }
 
     /// The header's meta: “#12”, “3 nesne”; none with nothing selected.

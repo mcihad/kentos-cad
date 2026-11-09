@@ -40,11 +40,14 @@ pub struct TopologyFixAsk {
 /// Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of
 /// the layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as
 /// neighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the
-/// rules' order; `preview` previews one fix of one finding without writing it.
+/// rules' order; `preview` previews one fix of one finding without writing it. `uids` (docs/adr/3800) keeps only the
+/// findings naming one of those objects: the counts (`total`, `open`, `exceptions`, `lapsed`, `errors`) and the lapsed
+/// warnings are theirs, the rest (`rules`, `objects`, `complete`, the stamp) the whole check's.
 ///
 /// Refusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),
-/// `finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has
-/// no answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could
+/// `invalid_input` (`uids` empty), `invalid_uid` and `entity_not_found` (`uids[i]`), `finding_not_found`
+/// (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has no answer, or it would
+/// change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could
 /// not all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception
 /// whose objects' geometry changed: its finding is open again).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -63,6 +66,10 @@ pub struct TopologyCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub preview: Option<TopologyFixAsk>,
+    /// Only the findings naming one of these objects, by their persistent ids (docs/adr/3800); none: every finding.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub uids: Option<Vec<String>>,
 }
 
 /// One finding (docs/adr/0202 §3).

@@ -2452,6 +2452,45 @@ impl App {
         body
     }
 
+    /// The record's topology findings (docs/adr/3800): how many, whether the drawing changed since the check, and a
+    /// line each (problem, rule, state, measure); nothing when the check found none, there was no check or no rule
+    /// names the layer. Öznitelikler's Topoloji section opens the tab on a finding.
+    fn entry_topology<'a>(&'a self, e: &'a Entry, body: Column<'a, Message>) -> Column<'a, Message> {
+        let lines = self.entry_topology_lines(&e.uid);
+        if lines.is_empty() {
+            return body;
+        }
+        body.push(words::summary(lines.into_iter().map(|(kind, text)| words::text_line(kind, text)).collect()))
+    }
+
+    /// [`Self::entry_topology`]'s lines for the record of `uid`.
+    pub(crate) fn entry_topology_lines(&self, uid: &str) -> Vec<(Kind, String)> {
+        use crate::topology::object::ObjectFindings;
+        let slot = self
+            .document
+            .as_ref()
+            .and_then(|d| kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| d.model.slot_of(u)));
+        let Some(ObjectFindings::Checked { findings, old }) = slot.and_then(|s| self.object_findings(s)) else {
+            return Vec::new();
+        };
+        if findings.is_empty() {
+            return Vec::new();
+        }
+        let mut lines = vec![(
+            Kind::Warn,
+            format!(
+                "Topoloji: son denetimde {} bulgu{}.",
+                findings.len(),
+                if old { "; çizim denetimden sonra değişti" } else { "" }
+            ),
+        )];
+        for f in findings {
+            let measure = if f.measure.is_empty() { String::new() } else { format!(" · {}", f.measure) };
+            lines.push((Kind::Info, format!("{} · {} · {}{measure}", f.problem, f.rule, f.state)));
+        }
+        lines
+    }
+
     /// What the editor shows above its pages: the record, its place among the layer's, how the form is
     /// opened, and what is wrong with its values.
     fn entry_head<'a>(&'a self, e: &'a Entry, locked: bool) -> Column<'a, Message> {
@@ -2523,6 +2562,10 @@ impl App {
                 Kind::Warn,
                 "Katman kilitli ya da yetkiniz yok: kayıt yalnız görüntülenir.",
             )]));
+        }
+        // The record's topology findings of the Topoloji tab's last check (docs/adr/3800), one record's alone.
+        if e.members.is_empty() && !e.preview && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology) {
+            body = self.entry_topology(e, body);
         }
         // The lists' sources that are not ready, each with its way out (docs/adr/0763).
         body = sources::sources_lines(e, body);

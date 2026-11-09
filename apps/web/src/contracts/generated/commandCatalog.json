@@ -66537,7 +66537,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of\nthe layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as\nneighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the\nrules' order; `preview` previews one fix of one finding without writing it.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),\n`finding_not_found` (`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has\nno answer, or it would change a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could\nnot all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception\nwhose objects' geometry changed: its finding is open again).",
+        "description": "Input of `cad.topology.check` v1: the project's rules (`rules`: some of them by id; none: all) over the objects of\nthe layers they name. A bound layer's part (docs/adr/0510) takes the rows of its source round the area as\nneighbours (the band, docs/adr/0578). The findings listed are the first `limit` (1–100 000, default 1 000) in the\nrules' order; `preview` previews one fix of one finding without writing it. `uids` (docs/adr/3800) keeps only the\nfindings naming one of those objects: the counts (`total`, `open`, `exceptions`, `lapsed`, `errors`) and the lapsed\nwarnings are theirs, the rest (`rules`, `objects`, `complete`, the stamp) the whole check's.\n\nRefusals (`CommandError.code`), checked in this order: `invalid_limit`, `topology_rule_not_found` (`rules[i]`),\n`invalid_input` (`uids` empty), `invalid_uid` and `entity_not_found` (`uids[i]`), `finding_not_found`\n(`preview.key`), `fix_unavailable` (`preview.fix`: the finding does not offer it, the fix has no answer, or it would\nchange a row outside the part). Warnings: `topology_incomplete` (a part's neighbours could\nnot all be read: the check is not complete, no layer of it is said to be clean), `exception_lapsed` (an exception\nwhose objects' geometry changed: its finding is open again).",
         "properties": {
           "limit": {
             "format": "uint32",
@@ -66559,6 +66559,16 @@
             ]
           },
           "rules": {
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "Only the findings naming one of these objects, by their persistent ids (docs/adr/3800); none: every finding.",
             "items": {
               "type": "string"
             },
@@ -66785,6 +66795,9 @@
         "refusals": [
           "invalid_limit",
           "topology_rule_not_found",
+          "invalid_input",
+          "invalid_uid",
+          "entity_not_found",
           "finding_not_found",
           "fix_unavailable"
         ],

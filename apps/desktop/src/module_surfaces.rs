@@ -137,6 +137,9 @@ pub(crate) enum PropertyRows {
     /// GNSS ölçümü: an accepted point's quality, solutions and state, read only (docs/adr/1340 §1): a map's and a
     /// GIS's.
     Survey,
+    /// Topoloji: the selected object's findings of the Topoloji tab's last check, read only (docs/adr/3800): a map's
+    /// and a GIS's, the programs with that tab.
+    Topology,
 }
 
 /// What one module's program shows.
@@ -280,6 +283,7 @@ const MAP: Surfaces = Surfaces {
         PropertyRows::Mask,
         PropertyRows::MapWork,
         PropertyRows::Survey,
+        PropertyRows::Topology,
     ],
     parcels: true,
     sheet: ProjectType::ZoningPlan,
@@ -393,7 +397,7 @@ const GIS: Surfaces = Surfaces {
     ],
     formats: Formats::All,
     sources: &[SourceSection::Databases, SourceSection::Services],
-    rows: &[PropertyRows::Crs, PropertyRows::Services, PropertyRows::Survey],
+    rows: &[PropertyRows::Crs, PropertyRows::Services, PropertyRows::Survey, PropertyRows::Topology],
     parcels: true,
     sheet: ProjectType::Gis,
     cloud: Some(ProjectType::Gis),

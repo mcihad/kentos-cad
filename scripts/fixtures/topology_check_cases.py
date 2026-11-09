@@ -260,6 +260,14 @@ NOT_FOUND = "Çizimin bugünkü denetiminde “{}” anahtarlı bulgu yok; önce
 NOT_OFFERED = "Bu bulgu “{}” düzeltmesini sunmuyor; sunduğu düzeltmeler: {}."
 OUTSIDE_FIX = ("Bu düzeltme alanın dışındaki bir satırı değiştirir; alanı genişletip satırı çalışma kopyasına alın.")
 LIMIT_TEXT = "Liste sınırı 1 ile 100000 arasında bir tam sayı olmalı."
+UIDS_EMPTY = ("Nesne listesi (uids) boş: bulguları istenen nesnelerin kalıcı kimliklerini verin ya da uids'i hiç "
+              "vermeyin.")
+
+
+def of(findings, *ks):
+    """The findings naming one of the objects A{k} (ADR 3800): a finding's uids hold one of theirs."""
+    asked = {uid(k) for k in ks}
+    return [f for f in findings if any(u in asked for u in f["uids"])]
 
 
 def lapsed_warning(n):
@@ -472,6 +480,34 @@ def check_cases():
       step({}, done(answer(found(moved, RULES)))))
     c("esnetilen A2: çakışma yerinde, ölçüsü aynı, anahtarı aynı",
       stretch_a2(), step({"rules": ["r1"]}, done(answer(found(drawing_objs(True), [R1]), rules=1))))
+
+    # One object's findings (ADR 3800): the counts and the lapsed warnings are theirs, the rest the whole check's.
+    c("uids: A1'in bulguları, sayılar onlarınki", step({"uids": [uid(1)]}, done(answer(of(fs, 1)))))
+    c("uids: A3 ve A5'in bulguları", step({"uids": [uid(3), uid(5)]}, done(answer(of(fs, 3, 5)))))
+    c("uids: A5'in çakışma bulgusu yok, liste boş", step({"rules": ["r1"], "uids": [uid(5)]},
+                                                        done(answer([], rules=1))))
+    c("uids ile liste sınırı: süzülenlerin ilki, sayılar hepsinin",
+      step({"uids": [uid(3), uid(5)], "limit": 1}, done(answer(of(fs, 3, 5), limit=1))))
+    c("uids: istisna süzülen bulgunun sayısında",
+      step({"uids": [uid(2)]}, done(answer(of(found(objs, RULES, exceptions=[x]), 2)))), setup_=setup(exceptions=[x]))
+    c("uids: süzülmeyen bulgunun düşen istisnası uyarılmaz",
+      step({"uids": [uid(3)]}, done(answer(of(found(objs, RULES, exceptions=[x], lapsed=[x]), 3)))),
+      setup_=setup(exceptions=[xd]))
+    c("uids: süzülen bulgunun düşen istisnası uyarılır",
+      step({"uids": [uid(1)]}, done(answer(of(found(objs, RULES, exceptions=[x], lapsed=[x]), 1)),
+                                    [lapsed_warning(1)])), setup_=setup(exceptions=[xd]))
+    c("uids boş olamaz", step({"uids": []}, failed("invalid_input", UIDS_EMPTY, "uids")))
+    c("uids: UUID olmayan kimlik", step({"uids": [uid(1), "x"]},
+                                       failed("invalid_uid", "“x” geçerli bir nesne kimliği değil.", "uids[1]")))
+    c("uids: büyük harfli kimlik kalıcı kimlik yazısı değil",
+      step({"uids": [uid(4).upper()]},
+           failed("invalid_uid", f"“{uid(4).upper()}” geçerli bir nesne kimliği değil.", "uids[0]")))
+    c("uids: çizimde olmayan nesne", step({"uids": [uid(9)]}, failed("entity_not_found",
+                                                                    f"“{uid(9)}” kimlikli nesne çizimde yok.",
+                                                                    "uids[0]")))
+    c("bilinmeyen kural nesnelerden önce reddedilir",
+      step({"rules": ["r9"], "uids": ["x"]},
+           failed("topology_rule_not_found", "Projede “r9” kimlikli topoloji kuralı yok.", "rules[0]")))
 
     # The part.
     fs_p, objs_p, ans, warn = part_answer(AREA)

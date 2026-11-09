@@ -118,7 +118,7 @@ fn measure_text(measure: Option<f64>, kind: Option<&str>, ctx: &RunContext<'_>) 
 
 fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> RunResult {
     feedback.progress(0.0, "Topoloji kuralları denetleniyor");
-    let input = TopologyCheck { rules: rules_of(v.text("rules")), limit: None, preview: None };
+    let input = TopologyCheck { rules: rules_of(v.text("rules")), limit: None, preview: None, uids: None };
     let with_exceptions = v.flag("exceptions");
     let (checked, warnings) = {
         let canceled = || feedback.canceled();

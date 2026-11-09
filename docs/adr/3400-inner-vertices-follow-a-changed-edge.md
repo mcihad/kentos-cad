@@ -110,5 +110,5 @@ korunmalı)” ve ADR 3000'in aynı satırı.
 - Köşe sil'de birleşen iki kenarın içindeki komşu köşeler (bugün kalır).
 - Tutamaçla birden çok nesne birlikte taşınınca öbür taşınanın kenar içindeki köşesi (bugün yerinde kalır).
 - Paralel kaydır'da yaylı ortak kenarda içteki köşe (ADR 2600 Sonra; bugün ret).
-- Topoloji denetiminin veri formu yolu (MAP-07'nin öbür maddesi).
+- ~~Topoloji denetiminin veri formu yolu (MAP-07'nin öbür maddesi).~~ ADR 3800.
 - Web (TODOS §0.2): çekirdeğin `changed_edges`/`carried`'ı WASM'a.

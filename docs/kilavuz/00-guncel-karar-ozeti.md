@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Seçili nesnenin topoloji bulguları (9 Kasım 2026; MAP-07, [ADR 3800](../../docs/adr/3800-topology-findings-of-the-selected-object.md)).**
+  `cad.topology.check`'in `uids` süzgeci; Öznitelikler'de tek nesnenin Topoloji bölümü (son denetimden, düğmesi sekmeyi
+  bulguda açar) ve Formla düzenle'de kaydın bulguları. Harita + CBS.
 - **Referanstan kot ver (9 Kasım 2026; MAP-06, [ADR 3780](../../docs/adr/3780-raise-lower-by-reference.md)).**
   Yeni `cad.entities.raise` (Civil 3D'nin Raise/Lower by Reference'ı): köşe referanstan eğimle ya da kot farkıyla kot
   alır, nesnenin bütün kotları aynı farkla kayar. Eğimle kot ver › Hedef Referanstan. CAD (Harita + Yol).

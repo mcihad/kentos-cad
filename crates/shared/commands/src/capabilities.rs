@@ -5379,6 +5379,10 @@ const ENTRIES: &[Entry] = &[
         refusals: &[&[
             "invalid_limit",
             "topology_rule_not_found",
+            // `uids` (docs/adr/3800).
+            "invalid_input",
+            "invalid_uid",
+            "entity_not_found",
             "finding_not_found",
             "fix_unavailable",
         ]],

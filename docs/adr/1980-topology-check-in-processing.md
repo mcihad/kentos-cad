@@ -60,6 +60,7 @@ aynı denetim sonucu erişilir.” İlgili:
 
 ## Sonra
 
-- **Veri formu yolu:** seçili nesnenin topoloji bulgularının Öznitelikler panelinde ve formda görünmesi.
+- ~~**Veri formu yolu:** seçili nesnenin topoloji bulgularının Öznitelikler panelinde ve formda görünmesi.~~
+  [ADR 3800](3800-topology-findings-of-the-selected-object.md).
 - Bulguların hata katmanı olarak yazılması (QGIS Topology Checker gibi), istenirse.
 - Taşınmaların sahnede işaretlenmesi (ADR 1262), üçlü birleşim ve çoklu köşe için açıklanabilir ret.

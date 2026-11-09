@@ -79,4 +79,4 @@ Tarih: 2026-11-08. plan/map-cad.md MAP-07, üçüncü tur. Durum: taslak. Plan s
 
 - Hata katmanının GeoPackage'a ve PostGIS'e yazılması (Sonucun yeri) ile istisnaların ayrı alanı (`IsException` gibi).
 - Önceki hata katmanını anahtarla eşleyip yalnız yeni bulguları eklemek.
-- Veri formu yolu, taşınmaların sahnede işaretlenmesi, üçlü birleşim ve çoklu köşe reddi (ADR 1980 Sonra).
+- ~~Veri formu yolu~~ (ADR 3800), taşınmaların sahnede işaretlenmesi, üçlü birleşim ve çoklu köşe reddi (ADR 1980 Sonra).

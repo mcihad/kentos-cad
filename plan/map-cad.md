@@ -37,7 +37,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
@@ -922,6 +922,14 @@ nokta) kenarın aynı kesrine gider; yayı değişen kenarda komşunun kenar par
 Esnet'te esnetilen öbür nesnenin T köşesi de taşınır, sınır ayrılmaz; kilitli komşu ADR 2600'deki gibi. 40 ortak durum
 (bağımsız başvuru), Python, MCP, masaüstü (tutamaç ve Köşe tablosu, ileti) ve resimler. Açık: Köşe sil'de birleşen
 kenarın içindeki köşe, tutamaçla birden çok nesne, veri formu yolu, büyük veri ölçümü.
+
+**9 Kasım 2026, yedinci tur — seçili nesnenin topoloji bulguları ([ADR 3800](../docs/adr/3800-topology-findings-of-the-selected-object.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Pro'nun Error Inspector'ı (kural, sınıf, istisna, kapsam süzgeçleri; bulgudan
+nesneye) ve QGIS Topology Checker (kurala göre süzgeç; nesnenin formunda hata yok). Kanıtlanan (veri formu yolu):
+`cad.topology.check`'in `uids`'i yalnız o nesneleri anan bulguları ve onların sayılarını verir; Öznitelikler'de tek
+nesnenin Topoloji bölümü son denetimden okunur (denetlenmedi, bulgu yok, çizim değişti; düğme sekmeyi bulguda açar);
+Formla düzenle'nin başında kaydın bulguları. 12 yeni bağımsız durum (35), Python, MCP, masaüstü ve resimler. Açık:
+Öznitelikler'den işaretleme, Köşe sil'de birleşen kenarın içindeki köşe, tutamaçla birden çok nesne, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 
