@@ -15730,6 +15730,7 @@ class ArchAuditFinding(_Model):
             `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
             `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
             `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),
+            `paiy_inside_height_below` (docs/adr/3040 §3),
             `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
             `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
             `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
@@ -57199,12 +57200,16 @@ class NewSpace(_Model):
     """One space to make: from the walls round `seed`, or with the boundary `parts` drawn.
     Attributes:
         columns: Physical column deduction; absent keeps legacy wall-only areas.
-        height: Unit: elevation.
+        floor_offset: Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor
+            slab under it, else its storey's floor. Unit: elevation.
+        height: Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040
+            §3). Unit: elevation.
         method: What its rings stand for; absent: the project's (`settings.arch.spaceMethod`, else net).
         parts: Its boundary drawn, when no seed is given.
         scope: Persistent source scope for a seeded room; drawn rooms use project only.
         seed: A point inside it: its boundary is found from the walls round it. Unit: length.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+        suspended_ceiling: Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none. Unit: elevation.
         unit: The building program's group it joins, by its id (docs/adr/0773); absent: none.
         void: A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
     """
@@ -57212,6 +57217,7 @@ class NewSpace(_Model):
     attrs: dict[str, str] | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     finishes: SpaceFinishes | None | Unset = UNSET
+    floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
     name: str | None | Unset = UNSET
@@ -57220,6 +57226,7 @@ class NewSpace(_Model):
     scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
+    suspended_ceiling: float | None | Unset = UNSET
     unit: str | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     void: bool | None | Unset = UNSET
@@ -57234,6 +57241,8 @@ class NewSpace(_Model):
             out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = None if self.finishes is None else self.finishes.to_json()
+        if self.floor_offset is not UNSET:
+            out["floorOffset"] = None if self.floor_offset is None else float(self.floor_offset)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.method is not UNSET:
@@ -57250,6 +57259,8 @@ class NewSpace(_Model):
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.sources is not UNSET:
             out["sources"] = None if self.sources is None else list(self.sources)
+        if self.suspended_ceiling is not UNSET:
+            out["suspendedCeiling"] = None if self.suspended_ceiling is None else float(self.suspended_ceiling)
         if self.unit is not UNSET:
             out["unit"] = self.unit
         if self.usage is not UNSET:
@@ -57265,6 +57276,7 @@ class NewSpace(_Model):
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             finishes=UNSET if "finishes" not in data else None if data["finishes"] is None else SpaceFinishes.from_json(data["finishes"]),
+            floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
             name=data.get("name", UNSET),
@@ -57273,6 +57285,7 @@ class NewSpace(_Model):
             scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            suspended_ceiling=UNSET if "suspendedCeiling" not in data else None if data["suspendedCeiling"] is None else float(data["suspendedCeiling"]),
             unit=data.get("unit", UNSET),
             usage=data.get("usage", UNSET),
             void=data.get("void", UNSET),
@@ -85603,7 +85616,10 @@ class SpaceEntity(Entity):
             never one with a value of its own.
         color: Colour override; absent = the layer's colour ("katmana göre").
         columns: Physical columns to deduct, within the same semantic level (no level: all).
-        height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
+        floor_offset: Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+            a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
+        height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
+            first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3). Unit: elevation.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -85620,6 +85636,8 @@ class SpaceEntity(Entity):
         scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+        suspended_ceiling: Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+            metres; its inside height. Absent: none. Unit: elevation.
         symbol: Library symbol overriding the layer's style.
         transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
         unit: The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
@@ -85641,6 +85659,7 @@ class SpaceEntity(Entity):
     color: str | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
+    floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -85655,6 +85674,7 @@ class SpaceEntity(Entity):
     scope: SpaceScope | SpaceScopeName | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
+    suspended_ceiling: float | None | Unset = UNSET
     symbol: str | None | Unset = UNSET
     transparency: float | None | Unset = UNSET
     unit: str | None | Unset = UNSET
@@ -85682,6 +85702,8 @@ class SpaceEntity(Entity):
             out["columns"] = _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
+        if self.floor_offset is not UNSET:
+            out["floorOffset"] = None if self.floor_offset is None else float(self.floor_offset)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.label is not UNSET:
@@ -85710,6 +85732,8 @@ class SpaceEntity(Entity):
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.sources is not UNSET:
             out["sources"] = None if self.sources is None else list(self.sources)
+        if self.suspended_ceiling is not UNSET:
+            out["suspendedCeiling"] = None if self.suspended_ceiling is None else float(self.suspended_ceiling)
         if self.symbol is not UNSET:
             out["symbol"] = self.symbol
         if self.transparency is not UNSET:
@@ -85738,6 +85762,7 @@ class SpaceEntity(Entity):
             color=data.get("color", UNSET),
             columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
+            floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -85752,6 +85777,7 @@ class SpaceEntity(Entity):
             scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            suspended_ceiling=UNSET if "suspendedCeiling" not in data else None if data["suspendedCeiling"] is None else float(data["suspendedCeiling"]),
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             unit=data.get("unit", UNSET),
@@ -85767,11 +85793,16 @@ class SpaceFields(_Model):
     Attributes:
         parts: Its boundary: one part or more, each an outer ring and its holes.
         columns: Physical columns to deduct, within the same semantic level (no level: all).
-        height: Floor to ceiling, metres; absent: its level's. Unit: elevation.
+        floor_offset: Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+            a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor. Unit: elevation.
+        height: Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
+            first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3). Unit: elevation.
         method: What its rings stand for. Absent: the walls' inner faces.
         scope: Unassigned uses only sources without an architectural level; target level must also be absent.
         seed: The point inside it its boundary is found round from the walls; absent: its boundary is drawn. Unit: length.
         sources: Explicit wall/column UUIDs, sorted and unique; absent preserves the legacy source search.
+        suspended_ceiling: Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+            metres; its inside height. Absent: none. Unit: elevation.
         unit: The group it belongs to (docs/adr/0773, `.kcad` schema 138): an independent unit, a common area or an outdoor
             area of the building's program, by its id. Absent: none.
         void: A void (docs/adr/0708): a shaft, a lift shaft, an opening in the floor — no floor in it. Drawn crossed, its area
@@ -85782,6 +85813,7 @@ class SpaceFields(_Model):
     broken: SpaceBreak | SpaceBreakName | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | Unset = UNSET
     finishes: SpaceFinishes | Unset = UNSET
+    floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | Unset = UNSET
     name: str | None | Unset = UNSET
@@ -85789,6 +85821,7 @@ class SpaceFields(_Model):
     scope: SpaceScope | SpaceScopeName | Unset = UNSET
     seed: Vec2 | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
+    suspended_ceiling: float | None | Unset = UNSET
     unit: str | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     void: bool | Unset = UNSET
@@ -85804,6 +85837,8 @@ class SpaceFields(_Model):
             out["columns"] = _enum_out(self.columns)
         if self.finishes is not UNSET:
             out["finishes"] = self.finishes.to_json()
+        if self.floor_offset is not UNSET:
+            out["floorOffset"] = None if self.floor_offset is None else float(self.floor_offset)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.method is not UNSET:
@@ -85818,6 +85853,8 @@ class SpaceFields(_Model):
             out["seed"] = None if self.seed is None else _vec2_out(self.seed)
         if self.sources is not UNSET:
             out["sources"] = None if self.sources is None else list(self.sources)
+        if self.suspended_ceiling is not UNSET:
+            out["suspendedCeiling"] = None if self.suspended_ceiling is None else float(self.suspended_ceiling)
         if self.unit is not UNSET:
             out["unit"] = self.unit
         if self.usage is not UNSET:
@@ -85834,6 +85871,7 @@ class SpaceFields(_Model):
             broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(SpaceBreak, data["broken"]),
             columns=_enum_in(SpaceColumns, data["columns"]) if "columns" in data else UNSET,
             finishes=SpaceFinishes.from_json(data["finishes"]) if "finishes" in data else UNSET,
+            floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             method=_enum_in(SpaceMethod, data["method"]) if "method" in data else UNSET,
             name=data.get("name", UNSET),
@@ -85841,6 +85879,7 @@ class SpaceFields(_Model):
             scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            suspended_ceiling=UNSET if "suspendedCeiling" not in data else None if data["suspendedCeiling"] is None else float(data["suspendedCeiling"]),
             unit=data.get("unit", UNSET),
             usage=data.get("usage", UNSET),
             void=data.get("void", UNSET),
@@ -86025,8 +86064,10 @@ class SpaceRow(_Model):
             valid geometry, included in totals. Absent for every valid boundary.
         by_method: A space from the walls: its area by each method, m². Unit: area.
         columns: Persistent column policy; omitted for legacy/ignore rows.
-        height: Unit: elevation.
+        height: Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its
+            height typed, the slab over it); without one, its storey's top. Unit: elevation.
         sources: Explicit wall/column UUIDs; absent uses all sources eligible for the scope/level.
+        suspended_ceiling_area: Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one. Unit: area.
         void: A void (docs/adr/0708): its area is summed in `voidArea`, not in `spaceArea`.
         volume: Unit: volume.
     """
@@ -86045,6 +86086,7 @@ class SpaceRow(_Model):
     number: str | None | Unset = UNSET
     scope: SpaceScope | SpaceScopeName | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
+    suspended_ceiling_area: float | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     void: bool | Unset = UNSET
     volume: float | None | Unset = UNSET
@@ -86076,6 +86118,8 @@ class SpaceRow(_Model):
             out["scope"] = _enum_out(self.scope)
         if self.sources is not UNSET:
             out["sources"] = None if self.sources is None else list(self.sources)
+        if self.suspended_ceiling_area is not UNSET:
+            out["suspendedCeilingArea"] = None if self.suspended_ceiling_area is None else float(self.suspended_ceiling_area)
         if self.usage is not UNSET:
             out["usage"] = self.usage
         if self.void is not UNSET:
@@ -86102,6 +86146,7 @@ class SpaceRow(_Model):
             number=data.get("number", UNSET),
             scope=_enum_in(SpaceScope, data["scope"]) if "scope" in data else UNSET,
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            suspended_ceiling_area=UNSET if "suspendedCeilingArea" not in data else None if data["suspendedCeilingArea"] is None else float(data["suspendedCeilingArea"]),
             usage=data.get("usage", UNSET),
             void=data.get("void", UNSET),
             volume=UNSET if "volume" not in data else None if data["volume"] is None else float(data["volume"]),
@@ -122241,11 +122286,13 @@ class SetSpacesOperation(SpacesOperation):
     Attributes:
         base: The skirting's finish (Süpürgelik, docs/adr/0733 §3).
         columns: Physical column deduction; absent keeps legacy wall-only areas.
+        floor_offset: Döşeme kot farkı (docs/adr/3040 §3); null: the floor slab under it, else its storey's floor. Unit: elevation.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
         scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
         sill: The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
         sources: Explicit UUIDs; null clears the list and restores scope/level search.
+        suspended_ceiling: Asma tavan: its height over the finished floor (docs/adr/3040 §3); null: none. Unit: elevation.
         unit: The building program's group, by its id (docs/adr/0773); null: out of any.
         void: A void or a room again (docs/adr/0708).
     """
@@ -122254,6 +122301,7 @@ class SetSpacesOperation(SpacesOperation):
     ceiling: str | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     floor: str | None | Unset = UNSET
+    floor_offset: float | None | Unset = UNSET
     height: float | None | Unset = UNSET
     level: str | None | Unset = UNSET
     method: SpaceMethod | SpaceMethodName | None | Unset = UNSET
@@ -122265,6 +122313,7 @@ class SetSpacesOperation(SpacesOperation):
     sill: str | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
     stair: str | None | Unset = UNSET
+    suspended_ceiling: float | None | Unset = UNSET
     unit: str | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     void: bool | None | Unset = UNSET
@@ -122280,6 +122329,8 @@ class SetSpacesOperation(SpacesOperation):
             out["columns"] = None if self.columns is None else _enum_out(self.columns)
         if self.floor is not UNSET:
             out["floor"] = self.floor
+        if self.floor_offset is not UNSET:
+            out["floorOffset"] = None if self.floor_offset is None else float(self.floor_offset)
         if self.height is not UNSET:
             out["height"] = None if self.height is None else float(self.height)
         if self.level is not UNSET:
@@ -122302,6 +122353,8 @@ class SetSpacesOperation(SpacesOperation):
             out["sources"] = None if self.sources is None else list(self.sources)
         if self.stair is not UNSET:
             out["stair"] = self.stair
+        if self.suspended_ceiling is not UNSET:
+            out["suspendedCeiling"] = None if self.suspended_ceiling is None else float(self.suspended_ceiling)
         if self.unit is not UNSET:
             out["unit"] = self.unit
         if self.usage is not UNSET:
@@ -122319,6 +122372,7 @@ class SetSpacesOperation(SpacesOperation):
             ceiling=data.get("ceiling", UNSET),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             floor=data.get("floor", UNSET),
+            floor_offset=UNSET if "floorOffset" not in data else None if data["floorOffset"] is None else float(data["floorOffset"]),
             height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
             level=data.get("level", UNSET),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(SpaceMethod, data["method"]),
@@ -122330,6 +122384,7 @@ class SetSpacesOperation(SpacesOperation):
             sill=data.get("sill", UNSET),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
             stair=data.get("stair", UNSET),
+            suspended_ceiling=UNSET if "suspendedCeiling" not in data else None if data["suspendedCeiling"] is None else float(data["suspendedCeiling"]),
             unit=data.get("unit", UNSET),
             usage=data.get("usage", UNSET),
             void=data.get("void", UNSET),

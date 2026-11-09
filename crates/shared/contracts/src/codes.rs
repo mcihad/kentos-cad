@@ -2704,6 +2704,8 @@ codes! {
     PAIY_ROOM_MISSING = "paiy_room_missing", Warning, false, "Konutta Planlı Alanlar İmar Yönetmeliği 29/1'in istediği piyeslerden biri yok.";
     PAIY_CORRIDOR_NARROW = "paiy_corridor_narrow", Warning, false, "Hol ya da koridorun net eni Planlı Alanlar İmar Yönetmeliği 29/3'ün 1,20 metresinden dar.";
     PAIY_STOREY_HEIGHT_OVER = "paiy_storey_height_over", Warning, false, "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor.";
+    /// A room's inside height under PAİY 28/4–6's (docs/adr/3040 §3).
+    PAIY_INSIDE_HEIGHT_BELOW = "paiy_inside_height_below", Warning, false, "Mahalin iç yüksekliği Planlı Alanlar İmar Yönetmeliği 28/4–6'nın en azından az (iskân edilen mahalde 2,60; ıslak hacim, kiler, geçit ve teknik mahalde 2,20 metre).";
     PAIY_DOOR_HEIGHT_BELOW = "paiy_door_height_below", Warning, false, "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az.";
     PAIY_DOOR_WIDTH_BELOW = "paiy_door_width_below", Warning, false, "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar.";
     PAIY_STAIR_WIDTH_NARROW = "paiy_stair_width_narrow", Warning, false, "Merdiven kolu Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından dar.";

@@ -34,7 +34,21 @@ method?: SpaceMethod,
 /**
  * Physical column deduction; absent keeps legacy wall-only areas.
  */
-columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: ArchInfo, height?: number, finishes?: SpaceFinishes, 
+columns?: SpaceColumns, number?: string, name?: string, usage?: string, arch?: ArchInfo, 
+/**
+ * Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040
+ * §3).
+ */
+height?: number, 
+/**
+ * Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor
+ * slab under it, else its storey's floor.
+ */
+floorOffset?: number, 
+/**
+ * Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none.
+ */
+suspendedCeiling?: number, finishes?: SpaceFinishes, 
 /**
  * A void: a shaft, a lift shaft, an opening in the floor (docs/adr/0708); absent: a room.
  */

@@ -29,17 +29,6 @@ use crate::checks::Stop;
 use crate::codes;
 use crate::spaces::{self, fail};
 
-fn level_height(doc: &Document, arch: &ArchInfo) -> Option<f64> {
-    let id = arch.level.as_deref()?;
-    doc.settings()
-        .arch
-        .as_ref()?
-        .levels
-        .iter()
-        .find(|l| l.id == id)?
-        .height
-}
-
 fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, Stop> {
     let known: Vec<String> = doc
         .settings()
@@ -175,9 +164,19 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     continue;
                 }
                 let area = spaces::area_of(&f.parts);
-                let height = f.height.or_else(|| level_height(doc, &f.arch));
+                // Its inside height: its finished floor to its ceiling (docs/adr/3040 §3).
+                let height = doc.room_height(f).map(|h| h.inside());
+                // Its asma tavan covers its net floor (its inner faces'), else its rings'.
+                let suspended_ceiling_area = f
+                    .suspended_ceiling
+                    .map(|_| source_search.net_area(f).unwrap_or(area));
                 if !f.void {
-                    rooms.push((uid(e), f.arch.level.clone(), &f.parts, f.finishes.floor.clone()));
+                    rooms.push((
+                        uid(e),
+                        f.arch.level.clone(),
+                        &f.parts,
+                        f.finishes.floor.clone(),
+                    ));
                 }
                 let by_method = f.seed.map(|_| {
                     SpaceMethod::ALL
@@ -208,11 +207,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
                     volume: height.map(|h| area * h),
+                    suspended_ceiling_area,
                     baseboard: (!f.void)
                         .then(|| crate::slab_quantities::baseboard(&f.parts, f.arch.level.as_deref(), &passages)),
                     by_method,
                     rule: {
-                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
+                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana)",f.method.label());
                         if !f.columns.is_ignore() {
                             rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
                         }

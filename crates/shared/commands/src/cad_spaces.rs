@@ -134,10 +134,23 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
+    /// Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/3040
+    /// §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
+    /// Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/3040 §3); absent: the top of the floor
+    /// slab under it, else its storey's floor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub floor_offset: Option<f64>,
+    /// Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/3040 §3); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub finishes: Option<SpaceFinishes>,
@@ -280,6 +293,26 @@ pub struct SpaceChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<Option<f64>>,
+    /// Döşeme kot farkı (docs/adr/3040 §3); null: the floor slab under it, else its storey's floor.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub floor_offset: Option<Option<f64>>,
+    /// Asma tavan: its height over the finished floor (docs/adr/3040 §3); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub suspended_ceiling: Option<Option<f64>>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -599,6 +632,8 @@ pub struct SpaceRow {
     pub area: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub perimeter: f64,
+    /// Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its
+    /// height typed, the slab over it); without one, its storey's top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
@@ -607,6 +642,11 @@ pub struct SpaceRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
+    /// Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub suspended_ceiling_area: Option<f64>,
     /// A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
     /// gaps to the floor) its sides run along, metres; none for a void.
     #[serde(default, skip_serializing_if = "Option::is_none")]

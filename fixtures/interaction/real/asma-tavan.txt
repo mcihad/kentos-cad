@@ -1,0 +1,50 @@
+# M40 3. bölüm (docs/adr/3040 §3): the two-storey building with its rooms and the 1. kat's Ara kat slab (kaplama 2, şap
+# 5 over 15 cm of concrete, sıva 2 under). The ground storey's Salon: Döşeme kot farkı 0.000, İç yükseklik 2.760 to the
+# slab's plaster. Asma tavan 2.50: İç yükseklik 2.500. The Yatak odası's floor 2 cm lower: 2.780. Denetim › Mevzuat says
+# the Salon is under PAİY 28/4's 2.60 m; Metraj › Mahaller writes each room's inside height and the Salon's asma tavan.
+fit KentOS Mimari — Bina
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 1148 57    # Kat ▾
+wait 800
+click 1180 174   # Kat görünümü: Yalnız etkin kat
+wait 1200
+click 300 560    # Salon
+wait 1200
+shot 01-salon
+click 1790 683   # Asma tavan
+wait 600
+key ctrl+a
+type 2.50
+key Return
+wait 1500
+shot 02-asma-tavan
+key Escape
+wait 500
+click 1235 700   # Yatak odası
+wait 1200
+click 1790 625   # Döşeme kot farkı
+wait 600
+key ctrl+a
+type -2 cm
+key Return
+wait 1500
+shot 03-kot-farki
+key Escape
+wait 500
+click 588 20     # Mimari
+wait 1000
+click 1162 111   # Denetim
+wait 3000
+drag 760 663 760 330   # the panel taller
+wait 1200
+move 700 950
+wait 600
+shot 04-denetim
+click 965 111    # Metraj
+wait 2000
+shot 05-metraj

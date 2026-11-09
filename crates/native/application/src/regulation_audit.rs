@@ -12,6 +12,11 @@
 //! - **Kat yüksekliği (28/1-c):** in a dwelling area at most 3.60 m floor to floor, 4.00 m in a building of three
 //!   storeys or fewer above its basements; read only when the project is plainly a dwelling's (a dwelling unit or a
 //!   bedroom).
+//! - **İç yükseklik (28/4–6, docs/adr/3040 §3):** a named room's finished floor to its ceiling (its asma tavan, its
+//!   height typed, the slab over it's plastered underside; without one, floor to floor: a bound over it): an inhabited
+//!   room at least 2.60 m; a wet room, a pantry or store, the room under a stair and a passage 2.20 m (28/5); a garage,
+//!   a boiler room and a technical room 2.20 m (28/6). Not read: outdoor rooms, shelters, shafts, attics, rooms with
+//!   no name and no use, rooms on a mezzanine (28/4: "asma katlar hariç").
 //! - **Kapılar (39/1, 13.8.2025):** at least 2.10 m high; their net clear width at least 1.50 m at a building's entrance,
 //!   1.00 m at an independent unit's, 0.90 m elsewhere. A door with no room on one side is an entrance: the building's
 //!   when it has a common area or more than one unit, else its only unit's; a door between a unit's room and a common
@@ -165,6 +170,9 @@ impl Article {
 pub const ROOMS_ARTICLE: Article = Article::paiy("29/1", ORIGINAL);
 pub const CORRIDOR_ARTICLE: Article = Article::paiy("29/3", ORIGINAL);
 pub const STOREY_ARTICLE: Article = Article::paiy("28/1-c", "12.8.2023/32277 değişikliğiyle");
+pub const INHABITED_HEIGHT_ARTICLE: Article = Article::paiy("28/4", ORIGINAL);
+pub const SERVICE_HEIGHT_ARTICLE: Article = Article::paiy("28/5", ORIGINAL);
+pub const TECHNICAL_HEIGHT_ARTICLE: Article = Article::paiy("28/6", ORIGINAL);
 pub const DOOR_HEIGHT_ARTICLE: Article = Article::paiy("39/1-a", "13.8.2025/32985 değişikliğiyle");
 pub const DOOR_ENTRANCE_ARTICLE: Article =
     Article::paiy("39/1-b", "13.8.2025/32985 değişikliğiyle");
@@ -190,12 +198,13 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/3035).
-pub const CODES: [&str; 30] = [
+pub const CODES: [&str; 31] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
     codes::PAIY_CORRIDOR_NARROW,
     codes::PAIY_STOREY_HEIGHT_OVER,
+    codes::PAIY_INSIDE_HEIGHT_BELOW,
     codes::PAIY_DOOR_HEIGHT_BELOW,
     codes::PAIY_DOOR_WIDTH_BELOW,
     codes::PAIY_STAIR_WIDTH_NARROW,
@@ -231,7 +240,9 @@ pub struct Fix {
     pub operation: serde_json::Value,
 }
 
+use kentos_domain::room_names::{HeightClass, height_class};
 pub use kentos_domain::room_names::{RoomKind, has, is, kind_of, words};
+use kentos_domain::{CeilingFrom, RoomHeight};
 
 /// 29/1's narrow side and net area, m and m²; a corridor's 29/3 width and no area.
 pub fn limits(kind: RoomKind) -> (f64, Option<f64>) {
@@ -567,6 +578,20 @@ pub fn findings(
     let mut search = SpaceSearch::new(doc);
     let mut rooms: Vec<Room> = Vec::new();
     let mut places: Vec<Place> = Vec::new();
+    // Inside heights (28/4–6): each named room read, its words, its class, its floor and ceiling and its label's point.
+    let mut inside: Vec<(Slot, String, HeightClass, RoomHeight, V)> = Vec::new();
+    let arch_levels: Vec<ArchLevel> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.clone())
+        .unwrap_or_default();
+    // A mezzanine (asma kat) by its storey's name: 28/4 does not read it.
+    let mezzanine = |level: Option<&str>| {
+        level
+            .and_then(|id| arch_levels.iter().find(|l| l.id == id))
+            .is_some_and(|l| has(&words(Some(&l.name), None), "ASMA"))
+    };
     for e in doc.entities() {
         let Entity::Space(s) = e else { continue };
         let x = &s.space;
@@ -606,6 +631,26 @@ pub fn findings(
         });
         if x.void || outdoor || x.broken.is_some() || shaft.is_some() {
             continue;
+        }
+        // Its inside height (28/4–6, docs/adr/3040 §3): a named room, not on a mezzanine.
+        if let Some(class) = height_class(name, usage)
+            && !mezzanine(e.own_level())
+            && let Some(h) = doc.room_height(x)
+        {
+            let label = x
+                .name
+                .clone()
+                .or_else(|| x.usage.clone())
+                .unwrap_or_default();
+            let subject = match x.number.as_deref().filter(|n| !n.trim().is_empty()) {
+                Some(n) => format!("{label} ({n})"),
+                None => label,
+            };
+            let at = kentos_geometry_core::geom::space::label_at(
+                &kentos_domain::arch_values::core_areas(&x.parts),
+            )
+            .unwrap_or(V::new(0.0, 0.0));
+            inside.push((slot, subject, class, h, at));
         }
         let Some(kind) = kind else {
             continue;
@@ -823,6 +868,49 @@ pub fn findings(
                     .map_or(V::new(0.0, 0.0), |r| r.at);
                 push(s, Vec::new(), at, None);
             }
+        }
+    }
+    // Inside heights (28/4–6, docs/adr/3040 §3): each room by its class, measured from its finished floor.
+    for (slot, subject, class, h, at) in &inside {
+        let (least, article, repair) = match class {
+            HeightClass::Inhabited => (
+                2.60,
+                INHABITED_HEIGHT_ARTICLE,
+                "Kat yüksekliğini artırın ya da asma tavanı yükseltin; hava maniası olan parselde plan 2,40 m'ye izin \
+                 verebilir (28/4).",
+            ),
+            HeightClass::Service => (
+                2.20,
+                SERVICE_HEIGHT_ARTICLE,
+                "Kat yüksekliğini artırın ya da asma tavanı yükseltin.",
+            ),
+            HeightClass::Technical => (
+                2.20,
+                TECHNICAL_HEIGHT_ARTICLE,
+                "İdarenin tayin ettiği yüksekliği sağlayın; 2,20 m'nin altına inilemez.",
+            ),
+        };
+        let qual = match h.ceiling_from {
+            CeilingFrom::Suspended => " (asma tavana kadar)",
+            CeilingFrom::Own => "",
+            CeilingFrom::Slab => " (üst döşemenin altına kadar)",
+            CeilingFrom::Storey => " (kattan kata; üst döşeme çizilmemiş)",
+        };
+        if let Some(s) = said(
+            codes::PAIY_INSIDE_HEIGHT_BELOW,
+            &format!("{subject} iç yüksekliği"),
+            h.inside(),
+            Bound::AtLeast,
+            Limit {
+                value: least,
+                article,
+            },
+            None,
+            metres,
+            qual,
+            repair,
+        ) {
+            push(s, vec![*slot], *at, None);
         }
     }
     // The building as 31, 32 and 34 read it.

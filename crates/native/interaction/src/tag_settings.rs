@@ -124,7 +124,7 @@ impl TagTool {
             Setting::notice(
                 "A",
                 "Şablon alanları",
-                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {share}: bölümün ortak alan payı · {gross}: bölümün brütü · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
+                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {share}: bölümün ortak alan payı · {gross}: bölümün brütü · {attr:Alan}: öznitelik. {floorElevation}: bitmiş döşemenin kotu; {ceilingElevation}: tavanın kotu (asma tavan, yazılan iç yükseklik ya da üst döşemenin altı). Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
             ),
         ];
         if let Some(why) = &self.problem {

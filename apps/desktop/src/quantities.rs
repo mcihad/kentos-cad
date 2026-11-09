@@ -302,17 +302,20 @@ impl App {
                 "Çevre",
                 // A room's baseboard (docs/adr/0722 §5); a void has none.
                 "Süpürgelik",
-                "Yükseklik",
+                // Its finished floor to its ceiling (PAİY 4(1)(ıı)) and its asma tavan's area (docs/adr/3040 §3).
+                "İç yükseklik",
                 "Hacim",
+                "Asma tavan",
                 "Net",
                 "Eksen",
                 "Brüt",
             ],
             numbers: vec![
                 false, false, false, false, false, true, true, true, true, true, true, true, true,
+                true,
             ],
             widths: vec![
-                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 72.0, 64.0, 64.0, 60.0, 60.0, 60.0,
+                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 72.0, 72.0, 64.0, 64.0, 60.0, 60.0, 60.0,
             ],
             shown: q
                 .spaces
@@ -329,6 +332,7 @@ impl App {
                         r.baseboard.map_or_else(String::new, len),
                         r.height.map_or_else(String::new, len),
                         opt(r.volume, 2),
+                        r.suspended_ceiling_area.map_or_else(String::new, area),
                         by(r, "net"),
                         by(r, "centerline"),
                         by(r, "gross"),
@@ -353,6 +357,7 @@ impl App {
                         o(r.baseboard),
                         o(r.height),
                         o(r.volume),
+                        o(r.suspended_ceiling_area),
                         b("net"),
                         b("centerline"),
                         b("gross"),
@@ -1246,7 +1251,7 @@ impl App {
     fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String {
         match tab {
             Tab::Spaces => q.spaces.first().map_or_else(
-                || "Alan: halkaların alanı, delikler düşülür; hacim: alan × yükseklik.".to_owned(),
+                || "Alan: halkaların alanı, delikler düşülür; hacim: alan × iç yükseklik (bitmiş döşemeden tavana).".to_owned(),
                 |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
             ),
             Tab::Walls => q.walls.first().map_or_else(
@@ -1403,15 +1408,16 @@ mod tests {
                 "Alan",
                 "Çevre",
                 "Süpürgelik",
-                "Yükseklik",
+                "İç yükseklik",
                 "Hacim",
+                "Asma tavan",
                 "Net",
                 "Eksen",
                 "Brüt"
             ]
         );
         assert!(
-            valid.cells.iter().all(|r| r.len() == 13),
+            valid.cells.iter().all(|r| r.len() == 14),
             "valid export shape changed"
         );
     }

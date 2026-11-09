@@ -135,3 +135,68 @@ pub fn stair_name(name: Option<&str>, usage: Option<&str>) -> bool {
                 .any(|w| w.starts_with("ALTI") || w.starts_with("DEPO"))
     })
 }
+
+/// Which of PAİY 28's inside heights a room's name or use asks (docs/adr/3040 §3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HeightClass {
+    /// An inhabited room (28/4): 2.60 m.
+    Inhabited,
+    /// A wet room, a pantry or store, the room under a stair, a passage (28/5): 2.20 m.
+    Service,
+    /// A garage, a car park, a boiler room, a wood or coal store, a technical room (28/6): 2.20 m, the
+    /// administration's.
+    Technical,
+}
+
+/// A room's 28 class by its name or use; none for one 28 does not read: an outdoor one (balkon, teras, bahçe), a
+/// shelter (Sığınak Yönetmeliği's own 2.40), a shaft, an attic (çatı arası), or one with no name and no use.
+pub fn height_class(name: Option<&str>, usage: Option<&str>) -> Option<HeightClass> {
+    let w = words(name, usage);
+    if w.is_empty() {
+        return None;
+    }
+    let has = |p: &str| has(&w, p);
+    if [
+        "BALKON", "TERAS", "BAHCE", "SIGINAK", "ASANSOR", "ISIKLIK", "AYDINLIK", "BACA", "SAFT",
+    ]
+    .iter()
+    .any(|p| has(p))
+        || (has("CATI") && has("ARASI"))
+    {
+        return None;
+    }
+    if [
+        "GARAJ",
+        "OTOPARK",
+        "KALORIFER",
+        "KAZAN",
+        "ODUNLUK",
+        "KOMURLUK",
+        "TEKNIK",
+        "ELEKTRIK",
+        "JENERATOR",
+        "HIDROFOR",
+        "TRAFO",
+        "MAKINE",
+        "POMPA",
+        "IKLIMLENDIRME",
+    ]
+    .iter()
+    .any(|p| has(p))
+        || is(&w, "ISI")
+    {
+        return Some(HeightClass::Technical);
+    }
+    if matches!(
+        kind_of(name, usage),
+        Some(RoomKind::Bath | RoomKind::Toilet)
+    ) || ["LAVABO", "CAMASIR", "KILER", "DEPO", "ARDIYE"]
+        .iter()
+        .any(|p| has(p))
+        || (has("MERDIVEN") && has("ALTI"))
+        || passage(name, usage)
+    {
+        return Some(HeightClass::Service);
+    }
+    Some(HeightClass::Inhabited)
+}

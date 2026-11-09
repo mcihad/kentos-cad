@@ -2,12 +2,13 @@
 //!
 //! - An opening: its number, type (its style), form, width, height (head − sill, with a head), sill (absent 0), head,
 //!   area (width × height), and its wall's style, level and phase.
-//! - A space: its number, name, usage, area and perimeter (its rings', holes off), height (its own, else its level's),
-//!   volume (area × height).
+//! - A space: its number, name, usage, area and perimeter (its rings', holes off), height (its inside height: its
+//!   finished floor to its ceiling, docs/adr/3040 §3), volume (area × height), its floor's and ceiling's elevations.
 //! - A column: its tag, place, type and width. A grid: its label. A stair: its risers. A ramp: its slope (given, else
 //!   its rise over its sloped length). An insert: its block's name as its type.
 //! - A wall: its style (as type and style), its width (as thickness and width), its base line's length, height (its
-//!   own, else its level's), net face area (length × height less its openings' areas) and volume (net face × width).
+//!   own, else concrete to concrete within its storey, docs/adr/3040 §1–2), net face area (length × height less its
+//!   openings' areas) and volume (net face × width).
 //! - Each: its level's name and phase, its attribute by name.
 //!
 //! Written: a length in the project's unit and length decimals; an area in its area unit and decimals, a volume in m³
@@ -106,18 +107,7 @@ impl Document {
         )
     }
 
-    fn level_height(&self, arch: &ArchInfo) -> Option<f64> {
-        let id = arch.level.as_deref()?;
-        self.settings()
-            .arch
-            .as_ref()?
-            .levels
-            .iter()
-            .find(|l| l.id == id)?
-            .height
-    }
-
-    /// The room's assigned floor; absence is unknown, not project zero.
+    /// The room's storey's floor; absence is unknown, not project zero.
     fn room_floor_elevation(&self, arch: &ArchInfo) -> Option<f64> {
         let id = arch.level.as_deref()?;
         self.settings()
@@ -278,7 +268,8 @@ impl Document {
                 let x = &s.space;
                 let areas = core_areas(&x.parts);
                 let area = kentos_geometry_core::geom::space::area(&areas);
-                let height = x.height.or_else(|| self.level_height(&x.arch));
+                // Its finished floor to its ceiling (docs/adr/3040 §3).
+                let height = self.room_height(x);
                 match place {
                     "number" => text(&x.number),
                     "name" => text(&x.name),
@@ -325,14 +316,18 @@ impl Document {
                     "perimeter" => {
                         Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
                     }
-                    "height" => height.map(Length),
-                    "volume" => height.map(|h| Volume(area * h)),
-                    "floorElevation" => self.room_floor_elevation(&x.arch).map(Length),
-                    // Floor-to-floor level height is not a stated room ceiling.
+                    "height" => height.map(|h| Length(h.inside())),
+                    "volume" => height.map(|h| Volume(area * h.inside())),
+                    // On a storey the project knows: its finished floor; its ceiling when it has one (an asma tavan, a
+                    // height typed, the slab over it): floor to floor is no ceiling.
+                    "floorElevation" => self
+                        .room_floor_elevation(&x.arch)
+                        .map(|_| Length(self.room_floor(x).0)),
                     "ceilingElevation" => self
                         .room_floor_elevation(&x.arch)
-                        .zip(x.height)
-                        .map(|(floor, height)| Length(floor + height)),
+                        .and(height)
+                        .filter(crate::RoomHeight::ceiling_known)
+                        .map(|h| Length(h.ceiling)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
                     // Its finishes (docs/adr/0733 §3).

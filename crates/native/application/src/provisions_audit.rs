@@ -111,12 +111,6 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
         return;
     }
     let escape = kentos_domain::escape::escape(doc);
-    let levels: Vec<kentos_commands::ArchLevel> = doc
-        .settings()
-        .arch
-        .as_ref()
-        .map(|a| a.levels.clone())
-        .unwrap_or_default();
     for (slot, area) in &shelter.shelters {
         let (name, at) = room(doc, *slot);
         // Over 100 m² two exits (8/c).
@@ -144,18 +138,12 @@ pub(crate) fn findings(doc: &Document, push: &mut dyn FnMut(Said, Vec<Slot>, V))
                 at,
             );
         }
-        // Its inside height: its own, else its storey's floor to floor (more than the net inside height).
+        // Its inside height: its finished floor to its ceiling (docs/adr/3040 §3); without one, its storey's floor to
+        // floor (more than the net inside height).
         let Some(Entity::Space(s)) = doc.get(*slot) else {
             continue;
         };
-        let storey = s
-            .space
-            .arch
-            .level
-            .as_deref()
-            .and_then(|id| levels.iter().find(|l| l.id == id))
-            .and_then(|l| l.height);
-        if let Some(h) = s.space.height.or(storey)
+        if let Some(h) = doc.room_height(&s.space).map(|h| h.inside())
             && h + 1e-6 < 2.40
         {
             push(

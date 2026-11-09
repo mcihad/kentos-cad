@@ -3741,7 +3741,7 @@
                   "void": true,
                   "area": 1.0,
                   "perimeter": 4.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
                 }
               ],
               "walls": [

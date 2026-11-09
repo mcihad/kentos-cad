@@ -97,6 +97,12 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = c.height {
         f.height = v;
     }
+    if let Some(v) = c.floor_offset {
+        f.floor_offset = v;
+    }
+    if let Some(v) = c.suspended_ceiling {
+        f.suspended_ceiling = v;
+    }
     if let Some(v) = &c.floor {
         f.finishes.floor.clone_from(v);
     }
@@ -150,12 +156,28 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             if c == &SpaceChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik ya da kaplamalardan birini verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik, döşeme kot farkı, asma tavan ya da kaplamalardan birini verin.".into(),
                     "operation",
                 ));
             }
             if let Some(Some(h)) = c.height {
                 checks::finite(h, "Yükseklik", "Sonlu bir sayı verin.", "operation.height")?;
+            }
+            if let Some(Some(v)) = c.floor_offset {
+                checks::finite(
+                    v,
+                    "Döşeme kot farkı",
+                    "Sonlu bir sayı verin.",
+                    "operation.floorOffset",
+                )?;
+            }
+            if let Some(Some(v)) = c.suspended_ceiling {
+                checks::finite(
+                    v,
+                    "Asma tavan",
+                    "Sonlu bir sayı verin.",
+                    "operation.suspendedCeiling",
+                )?;
             }
             if let Some(u) = &c.unit {
                 unit_known(doc, u.as_deref(), "operation.unit")?;

@@ -599,7 +599,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -1029,7 +1029,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -1461,7 +1461,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -1895,7 +1895,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -2327,7 +2327,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -2760,7 +2760,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -3195,7 +3195,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0,
                   "level": "zemin",
@@ -3632,7 +3632,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.0,
                   "level": "zemin",
@@ -4065,7 +4065,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -4498,7 +4498,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -4933,7 +4933,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8,
                   "level": "zemin",
@@ -5370,7 +5370,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.8,
                   "level": "zemin",
@@ -5801,7 +5801,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -6231,7 +6231,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -6663,7 +6663,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -7097,7 +7097,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -7529,7 +7529,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -7962,7 +7962,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -8397,7 +8397,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0,
                   "level": "zemin",
@@ -8834,7 +8834,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.0,
                   "level": "zemin",
@@ -9267,7 +9267,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -9700,7 +9700,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -10135,7 +10135,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8,
                   "level": "zemin",
@@ -10572,7 +10572,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.8,
                   "level": "zemin",
@@ -11003,7 +11003,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -11433,7 +11433,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -11865,7 +11865,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -12299,7 +12299,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -12731,7 +12731,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -13164,7 +13164,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -13599,7 +13599,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0,
                   "level": "zemin",
@@ -14036,7 +14036,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.0,
                   "level": "zemin",
@@ -14469,7 +14469,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -14902,7 +14902,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -15337,7 +15337,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8,
                   "level": "zemin",
@@ -15774,7 +15774,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.8,
                   "level": "zemin",
@@ -16205,7 +16205,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -16635,7 +16635,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -17067,7 +17067,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -17501,7 +17501,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -17933,7 +17933,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -18366,7 +18366,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -18801,7 +18801,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0,
                   "level": "zemin",
@@ -19238,7 +19238,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.0,
                   "level": "zemin",
@@ -19671,7 +19671,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -20104,7 +20104,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -20539,7 +20539,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8,
                   "level": "zemin",
@@ -20976,7 +20976,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.8,
                   "level": "zemin",
@@ -21407,7 +21407,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -21837,7 +21837,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2,
                   "level": "zemin",
                   "height": 3.0,
@@ -22269,7 +22269,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -22703,7 +22703,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 45.2,
                   "level": "zemin",
@@ -23135,7 +23135,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -23568,7 +23568,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0,
                   "level": "zemin",
                   "height": 3.0,
@@ -24003,7 +24003,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0,
                   "level": "zemin",
@@ -24440,7 +24440,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.0,
                   "level": "zemin",
@@ -24873,7 +24873,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -25306,7 +25306,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8,
                   "level": "zemin",
                   "height": 3.0,
@@ -25741,7 +25741,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8,
                   "level": "zemin",
@@ -26178,7 +26178,7 @@
                     "centerline": 74.0,
                     "gross": 77.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 46.8,
                   "level": "zemin",
@@ -26597,7 +26597,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2
                 }
               ],
@@ -27009,7 +27009,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 35.2
                 }
               ],
@@ -27423,7 +27423,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 53.2
                 }
@@ -27839,7 +27839,7 @@
                     "centerline": 70.0,
                     "gross": 73.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 53.2
                 }
@@ -28253,7 +28253,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0
                 }
               ],
@@ -28668,7 +28668,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.0
                 }
               ],
@@ -29085,7 +29085,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.0
                 }
@@ -29504,7 +29504,7 @@
                     "centerline": 70.0,
                     "gross": 73.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Duvar ekseni); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 54.0
                 }
@@ -29919,7 +29919,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8
                 }
               ],
@@ -30334,7 +30334,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "baseboard": 36.8
                 }
               ],
@@ -30751,7 +30751,7 @@
                     "centerline": 80.0,
                     "gross": 83.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Yalnız net; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "net",
                   "baseboard": 36.8
                 }
@@ -31170,7 +31170,7 @@
                     "centerline": 70.0,
                     "gross": 73.64
                   },
-                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × yükseklik; kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
+                  "rule": "alan: halkaların alanı, delikler düşülür (Brüt (dış yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde; süpürgelik: çevreden kenarları boyunca duran geçişlerin (kapı, döşemeye inen boşluk) genişliği düşülür",
                   "columns": "all",
                   "baseboard": 54.8
                 }

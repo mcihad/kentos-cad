@@ -23,7 +23,15 @@ method?: SpaceMethod,
 /**
  * Physical column deduction; absent keeps legacy wall-only areas.
  */
-columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?: number | null, floor?: string | null, wall?: string | null, ceiling?: string | null, 
+columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?: number | null, 
+/**
+ * Döşeme kot farkı (docs/adr/3040 §3); null: the floor slab under it, else its storey's floor.
+ */
+floorOffset?: number | null, 
+/**
+ * Asma tavan: its height over the finished floor (docs/adr/3040 §3); null: none.
+ */
+suspendedCeiling?: number | null, floor?: string | null, wall?: string | null, ceiling?: string | null, 
 /**
  * The skirting's finish (Süpürgelik, docs/adr/0733 §3).
  */

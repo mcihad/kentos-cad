@@ -551,3 +551,81 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
         "{found:#?}"
     );
 }
+
+/// Inside heights (M40, docs/adr/3040 §3): PAİY 28/4–6 read from each named room's finished floor to its ceiling. Under
+/// the 1. kat's Ara kat slab the ground storey's rooms are 2.76 m and keep 2.60 m; the Salon's asma tavan at 2.50 m is
+/// under 28/4's 2.60 m, the Banyo's at 2.15 m under 28/5's 2.20 m, the Kazan dairesi's own 2.10 m under 28/6's 2.20 m; a
+/// Hol under an asma tavan at 2.25 m keeps 28/5. A Balkon, a room with no name and a room on the Asma kat are not read.
+/// The 1. kat is 2.50 m with no slab drawn over it: its room is said from floor to floor.
+#[test]
+fn rooms_lower_than_paiy_28_asks_are_said_with_where_their_ceiling_is() {
+    let mut app = blank();
+    run(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": [
+            { "id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0 },
+            { "id": "k1", "name": "1. kat", "elevation": 3.0, "height": 2.5 },
+            { "id": "asma", "name": "Asma kat", "elevation": 5.5, "height": 2.2 }
+        ] } }),
+    );
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    let rect = |x0: f64, x1: f64| json!({"outer": {"pts": [p(x0, 0.0), p(x1, 0.0), p(x1, 5.0), p(x0, 5.0)]}});
+    run(
+        &mut app,
+        "cad.slabs.create",
+        json!({"layerId": layer, "slabs": [{
+            "parts": [{"outer": {"pts": [p(-0.5, -0.5), p(20.0, -0.5), p(20.0, 5.5), p(-0.5, 5.5)]}}],
+            "thickness": 0.15, "arch": {"level": "k1"},
+            "layers": {"over": [{"kind": "finish", "thickness": 0.02}, {"kind": "screed", "thickness": 0.05}],
+                       "under": [{"kind": "plaster", "thickness": 0.02}]}
+        }]}),
+    );
+    let room = |x0: f64, x1: f64, level: &str, extra: Value| {
+        let mut r = json!({"parts": [rect(x0, x1)], "method": "net", "arch": {"level": level}});
+        for (k, v) in extra.as_object().expect("fields") {
+            r[k] = v.clone();
+        }
+        r
+    };
+    run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            room(0.0, 5.0, "zemin", json!({"name": "Salon", "number": "Z-01", "suspendedCeiling": 2.5})),
+            room(5.2, 8.0, "zemin", json!({"name": "Yatak odası"})),
+            room(8.2, 10.0, "zemin", json!({"name": "Banyo", "floorOffset": -0.02, "suspendedCeiling": 2.15})),
+            room(10.2, 12.0, "zemin", json!({"name": "Kazan dairesi", "height": 2.1})),
+            room(12.2, 14.0, "zemin", json!({"name": "Balkon", "height": 2.0})),
+            room(14.2, 16.0, "zemin", json!({"height": 2.0})),
+            room(16.2, 18.0, "zemin", json!({"name": "Hol", "suspendedCeiling": 2.25})),
+            room(0.0, 5.0, "k1", json!({"name": "Oturma odası"})),
+            room(0.0, 5.0, "asma", json!({"name": "Ofis", "height": 2.2}))
+        ]}),
+    );
+    let said: Vec<(String, String)> = regulation(&mut app, json!(["regulation"]))
+        .into_iter()
+        .filter(|(code, ..)| code == "paiy_inside_height_below")
+        .map(|(_, message, rule)| (message, rule))
+        .collect();
+    let messages: Vec<&str> = said.iter().map(|(m, _)| m.as_str()).collect();
+    assert_eq!(
+        messages,
+        [
+            "Salon (Z-01) iç yüksekliği 2.50 m < 2.60 m (asma tavana kadar) — PAİY 28/4",
+            "Oturma odası iç yüksekliği 2.50 m < 2.60 m (kattan kata; üst döşeme çizilmemiş) — PAİY 28/4",
+            "Banyo iç yüksekliği 2.15 m < 2.20 m (asma tavana kadar) — PAİY 28/5",
+            "Kazan dairesi iç yüksekliği 2.10 m < 2.20 m — PAİY 28/6",
+        ],
+        "{said:#?}"
+    );
+    assert!(said[0].1.starts_with("PAİY"), "{said:#?}");
+}

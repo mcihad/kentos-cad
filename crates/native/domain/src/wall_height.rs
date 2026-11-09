@@ -42,6 +42,15 @@ impl Document {
         }
     }
 
+    /// The wall's foot, metres over ±0.00: the structure's top of the floor slab under the middle of its path, else
+    /// its storey's floor (0 without a storey); where its height is measured from.
+    pub fn wall_foot(&self, w: &WallFields) -> f64 {
+        let (floor, _) = self.wall_storey(w);
+        middle(w)
+            .and_then(|at| self.slab_structure_top_under(at, floor))
+            .unwrap_or(floor)
+    }
+
     /// Whether the wall's height comes from the slab over it (no height of its own, a slab over it lower than its
     /// storey's top): Öznitelikler says so.
     pub fn wall_under_slab(&self, w: &WallFields) -> bool {
@@ -59,21 +68,26 @@ impl Document {
         storey.is_none_or(|h| under < floor + h - 1e-9)
     }
 
-    /// The structure's top of the floor slab under `at` on the storey whose floor is `floor`: of the slabs whose
-    /// outline holds it and whose top is the storey's floor (half a metre under it, a lowered wet room's, to [`OVER`]
-    /// over it), the highest.
+    /// The structure's top of the floor slab under `at` on the storey whose floor is `floor`.
     fn slab_structure_top_under(&self, at: Vec2, floor: f64) -> Option<f64> {
+        self.floor_slab_under(at, floor)
+            .map(|(s, f)| s.structure_top(f))
+    }
+
+    /// The floor slab under `at` on the storey whose floor is `floor`, with its level's floor: of the slabs whose outline
+    /// holds it and whose top is the storey's floor (half a metre under it, a lowered wet room's, to [`OVER`] over it),
+    /// the highest.
+    pub(crate) fn floor_slab_under(&self, at: Vec2, floor: f64) -> Option<(&SlabFields, f64)> {
         self.slabs_holding(at)
             .filter(|(s, f)| {
                 let top = f + s.offset;
                 top >= floor - 0.5 && top <= floor + OVER
             })
             .max_by(|a, b| (a.1 + a.0.offset).total_cmp(&(b.1 + b.0.offset)))
-            .map(|(s, f)| s.structure_top(f))
     }
 
     /// The slabs whose outline holds `at`, each with its level's floor (0 without a level).
-    fn slabs_holding(&self, at: Vec2) -> impl Iterator<Item = (&SlabFields, f64)> {
+    pub(crate) fn slabs_holding(&self, at: Vec2) -> impl Iterator<Item = (&SlabFields, f64)> {
         let levels = self
             .settings()
             .arch
@@ -99,16 +113,7 @@ impl Document {
 
     /// Its level's floor and height (floor to floor), metres.
     fn wall_storey(&self, w: &WallFields) -> (f64, Option<f64>) {
-        let level = w.arch.level.as_deref().and_then(|id| {
-            self.settings()
-                .arch
-                .as_ref()
-                .and_then(|a| a.levels.iter().find(|l| l.id == id))
-        });
-        (
-            level.map_or(0.0, |l| l.elevation),
-            level.and_then(|l| l.height),
-        )
+        self.storey_of(&w.arch)
     }
 
     /// The lowest structure's underside, of the slabs whose outline holds `at`, more than [`OVER`] above `foot`.
@@ -166,7 +171,7 @@ fn holds(s: &SlabFields, at: Vec2) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
+pub(crate) mod tests {
     use super::*;
 
     fn wall(level: &str, x0: f64, x1: f64, height: Option<f64>) -> WallFields {
@@ -181,7 +186,7 @@ mod tests {
         .unwrap()
     }
 
-    fn document(slabs: serde_json::Value) -> Document {
+    pub(crate) fn document(slabs: serde_json::Value) -> Document {
         let mut snapshot: serde_json::Value = serde_json::json!({
             "format": "kentos.document", "version": 2, "name": "Kat", "origin": {"x": 0.0, "y": 0.0},
             "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
@@ -212,7 +217,13 @@ mod tests {
         Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap()
     }
 
-    fn slab(level: &str, x0: f64, x1: f64, thickness: f64, offset: f64) -> serde_json::Value {
+    pub(crate) fn slab(
+        level: &str,
+        x0: f64,
+        x1: f64,
+        thickness: f64,
+        offset: f64,
+    ) -> serde_json::Value {
         serde_json::json!({
             "parts": [{"outer": {"pts": [
                 {"x": x0, "y": 0.0}, {"x": x1, "y": 0.0}, {"x": x1, "y": 5.0}, {"x": x0, "y": 5.0}

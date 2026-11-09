@@ -29,6 +29,7 @@ key: string, check: ArchAuditCheck,
  * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
  * `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
  * `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033),
+ * `paiy_inside_height_below` (docs/adr/3040 §3),
  * `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
  * `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
  * `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`

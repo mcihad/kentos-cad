@@ -1012,7 +1012,8 @@ impl Input for kentos_commands::SpacesSeparators {
 }
 
 impl Input for kentos_commands::SpacesCreate {
-    /// `spaces[0].seed.x` and `.y`, `.height`, `lineWeight` (docs/adr/0342).
+    /// `spaces[0].seed.x` and `.y`, `.height`, `.floorOffset`, `.suspendedCeiling`, `lineWeight` (docs/adr/0342,
+    /// 3040 §3).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1023,17 +1024,31 @@ impl Input for kentos_commands::SpacesCreate {
             "seed.x" => s.seed.as_mut().map(|p| &mut p.x),
             "seed.y" => s.seed.as_mut().map(|p| &mut p.y),
             "height" => s.height.as_mut(),
+            "floorOffset" => s.floor_offset.as_mut(),
+            "suspendedCeiling" => s.suspended_ceiling.as_mut(),
             _ => None,
         }
     }
 }
 
 impl Input for kentos_commands::SpacesEdit {
-    /// Değiştir's `operation.height`; Böl's `operation.line[k].x` and `.y`; Duvarlardan bul's `operation.seed.x`, `.y`.
+    /// Değiştir's `operation.height`, `.floorOffset`, `.suspendedCeiling`; Böl's `operation.line[k].x` and `.y`;
+    /// Duvarlardan bul's `operation.seed.x`, `.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::SpacesOperation as Op;
         match &mut self.operation {
-            Op::Set(c) if path == "operation.height" => c.height.as_mut()?.as_mut(),
+            Op::Set(c)
+                if matches!(
+                    path,
+                    "operation.height" | "operation.floorOffset" | "operation.suspendedCeiling"
+                ) =>
+            {
+                match path {
+                    "operation.height" => c.height.as_mut()?.as_mut(),
+                    "operation.floorOffset" => c.floor_offset.as_mut()?.as_mut(),
+                    _ => c.suspended_ceiling.as_mut()?.as_mut(),
+                }
+            }
             Op::Split { keep: Some(p), .. } if path.starts_with("operation.keep.") => match path {
                 "operation.keep.x" => Some(&mut p.x),
                 "operation.keep.y" => Some(&mut p.y),

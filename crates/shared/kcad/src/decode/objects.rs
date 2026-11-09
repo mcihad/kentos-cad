@@ -443,6 +443,8 @@ pub(super) struct Features {
     pub(super) opening_phases: bool,
     /// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
     pub(super) slab_layers: bool,
+    /// Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
+    pub(super) room_heights: bool,
     /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -738,6 +740,7 @@ impl Features {
             opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
             opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
             slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
+            room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -2549,6 +2552,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::UnknownField,
             "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
+        ));
+    }
+    // Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
+    if kentos_contracts::needs_room_heights(&entity) && !has.room_heights {
+        return Err(r.fail(
+            Code::UnknownField,
+            "mahalin döşeme kot farkı (floorOffset) ve asma tavanı (suspendedCeiling) şema 221 ister",
         ));
     }
     // Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.

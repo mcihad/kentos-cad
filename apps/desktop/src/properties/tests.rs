@@ -4075,16 +4075,12 @@ fn a_wall_s_height_row_says_it_stops_under_the_slab_over_it() {
         .unwrap(),
     );
     select(&mut app, &[wall]);
-    let height = |app: &App| -> String {
-        rows(app)
-            .into_iter()
-            .flat_map(|(_, rows)| rows)
-            .find(|r| r.label == "Yükseklik")
-            .expect("Yükseklik")
-            .value
-            .to_string()
-    };
-    assert_eq!(height(&app), "Katın · 3.000");
+    // The number in its cell, where it comes from in the note under it (docs/adr/0687).
+    let height = |app: &App| noted(app, "Yükseklik");
+    assert_eq!(
+        height(&app),
+        ("3.000".into(), Some("Katın yüksekliği".into()))
+    );
     add(
         &mut app,
         serde_json::from_value(json!({
@@ -4094,7 +4090,116 @@ fn a_wall_s_height_row_says_it_stops_under_the_slab_over_it() {
         }))
         .unwrap(),
     );
-    assert_eq!(height(&app), "Üst döşemenin altı · 2.850");
+    assert_eq!(
+        height(&app),
+        ("2.850".into(), Some("Üst döşemenin altına kadar".into()))
+    );
+}
+
+/// A row's value and the note under it, if one follows.
+fn noted(app: &App, label: &str) -> (String, Option<String>) {
+    let all: Vec<_> = rows(app).into_iter().flat_map(|(_, rows)| rows).collect();
+    let k = all
+        .iter()
+        .position(|r| r.label == label)
+        .unwrap_or_else(|| panic!("{label}"));
+    (
+        all[k].value.to_string(),
+        all.get(k + 1)
+            .filter(|r| r.note)
+            .map(|r| r.value.to_string()),
+    )
+}
+
+/// A room's floor, asma tavan and inside height (docs/adr/3040 §3): under the 1. kat's Ara kat slab the ground storey's
+/// room is 2.76 to the slab's plaster; 2 cm lower, 2.78; an asma tavan at 2.50 is its inside height, and what is typed
+/// as its inside height then moves the asma tavan; taken away, the slab again.
+#[test]
+fn a_room_s_floor_asma_tavan_and_inside_height_are_its_rows() {
+    use kentos_commands::Workspace;
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.arch = Some(
+        serde_json::from_value(json!({"levels": [
+            {"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
+            {"id": "k1", "name": "1. kat", "elevation": 3.0, "height": 3.0}
+        ]}))
+        .unwrap(),
+    );
+    doc.set_settings(settings);
+    add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"slab", "id":0, "layerId":"parsel", "attrs":{},
+            "parts":[{"outer":{"pts":[{"x":-1.,"y":-1.},{"x":8.,"y":-1.},{"x":8.,"y":6.},{"x":-1.,"y":6.}]}}],
+            "thickness":0.15, "arch":{"level":"k1"},
+            "layers": {"over": [{"kind": "finish", "thickness": 0.02}, {"kind": "screed", "thickness": 0.05}],
+                       "under": [{"kind": "plaster", "thickness": 0.02}]}
+        }))
+        .unwrap(),
+    );
+    let room = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"space", "id":0, "layerId":"parsel", "attrs":{},
+            "parts":[{"outer":{"pts":[{"x":0.,"y":0.},{"x":5.,"y":0.},{"x":5.,"y":4.},{"x":0.,"y":4.}]}}],
+            "name":"Salon", "arch":{"level":"zemin"}
+        }))
+        .unwrap(),
+    );
+    select(&mut app, &[room]);
+    let space = |app: &App| match entity(app, room) {
+        Entity::Space(s) => s.space,
+        other => panic!("{other:?}"),
+    };
+    assert_eq!(noted(&app, "Döşeme kot farkı"), ("0.000".into(), None));
+    assert_eq!(noted(&app, "Döşeme kotu").0, "0.000");
+    assert_eq!(noted(&app, "Asma tavan"), ("Yok".into(), None));
+    assert_eq!(
+        noted(&app, "İç yükseklik"),
+        ("2.760".into(), Some("Üst döşemenin altına kadar".into()))
+    );
+    assert_eq!(noted(&app, "Hacim").0, "55.20");
+    // A wet room's floor 2 cm lower: 2.78 to the same ceiling.
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceFloorOffset(Slot(room)), "-2 cm".into()),
+    );
+    assert_eq!(space(&app).floor_offset, Some(-0.02));
+    assert_eq!(noted(&app, "Döşeme kotu").0, "-0.020");
+    assert_eq!(noted(&app, "İç yükseklik").0, "2.780");
+    // An asma tavan at 2.50 over the floor: the inside height.
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceSuspended(Slot(room)), "2.5".into()),
+    );
+    assert_eq!(
+        noted(&app, "İç yükseklik"),
+        ("2.500".into(), Some("Asma tavana kadar".into()))
+    );
+    // Its inside height typed moves the asma tavan, the height stays its own.
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceHeight(Slot(room)), "2.6".into()),
+    );
+    let s = space(&app);
+    assert_eq!((s.suspended_ceiling, s.height), (Some(2.6), None));
+    // Yok takes the asma tavan away; an empty floor offset gives the storey's floor again.
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceSuspended(Slot(room)), "Yok".into()),
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceFloorOffset(Slot(room)), String::new()),
+    );
+    let s = space(&app);
+    assert_eq!((s.suspended_ceiling, s.floor_offset), (None, None));
+    assert_eq!(noted(&app, "İç yükseklik").0, "2.760");
 }
 
 /// A slab's layers (docs/adr/3040 §2): Katmanlar picks a build-up whole (Ara kat döşemesi: kaplama 2, şap 5 over the

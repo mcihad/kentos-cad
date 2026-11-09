@@ -314,11 +314,16 @@ pub enum Field {
     /// A special door's construction length (docs/adr/0777 §5): a revolving door's drum, a sliding door's overlap, a
     /// pocket door's lip (empty: none).
     OpeningBuild(Slot, kentos_commands::OpeningTypeField),
-    /// A space's number, name, usage, height (empty: the level's) and finishes (empty: none; docs/adr/0342 §5).
+    /// A space's number, name, usage, inside height (empty: up to its ceiling; with an asma tavan, its height) and
+    /// finishes (empty: none; docs/adr/0342 §5, 3040 §3).
     SpaceNumber(Slot),
     SpaceName(Slot),
     SpaceUsage(Slot),
     SpaceHeight(Slot),
+    /// Its Döşeme kot farkı (empty: the floor slab under it, else its storey's) and Asma tavan (empty or Yok: none;
+    /// docs/adr/3040 §3).
+    SpaceFloorOffset(Slot),
+    SpaceSuspended(Slot),
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
@@ -2099,6 +2104,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceName(slot)
         | Field::SpaceUsage(slot)
         | Field::SpaceHeight(slot)
+        | Field::SpaceFloorOffset(slot)
+        | Field::SpaceSuspended(slot)
         | Field::SpaceFloor(slot)
         | Field::SpaceWall(slot)
         | Field::SpaceCeiling(slot)
@@ -2109,6 +2116,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             use kentos_commands::{SpaceChange, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
+            // With an asma tavan the inside height is its height: what is typed there moves it (docs/adr/3040 §3).
+            let suspended = matches!(model.get(*slot), Some(Entity::Space(s)) if s.space.suspended_ceiling.is_some());
             let change = match field {
                 Field::SpaceNumber(_) => SpaceChange {
                     number: Some(words),
@@ -2150,23 +2159,56 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     railing: Some(words),
                     ..Default::default()
                 },
+                Field::SpaceFloorOffset(_) if t.is_empty() => SpaceChange {
+                    floor_offset: Some(None),
+                    ..Default::default()
+                },
+                Field::SpaceSuspended(_)
+                    if t.is_empty() || kentos_domain::room_names::fold(t) == "YOK" =>
+                {
+                    SpaceChange {
+                        suspended_ceiling: Some(None),
+                        ..Default::default()
+                    }
+                }
                 _ if t.is_empty() => SpaceChange {
                     height: Some(None),
                     ..Default::default()
                 },
                 _ => {
                     let Some(n) = length(text) else {
-                        return vec![
-                            "Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m."
-                                .into(),
-                        ];
+                        return vec![match field {
+                            Field::SpaceFloorOffset(_) => {
+                                "Döşeme kot farkı için bir uzunluk girin; örneğin -2 cm.".into()
+                            }
+                            Field::SpaceSuspended(_) => {
+                                "Asma tavan için döşemeden bir yükseklik girin; örneğin 2.70 m. Kaldırmak için boş \
+                                 bırakın."
+                                    .into()
+                            }
+                            _ => "Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into(),
+                        }];
                     };
                     if !n.is_finite() {
                         return Vec::new();
                     }
-                    SpaceChange {
-                        height: Some(Some(n)),
-                        ..Default::default()
+                    match field {
+                        Field::SpaceFloorOffset(_) => SpaceChange {
+                            floor_offset: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        Field::SpaceSuspended(_) => SpaceChange {
+                            suspended_ceiling: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        _ if suspended => SpaceChange {
+                            suspended_ceiling: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        _ => SpaceChange {
+                            height: Some(Some(n)),
+                            ..Default::default()
+                        },
                     }
                 }
             };
@@ -2397,6 +2439,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceName(_)
         | Field::SpaceUsage(_)
         | Field::SpaceHeight(_)
+        | Field::SpaceFloorOffset(_)
+        | Field::SpaceSuspended(_)
         | Field::SpaceFloor(_)
         | Field::SpaceWall(_)
         | Field::SpaceCeiling(_)

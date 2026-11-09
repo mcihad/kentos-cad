@@ -891,11 +891,14 @@ pub const SCHEMA_WITH_RENOVATION_VIEW: u32 = 219;
 /// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure (`layers` of a slab: kaplama, şap, yalıtım
 /// over it, sıva under it).
 pub const SCHEMA_WITH_SLAB_LAYERS: u32 = 220;
+/// Schema 221 (docs/adr/3040 §3): a room's floor offset (`floorOffset`, Döşeme kot farkı) and suspended ceiling
+/// (`suspendedCeiling`, Asma tavan).
+pub const SCHEMA_WITH_ROOM_HEIGHTS: u32 = 221;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 218] = [
+pub const SCHEMAS: [u32; 219] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1114,6 +1117,7 @@ pub const SCHEMAS: [u32; 218] = [
     SCHEMA_WITH_OPENING_PHASES,
     SCHEMA_WITH_RENOVATION_VIEW,
     SCHEMA_WITH_SLAB_LAYERS,
+    SCHEMA_WITH_ROOM_HEIGHTS,
 ];
 
 /// The file a drawing is saved as.

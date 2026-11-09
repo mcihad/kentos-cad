@@ -1483,32 +1483,35 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             geo.push(
                 Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)),
             );
-            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/3040 §1): where the
-            // number comes from, and the number.
-            let height = match x.height {
-                Some(h) => f.length_bare(h),
-                None => {
-                    let from = if doc.model.wall_under_slab(x) {
-                        "Üst döşemenin altı"
-                    } else {
-                        "Katın"
-                    };
-                    doc.model.wall_height(x).map_or_else(
-                        || from.to_owned(),
-                        |h| format!("{from} · {}", f.length_bare(h)),
-                    )
-                }
-            };
+            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/3040 §1): the number in
+            // its cell, where it comes from in a note under it (docs/adr/0687: a decorated number does not fit a
+            // numeric cell at a large text size).
+            let height = doc.model.wall_height(x);
             geo.push(
-                Row::figure("Yükseklik", height)
-                    .unit(if x.height.is_some() {
-                        f.length_unit_label()
-                    } else {
-                        ""
-                    })
-                    .editor(number(Field::WallHeight(slot))),
+                Row::figure(
+                    "Yükseklik",
+                    height.map_or_else(|| "Yok".to_owned(), |h| f.length_bare(h)),
+                )
+                .unit(if height.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::WallHeight(slot))),
             );
-            let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            if x.height.is_none() && height.is_some() {
+                geo.push(Row::note(if doc.model.wall_under_slab(x) {
+                    "Üst döşemenin altına kadar"
+                } else {
+                    "Katın yüksekliği"
+                }));
+            }
+            let levels = doc
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.levels.clone())
+                .unwrap_or_default();
             let level_name = x
                 .arch
                 .level
@@ -1757,29 +1760,63 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     None,
                 )
             }));
-            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
-            let level_height = x
+            geo.push(
+                Row::text("Tadilat durumu", phase_name)
+                    .editor(select(phase_name.to_owned(), phases)),
+            );
+            // Its floor, its asma tavan and its inside height (docs/adr/3040 §3; PAİY 4(1)(ıı): from the floor's finish
+            // to the ceiling's): each number in its cell, where it comes from in a note under it (docs/adr/0687: a
+            // decorated number does not fit a numeric cell).
+            let (floor, floor_from) = doc.model.room_floor(x);
+            let storey_floor = x
                 .arch
                 .level
                 .as_deref()
                 .and_then(|id| levels.iter().find(|l| l.id == id))
-                .and_then(|l| l.height);
-            let height = x.height.or(level_height);
-            let cad = doc.settings().workspace == Some(kentos_commands::Workspace::Cad);
-            let shown = match (x.height, level_height) {
-                (Some(h), _) => f.length_bare(h),
-                (None, Some(h)) if cad => f.length_bare(h),
-                (None, Some(h)) => format!("{} (katın)", f.length_bare(h)),
-                (None, None) => "Yok".to_owned(),
-            };
+                .map_or(0.0, |l| l.elevation);
             geo.push(
-                Row::figure("Yükseklik", shown)
-                    .unit(if height.is_some() { f.length_unit_label() } else { "" })
-                    .editor(number(Field::SpaceHeight(slot))),
+                Row::figure("Döşeme kot farkı", f.length_bare(floor - storey_floor))
+                    .unit(f.length_unit_label())
+                    .editor(number(Field::SpaceFloorOffset(slot))),
             );
-            if cad && x.height.is_none() && level_height.is_some() {
-                // A numeric editor must not clip or parse a decorated fallback.
-                geo.push(Row::note("Katlar arası"));
+            if floor_from == kentos_domain::FloorFrom::Slab {
+                geo.push(Row::note("Altındaki döşemenin üstü"));
+            }
+            geo.push(Row::figure("Döşeme kotu", f.length_bare(floor)).unit(f.length_unit_label()));
+            geo.push(
+                Row::figure(
+                    "Asma tavan",
+                    x.suspended_ceiling
+                        .map_or_else(|| "Yok".to_owned(), |c| f.length_bare(c)),
+                )
+                .unit(if x.suspended_ceiling.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::SpaceSuspended(slot))),
+            );
+            let room = doc.model.room_height(x);
+            let height = room.map(|h| h.inside());
+            geo.push(
+                Row::figure(
+                    "İç yükseklik",
+                    height.map_or_else(|| "Yok".to_owned(), |h| f.length_bare(h)),
+                )
+                .unit(if height.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::SpaceHeight(slot))),
+            );
+            if let Some(from) = room.and_then(|h| match h.ceiling_from {
+                kentos_domain::CeilingFrom::Suspended => Some("Asma tavana kadar"),
+                kentos_domain::CeilingFrom::Own => None,
+                kentos_domain::CeilingFrom::Slab => Some("Üst döşemenin altına kadar"),
+                kentos_domain::CeilingFrom::Storey => Some("Katlar arası"),
+            }) {
+                geo.push(Row::note(from));
             }
             // The finishes as the room list writes them (docs/adr/3038; PAİY 57(29)): “Döşeme”, the regulation's word
             // and the schedules', not “Zemin” (the ground's).

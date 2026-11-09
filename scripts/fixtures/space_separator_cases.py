@@ -35,7 +35,7 @@ def case(unit,method,far,reverse):
         d=DELTA[method]
         row=dict(uid='$uidOf:3',method=method,columns='all',area=by[method],
             perimeter=float(2*(width+d/(2 if half else 1)+D(8)+d)+8),byMethod=by,
-            rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde'+BASEBOARD_RULE)
+            rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde'+BASEBOARD_RULE)
         row['baseboard']=row['perimeter']
         return dict(op='execute',command='cad.spaces.quantities',input={},within=1e-6,result=completed(dict(spaces=[row],walls='$any',openings=[],totals='$any')),expect=dict(revision='same'))
     changed=completed(dict(uids=['$any'],ids=[4],revision='$current'))
@@ -125,7 +125,7 @@ def stale_boundary_cases():
     """
     out=[]
     reason='Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).'
-    rule='alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik'
+    rule='alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana)'
     for unit in ['mm','cm','m','in','ft']:
         for far in [False,True]:
             for virtual in [False,True]:

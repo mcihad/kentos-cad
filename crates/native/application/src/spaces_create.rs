@@ -132,6 +132,15 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
                 &format!("{at}.height"),
             )?;
         }
+        // Its floor offset and asma tavan (docs/adr/3040 §3).
+        for (v, name, field) in [
+            (n.floor_offset, "Döşeme kot farkı", "floorOffset"),
+            (n.suspended_ceiling, "Asma tavan", "suspendedCeiling"),
+        ] {
+            if let Some(v) = v {
+                checks::finite(v, name, "Sonlu bir sayı verin.", &format!("{at}.{field}"))?;
+            }
+        }
         for (k, p) in n.parts.iter().flatten().enumerate() {
             for (j, q) in p.outer.pts.iter().enumerate() {
                 checks::point(
@@ -154,6 +163,8 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             usage: n.usage.clone(),
             arch: n.arch.clone().unwrap_or_default(),
             height: n.height,
+            floor_offset: n.floor_offset,
+            suspended_ceiling: n.suspended_ceiling,
             finishes: n.finishes.clone().unwrap_or_default(),
             void: n.void.unwrap_or(false),
             broken: None,

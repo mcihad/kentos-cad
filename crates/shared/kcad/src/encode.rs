@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 221 (docs/adr/3040 §3): a room's floor offset or asma tavan.
+    if objs.iter().any(kentos_contracts::needs_room_heights) {
+        return crate::SCHEMA_WITH_ROOM_HEIGHTS;
+    }
     // Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
     let slab_layers = |e: &Entity| matches!(e, Entity::Slab(s) if !s.slab.layers.is_empty());
     if objs.iter().any(slab_layers)

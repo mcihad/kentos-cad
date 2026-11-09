@@ -11,6 +11,8 @@ use crate::entity::{EntityBase, Vec2};
 
 /// The most vertices a space's rings hold together.
 pub const MAX_SPACE_POINTS: usize = 10_000;
+/// How far a room's finished floor may lie from its storey's elevation, metres (docs/adr/3040 §3).
+pub const MAX_SPACE_FLOOR_OFFSET: f64 = 10.0;
 
 /// What a space's rings stand for (docs/adr/0342 §1): the walls' inner faces, their centre lines or their outer faces.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -246,11 +248,24 @@ pub struct SpaceFields {
     #[serde(default, skip_serializing_if = "ArchInfo::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<ArchInfo>", optional))]
     pub arch: ArchInfo,
-    /// Floor to ceiling, metres; absent: its level's.
+    /// Its inside height typed, metres: from its finished floor to its ceiling (PAİY 4(1)(ıı)); an asma tavan comes
+    /// first. Absent: up to the slab over it, else its storey's top (docs/adr/3040 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
+    /// Döşeme kot farkı (docs/adr/3040 §3, `.kcad` schema 221): its finished floor over its storey's elevation, metres;
+    /// a wet room 2 cm lower. Absent: the top of the floor slab under it, else its storey's floor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub floor_offset: Option<f64>,
+    /// Asma tavan (docs/adr/3040 §3, `.kcad` schema 221): its suspended ceiling's underside over its finished floor,
+    /// metres; its inside height. Absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<SpaceFinishes>", optional))]
     pub finishes: SpaceFinishes,
@@ -388,6 +403,26 @@ impl SpaceFields {
                 format!("Mahalin yüksekliği {h}; sıfırdan büyük, en çok 1000 m olmalı."),
             ));
         }
+        if let Some(v) = self.floor_offset
+            && !(v.is_finite() && v.abs() <= MAX_SPACE_FLOOR_OFFSET)
+        {
+            return Some((
+                "floorOffset".into(),
+                format!(
+                    "Mahalin döşeme kot farkı {v}; katın kotuna göre en çok ±{MAX_SPACE_FLOOR_OFFSET} m olmalı."
+                ),
+            ));
+        }
+        if let Some(c) = self.suspended_ceiling
+            && !(c.is_finite() && c > 0.0 && c <= 1000.0)
+        {
+            return Some((
+                "suspendedCeiling".into(),
+                format!(
+                    "Asma tavanın yüksekliği {c}; döşemeden sıfırdan büyük, en çok 1000 m olmalı."
+                ),
+            ));
+        }
         for (name, v) in [
             ("number", &self.number),
             ("name", &self.name),
@@ -403,6 +438,11 @@ impl SpaceFields {
         }
         None
     }
+}
+
+/// Whether an object needs `.kcad` schema 221 (docs/adr/3040 §3): a room with a floor offset or an asma tavan.
+pub fn needs_room_heights(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Space(s) if s.space.floor_offset.is_some() || s.space.suspended_ceiling.is_some())
 }
 
 impl SpaceEntity {

@@ -28,7 +28,16 @@ void?: boolean,
 /**
  * Its rings' area, m².
  */
-area: number, perimeter: number, height?: number, volume?: number, 
+area: number, perimeter: number, 
+/**
+ * Its inside height (PAİY 4(1)(ıı), docs/adr/3040 §3): its finished floor to its ceiling (its asma tavan, its
+ * height typed, the slab over it); without one, its storey's top.
+ */
+height?: number, volume?: number, 
+/**
+ * Its asma tavan's area, m² (docs/adr/3040 §3): its net area; none without one.
+ */
+suspendedCeilingArea?: number, 
 /**
  * A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
  * gaps to the floor) its sides run along, metres; none for a void.

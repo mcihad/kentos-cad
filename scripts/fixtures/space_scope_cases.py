@@ -43,7 +43,7 @@ def case(unit,method,scope,far):
  e=dict(kind='space',id=5,layerId='mahal',attrs={},parts='$any',seed=seed,columns='all')
  if method!='net':e['method']=method
  if unassigned:e['scope']=scope
- rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde'
+ rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde'
  if unassigned:rule+='; kaynaklar: yalnız atanmamış'
  row=dict(uid='$uidOf:5',method=method,columns='all',area=float(area),perimeter=float(2*(width+D(8)+2*v)+8),byMethod=by,rule=rule)
  if unassigned:row['scope']=scope

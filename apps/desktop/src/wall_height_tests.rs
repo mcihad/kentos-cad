@@ -166,3 +166,64 @@ fn the_walls_stop_under_the_slab_over_them_and_follow_their_storey_s_height() {
         "concrete to concrete"
     );
 }
+
+/// A room's interior elevation (docs/adr/3040 §3): the two-storey building, the 1. kat's floor slab Ara kat (kaplama 2,
+/// şap 5 over 15 cm of concrete, sıva 2 under): the ground storey's room found from its walls is drawn to its ceiling's
+/// plaster, 2.76 (its walls run 2.78 to the concrete over its finished floor); the room over it, on the slab's finish,
+/// has no ceiling known and is drawn to its walls' tops, the next floor: 3.00.
+#[test]
+fn a_room_s_interior_elevation_is_its_inside_height() {
+    let mut app = crate::permit_set_tests::building();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    let p = |x: f64, y: f64| json!({"x": x, "y": y});
+    run(
+        &mut app,
+        "cad.slabs.create",
+        json!({"layerId": layer, "slabs": [{
+            "parts": [{"outer": {"pts": [p(0.0, 0.0), p(15.0, 0.0), p(15.0, 6.0), p(0.0, 6.0)]}}],
+            "thickness": 0.15, "arch": {"level": "k1"},
+            "layers": {"over": [{"kind": "finish", "thickness": 0.02}, {"kind": "screed", "thickness": 0.05}],
+                       "under": [{"kind": "plaster", "thickness": 0.02}]}
+        }]}),
+    );
+    let made = run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": [
+            {"seed": p(2.5, 3.0), "name": "Salon", "arch": {"level": "zemin"}},
+            {"seed": p(2.5, 3.0), "name": "Oda", "arch": {"level": "k1"}}
+        ]}),
+    );
+    let uids: Vec<String> = made["output"]["uids"]
+        .as_array()
+        .expect("uids")
+        .iter()
+        .map(|u| u.as_str().expect("a uid").to_owned())
+        .collect();
+    let heights = |app: &mut App, uid: &str| -> Vec<f64> {
+        let drawn = run(
+            app,
+            "cad.elevations.edit",
+            json!({"operation": {"kind": "derive", "space": uid}}),
+        );
+        drawn["output"]["sides"]
+            .as_array()
+            .expect("sides")
+            .iter()
+            .map(|s| (s["height"].as_f64().expect("a height") * 1000.0).round() / 1000.0)
+            .collect()
+    };
+    assert_eq!(
+        heights(&mut app, &uids[0]),
+        [2.76; 4],
+        "to the ceiling's plaster"
+    );
+    assert_eq!(heights(&mut app, &uids[1]), [3.0; 4], "to its walls' tops");
+}

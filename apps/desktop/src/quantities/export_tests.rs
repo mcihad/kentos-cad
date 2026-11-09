@@ -13,10 +13,25 @@ fn csv_exports_selected_quantity_table_including_empty_table_workbooks_keep_all(
     assert_eq!((q.spaces.len(), q.walls.len(), q.openings.len()), (400, 200, 0));
     let dir = scratch("quantity-export");
     for (tab, name, count, heading) in [
-        (Tab::Spaces, "Mahaller", 400, "Numara;Ad;Kullanım;Kat;Yöntem;Alan;Çevre;Süpürgelik;Yükseklik;Hacim;Net;Eksen;Brüt"),
-        (Tab::Walls, "Duvarlar", 200, "Stil;Kat;Uzunluk;Kalınlık;Yükseklik;Brüt yüzey;Açıklıklar;Net yüzey;Cep hacmi;Hacim"),
+        (
+            Tab::Spaces,
+            "Mahaller",
+            400,
+            "Numara;Ad;Kullanım;Kat;Yöntem;Alan;Çevre;Süpürgelik;İç yükseklik;Hacim;Asma tavan;Net;Eksen;Brüt",
+        ),
+        (
+            Tab::Walls,
+            "Duvarlar",
+            200,
+            "Stil;Kat;Uzunluk;Kalınlık;Yükseklik;Brüt yüzey;Açıklıklar;Net yüzey;Cep hacmi;Hacim",
+        ),
         // A niche's or flue's depth (docs/adr/0719 §4).
-        (Tab::Openings, "Açıklıklar", 0, "Numara;Biçim;Tür;Genişlik;Yükseklik;Alan;Derinlik"),
+        (
+            Tab::Openings,
+            "Açıklıklar",
+            0,
+            "Numara;Biçim;Tür;Genişlik;Yükseklik;Alan;Derinlik",
+        ),
     ] {
         for format in [WorkbookFormat::Csv, WorkbookFormat::Xlsx, WorkbookFormat::Ods] {
             let sheets = app.quantities_sheets(&q, tab, format);

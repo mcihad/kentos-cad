@@ -271,6 +271,13 @@
     - Döşeme katmanları (`SlabFields.layers`, `.kcad` şema 220): `thickness` taşıyıcının kalınlığı kalır; `over`
       (kaplama, şap, ısı/su yalıtımı) ve `under` (sıva). Döşemenin üstü bitmiş döşemedir. Öznitelikler'de dört hazır
       diziliş (`slab_build_ups`); Metraj katman katman (alanla, şap hacimle).
+    - Mahalin iç yüksekliği tek kuraldan (`Document::room_height`, `.kcad` şema 221): döşemesi kendi kot farkı
+      (`floorOffset`), yoksa altındaki döşemenin üstü, yoksa katın kotu; tavanı asma tavan (`suspendedCeiling`), yazılmış
+      iç yükseklik, üst döşemenin sıvalı altı, yoksa katın tepesi (tavan değil, üst sınır). Öznitelikler, Metraj, değer
+      sütunları, etiketler, iç görünüşler ve sığınak denetimi okur. Denetim › Mevzuat: PAİY 28/4 (2,60), 28/5 ve 28/6
+      (2,20), mahal adından sınıflanır (`room_names::height_class`); kod `paiy_inside_height_below`.
+    - Öznitelikler'de yükseklik satırları sayıyı hücrede, nereden geldiğini altındaki notta söyler (ADR 0687): "İç
+      yükseklik 2.760 / Üst döşemenin altına kadar".
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
@@ -1411,7 +1418,8 @@
   ölçek/renderer yoktur.
 
 - **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0687](../../docs/adr/0687-room-tag-elevations.md)).**
-  Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan;
+  Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan
+  (M40'tan beri bitmiş döşeme ve tavan: ADR 3040 §3);
   bilinmeyen boş, katlar arası yükseklik tavan sayılmaz. Ayar/geçmiş/dış
   değişiklikte yazı yenilenir, elle konum korunur. Gerçek GUI sayısal
   yükseklik taşmasını yakalayıp düzeltti. [Kabul](../../docs/baseline/2026-10-26-architecture-tag-elevations/README.md):
