@@ -2075,7 +2075,7 @@
     "cad.forms.import"
    ],
    "operation": null,
-   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute, kentos.cad.forms.compare, kentos.cad.forms.sources, kentos.cad.forms.export, kentos.cad.forms.import",
+   "python": "kentos.cad.forms.edit, kentos.cad.forms.validate, kentos.cad.forms.test, kentos.cad.forms.recompute, kentos.cad.forms.compare, kentos.cad.forms.sources, kentos.cad.forms.export, kentos.cad.forms.import_",
    "mcp": "cad.forms.edit, cad.forms.validate, cad.forms.test, cad.forms.recompute, cad.forms.compare, cad.forms.sources, cad.forms.export, cad.forms.import",
    "note": "Oluştur, Kaydet, Yeniden adlandır, Yayınla, Kuralları uygula ve Formu sil komuta verilir; ön denetim formun çekirdeğindendir, aynısını cad.forms.validate verir (ADR 0401); senaryolar cad.forms.test ile çalışır (ADR 0420); Hesapları yenile cad.forms.recompute'tur (ADR 0421); Değişiklikler cad.forms.compare'in farkıdır (ADR 0427); Dışa aktar ve İçe aktar form paketidir (ADR 0435); listelerin kaynağının durumu cad.forms.sources'tur (ADR 0763).",
    "scope": "shared",
@@ -8194,7 +8194,7 @@
     "cad.profiles.remove"
    ],
    "operation": null,
-   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply, kentos.cad.profiles.import, kentos.cad.profiles.list, kentos.cad.profiles.migrate, kentos.cad.profiles.remove",
+   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply, kentos.cad.profiles.import_, kentos.cad.profiles.list, kentos.cad.profiles.migrate, kentos.cad.profiles.remove",
    "mcp": "cad.profiles.check, cad.profiles.apply, cad.profiles.import, cad.profiles.list, cad.profiles.migrate, cad.profiles.remove",
    "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541); profil ve eşleme listesi cad.profiles.list'in, İçe aktar cad.profiles.import'un (Nereye: çizimin içine ya da profiller klasörüne, ADR 0735), Göç'ün önizlemesi ve yazması cad.profiles.migrate'in (ADR 0558); çizimin taşıdığını kaldırmak cad.profiles.remove'un (ADR 0735).",
    "scope": "gis",
@@ -9420,7 +9420,7 @@
     "cad.plotstyles.import"
    ],
    "operation": null,
-   "python": "kentos.cad.plotstyles.import",
+   "python": "kentos.cad.plotstyles.import_",
    "mcp": "cad.plotstyles.import",
    "note": "Pencere tabloyu cad.plotstyles.import'un planıyla yazmadan önizler; İçe aktar aynı girdiyle komutu çalıştırır, profil ve paftaların baskı ayarı tek geri alma adımıdır (ADR 1130). Python ve MCP aynı komutu kullanır.",
    "scope": "cad",
@@ -11166,7 +11166,7 @@
     "cad.entities.break"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.break",
+   "python": "kentos.cad.entities.break_",
    "mcp": "cad.entities.break",
    "note": "Nesne ve iki nokta komuta verilir; parçalar çekirdekten, her parça kaynağın bütün taşıdıklarıyla, ilişkili ölçüler parçalara izler (ADR 0254 §3, 0296).",
    "scope": "shared",
@@ -12131,12 +12131,13 @@
    "title": "Eğimle kot ver…",
    "level": "semantic",
    "via": [
-    "cad.entities.grade"
+    "cad.entities.grade",
+    "cad.entities.raise"
    ],
    "operation": null,
-   "python": "kentos.cad.entities.grade",
-   "mcp": "cad.entities.grade",
-   "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290).",
+   "python": "kentos.cad.entities.grade, kentos.cad.entities.raise_",
+   "mcp": "cad.entities.grade, cad.entities.raise",
+   "note": "Pencere komutun planını önizler; Uygula cad.entities.grade ile tek adım yazar (ADR 1290). Hedef Referanstan'da cad.entities.raise ile (ADR 3780).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

@@ -199,6 +199,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-04 / ADR 3740: web'de `map.features.reconcile` WASM'la koşuyorsa planın üretim paketinde ölçümü.
 - MAP-05 / ADR 3760: `map.survey.edit`'in web işleyicisinde `ellipses.labels` ve `labelHeight` (121 ortak durum) ve web'in
   Ağ dengelemesi'nde Etiket kutusu.
+- MAP-06 / ADR 3780: `cad.entities.raise`'in web işleyicisi (27 ortak durum) ve web'in Eğimle kot ver penceresinde Hedef
+  Referanstan (iki tıkla referans ve köşe, referansın sonraki nesne için kalması).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

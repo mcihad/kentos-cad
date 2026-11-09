@@ -697,6 +697,9 @@ fn command_tool(c: &Value) -> Value {
             | "cad.images.edit"
             // 2B düzleme indir removes the objects' elevations and measures (docs/adr/1061 §4).
             | "cad.entities.flatten"
+            // Eğimle kot ver and Referanstan kot ver write over the vertices' elevations (docs/adr/1290, 3780).
+            | "cad.entities.grade"
+            | "cad.entities.raise"
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
             // With overwrite it writes over an existing GeoTIFF (docs/adr/0644 §3).

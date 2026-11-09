@@ -2468,6 +2468,16 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Referanstan kot ver (plan/map-cad.md MAP-06, docs/adr/3780).
+    Entry {
+        id: "cad.entities.raise",
+        refusals: &[
+            REVISION,
+            &["invalid_uid", "entity_not_found", "not_a_path", "wrong_place", "invalid_input", "elevation_missing", "layer_locked"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
     // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
     Entry {
         id: "cad.pointclouds.overlap",

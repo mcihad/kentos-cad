@@ -135,3 +135,87 @@ pub enum GradePointKind {
     Low,
     Break,
 }
+
+/// `cad.entities.raise` v1 (plan/map-cad.md MAP-06, docs/adr/3780): Referanstan kot ver, as Civil 3D's Raise/Lower by
+/// Reference. The object's vertex `at` takes the reference's elevation plus the grade times its horizontal distance
+/// from the reference (or plus the difference), and every other elevation of the object moves by as much: the object
+/// is raised or lowered whole, its grades kept. One undo step “Referanstan kot ver”.
+pub const CAD_ENTITIES_RAISE: &str = "cad.entities.raise";
+pub const CAD_ENTITIES_RAISE_VERSION: u32 = 1;
+
+/// The reference of `cad.entities.raise`: a place and its elevation (a point's, a vertex's or a typed one).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RaiseReference {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub z: f64,
+}
+
+/// Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
+/// (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+/// exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
+/// difference (the vertex's elevation minus the reference's, m).
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
+/// (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+/// and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
+/// from), `layer_locked`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesRaise {
+    pub uid: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub at: u32,
+    pub reference: RaiseReference,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
+    pub grade: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub difference: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `cad.entities.raise` v1 (and its plan): the vertex's horizontal distance from the reference, its
+/// elevation before and after, what every elevation of the object moved by (`after − before`, up positive), the grade
+/// from the reference to the vertex after (none when the vertex stands on the reference), how many elevations moved
+/// and how many vertices have none (they stay without, as Kot ver's Artır leaves them), and the drawing's revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct EntitiesRaised {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub distance: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub before: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub after: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub by: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "grade")))]
+    pub grade: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub moved: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub unset: u32,
+    pub revision: String,
+}

@@ -34022,6 +34022,105 @@ class EntitiesPropertiesSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesRaise(_Model):
+    """Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
+    (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+    exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
+    difference (the vertex's elevation minus the reference's, m).
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
+    (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+    and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
+    from), `layer_locked`.
+    Attributes:
+        at: Unit: index.
+        difference: Unit: length.
+        grade: Unit: grade.
+    """
+    uid: str
+    at: int
+    reference: RaiseReference
+    difference: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    grade: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["at"] = self.at
+        out["reference"] = self.reference.to_json()
+        if self.difference is not UNSET:
+            out["difference"] = None if self.difference is None else float(self.difference)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.grade is not UNSET:
+            out["grade"] = None if self.grade is None else float(self.grade)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRaise:
+        return cls(
+            uid=data["uid"],
+            at=data["at"],
+            reference=RaiseReference.from_json(data["reference"]),
+            difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesRaised(_Model):
+    """Output of `cad.entities.raise` v1 (and its plan): the vertex's horizontal distance from the reference, its
+    elevation before and after, what every elevation of the object moved by (`after − before`, up positive), the grade
+    from the reference to the vertex after (none when the vertex stands on the reference), how many elevations moved
+    and how many vertices have none (they stay without, as Kot ver's Artır leaves them), and the drawing's revision.
+    Attributes:
+        distance: Unit: length.
+        before: Unit: elevation.
+        after: Unit: elevation.
+        by: Unit: length.
+        moved: Unit: count.
+        unset: Unit: count.
+        grade: Unit: grade.
+    """
+    distance: float
+    before: float
+    after: float
+    by: float
+    moved: int
+    unset: int
+    revision: str
+    grade: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["distance"] = float(self.distance)
+        out["before"] = float(self.before)
+        out["after"] = float(self.after)
+        out["by"] = float(self.by)
+        out["moved"] = self.moved
+        out["unset"] = self.unset
+        out["revision"] = self.revision
+        if self.grade is not UNSET:
+            out["grade"] = None if self.grade is None else float(self.grade)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRaised:
+        return cls(
+            distance=float(data["distance"]),
+            before=float(data["before"]),
+            after=float(data["after"]),
+            by=float(data["by"]),
+            moved=data["moved"],
+            unset=data["unset"],
+            revision=data["revision"],
+            grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesRelate(_Model):
     """Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard
     DE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of
@@ -75966,6 +76065,34 @@ class RadialGridSystem(_Model):
             radial_start=data.get("radialStart", UNSET),
             rings=[float(e0) for e0 in data["rings"]] if "rings" in data else list(),
             turns=[float(e0) for e0 in data["turns"]] if "turns" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RaiseReference(_Model):
+    """The reference of `cad.entities.raise`: a place and its elevation (a point's, a vertex's or a typed one).
+    Attributes:
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    x: float
+    y: float
+    z: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RaiseReference:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
         )
 
 
@@ -131471,6 +131598,8 @@ __all__ = [
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
+    "EntitiesRaise",
+    "EntitiesRaised",
     "EntitiesRelate",
     "EntitiesRelated",
     "EntitiesReverse",
@@ -133208,6 +133337,7 @@ __all__ = [
     "RadiusDimensionMeasure",
     "Railings",
     "RailingsName",
+    "RaiseReference",
     "RaiseShapeElevation",
     "RampEntity",
     "RampRow",

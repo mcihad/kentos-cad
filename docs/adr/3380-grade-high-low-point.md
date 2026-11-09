@@ -114,7 +114,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-06, altıncı tur. Durum: taslak. ADR 129
 
 ## Sonra
 
-- Eğimle yükselt/alçalt (Raise/Lower by Reference), yüzeyden kot alma (ADR 1290 Sonra).
+- ~~Eğimle yükselt/alçalt (Raise/Lower by Reference)~~ (ADR 3780), yüzeyden kot alma (ADR 1290 Sonra).
 - Noktanın çizimde kotuyla yazılması (etiket).
 - Çok parçalı nesne; dönen ve yaylı referansın bağı (MAP-06'nın kalanı).
 - Web (TODOS §0.2).

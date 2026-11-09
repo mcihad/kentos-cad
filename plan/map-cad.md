@@ -36,7 +36,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
@@ -810,6 +810,14 @@ geri eğim; kesişme yoksa çözüm yok) ve Grading Elevation Editor'ün geri e�
 ara köşeye düşerse eklenmez), noktaya kadar ileri, sonra geri eğimle kot verir; paralel ya da aralık dışı kesişme
 `no_intersection`. 14 yeni ortak durum (bağımsız başvuru), Python, MCP, masaüstü (Hedef › Yüksek/alçak nokta, önizlemede
 noktanın yeri ve halkası) ve resimler. Açık: çok parçalı nesne, dönen ve yaylı referans bağı, eğimle yükselt/alçalt.
+
+**9 Kasım 2026, yedinci tur — Referanstan kot ver ([ADR 3780](../docs/adr/3780-raise-lower-by-reference.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Raise/Lower by Reference'ı (referans noktası, çizgi üstünde
+nokta, eğim, oran ya da kot farkı; referans etkin kalır) ve Raise/Lower'ı. Kanıtlanan: yeni `cad.entities.raise` köşeye
+referansın kotu artı eğim × yatay uzaklık (ya da artı kot farkı) verir, nesnenin öbür bütün kotları (delikler, parçalar)
+aynı farkla kayar, kotsuz köşeler kotsuz kalır; tek geri alma adımı. 27 bağımsız durum, Python, MCP (yıkıcı listesinde,
+Eğimle kot ver de), masaüstü (Eğimle kot ver › Hedef Referanstan; Hedef ilk satırda; iki tıkla referans ve köşe; referans
+sonraki nesne için kalır) ve resimler. Açık: yüzeyden kot alma, çok parçalı nesne, dönen ve yaylı referans bağı.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

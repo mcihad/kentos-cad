@@ -1,0 +1,1833 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.entities.raise",
+ "commandVersion": 1,
+ "title": "Referanstan kot ver",
+ "note": "ADR 3780. Bağımsız başvuru scripts/fixtures/raise_cases.py: referanstan yatay uzaklık, köşenin yeni kotu ve öbür kotların kayması elle; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Referanstan kot",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000.0,
+   "workspace": "cad",
+   "cadWork": "map"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "tasarim",
+    "name": "Tasarım",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "tasarim",
+  "entities": [
+   {
+    "kind": "polyline",
+    "id": 1,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500030.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500080.0,
+      "y": 4400040.0
+     },
+     {
+      "x": 500100.0,
+      "y": 4400040.0
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.0,
+     0.5,
+     0.0,
+     0.0
+    ],
+    "zs": [
+     850.0,
+     null,
+     850.4,
+     851.25,
+     851.0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 2,
+    "layerId": "tasarim",
+    "attrs": {},
+    "a": {
+     "x": 500000.0,
+     "y": 4400100.0
+    },
+    "b": {
+     "x": 500060.0,
+     "y": 4400180.0
+    },
+    "za": 900.0,
+    "zb": 901.5
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500200.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500240.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500200.0,
+      "y": 4400030.0
+     }
+    ],
+    "zs": [
+     120.0,
+     120.2,
+     120.5,
+     120.3
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 500210.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500220.0,
+        "y": 4400020.0
+       }
+      ],
+      "zs": [
+       119.9,
+       119.95,
+       120.0
+      ]
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 500300.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500330.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500330.0,
+        "y": 4400025.0
+       }
+      ],
+      "zs": [
+       121.0,
+       null,
+       121.4
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500310.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500320.0,
+          "y": 4400005.0
+         },
+         {
+          "x": 500320.0,
+          "y": 4400015.0
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 4,
+    "layerId": "kilitli",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400300.0
+     },
+     {
+      "x": 500010.0,
+      "y": 4400300.0
+     }
+    ],
+    "zs": [
+     10.0,
+     10.5
+    ]
+   },
+   {
+    "kind": "text",
+    "id": 5,
+    "layerId": "tasarim",
+    "attrs": {},
+    "text": "Kot",
+    "p": {
+     "x": 500000.0,
+     "y": 4400400.0
+    },
+    "height": 2.0,
+    "rotation": 0.0
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400500.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400500.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400520.0
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 7,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500400.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500450.0,
+      "y": 4400000.0
+     }
+    ],
+    "zs": [
+     860.0,
+     860.5
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 500400.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500450.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500450.0,
+        "y": 4400060.0
+       }
+      ],
+      "zs": [
+       861.0,
+       null,
+       861.8
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "tasarim",
+    "attrs": {},
+    "p": {
+     "x": 500000.0,
+     "y": 4400600.0
+    },
+    "z": 5.0
+   }
+  ],
+  "uids": [
+   "0192f5c0-3780-7000-8000-000000000001",
+   "0192f5c0-3780-7000-8000-000000000002",
+   "0192f5c0-3780-7000-8000-000000000003",
+   "0192f5c0-3780-7000-8000-000000000004",
+   "0192f5c0-3780-7000-8000-000000000005",
+   "0192f5c0-3780-7000-8000-000000000006",
+   "0192f5c0-3780-7000-8000-000000000007",
+   "0192f5c0-3780-7000-8000-000000000008"
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Eğimle: köşe eşikten %2 yukarıda; bütün kotlar aynı farkla kayar, kotsuz köşe kotsuz kalır; geri alma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 3,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 104.4030650891055,
+       "before": 851.25,
+       "after": 851.8380613017821,
+       "by": 0.5880613017820906,
+       "grade": 0.02,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         850.5880613017821,
+         null,
+         850.9880613017821,
+         851.8380613017821,
+         851.5880613017821
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksi eğim: köşe eşikten aşağıda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": -0.015
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 22.360679774997898,
+       "before": 850.0,
+       "after": 849.4145898033751,
+       "by": -0.5854101966249345,
+       "grade": -0.015,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         849.4145898033751,
+         null,
+         849.814589803375,
+         850.6645898033751,
+         850.4145898033751
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kot farkıyla: köşe referanstan 15 cm yukarıda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 4,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "difference": 0.15
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 123.69316876852982,
+       "before": 851.0,
+       "after": 849.9,
+       "by": -1.1000000000000227,
+       "grade": 0.001212678125181481,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         848.9,
+         null,
+         849.3,
+         850.15,
+         849.9
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi: ucu kapaktan %3 yukarıda, öbür ucu aynı farkla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000002",
+      "at": 0,
+      "reference": {
+       "x": 500090.0,
+       "y": 4400140.0,
+       "z": 899.2
+      },
+      "grade": 0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 98.48857801796105,
+       "before": 900.0,
+       "after": 902.1546573405388,
+       "by": 2.154657340538847,
+       "grade": 0.03,
+       "moved": 2,
+       "unset": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "za": 902.1546573405388,
+        "zb": 903.6546573405388
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": 901.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi: öbür ucu kapaktan 40 cm aşağıda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000002",
+      "at": 1,
+      "reference": {
+       "x": 500090.0,
+       "y": 4400140.0,
+       "z": 899.2
+      },
+      "difference": -0.4
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 50.0,
+       "before": 901.5,
+       "after": 898.8000000000001,
+       "by": -2.699999999999932,
+       "grade": -0.007999999999999546,
+       "moved": 2,
+       "unset": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "za": 897.3000000000001,
+        "zb": 898.8000000000001
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "2": {
+        "za": 900.0,
+        "zb": 901.5
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan: dış halka, delikler ve öbür parça aynı farkla; kotsuz delik kotsuz kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 2,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "grade": -0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 49.24428900898052,
+       "before": 120.5,
+       "after": 120.2575571099102,
+       "by": -0.24244289008980502,
+       "grade": -0.01,
+       "moved": 9,
+       "unset": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "zs": [
+         119.7575571099102,
+         119.9575571099102,
+         120.2575571099102,
+         120.05755710991019
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           119.6575571099102,
+           119.7075571099102,
+           119.7575571099102
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           120.7575571099102,
+           null,
+           121.1575571099102
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "3": {
+        "zs": [
+         120.0,
+         120.2,
+         120.5,
+         120.3
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           119.9,
+           119.95,
+           120.0
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.0,
+           null,
+           121.4
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alan: kot farkıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000003",
+      "at": 0,
+      "reference": {
+       "x": 500260.0,
+       "y": 4399985.0,
+       "z": 120.75
+      },
+      "difference": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 61.84658438426491,
+       "before": 120.0,
+       "after": 120.8,
+       "by": 0.7999999999999972,
+       "grade": 0.0008084520834543973,
+       "moved": 9,
+       "unset": 4,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "zs": [
+         120.8,
+         121.0,
+         121.3,
+         121.1
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           120.7,
+           120.75,
+           120.8
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.8,
+           null,
+           122.2
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "3": {
+        "zs": [
+         120.0,
+         120.2,
+         120.5,
+         120.3
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500210.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500220.0,
+            "y": 4400020.0
+           }
+          ],
+          "zs": [
+           119.9,
+           119.95,
+           120.0
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500300.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400025.0
+           }
+          ],
+          "zs": [
+           121.0,
+           null,
+           121.4
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500310.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400005.0
+             },
+             {
+              "x": 500320.0,
+              "y": 4400015.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizginin öbür parçası da kayar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000007",
+      "at": 1,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.005
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 470.1063709417263,
+       "before": 860.5,
+       "after": 852.1005318547086,
+       "by": -8.399468145291394,
+       "grade": 0.005,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "7": {
+        "zs": [
+         851.6005318547086,
+         852.1005318547086
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400060.0
+           }
+          ],
+          "zs": [
+           852.6005318547086,
+           null,
+           853.4005318547086
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "7": {
+        "zs": [
+         860.0,
+         860.5
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500450.0,
+            "y": 4400060.0
+           }
+          ],
+          "zs": [
+           861.0,
+           null,
+           861.8
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşe referansın üstünde: eğim yok, köşe referansın kotunu alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 2,
+      "reference": {
+       "x": 500030.0,
+       "y": 4400040.0,
+       "z": 849.0
+      },
+      "grade": 0.05
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 0.0,
+       "before": 850.4,
+       "after": 849.0,
+       "by": -1.3999999999999773,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         848.6,
+         null,
+         849.0,
+         849.85,
+         849.6
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşe referansın üstünde, kot farkıyla: eğim yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 2,
+      "reference": {
+       "x": 500030.0,
+       "y": 4400040.0,
+       "z": 849.0
+      },
+      "difference": 0.25
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 0.0,
+       "before": 850.4,
+       "after": 849.25,
+       "by": -1.1499999999999773,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         848.85,
+         null,
+         849.25,
+         850.1,
+         849.85
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sıfır eğim: köşe referansın kotunda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 3,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 104.4030650891055,
+       "before": 851.25,
+       "after": 849.75,
+       "by": -1.5,
+       "grade": 0.0,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "zs": [
+         848.5,
+         null,
+         848.9,
+         849.75,
+         849.5
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Referanstan kot ver",
+     "within": 1e-09,
+     "expect": {
+      "fields": {
+       "1": {
+        "zs": [
+         850.0,
+         null,
+         850.4,
+         851.25,
+         851.0
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 3,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "distance": 104.4030650891055,
+       "before": 851.25,
+       "after": 851.8380613017821,
+       "by": 0.5880613017820906,
+       "grade": 0.02,
+       "moved": 4,
+       "unset": 1,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Doğrulama",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 3,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Hem eğim hem kot farkı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01,
+      "difference": 0.1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Referanstan eğimi (grade) ya da kot farkını (difference) verin, ikisini birden değil.",
+       "path": "grade"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ne eğim ne kot farkı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Referanstan eğimi (grade) ya da kot farkını (difference) verin, ikisini birden değil.",
+       "path": "grade"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonlu olmayan kot",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 3,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 1e+308
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Hesaplanan kot sonlu bir sayı değil; referansı ve eğimi denetleyin.",
+       "path": "grade"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşe sayısının dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 5,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "5. köşe yok: nesnenin 5 köşesi var, sıra 0'dan başlar.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizginin üçüncü köşesi yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000002",
+      "at": 2,
+      "reference": {
+       "x": 500090.0,
+       "y": 4400140.0,
+       "z": 899.2
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "2. köşe yok: nesnenin 2 köşesi var, sıra 0'dan başlar.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşenin kotu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 1,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "elevation_missing",
+       "message": "1. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hiçbir köşesinde kot olmayan çizgi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000006",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "difference": 0.1
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "elevation_missing",
+       "message": "0. köşenin kotu yok; fark bulunamıyor. Kotlu bir köşe seçin ya da önce Kot ver ile kot verin.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yazı bir yol değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000005",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_path",
+       "message": "Nesne çizgi, çoklu çizgi ya da alan değil; referanstan kot verilemez. Noktaya kotu Kot ver yazar.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta bir yol değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000008",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_path",
+       "message": "Nesne çizgi, çoklu çizgi ya da alan değil; referanstan kot verilemez. Noktaya kotu Kot ver yazar.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000004",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli: nesnenin kotları değişemez. Kilidi açın.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000063",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5c0-3780-7000-8000-000000000063” kimlikli nesne çizimde yok.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kimlik UUID değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "x",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“x” geçerli bir nesne kimliği değil.",
+       "path": "uid"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sürüm yazısı geçersiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01,
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm eski: çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-3780-7000-8000-000000000001",
+      "at": 0,
+      "reference": {
+       "x": 499980.0,
+       "y": 4400010.0,
+       "z": 849.75
+      },
+      "grade": 0.01,
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

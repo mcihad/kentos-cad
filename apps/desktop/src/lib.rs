@@ -66,6 +66,7 @@ mod flatten_window;
 mod reproject_window;
 mod features_window;
 mod baselines_window;
+mod grade_reference;
 mod grade_window;
 mod clean_report_window;
 mod parcels_check_window;
@@ -366,6 +367,8 @@ mod scale_summary_tests;
 mod features_window_tests;
 #[cfg(test)]
 mod baselines_window_tests;
+#[cfg(test)]
+mod grade_reference_tests;
 #[cfg(test)]
 mod grade_window_tests;
 #[cfg(test)]

@@ -56528,6 +56528,237 @@
       ]
     },
     {
+      "id": "cad.entities.raise",
+      "version": 1,
+      "title": "Referanstan kot ver",
+      "summary": "Bir çizgiyi, çoklu çizgiyi ya da alanı bir referans noktasına göre bütünüyle yükseltir ya da alçaltır (Civil 3D'nin Raise/Lower by Reference'ı gibi; ADR 3780): at köşesi (0'dan; çizginin uçları, çoklu çizginin ilk parçası, alanın dış halkası) referansın kotu artı eğim × referanstan yatay uzaklığı (grade, düşey bölü yatay, referanstan köşeye doğru artı yukarı: 0,02 %2'dir) ya da artı kot farkı (difference, m) olur; nesnenin öbür bütün kotları (alanın delikleri, her parçası) aynı farkla kayar, kendi eğimleri değişmez. Kotsuz köşeler kotsuz kalır (Kot ver'in Artır'ı gibi). Referans x, y, z ile verilir (bir noktanın, bir köşenin ya da yazılan). Cevap: yatay uzaklık, köşenin önceki ve yeni kotu, fark (by), referanstan köşeye eğim (köşe referansın üstündeyse yok), kayan kot ve kotsuz köşe sayısı. Tek geri alma adımı “Referanstan kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input (grade ile difference birlikte ya da hiçbiri; sonlu olmayan sonuç), elevation_missing (köşenin kotu yok), layer_locked.",
+      "aliases": [
+        "referanskot",
+        "raiselowerbyref"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given\n(0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and\nexactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the\ndifference (the vertex's elevation minus the reference's, m).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`\nand `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move\nfrom), `layer_locked`.",
+        "properties": {
+          "at": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "difference": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "grade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "reference": {
+            "$ref": "#/$defs/RaiseReference"
+          },
+          "uid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "uid",
+          "at",
+          "reference"
+        ],
+        "title": "EntitiesRaise",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.raise` v1 (and its plan): the vertex's horizontal distance from the reference, its\nelevation before and after, what every elevation of the object moved by (`after − before`, up positive), the grade\nfrom the reference to the vertex after (none when the vertex stands on the reference), how many elevations moved\nand how many vertices have none (they stay without, as Kot ver's Artır leaves them), and the drawing's revision.",
+        "properties": {
+          "after": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "before": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "by": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "distance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "grade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unset": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "distance",
+          "before",
+          "after",
+          "by",
+          "moved",
+          "unset",
+          "revision"
+        ],
+        "title": "EntitiesRaised",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.entities.raise` v1 (and its plan): the vertex's horizontal distance from the reference, its\nelevation before and after, what every elevation of the object moved by (`after − before`, up positive), the grade\nfrom the reference to the vertex after (none when the vertex stands on the reference), how many elevations moved\nand how many vertices have none (they stay without, as Kot ver's Artır leaves them), and the drawing's revision.",
+        "properties": {
+          "after": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "before": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "elevation"
+          },
+          "by": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "distance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "grade": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "unset": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "distance",
+          "before",
+          "after",
+          "by",
+          "moved",
+          "unset",
+          "revision"
+        ],
+        "title": "EntitiesRaised",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_path",
+          "wrong_place",
+          "invalid_input",
+          "elevation_missing",
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üçüncü köşe eşikten %2 aşağıda",
+          "input": {
+            "at": 2,
+            "grade": -0.02,
+            "reference": {
+              "x": 500120.0,
+              "y": 4420050.0,
+              "z": 851.25
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        },
+        {
+          "title": "İlk köşe referanstan 15 cm yukarıda",
+          "input": {
+            "at": 0,
+            "difference": 0.15,
+            "reference": {
+              "x": 500120.0,
+              "y": 4420050.0,
+              "z": 851.25
+            },
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.pointclouds.overlap",
       "version": 1,
       "title": "Tarama uyumu denetimi",
@@ -178340,6 +178571,33 @@
         "both"
       ],
       "type": "string"
+    },
+    "RaiseReference": {
+      "additionalProperties": false,
+      "description": "The reference of `cad.entities.raise`: a place and its elevation (a point's, a vertex's or a typed one).",
+      "properties": {
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "z"
+      ],
+      "type": "object"
     },
     "RampEntity": {
       "description": "A ramp (docs/adr/0343).",

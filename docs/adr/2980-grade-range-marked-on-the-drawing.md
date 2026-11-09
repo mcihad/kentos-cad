@@ -48,7 +48,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-06, beşinci tur. Durum: taslak. ADR 2180
 
 ## Sonra
 
-- Yüksek/alçak nokta ekleme (yapıldı, [ADR 3380](3380-grade-high-low-point.md)), eğimle yükselt/alçalt (ADR 1290 Sonra).
+- Yüksek/alçak nokta ekleme (yapıldı, [ADR 3380](3380-grade-high-low-point.md)), ~~eğimle yükselt/alçalt~~ ([ADR 3780](3780-raise-lower-by-reference.md)).
 - Aralığın köşelerine numara etiketi.
 - Çok parçalı nesne; dönen ve yaylı referansın bağı (MAP-06'nın kalanı).
 - Web (TODOS §0.2).

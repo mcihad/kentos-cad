@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import json
+import keyword
 import re
 import sys
 from collections import Counter
@@ -110,12 +111,12 @@ def ribbon_commands(tabs: object, splits: dict[str, set[str]] | None = None) -> 
 
 
 def python_name(command: str) -> str:
-    """A product command's call in the Python SDK: `cad.*` and `file.*` are `kentos.cad`'s (`file.import.*` under
-    `import_`, a keyword); the server's are a Connection's."""
-    if command.startswith("cad."):
-        return "kentos.cad." + command.removeprefix("cad.")
-    if command.startswith("file."):
-        return "kentos.cad." + command.replace("file.import.", "file.import_.", 1)
+    """A product command's call in the Python SDK: `cad.*` and `file.*` are `kentos.cad`'s, a part that is a Python
+    keyword with a trailing underscore as the SDK names it (`file.import_.dxf`, `entities.break_`,
+    `entities.raise_`); the server's are a Connection's."""
+    if command.startswith(("cad.", "file.")):
+        parts = command.removeprefix("cad.").split(".")
+        return "kentos.cad." + ".".join(p + "_" if keyword.iskeyword(p) else p for p in parts)
     return f"Connection: {command}"
 
 

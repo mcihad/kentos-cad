@@ -9,10 +9,13 @@
 //! docs/adr/3380: Hedef chooses the grade, the end's elevation or the high or low point (Yüksek/alçak nokta): the end's
 //! elevation, the grade from the start and the grade from the end (each from its vertex into the range, up positive);
 //! the preview says where the point falls (a new vertex between two, or an existing one) and rings it on the drawing.
+//!
+//! docs/adr/3780: Hedef Referanstan raises or lowers the object whole from a reference point, by `cad.entities.raise`
+//! (grade_reference.rs); Hedef is the form's first row.
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, Entity, GradePointKind, GradedPoint};
+use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, EntitiesRaised, Entity, GradePointKind, GradedPoint};
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, entities_grade};
@@ -20,20 +23,23 @@ use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
+use crate::grade_reference::By;
 use crate::traces::Control;
 
 pub const TITLE: &str = "Eğimle kot ver";
 const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
-const PICK: &str = "Sahneden seç";
+pub(crate) const PICK: &str = "Sahneden seç";
 
-/// What the range's end is given by (docs/adr/3380): the grade, the end's elevation or the high or low point.
+/// What the range's end is given by (docs/adr/3380): the grade, the end's elevation or the high or low point; or the
+/// object raised whole from a reference (docs/adr/3780).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Target {
     #[default]
     Grade,
     End,
     Peak,
+    Reference,
 }
 
 impl std::fmt::Display for Target {
@@ -42,6 +48,7 @@ impl std::fmt::Display for Target {
             Target::Grade => "Eğim",
             Target::End => "Bitiş kotu",
             Target::Peak => "Yüksek/alçak nokta",
+            Target::Reference => "Referanstan",
         })
     }
 }
@@ -64,11 +71,14 @@ fn place_words(p: &GradedPoint) -> String {
     }
 }
 
-/// Which end of the range a click on the drawing gives (docs/adr/2180).
+/// Which end of the range a click on the drawing gives (docs/adr/2180); for Referanstan the reference, then the vertex
+/// (docs/adr/3780).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Pick {
     Start,
     End,
+    Reference,
+    Vertex,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -90,6 +100,16 @@ pub struct State {
     pub plan: Option<Result<EntitiesGraded, String>>,
     /// The end a click on the drawing is awaited for (Sahneden seç).
     pub picking: Option<Pick>,
+    /// Referanstan (docs/adr/3780): the vertex, numbered from 1; the reference's place (east, north) and elevation,
+    /// whether one is given; by the grade (`percent`) or the difference; the command's plan.
+    pub at: f64,
+    pub east: f64,
+    pub north: f64,
+    pub height: f64,
+    pub referenced: bool,
+    pub by: By,
+    pub difference: f64,
+    pub raised: Option<Result<EntitiesRaised, String>>,
 }
 
 #[derive(Clone, Debug)]
@@ -102,13 +122,20 @@ pub enum Event {
     Percent(f64),
     Ahead(f64),
     Back(f64),
-    /// Sahneden seç: the range by two clicks, its start then its end.
+    /// Referanstan's vertex, the reference's Y (east), X (north) and elevation, by what, the difference.
+    At(f64),
+    East(f64),
+    North(f64),
+    Height(f64),
+    By(By),
+    Difference(f64),
+    /// Sahneden seç: the range by two clicks, its start then its end; for Referanstan the reference, then the vertex.
     Pick,
     Apply,
     Close,
 }
 
-fn msg(e: Event) -> Message {
+pub(crate) fn msg(e: Event) -> Message {
     Message::Grade(e)
 }
 
@@ -129,6 +156,10 @@ impl App {
     }
 
     fn grade_plan(&mut self) {
+        if self.grade.target == Target::Reference {
+            self.raise_plan();
+            return;
+        }
         let input = self.grade_input();
         let Some(doc) = self.document.as_mut() else { return };
         self.grade.plan = Some(match entities_grade::plan(&ExecutionContext::new(&mut doc.model), &input) {
@@ -162,19 +193,30 @@ impl App {
                 return Task::none();
             }
         };
+        // A reference given before stays for the next object, with Referanstan (Civil 3D keeps it active).
+        let kept = std::mem::take(&mut self.grade);
+        let kept = kept.referenced.then_some(kept);
         self.grade = State {
             uid: uid.to_string(),
             vertices: n as u32,
             from: 1.0,
             to: n as f64,
             start: z0.unwrap_or(0.0),
-            target: Target::Grade,
+            target: if kept.is_some() { Target::Reference } else { Target::Grade },
             end: z0.unwrap_or(0.0),
-            percent: 2.0,
+            percent: kept.as_ref().map_or(2.0, |k| k.percent),
             ahead: 2.0,
             back: 2.0,
             plan: None,
             picking: None,
+            at: 1.0,
+            east: kept.as_ref().map_or(0.0, |k| k.east),
+            north: kept.as_ref().map_or(0.0, |k| k.north),
+            height: kept.as_ref().map_or(0.0, |k| k.height),
+            referenced: kept.is_some(),
+            by: kept.as_ref().map_or(By::Grade, |k| k.by),
+            difference: kept.as_ref().map_or(0.0, |k| k.difference),
+            raised: None,
         };
         self.grade_plan();
         self.dialog = Some(Dialog::Grade);
@@ -191,8 +233,19 @@ impl App {
             Event::Percent(v) => self.grade.percent = v,
             Event::Ahead(v) => self.grade.ahead = v,
             Event::Back(v) => self.grade.back = v,
+            Event::At(v) => self.grade.at = v.round(),
+            Event::East(v) => (self.grade.east, self.grade.referenced) = (v, true),
+            Event::North(v) => (self.grade.north, self.grade.referenced) = (v, true),
+            Event::Height(v) => (self.grade.height, self.grade.referenced) = (v, true),
+            Event::By(b) => self.grade.by = b,
+            Event::Difference(v) => self.grade.difference = v,
             Event::Pick => {
-                self.start_grade_pick(Pick::Start);
+                let first = if self.grade.target == Target::Reference { Pick::Reference } else { Pick::Start };
+                self.start_grade_pick(first);
+                return Task::none();
+            }
+            Event::Apply if self.grade.target == Target::Reference => {
+                self.raise_apply();
                 return Task::none();
             }
             Event::Apply => {
@@ -242,7 +295,7 @@ impl App {
 
     /// The path's vertices as the window numbers them (from 0 here): a line's two ends, a polyline's or an area's outer
     /// ring's points.
-    fn grade_vertices(&self) -> Vec<kentos_commands::Vec2> {
+    pub(crate) fn grade_vertices(&self) -> Vec<kentos_commands::Vec2> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
         let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
         else {
@@ -260,6 +313,9 @@ impl App {
     /// Eğimle kot ver is not open or the range does not hold.
     pub(crate) fn grade_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
         let open = self.dialog == Some(Dialog::Grade) || self.grade.picking.is_some();
+        if open && self.grade.target == Target::Reference {
+            return self.reference_marks();
+        }
         let Some(doc) = self.document.as_ref().filter(|_| open) else { return (Vec::new(), Vec::new()) };
         let Some(e) = kentos_domain::Uuid::parse_str(&self.grade.uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s))
         else {
@@ -272,7 +328,7 @@ impl App {
         };
         let (from, to) = (self.grade.from.max(1.0) as usize - 1, self.grade.to.max(1.0) as usize - 1);
         match self.grade.picking {
-            Some(Pick::Start) => (Vec::new(), Vec::new()),
+            Some(Pick::Start | Pick::Reference | Pick::Vertex) => (Vec::new(), Vec::new()),
             Some(Pick::End) => (Vec::new(), pts.get(from).copied().into_iter().collect()),
             None if from < to && to < pts.len() => {
                 let span = &pts[from..=to];
@@ -298,12 +354,14 @@ impl App {
     }
 
     /// Sahneden seç (docs/adr/2180): the window steps aside for a click on the drawing.
-    fn start_grade_pick(&mut self, end: Pick) {
+    pub(crate) fn start_grade_pick(&mut self, end: Pick) {
         self.grade.picking = Some(end);
         self.dialog = None;
         let asks = match end {
             Pick::Start => "Başlangıç köşesine tıklayın",
             Pick::End => "Bitiş köşesine tıklayın",
+            Pick::Reference => "Referans noktasına ya da kotlu bir köşeye tıklayın",
+            Pick::Vertex => "Kotu verilecek köşeye tıklayın",
         };
         self.say(Level::Command, format!("{TITLE} › {asks}"));
         self.field = None;
@@ -324,6 +382,10 @@ impl App {
             return true;
         };
         let reach = self.draft.pick_aperture / self.viewport.camera.scale;
+        if end == Pick::Reference {
+            self.reference_picked(p, reach);
+            return true;
+        }
         let nearest = self
             .grade_vertices()
             .iter()
@@ -345,6 +407,10 @@ impl App {
                 self.grade.to = (i + 1) as f64;
                 self.grade_plan();
             }
+            Pick::Vertex | Pick::Reference => {
+                self.grade.at = (i + 1) as f64;
+                self.grade_plan();
+            }
         }
         true
     }
@@ -362,8 +428,14 @@ impl App {
             let i = (n.max(1.0) as usize) - 1;
             pts.get(i).map_or(String::new(), |v| format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y)))
         };
-        let form = Form::new()
-            .label_width(130.0)
+        // Hedef first: what is done decides the rows under it (docs/adr/3780).
+        let targets = [Target::Grade, Target::End, Target::Peak, Target::Reference];
+        let form = Form::new().label_width(130.0).field("Hedef", Segmented::new(targets, s.target, |t| msg(Event::Target(t))));
+        if s.target == Target::Reference {
+            let (form, lines, ready) = self.reference_form(form, BOX);
+            return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
+        }
+        let form = form
             .field(
                 "Başlangıç köşesi",
                 iced::widget::row![
@@ -380,10 +452,9 @@ impl App {
                 at(s.from),
                 at(s.to)
             ))
-            .field("Başlangıç kotu (m)", NumberInput::new(s.start, |v| msg(Event::Start(v))).step(0.1).decimals(3).point().width(BOX))
-            .field("Hedef", Segmented::new([Target::Grade, Target::End, Target::Peak], s.target, |t| msg(Event::Target(t))));
+            .field("Başlangıç kotu (m)", NumberInput::new(s.start, |v| msg(Event::Start(v))).step(0.1).decimals(3).point().width(BOX));
         let form = match s.target {
-            Target::Grade => form.field("Eğim (%)", percent(s.percent, Event::Percent)),
+            Target::Grade | Target::Reference => form.field("Eğim (%)", percent(s.percent, Event::Percent)),
             Target::End => form.field("Bitiş kotu (m)", end()),
             Target::Peak => form
                 .field("Bitiş kotu (m)", end())
@@ -428,13 +499,7 @@ impl App {
             },
         );
         let body = Column::new().spacing(12).push(form).push(words::summary(vec![about, line]));
-        let ready = matches!(s.plan, Some(Ok(_)));
-        Frame::new(TITLE)
-            .push(body)
-            .aside(words::ghost(CANCEL, Some(msg(Event::Close))))
-            .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
-            .width(560.0)
-            .modal(msg(Event::Close))
+        frame(body, matches!(s.plan, Some(Ok(_))))
     }
 
     pub(crate) fn grade_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -445,4 +510,14 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// The window around its body: Vazgeç, and Uygula when the preview holds. Four targets side by side need the width.
+fn frame(body: Column<'_, Message>, ready: bool) -> Element<'_, Message> {
+    Frame::new(TITLE)
+        .push(body)
+        .aside(words::ghost(CANCEL, Some(msg(Event::Close))))
+        .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
+        .width(600.0)
+        .modal(msg(Event::Close))
 }

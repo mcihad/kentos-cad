@@ -9498,6 +9498,39 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Referanstan kot ver (plan/map-cad.md MAP-06, docs/adr/3780).
+        CommandDescriptor {
+            id: crate::CAD_ENTITIES_RAISE.into(),
+            version: crate::CAD_ENTITIES_RAISE_VERSION,
+            title: "Referanstan kot ver".into(),
+            summary: "Bir çizgiyi, çoklu çizgiyi ya da alanı bir referans noktasına göre bütünüyle yükseltir ya da alçaltır (Civil 3D'nin Raise/Lower by Reference'ı gibi; ADR 3780): at köşesi (0'dan; çizginin uçları, çoklu çizginin ilk parçası, alanın dış halkası) referansın kotu artı eğim × referanstan yatay uzaklığı (grade, düşey bölü yatay, referanstan köşeye doğru artı yukarı: 0,02 %2'dir) ya da artı kot farkı (difference, m) olur; nesnenin öbür bütün kotları (alanın delikleri, her parçası) aynı farkla kayar, kendi eğimleri değişmez. Kotsuz köşeler kotsuz kalır (Kot ver'in Artır'ı gibi). Referans x, y, z ile verilir (bir noktanın, bir köşenin ya da yazılan). Cevap: yatay uzaklık, köşenin önceki ve yeni kotu, fark (by), referanstan köşeye eğim (köşe referansın üstündeyse yok), kayan kot ve kotsuz köşe sayısı. Tek geri alma adımı “Referanstan kot ver”. \
+                      Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input (grade ile difference birlikte ya da hiçbiri; sonlu olmayan sonuç), elevation_missing (köşenin kotu yok), layer_locked."
+                .into(),
+            aliases: vec!["referanskot".into(), "raiselowerbyref".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesRaise>(),
+            output: schema::<crate::EntitiesRaised>(),
+            plan: Some(schema::<crate::EntitiesRaised>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üçüncü köşe eşikten %2 aşağıda".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "at": 2, "reference": { "x": 500120.0, "y": 4420050.0, "z": 851.25 }, "grade": -0.02 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İlk köşe referanstan 15 cm yukarıda".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "at": 0, "reference": { "x": 500120.0, "y": 4420050.0, "z": 851.25 }, "difference": 0.15 }),
+                    output: None,
+                },
+            ],
+        },
         // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
         CommandDescriptor {
             id: crate::CAD_POINTCLOUDS_OVERLAP.into(),
@@ -16592,6 +16625,7 @@ mod tests {
                     crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCode>(e.input.clone()).map(|_| ()),
                     crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselines>(e.input.clone()).map(|_| ()),
                     crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGrade>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ENTITIES_RAISE => serde_json::from_value::<crate::EntitiesRaise>(e.input.clone()).map(|_| ()),
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(e.input.clone()).map(|_| ()),
@@ -17567,6 +17601,7 @@ mod tests {
                         crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCoded>(output.clone()).map(|_| ()),
                         crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),
                         crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
+                        crate::CAD_ENTITIES_RAISE => serde_json::from_value::<crate::EntitiesRaised>(output.clone()).map(|_| ()),
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),

@@ -316,6 +316,7 @@ pub mod crs_factors;
 pub mod map_features;
 pub mod survey_baselines;
 pub mod entities_grade;
+pub mod entities_raise;
 pub mod topology_clean;
 pub mod parcels_boundaries;
 pub mod parcels_check;
@@ -1484,6 +1485,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_SURVEY_BASELINES, kentos_commands::CAD_SURVEY_BASELINES_VERSION),
     // Eğimle kot ver (plan/map-cad.md MAP-06, docs/adr/1290).
     (kentos_commands::CAD_ENTITIES_GRADE, kentos_commands::CAD_ENTITIES_GRADE_VERSION),
+    // Referanstan kot ver (plan/map-cad.md MAP-06, docs/adr/3780).
+    (kentos_commands::CAD_ENTITIES_RAISE, kentos_commands::CAD_ENTITIES_RAISE_VERSION),
     (kentos_commands::CAD_TOPOLOGY_CLEAN, kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION),
     (kentos_commands::CAD_PARCELS_CHECK, kentos_commands::CAD_PARCELS_CHECK_VERSION),
     (kentos_commands::CAD_PARCELS_BOUNDARIES, kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION),
