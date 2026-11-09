@@ -2829,6 +2829,27 @@ const ENTRIES: &[Entry] = &[
         warnings: &["source_content_changed", "link_not_followed"],
         targets: none,
     },
+    // An approved item's objects put back as approved (plan/map-cad.md MAP-01, docs/adr/4080).
+    Entry {
+        id: "map.work.restore",
+        refusals: &[
+            REVISION,
+            &[
+                "not_a_map_project",
+                "unknown_work_item",
+                "work_not_approved",
+                "no_approved_values",
+                "invalid_uid",
+                "not_approved_object",
+                "nothing_to_restore",
+                "layer_not_found",
+                "layer_locked",
+                "layer_geometry_mismatch",
+            ],
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
     // KentOS Yol's LandXML export (plan/road.md Y10.2, docs/adr/0908 §6).
     Entry {
         id: "file.export.landxml",

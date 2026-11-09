@@ -10120,6 +10120,32 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Onaylı hâline getir (plan/map-cad.md MAP-01, docs/adr/4080).
+        CommandDescriptor {
+            id: crate::MAP_WORK_RESTORE.into(),
+            version: crate::MAP_WORK_RESTORE_VERSION,
+            title: "Onaylı hâline getir".into(),
+            summary: "Onaylı bir harita işi öğesinin (item) nesnelerini onayın tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri alma adımı “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan nesne onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler (her biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen nesneler yerinde kalır (added sayısı); asApproved öğenin içeriğinin onaylanan içerikle aynı olup olmadığını söyler. Geri gelen nesnenin katmanı çizimde, katman, kilitsiz ve türüne uygun olmalı; değişen nesnenin şimdiki katmanı kilitli olmamalı. \
+                      Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, work_not_approved, no_approved_values (dosyalı öğe, değerleri tutmayan onay), invalid_uid, not_approved_object, nothing_to_restore, layer_not_found, not_a_layer, layer_locked, layer_geometry_mismatch."
+                .into(),
+            aliases: vec!["onaylihalinegetir".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::MapWorkRestore>(),
+            output: schema::<crate::MapWorkRestored>(),
+            plan: Some(schema::<crate::MapWorkRestored>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Tasarım yüzeyinin silinen ve değişen nesneleri".into(),
+                input: json!({ "item": "is-4" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::MAP_SURVEY_QUERY.into(),
             version: crate::MAP_SURVEY_QUERY_VERSION,
@@ -16626,6 +16652,7 @@ mod tests {
                     crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdit>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdit>(e.input.clone()).map(|_| ()),
+                    crate::MAP_WORK_RESTORE => serde_json::from_value::<crate::MapWorkRestore>(e.input.clone()).map(|_| ()),
                     crate::CAD_CRS_FACTORS => serde_json::from_value::<crate::CrsFactors>(e.input.clone()).map(|_| ()),
                     crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCode>(e.input.clone()).map(|_| ()),
                     crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselines>(e.input.clone()).map(|_| ()),
@@ -17602,6 +17629,7 @@ mod tests {
                         crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
                         crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
+                        crate::MAP_WORK_RESTORE => serde_json::from_value::<crate::MapWorkRestored>(output.clone()).map(|_| ()),
                         crate::CAD_CRS_FACTORS => serde_json::from_value::<crate::CrsFactorsRead>(output.clone()).map(|_| ()),
                         crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCoded>(output.clone()).map(|_| ()),
                         crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),

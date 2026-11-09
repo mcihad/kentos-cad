@@ -1915,6 +1915,8 @@ __all__ = [
     "MapWorkEdited",
     "MapWorkOperation",
     "MapWorkQuery",
+    "MapWorkRestore",
+    "MapWorkRestored",
     "MapWorkTree",
     "MaplibreData",
     "MaplibreExported",

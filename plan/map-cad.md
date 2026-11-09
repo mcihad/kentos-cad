@@ -27,11 +27,11 @@ listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
 yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
-sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
+sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), sekizinci tur MAP-01'le başladı (ADR 4080).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680 | tipli katman profili; silineni onaylı hâline geri getirme; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080 | tipli katman profili; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700 | Poligon'da trigonometrik kotla bacağın kendi yüksekliği; EPSG'nin çokgen kullanım alanları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
@@ -275,6 +275,16 @@ hâl saklanmadıkça “ne idi” söylenemez) ve sürüm farkları. Kanıtlanan
 (`removedObjects`); `.kcad` şema 213 (Rust ve bağımsız okuyucu, üç bozuk örnek, 1717 dosya aynı); sözleşme testleri;
 edit 57, query 36 bağımsız durum, bağımsız okuyucuyla Python testi, MCP; Harita işi'nde durum çubuğu ve ipucu. Açık:
 silineni onaylı hâline geri getirme, geometri farkının çizimde gösterilmesi, tipli katman profili.
+
+**9 Kasım 2026, sekizinci tur — Onaylı hâline getir ([ADR 4080](../docs/adr/4080-map-work-restore-as-approved.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: ArcGIS'in Restore Rows'u (satırları ortak ata sürümünden, nesne kimlikleriyle
+geri getirir) ve ADR 0026 (silinen kimlik yeniden oluşturulabilir). Kanıtlanan: yeni komut `map.work.restore`: onaylı
+öğenin silinen nesneleri aynı kalıcı kimlikle onaylanan değeriyle yeniden oluşur, değişen ya da başka katmana taşınanlar
+onaylanan değerine döner, eklenenler kalır ve sayılır; tek adım, hepsi ya da hiçbiri; `uids` ile yalnız seçilenler;
+dört yeni ret kodu (onaylı değil, değerleri yok, onaylı nesne değil, geri getirilecek yok) ve katman denetimleri; 28
+bağımsız durum (Rust, Python), bağımsız okuyucuyla Python testi, MCP; Harita işi'nde Değişenler satırında ↺ düğmesi.
+Geri gelen nesne türetme kaydında adlıysa kayıt yeniden tamamlanır. Açık: geometri farkının çizimde gösterilmesi, tipli
+katman profili, eklenenleri de silen tam onaylı hâl (sahip kararı).
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

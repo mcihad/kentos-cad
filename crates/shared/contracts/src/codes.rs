@@ -642,6 +642,15 @@ codes! {
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
     /// The map's work would pass its most items or derivations.
     WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
+    /// An item put back as approved that is not approved (docs/adr/4080).
+    WORK_NOT_APPROVED = "work_not_approved", Failed, false, "Harita işi öğesi onaylı değil; onaylı hâline getirilecek bir onayı yok.";
+    /// An approval that kept no values of its objects: before schema 213, an item with a file, or too many or too large
+    /// objects (docs/adr/3680, 4080).
+    NO_APPROVED_VALUES = "no_approved_values", Failed, false, "Onay nesnelerin değerlerini tutmuyor; öğeyi yeniden onaylayın.";
+    /// An object that is not one of the item's approved objects (docs/adr/4080).
+    NOT_APPROVED_OBJECT = "not_approved_object", Failed, false, "Nesne öğenin onaylı nesnelerinden biri değil.";
+    /// Nothing removed or changed since the approval to put back (docs/adr/4080).
+    NOTHING_TO_RESTORE = "nothing_to_restore", Failed, false, "Onaydan sonra silinen ya da değişen nesne yok; onaylı hâline getirilecek bir şey yok.";
     /// A relinked source's new file holds other content: what was derived from it is out of date.
     SOURCE_CONTENT_CHANGED = "source_content_changed", Warning, false, "Yeni dosyanın içeriği öncekinden farklı: bu kaynaktan türetilmiş nesneler güncel değil.";
     /// An external reference or a bound layer on a relinked source's old file that did not follow it (docs/adr/1201 §2).

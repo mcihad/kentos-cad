@@ -4,7 +4,8 @@
 //! its problem as a pill and its derivations under it. An item's row selects its layers' objects and its layer in
 //! Katmanlar; a derivation's row selects its objects and shows them; the row's button relinks a missing file, accepts a
 //! changed one or moves the status on (`map.work.edit`). An approved item whose objects changed since its approval has
-//! a row under it, Değişenler, whose press selects the objects changed and added (docs/adr/2880). Above:
+//! a row under it, Değişenler, whose press selects the objects changed and added (docs/adr/2880) and whose button puts
+//! the removed and changed ones back as approved (docs/adr/4080). Above:
 //! the kind and the name of a new item, added with the layer chosen in Katmanlar (else the active one) and, by its
 //! second button, a file; Dosyaları oku reads every file's SHA-256. The tree is read again only when the drawing's
 //! revision or the depth changes.
@@ -37,6 +38,9 @@ pub enum Event {
     /// Değişenler under an approved item, by the item's id: the objects changed and added since its approval selected
     /// and shown (docs/adr/2880 §4).
     Changes(String),
+    /// Onaylı hâline getir under an approved item, by the item's id (docs/adr/4080): its removed objects made again and
+    /// its changed ones set back to their approved values.
+    Restore(String),
     /// The new item's kind and name.
     Kind(&'static str),
     Name(String),
@@ -178,6 +182,17 @@ impl App {
         self.answered(result)
     }
 
+    /// Onaylı hâline getir (docs/adr/4080): the item's removed objects made again with their ids and its changed ones
+    /// set back to their approved values, one undo step; what it did is said, the added objects that stay too.
+    fn map_work_restore(&mut self, id: &str) {
+        let Some(doc) = self.document.as_mut() else { return };
+        let input = kentos_commands::MapWorkRestore { item: id.to_owned(), uids: Vec::new(), expected_revision: None };
+        let result = kentos_native_application::map_work_restore::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        if let Some(out) = self.answered(result) {
+            self.say(Level::Success, restored_words(&out));
+        }
+    }
+
     /// The layer a new item takes: the one chosen in Katmanlar, else the active one.
     fn map_work_layer(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
@@ -215,6 +230,7 @@ impl App {
             Event::Item(id) => self.select_item(&id),
             Event::Derivation(id) => self.select_derivation(&id),
             Event::Changes(id) => self.select_changes(&id),
+            Event::Restore(id) => self.map_work_restore(&id),
             Event::Kind(k) => self.map_work.kind = k,
             Event::Name(n) => self.map_work.name = n,
             Event::Add(false) => self.map_work_add(None),
@@ -738,7 +754,35 @@ fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
     if there > 0 {
         item = item.on_press(msg(Event::Changes(r.id.clone())));
     }
+    // Docs/adr/4080: what was removed or changed put back as approved (the added objects stay).
+    if c.removed + c.changed > 0 {
+        item = item.action(
+            icon(Icon::Undo).size(13.0),
+            RESTORE_TIP,
+            msg(Event::Restore(r.id.clone())),
+        );
+    }
     item
+}
+
+/// The Değişenler row's button (docs/adr/4080).
+pub(crate) const RESTORE_TIP: &str =
+    "Onaylı hâline getir: silinenler aynı kimlikle geri gelir, değişenler onaylanan değerine döner; eklenenler kalır";
+
+/// What Onaylı hâline getir did (docs/adr/4080): the objects made again, those set back, the added ones that stay.
+pub(crate) fn restored_words(out: &kentos_commands::MapWorkRestored) -> String {
+    let mut parts = Vec::new();
+    if !out.restored.is_empty() {
+        parts.push(format!("{} silinen nesne aynı kimlikle geri geldi", out.restored.len()));
+    }
+    if !out.reverted.is_empty() {
+        parts.push(format!("{} değişen nesne onaylanan değerine döndü", out.reverted.len()));
+    }
+    let mut words = format!("Onaylı hâline getirildi: {}.", parts.join(", "));
+    if out.added > 0 {
+        words.push_str(&format!(" Onaydan sonra eklenen {} nesne yerinde kaldı.", out.added));
+    }
+    words
 }
 
 /// A revision's first 12 hex digits.

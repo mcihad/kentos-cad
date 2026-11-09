@@ -54741,6 +54741,82 @@ class MapWorkQuery(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MapWorkRestore(_Model):
+    """Input of `map.work.restore` v1 (docs/adr/4080): an approved item's objects put back as its approval kept them (its
+    values, docs/adr/3680), in one undo step “Onaylı hâline getir”. An approved object no longer in the drawing is made
+    again with its persistent id; one changed (or moved off the item's layers) is set back to its value. `uids` names
+    only those (each one of the item's approved objects, removed or changed now); none: all of them. Objects added
+    since the approval stay. All of them are put back or none.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, `unknown_work_item` (`item`),
+    `work_not_approved`, `no_approved_values`, `invalid_uid` and `not_approved_object` (`uids[i]`), `nothing_to_restore`
+    (`uids[i]`: that object is as approved; `item`: nothing is), then for each object put back its layer as approved
+    (`layer_not_found`, `not_a_layer`, `layer_locked`, `layer_geometry_mismatch`) and a changed object's layer now
+    (`layer_locked`), at `uids[i]` or `item`.
+    Attributes:
+        item: The item's id (`is-N`).
+        uids: Persistent ids of the approved objects to put back; none: every one removed or changed.
+    """
+    item: str
+    expected_revision: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkRestore:
+        return cls(
+            item=data["item"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MapWorkRestored(_Model):
+    """Output of `map.work.restore` v1 (docs/adr/4080): the objects made again (they were removed) and those set back (they
+    were changed), each by its persistent id in order; how many objects added since the approval stay; whether the
+    item's content is now the one approved (its revision its approval's stamp); the document's revision.
+    Attributes:
+        added: Unit: count.
+    """
+    item: str
+    restored: list[str]
+    reverted: list[str]
+    added: int
+    as_approved: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item
+        out["restored"] = list(self.restored)
+        out["reverted"] = list(self.reverted)
+        out["added"] = self.added
+        out["asApproved"] = self.as_approved
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MapWorkRestored:
+        return cls(
+            item=data["item"],
+            restored=list(data["restored"]),
+            reverted=list(data["reverted"]),
+            added=data["added"],
+            as_approved=data["asApproved"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MapWorkTree(_Model):
     """Output of `map.work.query` v1: the items in the project's order, the derivations in theirs, the object asked about,
     how many derivations are out of date, how many rows have a problem (an item not up to date, a derivation missing
@@ -132687,6 +132763,8 @@ __all__ = [
     "MapWorkEdited",
     "MapWorkOperation",
     "MapWorkQuery",
+    "MapWorkRestore",
+    "MapWorkRestored",
     "MapWorkTree",
     "MaplibreData",
     "MaplibreExported",

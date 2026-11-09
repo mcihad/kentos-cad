@@ -62933,6 +62933,169 @@
       ]
     },
     {
+      "id": "map.work.restore",
+      "version": 1,
+      "title": "Onaylı hâline getir",
+      "summary": "Onaylı bir harita işi öğesinin (item) nesnelerini onayın tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri alma adımı “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan nesne onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler (her biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen nesneler yerinde kalır (added sayısı); asApproved öğenin içeriğinin onaylanan içerikle aynı olup olmadığını söyler. Geri gelen nesnenin katmanı çizimde, katman, kilitsiz ve türüne uygun olmalı; değişen nesnenin şimdiki katmanı kilitli olmamalı. Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, work_not_approved, no_approved_values (dosyalı öğe, değerleri tutmayan onay), invalid_uid, not_approved_object, nothing_to_restore, layer_not_found, not_a_layer, layer_locked, layer_geometry_mismatch.",
+      "aliases": [
+        "onaylihalinegetir"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `map.work.restore` v1 (docs/adr/4080): an approved item's objects put back as its approval kept them (its\nvalues, docs/adr/3680), in one undo step “Onaylı hâline getir”. An approved object no longer in the drawing is made\nagain with its persistent id; one changed (or moved off the item's layers) is set back to its value. `uids` names\nonly those (each one of the item's approved objects, removed or changed now); none: all of them. Objects added\nsince the approval stay. All of them are put back or none.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, `unknown_work_item` (`item`),\n`work_not_approved`, `no_approved_values`, `invalid_uid` and `not_approved_object` (`uids[i]`), `nothing_to_restore`\n(`uids[i]`: that object is as approved; `item`: nothing is), then for each object put back its layer as approved\n(`layer_not_found`, `not_a_layer`, `layer_locked`, `layer_geometry_mismatch`) and a changed object's layer now\n(`layer_locked`), at `uids[i]` or `item`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "description": "The item's id (`is-N`).",
+            "type": "string"
+          },
+          "uids": {
+            "description": "Persistent ids of the approved objects to put back; none: every one removed or changed.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "title": "MapWorkRestore",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.restore` v1 (docs/adr/4080): the objects made again (they were removed) and those set back (they\nwere changed), each by its persistent id in order; how many objects added since the approval stay; whether the\nitem's content is now the one approved (its revision its approval's stamp); the document's revision.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "asApproved": {
+            "type": "boolean"
+          },
+          "item": {
+            "type": "string"
+          },
+          "restored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reverted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "restored",
+          "reverted",
+          "added",
+          "asApproved",
+          "revision"
+        ],
+        "title": "MapWorkRestored",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `map.work.restore` v1 (docs/adr/4080): the objects made again (they were removed) and those set back (they\nwere changed), each by its persistent id in order; how many objects added since the approval stay; whether the\nitem's content is now the one approved (its revision its approval's stamp); the document's revision.",
+        "properties": {
+          "added": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "asApproved": {
+            "type": "boolean"
+          },
+          "item": {
+            "type": "string"
+          },
+          "restored": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reverted": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "restored",
+          "reverted",
+          "added",
+          "asApproved",
+          "revision"
+        ],
+        "title": "MapWorkRestored",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "not_a_map_project",
+          "unknown_work_item",
+          "work_not_approved",
+          "no_approved_values",
+          "invalid_uid",
+          "not_approved_object",
+          "nothing_to_restore",
+          "layer_not_found",
+          "layer_locked",
+          "layer_geometry_mismatch"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Tasarım yüzeyinin silinen ve değişen nesneleri",
+          "input": {
+            "item": "is-4"
+          }
+        }
+      ]
+    },
+    {
       "id": "map.survey.query",
       "version": 1,
       "title": "GNSS arşivini sorgula",
@@ -103413,6 +103576,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur."
+    },
+    {
+      "code": "work_not_approved",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Harita işi öğesi onaylı değil; onaylı hâline getirilecek bir onayı yok."
+    },
+    {
+      "code": "no_approved_values",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Onay nesnelerin değerlerini tutmuyor; öğeyi yeniden onaylayın."
+    },
+    {
+      "code": "not_approved_object",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne öğenin onaylı nesnelerinden biri değil."
+    },
+    {
+      "code": "nothing_to_restore",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Onaydan sonra silinen ya da değişen nesne yok; onaylı hâline getirilecek bir şey yok."
     },
     {
       "code": "source_content_changed",

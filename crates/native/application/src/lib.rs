@@ -337,6 +337,7 @@ mod orthophoto_seams;
 pub mod pointcloud_overlap;
 pub mod pointcloud_register;
 pub mod map_work_edit;
+pub mod map_work_restore;
 pub mod map_survey;
 pub mod map_survey_edit;
 pub mod map_survey_network;
@@ -1477,6 +1478,8 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
     (kentos_commands::MAP_WORK_QUERY, kentos_commands::MAP_WORK_QUERY_VERSION),
     (kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION),
+    // An approved item's objects put back as approved (plan/map-cad.md MAP-01, docs/adr/4080).
+    (kentos_commands::MAP_WORK_RESTORE, kentos_commands::MAP_WORK_RESTORE_VERSION),
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
     (kentos_commands::CAD_CRS_FACTORS, kentos_commands::CAD_CRS_FACTORS_VERSION),
     // Kodla çiz (plan/map-cad.md MAP-04, docs/adr/1360).

@@ -18,6 +18,8 @@ pub const MAP_WORK_QUERY: &str = "map.work.query";
 pub const MAP_WORK_QUERY_VERSION: u32 = 1;
 pub const MAP_WORK_EDIT: &str = "map.work.edit";
 pub const MAP_WORK_EDIT_VERSION: u32 = 1;
+pub const MAP_WORK_RESTORE: &str = "map.work.restore";
+pub const MAP_WORK_RESTORE_VERSION: u32 = 1;
 
 /// Input of `map.work.query` v1: `deep` reads every item's file (its SHA-256 against the item's revision: `changed`,
 /// and the derivations of a changed file out of date) and works out every item's content revision; without it a file
@@ -469,3 +471,51 @@ pub struct MapWorkEdited {
 fn is_zero(n: &u32) -> bool {
     *n == 0
 }
+
+/// Input of `map.work.restore` v1 (docs/adr/4080): an approved item's objects put back as its approval kept them (its
+/// values, docs/adr/3680), in one undo step “Onaylı hâline getir”. An approved object no longer in the drawing is made
+/// again with its persistent id; one changed (or moved off the item's layers) is set back to its value. `uids` names
+/// only those (each one of the item's approved objects, removed or changed now); none: all of them. Objects added
+/// since the approval stay. All of them are put back or none.
+///
+/// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, `unknown_work_item` (`item`),
+/// `work_not_approved`, `no_approved_values`, `invalid_uid` and `not_approved_object` (`uids[i]`), `nothing_to_restore`
+/// (`uids[i]`: that object is as approved; `item`: nothing is), then for each object put back its layer as approved
+/// (`layer_not_found`, `not_a_layer`, `layer_locked`, `layer_geometry_mismatch`) and a changed object's layer now
+/// (`layer_locked`), at `uids[i]` or `item`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MapWorkRestore {
+    /// The item's id (`is-N`).
+    pub item: String,
+    /// Persistent ids of the approved objects to put back; none: every one removed or changed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub uids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub expected_revision: Option<String>,
+}
+
+/// Output of `map.work.restore` v1 (docs/adr/4080): the objects made again (they were removed) and those set back (they
+/// were changed), each by its persistent id in order; how many objects added since the approval stay; whether the
+/// item's content is now the one approved (its revision its approval's stamp); the document's revision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct MapWorkRestored {
+    pub item: String,
+    pub restored: Vec<String>,
+    pub reverted: Vec<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    pub as_approved: bool,
+    pub revision: String,
+}
+

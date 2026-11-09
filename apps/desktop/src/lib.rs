@@ -356,6 +356,8 @@ mod map_work_stamps_tests;
 #[cfg(test)]
 mod map_work_changes_tests;
 #[cfg(test)]
+mod map_work_restore_tests;
+#[cfg(test)]
 mod survey_heights_tests;
 #[cfg(test)]
 mod survey_epoch_tests;

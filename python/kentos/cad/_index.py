@@ -362,6 +362,7 @@ COMMANDS: dict[str, Any] = {
     "map.survey.query": map.survey.query,
     "map.work.edit": map.work.edit,
     "map.work.query": map.work.query,
+    "map.work.restore": map.work.restore,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,
