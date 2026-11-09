@@ -183,10 +183,18 @@ pub enum ScheduleField {
     Annexes,
     TotalGross,
     LandShare,
+    /// Mahal listesi (docs/adr/3038; `.kcad` schema 216; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window
+    /// sills' and parapets', its stair's treads' and risers', and its handrails' and railings' finishes; the doors and the
+    /// windows that serve it, by their joinery codes (“K01, P01 (2)”).
+    SillFinish,
+    StairFinish,
+    RailingFinish,
+    Doors,
+    Windows,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 59] = [
+    pub const ALL: [ScheduleField; 64] = [
         ScheduleField::Number,
         ScheduleField::Code,
         ScheduleField::Type,
@@ -246,6 +254,11 @@ impl ScheduleField {
         ScheduleField::Annexes,
         ScheduleField::TotalGross,
         ScheduleField::LandShare,
+        ScheduleField::SillFinish,
+        ScheduleField::StairFinish,
+        ScheduleField::RailingFinish,
+        ScheduleField::Doors,
+        ScheduleField::Windows,
     ];
 
     /// Its heading when the column gives none.
@@ -311,6 +324,11 @@ impl ScheduleField {
             ScheduleField::Annexes => "Eklentiler",
             ScheduleField::TotalGross => "BB toplam brüt alanı",
             ScheduleField::LandShare => "Arsa payı",
+            ScheduleField::SillFinish => "Denizlik ve parapet",
+            ScheduleField::StairFinish => "Basamak ve rıht",
+            ScheduleField::RailingFinish => "Küpeşte ve korkuluk",
+            ScheduleField::Doors => "Kapı",
+            ScheduleField::Windows => "Pencere",
         }
     }
 
@@ -375,6 +393,11 @@ impl ScheduleField {
             ScheduleField::Annexes => "annexes",
             ScheduleField::TotalGross => "totalGross",
             ScheduleField::LandShare => "landShare",
+            ScheduleField::SillFinish => "sillFinish",
+            ScheduleField::StairFinish => "stairFinish",
+            ScheduleField::RailingFinish => "railingFinish",
+            ScheduleField::Doors => "doors",
+            ScheduleField::Windows => "windows",
         }
     }
 
@@ -436,6 +459,7 @@ impl ScheduleField {
             Form | Sill | Head | Wall | Code => of == ScheduleOf::Openings,
             Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish
             | Baseboard | Unit | Target | TargetDiff | Share | Gross => of == ScheduleOf::Spaces,
+            SillFinish | StairFinish | RailingFinish | Doors | Windows => of == ScheduleOf::Spaces,
             Tag | Place => of == ScheduleOf::Columns,
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
@@ -463,6 +487,9 @@ impl ScheduleField {
                 | BaseFinish
                 | WallFinish
                 | CeilingFinish
+                | SillFinish
+                | StairFinish
+                | RailingFinish
                 | RecordedArea
                 | ShareWeight
         )
@@ -567,6 +594,15 @@ impl ScheduleField {
         matches!(
             self,
             Nature | AnnexNet | AnnexGross | Annexes | TotalGross | LandShare
+        )
+    }
+
+    /// Whether it is one of the room list's fields (docs/adr/3038, `.kcad` schema 216).
+    pub fn is_room_list(self) -> bool {
+        use ScheduleField::*;
+        matches!(
+            self,
+            SillFinish | StairFinish | RailingFinish | Doors | Windows
         )
     }
 

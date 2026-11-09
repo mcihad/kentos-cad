@@ -155,6 +155,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
     assert_eq!(
         labels,
         [
+            "Mahal listesi",
             "Metrekare cetveli",
             "Emsal ve TAKS",
             "Kat irtifakı",
@@ -166,7 +167,12 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         .entities()
         .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
         .count();
-    assert_eq!(made_tables, 5);
+    assert_eq!(made_tables, 6);
+    // The room list a sheet of its own (docs/adr/3038): EK-2's Liste, Mahal listesi.
+    assert_eq!(
+        tables.iter().map(|t| t.list).collect::<Vec<_>>(),
+        [Some("MHL"), None, None, None, None, None]
+    );
     // Found, not made again.
     let again = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
     assert_eq!(again, tables);
@@ -174,21 +180,35 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         doc.entities()
             .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
             .count(),
-        5
+        6
     );
     let input = kentos_native_application::permit_set::PermitSet {
         phase: kentos_sheet::permit::Phase::Permit,
         values: particulars(),
         tables: tables
             .iter()
+            .filter(|t| t.list.is_none())
             .map(|t| (t.label.to_owned(), t.bounds))
             .collect(),
+        lists: tables
+            .iter()
+            .filter_map(|t| {
+                t.list
+                    .map(|kind| kentos_native_application::permit_set::ListSheet {
+                        title: t.label.to_owned(),
+                        kind,
+                        bounds: t.bounds,
+                        scale: 100,
+                    })
+            })
+            .collect(),
     };
-    let (edited, made) = kentos_native_application::permit_set::execute(
+    let (edited, made, notes) = kentos_native_application::permit_set::execute(
         &mut kentos_native_application::ExecutionContext::new(doc),
         &input,
     )
     .expect("made");
+    assert!(notes.is_empty(), "{notes:?}");
     assert!(edited.label.contains("Pafta") || !edited.label.is_empty());
     let titles: Vec<String> = made
         .iter()
@@ -201,7 +221,8 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "UP-02 Vaziyet planı",
             "UP-03 Zemin kat planı",
             "UP-04 1. kat planı",
-            "UP-05 Mimari hesap raporu"
+            "UP-05 Mahal listesi",
+            "UP-06 Mimari hesap raporu"
         ]
     );
     assert_eq!(
@@ -240,13 +261,29 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "{want} in the title block: {plan:?}"
         );
     }
+    // The room list's sheet (docs/adr/3038): its own paper, no caption, no scale, EK-2 LS/MHL.
+    let list = texts(&app, &made[4].sheet);
+    for want in [
+        "Mahal listesi",
+        "UP-05",
+        "260457_00_MM_XXXX_LS_MHL_NNN_01_000",
+    ] {
+        assert!(
+            list.iter().any(|x| x.contains(want)),
+            "{want} on the room list's sheet: {list:?}"
+        );
+    }
+    assert!(
+        !list.iter().any(|x| x.contains("Mahal listesi — Ölçek")),
+        "a list has no caption: {list:?}"
+    );
     // The calculation sheet: a locked map on each table, captioned, at the plot scale; the tables' own rows.
-    let calc = texts(&app, &made[4].sheet);
+    let calc = texts(&app, &made[5].sheet);
     for want in [
         "Metrekare cetveli — Ölçek 1/100",
         "Otopark hesabı — Ölçek 1/100",
         "Sığınak hesabı — Ölçek 1/100",
-        "UP-05",
+        "UP-06",
         "260457_00_MM_XXXX_HS_MIR_NNN_01_000",
     ] {
         assert!(
@@ -293,6 +330,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "260457_00_MM_XXXX_PL_VAZ_NNN_01_000.pdf",
             "260457_00_MM_XXXX_PL_MMC_K00_01_000.pdf",
             "260457_00_MM_XXXX_PL_MMC_K01_01_000.pdf",
+            "260457_00_MM_XXXX_LS_MHL_NNN_01_000.pdf",
             "260457_00_MM_XXXX_HS_MIR_NNN_01_000.pdf",
         ]
     );

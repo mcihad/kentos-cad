@@ -154,6 +154,7 @@ impl App {
                         .map(|f| (f.name.to_owned(), f.value.clone()))
                         .collect(),
                     tables: Vec::new(),
+                    lists: Vec::new(),
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
@@ -162,7 +163,25 @@ impl App {
                 let group = doc.model.begin_group("Ruhsat takımı");
                 let tables = kentos_interaction::calc_tables::ensure(&mut doc.model);
                 if let Ok(t) = &tables {
-                    input.tables = t.iter().map(|c| (c.label.to_owned(), c.bounds)).collect();
+                    // The room list a sheet of its own (docs/adr/3038), the rest the calculation sheet's.
+                    let plot = doc.model.settings().plot_scale.round().max(1.0) as u32;
+                    input.tables = t
+                        .iter()
+                        .filter(|c| c.list.is_none())
+                        .map(|c| (c.label.to_owned(), c.bounds))
+                        .collect();
+                    input.lists = t
+                        .iter()
+                        .filter_map(|c| {
+                            c.list
+                                .map(|kind| kentos_native_application::permit_set::ListSheet {
+                                    title: c.label.to_owned(),
+                                    kind,
+                                    bounds: c.bounds,
+                                    scale: plot,
+                                })
+                        })
+                        .collect();
                 }
                 let made = kentos_native_application::permit_set::execute(
                     &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -175,7 +194,7 @@ impl App {
                             s.status = why;
                         }
                     }
-                    Ok((_, made)) => {
+                    Ok((_, made, notes)) => {
                         let missing =
                             kentos_native_application::permit_set::missing_particulars(&doc.model);
                         let phase = input.phase;
@@ -183,7 +202,7 @@ impl App {
                             (Some(a), Some(b)) => format!("{} … {}", a.number, b.number),
                             _ => String::new(),
                         };
-                        let said = format!(
+                        let mut said = format!(
                             "{} takımı: {} pafta ({numbers}){}",
                             phase.name(),
                             made.len(),
@@ -200,6 +219,11 @@ impl App {
                                 )
                             }
                         );
+                        // A list no paper holds (docs/adr/3038).
+                        for n in &notes {
+                            said.push_str("; ");
+                            said.push_str(n);
+                        }
                         self.say(kentos_interaction::Level::Info, said);
                         // Paftaları toplu yayınla on the set: a file a sheet, PDF/A-2, named by EK-2, checked.
                         let _ = self.sheet_publish_open();

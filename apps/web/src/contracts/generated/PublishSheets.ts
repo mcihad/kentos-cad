@@ -20,7 +20,9 @@ resources: boolean,
  */
 name?: string, 
 /**
- * Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
+ * Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
+ * {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value
+ * refuses with naming_value_missing). Collisions get a stable numeric suffix.
  */
 naming: string, 
 /**

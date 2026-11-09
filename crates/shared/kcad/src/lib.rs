@@ -875,11 +875,15 @@ pub const SCHEMA_WITH_LOCAL_RULES: u32 = 213;
 pub const SCHEMA_WITH_SPRINKLERS: u32 = 214;
 /// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı (a table's source `parking`, `shelter`).
 pub const SCHEMA_WITH_PROVISION_TABLES: u32 = 215;
+/// Schema 216 (docs/adr/3038): Mahal listesi: a space's sill's, stair's and railing's finishes (`finishes.sill`,
+/// `stair`, `railing`) and a spaces schedule's room list columns (`sillFinish`, `stairFinish`, `railingFinish`,
+/// `doors`, `windows`).
+pub const SCHEMA_WITH_ROOM_LIST: u32 = 216;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 213] = [
+pub const SCHEMAS: [u32; 214] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1093,6 +1097,7 @@ pub const SCHEMAS: [u32; 213] = [
     SCHEMA_WITH_LOCAL_RULES,
     SCHEMA_WITH_SPRINKLERS,
     SCHEMA_WITH_PROVISION_TABLES,
+    SCHEMA_WITH_ROOM_LIST,
 ];
 
 /// The file a drawing is saved as.

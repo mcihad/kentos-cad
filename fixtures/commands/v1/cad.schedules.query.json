@@ -222,7 +222,8 @@
           "floor": "Parke",
           "wall": "Boya",
           "ceiling": "Alçı",
-          "base": "Ahşap"
+          "base": "Ahşap",
+          "sill": "Mermer denizlik"
         },
         "usage": "Oturma"
       },
@@ -400,6 +401,46 @@
         "arch": {
           "level": "zemin"
         }
+      },
+      {
+        "kind": "space",
+        "id": 10,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 8.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 11.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 11.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "103",
+        "name": "Merdiven",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Granit",
+          "stair": "Granit basamak",
+          "railing": "Ahşap küpeşte"
+        }
       }
     ]
   },
@@ -422,7 +463,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -436,7 +477,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -610,7 +651,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 3,
               "revision": "$current"
             },
@@ -624,7 +665,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -745,7 +786,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -759,7 +800,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -954,7 +995,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -968,7 +1009,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -1165,7 +1206,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -1179,7 +1220,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -1429,7 +1470,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -1443,7 +1484,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -1484,38 +1525,6 @@
                   "row": 1,
                   "role": "data",
                   "cells": [
-                    "1. kat",
-                    "Koltuk",
-                    "1"
-                  ],
-                  "members": [
-                    "$uidOf:7"
-                  ]
-                },
-                {
-                  "row": 2,
-                  "role": "footer",
-                  "cells": [
-                    "",
-                    "Koltuk toplamı",
-                    "1"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 3,
-                  "role": "footer",
-                  "cells": [
-                    "1. kat toplamı",
-                    "",
-                    "1"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 4,
-                  "role": "data",
-                  "cells": [
                     "Zemin kat",
                     "Koltuk",
                     "1"
@@ -1525,7 +1534,7 @@
                   ]
                 },
                 {
-                  "row": 5,
+                  "row": 2,
                   "role": "data",
                   "cells": [
                     "Zemin kat",
@@ -1537,7 +1546,7 @@
                   ]
                 },
                 {
-                  "row": 6,
+                  "row": 3,
                   "role": "footer",
                   "cells": [
                     "",
@@ -1547,7 +1556,7 @@
                   "members": []
                 },
                 {
-                  "row": 7,
+                  "row": 4,
                   "role": "data",
                   "cells": [
                     "Zemin kat",
@@ -1559,7 +1568,7 @@
                   ]
                 },
                 {
-                  "row": 8,
+                  "row": 5,
                   "role": "data",
                   "cells": [
                     "Zemin kat",
@@ -1571,7 +1580,7 @@
                   ]
                 },
                 {
-                  "row": 9,
+                  "row": 6,
                   "role": "footer",
                   "cells": [
                     "",
@@ -1581,12 +1590,44 @@
                   "members": []
                 },
                 {
-                  "row": 10,
+                  "row": 7,
                   "role": "footer",
                   "cells": [
                     "Zemin kat toplamı",
                     "",
                     "4"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 8,
+                  "role": "data",
+                  "cells": [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  "members": [
+                    "$uidOf:7"
+                  ]
+                },
+                {
+                  "row": 9,
+                  "role": "footer",
+                  "cells": [
+                    "",
+                    "Koltuk toplamı",
+                    "1"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 10,
+                  "role": "footer",
+                  "cells": [
+                    "1. kat toplamı",
+                    "",
+                    "1"
                   ],
                   "members": []
                 },
@@ -1666,7 +1707,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 4,
               "revision": "$current"
             },
@@ -1680,7 +1721,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -1821,7 +1862,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 2,
               "revision": "$current"
             },
@@ -1835,7 +1876,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -1948,7 +1989,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 0,
               "revision": "$current"
             },
@@ -1962,7 +2003,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2048,7 +2089,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 0,
               "revision": "$current"
             },
@@ -2062,7 +2103,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2163,7 +2204,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -2177,7 +2218,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2329,8 +2370,8 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
-              "rows": 3,
+              "id": 11,
+              "rows": 4,
               "revision": "$current"
             },
             "warnings": []
@@ -2343,7 +2384,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2464,6 +2505,23 @@
                   ],
                   "members": [
                     "$uidOf:3"
+                  ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "103",
+                    "Merdiven",
+                    "Granit",
+                    "",
+                    "",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  "members": [
+                    "$uidOf:10"
                   ]
                 }
               ],
@@ -2522,8 +2580,8 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
-              "rows": 3,
+              "id": 11,
+              "rows": 4,
               "revision": "$current"
             },
             "warnings": []
@@ -2536,7 +2594,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2661,6 +2719,23 @@
                 },
                 {
                   "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "103",
+                    "Merdiven",
+                    "Granit",
+                    "",
+                    "",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  "members": [
+                    "$uidOf:10"
+                  ]
+                },
+                {
+                  "row": 5,
                   "role": "total",
                   "cells": [
                     "Toplam",
@@ -2669,8 +2744,8 @@
                     "",
                     "",
                     "",
-                    "52.00",
-                    "50.000"
+                    "64.00",
+                    "64.000"
                   ],
                   "members": []
                 }
@@ -2719,8 +2794,8 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
-              "rows": 3,
+              "id": 11,
+              "rows": 4,
               "revision": "$current"
             },
             "warnings": []
@@ -2733,7 +2808,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -2767,42 +2842,13 @@
                   "row": 1,
                   "role": "header",
                   "cells": [
-                    "1. kat",
-                    ""
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 2,
-                  "role": "data",
-                  "cells": [
-                    "1. kat",
-                    "20.00"
-                  ],
-                  "members": [
-                    "$uidOf:3"
-                  ]
-                },
-                {
-                  "row": 3,
-                  "role": "footer",
-                  "cells": [
-                    "1. kat toplamı",
-                    "20.00"
-                  ],
-                  "members": []
-                },
-                {
-                  "row": 4,
-                  "role": "header",
-                  "cells": [
                     "Zemin kat",
                     ""
                   ],
                   "members": []
                 },
                 {
-                  "row": 5,
+                  "row": 2,
                   "role": "data",
                   "cells": [
                     "Zemin kat",
@@ -2813,7 +2859,7 @@
                   ]
                 },
                 {
-                  "row": 6,
+                  "row": 3,
                   "role": "data",
                   "cells": [
                     "Zemin kat",
@@ -2824,20 +2870,60 @@
                   ]
                 },
                 {
-                  "row": 7,
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "Zemin kat",
+                    "12.00"
+                  ],
+                  "members": [
+                    "$uidOf:10"
+                  ]
+                },
+                {
+                  "row": 5,
                   "role": "footer",
                   "cells": [
                     "Zemin kat toplamı",
-                    "32.00"
+                    "44.00"
                   ],
                   "members": []
                 },
                 {
+                  "row": 6,
+                  "role": "header",
+                  "cells": [
+                    "1. kat",
+                    ""
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 7,
+                  "role": "data",
+                  "cells": [
+                    "1. kat",
+                    "20.00"
+                  ],
+                  "members": [
+                    "$uidOf:3"
+                  ]
+                },
+                {
                   "row": 8,
+                  "role": "footer",
+                  "cells": [
+                    "1. kat toplamı",
+                    "20.00"
+                  ],
+                  "members": []
+                },
+                {
+                  "row": 9,
                   "role": "total",
                   "cells": [
                     "Toplam",
-                    "52.00"
+                    "64.00"
                   ],
                   "members": []
                 }
@@ -2901,7 +2987,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 1,
               "revision": "$current"
             },
@@ -2915,7 +3001,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -3045,8 +3131,8 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
-              "rows": 3,
+              "id": 11,
+              "rows": 4,
               "revision": "$current"
             },
             "warnings": []
@@ -3059,7 +3145,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -3131,6 +3217,18 @@
                   "members": [
                     "$uidOf:3"
                   ]
+                },
+                {
+                  "row": 4,
+                  "role": "data",
+                  "cells": [
+                    "",
+                    "1",
+                    "12.00"
+                  ],
+                  "members": [
+                    "$uidOf:10"
+                  ]
                 }
               ],
               "revision": "$current"
@@ -3171,7 +3269,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -3185,7 +3283,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -3328,7 +3426,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -3342,7 +3440,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -3525,7 +3623,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 1,
               "revision": "$current"
             },
@@ -3539,7 +3637,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",
@@ -3638,7 +3736,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 1,
               "revision": "$current"
             },
@@ -3652,7 +3750,7 @@
           "op": "execute",
           "command": "cad.schedules.query",
           "input": {
-            "uid": "$uidOf:10"
+            "uid": "$uidOf:11"
           },
           "result": {
             "status": "completed",

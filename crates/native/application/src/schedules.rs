@@ -378,6 +378,10 @@ fn written(
         (Entity::Space(s), F::BaseFinish) => s.space.finishes.base = text(),
         (Entity::Space(s), F::WallFinish) => s.space.finishes.wall = text(),
         (Entity::Space(s), F::CeilingFinish) => s.space.finishes.ceiling = text(),
+        // The room list's (docs/adr/3038).
+        (Entity::Space(s), F::SillFinish) => s.space.finishes.sill = text(),
+        (Entity::Space(s), F::StairFinish) => s.space.finishes.stair = text(),
+        (Entity::Space(s), F::RailingFinish) => s.space.finishes.railing = text(),
         (Entity::Column(c), F::Tag) => c.column.tag = text(),
         (Entity::Column(c), F::Type) => c.column.kind = text(),
         (Entity::Column(c), F::Width) => c.column.width = length_of(doc, value, true)?,

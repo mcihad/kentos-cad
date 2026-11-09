@@ -2,7 +2,8 @@
 //! (Planlı Alanlar İmar Yönetmeliği 57(2)(a); the digital project regulation's EK-2 2.8.1: TAKS, emsal, otopark,
 //! sığınak … hesapları): Metrekare cetveli, Emsal ve TAKS, Kat irtifakı, Otopark and Sığınak hesabı. The drawing's own
 //! live table of each is taken as it is; one it lacks is made beside the drawing, under the others, at the plot
-//! scale's table height (the same tables Metraj ▾ places by hand, docs/adr/3029–3031, 3036).
+//! scale's table height (the same tables Metraj ▾ places by hand, docs/adr/3029–3031, 3036). The room list (Mahal
+//! listesi, docs/adr/3038) is found and made the same way; it is a sheet of its own (EK-2 LS/MHL).
 
 use kentos_commands::{
     CommandResult, EntitiesCreate, Entity, NewObject, ScheduleColumn, ScheduleField,
@@ -11,11 +12,13 @@ use kentos_commands::{
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, create, schedules_create, sheets_fit};
 
-/// A calculation table of the drawing: what the sheet names it and where it lies, metres.
+/// A calculation table of the drawing: what the sheet names it and where it lies, metres; a list's EK-2 kind when it is
+/// a sheet of its own (the room list's MHL), none when it goes on the calculation sheet.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CalcTable {
     pub label: &'static str,
     pub bounds: [f64; 4],
+    pub list: Option<&'static str>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -25,10 +28,16 @@ enum Kind {
     LandShares,
     Parking,
     Shelter,
+    RoomList,
 }
 
 fn kind_of(source: &TableSource) -> Option<Kind> {
     match source {
+        TableSource::Schedule {
+            of: ScheduleOf::Spaces,
+            columns,
+            ..
+        } if columns.iter().any(|c| c.field.is_room_list()) => Some(Kind::RoomList),
         TableSource::Schedule { by_level: true, .. } => Some(Kind::Areas),
         TableSource::Schedule { columns, .. }
             if columns.iter().any(|c| c.field == ScheduleField::LandShare) =>
@@ -60,16 +69,21 @@ fn column(field: ScheduleField) -> ScheduleColumn {
     }
 }
 
-/// A units schedule at `at`: the metrekare cetveli storey by storey, or the kat irtifakı table of the independent units
-/// (tag_tools.rs's presets).
+/// A schedule at `at`: the metrekare cetveli storey by storey, the kat irtifakı table of the independent units, or the
+/// room list (tag_tools.rs's presets).
 fn schedule(doc: &mut Document, kind: Kind, at: [f64; 2]) -> Result<(), String> {
     use ScheduleField::*;
+    let (mut of, mut sort, mut total) = (ScheduleOf::Units, Vec::new(), Some(true));
     let (columns, filter, by_level) = match kind {
         Kind::Areas => (
             vec![Level, Number, Name, UnitKind, PaiyGross, PaiyNet],
             None,
             Some(true),
         ),
+        Kind::RoomList => {
+            (of, sort, total) = (ScheduleOf::Spaces, crate::tag_tools::room_list_sort(), None);
+            (crate::tag_tools::ROOM_LIST.to_vec(), None, None)
+        }
         _ => (
             vec![
                 Number,
@@ -93,12 +107,12 @@ fn schedule(doc: &mut Document, kind: Kind, at: [f64; 2]) -> Result<(), String> 
     let input = SchedulesCreate {
         layer_id: doc.layers().active().to_owned(),
         at: kentos_commands::Vec2 { x: at[0], y: at[1] },
-        of: ScheduleOf::Units,
+        of,
         columns: Some(columns.into_iter().map(column).collect()),
         filter,
-        sort: Vec::new(),
+        sort,
         group: None,
-        total: Some(true),
+        total,
         by_level,
         height: None,
         color: None,
@@ -170,6 +184,8 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
         .is_some();
     let rooms = doc.entities().any(|e| matches!(e, Entity::Space(_)));
     let wanted = [
+        // The room list first (MO: mahal listesi before the parking calculation); a sheet of its own.
+        (Kind::RoomList, "Mahal listesi", rooms),
         (Kind::Areas, "Metrekare cetveli", rooms),
         (Kind::Zoning, "Emsal ve TAKS", zoning),
         (Kind::LandShares, "Kat irtifakı", units),
@@ -189,7 +205,7 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
             Some(b) => b,
             None => {
                 match kind {
-                    Kind::Areas | Kind::LandShares => schedule(doc, kind, [x, y])?,
+                    Kind::Areas | Kind::LandShares | Kind::RoomList => schedule(doc, kind, [x, y])?,
                     Kind::Zoning => live(doc, TableSource::Zoning {}, [x, y])?,
                     Kind::Parking => live(doc, TableSource::Parking {}, [x, y])?,
                     Kind::Shelter => live(doc, TableSource::Shelter {}, [x, y])?,
@@ -199,7 +215,12 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
                 b
             }
         };
-        out.push(CalcTable { label, bounds });
+        let list = (kind == Kind::RoomList).then_some("MHL");
+        out.push(CalcTable {
+            label,
+            bounds,
+            list,
+        });
     }
     Ok(out)
 }

@@ -47,6 +47,8 @@ pub const SCHEDULE_UNITS_ID: &str = "scheduleUnits";
 pub const SCHEDULE_AREAS_ID: &str = "scheduleAreas";
 /// Kat irtifakı tablosu (docs/adr/3031): the independent units with their natures, areas, annexes and land shares.
 pub const SCHEDULE_LAND_SHARES_ID: &str = "scheduleLandShares";
+/// Mahal listesi (docs/adr/3038).
+pub const SCHEDULE_ROOM_LIST_ID: &str = "scheduleRoomList";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -867,10 +869,14 @@ pub enum SchedulePreset {
     /// Kat irtifakı tablosu (docs/adr/3031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/2-a, 57/3): the independent units alone,
     /// each with its storey, nature, net and gross areas, annexes, total and general gross and land share.
     LandShares,
+    /// Mahal listesi (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): every room storey by storey, the lowest
+    /// first, under its storey's heading: its number and name, its floor's, skirting's, walls' and ceiling's finishes,
+    /// the doors and windows serving it by their codes, its sills', stair's and railings' finishes.
+    RoomList,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 9] = [
+    pub const ALL: [SchedulePreset; 10] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
@@ -880,12 +886,15 @@ impl SchedulePreset {
         SchedulePreset::Units,
         SchedulePreset::AreaTable,
         SchedulePreset::LandShares,
+        SchedulePreset::RoomList,
     ];
 
     pub fn of(self) -> ScheduleOf {
         match self {
             SchedulePreset::Openings => ScheduleOf::Openings,
-            SchedulePreset::Spaces | SchedulePreset::Finishes => ScheduleOf::Spaces,
+            SchedulePreset::Spaces | SchedulePreset::Finishes | SchedulePreset::RoomList => {
+                ScheduleOf::Spaces
+            }
             SchedulePreset::Columns => ScheduleOf::Columns,
             SchedulePreset::Walls => ScheduleOf::Walls,
             SchedulePreset::Fixtures => ScheduleOf::Fixtures,
@@ -900,6 +909,7 @@ impl SchedulePreset {
             SchedulePreset::Finishes => "Mahal kaplama çizelgesi",
             SchedulePreset::AreaTable => "Metrekare cetveli",
             SchedulePreset::LandShares => "Kat irtifakı tablosu",
+            SchedulePreset::RoomList => "Mahal listesi",
             other => other.of().label(),
         }
     }
@@ -915,6 +925,7 @@ impl SchedulePreset {
             SchedulePreset::Units => "units",
             SchedulePreset::AreaTable => "areas",
             SchedulePreset::LandShares => "landShares",
+            SchedulePreset::RoomList => "roomList",
         }
     }
 
@@ -922,9 +933,17 @@ impl SchedulePreset {
     fn columns(self, group: bool) -> Option<Vec<kentos_commands::ScheduleColumn>> {
         use kentos_commands::ScheduleField::*;
         let fields: &[kentos_commands::ScheduleField] = match (self, group) {
-            (SchedulePreset::Finishes, _) => {
-                &[Number, Name, FloorFinish, BaseFinish, WallFinish, CeilingFinish, Area, Baseboard]
-            }
+            (SchedulePreset::Finishes, _) => &[
+                Number,
+                Name,
+                FloorFinish,
+                BaseFinish,
+                WallFinish,
+                CeilingFinish,
+                Area,
+                Baseboard,
+            ],
+            (SchedulePreset::RoomList, _) => &ROOM_LIST,
             // The metrekare cetveli: storey, unit, its kind, the storey's part of its gross and net.
             (SchedulePreset::AreaTable, _) => &[Level, Number, Name, UnitKind, PaiyGross, PaiyNet],
             // Kat irtifakı tablosu (KMK 12/a: number and nature, the areas, annexes, land share; PAİY 57/3's areas).
@@ -984,6 +1003,44 @@ impl SchedulePreset {
                 .collect(),
         )
     }
+}
+
+/// Mahal listesi's columns (docs/adr/3038): the storey (its heading), the room's number and name, its finishes as
+/// Planlı Alanlar İmar Yönetmeliği 57(29) lists them, and the doors and windows serving it.
+pub const ROOM_LIST: [kentos_commands::ScheduleField; 12] = {
+    use kentos_commands::ScheduleField::*;
+    [
+        Level,
+        Number,
+        Name,
+        FloorFinish,
+        BaseFinish,
+        WallFinish,
+        CeilingFinish,
+        Doors,
+        Windows,
+        SillFinish,
+        StairFinish,
+        RailingFinish,
+    ]
+};
+
+/// Mahal listesi's order: storey by storey (the lowest first) under each storey's heading, then by number.
+pub fn room_list_sort() -> Vec<ScheduleSort> {
+    vec![
+        ScheduleSort {
+            column: 0,
+            descending: false,
+            header: true,
+            footer: false,
+        },
+        ScheduleSort {
+            column: 1,
+            descending: false,
+            header: false,
+            footer: false,
+        },
+    ]
 }
 
 /// What Kat irtifakı tablosu's message adds (docs/adr/3031): the land shares' whole, why they could not be given, the
@@ -1072,12 +1129,17 @@ impl ScheduleTool {
             preset,
             // A fixtures schedule counts alike ones on one row.
             group: preset == SchedulePreset::Fixtures,
-            total: preset != SchedulePreset::Openings,
-            // A units schedule keeps the program's order (docs/adr/0795), a metrekare cetveli the storeys'.
+            // A units schedule keeps the program's order (docs/adr/0795), a metrekare cetveli the storeys'; the room
+            // list sorts storey by storey itself (docs/adr/3038).
             sorted: !matches!(
                 preset,
-                SchedulePreset::Units | SchedulePreset::AreaTable | SchedulePreset::LandShares
+                SchedulePreset::Units
+                    | SchedulePreset::AreaTable
+                    | SchedulePreset::LandShares
+                    | SchedulePreset::RoomList
             ),
+            // The room list has no total row: it adds nothing up.
+            total: !matches!(preset, SchedulePreset::Openings | SchedulePreset::RoomList),
             subtotals: false,
             active_level: false,
             table: None,
@@ -1105,7 +1167,9 @@ impl ScheduleTool {
                     ..Default::default()
                 }
             }),
-            sort: if self.sorted || self.subtotals {
+            sort: if self.preset == SchedulePreset::RoomList {
+                room_list_sort()
+            } else if self.sorted || self.subtotals {
                 vec![ScheduleSort {
                     column: 0,
                     descending: false,
@@ -1238,6 +1302,7 @@ impl Tool for ScheduleTool {
             SchedulePreset::Units => SCHEDULE_UNITS_ID,
             SchedulePreset::AreaTable => SCHEDULE_AREAS_ID,
             SchedulePreset::LandShares => SCHEDULE_LAND_SHARES_ID,
+            SchedulePreset::RoomList => SCHEDULE_ROOM_LIST_ID,
             _ => SCHEDULE_ID,
         }
     }

@@ -31,6 +31,18 @@ pub struct PermitSet {
     /// The calculation tables the set's “Mimari hesap raporu” shows (their names and boxes, metres), in its order;
     /// none: no such sheet (`kentos_interaction::calc_tables::ensure` makes and finds them).
     pub tables: Vec<(String, [f64; 4])>,
+    /// The lists that are sheets of their own (docs/adr/3038), after the plans: each its title (Mahal listesi), its
+    /// EK-2 kind (MHL), its box (metres) and the scale it is drawn at; each on the smallest A paper it fits.
+    pub lists: Vec<ListSheet>,
+}
+
+/// A list the set gives a sheet of its own (docs/adr/3038).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ListSheet {
+    pub title: String,
+    pub kind: &'static str,
+    pub bounds: [f64; 4],
+    pub scale: u32,
 }
 
 /// `variables` with the particulars it lacks added (their defaults; the work's name the drawing's) and `values`
@@ -120,12 +132,13 @@ fn union(a: Option<[f64; 4]>, b: [f64; 4]) -> [f64; 4] {
     }
 }
 
-/// The set's pages for `phase` and the paper they go on.
+/// The set's pages for `phase` and the paper they go on, and what was left out (a list no paper holds).
 pub(crate) fn pages(
     doc: &Document,
     phase: Phase,
     tables: &[(String, [f64; 4])],
-) -> Result<(Vec<Page>, PaperChoice), Stop> {
+    lists: &[ListSheet],
+) -> Result<(Vec<Page>, PaperChoice, Vec<String>), Stop> {
     let levels = doc
         .settings()
         .arch
@@ -189,7 +202,10 @@ pub(crate) fn pages(
     let scale = phase.scale();
     // The tables are drawn at the plot scale's height: shown at it.
     let plot = doc.settings().plot_scale.round().max(1.0) as u32;
-    let table_sizes: Vec<[f64; 2]> = tables.iter().map(|(_, b)| on_paper(*b, plot)).collect();
+    let table_sizes: Vec<[f64; 2]> = tables
+        .iter()
+        .map(|(_, b)| on_paper(permit::padded(*b, plot), plot))
+        .collect();
     let fits_tables =
         |p: kentos_sheet::Paper| table_sizes.is_empty() || permit::shelf(p, &table_sizes).is_some();
     let (paper, site_scale) = [500, 1000]
@@ -227,11 +243,32 @@ pub(crate) fn pages(
             scale,
         ));
     }
+    // The lists after the plans (MO: mahal listesi, then the parking calculation), each on the smallest paper it fits.
+    let mut notes = Vec::new();
+    for l in lists {
+        let size = [on_paper(permit::padded(l.bounds, l.scale), l.scale)];
+        match permit::PAPERS
+            .into_iter()
+            .find(|p| permit::shelf(*p, &size).is_some())
+        {
+            Some(p) => out.push(Page::list(
+                &l.title,
+                l.kind,
+                vec![(l.title.clone(), l.bounds)],
+                l.scale,
+                PaperChoice {
+                    paper: p,
+                    orientation: kentos_sheet::Orientation::Landscape,
+                },
+            )),
+            None => notes.push(format!("{} A0 kâğıda sığmadı; paftası kurulmadı.", l.title)),
+        }
+    }
     // The calculation sheet last (MO: the parking calculation after the drawings), when its tables fit the paper.
     if !tables.is_empty() && fits_tables(paper.paper) {
         out.push(Page::tables(tables.to_vec(), plot));
     }
-    Ok((out, paper))
+    Ok((out, paper, notes))
 }
 
 /// The set's sheets' change of the book, through `cad.sheets.edit`'s input.
@@ -239,7 +276,8 @@ pub(crate) fn edit(
     doc: &Document,
     phase: Phase,
     tables: &[(String, [f64; 4])],
-) -> Result<(SheetsEdit, Vec<permit::Made>), Stop> {
+    lists: &[ListSheet],
+) -> Result<(SheetsEdit, Vec<permit::Made>, Vec<String>), Stop> {
     let template = template::system_template(permit::TEMPLATE).ok_or_else(|| {
         Stop::failed(error(
             "unknown_template",
@@ -247,7 +285,7 @@ pub(crate) fn edit(
             Some("source".into()),
         ))
     })?;
-    let (pages, paper) = pages(doc, phase, tables)?;
+    let (pages, paper, notes) = pages(doc, phase, tables, lists)?;
     let (book, _) = match doc.sheets() {
         Some(s) => kentos_sheet::project::read_project_sheets(s)
             .map_err(|e| Stop::failed(error("book_unreadable", e.message, None)))?,
@@ -282,22 +320,23 @@ pub(crate) fn edit(
             expected_revision: None,
         },
         made.made,
+        notes,
     ))
 }
 
 /// The particulars written (a settings edit, never an undo step), then the set's sheets (one undo step). The sheets
-/// made, with the change's answer.
+/// made, with the change's answer and what was left out.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: &PermitSet,
-) -> Result<(SheetsEdited, Vec<permit::Made>), String> {
+) -> Result<(SheetsEdited, Vec<permit::Made>, Vec<String>), String> {
     let mut settings = cx.doc.settings().clone();
     settings.variables = with_particulars(&settings.variables, cx.doc.name(), &input.values);
     cx.doc.set_settings(settings);
-    let (edit, made) =
-        edit(cx.doc, input.phase, &input.tables).map_err(|s| s.into_error().message)?;
+    let (edit, made, notes) = edit(cx.doc, input.phase, &input.tables, &input.lists)
+        .map_err(|s| s.into_error().message)?;
     match sheets_edit::execute(cx, edit) {
-        CommandResult::Completed { output, .. } => Ok((output, made)),
+        CommandResult::Completed { output, .. } => Ok((output, made, notes)),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Ruhsat takımı kurulamadı.".into()),
     }

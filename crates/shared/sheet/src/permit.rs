@@ -74,7 +74,8 @@ pub enum PageKind {
     Site,
     /// A storey's plan.
     Plan,
-    /// The calculation tables (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each, at the plot scale.
+    /// The calculation tables (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each, at the plot scale. A list
+    /// sheet (Mahal listesi, docs/adr/3038) is one too: its table, uncaptioned, on a paper of its own.
     Tables,
 }
 
@@ -93,6 +94,11 @@ pub struct Page {
     pub place: String,
     /// The tables a calculation sheet shows: their names and boxes, metres.
     pub views: Vec<(String, [f64; 4])>,
+    /// Its own paper (a list's, docs/adr/3038); none: the set's.
+    pub paper: Option<PaperChoice>,
+    /// Its tables each under a caption with its scale (the calculation sheet's); a list's is not: its title block
+    /// names it and a list has no scale.
+    pub captioned: bool,
 }
 
 impl Page {
@@ -107,6 +113,8 @@ impl Page {
             file_kind: "MMC",
             place: "NNN".into(),
             views: Vec::new(),
+            paper: None,
+            captioned: false,
         }
     }
 
@@ -121,6 +129,8 @@ impl Page {
             file_kind: "VAZ",
             place: "NNN".into(),
             views: Vec::new(),
+            paper: None,
+            captioned: false,
         }
     }
 
@@ -141,6 +151,8 @@ impl Page {
             file_kind: "MMC",
             place: place.to_owned(),
             views: Vec::new(),
+            paper: None,
+            captioned: false,
         }
     }
 
@@ -156,8 +168,41 @@ impl Page {
             file_kind: "MIR",
             place: "NNN".into(),
             views,
+            paper: None,
+            captioned: true,
         }
     }
+
+    /// A list sheet (EK-2 Tablo 2.12 Liste, LS): `views` (name, box) at `scale` on `paper`, its file `kind` (Tablo
+    /// 2.13: MHL a mahal listesi), titled `title` (docs/adr/3038).
+    pub fn list(
+        title: &str,
+        kind: &'static str,
+        views: Vec<(String, [f64; 4])>,
+        scale: u32,
+        paper: PaperChoice,
+    ) -> Page {
+        Page {
+            kind: PageKind::Tables,
+            title: title.to_owned(),
+            level: None,
+            center: None,
+            scale: Some(scale),
+            file_type: "LS",
+            file_kind: kind,
+            place: "NNN".into(),
+            views,
+            paper: Some(paper),
+            captioned: false,
+        }
+    }
+}
+
+/// A table's box `b` (metres) with 1.5 mm of paper around it at 1/`scale` (docs/adr/3038): a map exactly the table's
+/// box clipped its outer lines (the room list's right edge was not printed).
+pub fn padded(b: [f64; 4], scale: u32) -> [f64; 4] {
+    let pad = 1.5 * f64::from(scale) / 1000.0;
+    [b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad]
 }
 
 /// Whether `sizes` (paper mm) each fit the map's room on landscape `paper`, a tenth to spare.
@@ -478,6 +523,8 @@ pub fn permit_sheets(
             .or_insert(0);
         *n += 1;
         let text = |v: &str| VarValue::Text(v.to_owned());
+        // A list's own paper (docs/adr/3038), else the set's.
+        let paper = page.paper.clone().unwrap_or_else(|| paper.clone());
         let options = InstanceOptions {
             paper: Some(paper.clone()),
             name: Some(format!("{number} {}", page.title)),
@@ -541,12 +588,22 @@ pub fn permit_sheets(
                 // The template's map, cloned for each table: locked at the plot scale on the table's box.
                 let template_map = sheet.items.iter().find(|i| i.id == map_item).cloned();
                 drop_items(sheet, &|id: &String| *id == map_item);
+                if !page.captioned {
+                    // A list has no scale (docs/adr/3038): its title block says so.
+                    sheet.variables.push(crate::model::Variable {
+                        name: "olcek".into(),
+                        label: "Ölçek".into(),
+                        kind: crate::model::VarKind::Text,
+                        value: VarValue::Text("—".into()),
+                    });
+                }
                 let scale = page.scale.unwrap_or(100);
                 let k = 1000.0 / f64::from(scale);
                 let sizes: Vec<[f64; 2]> = page
                     .views
                     .iter()
-                    .map(|(_, b)| [(b[2] - b[0]) * k, (b[3] - b[1]) * k])
+                    .map(|(_, b)| padded(*b, scale))
+                    .map(|b| [(b[2] - b[0]) * k, (b[3] - b[1]) * k])
                     .collect();
                 let places = shelf(paper.paper, &sizes).ok_or_else(|| {
                     SheetError::at(
@@ -581,6 +638,9 @@ pub fn permit_sheets(
                             m.view_locked = true;
                         }
                         sheet.items.push(map);
+                    }
+                    if !page.captioned {
+                        continue;
                     }
                     let caption: Item = serde_json::from_value(json!({
                         "id": format!("{}-tablo-{}-baslik", ids.sheet, n + 1),

@@ -81,6 +81,7 @@ pub mod zoning;
 pub mod site;
 pub mod escape;
 pub mod room_names;
+pub mod room_openings;
 pub mod provisions;
 pub mod title_facts;
 pub mod tag_read;

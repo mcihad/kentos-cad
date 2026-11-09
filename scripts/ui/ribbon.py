@@ -449,7 +449,10 @@ CAD = [
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
-                {"command": "tool.scheduleFinishes", "title": "Çizelge", "label": "Mahal kaplama çizelgesi"},
+                # Mahal listesi (docs/adr/3038): PAİY 57(29)'s list, storey by storey, in the place of the finishes
+                # schedule, whose columns it has (a menu holds six, DESIGN.md §7.3.1); Mahal kaplama çizelgesi stays the
+                # Çizelge tool's Tür and the command search's.
+                {"command": "tool.scheduleRoomList", "title": "Çizelge", "label": "Mahal listesi"},
                 {"command": "tool.scheduleFixtures", "title": "Çizelge", "label": "Donatı çizelgesi"},
                 {"command": "tool.scheduleUnits", "title": "Çizelge", "label": "Bölüm çizelgesi"},
                 {"command": "tool.materialLegend", "title": "Çizelge", "label": "Malzeme lejandı"},
@@ -894,6 +897,9 @@ MODULES = {
         "processing.run.network.serviceAreas": ["cbs"],
         # The project type's switch: a module's projects keep their module's type.
         "workspace.cad": [], "workspace.gis": [], "workspace.plan3d": [], "workspace.disaster": [],
+        # Mahal kaplama çizelgesi (docs/adr/0733 §3) left Çizelge ▾ to the room list (docs/adr/3038), whose columns it
+        # has; it stays Mimari's (the Çizelge tool's Tür, Komut ara), not every module's.
+        "tool.scheduleFinishes": ["mimari"],
         # The GNSS archive's sessions and the feature codes' reconciling are KentOS Harita's.
         "map.survey": ["harita"], "map.survey.import": ["harita"], "map.survey.select": ["harita", "cbs"],
         "map.survey.adjustment": ["harita"], "map.featuresReconcile": ["harita"],

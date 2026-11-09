@@ -96,6 +96,20 @@ pub fn kind_of(name: Option<&str>, usage: Option<&str>) -> Option<RoomKind> {
     }
 }
 
+/// The words a room people pass through is called by (geçiş mahalleri, docs/adr/3028): a door between one and a room is
+/// the room's.
+const PASSAGES: [&str; 7] = [
+    "KORIDOR", "HOL", "ANTRE", "GIRIS", "SAHANLIK", "MERDIVEN", "GECIT",
+];
+
+/// Whether a room's name or use is one people pass through (Koridor, Hol, Antre, Giriş, Sahanlık, Merdiven, Geçit): one
+/// of its words is one of them.
+pub fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
+    words(name, usage)
+        .iter()
+        .any(|w| PASSAGES.contains(&w.as_str()))
+}
+
 /// Whether a unit's nature is a dwelling's (Daire, Mesken, Konut, Ev) or not given (docs/adr/3033).
 pub fn dwelling_nature(nature: Option<&str>) -> bool {
     nature.is_none_or(|n| {

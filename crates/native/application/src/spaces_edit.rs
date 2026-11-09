@@ -106,6 +106,19 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.ceiling {
         f.finishes.ceiling.clone_from(v);
     }
+    if let Some(v) = &c.base {
+        f.finishes.base.clone_from(v);
+    }
+    // The room list's finishes (docs/adr/3038).
+    if let Some(v) = &c.sill {
+        f.finishes.sill.clone_from(v);
+    }
+    if let Some(v) = &c.stair {
+        f.finishes.stair.clone_from(v);
+    }
+    if let Some(v) = &c.railing {
+        f.finishes.railing.clone_from(v);
+    }
     if let Some(v) = c.void {
         f.void = v;
     }

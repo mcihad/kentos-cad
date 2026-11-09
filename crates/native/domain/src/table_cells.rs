@@ -37,7 +37,8 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
 }
 
 /// Whether a schedule reads the project's settings a step's `ops` change (docs/adr/0795): a units schedule the
-/// program and the levels, a spaces schedule with a program field the program.
+/// program and the levels, a spaces schedule with a program field the program; a door and window schedule and the room
+/// list's doors and windows the project's opening types (their names and joinery codes, docs/adr/3028, 3038).
 fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let program = ops
         .iter()
@@ -53,9 +54,21 @@ fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
     let Some(TableSource::Schedule { of, columns, .. }) = &t.source else {
         return false;
     };
+    let types = ops.iter().any(|op| matches!(op, Op::OpeningTypes { .. }));
     match of {
         kentos_contracts::ScheduleOf::Units => program || settings,
-        kentos_contracts::ScheduleOf::Spaces => program && columns.iter().any(|c| c.field.is_program()),
+        kentos_contracts::ScheduleOf::Spaces => {
+            (program && columns.iter().any(|c| c.field.is_program()))
+                || (types
+                    && columns.iter().any(|c| {
+                        matches!(
+                            c.field,
+                            kentos_contracts::ScheduleField::Doors
+                                | kentos_contracts::ScheduleField::Windows
+                        )
+                    }))
+        }
+        kentos_contracts::ScheduleOf::Openings => types,
         _ => false,
     }
 }

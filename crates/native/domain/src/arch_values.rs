@@ -162,7 +162,7 @@ impl Document {
         .unwrap_or_else(|| s.to_owned())
     }
 
-    fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
+    pub(crate) fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
         let uid = crate::identity::Uuid::parse_str(host).ok()?;
         let slot = self.store.slot_of(uid)?;
         match &*self.store.get(slot)?.entity {
@@ -337,6 +337,21 @@ impl Document {
                     "baseFinish" => text(&x.finishes.base),
                     "wallFinish" => text(&x.finishes.wall),
                     "ceilingFinish" => text(&x.finishes.ceiling),
+                    // The room list's (docs/adr/3038): its sills', its stair's and its railings' finishes, the doors and
+                    // the windows that serve it.
+                    "sillFinish" => text(&x.finishes.sill),
+                    "stairFinish" => text(&x.finishes.stair),
+                    "railingFinish" => text(&x.finishes.railing),
+                    "doors" | "windows" => {
+                        let all = self.room_openings();
+                        let mine = all.get(&crate::Slot(e.base().id))?;
+                        let t = if place == "doors" {
+                            &mine.doors
+                        } else {
+                            &mine.windows
+                        };
+                        (!t.is_empty()).then(|| Text(t.clone()))
+                    }
                     // Its baseboard: Metraj's rule (docs/adr/0722 §5); a void has none.
                     "baseboard" => (!x.void).then(|| {
                         Length(crate::passages::baseboard(

@@ -13726,7 +13726,7 @@
    "python": "kentos.cad.schedules.create",
    "mcp": "cad.schedules.create",
    "note": "Mahal kaplama çizelgesi: kaplama sütunları, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §3, §5).",
-   "scope": "cad",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -13774,6 +13774,22 @@
    "python": "kentos.cad.schedules.create",
    "mcp": "cad.schedules.create",
    "note": "Tür, grup, toplam, sıra ve tıklanan köşe komuta verilir; satırlar komutun ve belgenin hesabı, önizleme planından (ADR 0344 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.scheduleRoomList",
+   "kind": "command",
+   "title": "Mahal listesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Mahal çizelgesi: kat (başlık satırıyla, en alt kattan), numara, ad, döşeme, süpürgelik, duvar, tavan, kapı, pencere, denizlik ve parapet, basamak ve rıht, küpeşte ve korkuluk sütunları; toplamsız (ADR 3038).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0

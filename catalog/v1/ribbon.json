@@ -2237,9 +2237,9 @@
           "label": "Mahal çizelgesi"
          },
          {
-          "command": "tool.scheduleFinishes",
+          "command": "tool.scheduleRoomList",
           "title": "Çizelge",
-          "label": "Mahal kaplama çizelgesi"
+          "label": "Mahal listesi"
          },
          {
           "command": "tool.scheduleFixtures",
@@ -7298,6 +7298,9 @@
    "workspace.gis": [],
    "workspace.plan3d": [],
    "workspace.disaster": [],
+   "tool.scheduleFinishes": [
+    "mimari"
+   ],
    "map.survey": [
     "harita"
    ],

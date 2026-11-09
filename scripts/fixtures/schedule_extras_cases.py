@@ -11,8 +11,9 @@ The rules (docs/adr/0733 §2–§6, docs/adr/0344 §3):
   the number and name of the space on its level whose ring holds its point (spaces here are rectangles), its level and
   phase its own.
 - A space's finishes are its own fields; its baseboard its perimeter less its doorways (none here: its perimeter).
-- Rows in the drawing's order, sorted by the keys (numbers by value, words in the natural order, empties last), alike
-  rows merged when grouped (summed: count, area, perimeter, baseboard).
+- Rows in the drawing's order, sorted by the keys (numbers by value, words in the natural order, a storey by its
+  elevation, the lowest first (docs/adr/3038), empties last), alike rows merged when grouped (summed: count, area,
+  perimeter, baseboard).
 - A sort key with `header` puts its value before each group, across the row (merged), bold; with `footer` after it
   “‹value› toplamı” in its column (or the first not summed) and the group's sums, bold; an inner key's footer before
   an outer one's; the total last. Header, footer and total rows have no members.
@@ -74,7 +75,8 @@ def insert(b, at, arch=None, attrs=None):
 
 SEED = {
     1: ("space", "mahal", space("101", "Salon", "Oturma", "zemin", (0, 0, 5, 4),
-                                {"floor": "Parke", "wall": "Boya", "ceiling": "Alçı", "base": "Ahşap"}), {}),
+                                {"floor": "Parke", "wall": "Boya", "ceiling": "Alçı", "base": "Ahşap",
+                                 "sill": "Mermer denizlik"}), {}),
     2: ("space", "mahal", space("102", "Banyo", "Islak", "zemin", (5, 0, 8, 4), {"floor": "Seramik", "wall": "Seramik"}), {}),
     3: ("space", "mahal", space("201", "Oda", "Yatak", "kat-1", (0, 0, 5, 4), {"floor": "Laminat"}), {}),
     4: ("insert", "donati", *insert(B_KOLTUK, P(1, 1), {"level": "zemin"}, {"Renk": "Gri"})),
@@ -83,8 +85,11 @@ SEED = {
     7: ("insert", "donati", *insert(B_KOLTUK, P(1, 1), {"level": "kat-1"})),
     8: ("insert", "donati", *insert(B_ANTET, P(20, 20))),
     9: ("insert", "kilitli", *insert(B_LAVABO, P(6, 2), {"level": "zemin"})),
+    # The room list's stair and railings (docs/adr/3038).
+    10: ("space", "mahal", space("103", "Merdiven", None, "zemin", (8, 0, 11, 4),
+                                 {"floor": "Granit", "stair": "Granit basamak", "railing": "Ahşap küpeşte"}), {}),
 }
-NEW = 10
+NEW = 11
 SETUP = {
     "format": "kentos.document", "version": 1, "name": "Donatı ve kaplama çizelgeleri",
     "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
@@ -103,14 +108,19 @@ BLOCKS = {b["id"]: b for b in SETUP["blocks"]}
 TITLES = {"type": "Tür", "category": "Kategori", "space": "Mahal", "level": "Kat", "phase": "Evre", "count": "Adet",
           "number": "No", "name": "Ad", "usage": "Kullanım", "floorFinish": "Döşeme", "baseFinish": "Süpürgelik",
           "wallFinish": "Duvar kaplaması", "ceilingFinish": "Tavan", "area": "Alan", "perimeter": "Çevre",
-          "baseboard": "Süpürgelik boyu"}
+          "baseboard": "Süpürgelik boyu",
+          # The room list's (docs/adr/3038).
+          "sillFinish": "Denizlik ve parapet", "stairFinish": "Basamak ve rıht", "railingFinish": "Küpeşte ve korkuluk",
+          "doors": "Kapı", "windows": "Pencere"}
 LENGTHS = {"perimeter", "baseboard"}
 SUMMED = {"count", "area", "perimeter", "baseboard"}
 NUMERIC = LENGTHS | {"count", "area"}
-EDITABLE = {"number", "type", "name", "usage", "attr", "floorFinish", "baseFinish", "wallFinish", "ceilingFinish"}
+EDITABLE = {"number", "type", "name", "usage", "attr", "floorFinish", "baseFinish", "wallFinish", "ceilingFinish",
+            "sillFinish", "stairFinish", "railingFinish"}
 READS = {"fixtures": {"type", "category", "space", "level", "phase", "count", "attr"},
          "spaces": {"number", "name", "usage", "level", "phase", "count", "attr", "area", "perimeter", "floorFinish",
-                    "baseFinish", "wallFinish", "ceilingFinish", "baseboard"}}
+                    "baseFinish", "wallFinish", "ceilingFinish", "baseboard", "sillFinish", "stairFinish",
+                    "railingFinish", "doors", "windows"}}
 DEFAULT = {"fixtures": ["type", "category", "space", "level", "count"]}
 OF_LABEL = {"fixtures": "Donatı çizelgesi", "spaces": "Mahal çizelgesi"}
 KIND = {"fixtures": "insert", "spaces": "space"}
@@ -260,7 +270,12 @@ def rows_of(objs, src):
                 o = -1
             else:
                 x, y = a["vals"][j], b["vals"][j]
-                if x[0] != "text" and y[0] != "text":
+                storeys = [l["name"] for l in sorted(LEVELS, key=lambda l: l["elevation"])]
+                if columns[j]["field"] == "level" and a["texts"][j] in storeys and b["texts"][j] in storeys:
+                    # A storey by its elevation (docs/adr/3038).
+                    ra, rb = storeys.index(a["texts"][j]), storeys.index(b["texts"][j])
+                    o = (ra > rb) - (ra < rb)
+                elif x[0] != "text" and y[0] != "text":
                     o = (x[1] > y[1]) - (x[1] < y[1])
                 else:
                     o = pe.natural_cmp(a["texts"][j], b["texts"][j])
@@ -475,6 +490,10 @@ FIN = [{"field": f} for f in ("number", "name", "floorFinish", "baseFinish", "wa
                               "baseboard")]
 SP = {"layerId": "cizelge", "at": P(30, 0), "of": "spaces"}
 BY_SPACE = [{"field": "space"}, {"field": "type"}, {"field": "count"}]
+# Mahal listesi (docs/adr/3038): storey (its heading), number, name, the finishes, the doors and windows.
+ROOM_LIST = [{"field": f} for f in ("level", "number", "name", "floorFinish", "baseFinish", "wallFinish",
+                                    "ceilingFinish", "doors", "windows", "sillFinish", "stairFinish",
+                                    "railingFinish")]
 
 
 def create_cases():
@@ -484,6 +503,8 @@ def create_cases():
           [create({**FX, "columns": [{"field": "type"}, {"field": "category"}, {"field": "count"}], "group": True, "total": True,
                    "sort": [{"column": 0}]})])
     c.add("Donatı çizelgesi: yalnız zemin kat", [create({**FX, "filter": {"levels": ["zemin"]}})])
+    c.add("Mahal listesi: kat kat, en alttan; kaplamalar, denizlik, basamak ve rıht, küpeşte ve korkuluk",
+          [create({**SP, "columns": ROOM_LIST, "sort": [{"column": 0, "header": True}, {"column": 1}]})])
     c.add("Donatı çizelgesi: tür süzgeci Koltuk", [create({**FX, "filter": {"types": ["Koltuk"]}})])
     c.add("Donatı çizelgesi: tür süzgeci iki tür", [create({**FX, "filter": {"types": ["Lavabo", "Antet"]}})])
     c.add("Donatı çizelgesi: evre Yeni", [create({**FX, "filter": {"phases": ["new"]}})])
@@ -594,8 +615,11 @@ def edit_cases():
             "cell_computed", f"“{title}” sütunu çizimden hesaplanır; düzenlenmez. Kaynağın kendi alanını değiştirin.",
             "operation.column")))
     total = {**SP, "columns": FIN, "total": True}
-    c.add("Ret: genel toplamın satırı", edit(total, 4, 2, "X", refusal(
-        "cell_out_of_range", "Çizelgenin 4. satırı veri satırı değil; veri satırları 1–3 (0 başlık, sonuncusu toplam).",
+    # The total row: after every space's row (the room list's stair room is the fourth, docs/adr/3038).
+    rooms = sum(1 for k, *_ in SEED.values() if k == "space")
+    c.add("Ret: genel toplamın satırı", edit(total, rooms + 1, 2, "X", refusal(
+        "cell_out_of_range",
+        f"Çizelgenin {rooms + 1}. satırı veri satırı değil; veri satırları 1–{rooms} (0 başlık, sonuncusu toplam).",
         "operation.row")))
     for col, title in [(1, "Kategori"), (3, "Kat")]:
         c.add(f"Ret: donatının {title.lower()} sütunu hesaplanır", edit(FX, 2, col, "X", refusal(

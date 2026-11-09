@@ -322,6 +322,12 @@ pub enum Field {
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
+    /// Its skirting's finish and the room list's (docs/adr/3038): sills and parapets, stair treads and risers, handrails
+    /// and railings.
+    SpaceBase(Slot),
+    SpaceSill(Slot),
+    SpaceStair(Slot),
+    SpaceRailing(Slot),
     /// A slab's thickness, top's offset, edge's width (lengths) and material (empty: none; docs/adr/0722 §6).
     SlabThickness(Slot),
     SlabOffset(Slot),
@@ -2092,7 +2098,11 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceHeight(slot)
         | Field::SpaceFloor(slot)
         | Field::SpaceWall(slot)
-        | Field::SpaceCeiling(slot) => {
+        | Field::SpaceCeiling(slot)
+        | Field::SpaceBase(slot)
+        | Field::SpaceSill(slot)
+        | Field::SpaceStair(slot)
+        | Field::SpaceRailing(slot) => {
             use kentos_commands::{SpaceChange, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
@@ -2119,6 +2129,22 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 Field::SpaceCeiling(_) => SpaceChange {
                     ceiling: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceBase(_) => SpaceChange {
+                    base: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceSill(_) => SpaceChange {
+                    sill: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceStair(_) => SpaceChange {
+                    stair: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceRailing(_) => SpaceChange {
+                    railing: Some(words),
                     ..Default::default()
                 },
                 _ if t.is_empty() => SpaceChange {
@@ -2346,6 +2372,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceFloor(_)
         | Field::SpaceWall(_)
         | Field::SpaceCeiling(_)
+        | Field::SpaceBase(_)
+        | Field::SpaceSill(_)
+        | Field::SpaceStair(_)
+        | Field::SpaceRailing(_)
         | Field::SlabThickness(_)
         | Field::SlabOffset(_)
         | Field::SlabEdgeWidth(_)

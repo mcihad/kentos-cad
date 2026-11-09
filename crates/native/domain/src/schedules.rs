@@ -596,6 +596,21 @@ impl Document {
         let shares = (of != ScheduleOf::Units && columns.iter().any(|c| c.field.is_share()))
             .then(|| self.program_shares().map(|(_, parts)| parts))
             .flatten();
+        // The rooms' doors and windows (docs/adr/3038): every opening's room, worked out once for the schedule.
+        let openings = (of == ScheduleOf::Spaces
+            && columns
+                .iter()
+                .any(|c| matches!(c.field, ScheduleField::Doors | ScheduleField::Windows)))
+        .then(|| self.room_openings());
+        let opening_of = |e: &Entity, field: ScheduleField| -> Option<ArchValue> {
+            let mine = openings.as_ref()?.get(&Slot(e.base().id))?;
+            let t = if field == ScheduleField::Doors {
+                &mine.doors
+            } else {
+                &mine.windows
+            };
+            (!t.is_empty()).then(|| ArchValue::Text(t.clone()))
+        };
         let share_of = |e: &Entity, field: ScheduleField| -> Option<ArchValue> {
             let Entity::Space(x) = e else { return None };
             let unit = x.space.unit.as_deref()?;
@@ -629,6 +644,8 @@ impl Document {
                 .map(|c| {
                     if c.field.is_share() {
                         share_of(e, c.field)
+                    } else if matches!(c.field, ScheduleField::Doors | ScheduleField::Windows) {
+                        opening_of(e, c.field)
                     } else {
                         self.arch_value(e, c.field.name(), c.attr.as_deref())
                     }
@@ -653,6 +670,19 @@ impl Document {
                 units: Vec::new(),
             });
         }
+        // A storey sorts by its elevation, the lowest first, not by its name (docs/adr/3038: the room list storey by
+        // storey; Mimarlar Odası's order, planlar en alt kattan): Bodrum, Zemin kat, 1. kat.
+        let storeys: Vec<String> = {
+            let mut l = self
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.levels.clone())
+                .unwrap_or_default();
+            l.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
+            l.into_iter().map(|l| l.name).collect()
+        };
+        let storey_of = |t: &str| storeys.iter().position(|n| n == t);
         rows.sort_by(|a, b| {
             for k in sort {
                 let j = k.column as usize;
@@ -662,7 +692,14 @@ impl Document {
                     (true, false) => Ordering::Greater,
                     (false, true) => Ordering::Less,
                     _ => {
-                        let o = by_value(&a.values[j], &a.texts[j], &b.values[j], &b.texts[j]);
+                        let storey = (columns.get(j).map(|c| c.field)
+                            == Some(ScheduleField::Level))
+                        .then(|| storey_of(&a.texts[j]).zip(storey_of(&b.texts[j])))
+                        .flatten();
+                        let o = match storey {
+                            Some((x, y)) => x.cmp(&y),
+                            None => by_value(&a.values[j], &a.texts[j], &b.values[j], &b.texts[j]),
+                        };
                         if k.descending { o.reverse() } else { o }
                     }
                 };

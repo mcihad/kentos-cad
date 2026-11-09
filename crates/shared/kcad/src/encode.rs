@@ -2270,6 +2270,15 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 216 (docs/adr/3038): the room list's finishes and columns.
+    if objs.iter().any(kentos_contracts::needs_room_list)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_room_list))
+    {
+        return crate::SCHEMA_WITH_ROOM_LIST;
+    }
     // Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
     let provision_table = |e: &Entity| {
         matches!(e, Entity::Table(t)

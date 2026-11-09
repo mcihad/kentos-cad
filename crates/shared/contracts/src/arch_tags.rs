@@ -150,6 +150,17 @@ pub fn needs_land_shares(e: &crate::Entity) -> bool {
         Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_land())))
 }
 
+/// Whether `e` says the room list's fields (docs/adr/3038): a space with a sill's, a stair's or a railing's finish, or a
+/// spaces schedule with one of the room list's columns: KCAD schema 216.
+pub fn needs_room_list(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Space(s) => s.space.finishes.has_room_list(),
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_room_list())),
+        _ => false,
+    }
+}
+
 /// Whether `e` is a tag framed by an ellipse (docs/adr/3027): KCAD schema 207.
 pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
     matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)

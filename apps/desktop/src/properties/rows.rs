@@ -1756,12 +1756,49 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 // A numeric editor must not clip or parse a decorated fallback.
                 geo.push(Row::note("Katlar arası"));
             }
-            geo.push(words("Zemin kaplaması", &x.finishes.floor, Field::SpaceFloor(slot)));
-            geo.push(words("Duvar kaplaması", &x.finishes.wall, Field::SpaceWall(slot)));
-            geo.push(words("Tavan kaplaması", &x.finishes.ceiling, Field::SpaceCeiling(slot)));
+            // The finishes as the room list writes them (docs/adr/3038; PAİY 57(29)): “Döşeme”, the regulation's word
+            // and the schedules', not “Zemin” (the ground's).
+            geo.push(words(
+                "Döşeme kaplaması",
+                &x.finishes.floor,
+                Field::SpaceFloor(slot),
+            ));
+            geo.push(words(
+                "Süpürgelik",
+                &x.finishes.base,
+                Field::SpaceBase(slot),
+            ));
+            geo.push(words(
+                "Duvar kaplaması",
+                &x.finishes.wall,
+                Field::SpaceWall(slot),
+            ));
+            geo.push(words(
+                "Tavan kaplaması",
+                &x.finishes.ceiling,
+                Field::SpaceCeiling(slot),
+            ));
+            geo.push(words(
+                "Denizlik ve parapet",
+                &x.finishes.sill,
+                Field::SpaceSill(slot),
+            ));
+            geo.push(words(
+                "Basamak ve rıht",
+                &x.finishes.stair,
+                Field::SpaceStair(slot),
+            ));
+            geo.push(words(
+                "Küpeşte ve korkuluk",
+                &x.finishes.railing,
+                Field::SpaceRailing(slot),
+            ));
             let a = kentos_native_application::spaces::area_of(&x.parts);
             geo.extend(area(a));
-            geo.push(metres("Çevre", kentos_native_application::spaces::perimeter_of(&x.parts)));
+            geo.push(metres(
+                "Çevre",
+                kentos_native_application::spaces::perimeter_of(&x.parts),
+            ));
             if let Some(h) = height {
                 geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
             }

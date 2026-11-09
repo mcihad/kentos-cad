@@ -25,6 +25,14 @@ method?: SpaceMethod,
  */
 columns?: SpaceColumns, level?: string | null, phase?: ArchPhase | null, height?: number | null, floor?: string | null, wall?: string | null, ceiling?: string | null, 
 /**
+ * The skirting's finish (Süpürgelik, docs/adr/0733 §3).
+ */
+base?: string | null, 
+/**
+ * The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
+ */
+sill?: string | null, stair?: string | null, railing?: string | null, 
+/**
  * A void or a room again (docs/adr/0708).
  */
 void?: boolean, 

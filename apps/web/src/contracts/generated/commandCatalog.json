@@ -177344,7 +177344,11 @@
             "annexGross",
             "annexes",
             "totalGross",
-            "landShare"
+            "landShare",
+            "stairFinish",
+            "railingFinish",
+            "doors",
+            "windows"
           ],
           "type": "string"
         },
@@ -177431,6 +177435,11 @@
         {
           "const": "nature",
           "description": "Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:\ndaire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),\nits total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).",
+          "type": "string"
+        },
+        {
+          "const": "sillFinish",
+          "description": "Mahal listesi (docs/adr/3038; `.kcad` schema 216; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window\nsills' and parapets', its stair's treads' and risers', and its handrails' and railings' finishes; the doors and the\nwindows that serve it, by their joinery codes (“K01, P01 (2)”).",
           "type": "string"
         }
       ]
@@ -183142,7 +183151,7 @@
     },
     "SpaceFinishes": {
       "additionalProperties": false,
-      "description": "A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).",
+      "description": "A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room\nlist's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's\ntreads' and risers', and its handrails' and railings'.",
       "properties": {
         "base": {
           "description": "The skirting's finish (`.kcad` schema 131).",
@@ -183158,6 +183167,27 @@
           ]
         },
         "floor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "railing": {
+          "description": "Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sill": {
+          "description": "Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stair": {
+          "description": "Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).",
           "type": [
             "string",
             "null"
@@ -183616,6 +183646,13 @@
           "additionalProperties": false,
           "description": "Değiştir: the fields given, on every space named.",
           "properties": {
+            "base": {
+              "description": "The skirting's finish (Süpürgelik, docs/adr/0733 §3).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "ceiling": {
               "type": [
                 "string",
@@ -183690,6 +183727,12 @@
                 }
               ]
             },
+            "railing": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "scope": {
               "anyOf": [
                 {
@@ -183701,6 +183744,13 @@
               ],
               "description": "Source scope to keep for later wall/column updates; unassigned requires clearing level."
             },
+            "sill": {
+              "description": "The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
             "sources": {
               "description": "Explicit UUIDs; null clears the list and restores scope/level search.",
               "items": {
@@ -183708,6 +183758,12 @@
               },
               "type": [
                 "array",
+                "null"
+              ]
+            },
+            "stair": {
+              "type": [
+                "string",
                 "null"
               ]
             },

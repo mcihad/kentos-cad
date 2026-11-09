@@ -19,9 +19,6 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
 
-/// How far beyond a wall's face a door's side is looked at for a room, metres.
-const SIDE: f64 = 0.3;
-
 /// An opening the plan codes: its object, the code its type takes, its type's name and its middle.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Coded {
@@ -72,26 +69,10 @@ fn next_code(types: &[OpeningType], letters: &str) -> String {
     format!("{letters}{:02}", top + 1)
 }
 
-/// An opening's middle and its two sides' points a little beyond its wall's faces: left, right.
+/// An opening's middle and its two sides' points a little beyond its wall's faces: left, right (the room list's too,
+/// docs/adr/3038).
 pub(crate) fn sides(f: &OpeningFields) -> Option<(V, V, V)> {
-    let p: Vec<V> = f.place.iter().map(|q| V::new(q.x, q.y)).collect();
-    if p.len() != 4 {
-        return None;
-    }
-    let mid = |a: V, b: V| V::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
-    let (left, right) = (mid(p[0], p[2]), mid(p[1], p[3]));
-    let c = mid(left, right);
-    let (dx, dy) = (left.x - right.x, left.y - right.y);
-    let len = dx.hypot(dy);
-    if len < 1e-9 {
-        return None;
-    }
-    let n = V::new(dx / len, dy / len);
-    Some((
-        c,
-        V::new(left.x + n.x * SIDE, left.y + n.y * SIDE),
-        V::new(right.x - n.x * SIDE, right.y - n.y * SIDE),
-    ))
+    kentos_domain::room_openings::opening_sides(f)
 }
 
 /// The rooms of each level, their areas as the geometry reads them.
@@ -131,31 +112,9 @@ pub(crate) type NumberedRoom = (
     Vec<kentos_geometry_core::geom::arrangement::Area>,
 );
 
-/// The words a room people pass through is called by (geçiş mahalleri): a door between one and a room is the room's.
-const PASSAGES: [&str; 7] = [
-    "KORIDOR", "HOL", "ANTRE", "GIRIS", "SAHANLIK", "MERDIVEN", "GECIT",
-];
-
-/// Whether a room's name or use is one people pass through (Koridor, Hol, Antre, Giriş …).
+/// Whether a room's name or use is one people pass through (Koridor, Hol, Antre, Giriş …; the room list's too).
 fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
-    let fold = |t: &str| {
-        t.chars()
-            .map(|c| match c {
-                'ç' | 'Ç' => 'C',
-                'ğ' | 'Ğ' => 'G',
-                'ı' | 'I' | 'İ' | 'i' => 'I',
-                'ö' | 'Ö' => 'O',
-                'ş' | 'Ş' => 'S',
-                'ü' | 'Ü' => 'U',
-                c => c.to_ascii_uppercase(),
-            })
-            .collect::<String>()
-    };
-    [name, usage].into_iter().flatten().map(fold).any(|t| {
-        PASSAGES
-            .iter()
-            .any(|p| t.split(|c: char| !c.is_alphanumeric()).any(|w| w == *p))
-    })
+    kentos_domain::room_names::passage(name, usage)
 }
 
 /// The rooms that have a number, each level's, with their areas (docs/adr/3028's Mahale göre).

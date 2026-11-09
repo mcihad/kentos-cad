@@ -435,6 +435,8 @@ pub(super) struct Features {
     pub(super) sprinklers: bool,
     /// Schema 215 (docs/adr/3036): Otopark and Sığınak hesabı.
     pub(super) provision_tables: bool,
+    /// Schema 216 (docs/adr/3038): the room list's finishes and columns.
+    pub(super) room_list: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -724,6 +726,7 @@ impl Features {
             local_rules: schema >= crate::SCHEMA_WITH_LOCAL_RULES,
             sprinklers: schema >= crate::SCHEMA_WITH_SPRINKLERS,
             provision_tables: schema >= crate::SCHEMA_WITH_PROVISION_TABLES,
+            room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2527,6 +2530,14 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 216 (docs/adr/3038): the room list's finishes and a spaces schedule's room list columns.
+    if kentos_contracts::needs_room_list(&entity) && !has.room_list {
+        return Err(r.fail(
+            Code::UnknownField,
+            "mahalin denizlik, merdiven ve korkuluk kaplamaları ve çizelgenin mahal listesi sütunları (sillFinish, \
+             stairFinish, railingFinish, doors, windows) şema 216 ister",
         ));
     }
     // Schema 211 (docs/adr/3031): a units schedule's kat irtifakı fields; before it none was a field.

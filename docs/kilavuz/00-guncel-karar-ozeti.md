@@ -214,6 +214,17 @@
       Yayın adında `{@ad}` (`naming_value_missing`).
     - `kentos_interaction::calc_tables::ensure`: hesap tabloları (metrekare cetveli, emsal, kat irtifakı, otopark,
       sığınak) bulunur ya da çizimin sağına kurulur → `PermitSet.tables` → `PageKind::Tables` (`permit::shelf`, HS/MIR).
+  - **Mahal listesi (M38 1. bölüm, [ADR 3038](../adr/3038-room-list-and-graphic-joinery-list.md)):**
+    - `SpaceFinishes.sill`/`stair`/`railing` (KCAD 216, `needs_room_list`); `SpaceChange.base`/`sill`/`stair`/`railing`;
+      Öznitelikler "Döşeme kaplaması" (eski "Zemin kaplaması") … "Küpeşte ve korkuluk".
+    - `kentos_domain::room_openings`: `opening_sides`, `room_openings()` (ADR 3028'in kuralı; "K01 (2), P02");
+      `room_names::passage`. Çizelge alanları `sillFinish`, `stairFinish`, `railingFinish`, `doors`, `windows`
+      (`is_room_list`); kapı-pencere çizelgesi ve listenin kapı/pencere sütunları `Op::OpeningTypes`'ı izler.
+    - Kat sütununa göre sıralama katların kotuna göredir (bütün çizelgeler).
+    - `tag_tools::ROOM_LIST`, `room_list_sort`, `SchedulePreset::RoomList`, `tool.scheduleRoomList` (Çizelge ▾'de
+      Mahal kaplama çizelgesinin yerinde; menü en çok altı).
+    - Takım: `CalcTable.list` (MHL) → `PermitSet.lists` (`ListSheet`) → `Page::list` (LS/MHL/NNN, kendi kâğıdı,
+      `olcek` "—", başlıksız); `permit::padded`: tablo pencereleri kâğıtta 1,5 mm pay.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

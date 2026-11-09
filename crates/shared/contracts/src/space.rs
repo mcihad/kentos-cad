@@ -157,7 +157,9 @@ pub struct SpacePart {
     pub holes: Vec<SpaceRing>,
 }
 
-/// A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).
+/// A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room
+/// list's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
+/// treads' and risers', and its handrails' and railings'.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -177,11 +179,28 @@ pub struct SpaceFinishes {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub base: Option<String>,
+    /// Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sill: Option<String>,
+    /// Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub stair: Option<String>,
+    /// Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub railing: Option<String>,
 }
 
 impl SpaceFinishes {
     pub fn is_empty(&self) -> bool {
         self == &SpaceFinishes::default()
+    }
+
+    /// Whether it has one of the room list's finishes (docs/adr/3038, `.kcad` schema 216).
+    pub fn has_room_list(&self) -> bool {
+        self.sill.is_some() || self.stair.is_some() || self.railing.is_some()
     }
 }
 

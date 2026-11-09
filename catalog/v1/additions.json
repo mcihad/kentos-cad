@@ -2944,6 +2944,22 @@
       "status": "implemented"
     },
     {
+      "id": "tool.scheduleRoomList",
+      "title": "Mahal listesi",
+      "short": "Mahal listesi",
+      "icon": "scheduleRoomList",
+      "description": "Projenin mahal listesini imleçten yerleştirir (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
+      "aliases": [
+        "MAHALLISTESI",
+        "MAHALLİSTESİ",
+        "ROOMLIST",
+        "ROOMFINISHLIST"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.scheduleFixtures",
       "title": "Donatı çizelgesi",
       "short": "Donatı",
@@ -5226,6 +5242,7 @@
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",
+    "scheduleRoomList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"7\" rx=\"0.6\"/><path d=\"M2 8a2.5 2.5 0 0 1 2.5 2.5\" stroke-width=\"1\"/><path d=\"M2 13.4h7.5\" stroke-width=\"1.5\"/><path d=\"M2 16h7.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
     "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2\" y=\"4.5\" width=\"7.5\" height=\"11\" rx=\"0.8\"/><path d=\"M4 10h3.5\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",

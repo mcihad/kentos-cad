@@ -6351,6 +6351,10 @@ class ScheduleField(_StrEnum):
     - ``annexes``
     - ``totalGross``
     - ``landShare``
+    - ``stairFinish``
+    - ``railingFinish``
+    - ``doors``
+    - ``windows``
     - ``code``: An opening's type's joinery code (docs/adr/3028; KCAD schema 208): grouped by it, the joinery list.
     - ``attr``: The attribute the column's `attr` names.
     - ``floorFinish``: A space's finishes (docs/adr/0733 §3): its floor's, its base's (the skirting's), its walls' and its ceiling's.
@@ -6368,6 +6372,7 @@ class ScheduleField(_StrEnum):
     - ``unitKind``: A unit's kind (Bağımsız bölüm, Ortak alan, Dış alan), its building's and its wing's names, its recorded area and
     - ``paiyNet``: Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/3029; `.kcad` schema 209): its
     - ``nature``: Kat irtifakı (docs/adr/3031; `.kcad` schema 211): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
+    - ``sillFinish``: Mahal listesi (docs/adr/3038; `.kcad` schema 216; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window
     """
     NUMBER = "number"
     TYPE = "type"
@@ -6411,6 +6416,10 @@ class ScheduleField(_StrEnum):
     ANNEXES = "annexes"
     TOTAL_GROSS = "totalGross"
     LAND_SHARE = "landShare"
+    STAIR_FINISH = "stairFinish"
+    RAILING_FINISH = "railingFinish"
+    DOORS = "doors"
+    WINDOWS = "windows"
     CODE = "code"
     ATTR = "attr"
     FLOOR_FINISH = "floorFinish"
@@ -6428,9 +6437,10 @@ class ScheduleField(_StrEnum):
     UNIT_KIND = "unitKind"
     PAIY_NET = "paiyNet"
     NATURE = "nature"
+    SILL_FINISH = "sillFinish"
 
 
-ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "paiyGross", "paiyShare", "generalGross", "annexNet", "annexGross", "annexes", "totalGross", "landShare", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind", "paiyNet", "nature"]
+ScheduleFieldName = Literal["number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area", "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "baseFinish", "wallFinish", "ceilingFinish", "unitWidth", "leafWidth", "clearWidth", "leaves", "drum", "pocket", "panels", "building", "wing", "recordedArea", "shareWeight", "paiyGross", "paiyShare", "generalGross", "annexNet", "annexGross", "annexes", "totalGross", "landShare", "stairFinish", "railingFinish", "doors", "windows", "code", "attr", "floorFinish", "baseboard", "category", "space", "roughWidth", "unit", "target", "targetDiff", "operation", "share", "gross", "tracks", "unitKind", "paiyNet", "nature", "sillFinish"]
 """The names of :class:`ScheduleField`, for a plain string."""
 
 
@@ -85667,13 +85677,21 @@ class SpaceFields(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class SpaceFinishes(_Model):
-    """A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3).
+    """A space's finishes: its floor's, walls' and ceiling's, and its base's (the skirting's, docs/adr/0733 §3); the room
+    list's others (docs/adr/3038; Planlı Alanlar İmar Yönetmeliği 57(29)): its window sills' and parapets', its stair's
+    treads' and risers', and its handrails' and railings'.
     Attributes:
         base: The skirting's finish (`.kcad` schema 131).
+        railing: Küpeşte ve korkuluk: its handrails and railings (`.kcad` schema 216).
+        sill: Denizlik ve parapet: its window sills' and parapets' (`.kcad` schema 216).
+        stair: Merdiven basamak ve rıht: its stair's treads and risers (`.kcad` schema 216).
     """
     base: str | None | Unset = UNSET
     ceiling: str | None | Unset = UNSET
     floor: str | None | Unset = UNSET
+    railing: str | None | Unset = UNSET
+    sill: str | None | Unset = UNSET
+    stair: str | None | Unset = UNSET
     wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -85684,6 +85702,12 @@ class SpaceFinishes(_Model):
             out["ceiling"] = self.ceiling
         if self.floor is not UNSET:
             out["floor"] = self.floor
+        if self.railing is not UNSET:
+            out["railing"] = self.railing
+        if self.sill is not UNSET:
+            out["sill"] = self.sill
+        if self.stair is not UNSET:
+            out["stair"] = self.stair
         if self.wall is not UNSET:
             out["wall"] = self.wall
         return out
@@ -85694,6 +85718,9 @@ class SpaceFinishes(_Model):
             base=data.get("base", UNSET),
             ceiling=data.get("ceiling", UNSET),
             floor=data.get("floor", UNSET),
+            railing=data.get("railing", UNSET),
+            sill=data.get("sill", UNSET),
+            stair=data.get("stair", UNSET),
             wall=data.get("wall", UNSET),
         )
 
@@ -122029,15 +122056,18 @@ class ClearSpaceSeparatorOperation(SpaceSeparatorOperation):
 class SetSpacesOperation(SpacesOperation):
     """Değiştir: the fields given, on every space named.
     Attributes:
+        base: The skirting's finish (Süpürgelik, docs/adr/0733 §3).
         columns: Physical column deduction; absent keeps legacy wall-only areas.
         height: Unit: elevation.
         method: The method its boundary is found again with (a space from the walls) or its rings stand for (a drawn one).
         scope: Source scope to keep for later wall/column updates; unassigned requires clearing level.
+        sill: The room list's finishes (docs/adr/3038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
         sources: Explicit UUIDs; null clears the list and restores scope/level search.
         unit: The building program's group, by its id (docs/adr/0773); null: out of any.
         void: A void or a room again (docs/adr/0708).
     """
     TAG_VALUE: ClassVar[str] = "set"
+    base: str | None | Unset = UNSET
     ceiling: str | None | Unset = UNSET
     columns: SpaceColumns | SpaceColumnsName | None | Unset = UNSET
     floor: str | None | Unset = UNSET
@@ -122047,8 +122077,11 @@ class SetSpacesOperation(SpacesOperation):
     name: str | None | Unset = UNSET
     number: str | None | Unset = UNSET
     phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    railing: str | None | Unset = UNSET
     scope: SpaceScope | SpaceScopeName | None | Unset = UNSET
+    sill: str | None | Unset = UNSET
     sources: list[str] | None | Unset = UNSET
+    stair: str | None | Unset = UNSET
     unit: str | None | Unset = UNSET
     usage: str | None | Unset = UNSET
     void: bool | None | Unset = UNSET
@@ -122056,6 +122089,8 @@ class SetSpacesOperation(SpacesOperation):
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"kind": "set"}
+        if self.base is not UNSET:
+            out["base"] = self.base
         if self.ceiling is not UNSET:
             out["ceiling"] = self.ceiling
         if self.columns is not UNSET:
@@ -122074,10 +122109,16 @@ class SetSpacesOperation(SpacesOperation):
             out["number"] = self.number
         if self.phase is not UNSET:
             out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.railing is not UNSET:
+            out["railing"] = self.railing
         if self.scope is not UNSET:
             out["scope"] = None if self.scope is None else _enum_out(self.scope)
+        if self.sill is not UNSET:
+            out["sill"] = self.sill
         if self.sources is not UNSET:
             out["sources"] = None if self.sources is None else list(self.sources)
+        if self.stair is not UNSET:
+            out["stair"] = self.stair
         if self.unit is not UNSET:
             out["unit"] = self.unit
         if self.usage is not UNSET:
@@ -122091,6 +122132,7 @@ class SetSpacesOperation(SpacesOperation):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SetSpacesOperation:
         return cls(
+            base=data.get("base", UNSET),
             ceiling=data.get("ceiling", UNSET),
             columns=UNSET if "columns" not in data else None if data["columns"] is None else _enum_in(SpaceColumns, data["columns"]),
             floor=data.get("floor", UNSET),
@@ -122100,8 +122142,11 @@ class SetSpacesOperation(SpacesOperation):
             name=data.get("name", UNSET),
             number=data.get("number", UNSET),
             phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            railing=data.get("railing", UNSET),
             scope=UNSET if "scope" not in data else None if data["scope"] is None else _enum_in(SpaceScope, data["scope"]),
+            sill=data.get("sill", UNSET),
             sources=UNSET if "sources" not in data else None if data["sources"] is None else list(data["sources"]),
+            stair=data.get("stair", UNSET),
             unit=data.get("unit", UNSET),
             usage=data.get("usage", UNSET),
             void=data.get("void", UNSET),

@@ -274,8 +274,8 @@ fn the_calculation_sheet_shows_each_table_at_the_plot_scale() {
         .collect();
     assert_eq!(maps.len(), 2, "a map a table, the template's own gone");
     for (m, centre) in maps.iter().zip([[24.0, 2.5], [24.0, -4.5]]) {
-        // 8 × 5 m at 1/100: 80 × 50 mm.
-        assert_eq!((m.frame.width, m.frame.height), (80_000, 50_000));
+        // 8 × 5 m at 1/100: 80 × 50 mm, 1.5 mm around it (its outer lines are not clipped, docs/adr/3038).
+        assert_eq!((m.frame.width, m.frame.height), (83_000, 53_000));
         let ItemKind::Map(map) = &m.kind else {
             unreachable!()
         };
@@ -293,5 +293,74 @@ fn the_calculation_sheet_shows_each_table_at_the_plot_scale() {
     assert!(
         s.items.iter().all(|i| i.kind.type_name() != "northArrow"),
         "no north on a sheet of tables"
+    );
+}
+
+#[test]
+fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
+    // Mahal listesi (docs/adr/3038): EK-2's Liste (LS) of kind MHL, on the paper it fits while the set is on A2.
+    let template = system_template(permit::TEMPLATE).expect("the MO sheet");
+    let a2 = PaperChoice {
+        paper: Paper::A2,
+        orientation: Orientation::Landscape,
+    };
+    let a3 = PaperChoice {
+        paper: Paper::A3,
+        orientation: Orientation::Landscape,
+    };
+    let pages = [
+        Page::info(),
+        Page::list(
+            "Mahal listesi",
+            "MHL",
+            vec![("Mahal listesi".into(), [30.0, -10.0, 45.0, 0.0])],
+            100,
+            a3.clone(),
+        ),
+    ];
+    let made = permit::permit_sheets(
+        &SheetBook::default(),
+        template,
+        Phase::Permit,
+        a2.clone(),
+        &pages,
+        true,
+        |s| create::ids_for(template, s),
+    )
+    .unwrap();
+    assert_eq!(made.made[1].title, "Mahal listesi");
+    let book = made.ops.iter().fold(SheetBook::default(), |b, op| {
+        ops::apply(&b, op).unwrap().book
+    });
+    let (first, list) = (&book.sheets[0], &book.sheets[1]);
+    assert_eq!(first.page.paper, Paper::A2);
+    assert_eq!(list.page.paper, Paper::A3, "its own paper");
+    let text = |v: &str| Some(VarValue::Text(v.into()));
+    assert_eq!(
+        (
+            answer(list, "dosya_turu").cloned(),
+            answer(list, "dosya_tipi").cloned(),
+            answer(list, "olcek").cloned()
+        ),
+        (text("LS"), text("MHL"), text("—")),
+        "a list has no scale"
+    );
+    let maps: Vec<&kentos_sheet::Item> = list
+        .items
+        .iter()
+        .filter(|i| matches!(i.kind, ItemKind::Map(_)))
+        .collect();
+    assert_eq!(maps.len(), 1);
+    // 15 × 10 m at 1/100: 150 × 100 mm, 1.5 mm around it.
+    assert_eq!(
+        (maps[0].frame.width, maps[0].frame.height),
+        (153_000, 103_000)
+    );
+    assert!(
+        !list
+            .items
+            .iter()
+            .any(|i| matches!(&i.kind, ItemKind::Text(t) if t.content.contains("Ölçek 1/"))),
+        "no caption"
     );
 }
