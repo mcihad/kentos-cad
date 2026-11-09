@@ -10,6 +10,7 @@
 //! left, and where each of the recipe's layers goes: found by its name, added with the recipe's look) and a choice per
 //! recipe layer of this project's layer to draw on instead; Üret draws it, Vazgeç drops it.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use iced::widget::container;
@@ -64,6 +65,8 @@ pub struct State {
     pub answer: Option<Result<RoadProjectGraph, String>>,
     /// The last Tariften üret's answer (docs/adr/3240).
     pub produced: Option<RoadProjectProduced>,
+    /// What each layer of its recipe takes when it is added, beyond its style (docs/adr/4440), by its id there.
+    pub looks: BTreeMap<String, String>,
     /// The recipe picked, before it is drawn (docs/adr/3640).
     pub recipe: Option<Recipe>,
 }
@@ -77,6 +80,8 @@ pub struct Recipe {
     pub layers: Vec<(String, String, String)>,
     pub plan: Result<RoadProjectProduced, String>,
     pub warnings: Vec<String>,
+    /// What each of its layers takes when it is added, beyond its style (docs/adr/4440), by its id in the recipe.
+    pub looks: BTreeMap<String, String>,
 }
 
 impl Recipe {
@@ -102,9 +107,24 @@ pub fn recipe_layers(path: &std::path::Path) -> Vec<(String, String)> {
     out
 }
 
+/// What each layer of a recipe file takes when it is added, beyond its style (docs/adr/4440): its transparency, blending
+/// mode, type and Yazdır, said as Tariften üret says them; by its id in the recipe, only those that take any.
+pub fn recipe_looks(path: &std::path::Path) -> BTreeMap<String, String> {
+    let Some(graph) = std::fs::read(path).ok().and_then(|b| serde_json::from_slice::<RoadProjectGraph>(&b).ok()) else {
+        return BTreeMap::new();
+    };
+    graph
+        .nodes
+        .iter()
+        .filter_map(|n| n.recipe.as_ref()?.layer.as_ref())
+        .filter_map(|l| Some((l.id.clone(), road_project_produce::look_said(l)?)))
+        .collect()
+}
+
 /// What adding a recipe layer brings (docs/adr/3640, 4040), in the plan or (`done`) after Üret: the recipe's style, the
-/// groups it goes in, and the groups and the line type added with it.
-fn added_words(l: &RoadProducedLayer, done: bool) -> String {
+/// groups it goes in, and the groups and the line type added with it; what it takes beyond its style (`look`,
+/// docs/adr/4440).
+fn added_words(l: &RoadProducedLayer, done: bool, look: Option<&String>) -> String {
     let verb = if done { "eklendi" } else { "eklenecek" };
     let into = if l.group.is_empty() { String::new() } else { format!(" “{}” grubuna", l.group.join(" › ")) };
     let mut out = if done {
@@ -123,6 +143,10 @@ fn added_words(l: &RoadProducedLayer, done: bool) -> String {
     }
     if !also.is_empty() {
         out.push_str(&format!(" {} de {verb}.", also.join(" ve ")));
+    }
+    if let Some(look) = look {
+        out.push(' ');
+        out.push_str(look);
     }
     out
 }
@@ -143,7 +167,7 @@ pub fn plan_lines(r: &Recipe) -> Vec<(Kind, String)> {
     for l in &out.layers {
         lines.push(match l.how {
             RoadLayerMatch::Name => (Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name)),
-            RoadLayerMatch::Created => (Kind::Info, added_words(l, false)),
+            RoadLayerMatch::Created => (Kind::Info, added_words(l, false, r.looks.get(&l.from))),
             RoadLayerMatch::Given => (Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name)),
             RoadLayerMatch::Id => (Kind::Info, format!("“{}” katmanına kimliğiyle (eski tarif).", l.to_name)),
         });
@@ -184,8 +208,8 @@ fn outdated(s: S) -> bool {
 }
 
 /// What Tariften üret did (docs/adr/3240): the drawings drawn (each kept here, from its main source by name) and those
-/// left with why.
-pub fn produced_lines(out: &RoadProjectProduced) -> Vec<(Kind, String)> {
+/// left with why; a layer added with what it took beyond its style (`looks`, docs/adr/4440).
+pub fn produced_lines(out: &RoadProjectProduced, looks: &BTreeMap<String, String>) -> Vec<(Kind, String)> {
     let mut lines = Vec::new();
     if out.produced.is_empty() {
         lines.push((Kind::Info, "Tariften üretilecek yeni çizim yok.".to_owned()));
@@ -200,7 +224,7 @@ pub fn produced_lines(out: &RoadProjectProduced) -> Vec<(Kind, String)> {
     // Where the recipe's layers went (docs/adr/3640); a recipe from before, by the layer's id, is no news.
     for l in &out.layers {
         match l.how {
-            RoadLayerMatch::Created => lines.push((Kind::Info, added_words(l, true))),
+            RoadLayerMatch::Created => lines.push((Kind::Info, added_words(l, true, looks.get(&l.from)))),
             RoadLayerMatch::Name => lines.push((Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name))),
             RoadLayerMatch::Given => lines.push((Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name))),
             RoadLayerMatch::Id => {}
@@ -316,7 +340,8 @@ impl App {
     /// A recipe picked (docs/adr/3640): shown with its plan before anything is drawn.
     pub(crate) fn project_graph_preview(&mut self, path: PathBuf) {
         let layers = recipe_layers(&path).into_iter().map(|(id, name)| (id, name, AUTO.to_owned())).collect();
-        self.project_graph.recipe = Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new() });
+        let looks = recipe_looks(&path);
+        self.project_graph.recipe = Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new(), looks });
         self.project_graph_plan();
     }
 
@@ -335,6 +360,7 @@ impl App {
                 format!("{TITLE}: {} çizim tariften üretildi{left} ({}).", out.produced.len(), path.display()),
             );
             self.project_graph.produced = Some(out);
+            self.project_graph.looks = r.looks;
             self.project_graph_read();
         }
     }
@@ -396,7 +422,7 @@ impl App {
         let mut rows = Vec::new();
         match &s.answer {
             Some(Ok(g)) => {
-                for (kind, said) in s.produced.iter().flat_map(produced_lines) {
+                for (kind, said) in s.produced.iter().flat_map(|out| produced_lines(out, &s.looks)) {
                     lines.push(words::text_line(kind, said));
                 }
                 let fine = g.outdated == 0 && g.blocked == 0;
@@ -459,7 +485,7 @@ impl App {
                 );
             }
             if !r.layers.is_empty() {
-                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili ve gruplarıyla eklenir. Başka bir katmana çizmek için seçin.");
+                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili, grupları, saydamlığı, türü ve Yazdır'ıyla eklenir. Başka bir katmana çizmek için seçin.");
             }
             // What it would do, read before Üret.
             let ready = matches!(&r.plan, Ok(out) if !out.produced.is_empty());

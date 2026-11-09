@@ -1,0 +1,95 @@
+{
+  "nodes": [
+    {
+      "kind": "surface",
+      "id": "a-5",
+      "name": "Düz",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-10",
+      "name": "Tümsek",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-6",
+      "name": "Teras",
+      "state": "current"
+    },
+    {
+      "kind": "surface",
+      "id": "a-9",
+      "name": "Set",
+      "state": "current"
+    },
+    {
+      "kind": "drawing",
+      "id": "cz-1",
+      "name": "Sıfır hattı",
+      "state": "current",
+      "recipe": {
+        "command": "road.terrains.zeroline",
+        "version": 1,
+        "input": {
+          "base": "a-5",
+          "comparison": "a-10",
+          "layerId": "k-17"
+        },
+        "written": 1,
+        "objects": 1,
+        "digest": "0123456789abcdef",
+        "made": 1,
+        "revision": "7",
+        "layer": {
+          "id": "k-17",
+          "name": "Kazı noktaları",
+          "color": "#2A9D8F",
+          "lineType": "dashdot",
+          "lineWeight": 0.35,
+          "style": {
+            "color": "#2A9D8F",
+            "lineType": "dashdot",
+            "lineWeight": 0.35,
+            "fill": "#2A9D8F",
+            "point": {
+              "symbol": "cross",
+              "size": 6.0
+            },
+            "label": {
+              "placement": "along",
+              "size": 10.0
+            }
+          },
+          "geometry": "point"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": 0,
+      "to": 4,
+      "kind": "source",
+      "main": true,
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    },
+    {
+      "from": 1,
+      "to": 4,
+      "kind": "source",
+      "kept": "0123456789abcdef",
+      "now": "0123456789abcdef"
+    }
+  ],
+  "drawings": 1,
+  "outdated": 0,
+  "sheets": 0,
+  "blocked": 0,
+  "epsg": "EPSG:5254",
+  "system": "TUREF / TM30",
+  "deep": false,
+  "revision": "9"
+}

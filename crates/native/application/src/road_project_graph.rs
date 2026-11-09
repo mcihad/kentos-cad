@@ -85,6 +85,8 @@ pub fn drawing_within(doc: &Document, d: &RoadDrawingDef, (lo, hi): ([f64; 2], [
 /// The definition of the layer drawing `d` went on (docs/adr/3640): its id, name and look; none when the layer is gone
 /// or not a layer. Docs/adr/4040: the groups it is in (from the top), its whole style and the project line type the
 /// style names, as this project defines it (none: it names none, or the project has no line type of that name).
+/// Docs/adr/4440: its opacity and blending mode (a mask is not kept: it cuts into this project's layers by their ids),
+/// its type and, when it is not printed, its Yazdır.
 fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::RoadRecipeLayer> {
     let id = d.input.get("layerId")?.as_str()?;
     let layers = doc.layers();
@@ -111,6 +113,11 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
         group,
         style: Some(node.style.clone()),
         line_type_def,
+        compose: node.compose.as_ref().and_then(|c| {
+            kentos_commands::LayerCompose { opacity: c.opacity, blend: c.blend, mask: None }.normalized()
+        }),
+        geometry: node.geometry,
+        plot: node.plot.filter(|printed| !printed),
     })
 }
 

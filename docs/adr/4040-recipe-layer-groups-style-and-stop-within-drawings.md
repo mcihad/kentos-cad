@@ -136,6 +136,7 @@ katmanının grubu ve tam stili”.
 
 - Bellek ve CPU bütçesi, gerçek veriyle ölçümle birlikte.
 - Etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru hattı profili çizimlerinin kendi hesabının içinde durması.
-- Katmanın saydamlığı, türü ve alanlarının tarife girmesi.
+- Katmanın saydamlığı, türü ve alanlarının tarife girmesi (saydamlık, karışım kipi, tür ve Yazdır:
+  [ADR 4440](4440-recipe-layer-transparency-type-and-print.md); alanlar açık).
 - Ölçüm arşivinin zincire bağlanması; atlas sayfalarının denetimi (ADR 3640 Sonra).
 - Web (TODOS §0.2).

@@ -9,8 +9,9 @@
 //! is heard between them (docs/adr/2440). A drawing's layer (docs/adr/3640): the one `layers` gives for its recipe
 //! layer; else, the recipe keeping the layer's definition, the layer of that name here (folded, as Katmanları çevir
 //! finds a standard layer; two of them: which one is asked), or one added with the recipe's look (kept only when a
-//! drawing went on it); a recipe from before, by the layer's id. The shared cases are
-//! `fixtures/commands/v1/road.project.produce.json`.
+//! drawing went on it); a recipe from before, by the layer's id. Docs/adr/4440: a layer added takes the recipe layer's
+//! opacity and blending mode, its type and its Yazdır too; what a drawing writes that its layer's type does not hold
+//! refuses the produce here, the plan too. The shared cases are `fixtures/commands/v1/road.project.produce.json`.
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
@@ -271,7 +272,8 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
 
 /// What does not hold in a recipe layer's definition (docs/adr/4040): a group without a name; a style whose colour,
 /// line type or weight is not the definition's; a line type definition its style does not name, or one that does not
-/// hold as a project line type.
+/// hold as a project line type. Docs/adr/4440: a composition with a mask, one that says nothing, or an opacity outside
+/// 0–1.
 fn definition_problem(def: &RoadRecipeLayer) -> Option<String> {
     if def.group.iter().any(|g| g.trim().is_empty()) {
         return Some("grup adlarından biri boş.".to_owned());
@@ -280,6 +282,20 @@ fn definition_problem(def: &RoadRecipeLayer) -> Option<String> {
         && (s.color != def.color || s.line_type != def.line_type || s.line_weight != def.line_weight)
     {
         return Some("stilin rengi, çizgi türü ya da kalınlığı tanımınkiyle aynı değil.".to_owned());
+    }
+    if let Some(c) = &def.compose {
+        if c.mask.is_some() {
+            return Some(
+                "katman çiziminde maske var; maske projesinin öbür katmanlarını kimlikleriyle keser, tarifte tutulmaz."
+                    .to_owned(),
+            );
+        }
+        if c.opacity.is_none() && c.blend.is_none() {
+            return Some("katman çizimi boş: saydamlık da karışım kipi de yok.".to_owned());
+        }
+        if let Some(p) = c.problem() {
+            return Some(format!("katman çiziminde {p}."));
+        }
     }
     let d = def.line_type_def.as_ref()?;
     let named = def.style.as_ref().and_then(|s| s.line_pattern.as_deref());
@@ -319,7 +335,7 @@ const STEP: &str = "Tariften üret";
 /// A layer added for a recipe layer (docs/adr/3640, 4040): its id and the recipe layer's name, whether a drawing went
 /// on it; the groups it went in (their names here), those added for it (id, name), the project line type added for it,
 /// one its style named that neither this project nor the recipe defines (left out), and whether the recipe kept its
-/// whole style.
+/// whole style; what it took from the recipe beyond its style, said (docs/adr/4440).
 struct Added {
     id: String,
     name: String,
@@ -329,6 +345,50 @@ struct Added {
     line_type_added: Option<String>,
     dropped: Option<String>,
     styled: bool,
+    look: Option<String>,
+}
+
+/// What a layer added from `def` takes beyond its style (docs/adr/4440), in the words of the layer's panels: its
+/// transparency (Saydamlık, 1 − opacity in percent), its blending mode, its type and that it is not printed —
+/// “Tarifteki gibi saydamlığı %40, karışım kipi Çoğalt, türü Çizgi ve yazdırılmaz.”; none when it takes none of them.
+pub fn look_said(def: &RoadRecipeLayer) -> Option<String> {
+    let mut parts = Vec::new();
+    if let Some(c) = def.compose.as_ref().and_then(kentos_commands::LayerCompose::normalized) {
+        if let Some(o) = c.opacity {
+            parts.push(format!("saydamlığı %{}", crate::road_superelevations::percent(1.0 - o)));
+        }
+        if let Some(b) = c.blend {
+            parts.push(format!("karışım kipi {}", b.label()));
+        }
+    }
+    if let Some(g) = def.geometry {
+        parts.push(format!("türü {}", g.label()));
+    }
+    if def.plot == Some(false) {
+        parts.push("yazdırılmaz".to_owned());
+    }
+    let (last, rest) = parts.split_last()?;
+    let said = if rest.is_empty() { last.clone() } else { format!("{} ve {last}", rest.join(", ")) };
+    Some(format!("Tarifteki gibi {said}."))
+}
+
+/// The first object of `uids` its layer's type does not hold (docs/adr/0622 §5, 4440), said with what to do. The step's
+/// integrity check would refuse it when the step is written; told here, the plan says it too.
+fn misfit(doc: &Document, uids: &[String]) -> Option<String> {
+    uids.iter().find_map(|u| {
+        let e = kentos_domain::Uuid::parse_str(u).ok().and_then(|uid| doc.slot_of(uid)).and_then(|s| doc.get(s))?;
+        let node = doc.layers().get(&e.base().layer_id)?;
+        let holds = node.geometry?;
+        (!holds.admits(e.kind())).then(|| {
+            format!(
+                "“{}” bir {}; {} bu katmana yazılmaz. Çizimin katmanını türüne uyan bir katman olarak layers ile verin ya da \
+                 katmanın türünü Karışık yapın; hiçbir şey yazılmadı.",
+                node.name,
+                holds.layer_words(),
+                kentos_commands::kind_words(e.kind())
+            )
+        })
+    })
 }
 
 /// Adds the layer of `def` here (docs/adr/4040): in its groups, each found among its parent's groups by its name
@@ -386,6 +446,10 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
     }
     let mut new = NewLayer::layer(def.name.trim());
     new.style = style;
+    // Docs/adr/4440: its composition, type and Yazdır as the recipe keeps them.
+    new.compose = def.compose.as_ref().and_then(kentos_commands::LayerCompose::normalized);
+    new.geometry = def.geometry;
+    new.plot = def.plot.filter(|printed| !printed);
     let id = doc.add_layer_at(new, parent.as_deref(), None, Some(STEP), false).map_err(refused)?;
     Ok(Added {
         id,
@@ -396,6 +460,7 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
         line_type_added,
         dropped,
         styled: def.style.is_some(),
+        look: look_said(def),
     })
 }
 
@@ -420,6 +485,10 @@ fn created_words(a: &Added) -> String {
     }
     if let Some(t) = &a.dropped {
         out.push_str(&format!(" “{t}” çizgi türü bu projede de tarifte de tanımlı değil; katman yerleşik türüyle çizilir."));
+    }
+    if let Some(look) = &a.look {
+        out.push(' ');
+        out.push_str(look);
     }
     out
 }
@@ -491,6 +560,15 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
         }
         match in_share(cx, k as u64, total, |cx| run_drawing(cx, &w.from, &w.command, &input, &[])) {
             Ok((uids, said)) => {
+                // Docs/adr/4440: an object its layer's type does not hold refuses them all here, the plan too (written:
+                // the step's integrity check would refuse it only when execute ends).
+                if let Some(why) = misfit(cx.doc, &uids) {
+                    return relay(naming(
+                        Stop::failed(error(codes::LAYER_GEOMETRY_MISMATCH, why, Some("layers".into()))).into(),
+                        &w.from,
+                        words,
+                    ));
+                }
                 if let Some((id, how)) = found {
                     let made = added.iter_mut().find(|a| a.id == id);
                     let (group, groups_added, line_type_added) = match made {

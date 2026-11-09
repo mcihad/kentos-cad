@@ -83339,12 +83339,18 @@ class RoadRecipeLayer(_Model):
     takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
     `road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the
     groups it was in, its whole style and the project line type that style names, as its project defines it; a layer
-    added from it goes into those groups with that style. A recipe from before has none of them.
+    added from it goes into those groups with that style. Docs/adr/4440: how it was composed into the drawing (its
+    opacity and blending mode), what it held and whether it was printed; a layer added from it takes them too. A recipe
+    from before has none of them.
     Attributes:
         line_weight: Unit: paper-mm.
+        compose: How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask
+            (a mask cuts into its project's other layers by their ids); none: opaque and normal.
+        geometry: What it held (Katman türü): points, lines, areas or annotation; none: any kind.
         group: The names of the groups it was in, from the top of the tree; empty: at the top.
         line_type_def: The project line type its style names (`style.linePattern`), as its project defines it; none when the style
             names none or its project has no such line type.
+        plot: Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.
         style: Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
             fields above.
     """
@@ -83353,8 +83359,11 @@ class RoadRecipeLayer(_Model):
     color: str
     line_type: LineType | LineTypeName
     line_weight: float
+    compose: LayerCompose | None | Unset = UNSET
+    geometry: LayerGeometry | LayerGeometryName | None | Unset = UNSET
     group: list[str] | Unset = UNSET
     line_type_def: LineTypeDef | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
     style: LayerStyle | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -83364,10 +83373,16 @@ class RoadRecipeLayer(_Model):
         out["color"] = self.color
         out["lineType"] = _enum_out(self.line_type)
         out["lineWeight"] = float(self.line_weight)
+        if self.compose is not UNSET:
+            out["compose"] = None if self.compose is None else self.compose.to_json()
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
         if self.group is not UNSET:
             out["group"] = list(self.group)
         if self.line_type_def is not UNSET:
             out["lineTypeDef"] = None if self.line_type_def is None else self.line_type_def.to_json()
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
         if self.style is not UNSET:
             out["style"] = None if self.style is None else self.style.to_json()
         return out
@@ -83380,8 +83395,11 @@ class RoadRecipeLayer(_Model):
             color=data["color"],
             line_type=_enum_in(LineType, data["lineType"]),
             line_weight=float(data["lineWeight"]),
+            compose=UNSET if "compose" not in data else None if data["compose"] is None else LayerCompose.from_json(data["compose"]),
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(LayerGeometry, data["geometry"]),
             group=list(data["group"]) if "group" in data else UNSET,
             line_type_def=UNSET if "lineTypeDef" not in data else None if data["lineTypeDef"] is None else LineTypeDef.from_json(data["lineTypeDef"]),
+            plot=data.get("plot", UNSET),
             style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
         )
 

@@ -50,7 +50,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın saydamlığı ve türü | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın alanları | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -2369,6 +2369,16 @@ eklenen gruplarına, tarifin stiliyle koyar, çizgi türünü projede yoksa ekle
 bağımsız durum (55), İş grafiği'nde yeni durum (22), Python, MCP, masaüstü. Bulunan: proje üreticileri ADR 3920'den beri
 yüzey damgalarını boş çizimden hesaplıyordu (yazılmış durumlar doğru), düzeltildi. Açık: bütçe, öbür yedi çizimin kendi
 hesabının içinde durması, katmanın saydamlığı ve türü.
+
+**10 Kasım 2026, sekizinci tur — tarifin katmanının saydamlığı, türü ve Yazdır'ı ([ADR 4440](../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
+Kapsam: **Harita + Yol**. Dayanak: AutoCAD'in katman durumu (yazdırma açık ya da kapalı ve saydamlık katmanın saklanan
+özellikleri arasında), QGIS'in stil kategorileri (Rendering'de saydamlık, Fields ayrı) ve Layer rendering'i (saydamlık,
+karışım kipi). Kanıtlanan: İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz: maske projesinin
+katmanlarını kimlikle keser), türünü ve Yazdır'ını taşır; Tariften üret eklediği katmana verir, adıyla bulunan katman
+kendi görünüşünü korur; çizimin nesnesini katmanının türü tutmuyorsa üretim planda da `layer_geometry_mismatch` ile
+reddedilir; maskeli, boş ve 0–1 dışı katman çizimi tutarsız tarif. Grafikte 1 (23), üretimde 9 yeni bağımsız durum (64),
+Python, MCP, masaüstü. Bulunan: plan türlü katmanın tutmadığı nesneyi görmüyordu (yazım adımın sonunda reddediliyordu),
+düzeltildi. Açık: bütçe, öbür yedi çizimin kendi hesabının içinde durması, katmanın alanları.
 
 ## Uygulama sırası ve sahiplik
 

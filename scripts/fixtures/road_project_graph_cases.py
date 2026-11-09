@@ -190,6 +190,16 @@ def layer_def(st, lid):
         found = next((t for t in own if t["name"].strip().lower() == pattern.strip().lower()), None)
         if found is not None:
             out["lineTypeDef"] = copy.deepcopy(found)
+    # Docs/adr/4440: its opacity and blending mode as said (an opacity of 1 and the normal mode say nothing), never its
+    # mask; its type; Yazdır only when it is not printed.
+    said = {k: v for k, v in (n.get("compose") or {}).items()
+            if (k == "opacity" and v != 1.0) or (k == "blend" and v != "normal")}
+    if said:
+        out["compose"] = said
+    if n.get("geometry") is not None:
+        out["geometry"] = n["geometry"]
+    if n.get("plot") is False:
+        out["plot"] = False
     return out
 
 
@@ -327,6 +337,17 @@ def grouped_setup():
     return s
 
 
+def look_setup():
+    """Docs/adr/4440: the map project with the zero line's layer 40 % transparent in the multiply mode, its labels
+    masking Drenaj (by its id), a line layer not printed."""
+    s = map_setup()
+    layer = next(n for n in s["layers"] if n["id"] == "sifir")
+    layer["compose"] = {"opacity": 0.6, "blend": "multiply", "mask": {"labels": True, "size": 1.0, "targets": ["drenaj"]}}
+    layer["geometry"] = "line"
+    layer["plot"] = False
+    return s
+
+
 def edit_height(st):
     """The mound's corner set lower by an edit of its surface (road_project_cases.py's): the mound's stamp changes."""
     t = st.find("surface", "t-10")
@@ -395,6 +416,11 @@ def cases():
     a = drawn(st, rp.ZEROLINE)
     add("Gruptaki katmanın tarifi: grupları, bütün stili ve adladığı proje çizgi türünün tanımı",
         [*a, asked(st, book_=BOOK, boxes=boxes)], sgr)
+    slk = look_setup()
+    st = rp.State(slk)
+    a = drawn(st, rp.ZEROLINE)
+    add("Katmanın saydamlığı, karışım kipi, türü ve yazdırılmaması da tarifte; maskesi değil",
+        [*a, asked(st, book_=BOOK, boxes=boxes)], slk)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     add("Derin okuma: kurulamayan yüzey grafikte de", [*a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)

@@ -55820,7 +55820,7 @@
       "id": "road.project.graph",
       "version": 1,
       "title": "İş grafiği",
-      "summary": "Yol ve harita projesinin kaynaktan paftaya zincirini tek grafik olarak okur; hiçbir şey yazmaz. Düğümler: yüzeylerin nokta ve kırık çizgi katmanları (layer), proje ağacının satırları sırasıyla (road.project.query'nin; deep onunki gibi kurar) ve bir çizimi gösteren paftalar (sheet, kitabın sırasıyla). Kenarlar: katman yüzeyi kurar (builds), satır ağaçtaki ebeveyninin üstüne yapılır (basis), çizim kaynaklarından yapılır (source: her kaynağı, main ana kaynağı, kept çizildiğindeki damga, now bugünkü; kaynak yoksa now yok), paftanın sabit görünüşlü haritası çizimin bir nesnesini zemininde gösterir (shows, map haritanın adı; atlas haritası her sayfada başka zemin gösterdiği için dışarıda). Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne sayısı, nesnelerin damgası. Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi değil).",
+      "summary": "Yol ve harita projesinin kaynaktan paftaya zincirini tek grafik olarak okur; hiçbir şey yazmaz. Düğümler: yüzeylerin nokta ve kırık çizgi katmanları (layer), proje ağacının satırları sırasıyla (road.project.query'nin; deep onunki gibi kurar) ve bir çizimi gösteren paftalar (sheet, kitabın sırasıyla). Kenarlar: katman yüzeyi kurar (builds), satır ağaçtaki ebeveyninin üstüne yapılır (basis), çizim kaynaklarından yapılır (source: her kaynağı, main ana kaynağı, kept çizildiğindeki damga, now bugünkü; kaynak yoksa now yok), paftanın sabit görünüşlü haritası çizimin bir nesnesini zemininde gösterir (shows, map haritanın adı; atlas haritası her sayfada başka zemin gösterdiği için dışarıda). Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne sayısı, nesnelerin damgası; çizildiği katmanın tanımı (layer: adı, rengi, çizgi türü, kalınlığı, grupları, bütün stili ve adladığı proje çizgi türü, ADR 3640, 4040; saydamlığı ve karışım kipi, maskesi değil, türü ve yazdırılmıyorsa Yazdır'ı, ADR 4440). Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi değil).",
       "aliases": [
         "isgrafigi",
         "projegrafigi",
@@ -56169,7 +56169,7 @@
       "id": "road.project.produce",
       "version": 1,
       "title": "Tariften üret",
-      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u ve çizim komutlarının retleri.",
+      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki gruplarına, bütün stiliyle ve proje çizgi türüyle (ADR 4040), saydamlığı, karışım kipi, türü ve Yazdır'ıyla (ADR 4440) eklenir; adıyla bulunan ya da verilen katman kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da; ADR 4440) ve çizim komutlarının retleri.",
       "aliases": [
         "tariftenuret"
       ],
@@ -185980,10 +185980,32 @@
       "type": "object"
     },
     "RoadRecipeLayer": {
-      "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the\ngroups it was in, its whole style and the project line type that style names, as its project defines it; a layer\nadded from it goes into those groups with that style. A recipe from before has none of them.",
+      "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the\ngroups it was in, its whole style and the project line type that style names, as its project defines it; a layer\nadded from it goes into those groups with that style. Docs/adr/4440: how it was composed into the drawing (its\nopacity and blending mode), what it held and whether it was printed; a layer added from it takes them too. A recipe\nfrom before has none of them.",
       "properties": {
         "color": {
           "type": "string"
+        },
+        "compose": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerCompose"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask\n(a mask cuts into its project's other layers by their ids); none: opaque and normal."
+        },
+        "geometry": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerGeometry"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "What it held (Katman türü): points, lines, areas or annotation; none: any kind."
         },
         "group": {
           "description": "The names of the groups it was in, from the top of the tree; empty: at the top.",
@@ -186016,6 +186038,13 @@
         },
         "name": {
           "type": "string"
+        },
+        "plot": {
+          "description": "Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.",
+          "type": [
+            "boolean",
+            "null"
+          ]
         },
         "style": {
           "anyOf": [

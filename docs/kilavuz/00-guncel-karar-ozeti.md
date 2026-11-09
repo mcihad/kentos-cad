@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
+  İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
+  eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.
 - **İzlemenin dönem dizisi (10 Kasım 2026; MAP-19, [ADR 4420](../../docs/adr/4420-monitoring-series-of-epochs.md)).**
   `cad.asbuilt.check`'in izleme işinde `epochs` ve `date`: her nokta ilk ölçüldüğü döneme göre izlenir (`tracks`),
   günlerle ortalama hız. Uygulama kontrolü › İzleme › Önceki dönemler. Harita + Yol + CBS.

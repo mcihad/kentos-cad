@@ -149,11 +149,14 @@ class _RoadProjectGraph(LocalCommand[RoadProjectGraphQuery, RoadProjectGraph, Ro
     yok), paftanın sabit görünüşlü haritası çizimin bir nesnesini zemininde gösterir
     (shows, map haritanın adı; atlas haritası her sayfada başka zemin gösterdiği için
     dışarıda). Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi,
-    yazılan ve bugün duran nesne sayısı, nesnelerin damgası. Güncel olmayan (stale,
-    missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi denetim
-    onu outdated_drawing ile reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku
-    ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen
-    pafta. Retler: not_a_road_project (yol ve harita projesi değil).
+    yazılan ve bugün duran nesne sayısı, nesnelerin damgası; çizildiği katmanın tanımı
+    (layer: adı, rengi, çizgi türü, kalınlığı, grupları, bütün stili ve adladığı proje
+    çizgi türü, ADR 3640, 4040; saydamlığı ve karışım kipi, maskesi değil, türü ve
+    yazdırılmıyorsa Yazdır'ı, ADR 4440). Güncel olmayan (stale, missing, edited, gone)
+    bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile
+    reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar:
+    çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler:
+    not_a_road_project (yol ve harita projesi değil).
     """
     __slots__ = ()
     id = "road.project.graph"
@@ -183,11 +186,14 @@ class _RoadProjectGraph(LocalCommand[RoadProjectGraphQuery, RoadProjectGraph, Ro
         haritası çizimin bir nesnesini zemininde gösterir (shows, map haritanın adı; atlas
         haritası her sayfada başka zemin gösterdiği için dışarıda). Her çizimin tarifi
         (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne
-        sayısı, nesnelerin damgası. Güncel olmayan (stale, missing, edited, gone) bir çizimi
-        gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder
-        (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim,
-        güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler: not_a_road_project
-        (yol ve harita projesi değil).
+        sayısı, nesnelerin damgası; çizildiği katmanın tanımı (layer: adı, rengi, çizgi
+        türü, kalınlığı, grupları, bütün stili ve adladığı proje çizgi türü, ADR 3640, 4040;
+        saydamlığı ve karışım kipi, maskesi değil, türü ve yazdırılmıyorsa Yazdır'ı, ADR
+        4440). Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale
+        olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin
+        sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim,
+        pafta, teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi
+        değil).
 
         Args:
             doc: The drawing it works on.
@@ -270,22 +276,26 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
     katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa
     burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane
     ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman
-    (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın
-    layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id,
-    created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş
-    çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in).
-    drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri:
-    komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır;
-    verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
-    sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
-    nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
-    çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
-    başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
-    (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
-    invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
-    file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
-    ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
-    service_layer, layer_locked'u ve çizim komutlarının retleri.
+    (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen
+    katman tarifteki gruplarına, bütün stiliyle ve proje çizgi türüyle (ADR 4040),
+    saydamlığı, karışım kipi, türü ve Yazdır'ıyla (ADR 4440) eklenir; adıyla bulunan ya
+    da verilen katman kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği
+    katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı
+    komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists
+    ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o
+    çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi
+    iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada
+    çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin
+    çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje
+    ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında
+    duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş;
+    girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve
+    çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
+    not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
+    unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
+    katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
+    yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da; ADR
+    4440) ve çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.produce"
@@ -317,22 +327,26 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman
         (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da
         tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona
-        çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın layers'ı çizimlerin
-        gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler.
-        Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim
-        left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse
-        yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi,
-        tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün
-        çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her
-        çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş
-        grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma
-        çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki
-        projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı
-        tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision,
-        revision_conflict, not_a_road_project, invalid_file_path, file_not_found,
-        invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
-        ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
-        service_layer, layer_locked'u ve çizim komutlarının retleri.
+        çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki
+        gruplarına, bütün stiliyle ve proje çizgi türüyle (ADR 4040), saydamlığı, karışım
+        kipi, türü ve Yazdır'ıyla (ADR 4440) eklenir; adıyla bulunan ya da verilen katman
+        kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl
+        bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana
+        kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır
+        (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler
+        (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi
+        iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada
+        çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin
+        çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje
+        ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında
+        duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş;
+        girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve
+        çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
+        not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
+        unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
+        katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
+        yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da; ADR
+        4440) ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.

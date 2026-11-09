@@ -174,7 +174,7 @@ fn saved_recipe(dir: &std::path::Path) -> std::path::PathBuf {
 
 /// The shared cases' Yol project of `road.project.produce` (road_terrain_zeroline_cases.py's: Düz, Tümsek, `sifir`)
 /// opened, without drawings.
-fn other_project() -> App {
+pub(crate) fn other_project() -> App {
     let cases: Value =
         serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.project.produce.json")).expect("cases");
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
@@ -208,7 +208,7 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
     assert_eq!(out.produced.len(), 1);
     assert_eq!((out.produced[0].source.id.as_str(), out.produced[0].source.name.as_str()), ("t-5", "Düz"));
     assert_eq!(
-        produced_lines(&out),
+        produced_lines(&out, &b.project_graph.looks),
         [
             (Kind::Ok, "Tariften üretildi: 1 çizim, 1 nesne: cz-1 (Düz).".to_owned()),
             // docs/adr/3640: the recipe keeps its layer's definition; this project has the layer of that name.
@@ -225,7 +225,7 @@ fn tariften_uret_draws_the_recipe_in_another_project() {
     let again = b.project_graph.produced.clone().expect("answered");
     assert!(again.produced.is_empty());
     assert_eq!(
-        produced_lines(&again)[1],
+        produced_lines(&again, &b.project_graph.looks)[1],
         (Kind::Info, "Tarifin cz-1 çizimi bırakıldı: Projede bu çizim var (aynı komut, ana kaynak ve katman); Yeniden üret ile güncellenir.".to_owned())
     );
     // One undo takes the drawing back.
@@ -366,7 +366,8 @@ fn tariften_uret_adds_the_recipe_layer_in_its_groups_with_its_style() {
     let out = b.project_graph.produced.clone().expect("produced");
     let done = "“Kazı sınırı” katmanı tarifteki stiliyle “Yol › Toprak işleri” grubuna eklendi. “Toprak işleri” grubu ve \
                 “SINIR” çizgi türü de eklendi.";
-    assert!(produced_lines(&out).iter().any(|(_, l)| l == done), "{:?}", produced_lines(&out));
+    let said = produced_lines(&out, &b.project_graph.looks);
+    assert!(said.iter().any(|(_, l)| l == done), "{said:?}");
     let model = &b.document.as_ref().expect("a drawing").model;
     let id = out.layers[0].to.clone();
     let layers = model.layers();

@@ -30,7 +30,14 @@ rules, by hand:
   (their names here), those added and the line type added. A layer taken away again takes the groups added for it
   that hold nothing then and the line type added for it that no layer names. A definition whose style's colour, line
   type or weight is not its own, with an empty group name, or with a line type its style does not name or that does
-  not hold, is refused.
+  not hold, is refused;
+- a recipe layer keeping its composition, type and Yazdır (docs/adr/4440): a layer added takes its opacity and blending
+  mode, its type and, when it is not printed, Yazdır off, said after the rest (“Tarifteki gibi saydamlığı %40, karışım
+  kipi Çoğalt, türü Çizgi ve yazdırılmaz.”: the transparency is 1 − the opacity in percent); a layer found by its name
+  keeps its own. An object a drawing writes that its layer's type does not hold (docs/adr/0622 §5: a point layer holds
+  points, a line layer lines, polylines, arcs, curves, circles and ellipses; a zero line's lines are polylines) refuses
+  the produce, the plan too, whichever way the layer was found. A composition with a mask, one that says nothing, or an
+  opacity outside 0–1 is refused.
 
 No KentOS code.
 
@@ -122,6 +129,13 @@ TWO_NEW = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-9
 K12 = sdef("k-12", "Kazı sınırı", group=("YOL", "Toprak işleri"))
 K13 = sdef("k-13", "Kazı sınırı", group=("Toprak", "Sınırlar"))
 K14 = sdef("k-14", "Kazı sınırı", style=dict(STYLE, linePattern="YOKTUR"), line_type=None)
+# Docs/adr/4440: a layer 40 % transparent in the multiply mode, a line layer not printed (its style names no project
+# line type); the same under the zero line's name (found here: its own look stays); a point layer; three inconsistent.
+PLAIN = {k: v for k, v in STYLE.items() if k != "linePattern"}
+LOOK = {"compose": {"opacity": 0.6, "blend": "multiply"}, "geometry": "line", "plot": False}
+K15 = dict(sdef("k-15", "Kazı sınırı", style=PLAIN, line_type=None), **copy.deepcopy(LOOK))
+K16 = dict(sdef("k-7", "Sıfır hattı", style=PLAIN, line_type=None), **copy.deepcopy(LOOK))
+K17 = dict(sdef("k-17", "Kazı noktaları", style=PLAIN, line_type=None), geometry="point")
 
 
 def on_layer(drawings, layer):
@@ -199,6 +213,14 @@ FILES = {
     "bos-gruplu.json": recipe(on_layer(TWO[:1], dict(K12, group=["Yol", " "]))),
     "adlanmayan-cizgi-turlu.json": recipe(on_layer(TWO[:1], dict(K12, lineTypeDef=dict(SINIR, name="KESIK")))),
     "bosluklu-cizgi-turlu.json": recipe(on_layer(TWO[:1], dict(K12, lineTypeDef=dict(SINIR, name=" SINIR")))),
+    # Docs/adr/4440: recipes keeping their layers' compositions, types and Yazdır.
+    "saydam-katmanli.json": recipe(on_layer(TWO, K15)),
+    "saydam-adli.json": recipe(on_layer(TWO, K16)),
+    "nokta-katmanli.json": recipe(on_layer(TWO[:1], K17)),
+    "maskeli.json": recipe(on_layer(TWO[:1], dict(K15, compose={"opacity": 0.6, "mask": {
+        "labels": True, "size": 1.0, "targets": ["drenaj"]}}))),
+    "bos-cizimli.json": recipe(on_layer(TWO[:1], dict(K15, compose={}))),
+    "saydamligi-tutmayan.json": recipe(on_layer(TWO[:1], dict(K15, compose={"opacity": 1.5}))),
 }
 
 
@@ -354,6 +376,7 @@ def cases():
                     step({"path": fx("grup-katmanli.json"), "drawings": ["cz-1"]}, failed("not_a_layer", ANY, "layerId"))))
     out += layer_cases()
     out += group_cases()
+    out += look_cases()
     # The file and the recipe.
     out.append(case("Tarifte olmayan çizim", step({"path": path, "drawings": ["cz-9"]},
                                                  failed("unknown_drawing", "Tarifte “cz-9” kimlikli çizim yok.",
@@ -556,6 +579,103 @@ def group_cases():
     return out
 
 
+# Docs/adr/4440, by hand: what a layer type holds (docs/adr/0622 §5), a zero line's object kind, and the words.
+HOLDS = {"point": {"point"}, "line": {"line", "polyline", "arc", "spline", "nurbs", "circle", "ellipse"}}
+LAYER_WORDS = {"point": "nokta katmanı", "line": "çizgi katmanı"}
+TYPE_LABELS = {"point": "Nokta", "line": "Çizgi"}
+BLEND_LABELS = {"multiply": "Çoğalt"}
+ZERO_KIND, ZERO_KIND_WORDS = "polyline", "çoklu çizgi"
+
+
+def transparency(opacity):
+    """Saydamlık: 1 − the opacity in percent, its last bits rounded away (0.6 → “40”)."""
+    p = round((1.0 - opacity) * 100.0, 9)
+    return str(int(p)) if p == int(p) else repr(p)
+
+
+def look_said(defn):
+    """“Tarifteki gibi …”: what a layer added from `defn` takes beyond its style, in its panels' words."""
+    parts = []
+    c = defn.get("compose") or {}
+    if c.get("opacity", 1.0) != 1.0:
+        parts.append(f"saydamlığı %{transparency(c['opacity'])}")
+    if c.get("blend", "normal") != "normal":
+        parts.append(f"karışım kipi {BLEND_LABELS[c['blend']]}")
+    if defn.get("geometry"):
+        parts.append(f"türü {TYPE_LABELS[defn['geometry']]}")
+    if defn.get("plot") is False:
+        parts.append("yazdırılmaz")
+    if not parts:
+        return ""
+    return " Tarifteki gibi " + (parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + " ve " + parts[-1]) + "."
+
+
+def misfit_words(layer_name, geometry):
+    """A zero line's polyline on a layer of `geometry` that does not hold it: the refusal's words."""
+    assert ZERO_KIND not in HOLDS[geometry]
+    return (f"“{layer_name}” bir {LAYER_WORDS[geometry]}; {ZERO_KIND_WORDS} bu katmana yazılmaz. Çizimin katmanını türüne "
+            "uyan bir katman olarak layers ile verin ya da katmanın türünü Karışık yapın; hiçbir şey yazılmadı.")
+
+
+def typed_point():
+    """The project with the zero line's layer a point layer (it holds nothing yet)."""
+    s = zc.setup(work="road")
+    next(n for n in s["layers"] if n["id"] == "sifir")["geometry"] = "point"
+    return s
+
+
+def look_cases():
+    """Docs/adr/4440: a recipe layer's composition, type and Yazdır."""
+    out = []
+    path = fx("saydam-katmanli.json")
+    assert ZERO_KIND in HOLDS[K15["geometry"]]
+    went_l = went("k-15", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı")
+    said_l = {"code": "recipe_layer_created", "message": "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki "
+              "stiliyle eklendi." + look_said(K15), "path": "layers"}
+    added = dict(node("Kazı sınırı", PLAIN), compose=copy.deepcopy(K15["compose"]), geometry="line", plot=False)
+    left_both = [{"drawing": "cz-1", "why": "exists", "message": EXISTS},
+                 {"drawing": "cz-2", "why": "exists", "message": EXISTS}]
+    out.append(case("Saydamlığı, karışım kipi, türü ve yazdırılmaması da tariften: eklenen katman onlarla; ikinci kez "
+                    "adıyla bulunur",
+                    step({"path": path}, done({"produced": both(), "layers": [went_l], "revision": "$current"},
+                                              [said_l]),
+                         expect=dict(STEPPED, layers=tree_with(added))),
+                    step({"path": path}, done({"produced": [], "left": left_both, "revision": "$current"}),
+                         expect=SAME),
+                    note="tarifte %40 saydam (opaklık 0,6), Çoğalt, çizgi katmanı, yazdırılmaz; sıfır hattının çizgileri "
+                         "çoklu çizgi: çizgi katmanına yazılır"))
+    out.append(case("Plan eklenecek katmanın saydamlığını, türünü ve yazdırılmamasını söyler, yazmaz",
+                    step({"path": path}, done({"produced": both(False), "layers": [went_l], "revision": "$current"},
+                                              [said_l]), op="plan")))
+    out.append(case("Adıyla bulunan katman kendi görünüşünü korur: tarifin saydamlığı ve türü uygulanmaz",
+                    step({"path": fx("saydam-adli.json")},
+                         done({"produced": both(), "layers": [went("k-7", "sifir", "name", "Sıfır hattı")],
+                               "revision": "$current"}),
+                         expect=dict(STEPPED, layers=zc.setup(work="road")["layers"]))))
+    point = "Tarifin “cz-1” çizimi (Sıfır hattı): " + misfit_words("Kazı noktaları", "point")
+    out.append(case("Tarifin nokta katmanına sıfır hattının çizgileri yazılmaz: ret, katman da eklenmez",
+                    step({"path": fx("nokta-katmanli.json")}, failed("layer_geometry_mismatch", point, "layers"))))
+    out.append(case("Plan da reddeder: nokta katmanına çizgi",
+                    step({"path": fx("nokta-katmanli.json")}, failed("layer_geometry_mismatch", point, "layers"),
+                         op="plan")))
+    here = "Tarifin “cz-1” çizimi (Sıfır hattı): " + misfit_words("Sıfır hattı", "point")
+    out.append(case("Bu projenin katmanı nokta katmanı: ret, plan da",
+                    step({"path": fx("sifir-hatlari.json")}, failed("layer_geometry_mismatch", here, "layers"),
+                         op="plan"),
+                    step({"path": fx("sifir-hatlari.json")}, failed("layer_geometry_mismatch", here, "layers")),
+                    setup="$nokta", note="eskiden plan geçiyor, yazım adımın sonunda bütünlük denetimine takılıyordu"))
+    bad = "Tarifteki “cz-1” çiziminin katman tanımı (k-15) tutarsız: "
+    for name, file_, why in [
+        ("Katman çiziminde maske", "maskeli.json",
+         "katman çiziminde maske var; maske projesinin öbür katmanlarını kimlikleriyle keser, tarifte tutulmaz."),
+        ("Boş katman çizimi", "bos-cizimli.json", "katman çizimi boş: saydamlık da karışım kipi de yok."),
+        ("Opaklığı 1'den büyük", "saydamligi-tutmayan.json", "katman çiziminde saydamlık 0 ile 1 arasında olmalı."),
+    ]:
+        out.append(case(f"Tarifin katman tanımı tutarsız: {name.lower()}",
+                        step({"path": fx(file_)}, failed("invalid_project_recipe", bad + why, "path"))))
+    return out
+
+
 def main():
     found = cases()
     for c in found:
@@ -567,9 +687,11 @@ def main():
             c["setup"] = doubled()
         elif c.get("setup") == "$cizgi":
             c["setup"] = own_line_type()
+        elif c.get("setup") == "$nokta":
+            c["setup"] = typed_point()
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.project.produce", "commandVersion": 1,
            "title": "Tariften üret",
-           "note": "ADR 3240, 3640, 4040. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
+           "note": "ADR 3240, 3640, 4040, 4440. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
                    "graf biçimi) fixtures/recipes/v1 altında elle yazılır; sıfır hatlarının çizgi sayısı "
                    "road_terrain_zeroline_cases.py'den; KentOS kodu yok.",
            "setup": zc.setup(work="road"), "cases": found}

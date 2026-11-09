@@ -68,7 +68,9 @@ pub enum RoadGraphKind {
 /// takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
 /// `road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the
 /// groups it was in, its whole style and the project line type that style names, as its project defines it; a layer
-/// added from it goes into those groups with that style. A recipe from before has none of them.
+/// added from it goes into those groups with that style. Docs/adr/4440: how it was composed into the drawing (its
+/// opacity and blending mode), what it held and whether it was printed; a layer added from it takes them too. A recipe
+/// from before has none of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -95,6 +97,19 @@ pub struct RoadRecipeLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_def: Option<crate::LineTypeDef>,
+    /// How it was composed into the drawing (Katman çizimi, docs/adr/4440): its opacity and blending mode, never a mask
+    /// (a mask cuts into its project's other layers by their ids); none: opaque and normal.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub compose: Option<crate::LayerCompose>,
+    /// What it held (Katman türü): points, lines, areas or annotation; none: any kind.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geometry: Option<crate::LayerGeometry>,
+    /// Yazdır: `false`, it was drawn on screen but not printed; none: printed. Only `false` is written.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub plot: Option<bool>,
 }
 
 /// How a drawing is made again: its command and the version that draws it again (a record keeps no version; every
