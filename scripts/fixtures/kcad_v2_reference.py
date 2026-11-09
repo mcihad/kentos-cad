@@ -2671,6 +2671,9 @@ def document(d):
     if (d.get("settings", {}).get("arch") or {}).get("localRules") is not None:
         # The municipality's regulation the audit reads (docs/adr/3034).
         schema = max(schema, 213)
+    if (d.get("settings", {}).get("arch") or {}).get("sprinklers"):
+        # The building's sprinkler system (docs/adr/3035).
+        schema = max(schema, 214)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3546,7 +3549,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-214.kcad"] = container(root(cmap(parts), version=uint(214)))
+    files["schema-version-215.kcad"] = container(root(cmap(parts), version=uint(215)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6341,6 +6344,11 @@ def build():
     assert local.count(b"\x67version\x18\xd5") == 1, "the local regulation is schema 213"
     out["local-rules.kcad"] = container(local)
     out["broken/local-rules-in-schema-212.kcad"] = container(local.replace(b"\x67version\x18\xd5", b"\x67version\x18\xd4"))
+    # Schema 214 (docs/adr/3035): the building's sprinkler system; schema 213 refuses it as unknown.
+    sprinklers = document(load("sprinklers.json"))
+    assert sprinklers.count(b"\x67version\x18\xd6") == 1, "the sprinkler system is schema 214"
+    out["sprinklers.kcad"] = container(sprinklers)
+    out["broken/sprinklers-in-schema-213.kcad"] = container(sprinklers.replace(b"\x67version\x18\xd6", b"\x67version\x18\xd5"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

@@ -1365,6 +1365,11 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub local_rules: Option<LocalRules>,
+    /// Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+    /// fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub sprinklers: bool,
 }
 
 /// A municipality's own regulation (docs/adr/3034): its values read over Planlı Alanlar İmar Yönetmeliği's, as PAİY
@@ -1778,6 +1783,11 @@ impl ArchSettings {
     /// Whether it names a municipality's regulation (KCAD 213, docs/adr/3034).
     pub fn has_local_rules(&self) -> bool {
         self.local_rules.is_some()
+    }
+
+    /// Whether it says the building has a sprinkler system (KCAD 214, docs/adr/3035).
+    pub fn has_sprinklers(&self) -> bool {
+        self.sprinklers
     }
 
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).

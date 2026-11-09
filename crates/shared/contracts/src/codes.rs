@@ -2719,6 +2719,12 @@ codes! {
     PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük.";
     PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";
     REGULATION_CONFLICT = "regulation_conflict", Warning, false, "Ölçü yerel imar yönetmeliğine uyuyor, Planlı Alanlar İmar Yönetmeliği'ne uymuyor: çelişkide idare karar verir.";
+    BYKHY_ESCAPE_DISTANCE_OVER = "bykhy_escape_distance_over", Warning, false, "Kaçış uzaklığı Binaların Yangından Korunması Hakkında Yönetmelik'in (32/4, 48/2, 48/4, Ek-5/B) en çoğunu aşıyor.";
+    BYKHY_ESCAPE_NO_ROUTE = "bykhy_escape_no_route", Warning, false, "Mahalden kat çıkışına ya da daire kapısına yürünerek ulaşılmıyor (Binaların Yangından Korunması Hakkında Yönetmelik 33/6-b, 48/2).";
+    BYKHY_EXIT_WIDTH_BELOW = "bykhy_exit_width_below", Warning, false, "Kaçış merdiveni ya da çıkış kapısı kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 33/1, 33/2'nin istediğinden dar.";
+    BYKHY_EXIT_COUNT_BELOW = "bykhy_exit_count_below", Warning, false, "Kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 39/2'nin istediği çıkış sayısı yok.";
+    BYKHY_CORRIDOR_NARROW = "bykhy_corridor_narrow", Warning, false, "Kaçış yolu olan koridor Binaların Yangından Korunması Hakkında Yönetmelik 33/1'in 1,10 metresinden (yüksek binada 33/2'nin 1,20 metresinden) dar.";
+    BYKHY_STAIR_COUNT_BELOW = "bykhy_stair_count_below", Warning, false, "Yapı yüksekliğine göre Binaların Yangından Korunması Hakkında Yönetmelik 48/5'in istediği kaçış merdiveni sayısı yok.";
     /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).

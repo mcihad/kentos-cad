@@ -1705,6 +1705,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.materials && a.has_materials() {
                     return Err(r.fail_at(Code::UnknownField, at, "projenin malzemeleri şema 148 ister"));
                 }
+                if !has.sprinklers && a.has_sprinklers() {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "yağmurlama sistemi (sprinklers) şema 214 ister",
+                    ));
+                }
                 if !has.local_rules && a.has_local_rules() {
                     return Err(r.fail_at(
                         Code::UnknownField,

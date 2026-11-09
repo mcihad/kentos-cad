@@ -180,6 +180,14 @@
     - `shaft_of` (Asansör, Işıklık/Aydınlık, Hava bacası; asansör holü değil), `technical` (34/1 bodrum sayımı),
       `storeys()`; merdivenin yeri `StairIn` (durduğu mahalin bölümü). Düzeltme `Fix` → `cad.arch.edit`.
     - Denetim tablosunun sütunları sürüklenir (`ArchAuditPanel.columns`).
+  - **Yangın kaçışı (M35, [ADR 3035](../adr/3035-fire-escape-routes-distances-load-exits.md)):**
+    - `kentos_domain::escape::escape(doc)`: kat kat yürüme grafiği (kapı/boşluk yan noktaları 10 cm, ayırıcıda metrede
+      bir geçiş, iç köşe 0,40 m), çıkışlar (Merdiven adlı ortak mahal, açık merdiven ayağı/başı, zemin ve altında dış
+      kapı), sahibe göre yürüme (33/6-b); `RoomEscape` (exit: rota + tek yön + çıkış sayısı; entrance: 48/2),
+      `DoorEscape` (48/4). `dwelling_nature`, `stair_name` burada.
+    - `fire_audit.rs` (application): `Use` (Ek-5/B satırı: `walks`, `dead_end`, `per_unit`), `use_of`, `load_of`
+      (Ek-5/A), kurallar `bykhy_*`; Mevzuat grubunun sonunda çağrılır. `ArchSettings.sprinklers` (KCAD 214), Proje
+      ayarları › Yangın güvenliği.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

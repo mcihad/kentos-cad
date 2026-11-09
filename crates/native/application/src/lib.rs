@@ -522,6 +522,7 @@ pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, referenc
 pub mod spaces_edit;
 pub mod program_check;
 pub mod regulation_audit;
+pub mod fire_audit;
 pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;

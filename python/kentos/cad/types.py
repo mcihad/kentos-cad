@@ -15689,7 +15689,8 @@ class ArchAuditFinding(_Model):
             `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
             `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
             `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
-            (docs/adr/3034).
+            (docs/adr/3034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+            `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -16145,6 +16146,8 @@ class ArchSettings(_Model):
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
         space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
         space_usages: Suggested room usages in project order, never a mandatory classification.
+        sprinklers: Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+            fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
         zoning: İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
             ratio and the coverage are read against. Absent: none given.
     """
@@ -16168,6 +16171,7 @@ class ArchSettings(_Model):
     space_names: list[str] | Unset = UNSET
     space_number_prefixes: dict[str, str] | Unset = UNSET
     space_usages: list[str] | Unset = UNSET
+    sprinklers: bool | Unset = UNSET
     zoning: Zoning | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -16212,6 +16216,8 @@ class ArchSettings(_Model):
             out["spaceNumberPrefixes"] = dict(self.space_number_prefixes)
         if self.space_usages is not UNSET:
             out["spaceUsages"] = list(self.space_usages)
+        if self.sprinklers is not UNSET:
+            out["sprinklers"] = self.sprinklers
         if self.zoning is not UNSET:
             out["zoning"] = None if self.zoning is None else self.zoning.to_json()
         return out
@@ -16239,6 +16245,7 @@ class ArchSettings(_Model):
             space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
             space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
             space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
+            sprinklers=data.get("sprinklers", UNSET),
             zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
         )
 

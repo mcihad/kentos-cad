@@ -322,7 +322,8 @@ pub struct ArchAuditFinding {
     /// `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
     /// `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
     /// `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
-    /// (docs/adr/3034).
+    /// (docs/adr/3034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+    /// `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/3035).
     pub code: String,
     /// What is wrong.
     pub message: String,

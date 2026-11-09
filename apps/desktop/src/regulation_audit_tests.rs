@@ -198,14 +198,21 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("encodes");
         std::fs::write(std::path::Path::new(&out).join("konut.kcad"), bytes).expect("written");
     }
-    // Not a dwelling: an office keeps none of 29/1's rooms, nor 28/1-c's storey.
+    // Not a dwelling: an office keeps none of 29/1's rooms, nor 28/1-c's storey; its 0.85 m corridor is the fire
+    // regulation's escape route, 1.10 m asked (BYKHY 33/1, M35).
     run(
         &mut app,
         "cad.program.edit",
         json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Büro"}]}}),
     );
     let found = regulation(&mut app, json!(["regulation"]));
-    assert!(found.is_empty(), "{found:?}");
+    let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
+    assert_eq!(messages.len(), 1, "{found:?}");
+    assert!(
+        messages[0].starts_with("Koridor net eni 0.8")
+            && messages[0].ends_with("< 1.10 m (kaçış yolu) — BYKHY 33/1 (9.7.2015)"),
+        "{found:?}"
+    );
 }
 
 /// A blank Mimari drawing.

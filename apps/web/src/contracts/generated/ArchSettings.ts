@@ -105,4 +105,9 @@ site?: SitePlan,
  * Yerel imar yönetmeliği (docs/adr/3034; `.kcad` schema 213): the municipality's regulation Mimari denetim's
  * Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
  */
-localRules?: LocalRules, };
+localRules?: LocalRules, 
+/**
+ * Yağmurlama sistemi (docs/adr/3035; `.kcad` schema 214): the building has an automatic sprinkler system, so the
+ * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
+ */
+sprinklers?: boolean, };

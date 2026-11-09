@@ -74,6 +74,8 @@ pub enum Source {
     Paiy,
     /// Sivas Belediyesi İmar Yönetmeliği.
     Sivas,
+    /// Binaların Yangından Korunması Hakkında Yönetmelik (docs/adr/3035).
+    Bykhy,
 }
 
 impl Source {
@@ -82,6 +84,7 @@ impl Source {
         match self {
             Source::Paiy => "PAİY",
             Source::Sivas => "Sivas",
+            Source::Bykhy => "BYKHY",
         }
     }
 
@@ -90,6 +93,7 @@ impl Source {
         match self {
             Source::Paiy => "PAİY",
             Source::Sivas => "Sivas İmar Yön.",
+            Source::Bykhy => "BYKHY",
         }
     }
 }
@@ -172,8 +176,9 @@ pub const SIVAS_AIR_SHAFT_ARTICLE: Article = Article::sivas("32/3");
 pub const SIVAS_ELEVATOR_ARTICLE: Article = Article::sivas("34/1");
 pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
-/// The codes the group finds, in their order.
-pub const CODES: [&str; 20] = [
+/// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
+/// (docs/adr/3035).
+pub const CODES: [&str; 26] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -194,6 +199,12 @@ pub const CODES: [&str; 20] = [
     codes::PAIY_ELEVATOR_SMALL,
     codes::PAIY_ELEVATOR_LANDING_NARROW,
     codes::REGULATION_CONFLICT,
+    codes::BYKHY_ESCAPE_DISTANCE_OVER,
+    codes::BYKHY_ESCAPE_NO_ROUTE,
+    codes::BYKHY_EXIT_WIDTH_BELOW,
+    codes::BYKHY_EXIT_COUNT_BELOW,
+    codes::BYKHY_CORRIDOR_NARROW,
+    codes::BYKHY_STAIR_COUNT_BELOW,
 ];
 
 /// A fix a finding offers (docs/adr/3034): `cad.arch.edit`'s operation on its first object (a stair, a ramp) and the
@@ -261,14 +272,16 @@ fn fold(t: &str) -> String {
             'ı' | 'I' | 'İ' | 'i' => 'I',
             'ö' | 'Ö' => 'O',
             'ş' | 'Ş' => 'S',
-            'ü' | 'Ü' => 'U',
+            'ü' | 'Ü' | 'û' | 'Û' => 'U',
+            'â' | 'Â' => 'A',
+            'î' | 'Î' => 'I',
             c => c.to_ascii_uppercase(),
         })
         .collect()
 }
 
 /// A name's and a use's words, folded.
-fn words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
+pub(crate) fn words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
     [name, usage]
         .into_iter()
         .flatten()
@@ -283,12 +296,12 @@ fn words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
 }
 
 /// Whether a word begins with `w`.
-fn has(words: &[String], w: &str) -> bool {
+pub(crate) fn has(words: &[String], w: &str) -> bool {
     words.iter().any(|x| x.starts_with(w))
 }
 
 /// Whether a word is `w`.
-fn is(words: &[String], w: &str) -> bool {
+pub(crate) fn is(words: &[String], w: &str) -> bool {
     words.iter().any(|x| x == w)
 }
 
@@ -357,27 +370,22 @@ fn technical(name: Option<&str>, usage: Option<&str>) -> bool {
         || (is(&w, "SU") && has(&w, "DEPO"))
 }
 
-/// Whether a unit's nature is a dwelling's (or not given).
+/// Whether a unit's nature is a dwelling's (or not given): the escape routes' rule (docs/adr/3033, 3035).
 fn dwelling(nature: Option<&str>) -> bool {
-    nature.is_none_or(|n| {
-        let n = fold(n);
-        ["DAIRE", "MESKEN", "KONUT", "EV"]
-            .iter()
-            .any(|w| n.contains(w))
-    })
+    kentos_domain::escape::dwelling_nature(nature)
 }
 
-fn m2(v: f64) -> String {
+pub(crate) fn m2(v: f64) -> String {
     format!("{v:.2}")
 }
 
 /// Metres, two places: “1.20 m”.
-fn metres(v: f64) -> String {
+pub(crate) fn metres(v: f64) -> String {
     format!("{} m", m2(v))
 }
 
 /// Square metres, two places: “4.50 m²”.
-fn square(v: f64) -> String {
+pub(crate) fn square(v: f64) -> String {
     format!("{} m²", m2(v))
 }
 
@@ -392,7 +400,7 @@ fn riser(v: f64) -> String {
 
 /// Which way a limit binds a measure.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Bound {
+pub(crate) enum Bound {
     AtLeast,
     AtMost,
 }
@@ -474,20 +482,20 @@ fn judge(v: f64, bound: Bound, national: Limit, local: Option<Limit>) -> Verdict
 }
 
 /// A measure's finding as its words say it.
-struct Said {
-    code: &'static str,
-    message: String,
-    repair: String,
-    rule: String,
+pub(crate) struct Said {
+    pub(crate) code: &'static str,
+    pub(crate) message: String,
+    pub(crate) repair: String,
+    pub(crate) rule: String,
     /// The limit that binds; none for a conflict.
-    binding: Option<Limit>,
+    pub(crate) binding: Option<Limit>,
 }
 
 /// One measure read (docs/adr/3034): `subject` and the measure, its limit, `qual` after them and the article; the other
 /// layer's limit beside it where it differs (“… < 1.30 m — Sivas 31/1-a; PAİY 31/1-a: 1.20 m”); a conflict under
 /// `regulation_conflict` with both and who decides.
 #[allow(clippy::too_many_arguments)]
-fn said(
+pub(crate) fn said(
     code: &'static str,
     subject: &str,
     v: f64,
@@ -579,7 +587,10 @@ impl Place {
 }
 
 /// A room's net outline: its inner faces found again from its seed, else its own.
-fn net_parts(search: &mut SpaceSearch<'_>, s: &SpaceFields) -> Vec<kentos_commands::SpacePart> {
+pub(crate) fn net_parts(
+    search: &mut SpaceSearch<'_>,
+    s: &SpaceFields,
+) -> Vec<kentos_commands::SpacePart> {
     if s.method != kentos_commands::SpaceMethod::Net && s.seed.is_some() {
         let mut net = s.clone();
         net.method = kentos_commands::SpaceMethod::Net;
@@ -1570,6 +1581,8 @@ pub fn findings(
             }
         }
     }
+    // Yangın kaçışı (docs/adr/3035): Binaların Yangından Korunması Hakkında Yönetmelik.
+    crate::fire_audit::findings(doc, &mut |s, slots, at| push(s, slots, at, None));
     out
 }
 

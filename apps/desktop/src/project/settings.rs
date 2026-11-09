@@ -286,6 +286,8 @@ pub enum Event {
     ArchLines(Option<kentos_commands::LineGroups>),
     /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/3034).
     ArchLocalRules(Option<kentos_commands::LocalRules>),
+    /// Yangın güvenliği's sprinkler system switched (docs/adr/3035).
+    ArchSprinklers(bool),
     RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
@@ -625,6 +627,7 @@ impl App {
             Event::ArchZoning(field, text) => s.arch_zoning.edit(field, text),
             Event::ArchLines(lines) => s.arch_lines = lines,
             Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
+            Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
             Event::RoomChoices(edit) => {
                 super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
             }
@@ -1122,6 +1125,7 @@ impl App {
                     |r| event(Event::ArchLocalRules(r)),
                     crate::zoning_badge::summary(&doc.model),
                 ),
+                super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
                 super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(
                     e

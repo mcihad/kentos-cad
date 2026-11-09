@@ -84,7 +84,8 @@ const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
 ];
 
 /// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
-/// elevation, m (the site plan's, docs/adr/3032); the municipality's regulation chosen (docs/adr/3034).
+/// elevation, m (the site plan's, docs/adr/3032); the municipality's regulation chosen (docs/adr/3034); whether the
+/// building has a sprinkler system (Yangın güvenliği, docs/adr/3035).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningTexts {
     pub parcel: String,
@@ -92,6 +93,7 @@ pub struct ZoningTexts {
     pub coverage: String,
     pub datum: String,
     pub local: Option<kentos_commands::LocalRules>,
+    pub sprinklers: bool,
 }
 
 /// Yerel imar yönetmeliği's choices (docs/adr/3034): none, or a municipality's.
@@ -126,6 +128,7 @@ impl ZoningTexts {
             coverage: t(z.and_then(|z| z.coverage)),
             datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
             local: arch.and_then(|a| a.local_rules),
+            sprinklers: arch.is_some_and(|a| a.sprinklers),
         }
     }
 
@@ -220,6 +223,23 @@ pub(super) fn zoning_view<'a>(
     super::group::<Message>("İmar durumu", body)
 }
 
+/// Yangın güvenliği (docs/adr/3035): whether the building has a sprinkler system, the fire regulation's escape
+/// distances read by it.
+pub(super) fn fire_view<'a>(
+    t: &'a ZoningTexts,
+    on: impl Fn(bool) -> Message + 'a,
+) -> Element<'a, Message> {
+    let body = Column::new()
+        .spacing(6)
+        .push(kentos_ui::widget::Switch::new(t.sprinklers, on).label("Yağmurlama (sprinkler) sistemi var"))
+        .push(label::caption(
+            "Denetim › Mevzuat kaçış uzaklıklarını Binaların Yangından Korunması Hakkında Yönetmelik'e göre ölçer: \
+             en uzak nokta duvardan 40 cm içeride alınır (32/6), sınırlar Ek-5/B'den ve konutta 48/2'den gelir \
+             (yağmurlamalı binada daha uzun). Korunumlu merdiven, yangın kapısı ve güvenlik holü çizimden okunmaz.",
+        ));
+    super::group::<Message>("Yangın güvenliği", body)
+}
+
 fn shown(n: Option<f64>) -> String {
     n.map(|v| format!("{v}")).unwrap_or_default()
 }
@@ -308,8 +328,9 @@ pub fn read(
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
     // ±0.00's elevation (docs/adr/3032): the site plan's, the rest of it kept as the project has it.
     let datum = number(&zoning.datum).map_err(|()| "±0,00 kotu bir sayı olmalı.".to_owned())?;
-    // The municipality's regulation the audit reads (docs/adr/3034).
+    // The municipality's regulation the audit reads (docs/adr/3034) and the sprinkler system (docs/adr/3035).
     let local_rules = zoning.local;
+    let sprinklers = zoning.sprinklers;
     let site = {
         let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
         s.datum = datum;
@@ -375,6 +396,7 @@ pub fn read(
         // The site plan (docs/adr/3032): its parcel and edges are Parsel's, ±0.00 this form's.
         site,
         local_rules,
+        sprinklers,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),
