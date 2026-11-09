@@ -178,7 +178,9 @@ impl App {
                                     title: c.label.to_owned(),
                                     kind,
                                     bounds: c.bounds,
-                                    scale: plot,
+                                    scale: c.scale.unwrap_or(plot),
+                                    // The joinery list's elevations are drawn to scale (docs/adr/3038).
+                                    scaled: c.scale.is_some(),
                                 })
                         })
                         .collect();

@@ -144,6 +144,7 @@ pub const TOOLS: &[&str] = &[
     tag_tools::SCHEDULE_AREAS_ID,
     tag_tools::SCHEDULE_LAND_SHARES_ID,
     tag_tools::SCHEDULE_ROOM_LIST_ID,
+    crate::joinery_list_tool::ID,
     viewmark_tools::SECTION_ID,
     viewmark_tools::ELEVATION_ID,
     viewmark_tools::DETAIL_ID,
@@ -577,6 +578,9 @@ impl Session {
             tag_tools::SCHEDULE_ROOM_LIST_ID => Box::new(tag_tools::ScheduleTool::of_preset(
                 tag_tools::SchedulePreset::RoomList,
             )),
+            crate::joinery_list_tool::ID => {
+                Box::new(crate::joinery_list_tool::JoineryListTool::new())
+            }
             viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(
                 kentos_commands::ViewMarkForm::Section,
             )),

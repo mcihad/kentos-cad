@@ -110,7 +110,7 @@ pub(crate) fn particulars() -> Vec<(String, String)> {
 }
 
 /// The texts a sheet writes, as the PDF writes them (the drawing's variables and facts as the publication reads them).
-fn texts(app: &App, sheet: &str) -> Vec<String> {
+pub(crate) fn texts(app: &App, sheet: &str) -> Vec<String> {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let (book, _) =
         kentos_sheet::project::read_project_sheets(doc.sheets().expect("a book")).expect("reads");
@@ -199,6 +199,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
                         kind,
                         bounds: t.bounds,
                         scale: 100,
+                        scaled: false,
                     })
             })
             .collect(),

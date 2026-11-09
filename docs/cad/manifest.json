@@ -12424,6 +12424,22 @@
    "tests": 3
   },
   {
+   "id": "tool.joineryList",
+   "kind": "command",
+   "title": "Doğrama listesi",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.insert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.insert",
+   "note": "Doğrama listesinin bloğu (kimliği sabit, adı MM-XXXX-DOGRAMALISTESI) çizimin tiplerinden yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı; belge tip ya da açıklık değişince bloğu aynı adımda yeniden yazar (ADR 3038).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.labelHide",
    "kind": "tool",
    "title": "Etiketi gizle",

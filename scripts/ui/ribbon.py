@@ -432,6 +432,8 @@ CAD = [
                 {"command": "tool.tagAll", "title": "Etiket", "label": "Hepsini etiketle"},
                 # Doğrama kodları (docs/adr/3028): the openings' joinery codes and their tags, code over 90/210.
                 {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
+                # Doğrama listesi (docs/adr/3038): the codes' list with the types' elevations.
+                {"command": "tool.joineryList", "title": "Etiket", "label": "Doğrama listesi"},
             ]},
             # Metraj ▾ (docs/adr/3029): the quantities and the metrekare cetveli, the regulation's areas storey by
             # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1). Emsal ve TAKS tablosu (docs/adr/3030) beside

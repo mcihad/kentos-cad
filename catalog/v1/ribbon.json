@@ -2183,6 +2183,11 @@
           "command": "tool.openingCodes",
           "title": "Etiket",
           "label": "Doğrama kodları"
+         },
+         {
+          "command": "tool.joineryList",
+          "title": "Etiket",
+          "label": "Doğrama listesi"
          }
         ]
        },

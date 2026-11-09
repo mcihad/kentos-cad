@@ -2280,6 +2280,13 @@
       ],
       "note": "Mahal çizelgesi: kat (başlık satırıyla, en alt kattan), numara, ad, döşeme, süpürgelik, duvar, tavan, kapı, pencere, denizlik ve parapet, basamak ve rıht, küpeşte ve korkuluk sütunları; toplamsız (ADR 3038)."
     },
+    "tool.joineryList": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.insert"
+      ],
+      "note": "Doğrama listesinin bloğu (kimliği sabit, adı MM-XXXX-DOGRAMALISTESI) çizimin tiplerinden yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı; belge tip ya da açıklık değişince bloğu aynı adımda yeniden yazar (ADR 3038)."
+    },
     "tool.scheduleFixtures": {
       "level": "semantic",
       "via": [

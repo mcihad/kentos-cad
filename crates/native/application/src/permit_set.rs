@@ -43,6 +43,8 @@ pub struct ListSheet {
     pub kind: &'static str,
     pub bounds: [f64; 4],
     pub scale: u32,
+    /// What it shows is drawn to scale (the joinery list's elevations): its title block says the scale.
+    pub scaled: bool,
 }
 
 /// `variables` with the particulars it lacks added (their defaults; the work's name the drawing's) and `values`
@@ -260,6 +262,7 @@ pub(crate) fn pages(
                     paper: p,
                     orientation: kentos_sheet::Orientation::Landscape,
                 },
+                l.scaled,
             )),
             None => notes.push(format!("{} A0 kâğıda sığmadı; paftası kurulmadı.", l.title)),
         }

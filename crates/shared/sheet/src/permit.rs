@@ -99,6 +99,8 @@ pub struct Page {
     /// Its tables each under a caption with its scale (the calculation sheet's); a list's is not: its title block
     /// names it and a list has no scale.
     pub captioned: bool,
+    /// A list drawn to scale (the joinery list's elevations at 1/50, docs/adr/3038): its title block says its scale.
+    pub scaled: bool,
 }
 
 impl Page {
@@ -115,6 +117,7 @@ impl Page {
             views: Vec::new(),
             paper: None,
             captioned: false,
+            scaled: false,
         }
     }
 
@@ -131,6 +134,7 @@ impl Page {
             views: Vec::new(),
             paper: None,
             captioned: false,
+            scaled: false,
         }
     }
 
@@ -153,6 +157,7 @@ impl Page {
             views: Vec::new(),
             paper: None,
             captioned: false,
+            scaled: false,
         }
     }
 
@@ -170,17 +175,20 @@ impl Page {
             views,
             paper: None,
             captioned: true,
+            scaled: false,
         }
     }
 
     /// A list sheet (EK-2 Tablo 2.12 Liste, LS): `views` (name, box) at `scale` on `paper`, its file `kind` (Tablo
-    /// 2.13: MHL a mahal listesi), titled `title` (docs/adr/3038).
+    /// 2.13: MHL a mahal listesi, MMC the joinery list's drawing), titled `title`; `scaled` when what it shows is drawn
+    /// to scale (docs/adr/3038).
     pub fn list(
         title: &str,
         kind: &'static str,
         views: Vec<(String, [f64; 4])>,
         scale: u32,
         paper: PaperChoice,
+        scaled: bool,
     ) -> Page {
         Page {
             kind: PageKind::Tables,
@@ -194,6 +202,7 @@ impl Page {
             views,
             paper: Some(paper),
             captioned: false,
+            scaled,
         }
     }
 }
@@ -588,7 +597,7 @@ pub fn permit_sheets(
                 // The template's map, cloned for each table: locked at the plot scale on the table's box.
                 let template_map = sheet.items.iter().find(|i| i.id == map_item).cloned();
                 drop_items(sheet, &|id: &String| *id == map_item);
-                if !page.captioned {
+                if !page.captioned && !page.scaled {
                     // A list has no scale (docs/adr/3038): its title block says so.
                     sheet.variables.push(crate::model::Variable {
                         name: "olcek".into(),

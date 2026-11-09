@@ -1378,6 +1378,9 @@ impl Document {
         // After the fields: the tables' schedules, fields and formulas (docs/adr/0327).
         let tables = self.follow_tables(ops);
         ops.extend(tables);
+        // And the joinery list's block with its types and openings (docs/adr/3038 §6).
+        let joinery = self.follow_joinery(ops);
+        ops.extend(joinery);
         // And the site plan's setback line (docs/adr/3032) on its parcel, its storeys and its footprint.
         let site = self.follow_site(ops);
         ops.extend(site);

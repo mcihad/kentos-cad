@@ -225,6 +225,15 @@
       Mahal kaplama çizelgesinin yerinde; menü en çok altı).
     - Takım: `CalcTable.list` (MHL) → `PermitSet.lists` (`ListSheet`) → `Page::list` (LS/MHL/NNN, kendi kâğıdı,
       `olcek` "—", başlıksız); `permit::padded`: tablo pencereleri kâğıtta 1,5 mm pay.
+  - **Doğrama listesi (M38 2. bölüm, ADR 3038 §5–§6):**
+    - `OpeningType.material`, `u_value` (KCAD 217, `has_specs`); `OpeningTypeChange.material`/`u_value`; yalnız
+      bunlar değişince tipin sürümü artmaz, açıklıklar değişmez. Birim `W/m2K`.
+    - `joinery_audit.rs` (application): `window_u_high` (TS 825:2024, `Source::Ts825`), Mevzuat'ın sonunda.
+    - `kentos_domain::joinery_list`: `JOINERY_LIST_ID` (sabit), `joinery_rows`, `joinery_list_block` (Türkiye'nin
+      açılım çizgisi: menteşe köşelerinden kol tarafının ortasına), `follow_joinery` (history.rs, tablolardan sonra),
+      `extent`.
+    - `kentos_interaction::joinery_list_tool` (`tool.joineryList`, Etiket ▾), `calc_tables` `Kind::JoineryList`
+      (`CalcTable.scale` 50) → `ListSheet.scaled` → `Page.scaled` (antet ölçeği yazar).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

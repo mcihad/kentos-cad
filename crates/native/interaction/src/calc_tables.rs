@@ -13,12 +13,14 @@ use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, create, schedules_create, sheets_fit};
 
 /// A calculation table of the drawing: what the sheet names it and where it lies, metres; a list's EK-2 kind when it is
-/// a sheet of its own (the room list's MHL), none when it goes on the calculation sheet.
+/// a sheet of its own (the room list's MHL, the joinery list's MMC), none when it goes on the calculation sheet; the
+/// scale it is drawn for when not the plot scale (the joinery list's 1/50).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CalcTable {
     pub label: &'static str,
     pub bounds: [f64; 4],
     pub list: Option<&'static str>,
+    pub scale: Option<u32>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,6 +31,7 @@ enum Kind {
     Parking,
     Shelter,
     RoomList,
+    JoineryList,
 }
 
 fn kind_of(source: &TableSource) -> Option<Kind> {
@@ -51,8 +54,15 @@ fn kind_of(source: &TableSource) -> Option<Kind> {
     }
 }
 
-/// The drawing's table of `kind`, the last made.
+/// The drawing's table of `kind`, the last made; the joinery list's insert (docs/adr/3038 §6).
 fn found(doc: &Document, kind: Kind) -> Option<[f64; 4]> {
+    if kind == Kind::JoineryList {
+        return doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Insert(i) if i.block == kentos_domain::joinery_list::JOINERY_LIST_ID))
+            .last()
+            .and_then(|e| sheets_fit::extent_of(doc, std::iter::once(e)));
+    }
     doc.entities()
         .filter(
             |e| matches!(e, Entity::Table(t) if t.source.as_ref().and_then(kind_of) == Some(kind)),
@@ -126,6 +136,43 @@ fn schedule(doc: &mut Document, kind: Kind, at: [f64; 2]) -> Result<(), String> 
     }
 }
 
+/// The joinery list's block, as the drawing's types give it, and an insert of it with its top left at `at`.
+fn joinery_list(doc: &mut Document, at: [f64; 2]) -> Result<(), String> {
+    let block = doc.joinery_list_block();
+    if doc
+        .block(kentos_domain::joinery_list::JOINERY_LIST_ID)
+        .is_some()
+    {
+        doc.update_block(block).map_err(|r| r.to_string())?;
+    } else {
+        doc.add_block(block).map_err(|r| r.to_string())?;
+    }
+    let input = kentos_commands::BlocksInsert {
+        parameters: None,
+        block: Some(kentos_domain::joinery_list::JOINERY_LIST_ID),
+        name: None,
+        at: kentos_commands::Vec2 { x: at[0], y: at[1] },
+        scale: Some(1.0),
+        y_scale: None,
+        rotation: Some(0.0),
+        mirror: None,
+        layer_id: doc.layers().active().to_owned(),
+        color: None,
+        attributes: None,
+        attrs: None,
+        label: None,
+        symbol: None,
+        arch: Default::default(),
+        expected_revision: None,
+    };
+    match kentos_native_application::blocks_insert::execute(&mut ExecutionContext::new(doc), input)
+    {
+        CommandResult::Completed { .. } => Ok(()),
+        CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
+        _ => Err("Doğrama listesi yazılamadı.".into()),
+    }
+}
+
 /// A live table of the drawing (Emsal ve TAKS, Otopark, Sığınak) at `at`, its rows the document's.
 fn live(doc: &mut Document, source: TableSource, at: [f64; 2]) -> Result<(), String> {
     let written = match &source {
@@ -183,9 +230,12 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
         .and_then(|a| a.zoning)
         .is_some();
     let rooms = doc.entities().any(|e| matches!(e, Entity::Space(_)));
+    let joinery = !doc.joinery_rows().is_empty();
     let wanted = [
         // The room list first (MO: mahal listesi before the parking calculation); a sheet of its own.
         (Kind::RoomList, "Mahal listesi", rooms),
+        // The joinery list (docs/adr/3038 §6): a sheet of its own at 1/50.
+        (Kind::JoineryList, "Doğrama listesi", joinery),
         (Kind::Areas, "Metrekare cetveli", rooms),
         (Kind::Zoning, "Emsal ve TAKS", zoning),
         (Kind::LandShares, "Kat irtifakı", units),
@@ -202,10 +252,17 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
             continue;
         }
         let bounds = match found(doc, kind) {
+            Some(b) if kind == Kind::JoineryList => {
+                // The list as the types are now (the document keeps it so; a drawing of before kept none).
+                let block = doc.joinery_list_block();
+                doc.update_block(block).map_err(|r| r.to_string())?;
+                found(doc, kind).unwrap_or(b)
+            }
             Some(b) => b,
             None => {
                 match kind {
                     Kind::Areas | Kind::LandShares | Kind::RoomList => schedule(doc, kind, [x, y])?,
+                    Kind::JoineryList => joinery_list(doc, [x, y])?,
                     Kind::Zoning => live(doc, TableSource::Zoning {}, [x, y])?,
                     Kind::Parking => live(doc, TableSource::Parking {}, [x, y])?,
                     Kind::Shelter => live(doc, TableSource::Shelter {}, [x, y])?,
@@ -215,11 +272,19 @@ pub fn ensure(doc: &mut Document) -> Result<Vec<CalcTable>, String> {
                 b
             }
         };
-        let list = (kind == Kind::RoomList).then_some("MHL");
+        let (list, scale) = match kind {
+            Kind::RoomList => (Some("MHL"), None),
+            Kind::JoineryList => (
+                Some("MMC"),
+                Some(kentos_domain::joinery_list::JOINERY_LIST_SCALE),
+            ),
+            _ => (None, None),
+        };
         out.push(CalcTable {
             label,
             bounds,
             list,
+            scale,
         });
     }
     Ok(out)

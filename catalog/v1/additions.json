@@ -2960,6 +2960,23 @@
       "status": "implemented"
     },
     {
+      "id": "tool.joineryList",
+      "title": "Doğrama listesi",
+      "short": "Doğrama listesi",
+      "icon": "joineryList",
+      "description": "Grafik doğrama listesini imleçten yerleştirir (docs/adr/3038): çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
+      "aliases": [
+        "DOGRAMALISTESI",
+        "DOĞRAMALISTESİ",
+        "KAPIPENCERELISTESI",
+        "JOINERYLIST",
+        "DOORWINDOWLEGEND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.scheduleFixtures",
       "title": "Donatı çizelgesi",
       "short": "Donatı",
@@ -5242,6 +5259,7 @@
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
     "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
     "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",
+    "joineryList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"12.5\" rx=\"0.6\"/><path d=\"M9.5 3.5 2 9.75 9.5 16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleRoomList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"7\" rx=\"0.6\"/><path d=\"M2 8a2.5 2.5 0 0 1 2.5 2.5\" stroke-width=\"1\"/><path d=\"M2 13.4h7.5\" stroke-width=\"1.5\"/><path d=\"M2 16h7.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
     "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",

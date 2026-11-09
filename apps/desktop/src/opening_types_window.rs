@@ -140,6 +140,15 @@ fn length_text(f: &Format, v: &Value) -> String {
 
 /// What the window's report line says about `r`.
 pub(crate) fn report_words(r: &OpeningTypeReport) -> String {
+    // Only the type's frame and leaves or its U value changed (docs/adr/3038): no opening changes, none is counted.
+    if r.fields.is_empty()
+        && r.applied.is_empty()
+        && r.kept.is_empty()
+        && r.skipped.is_empty()
+        && r.refused.is_empty()
+    {
+        return "yalnız tipin kasa ve kanadı ya da U değeri; açıklıklar aynı kalır".into();
+    }
     let mut parts = vec![format!("{} açıklık izliyor", r.applied.len())];
     if !r.kept.is_empty() {
         parts.push(format!("{} istisna korunur", r.kept.len()));

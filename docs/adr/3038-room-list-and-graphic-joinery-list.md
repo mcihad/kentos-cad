@@ -1,6 +1,7 @@
 # 3038 — Mahal listesi ve grafik doğrama listesi
 
-Tarih: 2026-11-09. Durum: kabul, 1. bölüm (M38; ADV-24). 2. bölüm grafik doğrama listesidir; bu ADR'ye eklenir.
+Tarih: 2026-11-09. Durum: kabul (M38; ADV-24): 1. bölüm mahal listesi, 2. bölüm doğrama tipinin kasa-kanadı, U değeri
+ve grafik doğrama listesi.
 
 ## Sorun
 
@@ -99,8 +100,53 @@ Tarih: 2026-11-09. Durum: kabul, 1. bölüm (M38; ADV-24). 2. bölüm grafik do�
   çizimden tahmin edilmez). Kapılar TS 825:2024'ün çizelgesinde yok; yargılanmaz.
 - Birim kataloğuna `W/m2K` eklendi.
 
+### 6. Grafik doğrama listesi
+
+- **Görünüş çizimi Türkiye'nin kuralıyla:** İTÜ MIM 244 notu (*Mimari Teknik Çizim İlkeleri*, Şekil 1) Britanya ile
+  Türkiye'yi yan yana gösterir: Britanya'da üçgenin tepesi menteşe hattındadır; Türkiye'de çizgiler menteşe tarafının
+  köşelerinden başlar, kol tarafının ortasında birleşir (`referans/itu-teknik-cizim-ilkeleri.pdf`, s. 1). KentOS
+  Türkiye'ninkini çizer.
+  - Tek kanatlı kapı sağdan menteşeli (notun şekli), kol tarafında 1,00 m'de kısa bir kol çizgisi; çift kanat dış
+    kasalarından menteşeli, çizgiler orta kayıtta birleşir. Sürme ve cebe giren kanat ok; katlanır kanat panel çizgisi.
+  - Pencere: kaba boşluk, kasa, dikey ve yatay kayıtlar; alt sıranın ilk bölmeleri kanat sayısı kadar açılır kanattır,
+    her biri kendi tarafındaki kasaya menteşeli; sürme ok, sabit işaretsiz; denizlik çıkıntısı altında.
+  - Kaba ölçü görünüşün altında ve solunda ölçü çizgisiyle (cm).
+- **Liste bir bloktur** (EK-2 4.18.2: kapı ve pencere blok olarak gösterilir; Tablo 4.4 adı
+  `MM-XXXX-DOGRAMALISTESI`). Kimliği sabittir; bir çizimde bir tanedir. **Canlıdır:** bir adım bir tipi ya da bir
+  açıklığı değiştirince belge bloğu aynı adımda yeniden yazar (`follow_joinery`); geri alma ikisini birlikte alır. Elle
+  değişiklik korunmaz (blok açıklaması söyler).
+- Tip başına bir sütun, kodlarına göre (GK01, K01, P01, P02; kodsuz tip adıyla sonda), altılı bantlar alt alta.
+  Satırlar: Kod, Görünüş, Kaba ölçü (cm), Denizlik (cm), Açılım ("Kanatlı, 2 kanat"), Kasa ve kanat (sütuna sığacak
+  satırlara bölünür), U (W/m²K), Adet. Altında "Ölçüler kaba yapı boşluğudur (cm). Açılım çizgileri menteşe tarafından
+  kol tarafına iner." Yazılar 1/50'de 2,5 mm (kod 3,5 mm); görünüşler gerçek boyutta.
+- Yalnız bir tipi izleyen kapı ve pencereler listededir; tipsizler için Doğrama kodları tip ve kod verir (araç kaç
+  tane kaldığını söyler).
+- **Mimari › Belgele › Etiket ▾ › Doğrama listesi** (`tool.joineryList`; Doğrama kodları'ndan sonra): imleçte listenin
+  çerçevesi; tıklama ya da yazılan nokta sol üst köşedir; blok ve yerleştirme tek geri alma adımı, çizelgelerin
+  katmanında (MM-XXXX-CIZELGE). Simge `joineryList`: Türkiye çizgisiyle bir kapı görünüşü ve liste.
+- **Ruhsat takımı:** `calc_tables::ensure` listeyi bulur (yoksa öbür tabloların yanına yerleştirir, varsa bloğunu
+  tazeler); mahal listesinden sonra kendi paftası, **1/50**, EK-2 **LS/MMC/NNN** (Liste türünde mimari çizim: içinde
+  görünüş var). Görünüşler ölçekli çizildiği için antet ölçeği yazar (mahal listesi "—" kalır; `Page::list`'in `scaled`'ı).
+- Kapı ve pencere tipleri penceresinin özeti, yalnız kasa-kanat ya da U değeri değişince "0 açıklık izliyor" yerine
+  "yalnız tipin kasa ve kanadı ya da U değeri; açıklıklar aynı kalır" der.
+
 ## Ölçüm
 
+- **Testler (grafik doğrama listesi):**
+  - `joinery_list_tests` (kabul dairesi): Doğrama kodları, Pencere 120'ye "PVC, 5 odacıklı; çift camlı Low-E 4+16+4"
+    ve 1,6; Etiket ▾ › Doğrama listesi (30,0): "Doğrama listesi: 4 tip (GK01, K01, P01, P02), 10 açıklık"; blok
+    `MM-XXXX-DOGRAMALISTESI`; sekiz satır etiketi; 100/210, 90/210, 120/130, 60/70; "PVC, 5 odacıklı; çift" / "camlı
+    Low-E 4+16+4"; sıra GK01 < K01 < P01 < P02. U 1,4 yapılınca liste aynı adımda "1,4"; geri alma "1,6"yı geri getirir.
+    Ruhsat takımında mahal listesinden sonra "Doğrama listesi" paftası, "1/50", `_LS_MMC_NNN_01_000`; mahal listesinde
+    ölçek yok.
+  - `kentos_domain::joinery_list`: ölçü ve U yazımı, satıra bölme; kanadın çizgileri menteşe köşelerinden kol tarafının
+    ortasına.
+- **Gerçek pencere** (`fixtures/interaction/real/dograma-listesi.txt`; kabul dairesi, 1920 × 1080):
+  - Önce: tip penceresinde kasa-kanat ve U yok; Etiket ▾'de üç satır.
+  - Sonra: Pencere 120'ye kasa-kanat ve 2,4 yazıldı; Etiket ▾ › Doğrama listesi (0,-12)'ye yerleşti; Ruhsat takımı UP-05
+    Doğrama listesi'ni A3'te, ölçek 1/50 ile kurdu; 5 dosya PDF/A-2b yayınlandı (UP-01 İmar durumu olmadığı için
+    çıkarıldı); Denetim › Mevzuat: "P01 Pencere 120 (4 pencere): U 2,4 W/m²K > 1,8 W/m²K — TS 825 …", 4 nesne.
+  - Bulunan kusur: pencerenin özeti bir satır büyüyünce alanlar 24 piksel kayıyor (senaryo buna göre).
 - **Testler (2. bölümün ilk adımı):**
   - `opening_types_tests::a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it`: okunamayan U ("iki")
     söylenir; P01'e "PVC, 3 odacıklı; çift camlı" ve 2,4 → bulgu ve kaynağı; 1,8 → bulgu yok; pencere tipin
@@ -135,8 +181,11 @@ Tarih: 2026-11-09. Durum: kabul, 1. bölüm (M38; ADV-24). 2. bölüm grafik do�
 
 ## Sonraki adımlar
 
-- 2. bölüm: grafik doğrama listesi (tip görünüşü Türkiye'deki açılım çizgisiyle, kaba ölçü, açılım, kasa ve kanat
-  malzemesi, U değeri, adet), takımda paftası ve TS 825:2024 pencere U denetimi.
+- Pencere açılışında vasistas (alttan menteşeli) ve çift açılım: açılış türü olarak (şema ve plan çizimi) ayrı iş;
+  liste o zaman alttan menteşe çizgisini de çizer.
+- Her tipin görünüşü ayrıca kendi bloğu (Tablo 4.4: `MM-KAPI-K01-90X210`), cephe görünüşlerinde kullanılmak üzere
+  (ADV-19).
+- Pencere tipleri penceresinin özeti büyüyünce alanların kayması.
 - Poz numarası ve TS numarası kaplama metninde yazılıyor; malzeme kitaplığından okunması sonraki iştir.
 - Dış cephe ve çatı kaplaması (MO 14.8) bina düzeyinde bir satır olarak; mahal listesinde başlıklı grupta Kat
   sütununun tekrarlanmaması.

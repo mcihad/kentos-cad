@@ -316,6 +316,7 @@ fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
             vec![("Mahal listesi".into(), [30.0, -10.0, 45.0, 0.0])],
             100,
             a3.clone(),
+            false,
         ),
     ];
     let made = permit::permit_sheets(
