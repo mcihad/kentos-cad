@@ -285,3 +285,117 @@ fn a_window_type_says_its_frame_and_u_value_and_ts_825_judges_it() {
         ("PVC, 3 odacıklı; çift camlı", "1,8")
     );
 }
+
+/// The chosen type's name and form.
+fn chosen(app: &App) -> (String, OpeningForm) {
+    let w = app.opening_types.as_ref().unwrap();
+    let u = &w.uses[w.chosen];
+    (u.kind.name.clone(), u.kind.form)
+}
+
+/// Yeni tip ▾'s item with these words, as a trace picks it.
+fn pick_new(app: &mut App, item: &str) {
+    let message = app
+        .opening_types_control(Control::Pick(NEW, item))
+        .expect("an item of Yeni tip ▾")
+        .expect("a message");
+    let _ = app.update(message);
+}
+
+/// The form of a new type was nowhere to choose (an owner's report: “yeni tip dediğimde hep aynı tip geliyor”): Yeni
+/// tip copied the chosen type, a door while the list starts with one. Yeni tip ▾ asks for the form first; a copy of a
+/// copy is numbered, never “… kopyası kopyası”.
+#[test]
+fn a_new_type_is_the_form_picked_or_a_copy_of_the_chosen_one() {
+    let mut app = app();
+    let _ = app.update(Message::Run("arch.openingTypes"));
+    let i = app
+        .opening_types
+        .as_ref()
+        .unwrap()
+        .uses
+        .iter()
+        .position(|u| u.kind.id == "k01")
+        .unwrap();
+    let _ = app.update(Message::OpeningTypes(Event::Choose(i)));
+    // A window with a door chosen: KentOS's first window's values, its own name, chosen in the list.
+    pick_new(&mut app, "Pencere");
+    assert_eq!(
+        chosen(&app),
+        ("Yeni pencere tipi".to_owned(), OpeningForm::Window)
+    );
+    // Said without “tipi tipi”.
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Tip eklendi: Yeni pencere tipi (pencere)."
+    );
+    let made = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .settings()
+        .arch
+        .as_ref()
+        .unwrap()
+        .opening_type("Yeni pencere tipi")
+        .unwrap()
+        .clone();
+    let first = kentos_commands::builtin_opening_types()
+        .into_iter()
+        .find(|t| t.form == OpeningForm::Window)
+        .unwrap();
+    assert_eq!(
+        (made.width, made.sill, made.head),
+        (first.width, first.sill, first.head)
+    );
+    // The chosen type's copy keeps its form; a copy of the copy is numbered.
+    pick_new(&mut app, COPY);
+    assert_eq!(
+        chosen(&app),
+        ("Yeni pencere tipi kopyası".to_owned(), OpeningForm::Window)
+    );
+    pick_new(&mut app, COPY);
+    assert_eq!(
+        chosen(&app),
+        (
+            "Yeni pencere tipi kopyası 2".to_owned(),
+            OpeningForm::Window
+        )
+    );
+    // Each form of the menu.
+    for (item, form, name) in [
+        ("Kapı", OpeningForm::Door, "Yeni kapı tipi"),
+        ("Boşluk", OpeningForm::Opening, "Yeni boşluk tipi"),
+        ("Niş", OpeningForm::Niche, "Yeni niş tipi"),
+        ("Baca", OpeningForm::Flue, "Yeni baca tipi"),
+        ("Pencere", OpeningForm::Window, "Yeni pencere tipi 2"),
+    ] {
+        pick_new(&mut app, item);
+        assert_eq!(chosen(&app), (name.to_owned(), form), "{item}");
+    }
+    // An item the menu does not have is said, nothing made.
+    assert!(
+        app.opening_types_control(Control::Pick(NEW, "Kapak"))
+            .is_err()
+    );
+    // The names the copies take.
+    let t = |name: &str| OpeningType {
+        name: name.into(),
+        ..made.clone()
+    };
+    assert_eq!(new_name(None, Some(&t("İç kapı 90"))), "İç kapı 90 kopyası");
+    assert_eq!(
+        new_name(None, Some(&t("İç kapı 90 kopyası"))),
+        "İç kapı 90 kopyası"
+    );
+    assert_eq!(
+        new_name(None, Some(&t("İç kapı 90 kopyası 3"))),
+        "İç kapı 90 kopyası"
+    );
+    assert_eq!(
+        new_name(None, Some(&t("Kopyası olmayan"))),
+        "Kopyası olmayan kopyası"
+    );
+    assert_eq!(new_name(Some(OpeningForm::Niche), None), "Yeni niş tipi");
+}

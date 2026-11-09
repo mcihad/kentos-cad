@@ -2,7 +2,8 @@
 //! with its openings counted, those at an older version and those keeping values of their own. The chosen type's
 //! values are typed in the project's unit; before Uygula the plan of `cad.openingtypes.edit` says what the change does
 //! (how many openings follow, how many keep their own value, how many are left on a locked layer, which refuse it).
-//! Yeni tip copies the chosen one, Sil leaves its openings with their values; Kitaplıktan al and Kitaplığa yaz carry
+//! Yeni tip ▾ starts a door, window, opening, niche or flue type from KentOS's first of that form, or copies the chosen
+//! type; Sil leaves its openings with their values; Kitaplıktan al and Kitaplığa yaz carry
 //! the office's types as a `kentos.opening-types` file. Every write is one undo step. Aynı tiptekileri seç
 //! (`arch.openingSameType`) and the selection's Tipten ayır, Tipe uygula and Tipe döndür live here too.
 
@@ -20,7 +21,7 @@ use kentos_commands::{
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::{Format, Level};
 use kentos_ui::icon::icon;
-use kentos_ui::widget::{Choice, Dialog as Frame, Select};
+use kentos_ui::widget::{Choice, Dialog as Frame, Menu, MenuButton, Select};
 use kentos_ui::{label, style};
 use serde_json::{Map, Value};
 
@@ -33,6 +34,16 @@ pub const TITLE: &str = "Kapı ve pencere tipleri";
 const CLOSE: &str = "Kapat";
 const APPLY: &str = "Uygula";
 const NEW: &str = "Yeni tip";
+/// Yeni tip ▾'s last item: a copy of the chosen type, its form kept.
+const COPY: &str = "Seçili tipin kopyası";
+/// The forms a new type starts as, in Yeni tip ▾'s order, with their icons.
+const FORMS: [(OpeningForm, &str); 5] = [
+    (OpeningForm::Door, "door"),
+    (OpeningForm::Window, "window"),
+    (OpeningForm::Opening, "wallOpening"),
+    (OpeningForm::Niche, "wallNiche"),
+    (OpeningForm::Flue, "wallFlue"),
+];
 const REMOVE: &str = "Sil";
 const IMPORT: &str = "Kitaplıktan al…";
 const EXPORT: &str = "Kitaplığa yaz…";
@@ -118,7 +129,8 @@ pub enum Event {
     /// Kasa ve kanat, U değeri (docs/adr/3038).
     Material(String),
     UValue(String),
-    New,
+    /// Yeni tip ▾: a type of this form from KentOS's first of it; none: a copy of the chosen type.
+    New(Option<OpeningForm>),
     Remove,
     Apply,
     Import,
@@ -669,7 +681,7 @@ impl App {
                             self.say(
                                 Level::Success,
                                 format!(
-                                    "{} tipi değişti (sürüm {version}): {}.",
+                                    "Tip değişti: {} (sürüm {version}): {}.",
                                     t.name,
                                     report_words(&done.report)
                                 ),
@@ -684,12 +696,10 @@ impl App {
                 }
                 self.opening_types_read(Some(t.id));
             }
-            Event::New => {
-                let chosen = self.opening_types_chosen();
-                let base = chosen.as_ref().map_or_else(
-                    || "Yeni kapı tipi".to_owned(),
-                    |t| format!("{} kopyası", t.name),
-                );
+            Event::New(form) => {
+                // A copy of the chosen type, or a type of the form picked (none chosen: a door).
+                let chosen = self.opening_types_chosen().filter(|_| form.is_none());
+                let base = new_name(form, chosen.as_ref());
                 let names: Vec<String> = self
                     .opening_types
                     .as_ref()
@@ -705,7 +715,9 @@ impl App {
                     name: name.clone(),
                     id: None,
                     copy_of: chosen.as_ref().map(|t| t.id.clone()),
-                    form: chosen.as_ref().map_or(Some(OpeningForm::Door), |_| None),
+                    form: chosen
+                        .as_ref()
+                        .map_or(Some(form.unwrap_or(OpeningForm::Door)), |_| None),
                     change: OpeningTypeChange::default(),
                 });
                 if let Some(done) = done {
@@ -714,7 +726,15 @@ impl App {
                         .iter()
                         .find(|t| t.name == name)
                         .map(|t| t.id.clone());
-                    self.say(Level::Success, format!("{name} tipi eklendi."));
+                    // “Tip eklendi: Yeni pencere tipi (pencere).”: “{name} tipi eklendi” said “Yeni pencere tipi tipi”.
+                    let form = done
+                        .types
+                        .iter()
+                        .find(|t| t.name == name)
+                        .map_or(String::new(), |t| {
+                            format!(" ({})", t.form.label().to_lowercase())
+                        });
+                    self.say(Level::Success, format!("Tip eklendi: {name}{form}."));
                     self.opening_types_read(id);
                 }
             }
@@ -731,7 +751,7 @@ impl App {
                 {
                     self.say(
                         Level::Success,
-                        format!("{} tipi silindi; açıklıkları değerleriyle kaldı.", t.name),
+                        format!("Tip silindi: {}; açıklıkları değerleriyle kaldı.", t.name),
                     );
                 }
                 self.opening_types_read(None);
@@ -917,7 +937,7 @@ impl App {
         }
         if w.uses.is_empty() {
             list = list.push(label::caption(
-                "Projede tip yok. Yeni tip KentOS'un kapısından başlar; Kitaplıktan al ofisin tiplerini getirir.",
+                "Projede tip yok: Yeni tip ▾ biçimini seçtiğiniz tipi başlatır, Kitaplıktan al ofisin tiplerini getirir.",
             ));
         }
         let left = container(iced::widget::scrollable(list).height(Fill)).width(260.0);
@@ -935,7 +955,7 @@ impl App {
                 .is_some_and(|u| !w.name.trim().is_empty() && w.name.trim() != u.kind.name);
         let window = Frame::new(TITLE)
             .push(body)
-            .action(words::secondary(NEW, Some(msg(Event::New))))
+            .action(new_menu(w.uses.get(w.chosen).map(|u| u.kind.name.clone())))
             .action(words::secondary(REMOVE, chosen.then(|| msg(Event::Remove))))
             .action(words::secondary(IMPORT, Some(msg(Event::Import))))
             .action(words::secondary(EXPORT, chosen.then(|| msg(Event::Export))))
@@ -1119,11 +1139,84 @@ impl App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
-            Control::Press(NEW) => Some(msg(Event::New)),
+            // Yeni tip ▾'s items by their words: a form, or the chosen type's copy.
+            Control::Pick(NEW, COPY)
+                if !self
+                    .opening_types
+                    .as_ref()
+                    .is_some_and(|w| w.uses.is_empty()) =>
+            {
+                Some(msg(Event::New(None)))
+            }
+            Control::Pick(NEW, item) => match FORMS.iter().find(|(f, _)| f.label() == item) {
+                Some((f, _)) => Some(msg(Event::New(Some(*f)))),
+                None => return Err(format!("“{NEW}” menüsünde “{item}” yok")),
+            },
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// A new type's name before it is numbered: “Yeni pencere tipi” for a form, “İç kapı 90 kopyası” for a copy (a copy's
+/// copy is “İç kapı 90 kopyası 2”, never “… kopyası kopyası”).
+fn new_name(form: Option<OpeningForm>, chosen: Option<&OpeningType>) -> String {
+    match chosen {
+        Some(t) => {
+            let name = t.name.trim();
+            let stem = name
+                .rsplit_once(" kopyası")
+                .filter(|(_, rest)| rest.is_empty() || rest.trim().parse::<u32>().is_ok())
+                .map_or(name, |(stem, _)| stem);
+            format!("{stem} kopyası")
+        }
+        None => {
+            let form = form.unwrap_or(OpeningForm::Door);
+            format!("Yeni {} tipi", form.label().to_lowercase())
+        }
+    }
+}
+
+/// Yeni tip ▾ (the form of a new type was nowhere to choose: Yeni tip copied the chosen type, a door when the list
+/// started with one): a door, window, opening, niche or flue, each from KentOS's first type of its form, then a copy of
+/// the chosen type `chosen`.
+fn new_menu<'a>(chosen: Option<String>) -> Element<'a, Message> {
+    let face = container(
+        row![
+            label::body(NEW),
+            icon(kentos_ui::icon::Icon::ChevronDown)
+                .size(12.0)
+                .tone(kentos_ui::icon::Tone::Muted),
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .padding(kentos_ui::theme::metrics::action())
+    .style(style::container::field_box);
+    MenuButton::new(face, move || {
+        let builtin = kentos_commands::builtin_opening_types();
+        let mut menu = Menu::new().header("Biçimi seçin");
+        for (form, glyph) in FORMS {
+            let from = builtin
+                .iter()
+                .find(|t| t.form == form)
+                .map(|t| t.name.clone());
+            menu = menu
+                .item(form.label(), msg(Event::New(Some(form))))
+                .icon(crate::icons::from_web(Some(glyph)));
+            if let Some(from) = from {
+                menu = menu.detail(format!("başlangıç: {from}"));
+            }
+        }
+        menu = menu
+            .separator()
+            .item(COPY, chosen.is_some().then(|| msg(Event::New(None))));
+        if let Some(name) = &chosen {
+            menu = menu.detail(name.clone());
+        }
+        menu
+    })
+    .into()
 }
 
 /// The window's fields filled from the type `t`.

@@ -631,7 +631,8 @@
   eşik, pervaz, denizlik, kayıtlar, kesikli kullanım alanı. `cad.arch.audit`'in Kapılar grubu (fiziksel, net geçiş, proje
   kuralı; `minClearWidth`), mutfak dizisi kapının dilimini söyler. Masaüstünde Kapı ve pencere tipleri penceresi, Açıklık
   sekmesinde Tip paneli, Öznitelikler'de Tip bölümü. Döner, cebe giren, katlanır kapı ve yatay kaydın çizimi açık; elle gerçek
-  pencerede denenmedi.
+  pencerede denenmedi. 9 Kasım eki: Yeni tip ▾ önce biçimi sorar (Kapı, Pencere, Boşluk, Niş, Baca) ya da seçili tipi
+  kopyalar; önceden hep seçili tipin kopyasıydı ve pencere tipi açmanın yolu görünmüyordu.
 
 - **Malzeme kitaplığı, Duvar stilleri'nde malzeme seçicisi, döşemenin mahale bağlanması (31 Ekim 2026; [ADR 0791](../../docs/adr/0791-material-library-style-picker-space-binding.md), ADV-02c [~]).**
   Çizimin dışında malzeme kitaplığı `kentos.materials` 1 (`.kmalzeme`; KentOS'un `catalog/v1/materials/kentos-temel.json`,
