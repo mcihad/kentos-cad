@@ -207,6 +207,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   sözde birleşmesi.
 - MAP-09 / ADR 3840: web'in İşlem araç kutusunda İmar planını denetle (`zoning.check`; `fixtures/processing/v1/zoning.json`'un
   3 durumu) ve bölgelerin hata katmanına alan olarak yazılması.
+- MAP-10 / ADR 3860: web'in İşlem araç kutusunda Altyapı bağlarını çiz (`scenarios.links`;
+  `fixtures/processing/v1/scenario-links.json`'un 2 durumu).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

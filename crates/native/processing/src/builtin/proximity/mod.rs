@@ -9,6 +9,7 @@ pub mod hub;
 pub mod matrix;
 pub mod nearest;
 pub mod neighbors;
+pub mod scenario_links;
 pub mod shortest_line;
 
 use kentos_commands::{AngleUnit, Entity};

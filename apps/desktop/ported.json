@@ -236,6 +236,7 @@
     "processing.run.proximity.hub",
     "processing.run.proximity.neighbors",
     "processing.run.proximity.shortestLine",
+    "processing.run.scenarios.links",
     "processing.run.layers.splitByAttribute",
     "processing.run.layers.merge",
     "processing.run.layers.extract",

@@ -3358,6 +3358,20 @@
       "status": "implemented"
     },
     {
+      "id": "processing.run.scenarios.links",
+      "title": "Altyapı bağlarını çiz…",
+      "short": "Altyapı bağları",
+      "icon": "shortestLine",
+      "description": "Bir senaryonun alanlarını bir altyapı katmanının en yakın nesnesine bağlar (cad.scenarios.impact'in altyapıya yakınlık bağları; ADR 3860): her bağ alanın ağırlık merkezinden nesnenin en yakın yerine bir çizgi olarak kendi katmanına yazılır, taraf, alan, hat ve uzaklıkla; tek geri alma adımı. Mevcut durum, senaryo ya da ikisi. Yakınlık hattın kapasitesi ya da bağlanma hakkı değildir.",
+      "aliases": [
+        "ALTYAPIBAGLARI",
+        "SCENARIOLINKS"
+      ],
+      "shortcuts": [],
+      "category": "İşlemler",
+      "status": "implemented"
+    },
+    {
       "id": "processing.run.stats.dbscanSweep",
       "title": "DBSCAN parametre taraması…",
       "short": "DBSCAN taraması",

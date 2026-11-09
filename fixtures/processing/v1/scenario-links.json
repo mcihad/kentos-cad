@@ -1,0 +1,562 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "measureTolerance": 1e-06,
+ "documents": {
+  "scenario-links.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "drawingFont": "barlow",
+    "activeLayer": "karar",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "scenarios.links": {
+     "scenario": "",
+     "infrastructure": {
+      "scope": "layer",
+      "layerId": "karar"
+     },
+     "distance": 0.0,
+     "uses": "",
+     "side": "both",
+     "layer": {
+      "newName": "Altyapı bağları"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "scenario-links",
+   "title": "Altyapı bağlarını çiz: iki taraftaki on bir alan kanalizasyon hattının en yakın yerine bağlanır, tek geri alma adımı",
+   "document": "scenario-links.kcad",
+   "run": {
+    "tool": "scenarios.links"
+   },
+   "values": {
+    "scenario": "Alternatif A",
+    "infrastructure": {
+     "scope": "layer",
+     "layerId": "altyapi"
+    },
+    "distance": 40.0,
+    "uses": "",
+    "side": "both",
+    "layer": {
+     "newName": "Altyapı bağları"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "“Alternatif A”: 11 alan en yakın altyapı nesnesine bağlandı; 11 bağ yazıldı.",
+    "undo": "Altyapı bağlarını çiz",
+    "layers": [
+     {
+      "id": "islem-altyapi-baglari",
+      "name": "Altyapı bağları",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Mevcut durum",
+       "Alan": "0192f5c0-1440-7000-8000-000000000001",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487020.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Mevcut durum",
+       "Alan": "0192f5c0-1440-7000-8000-000000000002",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487055.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487055.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Mevcut durum",
+       "Alan": "0192f5c0-1440-7000-8000-000000000003",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "45.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 45.0,
+      "vertices": [
+       {
+        "x": 487085.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487085.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Mevcut durum",
+       "Alan": "0192f5c0-1440-7000-8000-000000000004",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "20.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 20.0,
+      "vertices": [
+       {
+        "x": 487085.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487085.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Mevcut durum",
+       "Alan": "0192f5c0-1440-7000-8000-000000000005",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487110.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487110.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-000000000007",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487020.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-000000000008",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487055.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487055.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-000000000009",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "50.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 50.0,
+      "vertices": [
+       {
+        "x": 487085.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487085.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-00000000000a",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "20.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 20.0,
+      "vertices": [
+       {
+        "x": 487085.0,
+        "y": 4420040.0
+       },
+       {
+        "x": 487085.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-00000000000b",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487085.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487085.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-00000000000c",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "55.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 55.0,
+      "vertices": [
+       {
+        "x": 487125.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487125.0,
+        "y": 4420060.0
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 11,
+     "links": {
+      "columns": [
+       "Taraf",
+       "Alan",
+       "Hat",
+       "Uzaklık",
+       "Yazıldı"
+      ],
+      "rows": [
+       [
+        "Mevcut durum",
+        "0192f5c0-1440-7000-8000-000000000001",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Mevcut durum",
+        "0192f5c0-1440-7000-8000-000000000002",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Mevcut durum",
+        "0192f5c0-1440-7000-8000-000000000003",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "45.000 m",
+        "evet"
+       ],
+       [
+        "Mevcut durum",
+        "0192f5c0-1440-7000-8000-000000000004",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "20.000 m",
+        "evet"
+       ],
+       [
+        "Mevcut durum",
+        "0192f5c0-1440-7000-8000-000000000005",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-000000000007",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-000000000008",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-000000000009",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "50.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-00000000000a",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "20.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-00000000000b",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-00000000000c",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "55.000 m",
+        "evet"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "scenario-links-homes",
+   "title": "Altyapı bağlarını çiz: yalnız konut alanları, yalnız senaryo tarafı",
+   "document": "scenario-links.kcad",
+   "run": {
+    "tool": "scenarios.links"
+   },
+   "values": {
+    "scenario": "Alternatif A",
+    "infrastructure": {
+     "scope": "layer",
+     "layerId": "altyapi"
+    },
+    "distance": 40.0,
+    "uses": "konut",
+    "side": "alternative",
+    "layer": {
+     "newName": "Altyapı bağları"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "“Alternatif A”: 3 alan en yakın altyapı nesnesine bağlandı; 3 bağ yazıldı.",
+    "undo": "Altyapı bağlarını çiz",
+    "layers": [
+     {
+      "id": "islem-altyapi-baglari",
+      "name": "Altyapı bağları",
+      "style": {
+       "color": "#0090FF",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-000000000007",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487020.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487020.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-000000000008",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "35.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 35.0,
+      "vertices": [
+       {
+        "x": 487055.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487055.0,
+        "y": 4420060.0
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "layerId": "islem-altyapi-baglari",
+      "attrs": {
+       "Taraf": "Senaryo",
+       "Alan": "0192f5c0-1440-7000-8000-00000000000c",
+       "Hat": "0192f5c0-1440-7000-8000-00000000000f",
+       "Uzaklık": "55.000 m"
+      },
+      "parts": 1,
+      "holes": 0,
+      "length": 55.0,
+      "vertices": [
+       {
+        "x": 487125.0,
+        "y": 4420005.0
+       },
+       {
+        "x": 487125.0,
+        "y": 4420060.0
+       }
+      ]
+     }
+    ],
+    "outputs": {
+     "count": 3,
+     "links": {
+      "columns": [
+       "Taraf",
+       "Alan",
+       "Hat",
+       "Uzaklık",
+       "Yazıldı"
+      ],
+      "rows": [
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-000000000007",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-000000000008",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "35.000 m",
+        "evet"
+       ],
+       [
+        "Senaryo",
+        "0192f5c0-1440-7000-8000-00000000000c",
+        "0192f5c0-1440-7000-8000-00000000000f",
+        "55.000 m",
+        "evet"
+       ]
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

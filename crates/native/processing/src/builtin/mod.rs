@@ -58,6 +58,8 @@ pub fn tools() -> Vec<Tool> {
         proximity::hub::tool(),
         proximity::neighbors::tool(),
         proximity::shortest_line::tool(),
+        // Altyapı bağlarını çiz (docs/adr/3860): a scenario's areas joined to their nearest infrastructure.
+        proximity::scenario_links::tool(),
         // Katman işlemleri (docs/adr/0217): both platforms.
         layers::split::tool(),
         layers::merge::tool(),

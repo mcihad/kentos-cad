@@ -609,9 +609,9 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     // Adres's two, the desktop's while the web is paused (docs/adr/0229 §11, §12; docs/adr/0228), and the desktop's
     // COG olarak kaydet (docs/adr/0515), Yerel Moran (docs/adr/0520), Olay kaymasını denetle (docs/adr/0526) and
     // DBSCAN parametre taraması (docs/adr/0574) and Kalite maskesi uygula (docs/adr/0644 §2), Topolojiyi kurallarla
-    // denetle (docs/adr/1980), the point cloud registration's matrix (docs/adr/3100) and İmar planını denetle
-    // (docs/adr/3840).
-    assert_eq!(app.processing_meta(), "156 araç");
+    // denetle (docs/adr/1980), the point cloud registration's matrix (docs/adr/3100), İmar planını denetle
+    // (docs/adr/3840) and Altyapı bağlarını çiz (docs/adr/3860).
+    assert_eq!(app.processing_meta(), "157 araç");
     // Turkish letters folded: “kose numara” finds Köşe noktalarını numarala only (as the web's test).
     event(
         &mut app,

@@ -59,5 +59,5 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-10, altıncı tur. Durum: taslak. ADR 306
 ## Sonra
 
 - Ağ üzerinden (yol boyunca) uzaklık; eğim; risk katmanları; damganın çizimde saklanması (MAP-10'un öbür maddeleri).
-- Bağların bir katmana yazılması.
+- ~~Bağların bir katmana yazılması.~~ [ADR 3860](3860-scenario-links-drawn-on-a-layer.md).
 - Web (TODOS §0.2).

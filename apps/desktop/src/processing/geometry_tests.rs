@@ -16,6 +16,7 @@ use crate::document::Document;
 const GEOMETRY: &str = include_str!("../../../../fixtures/processing/v1/geometry.kcad");
 const TOPOLOGY: &str = include_str!("../../../../fixtures/processing/v1/topology.kcad");
 const ZONING: &str = include_str!("../../../../fixtures/processing/v1/zoning-u-yol.kcad");
+const LINKS: &str = include_str!("../../../../fixtures/processing/v1/scenario-links.kcad");
 
 /// The app with the geometry drawing open.
 fn app_with_geometry() -> App {
@@ -253,6 +254,72 @@ fn zoning_screens() {
     app.processing.dialog = None;
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-cizimde-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+}
+
+/// Altyapı bağlarını çiz (docs/adr/3860) on the scenario case's drawing: Alternatif A's areas and the field state's
+/// joined to the sewer line 40 m; eleven lines on Altyapı bağları, each from an area's centroid to the line's nearest
+/// place with the side, the area, the line and the distance; one undo step.
+#[test]
+fn the_scenario_s_areas_are_joined_to_the_line_in_one_step() {
+    let mut app = app_with(LINKS);
+    let _ = app.update(Message::Run("processing.run.scenarios.links"));
+    value(&mut app, "scenario", json!("Alternatif A"));
+    value(&mut app, "infrastructure", layer("altyapi"));
+    value(&mut app, "distance", json!(40));
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, table, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert_eq!(text, "“Alternatif A”: 11 alan en yakın altyapı nesnesine bağlandı; 11 bağ yazıldı.");
+    assert_eq!(table.expect("the table").rows.len(), 11);
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let id = doc.layers().leaves().into_iter().find(|l| l.name == "Altyapı bağları").map(|l| l.id.clone()).expect("the layer");
+    let lines: Vec<_> = doc.entities().filter(|e| e.base().layer_id == id).cloned().collect();
+    assert_eq!(lines.len(), 11);
+    let kentos_commands::Entity::Line(first) = &lines[0] else { panic!("{:?}", lines[0]) };
+    assert_eq!((first.a.x, first.a.y, first.b.x, first.b.y), (487020.0, 4420025.0, 487020.0, 4420060.0));
+    assert_eq!((first.base.attrs["Taraf"].as_str(), first.base.attrs["Uzaklık"].as_str()), ("Mevcut durum", "35.000 m"));
+    assert_eq!(doc.undo().as_deref(), Some("Altyapı bağlarını çiz"));
+    assert!(doc.layers().leaves().iter().all(|l| l.name != "Altyapı bağları"));
+}
+
+/// Altyapı bağlarını çiz's window after its run and the links on the drawing, `.run/gui-evidence/altyapi-baglari-3860/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib processing::geometry_tests::links_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn links_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/altyapi-baglari-3860");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    let mut app = app_with(LINKS);
+    app.program = Some(kentos_launch::Module::Map);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let _ = app.update(Message::Run("processing.run.scenarios.links"));
+    value(&mut app, "scenario", json!("Alternatif A"));
+    value(&mut app, "infrastructure", layer("altyapi"));
+    value(&mut app, "distance", json!(40));
+    value(&mut app, "side", json!("base"));
+    event(&mut app, Event::Run);
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("1-pencere-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+    app.processing.dialog = None;
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("2-cizimde-acik-genis.png");
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
 }

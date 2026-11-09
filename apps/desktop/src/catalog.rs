@@ -376,6 +376,8 @@ pub const PORTED: &[&str] = &[
     "processing.run.proximity.hub",
     "processing.run.proximity.neighbors",
     "processing.run.proximity.shortestLine",
+    // Altyapı bağlarını çiz (docs/adr/3860): a scenario's areas joined to their nearest infrastructure.
+    "processing.run.scenarios.links",
     // Katman işlemleri (docs/adr/0217).
     "processing.run.layers.splitByAttribute",
     "processing.run.layers.merge",

@@ -40,7 +40,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
@@ -1181,6 +1181,13 @@ en yakın altyapı nesnesi, ağırlık merkezi, nesnenin en yakın yeri ve uzakl
 çizimde göster bağları kesikli çizgiyle ve uzaklıkla çizer. Ortak durumlar (bağımsız başvuru, kesin eşitlik dahil),
 Python, MCP, masaüstü ve resimler. Açık: eğim, ağ üzerinden erişim, damganın çizimde saklanması, bağların katmana
 yazılması.
+
+**9 Kasım 2026, yedinci tur — altyapı bağları katmanda ([ADR 3860](../docs/adr/3860-scenario-links-drawn-on-a-layer.md)).**
+Kapsam: **Harita + CBS**. Dayanak: QGIS'in Join attributes by nearest'i ve en kısa çizgi aracı. Kanıtlanan: yeni İşlem
+aracı Altyapı bağlarını çiz (`scenarios.links`): `cad.scenarios.impact`'in bağları (alanın ağırlık merkezinden en yakın
+hattın en yakın yerine) “Altyapı bağları” katmanına çizgi olarak, taraf, alan, hat ve uzaklıkla, tek geri alma adımı;
+boyu olmayan bağ söylenir. 2 İşlem durumu (komutun bağımsız başvurusundan), Python, MCP, masaüstü ve resimler. Açık:
+ağ üzerinden erişim, eğim, damganın çizimde saklanması.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 
