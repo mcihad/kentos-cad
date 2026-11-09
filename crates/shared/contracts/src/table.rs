@@ -325,6 +325,11 @@ pub enum TableSource {
     /// they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
     /// Tabloyu güncelle, never at every step (a drawing it reads is a file).
     Extraction(Box<crate::extraction::ExtractionSource>),
+    /// Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3
+    /// asks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the
+    /// drawing's, the construction area) and each storey's area counted in and out; written again by the document at
+    /// every step and when the project's settings change.
+    Zoning {},
 }
 
 impl TableSource {
@@ -338,6 +343,7 @@ impl TableSource {
             TableSource::Blocks { .. } => "blocks",
             TableSource::Schedule { .. } => "schedule",
             TableSource::Extraction(_) => "extraction",
+            TableSource::Zoning {} => "zoning",
         }
     }
 
@@ -350,7 +356,8 @@ impl TableSource {
             TableSource::File { .. }
             | TableSource::Blocks { .. }
             | TableSource::Schedule { .. }
-            | TableSource::Extraction(_) => &[],
+            | TableSource::Extraction(_)
+            | TableSource::Zoning {} => &[],
         }
     }
 }
@@ -678,6 +685,8 @@ impl TableShape<'_> {
                     return Some(("source", words));
                 }
             }
+            // Emsal ve TAKS tablosu (docs/adr/3030): its rows are the document's; it names nothing.
+            Some(TableSource::Zoning {}) => {}
             Some(s) if s.objects().is_empty() || s.objects().len() > MAX_SOURCE_OBJECTS => {
                 return Some((
                     "source",

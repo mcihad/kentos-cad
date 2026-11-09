@@ -258,7 +258,9 @@ pub(crate) fn panel(
         [] => Panel {
             summary: Summary::Empty,
             meta: None,
-            sections: vec![document_section(doc, shown.crs)],
+            sections: std::iter::once(document_section(doc, shown.crs))
+                .chain(zoning_section(doc))
+                .collect(),
             types: Vec::new(),
             total: 0,
             editable: 0,
@@ -344,6 +346,27 @@ fn document_section(doc: &Document, crs: bool) -> Section {
         title: "Çizim".into(),
         rows,
     }
+}
+
+/// No selection, the project with a zoning (docs/adr/3030): its emsal and TAKS against their limits, live as the
+/// status bar's badge, with the room the badge has not on a narrow bar.
+fn zoning_section(doc: &Document) -> Option<Section> {
+    let r = doc.model.zoning_report()?;
+    let comma = |v: f64| format!("{v:.2}").replace('.', ",");
+    let against = |v: f64, l: Option<f64>| match l {
+        Some(l) if v > l + 1e-9 => format!("{} / {} · aşıldı", comma(v), comma(l)),
+        Some(l) => format!("{} / {}", comma(v), comma(l)),
+        None => comma(v),
+    };
+    Some(Section {
+        id: "zoning".into(),
+        title: "İmar durumu".into(),
+        rows: vec![
+            Row::figure("Parsel alanı", comma(r.parcel)).unit("m²"),
+            Row::figure("Emsal", against(r.far(), r.far_limit)),
+            Row::figure("TAKS", against(r.coverage(), r.coverage_limit)),
+        ],
+    })
 }
 
 /// A layer drawn from a map service (docs/adr/0208 §14): its kind, address,

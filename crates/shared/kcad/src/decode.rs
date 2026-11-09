@@ -1705,6 +1705,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.materials && a.has_materials() {
                     return Err(r.fail_at(Code::UnknownField, at, "projenin malzemeleri şema 148 ister"));
                 }
+                if !has.zoning && (a.has_zoning() || a.program.has_emsal()) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "parselin imar durumu (zoning) ve kullanımın emsal sınıfı şema 210 ister",
+                    ));
+                }
                 if !has.opening_codes && a.has_opening_codes() {
                     return Err(r.fail_at(
                         Code::UnknownField,

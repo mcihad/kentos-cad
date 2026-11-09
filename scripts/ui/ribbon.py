@@ -434,10 +434,12 @@ CAD = [
                 {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
             ]},
             # Metraj ▾ (docs/adr/3029): the quantities and the metrekare cetveli, the regulation's areas storey by
-            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1).
+            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1). Emsal ve TAKS tablosu (docs/adr/3030) beside
+            # them: the areas against the parcel's zoning.
             {"key": "archQuantities", "size": "small", "split": [
                 {"command": "arch.quantities", "title": "Metraj", "label": "Metraj"},
                 {"command": "tool.scheduleAreas", "title": "Metraj", "label": "Metrekare cetveli"},
+                {"command": "arch.zoningTable", "title": "Metraj", "label": "Emsal ve TAKS tablosu"},
             ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},

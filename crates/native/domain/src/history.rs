@@ -1041,6 +1041,7 @@ impl Document {
                 self.refresh_viewmarks();
                 self.refresh_level_marks();
                 self.refresh_derived_tags();
+                self.refresh_zoning_tables();
                 self.refresh_dimension_set_rows();
                 self.mark_changed();
             }
@@ -1089,6 +1090,7 @@ impl Document {
             self.refresh_viewmarks();
             self.refresh_level_marks();
             self.refresh_derived_tags();
+            self.refresh_zoning_tables();
             self.refresh_dimension_set_rows();
             self.mark_changed();
         }
@@ -1187,6 +1189,7 @@ impl Document {
         self.refresh_viewmarks();
         self.refresh_level_marks();
         self.refresh_derived_tags();
+        self.refresh_zoning_tables();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
@@ -1208,6 +1211,7 @@ impl Document {
         self.refresh_viewmarks();
         self.refresh_level_marks();
         self.refresh_derived_tags();
+        self.refresh_zoning_tables();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)

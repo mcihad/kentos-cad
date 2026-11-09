@@ -2280,6 +2280,14 @@
       ],
       "note": "Donatı çizelgesi: blok yerleştirmeleri, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §2, §5)."
     },
+    "arch.zoningTable": {
+      "level": "semantic",
+      "via": [
+        "cad.entities.create"
+      ],
+      "operation": "table",
+      "note": "Emsal ve TAKS tablosu (kaynağı zoning): parsel, emsal, TAKS, izin verilen ve projedeki alanlar, kat kat emsale dahil ve harici alan; satırlarını belge her adımda ve Proje ayarları değişince kendisi yazar (ADR 3030)."
+    },
     "tool.scheduleAreas": {
       "level": "semantic",
       "via": [

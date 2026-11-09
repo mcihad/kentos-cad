@@ -1088,7 +1088,11 @@ impl<'d> Encoder<'d> {
                         // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON; schema 80's
                         // schedule of the drawing's objects too (docs/adr/0344 §3).
                         // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
-                        TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_) => {
+                        // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                        TableSource::Blocks { .. }
+                        | TableSource::Schedule { .. }
+                        | TableSource::Extraction(_)
+                        | TableSource::Zoning {} => {
                             f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
                         }
                         TableSource::File {

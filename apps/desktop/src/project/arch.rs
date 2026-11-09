@@ -83,6 +83,105 @@ const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
     (None, "Nesnenin kendi kalınlığı"),
 ];
 
+/// İmar durumu as typed (docs/adr/3030): the parcel's area, m², the plan's emsal (KAKS) and TAKS.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ZoningTexts {
+    pub parcel: String,
+    pub far: String,
+    pub coverage: String,
+}
+
+/// One of İmar durumu's fields.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ZoningField {
+    Parcel,
+    Far,
+    Coverage,
+}
+
+impl ZoningTexts {
+    /// The project's zoning as the form shows it.
+    pub fn of(arch: Option<&ArchSettings>) -> Self {
+        let z = arch.and_then(|a| a.zoning);
+        let t = |v: Option<f64>| {
+            v.map(kentos_processing::text::js_number)
+                .unwrap_or_default()
+        };
+        Self {
+            parcel: t(z.map(|z| z.parcel_area)),
+            far: t(z.and_then(|z| z.far)),
+            coverage: t(z.and_then(|z| z.coverage)),
+        }
+    }
+
+    pub fn edit(&mut self, field: ZoningField, text: String) {
+        match field {
+            ZoningField::Parcel => self.parcel = text,
+            ZoningField::Far => self.far = text,
+            ZoningField::Coverage => self.coverage = text,
+        }
+    }
+
+    /// The zoning typed: none when all three are empty; the parcel's area when any is given.
+    pub fn read(&self) -> Result<Option<kentos_commands::Zoning>, String> {
+        let parcel =
+            number(&self.parcel).map_err(|()| "Parsel alanı bir sayı olmalı.".to_owned())?;
+        let far = number(&self.far).map_err(|()| "Emsal bir sayı olmalı.".to_owned())?;
+        let coverage = number(&self.coverage).map_err(|()| "TAKS bir sayı olmalı.".to_owned())?;
+        match parcel {
+            None if far.is_none() && coverage.is_none() => Ok(None),
+            None => Err("Emsal ya da TAKS için parsel alanı da verilmeli.".into()),
+            Some(parcel_area) => Ok(Some(kentos_commands::Zoning {
+                parcel_area,
+                far,
+                coverage,
+            })),
+        }
+    }
+}
+
+/// İmar durumu (docs/adr/3030): the three fields and, when the drawing has a zoning, its ratios: each line's words,
+/// value and whether it passes its limit.
+pub(super) fn zoning_view<'a>(
+    t: &'a ZoningTexts,
+    on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
+    summary: Vec<(String, String, bool)>,
+) -> Element<'a, Message> {
+    let wrong = |s: &str| number(s).is_err();
+    let line = |name: &'static str, holder: &'static str, value: &'a str, f: ZoningField| {
+        row![
+            container(label::body(name)).width(typography::scaled(140.0)),
+            container(field(holder, value, wrong(value), move |v| on(f, v)))
+                .width(typography::scaled(120.0)),
+        ]
+        .spacing(8)
+        .align_y(Center)
+    };
+    let mut body = Column::new()
+        .spacing(6)
+        .push(line("Parsel alanı (m²)", "450", &t.parcel, ZoningField::Parcel))
+        .push(line("Emsal (KAKS)", "1,50", &t.far, ZoningField::Far))
+        .push(line("TAKS", "0,40", &t.coverage, ZoningField::Coverage))
+        .push(label::caption(
+            "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
+             emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
+             geçerse fazlası katlar alanına eklenir (Planlı Alanlar İmar Yönetmeliği 5/8, 22). TAKS, zemin katın \
+             brüt alanının parsel alanına oranıdır. KentOS bir onay vermez; planın kendi notları ayrıca okunur.",
+        ));
+    for (words, value, over) in summary {
+        body = body.push(
+            row![
+                container(label::body(words)).width(typography::scaled(220.0)),
+                label::strong(value).style(move |theme: &iced::Theme| iced::widget::text::Style {
+                    color: over.then(|| kentos_ui::theme::Tokens::of(theme).danger),
+                }),
+            ]
+            .spacing(8),
+        );
+    }
+    super::group::<Message>("İmar durumu", body)
+}
+
 fn shown(n: Option<f64>) -> String {
     n.map(|v| format!("{v}")).unwrap_or_default()
 }
@@ -165,9 +264,11 @@ pub fn read(
     space_method: Option<kentos_commands::SpaceMethod>,
     cut: &str,
     lines: Option<kentos_commands::LineGroups>,
+    zoning: &ZoningTexts,
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
     let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
+    let zoning = zoning.read()?;
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
         let elevation = match number(&r.elevation) {
@@ -222,6 +323,8 @@ pub fn read(
         options: choices.map_or_else(Vec::new, |a| a.options.clone()),
         // And their combinations (docs/adr/0808).
         option_combos: choices.map_or_else(Vec::new, |a| a.option_combos.clone()),
+        // The parcel's zoning (docs/adr/3030).
+        zoning,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),
@@ -328,7 +431,15 @@ pub(super) fn view<'a>(
                  ölçü, yazı ve akslar kendi kalınlığında kalır. Yeni Mimari projesi böyle açılır.",
             )),
     );
-    let read_now = read(rows, detail, method, cut, lines, None);
+    let read_now = read(
+        rows,
+        detail,
+        method,
+        cut,
+        lines,
+        &ZoningTexts::default(),
+        None,
+    );
     let head = kentos_ui::widget::table::band(
         row![
             container(kentos_ui::widget::table::title("Kat"))
@@ -575,20 +686,45 @@ mod tests {
         let a = project();
         let form = rows(Some(&a));
         assert_eq!(
-            read(&form, None, None, "1,25", None, Some(&a))
-                .unwrap()
-                .cut_height,
+            read(
+                &form,
+                None,
+                None,
+                "1,25",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .cut_height,
             Some(1.25)
         );
         assert_eq!(
-            read(&form, None, None, " ", None, Some(&a))
-                .unwrap()
-                .cut_height,
+            read(
+                &form,
+                None,
+                None,
+                " ",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .cut_height,
             None
         );
         for bad in ["5", "0.1", "bir"] {
             assert!(
-                read(&form, None, None, bad, None, Some(&a)).is_err(),
+                read(
+                    &form,
+                    None,
+                    None,
+                    bad,
+                    None,
+                    &ZoningTexts::default(),
+                    Some(&a)
+                )
+                .is_err(),
                 "{bad}"
             );
         }
@@ -602,15 +738,31 @@ mod tests {
         let form = rows(Some(&a));
         let by_scale = Some(kentos_commands::LineGroups::ByScale);
         assert_eq!(
-            read(&form, None, None, "", by_scale, Some(&a))
-                .unwrap()
-                .line_groups,
+            read(
+                &form,
+                None,
+                None,
+                "",
+                by_scale,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .line_groups,
             by_scale
         );
         assert_eq!(
-            read(&form, None, None, "", None, Some(&a))
-                .unwrap()
-                .line_groups,
+            read(
+                &form,
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .line_groups,
             None
         );
         assert_eq!(LINES.map(|(g, _)| g), [by_scale, None]);
@@ -620,20 +772,59 @@ mod tests {
     fn project_form_preserves_exact_choices_and_only_an_explicit_prefix_edit_changes_the_start() {
         let a = project();
         let mut form = rows(Some(&a));
-        assert_eq!(read(&form, None, None, "", None, Some(&a)).unwrap(), a);
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap(),
+            a
+        );
         edit(&mut form, 0, Edit::Name("Giriş katı".into()));
-        let before = read(&form, None, None, "", None, Some(&a)).unwrap();
+        let before = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert_eq!(before.space_first_number("zemin").as_deref(), Some("Z-001"));
         assert_eq!(before.space_names, a.space_names);
         edit(&mut form, 0, Edit::Prefix(" G- ".into()));
-        let changed = read(&form, None, None, "", None, Some(&a)).unwrap();
+        let changed = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert_eq!(
             changed.space_first_number("zemin").as_deref(),
             Some("G-001")
         );
         assert_eq!(changed.space_usages, a.space_usages);
         edit(&mut form, 0, Edit::Delete);
-        let cleared = read(&form, None, None, "", None, Some(&a)).unwrap();
+        let cleared = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert!(cleared.space_number_prefixes.is_empty());
         assert_eq!(cleared.space_names, a.space_names);
     }
@@ -660,12 +851,34 @@ mod tests {
             assert_eq!(a, project());
         }
         change(&mut a, ChoiceEdit::Add);
-        assert!(read(&rows(Some(&a)), None, None, "", None, Some(&a)).is_err());
+        assert!(
+            read(
+                &rows(Some(&a)),
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .is_err()
+        );
         change(&mut a, ChoiceEdit::Value(2, "Çalışma".into()));
         change(&mut a, ChoiceEdit::Up(2));
         assert_eq!(a.space_names, ["Mutfak", "Çalışma", "mutfak"]);
         change(&mut a, ChoiceEdit::Value(1, " Mutfak ".into()));
-        assert!(read(&rows(Some(&a)), None, None, "", None, Some(&a)).is_err());
+        assert!(
+            read(
+                &rows(Some(&a)),
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .is_err()
+        );
         change(&mut a, ChoiceEdit::Delete(1));
         assert_eq!(a, project());
     }

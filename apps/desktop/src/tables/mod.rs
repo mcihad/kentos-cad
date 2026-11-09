@@ -41,6 +41,10 @@ pub fn source_words(t: &TableEntity) -> String {
         Some(TableSource::Schedule { of, members, .. }) => {
             format!("{}: {} satır, nesnelerinden", of.label(), members.len())
         }
+        // Emsal ve TAKS tablosu (docs/adr/3030).
+        Some(TableSource::Zoning {}) => {
+            "Emsal ve TAKS tablosu: imar durumundan ve mahallerden".to_owned()
+        }
         // Veri çıkarımı (docs/adr/1030 §6): its recipe, the drawings it reads besides this one.
         Some(TableSource::Extraction(x)) => {
             let others = x.recipe.drawings.len();
@@ -139,6 +143,47 @@ impl crate::app::App {
             Some(kentos_commands::TableSource::Blocks { names, by, columns }),
         );
         self.place_table(geometry, "Revizyon listesi");
+    }
+
+    /// Emsal ve TAKS tablosu (`arch.zoningTable`, docs/adr/3030): the parcel's zoning against the drawing as PAİY 57/3
+    /// asks the approved project to show it, placed from the cursor; the document keeps it at every step and when
+    /// Proje ayarları change. Without a zoning, where it is typed, and Proje ayarları open on Mimari.
+    pub(crate) fn place_zoning_table(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = &doc.model;
+        if model
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning)
+            .is_none()
+        {
+            self.say(
+                kentos_interaction::Level::Info,
+                "Projede imar durumu yok: Proje ayarları › Mimari › İmar durumu'na parsel alanını, emsali ve TAKS'ı \
+                 yazın; tablo onlarla yazılır.",
+            );
+            let _ = self.project_command("arch.settings");
+            return;
+        }
+        let written = model.zoning_table();
+        let scale = model.settings().plot_scale;
+        let look = kentos_interaction::table::Look {
+            header: true,
+            height: 2.5 / 1000.0 * scale,
+            ..Default::default()
+        };
+        let cells = kentos_geometry_core::ops::table::from_rows(written.rows, true);
+        let geometry = kentos_interaction::table::new_table(
+            model,
+            &cells,
+            &look,
+            kentos_interaction::Vec2::new(0.0, 0.0),
+            Some(kentos_commands::TableSource::Zoning {}),
+        );
+        self.place_table(geometry, "Emsal ve TAKS tablosu");
     }
 
     pub(crate) fn place_table(

@@ -109970,6 +109970,17 @@
             "type": "string"
           },
           "type": "array"
+        },
+        "zoning": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Zoning"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area\nratio and the coverage are read against. Absent: none given."
         }
       },
       "type": "object"
@@ -127985,6 +127996,26 @@
         {
           "const": "clear",
           "description": "The value is taken away.",
+          "type": "string"
+        }
+      ]
+    },
+    "EmsalCount": {
+      "description": "How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).",
+      "oneOf": [
+        {
+          "const": "included",
+          "description": "Emsale dahil: the floors' area (katlar alanı).",
+          "type": "string"
+        },
+        {
+          "const": "exempt",
+          "description": "Emsal harici (22/1): out of it, but together at most 30 % of the parcel's emsal area (5/8); what passes goes in.",
+          "type": "string"
+        },
+        {
+          "const": "outside",
+          "description": "Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the\nbasement …).",
           "type": "string"
         }
       ]
@@ -182310,6 +182341,17 @@
           ],
           "x-unit": "area"
         },
+        "emsal": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/EmsalCount"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and\nuse (`emsal_by_use`)."
+        },
         "minPassage": {
           "description": "The least net passage: the widest a body may be and still go between all the space's doors (a corridor's).",
           "format": "double",
@@ -191501,6 +191543,19 @@
           "required": [
             "kind",
             "recipe"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3\nasks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the\ndrawing's, the construction area) and each storey's area counted in and out; written again by the document at\nevery step and when the project's settings change.",
+          "properties": {
+            "kind": {
+              "const": "zoning",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
           ],
           "type": "object"
         }
@@ -202570,6 +202625,39 @@
           "type": "string"
         }
       ]
+    },
+    "Zoning": {
+      "additionalProperties": false,
+      "description": "İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's\nemsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan\ngives it.",
+      "properties": {
+        "coverage": {
+          "description": "TAKS.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "far": {
+          "description": "Emsal (KAKS).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "parcelArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        }
+      },
+      "required": [
+        "parcelArea"
+      ],
+      "type": "object"
     },
     "ZoningFinding": {
       "description": "A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,\n`overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,\n`levelOrder`), its objects' persistent ids in the drawing's order, the area it measures (square metres) when it\nmeasures one, and what it says.",

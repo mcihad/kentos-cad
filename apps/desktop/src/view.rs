@@ -1684,6 +1684,11 @@ impl App {
             if let Some(cell) = self.level_cell(fit < 7) {
                 bar = bar.separator().push(cell);
             }
+            // Emsal ve TAKS (docs/adr/3030): while the project has a zoning; the limits while there is room, the
+            // ratios alone until the lamps go compact, then its icon (and “!” past a limit) as Kat's.
+            if let Some(cell) = crate::zoning_badge::cell(self, (fit < 7).then_some(fit < 2)) {
+                bar = bar.separator().push(cell);
+            }
             bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
@@ -1893,6 +1898,15 @@ impl App {
             // Kat (docs/adr/0713), as Senaryo, its words kept until the lamps fold.
             if let Some(words) = self.level_words() {
                 width += SEPARATOR + if fit < 7 { cell(&words, true) } else { 35.0 };
+            }
+            // Emsal ve TAKS (docs/adr/3030), its limits while there is room, its icon and a “!” once tight.
+            if let Some((words, _)) = crate::zoning_badge::words(&doc.model, fit < 2) {
+                width += SEPARATOR
+                    + if fit < 7 {
+                        cell(&words, true)
+                    } else {
+                        35.0 + text("!")
+                    };
             }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.

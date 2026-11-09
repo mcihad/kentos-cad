@@ -3575,6 +3575,8 @@ impl App {
             "arch.quantities" => self.open_quantities(),
             // Revizyon listesi (docs/adr/0721 §4).
             "arch.revisionList" => self.place_revision_list(),
+            // Emsal ve TAKS tablosu (docs/adr/3030).
+            "arch.zoningTable" => self.place_zoning_table(),
             "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)

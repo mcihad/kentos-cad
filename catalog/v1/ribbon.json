@@ -2199,6 +2199,11 @@
           "command": "tool.scheduleAreas",
           "title": "Metraj",
           "label": "Metrekare cetveli"
+         },
+         {
+          "command": "arch.zoningTable",
+          "title": "Metraj",
+          "label": "Emsal ve TAKS tablosu"
          }
         ]
        },

@@ -39,11 +39,15 @@ fn schedule_kinds(of: kentos_contracts::ScheduleOf) -> &'static [&'static str] {
 /// Whether a schedule reads the project's settings a step's `ops` change (docs/adr/0795): a units schedule the
 /// program and the levels, a spaces schedule with a program field the program.
 fn reads_settings(t: &TableEntity, ops: &[Op]) -> bool {
+    let program = ops.iter().any(|op| matches!(op, Op::BuildingProgram { .. }));
+    let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
+    // Emsal ve TAKS tablosu (docs/adr/3030): the program's briefs count the rooms; the levels are its rows.
+    if matches!(t.source, Some(TableSource::Zoning {})) {
+        return program || settings;
+    }
     let Some(TableSource::Schedule { of, columns, .. }) = &t.source else {
         return false;
     };
-    let program = ops.iter().any(|op| matches!(op, Op::BuildingProgram { .. }));
-    let settings = ops.iter().any(|op| matches!(op, Op::TemplateSettings { .. }));
     match of {
         kentos_contracts::ScheduleOf::Units => program || settings,
         kentos_contracts::ScheduleOf::Spaces => program && columns.iter().any(|c| c.field.is_program()),
@@ -262,6 +266,17 @@ impl Document {
             let rows = self.blocks_schedule(names, by.as_deref(), columns);
             self.take_rows(&mut out, rows);
         }
+        // Emsal ve TAKS tablosu (docs/adr/3030): its rows, alignments, and bold and warning cells.
+        if matches!(t.source, Some(TableSource::Zoning {})) {
+            let written = self.zoning_table();
+            self.take_rows(&mut out, written.rows);
+            out.aligns = Some(written.aligns);
+            out.header = true;
+            out.styles = written.styles;
+            out.merges.clear();
+            out.formulas.clear();
+            out.fields.clear();
+        }
         // A schedule of the drawing's objects (docs/adr/0344 §3): its rows, members and look.
         if let Some(TableSource::Schedule {
             of,
@@ -348,6 +363,42 @@ impl Document {
             .collect();
     }
 
+    /// Emsal ve TAKS tablosu after the project's settings changed, or a step was undone or redone past them
+    /// (docs/adr/3030): its cells written again from the zoning they now hold, as the view marks and the derived tags
+    /// are, without another undo step (the settings keep none).
+    pub(crate) fn refresh_zoning_tables(&mut self) -> usize {
+        if !self.store.has_computed_tables() {
+            return 0;
+        }
+        let mut ops = Vec::new();
+        for slot in self.store.computed_table_slots().collect::<Vec<_>>() {
+            let Some(current) = self.store.get(slot).cloned() else {
+                continue;
+            };
+            let Entity::Table(t) = &*current.entity else {
+                continue;
+            };
+            if !matches!(t.source, Some(TableSource::Zoning {})) {
+                continue;
+            }
+            let next = self.table_worked_out(t);
+            if next == *t || next.problem().is_some() {
+                continue;
+            }
+            ops.push(Op::Update {
+                after: Stored {
+                    uid: current.uid,
+                    entity: Arc::new(Entity::Table(next)),
+                },
+                before: current,
+            });
+        }
+        for op in &ops {
+            self.apply_op(op);
+        }
+        ops.len()
+    }
+
     /// What keeps the tables' computed cells after `ops` (docs/adr/0327), applied: the step takes them in.
     pub(crate) fn follow_tables(&mut self, ops: &[Op]) -> Vec<Op> {
         if !self.store.has_computed_tables() || ops.is_empty() {
@@ -388,6 +439,8 @@ impl Document {
             // the drawing's objects only the objects of its kinds (docs/adr/0344 §3).
             let reads_drawing = !t.fields.is_empty()
                 || matches!(t.source, Some(TableSource::Blocks { .. }))
+                // Emsal ve TAKS tablosu (docs/adr/3030): the rooms (a wall moved moves its rooms in the same step).
+                || (matches!(t.source, Some(TableSource::Zoning {})) && (options_changed || kinds.contains("space")))
                 || matches!(&t.source, Some(TableSource::Schedule { of, .. }) if options_changed || schedule_kinds(*of).iter().any(|k| kinds.contains(k)))
                 || reads_settings(t, ops);
             if !reads_drawing && !touched.contains(&current.uid) {

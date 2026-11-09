@@ -90,7 +90,11 @@ fn computed_table(stored: &Stored) -> bool {
             || !t.formulas.is_empty()
             || matches!(
                 t.source,
-                Some(kentos_contracts::TableSource::Blocks { .. } | kentos_contracts::TableSource::Schedule { .. })
+                Some(
+                    kentos_contracts::TableSource::Blocks { .. }
+                        | kentos_contracts::TableSource::Schedule { .. }
+                        | kentos_contracts::TableSource::Zoning {}
+                )
             ))
 }
 

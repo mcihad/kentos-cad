@@ -173,6 +173,11 @@ pub struct SpaceBrief {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub outdoor: bool,
+    /// How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and
+    /// use (`emsal_by_use`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub emsal: Option<crate::EmsalCount>,
 }
 
 impl SpaceBrief {
@@ -277,6 +282,11 @@ fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String,
 }
 
 impl BuildingProgram {
+    /// Whether a brief says how its rooms count for the floor area ratio (KCAD 210, docs/adr/3030).
+    pub fn has_emsal(&self) -> bool {
+        self.briefs.iter().any(|b| b.emsal.is_some())
+    }
+
     pub fn is_empty(&self) -> bool {
         self == &BuildingProgram::default()
     }

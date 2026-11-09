@@ -1766,7 +1766,10 @@ impl Packer {
                     .filter(|s| {
                         !matches!(
                             s,
-                            TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_)
+                            TableSource::Blocks { .. }
+                                | TableSource::Schedule { .. }
+                                | TableSource::Extraction(_)
+                                | TableSource::Zoning {}
                         )
                     })
                 {
@@ -3834,7 +3837,13 @@ fn table_cells_json(
     };
     let schedule = source
         .filter(|s| {
-            matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_))
+            matches!(
+                s,
+                TableSource::Blocks { .. }
+                    | TableSource::Schedule { .. }
+                    | TableSource::Extraction(_)
+                    | TableSource::Zoning {}
+            )
         })
         .cloned();
     if styles.is_empty()

@@ -211,6 +211,8 @@ pub struct State {
     arch_cut: String,
     /// Mimari: how the plan's lines are weighted (docs/adr/3013); none: every object its own pen.
     arch_lines: Option<kentos_commands::LineGroups>,
+    /// Mimari: the parcel's zoning as typed (docs/adr/3030).
+    arch_zoning: super::arch::ZoningTexts,
     /// Kotlar ve epok as typed (docs/adr/0519 §5; heights.rs); Kaydet writes them through `cad.settings.set`.
     heights: super::heights::Texts,
     /// Kaydet's question when a local project's unit changes with a drawing
@@ -278,6 +280,8 @@ pub enum Event {
     ArchMethod(Option<kentos_commands::SpaceMethod>),
     /// Mimari: the plan's cut height typed (docs/adr/3012).
     ArchCut(String),
+    /// İmar durumu's field typed (docs/adr/3030).
+    ArchZoning(super::arch::ZoningField, String),
     /// Mimari: Çizgi kalınlıkları chosen (docs/adr/3013).
     ArchLines(Option<kentos_commands::LineGroups>),
     RoomChoices(super::arch::ChoiceEvent),
@@ -332,6 +336,7 @@ impl State {
                 .and_then(|a| a.cut_height)
                 .map(kentos_processing::text::js_number)
                 .unwrap_or_default(),
+            arch_zoning: super::arch::ZoningTexts::of(doc.settings().arch.as_ref()),
             arch_lines: doc
                 .settings()
                 .arch
@@ -385,6 +390,7 @@ impl State {
             self.arch_method,
             &self.arch_cut,
             self.arch_lines,
+            &self.arch_zoning,
             self.settings.arch.as_ref(),
         )
         .ok()?;
@@ -398,6 +404,7 @@ impl State {
             self.arch_method,
             &self.arch_cut,
             self.arch_lines,
+            &self.arch_zoning,
             self.settings.arch.as_ref(),
         )
         .is_err()
@@ -613,6 +620,7 @@ impl App {
             Event::ArchDetail(detail) => s.arch_detail = detail,
             Event::ArchMethod(method) => s.arch_method = method,
             Event::ArchCut(text) => s.arch_cut = text,
+            Event::ArchZoning(field, text) => s.arch_zoning.edit(field, text),
             Event::ArchLines(lines) => s.arch_lines = lines,
             Event::RoomChoices(edit) => {
                 super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
@@ -627,6 +635,7 @@ impl App {
                 s.arch_method = None;
                 s.arch_cut.clear();
                 s.arch_lines = None;
+                s.arch_zoning = Default::default();
                 d.arch = None;
             }
             Event::ResetSection => {
@@ -800,6 +809,7 @@ impl App {
             s.arch_method,
             &s.arch_cut,
             s.arch_lines,
+            &s.arch_zoning,
             s.settings.arch.as_ref(),
         )
         .unwrap_or_default();
@@ -1102,6 +1112,11 @@ impl App {
                     |c| event(Event::ArchCut(c)),
                     s.arch_lines,
                     |l| event(Event::ArchLines(l)),
+                ),
+                super::arch::zoning_view(
+                    &s.arch_zoning,
+                    |f, t| event(Event::ArchZoning(f, t)),
+                    crate::zoning_badge::summary(&doc.model),
                 ),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
                 super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(

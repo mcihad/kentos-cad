@@ -1314,6 +1314,7 @@ impl Document {
             self.refresh_viewmarks();
             self.refresh_level_marks();
             self.refresh_derived_tags();
+            self.refresh_zoning_tables();
             if scale_changed {
                 self.refresh_dimension_set_rows();
             }

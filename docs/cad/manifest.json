@@ -711,6 +711,22 @@
    "tests": 0
   },
   {
+   "id": "arch.zoningTable",
+   "kind": "command",
+   "title": "Emsal ve TAKS tablosu",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Emsal ve TAKS tablosu (kaynağı zoning): parsel, emsal, TAKS, izin verilen ve projedeki alanlar, kat kat emsale dahil ve harici alan; satırlarını belge her adımda ve Proje ayarları değişince kendisi yazar (ADR 3030).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "array.find",
    "kind": "command",
    "title": "Dizi örüntülerini bul…",

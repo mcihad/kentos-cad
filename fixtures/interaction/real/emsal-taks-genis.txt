@@ -1,0 +1,10 @@
+# M30 (docs/adr/3030): the Emsal ve TAKS badge with its limits on a wide screen (1920 × 1080), on the building
+# paiy_area_tests keeps with its zoning and table (imar.kcad: a 200 m² parcel, TAKS 0,45 past 0,40: the badge red).
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+move 900 700
+wait 800
+shot m30-20-genis-rozet

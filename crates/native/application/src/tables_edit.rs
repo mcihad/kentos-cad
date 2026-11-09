@@ -232,8 +232,10 @@ fn size_holds(x: f64, what: &str, path: &str) -> Result<(), Stop> {
 
 /// `t` with edit `e` applied.
 fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Result<TableEntity, Stop> {
-    // A schedule's rows and cells are the document's (docs/adr/0344 §3): only its sizes and lines change here.
-    if matches!(t.source, Some(TableSource::Schedule { .. }))
+    // A schedule's rows and cells are the document's (docs/adr/0344 §3): only its sizes and lines change here; Emsal ve
+    // TAKS tablosu's too (docs/adr/3030).
+    let zoning = matches!(t.source, Some(TableSource::Zoning {}));
+    if (zoning || matches!(t.source, Some(TableSource::Schedule { .. })))
         && !matches!(
             e,
             TableEdit::RowHeight { .. }
@@ -246,7 +248,13 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
     {
         return Err(fail(
             codes::SCHEDULE_CELL,
-            "Çizelgenin hücreleri tablo olarak düzenlenmez; Çizelgeyi düzenle onları nesnelere yazar.".into(),
+            if zoning {
+                "Emsal ve TAKS tablosunun hücreleri çizimden ve imar durumundan yazılır; parseli ve oranları Proje \
+                 ayarları › Mimari › İmar durumu'nda değiştirin."
+                    .into()
+            } else {
+                "Çizelgenin hücreleri tablo olarak düzenlenmez; Çizelgeyi düzenle onları nesnelere yazar.".into()
+            },
             path,
         ));
     }
@@ -1040,7 +1048,8 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                             "operation.uids",
                         ));
                     }
-                    Some(TableSource::Blocks { .. }) => {
+                    // Emsal ve TAKS tablosu (docs/adr/3030) too: the document writes it at every step.
+                    Some(TableSource::Blocks { .. } | TableSource::Zoning {}) => {
                         status = TableRefresh::Live;
                         None
                     }

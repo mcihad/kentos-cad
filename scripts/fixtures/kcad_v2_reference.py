@@ -1616,12 +1616,12 @@ def table_parts(e):
     """A table's contract form as the file holds it (schema 68, docs/adr/0327 §4–§5): a block schedule's source under
     `schedule`, a linked file's path, digest, copy and rule under `link` beside its name and sheet."""
     src = e.get("source")
-    if src is None or src["kind"] not in ("blocks", "file", "schedule", "extraction"):
+    if src is None or src["kind"] not in ("blocks", "file", "schedule", "extraction", "zoning"):
         return e
     e = dict(e)
     # Schema 80 (docs/adr/0344 §3): a schedule of the drawing's objects as a block schedule; schema 182's data
-    # extraction table too (docs/adr/1030 §6).
-    if src["kind"] in ("blocks", "schedule", "extraction"):
+    # extraction table too (docs/adr/1030 §6), schema 210's Emsal ve TAKS tablosu (docs/adr/3030).
+    if src["kind"] in ("blocks", "schedule", "extraction", "zoning"):
         assert src.get("names", [None]), "boş ad listesi yazılmaz"
         e["schedule"] = e.pop("source")
         return e
@@ -2648,6 +2648,12 @@ def document(d):
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
         # A units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas (docs/adr/3029).
         schema = max(schema, 209)
+    if ((d.get("settings", {}).get("arch") or {}).get("zoning") is not None
+            or any("emsal" in b for b in ((d.get("settings", {}).get("arch") or {}).get("program") or {}).get("briefs", []))
+            or any(e["kind"] == "table" and (e.get("source") or {}).get("kind") == "zoning"
+                   for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]])):
+        # The parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu (docs/adr/3030).
+        schema = max(schema, 210)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3523,7 +3529,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-210.kcad"] = container(root(cmap(parts), version=uint(210)))
+    files["schema-version-211.kcad"] = container(root(cmap(parts), version=uint(211)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6283,6 +6289,20 @@ def build():
     assert paiy.count(b"\x67version\x18\xd1") == 1, "the regulation's areas are schema 209"
     out["paiy-areas.kcad"] = container(paiy)
     out["broken/paiy-areas-in-schema-208.kcad"] = container(paiy.replace(b"\x67version\x18\xd1", b"\x67version\x18\xd0"))
+    # Schema 210 (docs/adr/3030): the parcel's zoning; schema 209 refuses it as unknown, a parcel of no area too.
+    zoned = document(load("zoning.json"))
+    assert zoned.count(b"\x67version\x18\xd2") == 1, "the zoning is schema 210"
+    out["zoning.kcad"] = container(zoned)
+    out["broken/zoning-in-schema-209.kcad"] = container(zoned.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
+    flat = load("zoning.json")
+    flat["settings"]["arch"]["zoning"]["parcelArea"] = 0.0
+    out["broken/zoning-no-parcel.kcad"] = container(document(flat))
+    # Emsal ve TAKS tablosu is schema 210 on its own, the project without a zoning.
+    bare = load("zoning.json")
+    del bare["settings"]["arch"]["zoning"]
+    bare = document(bare)
+    assert bare.count(b"\x67version\x18\xd2") == 1, "the zoning table is schema 210"
+    out["broken/zoning-table-in-schema-209.kcad"] = container(bare.replace(b"\x67version\x18\xd2", b"\x67version\x18\xd1"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

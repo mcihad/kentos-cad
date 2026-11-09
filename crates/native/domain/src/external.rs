@@ -288,6 +288,7 @@ impl Document {
             // These words also depend on settings or sources delivered by another editor.
             self.refresh_level_marks();
             self.refresh_derived_tags();
+            self.refresh_zoning_tables();
             // Not an edit (the revision stays), but what the drawing shows changed.
             self.generation += 1;
         }

@@ -2270,6 +2270,22 @@ EmptyResultName = Literal["keep", "clear"]
 """The names of :class:`EmptyResult`, for a plain string."""
 
 
+class EmsalCount(_StrEnum):
+    """How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
+
+    - ``included``: Emsale dahil: the floors' area (katlar alanı).
+    - ``exempt``: Emsal harici (22/1): out of it, but together at most 30 % of the parcel's emsal area (5/8); what passes goes in.
+    - ``outside``: Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the
+    """
+    INCLUDED = "included"
+    EXEMPT = "exempt"
+    OUTSIDE = "outside"
+
+
+EmsalCountName = Literal["included", "exempt", "outside"]
+"""The names of :class:`EmsalCount`, for a plain string."""
+
+
 class EpochSource(_StrEnum):
     """Where a side's coordinate epoch came from: the call, the project's settings, the other side (the target takes
     the source's when it states none), or nowhere.
@@ -11811,6 +11827,7 @@ class TableSource(_Union):
     - :class:`BlocksTableSource` (``kind: blocks``)
     - :class:`ScheduleTableSource` (``kind: schedule``)
     - :class:`ExtractionTableSource` (``kind: extraction``)
+    - :class:`ZoningTableSource` (``kind: zoning``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -16064,6 +16081,8 @@ class ArchSettings(_Model):
         space_names: Suggested room names in project order. Free text and existing rooms remain unchanged.
         space_number_prefixes: Level id -> room number prefix. Applying `prefix + 001` is an explicit tool choice.
         space_usages: Suggested room usages in project order, never a mandatory classification.
+        zoning: İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+            ratio and the coverage are read against. Absent: none given.
     """
     active_level: str | None | Unset = UNSET
     audit_exceptions: list[ArchAuditException] | Unset = UNSET
@@ -16083,6 +16102,7 @@ class ArchSettings(_Model):
     space_names: list[str] | Unset = UNSET
     space_number_prefixes: dict[str, str] | Unset = UNSET
     space_usages: list[str] | Unset = UNSET
+    zoning: Zoning | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16122,6 +16142,8 @@ class ArchSettings(_Model):
             out["spaceNumberPrefixes"] = dict(self.space_number_prefixes)
         if self.space_usages is not UNSET:
             out["spaceUsages"] = list(self.space_usages)
+        if self.zoning is not UNSET:
+            out["zoning"] = None if self.zoning is None else self.zoning.to_json()
         return out
 
     @classmethod
@@ -16145,6 +16167,7 @@ class ArchSettings(_Model):
             space_names=list(data["spaceNames"]) if "spaceNames" in data else UNSET,
             space_number_prefixes=dict(data["spaceNumberPrefixes"]) if "spaceNumberPrefixes" in data else UNSET,
             space_usages=list(data["spaceUsages"]) if "spaceUsages" in data else UNSET,
+            zoning=UNSET if "zoning" not in data else None if data["zoning"] is None else Zoning.from_json(data["zoning"]),
         )
 
 
@@ -85110,6 +85133,8 @@ class SpaceBrief(_Model):
         adjacent: Usages one of its neighbours (a wall or an opening between) should have, each.
         area_max: Unit: area.
         area_min: Unit: area.
+        emsal: How its rooms count for the floor area ratio (docs/adr/3030; `.kcad` schema 210). Absent: by their name and
+            use (`emsal_by_use`).
         min_passage: The least net passage: the widest a body may be and still go between all the space's doors (a corridor's). Unit: length.
         min_width: The least net width: the largest circle inside the space, its diameter. Unit: length.
         outdoor: An outdoor space of a unit (a balcony, a terrace): summed apart from its unit's rooms.
@@ -85119,6 +85144,7 @@ class SpaceBrief(_Model):
     adjacent: list[str] | Unset = UNSET
     area_max: float | None | Unset = UNSET
     area_min: float | None | Unset = UNSET
+    emsal: EmsalCount | EmsalCountName | None | Unset = UNSET
     min_passage: float | None | Unset = UNSET
     min_width: float | None | Unset = UNSET
     outdoor: bool | Unset = UNSET
@@ -85133,6 +85159,8 @@ class SpaceBrief(_Model):
             out["areaMax"] = None if self.area_max is None else float(self.area_max)
         if self.area_min is not UNSET:
             out["areaMin"] = None if self.area_min is None else float(self.area_min)
+        if self.emsal is not UNSET:
+            out["emsal"] = None if self.emsal is None else _enum_out(self.emsal)
         if self.min_passage is not UNSET:
             out["minPassage"] = None if self.min_passage is None else float(self.min_passage)
         if self.min_width is not UNSET:
@@ -85150,6 +85178,7 @@ class SpaceBrief(_Model):
             adjacent=list(data["adjacent"]) if "adjacent" in data else UNSET,
             area_max=UNSET if "areaMax" not in data else None if data["areaMax"] is None else float(data["areaMax"]),
             area_min=UNSET if "areaMin" not in data else None if data["areaMin"] is None else float(data["areaMin"]),
+            emsal=UNSET if "emsal" not in data else None if data["emsal"] is None else _enum_in(EmsalCount, data["emsal"]),
             min_passage=UNSET if "minPassage" not in data else None if data["minPassage"] is None else float(data["minPassage"]),
             min_width=UNSET if "minWidth" not in data else None if data["minWidth"] is None else float(data["minWidth"]),
             outdoor=data.get("outdoor", UNSET),
@@ -104725,6 +104754,38 @@ class XyzExported(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class Zoning(_Model):
+    """İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
+    emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
+    gives it.
+    Attributes:
+        parcel_area: Unit: area.
+        coverage: TAKS. Unit: 1.
+        far: Emsal (KAKS). Unit: 1.
+    """
+    parcel_area: float
+    coverage: float | None | Unset = UNSET
+    far: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["parcelArea"] = float(self.parcel_area)
+        if self.coverage is not UNSET:
+            out["coverage"] = None if self.coverage is None else float(self.coverage)
+        if self.far is not UNSET:
+            out["far"] = None if self.far is None else float(self.far)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> Zoning:
+        return cls(
+            parcel_area=float(data["parcelArea"]),
+            coverage=UNSET if "coverage" not in data else None if data["coverage"] is None else float(data["coverage"]),
+            far=UNSET if "far" not in data else None if data["far"] is None else float(data["far"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ZoningCheck(_Model):
     """Input of `cad.zoning.check` v1: the tolerance (metres, a piece of an overlap or of a gap narrower than it is not
     counted, docs/adr/0202 §2; none: 0.01). Refusal: `invalid_input` (`tolerance` not finite or under 0.000001).
@@ -123297,6 +123358,24 @@ class ExtractionTableSource(TableSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class ZoningTableSource(TableSource):
+    """Emsal ve TAKS tablosu (docs/adr/3030; `.kcad` schema 210): the parcel's zoning against the drawing as PAİY 57/3
+    asks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the
+    drawing's, the construction area) and each storey's area counted in and out; written again by the document at
+    every step and when the project's settings change.
+    """
+    TAG_VALUE: ClassVar[str] = "zoning"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "zoning"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningTableSource:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class EditTablesOperation(TablesOperation):
     """Tabloyu düzenle: the edits in order, as one step."""
     TAG_VALUE: ClassVar[str] = "edit"
@@ -125410,7 +125489,7 @@ _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "po
 _TABLE_EDIT: dict[str, type[TableEdit]] = {"setCell": SetCellTableEdit, "insertRows": InsertRowsTableEdit, "deleteRows": DeleteRowsTableEdit, "insertColumns": InsertColumnsTableEdit, "deleteColumns": DeleteColumnsTableEdit, "merge": MergeTableEdit, "unmerge": UnmergeTableEdit, "style": StyleTableEdit, "clearStyle": ClearStyleTableEdit, "field": FieldTableEdit, "unfield": UnfieldTableEdit, "rowHeight": RowHeightTableEdit, "columnWidth": ColumnWidthTableEdit, "fit": FitTableEdit, "columnAlign": ColumnAlignTableEdit, "header": HeaderTableEdit, "grid": GridTableEdit, "frame": FrameTableEdit, "breaks": BreaksTableEdit, "sourceKey": SourceKeyTableEdit, "sourceRule": SourceRuleTableEdit, "unlink": UnlinkTableEdit}
 
 
-_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource, "extraction": ExtractionTableSource}
+_TABLE_SOURCE: dict[str, type[TableSource]] = {"coordinates": CoordinatesTableSource, "areas": AreasTableSource, "attributes": AttributesTableSource, "file": FileTableSource, "blocks": BlocksTableSource, "schedule": ScheduleTableSource, "extraction": ExtractionTableSource, "zoning": ZoningTableSource}
 
 
 _TABLES_OPERATION: dict[str, type[TablesOperation]] = {"edit": EditTablesOperation, "refresh": RefreshTablesOperation, "link": LinkTablesOperation, "unlink": UnlinkTablesOperation}
@@ -126399,6 +126478,8 @@ __all__ = [
     "EmptyInput",
     "EmptyResult",
     "EmptyResultName",
+    "EmsalCount",
+    "EmsalCountName",
     "EndIsolationAction",
     "EndOpeningReference",
     "EndSubPlace",
@@ -129480,7 +129561,9 @@ __all__ = [
     "XyzVerticesName",
     "XyzWithoutZ",
     "XyzWithoutZName",
+    "Zoning",
     "ZoningCheck",
     "ZoningChecked",
     "ZoningFinding",
+    "ZoningTableSource",
 ]

@@ -1350,6 +1350,152 @@ pub struct ArchSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OptionCombo>>", optional))]
     pub option_combos: Vec<crate::OptionCombo>,
+    /// İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+    /// ratio and the coverage are read against. Absent: none given.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub zoning: Option<Zoning>,
+}
+
+/// İmar durumu (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
+/// emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
+/// gives it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct Zoning {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub parcel_area: f64,
+    /// Emsal (KAKS).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub far: Option<f64>,
+    /// TAKS.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub coverage: Option<f64>,
+}
+
+impl Zoning {
+    /// What is wrong with it: the field and the words.
+    pub fn problem(&self) -> Option<(String, String)> {
+        if !(self.parcel_area.is_finite() && self.parcel_area > 0.0 && self.parcel_area <= 1.0e8) {
+            return Some((
+                "zoning.parcelArea".into(),
+                "Parsel alanı sıfırdan büyük bir sayı olmalı (m²).".into(),
+            ));
+        }
+        if let Some(f) = self.far
+            && !(f.is_finite() && f > 0.0 && f <= 50.0)
+        {
+            return Some((
+                "zoning.far".into(),
+                "Emsal (KAKS) sıfırdan büyük, en çok 50 olmalı.".into(),
+            ));
+        }
+        if let Some(c) = self.coverage
+            && !(c.is_finite() && c > 0.0 && c <= 1.0)
+        {
+            return Some((
+                "zoning.coverage".into(),
+                "TAKS sıfırdan büyük, en çok 1 olmalı.".into(),
+            ));
+        }
+        None
+    }
+}
+
+/// How a room counts for the floor area ratio (docs/adr/3030; Planlı Alanlar İmar Yönetmeliği 5/8, 21, 22).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum EmsalCount {
+    /// Emsale dahil: the floors' area (katlar alanı).
+    #[default]
+    Included,
+    /// Emsal harici (22/1): out of it, but together at most 30 % of the parcel's emsal area (5/8); what passes goes in.
+    Exempt,
+    /// Emsal harici, %30'a sayılmaz (5/8's own list: fire stairs and their halls, a shelter or plant room in the
+    /// basement …).
+    Outside,
+}
+
+impl EmsalCount {
+    pub const ALL: [EmsalCount; 3] = [
+        EmsalCount::Included,
+        EmsalCount::Exempt,
+        EmsalCount::Outside,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            EmsalCount::Included => "Emsale dahil",
+            EmsalCount::Exempt => "Emsal harici (%30 içinde)",
+            EmsalCount::Outside => "Emsal harici (%30'a sayılmaz)",
+        }
+    }
+
+    pub fn name(self) -> &'static str {
+        match self {
+            EmsalCount::Included => "included",
+            EmsalCount::Exempt => "exempt",
+            EmsalCount::Outside => "outside",
+        }
+    }
+}
+
+/// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/3030): the
+/// words of Planlı Alanlar İmar Yönetmeliği 22/1's rooms (otopark, sığınak, mescit, galeri, kapıcı, tesisat, kazan,
+/// depo …) exempt; 5/8's fire stairs and halls outside the 30 %; every other room in.
+pub fn emsal_by_use(name: Option<&str>, usage: Option<&str>) -> EmsalCount {
+    let fold = |t: &str| {
+        t.chars()
+            .map(|c| match c {
+                'ç' | 'Ç' => 'C',
+                'ğ' | 'Ğ' => 'G',
+                'ı' | 'I' | 'İ' | 'i' => 'I',
+                'ö' | 'Ö' => 'O',
+                'ş' | 'Ş' => 'S',
+                'ü' | 'Ü' => 'U',
+                c => c.to_ascii_uppercase(),
+            })
+            .collect::<String>()
+    };
+    let words: Vec<String> = [name, usage].into_iter().flatten().map(fold).collect();
+    let has = |w: &str| words.iter().any(|t| t.contains(w));
+    if has("YANGIN MERDIVEN") || has("YANGIN GUVENLIK") || has("KORUNUMLU") {
+        return EmsalCount::Outside;
+    }
+    const EXEMPT: [&str; 17] = [
+        "OTOPARK",
+        "SIGINAK",
+        "MESCIT",
+        "GALERI",
+        "ATRIUM",
+        "KAPICI",
+        "TESISAT",
+        "KAZAN",
+        "ISI MERKEZI",
+        "SU DEPOSU",
+        "JENERATOR",
+        "TRAFO",
+        "ENERJI ODASI",
+        "KOMURLUK",
+        "HIDROFOR",
+        "COCUK OYUN",
+        "KUTUPHANE",
+    ];
+    if EXEMPT.iter().any(|w| has(w)) {
+        EmsalCount::Exempt
+    } else {
+        EmsalCount::Included
+    }
 }
 
 /// The plan's cut height a new Mimari project starts with, metres (docs/adr/3012).
@@ -1418,6 +1564,11 @@ impl ArchSettings {
     /// Whether it says how its lines are weighted (KCAD 206, docs/adr/3013).
     pub fn has_line_groups(&self) -> bool {
         self.line_groups.is_some()
+    }
+
+    /// Whether it gives the parcel's zoning (KCAD 210, docs/adr/3030).
+    pub fn has_zoning(&self) -> bool {
+        self.zoning.is_some()
     }
 
     /// Whether it keeps building materials (KCAD 150, docs/adr/0785).
@@ -1548,6 +1699,11 @@ impl ArchSettings {
 
     /// What is wrong with it; none when it holds.
     pub fn problem(&self) -> Option<(String, String)> {
+        if let Some(z) = &self.zoning
+            && let Some(p) = z.problem()
+        {
+            return Some(p);
+        }
         if let Some(h) = self.cut_height {
             let (low, high) = CUT_HEIGHT_RANGE;
             if !(h.is_finite() && (low..=high).contains(&h)) {

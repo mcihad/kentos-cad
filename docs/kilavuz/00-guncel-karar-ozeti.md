@@ -148,6 +148,13 @@
       `GeneralGross` (bölüm çizelgesi, KCAD 209); `Gross`'un başlığı "Net + pay".
     - Kat kat bölüm çizelgesi `TableSource::Schedule.by_level` (`unit_level_rows`, `PaiyGroup::levels`); hazır
       `SchedulePreset::AreaTable` = `tool.scheduleAreas` "Metrekare cetveli".
+  - **Emsal ve TAKS (M30, [ADR 3030](../adr/3030-emsal-taks-zoning-badge-and-table.md)):**
+    - `ArchSettings.zoning` (parsel, `far`, `coverage`; KCAD 210), `SpaceBrief.emsal` / `emsal_by_use` (dış mahal %30
+      içinde). `Document::zoning_report`: oda oda M29 konturu; katlar alanı = dahil + %30'u aşan; sınır 0,30 × parsel ×
+      emsal; taban alanı zemin kat (ad "Zemin", yoksa ±0,00'a en yakın); `levels` kat kat.
+    - `zoning_badge` (durum çubuğu: sınırlı, sınırsız, ikon + "!"; sürüm başına önbellek), Öznitelikler › İmar durumu.
+    - `TableSource::Zoning {}` = `arch.zoningTable` "Emsal ve TAKS tablosu" (`zoning_table`: 57/3 satırları, kat kat,
+      aşım `OVER_COLOR`); `follow_tables` mahal değişince, `refresh_zoning_tables` ayar/geri alma sonrasında adımsız.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

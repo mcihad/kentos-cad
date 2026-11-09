@@ -12,6 +12,7 @@ import type { OptionSet } from "./OptionSet";
 import type { PhaseView } from "./PhaseView";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
+import type { Zoning } from "./Zoning";
 
 /**
  * The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
@@ -87,4 +88,9 @@ options?: Array<OptionSet>,
 /**
  * The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
  */
-optionCombos?: Array<OptionCombo>, };
+optionCombos?: Array<OptionCombo>, 
+/**
+ * İmar durumu (docs/adr/3030; `.kcad` schema 210): the parcel's area and the plan's coefficients the floor area
+ * ratio and the coverage are read against. Absent: none given.
+ */
+zoning?: Zoning, };

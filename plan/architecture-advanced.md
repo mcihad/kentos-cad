@@ -973,7 +973,8 @@ Dayanak S20, S22.
 _Durum (8 Kasım 2026):_ PAİY 4'ün bağımsız bölüm alanları yapıldı (M29 1. bölüm, [ADR 3029](../docs/adr/3029-regulation-areas-of-independent-units.md)).
 - Bölüm çizelgesinde BB net, BB brüt (dış cephede dış yüz, komşuyla eksen; şaft ve galeri hariç), ortak alan payı (ortak alanların brütünden) ve BB genel brüt; eski "Brüt" (net + pay) "Net + pay" adını aldı; KCAD 209.
 - Metrekare cetveli (M29 2. bölüm): Metraj ▾ › Metrekare cetveli, bölüm çizelgesi kat kat (`byLevel`): her katta bölümler ve ortak alanların o kattaki yönetmelik brüt ve net alanı, toplam binanın.
-- Kalanlar: kat ara toplamı, gruba alınmamış mahallerin yapı inşaat alanı, merdiven altı 1,80 m, sıvasız projede sıva payı, emsal/TAKS (M30), eklenti ve kat irtifakı (M31), vaziyet planı.
+- Emsal ve TAKS (M30, [ADR 3030](../docs/adr/3030-emsal-taks-zoning-badge-and-table.md)): Proje ayarları › Mimari › İmar durumu (parsel, emsal, TAKS); mahalin emsal sınıfı kullanım listesinden ya da adından; durum çubuğunda canlı rozet (aşımda kırmızı), Öznitelikler › İmar durumu; Metraj ▾ › Emsal ve TAKS tablosu (PAİY 57/3'ün değerleri, kat kat alanlar, her adımda ve ayar değişince yenilenir); KCAD 210.
+- Kalanlar: kat ara toplamı, gruba alınmamış mahallerin yapı inşaat alanı, merdiven altı 1,80 m, sıvasız projede sıva payı, emsal sınıfı arayüzü ve 22. maddenin %20/%50/70 m² sınırları, eklenti ve kat irtifakı (M31), vaziyet planı.
 
 **Kullanıcı sonucu:** Metrekare cetveli, emsal/TAKS tablosu, kat irtifakı tablosu ve vaziyet planı aynı modelden çıkar.
 Sınırı aşan değer çizim sırasında görünür. Dayanak S22; W4 §4/1–3, 8–10.
@@ -1142,7 +1143,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
 | M29 | Türk alan motoru ve metrekare cetveli | ADV-22 | PAİY 4 alanları çizelgede **(M29, ADR 3029: yapıldı; bölüm çizelgesinde BB net, brüt, ortak alan payı, genel brüt; Metrekare cetveli kat kat)** |
-| M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo |
+| M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo **(M30, ADR 3030: yapıldı; imar durumu Proje ayarlarında, durum çubuğu rozeti ve Öznitelikler, Emsal ve TAKS tablosu)** |
 | M31 | Bağımsız bölüm, eklenti, ortak yer, kat irtifakı | ADV-22 | Paylaşım tablosu |
 | M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 |
 | M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu |

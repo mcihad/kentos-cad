@@ -154,6 +154,32 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                 .collect();
             (of.label().to_owned(), heads, rows)
         }
+        // Emsal ve TAKS tablosu (docs/adr/3030): its rows worked out again, its words as the drawing shows them.
+        Some(TableSource::Zoning {}) => {
+            let written = doc.zoning_table();
+            let (head, rest) = written
+                .rows
+                .split_first()
+                .expect("an Emsal ve TAKS table has a heading");
+            let heads = head
+                .iter()
+                .enumerate()
+                .map(|(j, name)| WorkbookColumn {
+                    name: name.clone(),
+                    kind: if j == 0 {
+                        CellKind::Text
+                    } else {
+                        CellKind::Auto
+                    },
+                    decimals: None,
+                })
+                .collect();
+            notes.push(
+                "Emsal ve TAKS çizimden ve imar durumundan yeniden okundu; kaynaklar değişmedi."
+                    .into(),
+            );
+            ("Emsal ve TAKS".to_owned(), heads, rest.to_vec())
+        }
         _ => {
             let width = t.cells.iter().map(Vec::len).max().unwrap_or(0);
             let (heads, rest): (Vec<String>, &[Vec<String>]) = if t.header && !t.cells.is_empty() {

@@ -424,6 +424,7 @@ pub(super) struct Features {
     pub(super) ellipse_tags: bool,
     pub(super) opening_codes: bool,
     pub(super) paiy_areas: bool,
+    pub(super) zoning: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -707,6 +708,7 @@ impl Features {
             ellipse_tags: schema >= crate::SCHEMA_WITH_ELLIPSE_TAGS,
             opening_codes: schema >= crate::SCHEMA_WITH_OPENING_CODES,
             paiy_areas: schema >= crate::SCHEMA_WITH_PAIY_AREAS,
+            zoning: schema >= crate::SCHEMA_WITH_ZONING,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -1970,7 +1972,9 @@ pub(super) fn object(
                 let schedule = matches!(v, TableSource::Blocks { .. })
                     || (has.tags && matches!(v, TableSource::Schedule { .. }))
                     // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
-                    || (has.extraction && matches!(v, TableSource::Extraction(_)));
+                    || (has.extraction && matches!(v, TableSource::Extraction(_)))
+                    // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                    || (has.zoning && matches!(v, TableSource::Zoning {}));
                 // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
                 if !has.fixtures
                     && matches!(&v, TableSource::Schedule { of, columns, filter, sort, .. }
@@ -1980,6 +1984,14 @@ pub(super) fn object(
                         Code::UnknownField,
                         at,
                         "çizelgenin donatısı, yeni alanları, tür süzgeci, başlığı ve ara toplamı şema 131'den beri yazılır",
+                    ));
+                }
+                // Schema 210 (docs/adr/3030): Emsal ve TAKS tablosu.
+                if !has.zoning && matches!(v, TableSource::Zoning {}) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "emsal ve TAKS tablosunun kaynağı şema 210'dan beri yazılır",
                     ));
                 }
                 // Schema 182 (docs/adr/1030 §6): a data extraction table.
