@@ -15,6 +15,7 @@ use crate::document::Document;
 
 const GEOMETRY: &str = include_str!("../../../../fixtures/processing/v1/geometry.kcad");
 const TOPOLOGY: &str = include_str!("../../../../fixtures/processing/v1/topology.kcad");
+const ZONING: &str = include_str!("../../../../fixtures/processing/v1/zoning-u-yol.kcad");
 
 /// The app with the geometry drawing open.
 fn app_with_geometry() -> App {
@@ -177,6 +178,83 @@ fn the_findings_go_to_an_error_layer_in_one_step() {
     assert_eq!(doc.undo().as_deref(), Some("Topolojiyi kurallarla denetle"));
     assert!(doc.layers().leaves().iter().all(|l| l.name != "Topoloji bulguları"));
     assert!(!doc.can_undo());
+}
+
+/// İmar planını denetle (docs/adr/3840) on the U road's drawing: the toolbox's tool, its one finding in the table;
+/// Bulguları hata katmanına yaz writes its two regions as areas on İmar bulguları (1/2, 2/2, the finding's fields),
+/// one undo step, nothing selected.
+#[test]
+fn the_zoning_regions_go_to_an_error_layer_in_one_step() {
+    let mut app = app_with(ZONING);
+    let _ = app.update(Message::Run("processing.run.zoning.check"));
+    value(&mut app, "write", json!(true));
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, table, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert!(text.ends_with("1 bulgu verdi; 1 bulgunun 2 bölgesi hata katmanına yazıldı."), "{text}");
+    let table = table.expect("the table");
+    assert_eq!((table.rows.len(), table.rows[0][0].as_str(), table.rows[0][3].as_str()), (1, "Yola giren karar", "2"));
+    assert!(app.selection.ids().is_empty(), "the areas are the result, not the objects' selection");
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "İmar bulguları")
+        .map(|l| l.id.clone())
+        .expect("the error layer");
+    let areas: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    assert_eq!(areas.len(), 2);
+    for (k, a) in areas.iter().enumerate() {
+        let kentos_commands::Entity::Polygon(p) = a else { panic!("{a:?}") };
+        assert_eq!(p.base.attrs["Bölge"], format!("{}/2", k + 1));
+        assert_eq!(p.base.attrs["Tür"], "Yola giren karar");
+        assert!(p.base.attrs["İleti"].contains("giriyor"), "{:?}", p.base.attrs);
+    }
+    assert_eq!(doc.undo().as_deref(), Some("İmar planını denetle"));
+    assert!(doc.layers().leaves().iter().all(|l| l.name != "İmar bulguları"));
+}
+
+/// İmar planını denetle with Bulguları hata katmanına yaz on the drawing with four decisions and three parcels in a
+/// wide road, then the error layer on the drawing; `.run/gui-evidence/imar-hata-3840/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib processing::geometry_tests::zoning_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn zoning_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-hata-3840");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    let mut app = app_with(include_str!("../../../../fixtures/processing/v1/zoning-yollar.kcad"));
+    app.program = Some(kentos_launch::Module::Map);
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let _ = app.update(Message::Run("processing.run.zoning.check"));
+    value(&mut app, "write", json!(true));
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("1-pencere-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+    event(&mut app, Event::Run);
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("2-sonuc-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
+    app.processing.dialog = None;
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("3-cizimde-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
 }
 
 #[test]

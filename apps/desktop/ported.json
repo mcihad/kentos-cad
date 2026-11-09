@@ -279,6 +279,7 @@
     "processing.run.geometry.validity",
     "processing.run.geometry.repair",
     "processing.run.topology.check",
+    "processing.run.zoning.check",
     "processing.run.geometry.simplify",
     "processing.run.geometry.reproject",
     "processing.run.network.closestFacility",

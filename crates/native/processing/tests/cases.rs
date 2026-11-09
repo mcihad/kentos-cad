@@ -2289,6 +2289,32 @@ fn the_geometry_cases_do_what_they_say() {
     );
 }
 
+/// İmar planını denetle (docs/adr/3840): `cad.zoning.check`'s shared cases' drawings from the toolbox; the table, the
+/// selection and, asked to, the road regions written as areas on the error layer, measured (zoning_processing_cases.py).
+#[test]
+fn the_zoning_cases_do_what_they_say() {
+    let file = case_file("zoning.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let measure_tol = file["measureTolerance"].as_f64().expect("a measure tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = check_measured(c, play(c, &registry, false, &json!({})), tol, measure_tol);
+        found.extend(check_measured(c, play(c, &registry, true, &json!({})), tol, measure_tol));
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert_eq!(report.len(), 3);
+    assert!(problems.is_empty(), "\n{}\n\n{}", report.join("\n"), problems.join("\n"));
+}
+
 /// Koordinat sistemine dönüştür from every source system it offers
 /// (docs/adr/0741): scripts/fixtures/reproject_systems_cases.py puts a parcel
 /// into each system and moves its corners with PROJ's named EPSG paths.
@@ -2457,6 +2483,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         spatial_inference,
         remote,
         multidim,
+        zoning,
     ) = (
         cases(),
         case_file("geometry.json"),
@@ -2472,6 +2499,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         case_file("spatial-inference.json"),
         case_file("remote.json"),
         case_file("multidim.json"),
+        case_file("zoning.json"),
     );
     let registry = Registry::builtin();
     let lookup = |id: &str| registry.tool(id);
@@ -2495,7 +2523,8 @@ fn the_defaults_the_tools_take_from_the_drawing() {
                 .expect("documents"),
         )
         .chain(remote["documents"].as_object().expect("documents"))
-        .chain(multidim["documents"].as_object().expect("documents"));
+        .chain(multidim["documents"].as_object().expect("documents"))
+        .chain(zoning["documents"].as_object().expect("documents"));
     for (name, d) in documents {
         let doc = load(name);
         let defaults = Defaults::of(&doc);

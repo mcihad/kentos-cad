@@ -1,0 +1,439 @@
+{
+ "format": "kentos.processing-cases",
+ "version": 1,
+ "tolerance": 1e-06,
+ "measureTolerance": 1e-06,
+ "documents": {
+  "zoning-yollar.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "drawingFont": "barlow",
+    "activeLayer": "karar",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "zoning.check": {
+     "tolerance": 0.01,
+     "write": false,
+     "layer": {
+      "newName": "İmar bulguları"
+     }
+    }
+   }
+  },
+  "zoning-u-yol.kcad": {
+   "defaults": {
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "drawingFont": "barlow",
+    "activeLayer": "karar",
+    "measureHeightMm": 2
+   },
+   "tools": {
+    "zoning.check": {
+     "tolerance": 0.01,
+     "write": false,
+     "layer": {
+      "newName": "İmar bulguları"
+     }
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "zoning-check",
+   "title": "İmar planını denetle: yola giren dört karar ve üç parsel tabloda, alanlarıyla; bulgulu nesneler seçilir, çizim değişmez",
+   "document": "zoning-yollar.kcad",
+   "run": {
+    "tool": "zoning.check"
+   },
+   "values": {},
+   "expect": {
+    "status": "ok",
+    "summary": "İmar denetimi 2 planda, 8 karar alanında 7 bulgu verdi; bulgulu nesneler seçildi.",
+    "undo": null,
+    "layers": [],
+    "addedShapes": [],
+    "outputs": {
+     "count": 7,
+     "objects": [
+      4,
+      5,
+      6,
+      7,
+      11,
+      13,
+      14,
+      15
+     ],
+     "findings": {
+      "columns": [
+       "Tür",
+       "Nesneler",
+       "Alan",
+       "Bölge",
+       "İleti"
+      ],
+      "rows": [
+       [
+        "Yola giren karar",
+        "#4, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#5, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#6, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#7, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #13",
+        "20.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #14",
+        "25.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #15",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor."
+       ]
+      ]
+     }
+    },
+    "selection": [
+     4,
+     5,
+     6,
+     7,
+     11,
+     13,
+     14,
+     15
+    ]
+   }
+  },
+  {
+   "id": "zoning-check-errors",
+   "title": "İmar planını denetle: yola giren her bölge hata katmanına alan olarak yazılır, tek geri alma adımı",
+   "document": "zoning-yollar.kcad",
+   "run": {
+    "tool": "zoning.check"
+   },
+   "values": {
+    "write": true,
+    "layer": {
+     "newName": "İmar bulguları"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "İmar denetimi 2 planda, 8 karar alanında 7 bulgu verdi; 7 bulgunun 7 bölgesi hata katmanına yazıldı.",
+    "undo": "İmar planını denetle",
+    "layers": [
+     {
+      "id": "islem-imar-bulgulari",
+      "name": "İmar bulguları",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000004, 0192f5c0-1420-7000-8000-00000000000b",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+       "Bulgu alanı": "45.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 45.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000005, 0192f5c0-1420-7000-8000-00000000000b",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+       "Bulgu alanı": "45.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 45.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000006, 0192f5c0-1420-7000-8000-00000000000b",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+       "Bulgu alanı": "45.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 45.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000007, 0192f5c0-1420-7000-8000-00000000000b",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+       "Bulgu alanı": "45.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 45.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren parsel",
+       "Nesneler": "0192f5c0-1420-7000-8000-00000000000b, 0192f5c0-1420-7000-8000-00000000000d",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor.",
+       "Bulgu alanı": "20.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 20.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren parsel",
+       "Nesneler": "0192f5c0-1420-7000-8000-00000000000b, 0192f5c0-1420-7000-8000-00000000000e",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor.",
+       "Bulgu alanı": "25.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 25.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren parsel",
+       "Nesneler": "0192f5c0-1420-7000-8000-00000000000b, 0192f5c0-1420-7000-8000-00000000000f",
+       "Bölge": "1/1",
+       "İleti": "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor.",
+       "Bulgu alanı": "45.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 45.0
+     }
+    ],
+    "outputs": {
+     "count": 7,
+     "objects": [
+      4,
+      5,
+      6,
+      7,
+      11,
+      13,
+      14,
+      15
+     ],
+     "findings": {
+      "columns": [
+       "Tür",
+       "Nesneler",
+       "Alan",
+       "Bölge",
+       "İleti"
+      ],
+      "rows": [
+       [
+        "Yola giren karar",
+        "#4, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#5, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#6, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+       ],
+       [
+        "Yola giren karar",
+        "#7, #11",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #13",
+        "20.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #14",
+        "25.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor."
+       ],
+       [
+        "Yola giren parsel",
+        "#11, #15",
+        "45.00 m²",
+        "1",
+        "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor."
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "zoning-check-u-road",
+   "title": "İmar planını denetle: U biçimli yolun karara iki yerden girdiği tek bulgu iki alan olur (1/2, 2/2)",
+   "document": "zoning-u-yol.kcad",
+   "run": {
+    "tool": "zoning.check"
+   },
+   "values": {
+    "write": true,
+    "layer": {
+     "newName": "İmar bulguları"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "İmar denetimi 1 planda, 2 karar alanında 1 bulgu verdi; 1 bulgunun 2 bölgesi hata katmanına yazıldı.",
+    "undo": "İmar planını denetle",
+    "layers": [
+     {
+      "id": "islem-imar-bulgulari",
+      "name": "İmar bulguları",
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D26"
+      }
+     }
+    ],
+    "addedShapes": [
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000002, 0192f5c0-1420-7000-8000-000000000004",
+       "Bölge": "1/2",
+       "İleti": "“Y-U” yolunun 12 m genişliği içine Konut alanı kararı “K1” giriyor.",
+       "Bulgu alanı": "1200.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 600.0
+     },
+     {
+      "kind": "polygon",
+      "layerId": "islem-imar-bulgulari",
+      "attrs": {
+       "Tür": "Yola giren karar",
+       "Nesneler": "0192f5c0-1420-7000-8000-000000000002, 0192f5c0-1420-7000-8000-000000000004",
+       "Bölge": "2/2",
+       "İleti": "“Y-U” yolunun 12 m genişliği içine Konut alanı kararı “K1” giriyor.",
+       "Bulgu alanı": "1200.00 m²"
+      },
+      "parts": 1,
+      "holes": 0,
+      "area": 600.0
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "objects": [
+      2,
+      4
+     ],
+     "findings": {
+      "columns": [
+       "Tür",
+       "Nesneler",
+       "Alan",
+       "Bölge",
+       "İleti"
+      ],
+      "rows": [
+       [
+        "Yola giren karar",
+        "#2, #4",
+        "1200.00 m²",
+        "2",
+        "“Y-U” yolunun 12 m genişliği içine Konut alanı kararı “K1” giriyor."
+       ]
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

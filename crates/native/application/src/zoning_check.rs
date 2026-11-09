@@ -114,6 +114,33 @@ fn middle_of(paths: &[Vec<Edge>]) -> Option<Vec2> {
 /// The layers of the zoning plan's classes as the drawing has them (plan boundaries, decision areas, plan notes; the
 /// profile `imar-plani`'s paths): what the selection's role `zoning` reads (docs/adr/2480). A class without its layer
 /// is left out.
+/// A finding's kind in words, as İmar denetimi's table and İşlem araç kutusu's tool say it (docs/adr/3840).
+pub fn kind_word(kind: &str) -> &'static str {
+    match kind {
+        "missingLayer" => "Katman yok",
+        "noLevel" => "Kademe yok",
+        "upperMissing" => "Üst plan yok",
+        "levelOrder" => "Kademe sırası",
+        "outsideUpper" => "Üst plan dışına taşma",
+        "noPlan" => "Planı yok",
+        "noUse" => "Kullanım yok",
+        "unknownUse" => "Bilinmeyen kullanım",
+        "missingValue" => "Değer verilmemiş",
+        "declaredValued" => "Değer çelişkisi",
+        "kaksReview" => "KAKS gözden geçir",
+        "overlap" => "Karar çelişkisi",
+        "uncovered" => "Kararsız kısım",
+        "outside" => "Plan dışına taşma",
+        "roadGap" => "Kopuk yol",
+        "roadWidth" => "Yola giren karar",
+        // docs/adr/2640.
+        "roadParcel" => "Yola giren parsel",
+        "noteMissing" => "Plan notu yok",
+        "noteUnused" => "Anılmayan not",
+        _ => "Bulgu",
+    }
+}
+
 pub fn plan_layers(doc: &Document) -> Vec<String> {
     let Some(p) = builtin_profile(ZONING_PROFILE) else { return Vec::new() };
     ["plan-siniri", "karar-alani", "plan-notu"]

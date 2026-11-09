@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İmar denetimi İşlem araç kutusunda, bölgeler hata katmanında (9 Kasım 2026; MAP-09, [ADR 3840](../../docs/adr/3840-zoning-check-in-processing-and-error-layer.md)).**
+  Yeni İşlem aracı İmar planını denetle (`zoning.check`); Bulguları hata katmanına yaz yola giren her bölgeyi “İmar
+  bulguları” katmanına alan olarak yazar, tek geri alma adımı. Harita + CBS.
 - **Sınır grafiği çizimde: kirişli yayın şeridi, tek sözde sorunlar (9 Kasım 2026; MAP-08, [ADR 3820](../../docs/adr/3820-boundary-graph-strip-and-shared-rings.md)).**
   Çizimde göster kirişli yayın şeridini boyar; ekranda halkası buluşan sorunlar tek halka ve sayılı tek söz olur.
   Sözleşme değişmez. Harita + CBS.

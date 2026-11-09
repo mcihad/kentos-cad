@@ -39,7 +39,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
@@ -1097,6 +1097,14 @@ Inspector'ı. Kanıtlanan: `cad.zoning.check`'in yol genişliği ve yola giren p
 başvuru parçaların sınırını hücrelerden izler; U biçimli yolun iki yerden girdiği yeni durum (47 durum), Python, MCP,
 masaüstü (Alan hücresinde parça sayısı) ve resimler. Açık: plan değişikliği taslağı, sembolün karardan seçilmesi,
 bölgelerin hata katmanına yazılması, resmî şema ve eşleme.
+
+**9 Kasım 2026, yedinci tur — imar denetimi İşlem araç kutusunda, bölgeler hata katmanında ([ADR 3840](../docs/adr/3840-zoning-check-in-processing-and-error-layer.md)).**
+Kapsam: **Harita + CBS**. Dayanak: ADR 2200'ün okuması (QGIS Check validity'nin hata çıktısı, ArcGIS Export Topology
+Errors'un alan hataları). Kanıtlanan: yeni İşlem aracı İmar planını denetle (`zoning.check`, `cad.zoning.check`'in
+denetimi): tablo, seçim; Bulguları hata katmanına yaz ile yola giren her bölge “İmar bulguları” katmanına alan olarak
+(tür, kalıcı kimlikler, bulgu alanı, 1/2, ileti), tek geri alma adımı; tür sözleri ortak katmanda. 3 İşlem durumu
+(komutun bağımsız başvurusundan), Python, MCP, masaüstü ve resimler. Açık: plan değişikliği taslağı, sembolün
+karardan seçilmesi, hata katmanının GeoPackage'a yazılması, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

@@ -63,32 +63,8 @@ impl Group {
     }
 }
 
-/// A finding's kind in words.
-pub fn kind_word(kind: &str) -> &'static str {
-    match kind {
-        "missingLayer" => "Katman yok",
-        "noLevel" => "Kademe yok",
-        "upperMissing" => "Üst plan yok",
-        "levelOrder" => "Kademe sırası",
-        "outsideUpper" => "Üst plan dışına taşma",
-        "noPlan" => "Planı yok",
-        "noUse" => "Kullanım yok",
-        "unknownUse" => "Bilinmeyen kullanım",
-        "missingValue" => "Değer verilmemiş",
-        "declaredValued" => "Değer çelişkisi",
-        "kaksReview" => "KAKS gözden geçir",
-        "overlap" => "Karar çelişkisi",
-        "uncovered" => "Kararsız kısım",
-        "outside" => "Plan dışına taşma",
-        "roadGap" => "Kopuk yol",
-        "roadWidth" => "Yola giren karar",
-        // docs/adr/2640.
-        "roadParcel" => "Yola giren parsel",
-        "noteMissing" => "Plan notu yok",
-        "noteUnused" => "Anılmayan not",
-        _ => "Bulgu",
-    }
-}
+/// A finding's kind in words (the shared reading, docs/adr/3840: İşlem araç kutusu's tool says it the same way).
+pub use kentos_native_application::zoning_check::kind_word;
 
 #[derive(Clone, Debug, Default)]
 pub struct State {

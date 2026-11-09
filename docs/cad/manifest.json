@@ -8081,6 +8081,22 @@
    "tests": 0
   },
   {
+   "id": "processing.run.zoning.check",
+   "kind": "command",
+   "title": "İmar planını denetle…",
+   "level": "processing",
+   "via": [
+    "cad.processing.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "İşlemler aracı; Python ve MCP'den cad.processing.run ve .batch ile, aracın kimliğiyle (ADR 0508, 0529).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.toolbox",
    "kind": "command",
    "title": "İşlem araç kutusu",

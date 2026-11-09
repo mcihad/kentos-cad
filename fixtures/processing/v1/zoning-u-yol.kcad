@@ -1,0 +1,232 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "İmar planı denetimi",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000.0,
+  "workspace": "cad",
+  "cadWork": "map"
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "imar",
+   "name": "İmar planı",
+   "type": "group",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [
+    {
+     "id": "plan",
+     "name": "Plan sınırı",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "karar",
+     "name": "Karar alanları",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "notlar",
+     "name": "Plan notları",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    },
+    {
+     "id": "yollar",
+     "name": "Yollar",
+     "type": "layer",
+     "visible": true,
+     "locked": false,
+     "expanded": true,
+     "style": {
+      "color": "fg",
+      "lineType": "continuous",
+      "lineWeight": 0.25
+     },
+     "children": []
+    }
+   ]
+  }
+ ],
+ "activeLayer": "karar",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "plan",
+   "attrs": {
+    "PlanKimlik": "UIP-U",
+    "Seviye": "uip",
+    "Durum": "yururlukte"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420100.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "karar",
+   "attrs": {
+    "KararKimlik": "K1",
+    "Kullanim": "konut",
+    "TAKS": "0.40",
+    "KAKS": "1.20",
+    "KatAdedi": "3"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420100.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 3,
+   "layerId": "karar",
+   "attrs": {
+    "KararKimlik": "K2",
+    "Kullanim": "yol"
+   },
+   "pts": [
+    {
+     "x": 487050.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420100.0
+    }
+   ]
+  },
+  {
+   "kind": "polyline",
+   "id": 4,
+   "layerId": "yollar",
+   "attrs": {
+    "YolKimlik": "Y-U",
+    "Tur": "tasit",
+    "Genislik": "12"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420030.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420030.0
+    },
+    {
+     "x": 487100.0,
+     "y": 4420070.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420070.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5c0-1420-7000-8000-000000000001",
+  "0192f5c0-1420-7000-8000-000000000002",
+  "0192f5c0-1420-7000-8000-000000000003",
+  "0192f5c0-1420-7000-8000-000000000004"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

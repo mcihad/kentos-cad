@@ -3344,6 +3344,20 @@
       "status": "implemented"
     },
     {
+      "id": "processing.run.zoning.check",
+      "title": "İmar planını denetle…",
+      "short": "İmarı denetle",
+      "icon": "zoningCheck",
+      "description": "İmar planının katmanlarını İşlem araç kutusundan, bir modelden ya da betikten denetler (cad.zoning.check'in denetimi; ADR 3840): bulgular türü, nesneleri, alanı, bölge sayısı ve iletisiyle tabloda; bulgulu nesneler seçilir. Bulguları hata katmanına yaz açıksa yola giren karar ve parsellerin her bölgesi hata katmanına alan olarak yazılır (tek geri alma adımı). Resmî uygunluk iddia edilmez.",
+      "aliases": [
+        "IMARDENETLE",
+        "ZONINGCHECK"
+      ],
+      "shortcuts": [],
+      "category": "İşlemler",
+      "status": "implemented"
+    },
+    {
       "id": "processing.run.stats.dbscanSweep",
       "title": "DBSCAN parametre taraması…",
       "short": "DBSCAN taraması",

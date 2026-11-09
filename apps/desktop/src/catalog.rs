@@ -424,6 +424,8 @@ pub const PORTED: &[&str] = &[
     "processing.run.geometry.repair",
     // Topolojiyi kurallarla denetle (docs/adr/1980): the project's rules from the toolbox.
     "processing.run.topology.check",
+    // İmar planını denetle (docs/adr/3840): the plan's check from the toolbox, its road regions on an error layer.
+    "processing.run.zoning.check",
     "processing.run.geometry.simplify",
     "processing.run.geometry.reproject",
     // Ağ analizi (docs/adr/0209 §9).

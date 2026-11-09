@@ -205,6 +205,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Topoloji bölümü ve form penceresinde kaydın bulguları.
 - MAP-08 / ADR 3820: web'in Sınır grafiği çizim işaretlerinde kirişli yayın şeridi ve halkası buluşan sorunların tek
   sözde birleşmesi.
+- MAP-09 / ADR 3840: web'in İşlem araç kutusunda İmar planını denetle (`zoning.check`; `fixtures/processing/v1/zoning.json`'un
+  3 durumu) ve bölgelerin hata katmanına alan olarak yazılması.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

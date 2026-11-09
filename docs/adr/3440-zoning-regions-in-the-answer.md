@@ -64,6 +64,6 @@ cevabına girmesi (Python ve MCP'de çizilebilir halkalar; ortak durumların ür
 
 ## Sonra
 
-- Bölgelerin hata katmanına yazılması (topoloji bulguları gibi, ADR 2200).
+- ~~Bölgelerin hata katmanına yazılması (topoloji bulguları gibi, ADR 2200).~~ [ADR 3840](3840-zoning-check-in-processing-and-error-layer.md).
 - Plan değişikliği taslağı; sembolün karardan seçilmesi; resmî şema ve eşleme (MAP-09'un öbür maddeleri).
 - Web (TODOS §0.2).
