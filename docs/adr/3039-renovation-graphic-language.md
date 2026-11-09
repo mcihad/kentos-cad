@@ -4,7 +4,8 @@ Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - 1. bölüm: açıklığın kendi tadilat durumu; tadilat görünümüne göre duvar birleşimi ve kesimi.
 - §0: kavramın adı "Evre"den "Tadilat durumu"na geçti.
 - §3: araçlarda tadilat durumu (yeni çizilen, açık görünümün durumunu alır).
-- 2. bölüm ayrı eklerle gelecek: tadilat projesi görünümü ve lejantı, tadilat takımı, DXF katmanları.
+- §4: DXF'te tadilat durumu katmanları; DXF görünümün gösterdiğini alır.
+- Kalanlar ayrı eklerle gelecek: tadilat projesi görünümü ve lejantı, tadilat takımı.
 
 ## Sorun
 
@@ -121,6 +122,29 @@ Yeni çizilen yapı öğesi, çizildiği görünümün durumunu alır; ayrı bir
 - Mahal: Yeni durumda bulunan oda İlave olur ve sınırını işlerden sonraki duvarlardan bulur (ADR 0798 §3: iptal duvar
   sınır değildir). İki odayı birleştiren tadilatın yeni odası böylece doğru çıkar.
 
+### 4. DXF'te tadilat durumu
+
+- **Katman:** EK-4 Tablo 4.1'in katman adı üç alanlıdır: disiplin, öğe, malzeme/tip/gösterim. Üçüncü alan malzemeyi
+  tuttuğu için durum onun arkasına gelir. 4.14.3 derinliği ("-1…4"), 4.14.5 taramayı ("-T") aynı yerden ekletir.
+  - Örnekler: MM-DUVA-TUGLA-IPTAL, MM-KAPI-GENEL-ILAVE, MM-DUVA-TUGLA-MEVCUT, …-GECICI.
+  - Taraması onun "-T"si: MM-DUVA-TUGLA-IPTAL-T.
+  - Sözcükler 4.11'e göre büyük harf ve Türkçe harfsiz: MEVCUT, IPTAL, ILAVE, GECICI (`ek4_state_layer`, `EK4_STATES`).
+  - `is_ek4_layer` dördüncü alan olarak yalnız bunları kabul eder.
+  - Örneği AIA'nın "status" alanı (A-WALL-DEMO).
+- **Parçalar** durum katmanına gider. İptal katmanı kesikli yazılır (Mimarlar Odası'nın iptal tekniği). Katman yalnız ona
+  parça düşerse açılır: çizgisi olmayan boşluk katman açmaz. KentOS verisini taşıyan nesnenin kendisi kendi katmanında
+  kalır, geri okunduğunda yeri değişmez.
+- **Görünüm:** DXF, tasarım seçeneklerindeki gibi (ADR 0788 §5) çizimin görünüşünü alır. Tadilat görünümünün gizlediği
+  nesne yazılmaz ve rapor bunu söyler ("Tadilat görünümünün gizlediği nesne"). Yazılmayan açıklık duvarı kesmez, yazılmayan
+  duvar birleşmez. Sonuç:
+  - Tümü: bütün durumlar kendi katmanlarında. Tadilat projesi DXF'i budur.
+  - Mevcut durum: rölöve; yeni kapının yeri duvarda boşluk değil.
+  - Yeni durum: işlerden sonraki hâl.
+  ADR 0346'nın "DXF'e evre görünüşü yazılmaz" kuralı böylece değişti.
+- **Rapor:** "Tadilat durumu: N nesne durum katmanlarına yazıldı".
+- **Bulgu (düzeltilmedi):** GDAL'ın DXF okuyucusu Türkçe harfli katman adlarını (Kapı-IPTAL) `DXF_ENCODING=UTF-8`
+  verilmeden bozuk okur. EK-4 adları ASCII olduğu için bu yolu etkilemez.
+
 ## Doğrulama
 
 - Etkileşim (`crates/native/interaction/tests/all/phase_cuts.rs`): 6 m mevcut duvar, 1,5 m'de ilave 90'lık kapı, 4 m'de
@@ -147,6 +171,18 @@ Yeni çizilen yapı öğesi, çizildiği görünümün durumunu alır; ayrı bir
   iletilerinde; 27 durum dosyası yalnız bu sözcüklerle değişti. Beş dosyanın üreticisi bugünkü dosyayı yeniden
   üretmiyordu: başka işlerden kalan bir sapma. O dosyalarda yalnız sözcükler değiştirildi.
 - KCAD 218: `opening-phases` örneği ve şema 217'de bozuk dosyası; çok yeni şema örneği 219'a kaydı (geçerli örnek 249).
+- DXF (§4):
+  - `dxf_write.rs` `walls_with_a_renovation_state_go_on_their_state_layers`: iptal, ilave ve durumsuz duvar.
+    - Çizgiler MM-DUVA-TUGLA-IPTAL (kesikli), -ILAVE ve MM-DUVA-TUGLA'da.
+    - Taramalar -IPTAL-T, -ILAVE-T ve -T'de.
+    - Rapor 2 der.
+  - `ek4.rs` testi: durum katmanı adları ve `is_ek4_layer`.
+  - Başsız `renovation_dxf.rs`:
+    - Örnek Tümü'nde Duvar-MEVCUT (16 parça), Kapı-ILAVE (2), Kapı-IPTAL (3, kesikli).
+    - Mevcut durumda yeni kapı yazılmaz ve söylenir; duvarda onun boşluğu yok.
+    - Yeni durumda iptal pencere yazılmaz.
+  - Dosya GDAL 3.12.2 `ogrinfo` ile okundu: aynı katmanlar ve sayılar; katman tablosunda Kapı-IPTAL DASHED. KentOS'ta
+    açıldığında katman paneli aynı üç katmanı gösterir.
 - Gerçek pencere (1920×1080, rölöve daire: bütün duvarlar Mevcut; iz `fixtures/interaction/real/tadilat-durumu.txt`):
   - İki yatak odası arasındaki duvar İptal yapıldı.
   - Salon ile yatak odası 1 arasına kapı kondu ve İlave yapıldı.

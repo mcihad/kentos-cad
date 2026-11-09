@@ -711,6 +711,86 @@ fn hatches_aside(
     pieces
 }
 
+/// An object with a tadilat durumu has its pieces on its layer's state layer (docs/adr/3039 §4;
+/// `kentos_contracts::ek4_state_layer`): a wall to be removed on MM-DUVA-TUGLA-IPTAL, drawn dashed (Mimarlar Odası's iptal
+/// technique), its hatch on MM-DUVA-TUGLA-IPTAL-T; a new door on MM-KAPI-GENEL-ILAVE. The layers the file gets beside
+/// their layers, as AutoCAD's renovation layers do; freezing *-IPTAL shows the state after the works. The object with
+/// KentOS's data stays on its own layer, so it reads back where it was. `hatches_aside` has put the hatches on "-T".
+fn renovation_aside(
+    out: &mut DxfWriteInput,
+    phase: Option<kentos_contracts::ArchPhase>,
+    e: &kentos_contracts::Entity,
+    mut pieces: Vec<kentos_contracts::Entity>,
+) -> Vec<kentos_contracts::Entity> {
+    let Some(phase) = phase else {
+        return pieces;
+    };
+    let Some(layer) = out
+        .layers
+        .iter()
+        .find(|l| l.id == e.base().layer_id)
+        .cloned()
+    else {
+        return pieces;
+    };
+    // An object with no lines of its own (a passage, a gap in its wall) makes no layer.
+    if pieces.is_empty() {
+        return pieces;
+    }
+    let hatch_id = kentos_contracts::ek4_hatch_layer(&layer.name).to_ascii_lowercase();
+    let hatch = out
+        .layers
+        .iter()
+        .find(|l| l.id == hatch_id && pieces.iter().any(|p| p.base().layer_id == hatch_id))
+        .cloned();
+    // The piece's layer: its object's, or its object's "-T"; the state layer of each, made once.
+    let aside = |from: &kentos_contracts::DxfWriteLayer, out: &mut DxfWriteInput| {
+        let name = kentos_contracts::ek4_state_layer(&from.name, phase);
+        let id = name.to_ascii_lowercase();
+        if !out.layers.iter().any(|l| l.id == id) {
+            let mut made = kentos_contracts::DxfWriteLayer {
+                id: id.clone(),
+                name,
+                ..from.clone()
+            };
+            if phase == kentos_contracts::ArchPhase::Demolish {
+                made.line_type = kentos_contracts::LineType::Dashed;
+                made.line_pattern = None;
+            }
+            out.layers.push(made);
+        }
+        id
+    };
+    let own = aside(&layer, out);
+    let hatched = hatch.as_ref().map(|h| {
+        // The state's hatch layer: the state layer's "-T" (EK-4 4.14.5 after the state).
+        let name = kentos_contracts::ek4_hatch_layer(&kentos_contracts::ek4_state_layer(
+            &layer.name,
+            phase,
+        ));
+        let id = name.to_ascii_lowercase();
+        if !out.layers.iter().any(|l| l.id == id) {
+            out.layers.push(kentos_contracts::DxfWriteLayer {
+                id: id.clone(),
+                name,
+                ..h.clone()
+            });
+        }
+        (h.id.clone(), id)
+    });
+    for p in &mut pieces {
+        let at = p.base().layer_id.clone();
+        if at == layer.id {
+            p.base_mut().layer_id = own.clone();
+        } else if let Some((from, to)) = &hatched
+            && at == *from
+        {
+            p.base_mut().layer_id = to.clone();
+        }
+    }
+    pieces
+}
+
 /// The objects and definitions to write in a local project's unit: every
 /// coordinate and length scaled, the rest as it is.
 /// `input` with every wall as its plain pieces at the input's detail and scale, said in the report; none without walls.
@@ -764,9 +844,21 @@ fn plain_walls(
     let mut out = input.clone();
     out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
     let mut left = 0;
+    // Each object's tadilat durumu (docs/adr/3039 §4): its own, an opening's else its wall's.
+    let by_id: std::collections::HashMap<u32, &kentos_contracts::Entity> =
+        input.entities.iter().map(|e| (e.base().id, e)).collect();
+    let by_uid: std::collections::HashMap<String, &kentos_contracts::Entity> = input
+        .uids
+        .iter()
+        .filter_map(|(id, u)| by_id.get(id).map(|e| (u.to_text(), *e)))
+        .collect();
+    let state_of = |e: &kentos_contracts::Entity| e.phase(|u| by_uid.get(u).copied());
+    let mut stated = 0u32;
     let keep = input.annotations.metadata;
     let mut wholes = entities::Wholes::new();
-    let mut put = |out: &mut DxfWriteInput, e: &kentos_contracts::Entity, pieces: Vec<kentos_contracts::Entity>| {
+    let mut put = |out: &mut DxfWriteInput,
+                   e: &kentos_contracts::Entity,
+                   pieces: Vec<kentos_contracts::Entity>| {
         if keep {
             out.entities.push(e.clone());
             let uid = input.uids.get(&e.base().id).map(|u| u.to_text());
@@ -786,14 +878,26 @@ fn plain_walls(
                 Some(pieces),
             ) => {
                 let pieces = hatches_aside(&mut out, e, pieces);
+                let state = state_of(e);
+                stated += u32::from(state.is_some());
+                let pieces = renovation_aside(&mut out, state, e, pieces);
                 put(&mut out, e, pieces)
             }
             (kentos_contracts::Entity::Wall(_), None) => left += 1,
             // Keep the explicit role in the architectural whole; the anonymous
             // block's plain analytic path carries the same visible linework.
             (kentos_contracts::Entity::Polyline(p), _) if p.space_separator.is_some() => {
-                let mut plain = p.clone(); plain.space_separator = None;
-                put(&mut out, e, vec![kentos_contracts::Entity::Polyline(plain)]);
+                let mut plain = p.clone();
+                plain.space_separator = None;
+                let state = state_of(e);
+                stated += u32::from(state.is_some());
+                let pieces = renovation_aside(
+                    &mut out,
+                    state,
+                    e,
+                    vec![kentos_contracts::Entity::Polyline(plain)],
+                );
+                put(&mut out, e, pieces);
             }
             // A space's rings, each a closed polyline (docs/adr/0342).
             (kentos_contracts::Entity::Space(s), _) => {
@@ -817,24 +921,46 @@ fn plain_walls(
                         }));
                     }
                 }
+                let state = state_of(e);
+                stated += u32::from(state.is_some());
+                let pieces = renovation_aside(&mut out, state, e, pieces);
                 put(&mut out, e, pieces);
             }
             // A slab's rings and its edge's lines (docs/adr/0722 §6).
             (kentos_contracts::Entity::Slab(s), _) => {
-                put(&mut out, e, crate::spaces::slab_pieces_in(s, view))
+                let state = state_of(e);
+                stated += u32::from(state.is_some());
+                let pieces =
+                    renovation_aside(&mut out, state, e, crate::spaces::slab_pieces_in(s, view));
+                put(&mut out, e, pieces)
             }
             // A grid's, column's, stair's or ramp's pieces (docs/adr/0343 §5).
             (e, _) if crate::arch_elements::core_of(e).is_some() => {
                 let pieces = crate::arch_elements::plain_pieces_in(e, view).unwrap_or_default();
                 let pieces = hatches_aside(&mut out, e, pieces);
+                let state = state_of(e);
+                stated += u32::from(state.is_some());
+                let pieces = renovation_aside(&mut out, state, e, pieces);
                 put(&mut out, e, pieces);
             }
             _ => out.entities.push(e.clone()),
         }
     }
+    if stated > 0 {
+        report.note_n(
+            "Tadilat durumu",
+            "tadilat durumu olan nesnelerin çizgileri katmanlarının durum katmanına yazıldı (…-MEVCUT, -IPTAL kesikli, -ILAVE, -GECICI; taramaları onların -T'sine)",
+            0,
+            stated,
+        );
+    }
     if keep {
         if left > 0 {
-            report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
+            report.skip(
+                "Duvar",
+                "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı",
+                0,
+            );
         }
         return Some((out, wholes));
     }

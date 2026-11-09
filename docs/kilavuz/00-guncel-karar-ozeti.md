@@ -243,6 +243,9 @@
     - Araçlar yeni çizileni görünümün durumuyla yazar (`Context::new_arch`, `phased`): Mevcut durum ve Yıkım planında
       Mevcut, Yeni durumda İlave, Tümü'nde durumsuz; aks yazmaz; kapı duvarınkinden farklıysa kendi durumu
       (`NewOpening.phase`). Tadilat ▾ "Bundan sonra çizilenler İlave olur" der.
+    - DXF: parçalar durum katmanında (`ek4_state_layer`: MM-DUVA-TUGLA-IPTAL kesikli, -ILAVE, -MEVCUT, -GECICI; taraması
+      onun -T'si); görünümün gizlediği yazılmaz ve söylenir (tasarım seçenekleri gibi), duvarlar o durumdaki gibi kesilir.
+      `Entity::own_phase` döşemeyi ve mahal ayırıcıyı da okur (önce okumuyordu).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

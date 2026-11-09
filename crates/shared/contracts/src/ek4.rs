@@ -110,16 +110,23 @@ pub fn ek4_layer(element: &str, detail: &str) -> String {
 }
 
 /// Whether `name` is an EK-4 layer name: a two-letter disiplin, a four-letter öğe, then one to fifteen upper-case
-/// letters or digits; a hatch layer's "-T" after them.
+/// letters or digits; a tadilat durumu's word after them ([`ek4_state_layer`]), then a hatch layer's "-T".
 pub fn is_ek4_layer(name: &str) -> bool {
     let name = name.strip_suffix("-T").unwrap_or(name);
     let mut fields = name.split('-');
     let letters = |s: &str, n: usize| s.len() == n && s.bytes().all(|b| b.is_ascii_uppercase());
-    let (Some(discipline), Some(element), Some(detail), None) =
-        (fields.next(), fields.next(), fields.next(), fields.next())
-    else {
+    let (Some(discipline), Some(element), Some(detail), state, None) = (
+        fields.next(),
+        fields.next(),
+        fields.next(),
+        fields.next(),
+        fields.next(),
+    ) else {
         return false;
     };
+    if state.is_some_and(|s| !EK4_STATES.contains(&s)) {
+        return false;
+    }
     letters(discipline, 2)
         && letters(element, 4)
         && (1..=EK4_DETAIL_MAX).contains(&detail.len())
@@ -133,9 +140,52 @@ pub fn ek4_hatch_layer(layer: &str) -> String {
     format!("{layer}-T")
 }
 
+/// The tadilat durumu's words of a layer name (docs/adr/3039 §4): Mimarlar Odası's mevcut, iptal and ilave and geçici,
+/// as EK-4 4.11 writes a field (upper case, no Turkish letters), in `ArchPhase::ALL`'s order.
+pub const EK4_STATES: [&str; 4] = ["MEVCUT", "IPTAL", "ILAVE", "GECICI"];
+
+/// The layer an object of tadilat durumu `phase` on `layer` is drawn on in a DXF (docs/adr/3039 §4): its name and the
+/// state's word, as EK-4 4.14.3 adds a depth and 4.14.5 a "-T" after the third field (which holds the material):
+/// MM-DUVA-TUGLA-IPTAL. A hatch of it is on that layer's "-T" (MM-DUVA-TUGLA-IPTAL-T).
+pub fn ek4_state_layer(layer: &str, phase: crate::ArchPhase) -> String {
+    let word = EK4_STATES[crate::ArchPhase::ALL
+        .iter()
+        .position(|p| *p == phase)
+        .unwrap_or(0)];
+    format!("{layer}-{word}")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A tadilat durumu's layer (docs/adr/3039 §4): the state's word after the material, its hatch's "-T" after that;
+    /// still an EK-4 name. Another fourth field is not.
+    #[test]
+    fn a_state_layer_is_the_layer_and_its_state() {
+        use crate::ArchPhase;
+        assert_eq!(
+            ek4_state_layer("MM-DUVA-TUGLA", ArchPhase::Demolish),
+            "MM-DUVA-TUGLA-IPTAL"
+        );
+        assert_eq!(
+            ek4_state_layer("MM-KAPI-GENEL", ArchPhase::New),
+            "MM-KAPI-GENEL-ILAVE"
+        );
+        assert_eq!(
+            ek4_state_layer("MM-DUVA-TUGLA", ArchPhase::Existing),
+            "MM-DUVA-TUGLA-MEVCUT"
+        );
+        assert_eq!(
+            ek4_state_layer("MM-DUVA-TUGLA", ArchPhase::Temporary),
+            "MM-DUVA-TUGLA-GECICI"
+        );
+        assert!(is_ek4_layer("MM-DUVA-TUGLA-IPTAL"));
+        assert!(is_ek4_layer("MM-DUVA-TUGLA-IPTAL-T"));
+        assert!(is_ek4_layer("MM-DUVA-TUGLA-T"));
+        assert!(!is_ek4_layer("MM-DUVA-TUGLA-YIKIM"));
+        assert!(!is_ek4_layer("MM-DUVA-TUGLA-IPTAL-ILAVE"));
+    }
 
     #[test]
     fn words_are_upper_case_without_turkish_letters() {

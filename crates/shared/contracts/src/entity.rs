@@ -1993,6 +1993,9 @@ impl Entity {
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
             Entity::Opening(x) => x.opening.phase,
+            // A slab's and a room separator's (docs/adr/3039 §4: they were left out, a slab İptal was drawn in Yeni durum).
+            Entity::Slab(x) => x.slab.arch.phase,
+            Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.phase),
             _ => None,
         }
     }

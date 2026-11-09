@@ -21,6 +21,9 @@ mod cad_open;
 
 #[path = "headless/walls_rectangle.rs"]
 mod walls_rectangle;
+// Tadilat durumu in a DXF (docs/adr/3039 §4).
+#[path = "headless/renovation_dxf.rs"]
+mod renovation_dxf;
 
 #[path = "headless/dimension_set_exports.rs"]
 mod dimension_set_exports;
