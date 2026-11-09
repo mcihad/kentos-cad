@@ -102,7 +102,8 @@ ADR 2320, 2720, 3120, 3520'nin “Yüzey birleştirme”si.
 
 ## Sonra
 
-- Bölgesel yeniden kurma ve bağlı eğri/profil/hacmin yüzey revizyonuna bağlanması (MAP-14'ün öbür maddesi).
+- Bölgesel yeniden kurma ve bağlı eğri/profil/hacmin yüzey revizyonuna bağlanması (MAP-14'ün öbür maddesi). Yalnız
+  değişenin yazılması [ADR 4320](4320-regional-redraw-of-surface-drawings.md)'de; pafta eğrilerinin bağı açık.
 - Append'in karşılığı (iki yüzeyin bütün verisinin birlikte üçgenlenmesi); kaynak ve kullanım araştırılmalı.
 - Yapıştırılanın yalnız bir alanının yapıştırılması; kaynak araştırılmalı.
 - Gerçek veride süre: her yapıştırma yapıştırılanı yeniden kurar.

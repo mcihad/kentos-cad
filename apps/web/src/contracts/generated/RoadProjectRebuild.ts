@@ -6,8 +6,18 @@
  * changes are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on
  * its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
  *
+ * `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
+ * first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
+ * drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
+ * draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
+ * changed is drawn whole, so its objects keep the command's drawing order.
+ *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
  * `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
  * without `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).
  */
-export type RoadProjectRebuild = { drawings?: Array<string>, edited?: boolean, expectedRevision?: string, };
+export type RoadProjectRebuild = { drawings?: Array<string>, edited?: boolean, 
+/**
+ * Write only what changed (docs/adr/4320); absent: every drawing is drawn whole, as before.
+ */
+regional?: boolean, expectedRevision?: string, };

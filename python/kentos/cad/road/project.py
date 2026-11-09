@@ -556,9 +556,17 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
     ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman
     yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak
     çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında
-    duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). Retler:
-    invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
-    drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
+    duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR
+    4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır;
+    nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır,
+    nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta,
+    yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan
+    çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim
+    bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept
+    (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin
+    kutusu: değişen bölge). Retler: invalid_revision, revision_conflict,
+    not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim
+    komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.rebuild"
@@ -577,6 +585,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         drawings: Sequence[str] | None | Unset = UNSET,
         edited: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProjectRebuilt:
@@ -589,15 +598,23 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da
         kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR
         2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan
-        yeniden üretim hiçbir şey yazmaz (cancelled). Retler: invalid_revision,
-        revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone,
-        drawing_edited ve çizim komutlarının retleri.
+        yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni
+        yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan
+        çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle
+        yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu
+        çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır,
+        yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim
+        sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi
+        çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). Retler:
+        invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
+        drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.
             drawings:
             edited:
             expected_revision:
+            regional: Write only what changed (docs/adr/4320); absent: every drawing is drawn whole, as before.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -614,6 +631,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
             drawings=_opt(drawings, lambda x: list(x)),
             edited=edited,
             expected_revision=expected_revision,
+            regional=regional,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -624,6 +642,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         drawings: Sequence[str] | None | Unset = UNSET,
         edited: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | Unset = UNSET,
     ) -> RoadProjectRebuilt:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -632,6 +651,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
             drawings=_opt(drawings, lambda x: list(x)),
             edited=edited,
             expected_revision=expected_revision,
+            regional=regional,
         ))
 
     def validate(
@@ -642,6 +662,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         drawings: Sequence[str] | None | Unset = UNSET,
         edited: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -650,6 +671,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
             drawings=_opt(drawings, lambda x: list(x)),
             edited=edited,
             expected_revision=expected_revision,
+            regional=regional,
         ))
 
     def answer(
@@ -660,6 +682,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         drawings: Sequence[str] | None | Unset = UNSET,
         edited: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        regional: bool | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -673,6 +696,7 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
             drawings=_opt(drawings, lambda x: list(x)),
             edited=edited,
             expected_revision=expected_revision,
+            regional=regional,
         ), op=op, request_id=request_id, expected=expected)
 
 

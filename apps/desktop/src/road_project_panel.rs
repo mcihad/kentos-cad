@@ -38,6 +38,8 @@ pub enum Event {
     /// Draw one drawing again (by id; `edited` also when changed by hand), or every stale and missing one.
     Rebuild(Option<String>, bool),
     Auto(bool),
+    /// Yalnız değişeni yaz (docs/adr/4320): ticked, a drawing drawn again keeps what comes out as it is.
+    Regional(bool),
     /// Read the tree deep (surfaces and corridors made), or back to the quick reading.
     Deep(bool),
     /// A branch folded or opened against its start, by its key.
@@ -92,6 +94,8 @@ pub struct PanelState {
     read: RefCell<Option<Read>>,
     /// The rebuild running as a job, if one is.
     pub running: Option<Running>,
+    /// Yalnız değişeni yaz unticked: every drawing drawn whole (docs/adr/4320; ticked, the default, only what changed).
+    pub whole: bool,
 }
 
 impl PanelState {
@@ -234,7 +238,7 @@ impl App {
                     return Task::none();
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, expected_revision: None };
+                let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, regional: !self.road_project.whole, expected_revision: None };
                 let envelope = CallEnvelope {
                     command: kentos_commands::ROAD_PROJECT_REBUILD.into(),
                     version: None,
@@ -271,6 +275,7 @@ impl App {
                     self.say(Level::Info, words.to_owned());
                 }
             }
+            Event::Regional(on) => self.road_project.whole = !on,
             Event::Deep(on) => self.road_project.deep = on,
             Event::Fold(key) => {
                 if !self.road_project.toggled.remove(&key) {
@@ -313,13 +318,36 @@ impl App {
             _ => return self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned()),
         };
         if let Some(out) = self.answered(result) {
-            let objects: usize = out.rebuilt.iter().map(|r| r.uids.len()).sum();
-            let words = match out.rebuilt.len() {
-                0 => "Güncel olmayan çizim yok.".to_owned(),
-                n => format!("{n} çizim yeniden üretildi: {objects} nesne."),
-            };
+            let words = self.rebuilt_words(&out);
             self.say(Level::Success, words);
         }
+    }
+
+    /// What a rebuild did, in a sentence: the drawings and their objects; asked to write only what changed
+    /// (docs/adr/4320), the objects that stayed, those written and removed, and the box where the lines changed.
+    fn rebuilt_words(&self, out: &RoadProjectRebuilt) -> String {
+        let objects: usize = out.rebuilt.iter().map(|r| r.uids.len()).sum();
+        let n = out.rebuilt.len();
+        if n == 0 {
+            return "Güncel olmayan çizim yok.".to_owned();
+        }
+        if out.rebuilt.iter().all(|r| r.kept.is_none()) {
+            return format!("{n} çizim yeniden üretildi: {objects} nesne.");
+        }
+        let kept: usize = out.rebuilt.iter().filter_map(|r| r.kept).map(|k| k as usize).sum();
+        let removed: usize = out.rebuilt.iter().map(|r| r.removed as usize).sum();
+        let written = objects.saturating_sub(kept);
+        if written == 0 && removed == 0 {
+            return format!("{n} çizim yeniden üretildi: hiçbir nesne değişmedi, {kept} nesne yerinde; kayıt güncel.");
+        }
+        let region = out.rebuilt.iter().filter_map(|r| r.region).reduce(|[a, b, c, d], [e, f, g, h]| {
+            [a.min(e), b.min(f), c.max(g), d.max(h)]
+        });
+        let place = region.map_or_else(String::new, |[x0, y0, x1, y1]| {
+            let f = self.format();
+            format!("; değişen bölge {} × {}", f.length(x1 - x0), f.length(y1 - y0))
+        });
+        format!("{n} çizim yeniden üretildi: {kept} nesne yerinde kaldı, {written} yazıldı, {removed} silindi{place}.")
     }
 
     /// A drawing's objects selected and shown.
@@ -374,6 +402,12 @@ impl App {
                 on(tree.auto_rebuild),
                 "Kendiliğinden yeniden üret".to_owned(),
                 Some(msg(Event::Auto(!tree.auto_rebuild))),
+            ),
+            // Docs/adr/4320: a drawing drawn again keeps the objects that come out as they are.
+            crate::style::fields::check(
+                on(!self.road_project.whole),
+                "Yalnız değişeni yaz".to_owned(),
+                Some(msg(Event::Regional(self.road_project.whole))),
             ),
             // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
             crate::exchange::words::secondary(

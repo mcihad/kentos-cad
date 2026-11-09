@@ -2425,6 +2425,8 @@ const ENTRIES: &[Entry] = &[
         id: "road.project.rebuild",
         refusals: &[
             &["not_a_road_project", "unknown_drawing", "drawing_source_gone", "drawing_edited", "road_drawings_full", "layer_locked"],
+            // Docs/adr/4320: a drawing's surface that no longer builds, said by the drawing command's check.
+            &["terrain_unbuildable"],
             REVISION,
         ],
         warnings: &["corridor_unsolved"],

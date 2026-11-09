@@ -9398,7 +9398,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_PROJECT_REBUILD.into(),
             version: crate::ROAD_PROJECT_REBUILD_VERSION,
             title: "Yol çizimlerini yeniden üret".into(),
-            summary: "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). \
+            summary: "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). \
                       Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri."
                 .into(),
             aliases: vec!["yenidenuret".into()],
@@ -9413,11 +9413,18 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::RoadProjectRebuilt>(),
             plan: Some(schema::<crate::RoadProjectRebuilt>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Eskiyen bütün çizimler".into(),
-                input: json!({}),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Eskiyen bütün çizimler".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yalnız değişeni yaz".into(),
+                    input: json!({"regional": true}),
+                    output: None,
+                },
+            ],
         },
         // Tariften üret (plan/map-cad.md MAP-20, docs/adr/3240).
         CommandDescriptor {

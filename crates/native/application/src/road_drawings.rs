@@ -290,16 +290,51 @@ pub(crate) fn keep<I: Serialize>(
     doc: &mut Document,
     command: &str,
     input: &I,
-    (kind, field): (RoadSourceKind, &str),
+    main: (RoadSourceKind, &str),
     uids: &[String],
     replacing: Option<&str>,
 ) -> Result<String, Stop> {
+    let drawing = record(doc, command, input, main, uids, replacing)?;
+    let id = drawing.id.clone();
+    write_record(doc, drawing)?;
+    Ok(id)
+}
+
+/// Docs/adr/4320: a drawing drawn again whose objects came out as they are: its record takes its sources' stamps now
+/// and keeps the version and the revision of the write that made its objects (none was written now).
+pub(crate) fn renew(doc: &mut Document, d: &RoadDrawingDef, main: (RoadSourceKind, &str)) -> Result<(), Stop> {
+    let mut drawing = record(doc, &d.command, &d.input, main, &d.uids, Some(&d.id))?;
+    drawing.version = d.version;
+    drawing.revision = d.revision.clone();
+    write_record(doc, drawing)
+}
+
+fn write_record(doc: &mut Document, drawing: RoadDrawingDef) -> Result<(), Stop> {
+    let mut list = doc.road_drawings().to_vec();
+    match list.iter_mut().find(|d| d.id == drawing.id) {
+        Some(d) => *d = drawing,
+        None => list.push(drawing),
+    }
+    doc.set_road_drawings(list, "Yol çizimi")
+        .map_err(|e| Stop::failed(error(codes::ROAD_DRAWINGS_FULL, format!("Çizim kaydedilemedi: {}.", e.0), None)))?;
+    Ok(())
+}
+
+/// The record of what `command` drew (see [`keep`]), written nowhere.
+fn record<I: Serialize>(
+    doc: &Document,
+    command: &str,
+    input: &I,
+    (kind, field): (RoadSourceKind, &str),
+    uids: &[String],
+    replacing: Option<&str>,
+) -> Result<RoadDrawingDef, Stop> {
     let named = serde_json::to_value(input).ok().and_then(|v| v.get(field).and_then(Value::as_str).map(str::to_owned));
     let Some(main) = named.and_then(|t| resolve(doc, kind, &t)) else {
         return Err(Stop::failed(error(codes::ROAD_DRAWINGS_FULL, "Çizimin kaynağı projede bulunamadı.".into(), Some(field.into()))));
     };
-    let mut list = doc.road_drawings().to_vec();
-    let id = replacing.map_or_else(|| next_id(&list), str::to_owned);
+    let list = doc.road_drawings();
+    let id = replacing.map_or_else(|| next_id(list), str::to_owned);
     let drawing = RoadDrawingDef {
         id: id.clone(),
         command: command.to_owned(),
@@ -343,13 +378,7 @@ pub(crate) fn keep<I: Serialize>(
         version: Some(version_of(command)),
         revision: Some(doc.revision().to_string()),
     };
-    match list.iter_mut().find(|d| d.id == id) {
-        Some(d) => *d = drawing,
-        None => list.push(drawing),
-    }
-    doc.set_road_drawings(list, "Yol çizimi")
-        .map_err(|e| Stop::failed(error(codes::ROAD_DRAWINGS_FULL, format!("Çizim kaydedilemedi: {}.", e.0), None)))?;
-    Ok(id)
+    Ok(drawing)
 }
 
 /// `result` of a command that drew, its drawing kept when it completed (the step undoes both when it cannot be).

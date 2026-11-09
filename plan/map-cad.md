@@ -44,7 +44,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
@@ -1706,6 +1706,18 @@ olmayan, döngüye giren (yalnız tariflerden karar) ve kurulamayan yüzey söyl
 değişince yapıştıran eskir; `.kcad` şema 214; 7 + 1 bağımsız durum (Triangle, kesirler; dolgunun üçgenlemesinin tekliği
 doğrulanır), Python `road.paste`, MCP; masaüstünde Düzenlemeler'e Yapıştırılacak yüzey ve Yüzey yapıştır. Açık: bölgesel
 yeniden kurma, fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir).
+
+**10 Kasım 2026, sekizinci tur — yalnız değişenin yazılması ([ADR 4320](../docs/adr/4320-regional-redraw-of-surface-drawings.md)).**
+Kapsam: **Harita + Yol**. Dayanak: Esri ArcGIS Pro “Edit a terrain dataset” (kirli alan karo tabanlı, kurma karoyu ve
+sekiz komşusunu işler) ve ArcMap “Displaying dirty areas of a terrain”, Civil 3D 2025 (eskime, Rebuild, Rebuild -
+Automatic); üçü 10 Kasım 2026'da okundu. KentOS üçgenleri saklamaz (ADR 0900 §10); saklanan, yüzeyden çizilenlerdir.
+Kanıtlanan: `road.project.rebuild`'e `regional`: çizim kopyada yeniden yapılıp tam karşılaştırılır; aynı çıkan çizim
+yazılmaz (kaydın damgası yenilenir), çizgi çiziminde (tek renk ve saydamlıkta yazısız çizgiler) aynı çıkan çizgiler
+kimliği ve yeriyle kalır, değişenler yazılır, öbür değişen çizim bütün; cevapta `kept` ve `region` (değişen bölgenin
+kutusu); sonuç bütün yeniden çizimle nesne nesne aynı (kayıt özeti ve damgalar dahil); 23 bağımsız durum (Triangle,
+kesirli eğriler, belgenin nesne sırası), Python, MCP; masaüstünde Proje ağacı'nda **Yalnız değişeni yaz** (öntanımlı
+açık). Açık: pafta eğrilerinin kayıtlı çizim olması, kendiliğinden yeniden üretimin yalnız değişeni yazması, karolu
+hesap (gerçek veri), fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

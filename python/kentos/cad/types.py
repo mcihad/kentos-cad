@@ -82289,14 +82289,20 @@ class RoadDrawingProduced(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class RoadDrawingRebuilt(_Model):
-    """A drawing drawn again: its id and command, how many objects it removed and the new ones.
+    """A drawing drawn again: its id and command, how many objects it removed and its objects now (the drawing's order).
+    Asked `regional` (docs/adr/4320): `kept`, the objects left as they were, and, where a line drawing kept some or wrote
+    any, `region`, the box (min x, min y, max x, max y) of the lines it removed and wrote: where the drawing changed.
     Attributes:
         removed: Unit: count.
+        kept: Unit: count.
+        region: Unit: length.
     """
     drawing: str
     command: str
     removed: int
     uids: list[str]
+    kept: int | None | Unset = UNSET
+    region: list[float] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82304,6 +82310,10 @@ class RoadDrawingRebuilt(_Model):
         out["command"] = self.command
         out["removed"] = self.removed
         out["uids"] = list(self.uids)
+        if self.kept is not UNSET:
+            out["kept"] = self.kept
+        if self.region is not UNSET:
+            out["region"] = None if self.region is None else [float(e0) for e0 in self.region]
         return out
 
     @classmethod
@@ -82313,6 +82323,8 @@ class RoadDrawingRebuilt(_Model):
             command=data["command"],
             removed=data["removed"],
             uids=list(data["uids"]),
+            kept=data.get("kept", UNSET),
+            region=UNSET if "region" not in data else None if data["region"] is None else [float(e0) for e0 in data["region"]],
         )
 
 
@@ -83066,13 +83078,22 @@ class RoadProjectRebuild(_Model):
     changes are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on
     its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
 
+    `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
+    first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
+    drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
+    draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
+    changed is drawn whole, so its objects keep the command's drawing order.
+
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
     `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
     without `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).
+    Attributes:
+        regional: Write only what changed (docs/adr/4320); absent: every drawing is drawn whole, as before.
     """
     drawings: list[str] | None | Unset = UNSET
     edited: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    regional: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -83082,6 +83103,8 @@ class RoadProjectRebuild(_Model):
             out["edited"] = self.edited
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.regional is not UNSET:
+            out["regional"] = self.regional
         return out
 
     @classmethod
@@ -83090,6 +83113,7 @@ class RoadProjectRebuild(_Model):
             drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
             edited=data.get("edited", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
+            regional=data.get("regional", UNSET),
         )
 
 

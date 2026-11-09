@@ -351,6 +351,8 @@ mod scene3d_window_tests;
 #[cfg(test)]
 mod road_project_panel_tests;
 #[cfg(test)]
+mod road_project_regional_tests;
+#[cfg(test)]
 mod map_work_panel_tests;
 #[cfg(test)]
 mod map_work_tools_tests;

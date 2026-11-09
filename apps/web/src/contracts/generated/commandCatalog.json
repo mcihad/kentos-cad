@@ -55944,7 +55944,7 @@
       "id": "road.project.rebuild",
       "version": 1,
       "title": "Yol çizimlerini yeniden üret",
-      "summary": "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri.",
+      "summary": "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri.",
       "aliases": [
         "yenidenuret"
       ],
@@ -55961,7 +55961,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that\nis stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its\nchanges are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on\nits layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,\n`drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand\nwithout `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).",
+        "description": "Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that\nis stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its\nchanges are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on\nits layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.\n\n`regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy\nfirst; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line\ndrawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order\ndraws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that\nchanged is drawn whole, so its objects keep the command's drawing order.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,\n`drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand\nwithout `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).",
         "properties": {
           "drawings": {
             "items": {
@@ -55980,6 +55980,10 @@
               "string",
               "null"
             ]
+          },
+          "regional": {
+            "description": "Write only what changed (docs/adr/4320); absent: every drawing is drawn whole, as before.",
+            "type": "boolean"
           }
         },
         "title": "RoadProjectRebuild",
@@ -56058,6 +56062,12 @@
         {
           "title": "Eskiyen bütün çizimler",
           "input": {}
+        },
+        {
+          "title": "Yalnız değişeni yaz",
+          "input": {
+            "regional": true
+          }
         }
       ]
     },
@@ -185175,13 +185185,35 @@
       "type": "object"
     },
     "RoadDrawingRebuilt": {
-      "description": "A drawing drawn again: its id and command, how many objects it removed and the new ones.",
+      "description": "A drawing drawn again: its id and command, how many objects it removed and its objects now (the drawing's order).\nAsked `regional` (docs/adr/4320): `kept`, the objects left as they were, and, where a line drawing kept some or wrote\nany, `region`, the box (min x, min y, max x, max y) of the lines it removed and wrote: where the drawing changed.",
       "properties": {
         "command": {
           "type": "string"
         },
         "drawing": {
           "type": "string"
+        },
+        "kept": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "region": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
         },
         "removed": {
           "format": "uint32",

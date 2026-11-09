@@ -310,6 +310,7 @@ pub mod road_project_graph;
 pub mod road_project_produce;
 pub mod road_project_query;
 pub mod road_project_rebuild;
+pub(crate) mod road_project_regional;
 pub mod road_project_edit;
 pub mod map_work;
 pub mod crs_factors;

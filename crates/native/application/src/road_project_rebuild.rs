@@ -103,6 +103,8 @@ pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Resul
             drawing: d.id.clone(),
             command: d.command.clone(),
             removed: u32::try_from(present.len()).unwrap_or(u32::MAX),
+            kept: None,
+            region: None,
             uids,
         },
         warnings,
@@ -183,7 +185,12 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
         if cx.stopped() {
             return CommandResult::Cancelled;
         }
-        match in_share(cx, k as u64, total, |cx| redraw(cx, d)) {
+        // Docs/adr/4320: asked `regional`, only what changed is written.
+        let regional = input.regional;
+        let drawn = in_share(cx, k as u64, total, |cx| {
+            if regional { crate::road_project_regional::redraw_regional(cx, d) } else { redraw(cx, d) }
+        });
+        match drawn {
             Ok((r, w)) => {
                 rebuilt.push(r);
                 warnings.extend(w);
@@ -306,7 +313,7 @@ mod tests {
     }
 
     fn all() -> RoadProjectRebuild {
-        RoadProjectRebuild { drawings: None, edited: false, expected_revision: None }
+        RoadProjectRebuild { drawings: None, edited: false, regional: false, expected_revision: None }
     }
 
     /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.

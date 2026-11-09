@@ -273,6 +273,10 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Yalnız değişeni yaz (10 Kasım 2026; MAP-14, [ADR 4320](../../docs/adr/4320-regional-redraw-of-surface-drawings.md)).**
+  `road.project.rebuild`'in `regional`'ı: çizim kopyada yeniden yapılıp tam karşılaştırılır; aynı çıkan yazılmaz, çizgi
+  çiziminde aynı çıkan çizgiler kimliğiyle kalır, öbür değişen çizim bütün; `kept`, `region`. Proje ağacı'nda Yalnız
+  değişeni yaz (öntanımlı açık). Harita + Yol.
 - **Nokta bulutunda eksen ve açı (10 Kasım 2026; MAP-13, [ADR 4300](../../docs/adr/4300-point-cloud-axis-angle.md)).**
   Dönüşüm uygula'da Eksen ve açı: Rodrigues satırları sabit sırayla, merkez çevresinde, öteleme; tek matris olarak
   geçmişe. Euler açıları yok (sırası kaynakta yazılı değil). Harita + CBS.

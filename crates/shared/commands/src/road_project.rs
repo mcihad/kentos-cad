@@ -133,6 +133,12 @@ pub struct RoadProjectTree {
 /// changes are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on
 /// its layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.
 ///
+/// `regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy
+/// first; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line
+/// drawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order
+/// draws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that
+/// changed is drawn whole, so its objects keep the command's drawing order.
+///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,
 /// `drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand
 /// without `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).
@@ -148,12 +154,18 @@ pub struct RoadProjectRebuild {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub edited: bool,
+    /// Write only what changed (docs/adr/4320); absent: every drawing is drawn whole, as before.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub regional: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub expected_revision: Option<String>,
 }
 
-/// A drawing drawn again: its id and command, how many objects it removed and the new ones.
+/// A drawing drawn again: its id and command, how many objects it removed and its objects now (the drawing's order).
+/// Asked `regional` (docs/adr/4320): `kept`, the objects left as they were, and, where a line drawing kept some or wrote
+/// any, `region`, the box (min x, min y, max x, max y) of the lines it removed and wrote: where the drawing changed.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -164,6 +176,14 @@ pub struct RoadDrawingRebuilt {
     pub command: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub kept: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub region: Option<[f64; 4]>,
     pub uids: Vec<String>,
 }
 
