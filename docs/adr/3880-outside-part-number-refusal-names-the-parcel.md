@@ -44,6 +44,7 @@ dışı kimlikte retin parseli adıyla söylemesi (bugün kimlikle; masaüstü a
 
 ## Sonra
 
-- Numaranın yazısının dar parçaya sığması (ADR 3480 Sonra): nokta etiketi dönmediği için yazı nesnesine geçmeyi ister.
+- ~~Numaranın yazısının dar parçaya sığması (ADR 3480 Sonra): nokta etiketi dönmediği için yazı nesnesine geçmeyi
+  ister.~~ ADR 4280.
 - Tescil bildirimi (m. 22(1)(ğ)): TKGM'nin biçimi beklenir.
 - Web (TODOS §0.2).

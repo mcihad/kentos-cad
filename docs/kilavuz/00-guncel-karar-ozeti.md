@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dış parçanın numarası parçaya sığar (9 Kasım 2026; MAP-11, [ADR 4280](../../docs/adr/4280-separation-number-fitted-in-its-part.md)).**
+  `cad.readjustment.sheets`'in `numberHeight`'ı (kâğıtta mm): numara parçanın içinde yazı; yatay ya da en uzun kenarı
+  boyunca, onda bir adımlarla küçülür; `labels`'ta boy, dönüş, pay, sığma. Harita ve CBS.
 - **Senaryo ölçülerinde arazi eğimi (9 Kasım 2026; MAP-10, [ADR 4260](../../docs/adr/4260-scenario-terrain-slope.md)).**
   `cad.scenarios.impact`'in `slope`'u: yüzey üçgenlerinin düzleminden alan ağırlıklı ortalama eğim, kullanıcının
   eşiğiyle dik alan ve payı, yüzey dışı alan (veri eksiği). Harita + CBS.

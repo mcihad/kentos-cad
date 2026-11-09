@@ -25,12 +25,20 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, as
   of the widest stretch inside the part of the horizontal line at the half height of its outer ring's corners (each
   ring's crossings of the line, in order, paired: a straight edge crosses when its ends lie on either side, the upper
   end counted, at the interpolated x; an arc where its circle meets the line within its sweep from its start, its end
-  not counted); the first of equal stretches.
+  not counted); the first of equal stretches;
+- docs/adr/4280: with the user's `numberHeight` (paper mm), the number is a text whose height is that times the
+  sheet's scale over 1000, shrunk by tenths (1, 0.9 … 0.1) until its box lies inside the part: tried horizontal at the
+  place above, then along the outer ring's longest straight edge (read from the left, in (−90°, 90°]) at the same rule's
+  place in the part turned so; the largest share wins, the horizontal among equals; none fits: horizontal at 0.1. The
+  box (ADR 0145) is its letters' advances (Barlow 500, read here from the font file without a font library, in
+  thousandths of an em) times its height wide, from 0.73 of its height under its middle to 0.65 over it, turned about
+  it; inside when the part clipped by the box (Sutherland–Hodgman) has the box's area to 1e-9 of it.
 """
 
 import copy
 import json
 import math
+import struct
 import sys
 from decimal import Decimal
 from fractions import Fraction as F
@@ -158,14 +166,169 @@ def label_at(part):
     return [(best[0] + best[1]) / 2, y]
 
 
-def labels(p, numbers):
-    """docs/adr/3480: each numbered outside part's name, number and place."""
+def font_advances(path):
+    """A TrueType font's advances by character, thousandths of an em rounded: its head (units per em), hhea (metrics
+    count), hmtx and cmap (format 4, Windows Unicode) tables read by hand."""
+    data = path.read_bytes()
+    count = struct.unpack(">H", data[4:6])[0]
+    tables = {}
+    for i in range(count):
+        tag, _, offset, _ = struct.unpack(">4sIII", data[12 + 16 * i:28 + 16 * i])
+        tables[tag.decode("latin-1")] = offset
+    upem = struct.unpack(">H", data[tables["head"] + 18:tables["head"] + 20])[0]
+    metrics = struct.unpack(">H", data[tables["hhea"] + 34:tables["hhea"] + 36])[0]
+    widths = [struct.unpack(">H", data[tables["hmtx"] + 4 * i:tables["hmtx"] + 4 * i + 2])[0] for i in range(metrics)]
+    cmap = tables["cmap"]
+    for i in range(struct.unpack(">H", data[cmap + 2:cmap + 4])[0]):
+        platform, encoding, offset = struct.unpack(">HHI", data[cmap + 4 + 8 * i:cmap + 12 + 8 * i])
+        sub_ = cmap + offset
+        if (platform, encoding) == (3, 1) and struct.unpack(">H", data[sub_:sub_ + 2])[0] == 4:
+            break
+    twice = struct.unpack(">H", data[sub_ + 6:sub_ + 8])[0]
+    n = twice // 2
+    ends = struct.unpack(f">{n}H", data[sub_ + 14:sub_ + 14 + twice])
+    starts = struct.unpack(f">{n}H", data[sub_ + 16 + twice:sub_ + 16 + 2 * twice])
+    deltas = struct.unpack(f">{n}h", data[sub_ + 16 + 2 * twice:sub_ + 16 + 3 * twice])
+    at = sub_ + 16 + 3 * twice
+    ranges = struct.unpack(f">{n}H", data[at:at + twice])
+
+    def glyph(c):
+        for k in range(n):
+            if starts[k] <= c <= ends[k]:
+                if ranges[k] == 0:
+                    return (c + deltas[k]) & 0xFFFF
+                g = struct.unpack(">H", data[at + 2 * k + ranges[k] + 2 * (c - starts[k]):][:2])[0]
+                return (g + deltas[k]) & 0xFFFF if g else 0
+        return 0
+
+    def advance(ch):
+        g = glyph(ord(ch))
+        return round(widths[min(g, metrics - 1)] * 1000 / upem)
+    return advance
+
+
+ADVANCE = font_advances(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+SHARES = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+
+
+def text_box(number, at, turn, h):
+    """ADR 0145's box of a one-line text centred at `at` (middle centre), turned `turn` degrees."""
+    w = sum(ADVANCE(c) for c in number) / 1000.0 * h
+    r = math.radians(turn)
+    c, s = math.cos(r), math.sin(r)
+    return [(at[0] + c * x - s * y, at[1] + s * x + c * y)
+            for x, y in ((-w / 2, -0.73 * h), (w / 2, -0.73 * h), (w / 2, 0.65 * h), (-w / 2, 0.65 * h))]
+
+
+def ring_area(pts):
+    n = len(pts)
+    ox, oy = pts[0]
+    return sum((pts[i][0] - ox) * (pts[(i + 1) % n][1] - oy) - (pts[(i + 1) % n][0] - ox) * (pts[i][1] - oy)
+               for i in range(n)) / 2
+
+
+def clipped(subject, window):
+    """Sutherland–Hodgman: the subject ring inside the convex counter-clockwise window."""
+    out = list(subject)
+    for k in range(len(window)):
+        a, b = window[k], window[(k + 1) % len(window)]
+        side = lambda q: (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0])  # noqa: E731
+        given, out = out, []
+        for i, q in enumerate(given):
+            nxt = given[(i + 1) % len(given)]
+            sq, sn = side(q), side(nxt)
+            if sq >= 0:
+                out.append(q)
+            if (sq >= 0) != (sn >= 0):
+                f = sq / (sq - sn)
+                out.append((q[0] + (nxt[0] - q[0]) * f, q[1] + (nxt[1] - q[1]) * f))
+        if not out:
+            return []
+    return out
+
+
+def inside(part, box):
+    """Whether the box lies inside the part (straight rings here): the part clipped by it keeps its area."""
+    assert all(not any(r.get("bulges") or []) for r in part["rings"]), "the fitting cases' parts are straight"
+    whole = abs(ring_area(box))
+    shared = 0.0
+    for k, r in enumerate(part["rings"]):
+        piece = clipped([tuple(q) for q in r["pts"]], box)
+        a = abs(ring_area(piece)) if len(piece) >= 3 else 0.0
+        shared += -a if k else a
+    return whole > 0 and shared >= whole * (1 - 1e-9)
+
+
+def turned(part, about, angle):
+    c, s = math.cos(angle), math.sin(angle)
+    out = copy.deepcopy(part)
+    for r in out["rings"]:
+        r["pts"] = [[about[0] + (q[0] - about[0]) * c - (q[1] - about[1]) * s,
+                     about[1] + (q[0] - about[0]) * s + (q[1] - about[1]) * c] for q in r["pts"]]
+    return out
+
+
+def turns(part):
+    out = [0.0]
+    outer = part["rings"][0]
+    pts, bulges = outer["pts"], outer.get("bulges") or [0.0] * len(outer["pts"])
+    best = None
+    for i, a in enumerate(pts):
+        b = pts[(i + 1) % len(pts)]
+        length = math.hypot(b[0] - a[0], b[1] - a[1])
+        if bulges[i] == 0 and (best is None or length > best[0]):
+            best = (length, a, b)
+    if best is not None:
+        _, a, b = best
+        angle = math.degrees(math.atan2(b[1] - a[1], b[0] - a[0]))
+        if angle > 90:
+            angle -= 180
+        elif angle <= -90:
+            angle += 180
+        if angle != 0:
+            out.append(angle)
+    return out
+
+
+def fitted(part, number, height):
+    """docs/adr/4280: the place, turn, height, share and fit of a number's text in its part."""
+    origin = part["rings"][0]["pts"][0]
+    best = None
+    for turn in turns(part):
+        if turn == 0:
+            at = label_at(part)
+        else:
+            r = math.radians(turn)
+            local = label_at(turned(part, origin, -r))
+            c, s = math.cos(r), math.sin(r)
+            x, y = local[0] - origin[0], local[1] - origin[1]
+            at = [origin[0] + x * c - y * s, origin[1] + x * s + y * c]
+        for share in SHARES:
+            if best is not None and best[2] >= share:
+                break
+            if inside(part, text_box(number, at, turn, height * share)):
+                best = (at, turn, share)
+                break
+    if best is None:
+        return label_at(part), 0.0, height * SHARES[-1], SHARES[-1], False
+    at, turn, share = best
+    return at, turn, height * share, share, True
+
+
+def labels(p, numbers, height=None, scale=None):
+    """docs/adr/3480: each numbered outside part's name, number and place; docs/adr/4280: with a height, its fitted
+    text."""
     if numbers is None:
         return []
     out, k = [], 0
     for n, part in zip(names(p["parts"]), p["parts"]):
         if part["side"] == "outside":
-            out.append({"part": n, "number": numbers[k].strip(), "at": label_at(part)})
+            number = numbers[k].strip()
+            label = {"part": n, "number": number, "at": label_at(part)}
+            if height is not None:
+                at, turn, h, share, fits = fitted(part, number, height * scale / 1000.0)
+                label.update({"at": at, "height": h, "rotation": turn, "share": share, "fits": fits})
+            out.append(label)
             k += 1
     return out
 
@@ -182,7 +345,7 @@ def part_rows(p, scale, mode, numbers=None):
     return out
 
 
-def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None):
+def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None, height=None):
     """The sheets' answer rows and the book's listing for the partial parcels of the scope."""
     scope_kw = {k: kw[k] for k in ("scale", "mode", "tolerance", "field") if k in kw}
     scope = rs.scope(entities, 0, chosen, **scope_kw)
@@ -205,7 +368,8 @@ def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None):
         rows.append({"sheet": sid, "name": name, "uid": p["uid"], "parcel": p["parcel"], "scale": s, "center": centre,
                      "points": len(p["points"]), "areas": areas(p, scale, mode),
                      "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"])),
-                     **({"labels": labels(p, (numbers or {}).get(p["uid"]))} if (numbers or {}).get(p["uid"]) else {})})
+                     **({"labels": labels(p, (numbers or {}).get(p["uid"]), height, s)}
+                        if (numbers or {}).get(p["uid"]) else {})})
         listing.append({"id": sid, "name": name, "width": 210.0, "height": 297.0,
                         "items": len(TEMPLATE["sheet"]["items"]),
                         "maps": [{"item": f"{sid}-item-{MAP_AT}", "name": MAP_NAME, "scale": float(s)}]})
@@ -236,14 +400,16 @@ def made(rows, plan=False):
 WRITTEN = {"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed"}
 
 
-def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, **kw):
+def ok(name, chosen, entities=rs.MAIN, setup_=None, op="execute", options=None, numbers=None, height=None, **kw):
     given = (options or {}).get("scale")
-    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers)
+    rows, listing = sheets(entities, chosen, kw, given, numbers=numbers, height=height)
     inp = {"scope": scope_input(chosen, **kw)}
     if options:
         inp["options"] = options
     if numbers is not None:
         inp["numbers"] = numbers
+    if height is not None:
+        inp["numberHeight"] = height
     step = {"op": op, "input": inp, "within": W}
     if op == "validate":
         step["result"] = {"status": "completed", "output": None, "warnings": []}
@@ -292,6 +458,20 @@ def cases():
         ok("üç parselin dış parçaları numaralı: her parça ve numarası parselin katmanında, numara parçanın içinde",
            three, numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
                            rs.uid(P(10) + 1): ["101/24", "101/25"]}),
+        # docs/adr/4280: the numbers as texts fitted inside their parts, at the user's height on paper.
+        ok("numara yazısı 2 mm: dış parçalara sığar; ince uzun parçada en uzun kenarı boyunca döner", three,
+           numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
+                    rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=2.0),
+        ok("numara yazısı 6 mm: sığmayan onda bir adımlarla küçülür", three,
+           numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
+                    rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=6.0),
+        ok("numara yazısı 400 mm: hiçbir boyda sığmaz, yatay ve en küçük payda", [P(10)],
+           numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]}, height=400.0),
+        ok("numara yazısının planı: yazmaz", [P(10)], op="plan", numbers={rs.uid(P(10) + 1): ["101/24", "101/25"]},
+           height=2.0),
+        refused("numara yazısının boyu 0", {"scope": scope_input([P(10)]), "numbers": {rs.uid(P(10) + 1): ["101/24", "101/25"]},
+                "numberHeight": 0.0}, "invalid_input",
+                "Parsel numarasının yazı boyu 0'dan büyük bir milimetre olmalı (yazılan 0).", "numberHeight"),
         refused("parsel numaraları: parça sayısı tutmuyor", {"scope": scope_input([P(10)]),
                 "numbers": {rs.uid(P(10) + 1): ["101/24"]}}, "invalid_input",
                 "“101/10” parselinin düzenleme dışında 2 parçası var; 1 parsel numarası verildi.",

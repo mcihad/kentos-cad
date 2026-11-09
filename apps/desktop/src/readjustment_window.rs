@@ -80,6 +80,8 @@ pub struct State {
     pub applied: Vec<(bool, String)>,
     /// The parcel numbers of the parts outside, as typed: `Ada/Parsel: n, n; …` (docs/adr/3080).
     pub numbers: String,
+    /// The numbers' height on paper, millimetres, as typed (docs/adr/4280); empty: labelled points.
+    pub number_height: String,
 }
 
 impl Default for State {
@@ -106,6 +108,7 @@ impl Default for State {
             scope: None,
             applied: Vec::new(),
             numbers: String::new(),
+            number_height: String::new(),
         }
     }
 }
@@ -132,6 +135,8 @@ pub enum Event {
     MakeSheets,
     /// The parcel numbers of the parts outside, typed (docs/adr/3080).
     Numbers(String),
+    /// Their height on paper, millimetres, typed (docs/adr/4280).
+    NumberHeight(String),
     Save,
     Saved(Option<PathBuf>),
     Close,
@@ -383,6 +388,7 @@ impl App {
             Event::WriteSheet => self.readjustment_sheet_write(),
             Event::MakeSheets => return self.readjustment_sheets_make(),
             Event::Numbers(t) => self.readjustment.numbers = t,
+            Event::NumberHeight(t) => self.readjustment.number_height = t,
             Event::Apply => {
                 if let Some(Ok(scope)) = &self.readjustment.scope {
                     let scope = scope.clone();
@@ -518,6 +524,18 @@ impl App {
                 "Dış parça no",
                 crate::style::fields::input(None, "101/10: 101/24, 101/25; …", &s.numbers, false, false)
                     .on_input(|t| msg(Event::Numbers(t))),
+            )
+            // docs/adr/4280: the numbers written as texts fitted inside their parts at this height on paper.
+            .field(
+                "Numara yazısı (mm)",
+                row![
+                    crate::style::fields::input(None, "boş: noktanın etiketi", &s.number_height, false, false)
+                        .on_input(|t| msg(Event::NumberHeight(t)))
+                        .width(160),
+                    label::caption("parçaya sığana dek onda bir adımlarla küçülür; yatay ya da en uzun kenarı boyunca")
+                ]
+                .spacing(10)
+                .align_y(Center),
             )
         } else {
             form

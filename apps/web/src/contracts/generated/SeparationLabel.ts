@@ -5,4 +5,10 @@
  * number as given (trimmed) and its place: the middle of the widest stretch of the part's horizontal line at the half
  * height of its outer ring's corners (inside the part whatever its shape).
  */
-export type SeparationLabel = { part: string, number: string, at: [number, number], };
+export type SeparationLabel = { part: string, number: string, at: [number, number], 
+/**
+ * With `numberHeight` (docs/adr/4280): the text's height, metres on the drawing, its turn (degrees, counter-clockwise
+ * from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
+ * its middle.
+ */
+height?: number, rotation?: number, share?: number, fits?: boolean, };

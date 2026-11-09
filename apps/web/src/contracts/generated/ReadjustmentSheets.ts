@@ -17,7 +17,7 @@ import type { SheetTemplateSource } from "./SheetTemplateSource";
  * parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
  * (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
  * not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
- * `invalid_input` at `numbers.‹uid›`.
+ * `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.
  */
 export type ReadjustmentSheets = { scope: ReadjustmentScope, source?: SheetTemplateSource, 
 /**
@@ -29,4 +29,10 @@ options: Record<string, unknown>,
  * docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
  * outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
  */
-numbers?: { [key in string]: Array<string> }, expectedRevision?: string, };
+numbers?: { [key in string]: Array<string> }, 
+/**
+ * The outside parts' numbers' height on the sheet, paper millimetres (docs/adr/4280; the user's, KentOS gives
+ * none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
+ * straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480).
+ */
+numberHeight?: number, expectedRevision?: string, };

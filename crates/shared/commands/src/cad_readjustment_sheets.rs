@@ -39,7 +39,7 @@ fn empty_options() -> serde_json::Value {
 /// parcel's attribute: those are each sheet's own), `not_fixed_map` (no fixed map `harita`), `separation_sheet_exists`
 /// (a sheet of the name, or a point layer of the parcel, is there already), then the sheet core's own. `numbers` that do
 /// not fit (a parcel not partial in the scope, not one number for each outside part, an empty or a repeated one) are
-/// `invalid_input` at `numbers.‹uid›`.
+/// `invalid_input` at `numbers.‹uid›`; a `numberHeight` not above zero is `invalid_input` at `numberHeight`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -61,6 +61,13 @@ pub struct ReadjustmentSheets {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub numbers: Option<std::collections::BTreeMap<String, Vec<String>>>,
+    /// The outside parts' numbers' height on the sheet, paper millimetres (docs/adr/4280; the user's, KentOS gives
+    /// none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
+    /// straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub number_height: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = crate::cad::REVISION_TEXT)))]
@@ -111,6 +118,24 @@ pub struct SeparationLabel {
     pub number: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub at: [f64; 2],
+    /// With `numberHeight` (docs/adr/4280): the text's height, metres on the drawing, its turn (degrees, counter-clockwise
+    /// from east), its share of the height asked (1, 0.9 … 0.1) and whether its box lies inside the part; `at` is then
+    /// its middle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub rotation: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub share: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fits: Option<bool>,
 }
 
 /// Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the

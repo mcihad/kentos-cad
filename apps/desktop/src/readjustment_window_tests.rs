@@ -593,3 +593,87 @@ fn screens() {
         }
     }
 }
+
+/// docs/adr/4280: Numara yazısı 2 mm with 101/10's numbers: the numbers are texts, not labelled points, the sheet's
+/// scale times 2 mm tall and turned along the 4 m wide pieces' long sides; a height that does not read is said and
+/// nothing is written.
+#[test]
+fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
+    let mut app = named();
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Readjustment(R::NumberHeight("iki".into())));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert!(app.log.last().expect("said").text.contains("Numara yazısı: “iki” bir sayı değil"));
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
+    let _ = app.update(Message::Readjustment(R::NumberHeight("2".into())));
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    assert_eq!(app.dialog, None, "the sheets are made");
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
+    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    assert!(!on.iter().any(|e| matches!(e, kentos_commands::Entity::Point(_))), "no labelled point");
+    let texts: Vec<_> = on
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.clone()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(texts.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(), ["101/24", "101/25"]);
+    // 101/10's sheet is at 1:1000 (the shared case's): 2 mm on paper is 2 m.
+    let scale = 1000.0;
+    for t in &texts {
+        assert!((t.height - 2.0 * scale / 1000.0).abs() < 1e-9, "{}: {}", t.text, t.height);
+        assert!((t.rotation.abs() - 90.0).abs() < 1e-9, "{}: {}", t.text, t.rotation);
+        assert_eq!(t.base.attrs["ParselNo"], t.text);
+    }
+}
+
+/// docs/adr/4280: 101/10's sheet with the numbers fitted at 2 mm, turned along the narrow pieces; light wide and dark
+/// narrow, `.run/gui-evidence/numara-sigdir-4280/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::fit_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn fit_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/numara-sigdir-4280");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (made, file) in [(0, "1-pencere"), (1, "2-pafta-101-10"), (2, "3-model-dar-parca")] {
+            let mut app = named();
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("readjustment.distribute"));
+            let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+            let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+            let _ = app.update(Message::Readjustment(R::NumberHeight("2".into())));
+            if made > 0 {
+                let _ = app.update(Message::Readjustment(R::MakeSheets));
+                let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
+            }
+            if made == 2 {
+                // The model on 101/10's upper piece outside, 4 m wide: its number turned along it.
+                let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
+                let b = kentos_commands::Bounds { min_x: 486984.0, min_y: 4420046.0, max_x: 487000.0, max_y: 4420064.0 };
+                app.zoom_to_bounds(&b);
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
+}

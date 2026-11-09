@@ -67,8 +67,8 @@ numarasının çizimde, parçanın içinde yazılması; parçanın öznitelik ol
 
 ## Sonra
 
-- Numaranın yazısının parçanın içine sığdırılması (dar parçada etiket parçanın dışına taşıyor; yazının boyu çap
-  ölçeğinde).
+- ~~Numaranın yazısının parçanın içine sığdırılması (dar parçada etiket parçanın dışına taşıyor; yazının boyu çap
+  ölçeğinde).~~ ADR 4280.
 - Tescil bildirimi (m. 22(1)(ğ)): TKGM'nin biçimi beklenir.
 - ~~Kapsam dışı kimlikte retin parseli adıyla söylemesi (ADR 3080 Sonra).~~ ADR 3880.
 - Web (TODOS §0.2).

@@ -1520,6 +1520,951 @@
    ]
   },
   {
+   "name": "numara yazısı 2 mm: dış parçalara sığar; ince uzun parçada en uzun kenarı boyunca döner",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000004",
+        "0192f800-2060-7000-8000-000000000007",
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000004": [
+        "101/30"
+       ],
+       "0192f800-2060-7000-8000-000000000007": [
+        "101/31"
+       ],
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/25"
+       ]
+      },
+      "numberHeight": 2.0
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "group": "$any",
+       "sheets": [
+        {
+         "sheet": "ayirma-capi-1",
+         "name": "Ayırma çapı 101/3",
+         "uid": "0192f800-2060-7000-8000-000000000004",
+         "parcel": "101/3",
+         "scale": 250,
+         "center": [
+          487075.0,
+          4420010.0
+         ],
+         "points": 6,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "598.40"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "600.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "1.60"
+          ],
+          [
+           "Yanılma sınırı",
+           "6.80"
+          ],
+          [
+           "Giren kısım",
+           "333.33"
+          ],
+          [
+           "Girmeyen kısım",
+           "266.67"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "265.07"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "333.33"
+          ],
+          [
+           "Girmeyen · parsel 101/30",
+           "3-2-5-6-3",
+           "266.67"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen",
+           "number": "101/30",
+           "at": [
+            487083.3333333333,
+            4420010.0
+           ],
+           "height": 0.5,
+           "rotation": 0.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        },
+        {
+         "sheet": "ayirma-capi-2",
+         "name": "Ayırma çapı 101/6",
+         "uid": "0192f800-2060-7000-8000-000000000007",
+         "parcel": "101/6",
+         "scale": 250,
+         "center": [
+          487075.0,
+          4420030.0
+         ],
+         "points": 6,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "tapuda yok"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "600.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "—"
+          ],
+          [
+           "Yanılma sınırı",
+           "6.80"
+          ],
+          [
+           "Giren kısım",
+           "266.67"
+          ],
+          [
+           "Girmeyen kısım",
+           "333.33"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "—"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "266.67"
+          ],
+          [
+           "Girmeyen · parsel 101/31",
+           "3-2-5-6-3",
+           "333.33"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen",
+           "number": "101/31",
+           "at": [
+            487081.6666666667,
+            4420030.0
+           ],
+           "height": 0.5,
+           "rotation": 0.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        },
+        {
+         "sheet": "ayirma-capi-3",
+         "name": "Ayırma çapı 101/10",
+         "uid": "0192f800-2060-7000-8000-00000000000b",
+         "parcel": "101/10",
+         "scale": 1000,
+         "center": [
+          486994.0,
+          4420020.0
+         ],
+         "points": 8,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "321.10"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "320.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "-1.10"
+          ],
+          [
+           "Yanılma sınırı",
+           "4.50"
+          ],
+          [
+           "Giren kısım",
+           "240.00"
+          ],
+          [
+           "Girmeyen kısım",
+           "80.00"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "81.10"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "240.00"
+          ],
+          [
+           "Girmeyen 1 · parsel 101/24",
+           "5-6-2-1-5",
+           "40.00"
+          ],
+          [
+           "Girmeyen 2 · parsel 101/25",
+           "4-3-7-8-4",
+           "40.00"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen 1",
+           "number": "101/24",
+           "at": [
+            486994.0,
+            4419985.0
+           ],
+           "height": 2.0,
+           "rotation": 90.0,
+           "share": 1.0,
+           "fits": true
+          },
+          {
+           "part": "Girmeyen 2",
+           "number": "101/25",
+           "at": [
+            486994.0,
+            4420055.0
+           ],
+           "height": 2.0,
+           "rotation": 90.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        }
+       ],
+       "uids": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "sheets": [
+       {
+        "id": "ayirma-capi-1",
+        "name": "Ayırma çapı 101/3",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-1-item-2",
+          "name": "Çap",
+          "scale": 250.0
+         }
+        ]
+       },
+       {
+        "id": "ayirma-capi-2",
+        "name": "Ayırma çapı 101/6",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-2-item-2",
+          "name": "Çap",
+          "scale": 250.0
+         }
+        ]
+       },
+       {
+        "id": "ayirma-capi-3",
+        "name": "Ayırma çapı 101/10",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-3-item-2",
+          "name": "Çap",
+          "scale": 1000.0
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "numara yazısı 6 mm: sığmayan onda bir adımlarla küçülür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000004",
+        "0192f800-2060-7000-8000-000000000007",
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000004": [
+        "101/30"
+       ],
+       "0192f800-2060-7000-8000-000000000007": [
+        "101/31"
+       ],
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/25"
+       ]
+      },
+      "numberHeight": 6.0
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "group": "$any",
+       "sheets": [
+        {
+         "sheet": "ayirma-capi-1",
+         "name": "Ayırma çapı 101/3",
+         "uid": "0192f800-2060-7000-8000-000000000004",
+         "parcel": "101/3",
+         "scale": 250,
+         "center": [
+          487075.0,
+          4420010.0
+         ],
+         "points": 6,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "598.40"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "600.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "1.60"
+          ],
+          [
+           "Yanılma sınırı",
+           "6.80"
+          ],
+          [
+           "Giren kısım",
+           "333.33"
+          ],
+          [
+           "Girmeyen kısım",
+           "266.67"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "265.07"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "333.33"
+          ],
+          [
+           "Girmeyen · parsel 101/30",
+           "3-2-5-6-3",
+           "266.67"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen",
+           "number": "101/30",
+           "at": [
+            487083.3333333333,
+            4420010.0
+           ],
+           "height": 1.5,
+           "rotation": 0.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        },
+        {
+         "sheet": "ayirma-capi-2",
+         "name": "Ayırma çapı 101/6",
+         "uid": "0192f800-2060-7000-8000-000000000007",
+         "parcel": "101/6",
+         "scale": 250,
+         "center": [
+          487075.0,
+          4420030.0
+         ],
+         "points": 6,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "tapuda yok"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "600.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "—"
+          ],
+          [
+           "Yanılma sınırı",
+           "6.80"
+          ],
+          [
+           "Giren kısım",
+           "266.67"
+          ],
+          [
+           "Girmeyen kısım",
+           "333.33"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "—"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "266.67"
+          ],
+          [
+           "Girmeyen · parsel 101/31",
+           "3-2-5-6-3",
+           "333.33"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen",
+           "number": "101/31",
+           "at": [
+            487081.6666666667,
+            4420030.0
+           ],
+           "height": 1.5,
+           "rotation": 0.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        },
+        {
+         "sheet": "ayirma-capi-3",
+         "name": "Ayırma çapı 101/10",
+         "uid": "0192f800-2060-7000-8000-00000000000b",
+         "parcel": "101/10",
+         "scale": 1000,
+         "center": [
+          486994.0,
+          4420020.0
+         ],
+         "points": 8,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "321.10"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "320.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "-1.10"
+          ],
+          [
+           "Yanılma sınırı",
+           "4.50"
+          ],
+          [
+           "Giren kısım",
+           "240.00"
+          ],
+          [
+           "Girmeyen kısım",
+           "80.00"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "81.10"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "240.00"
+          ],
+          [
+           "Girmeyen 1 · parsel 101/24",
+           "5-6-2-1-5",
+           "40.00"
+          ],
+          [
+           "Girmeyen 2 · parsel 101/25",
+           "4-3-7-8-4",
+           "40.00"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen 1",
+           "number": "101/24",
+           "at": [
+            486994.0,
+            4419985.0
+           ],
+           "height": 2.4000000000000004,
+           "rotation": 90.0,
+           "share": 0.4,
+           "fits": true
+          },
+          {
+           "part": "Girmeyen 2",
+           "number": "101/25",
+           "at": [
+            486994.0,
+            4420055.0
+           ],
+           "height": 2.4000000000000004,
+           "rotation": 90.0,
+           "share": 0.4,
+           "fits": true
+          }
+         ],
+         "layer": "$any"
+        }
+       ],
+       "uids": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "sheets": [
+       {
+        "id": "ayirma-capi-1",
+        "name": "Ayırma çapı 101/3",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-1-item-2",
+          "name": "Çap",
+          "scale": 250.0
+         }
+        ]
+       },
+       {
+        "id": "ayirma-capi-2",
+        "name": "Ayırma çapı 101/6",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-2-item-2",
+          "name": "Çap",
+          "scale": 250.0
+         }
+        ]
+       },
+       {
+        "id": "ayirma-capi-3",
+        "name": "Ayırma çapı 101/10",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-3-item-2",
+          "name": "Çap",
+          "scale": 1000.0
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "numara yazısı 400 mm: hiçbir boyda sığmaz, yatay ve en küçük payda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/25"
+       ]
+      },
+      "numberHeight": 400.0
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "group": "$any",
+       "sheets": [
+        {
+         "sheet": "ayirma-capi-1",
+         "name": "Ayırma çapı 101/10",
+         "uid": "0192f800-2060-7000-8000-00000000000b",
+         "parcel": "101/10",
+         "scale": 1000,
+         "center": [
+          486994.0,
+          4420020.0
+         ],
+         "points": 8,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "321.10"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "320.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "-1.10"
+          ],
+          [
+           "Yanılma sınırı",
+           "4.50"
+          ],
+          [
+           "Giren kısım",
+           "240.00"
+          ],
+          [
+           "Girmeyen kısım",
+           "80.00"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "81.10"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "240.00"
+          ],
+          [
+           "Girmeyen 1 · parsel 101/24",
+           "5-6-2-1-5",
+           "40.00"
+          ],
+          [
+           "Girmeyen 2 · parsel 101/25",
+           "4-3-7-8-4",
+           "40.00"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen 1",
+           "number": "101/24",
+           "at": [
+            486994.0,
+            4419985.0
+           ],
+           "height": 40.0,
+           "rotation": 0.0,
+           "share": 0.1,
+           "fits": false
+          },
+          {
+           "part": "Girmeyen 2",
+           "number": "101/25",
+           "at": [
+            486994.0,
+            4420055.0
+           ],
+           "height": 40.0,
+           "rotation": 0.0,
+           "share": 0.1,
+           "fits": false
+          }
+         ],
+         "layer": "$any"
+        }
+       ],
+       "uids": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "canRedo": false,
+      "dirty": true,
+      "revision": "changed",
+      "sheets": [
+       {
+        "id": "ayirma-capi-1",
+        "name": "Ayırma çapı 101/10",
+        "width": 210.0,
+        "height": 297.0,
+        "items": 9,
+        "maps": [
+         {
+          "item": "ayirma-capi-1-item-2",
+          "name": "Çap",
+          "scale": 1000.0
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "numara yazısının planı: yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/25"
+       ]
+      },
+      "numberHeight": 2.0
+     },
+     "within": 1e-06,
+     "result": {
+      "status": "completed",
+      "output": {
+       "sheets": [
+        {
+         "sheet": "ayirma-capi-1",
+         "name": "Ayırma çapı 101/10",
+         "uid": "0192f800-2060-7000-8000-00000000000b",
+         "parcel": "101/10",
+         "scale": 1000,
+         "center": [
+          486994.0,
+          4420020.0
+         ],
+         "points": 8,
+         "areas": [
+          [
+           "Tescilli yüzölçümü",
+           "321.10"
+          ],
+          [
+           "Hesaplanan yüzölçümü",
+           "320.00"
+          ],
+          [
+           "Yüzölçümü farkı",
+           "-1.10"
+          ],
+          [
+           "Yanılma sınırı",
+           "4.50"
+          ],
+          [
+           "Giren kısım",
+           "240.00"
+          ],
+          [
+           "Girmeyen kısım",
+           "80.00"
+          ],
+          [
+           "Girmeyen kısma kalan (tescilli − giren)",
+           "81.10"
+          ]
+         ],
+         "parts": [
+          [
+           "Giren",
+           "1-2-3-4-1",
+           "240.00"
+          ],
+          [
+           "Girmeyen 1 · parsel 101/24",
+           "5-6-2-1-5",
+           "40.00"
+          ],
+          [
+           "Girmeyen 2 · parsel 101/25",
+           "4-3-7-8-4",
+           "40.00"
+          ]
+         ],
+         "labels": [
+          {
+           "part": "Girmeyen 1",
+           "number": "101/24",
+           "at": [
+            486994.0,
+            4419985.0
+           ],
+           "height": 2.0,
+           "rotation": 90.0,
+           "share": 1.0,
+           "fits": true
+          },
+          {
+           "part": "Girmeyen 2",
+           "number": "101/25",
+           "at": [
+            486994.0,
+            4420055.0
+           ],
+           "height": 2.0,
+           "rotation": 90.0,
+           "share": 1.0,
+           "fits": true
+          }
+         ]
+        }
+       ],
+       "uids": [],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "numara yazısının boyu 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-00000000000b"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-00000000000b": [
+        "101/24",
+        "101/25"
+       ]
+      },
+      "numberHeight": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Parsel numarasının yazı boyu 0'dan büyük bir milimetre olmalı (yazılan 0).",
+       "path": "numberHeight"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
    "name": "parsel numaraları: parça sayısı tutmuyor",
    "steps": [
     {

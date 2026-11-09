@@ -141,7 +141,20 @@ impl App {
             },
             _ => None,
         };
-        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), numbers, expected_revision: None };
+        // docs/adr/4280: the numbers' height on paper as typed; empty: labelled points.
+        let typed = self.readjustment.number_height.trim().replace(',', ".");
+        let number_height = if typed.is_empty() {
+            None
+        } else {
+            match typed.parse::<f64>() {
+                Ok(v) => Some(v),
+                Err(_) => {
+                    self.warn(format!("Numara yazısı: “{typed}” bir sayı değil; milimetre yazın (2,5 gibi) ya da boş bırakın."));
+                    return Task::none();
+                }
+            }
+        };
+        let input = ReadjustmentSheets { scope, source: None, options: serde_json::json!({}), numbers, number_height, expected_revision: None };
         let Some(doc) = self.document.as_mut() else { return Task::none() };
         let result = readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
         let Some(out) = self.answered(result) else { return Task::none() };

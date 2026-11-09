@@ -349,13 +349,17 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
     numara vermez; numaralı her dış parça parselin katmanına da yazılır (ADR 3480):
     parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla
     etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin
-    parçanın içindeki en geniş aralığının ortası); cevapta labels. Tek geri alma adımı.
-    Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay
-    vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity,
-    duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin
-    özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını
-    tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists (pafta ya
-    da nokta katmanı zaten var).
+    parçanın içindeki en geniş aralığının ortası); cevapta labels. numberHeight (kâğıt
+    mm, kullanıcının; ADR 4280) verilince numara nokta yerine parçanın içine sığan bir
+    yazıdır: boyu numberHeight × ölçek / 1000, sığana dek onda bir adımlarla küçülür;
+    önce yatay, sonra parçanın en uzun düz kenarı boyunca denenir; labels'ta height,
+    rotation, share ve fits. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla
+    birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri
+    (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template,
+    invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input
+    (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara;
+    numberHeight 0'dan büyük değil), not_fixed_map, separation_sheet_exists (pafta ya da
+    nokta katmanı zaten var).
     """
     __slots__ = ()
     id = "cad.readjustment.sheets"
@@ -373,6 +377,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        number_height: float | None | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -399,18 +404,24 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         dış parça parselin katmanına da yazılır (ADR 3480): parça alan olarak (Parsel,
         Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın
         köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş
-        aralığının ortası); cevapta labels. Tek geri alma adımı. Taslaktır: çaplar
-        parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler:
-        kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel,
-        unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap),
-        invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da
-        aynı numara), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı
-        zaten var).
+        aralığının ortası); cevapta labels. numberHeight (kâğıt mm, kullanıcının; ADR 4280)
+        verilince numara nokta yerine parçanın içine sığan bir yazıdır: boyu numberHeight ×
+        ölçek / 1000, sığana dek onda bir adımlarla küçülür; önce yatay, sonra parçanın en
+        uzun düz kenarı boyunca denenir; labels'ta height, rotation, share ve fits. Tek geri
+        alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2),
+        KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels,
+        no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da
+        parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça
+        sayısını tutmayan, boş ya da aynı numara; numberHeight 0'dan büyük değil),
+        not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).
 
         Args:
             doc: The drawing it works on.
             scope:
             expected_revision:
+            number_height: The outside parts' numbers' height on the sheet, paper millimetres (docs/adr/4280; the user's, KentOS gives
+                none): given, each number is written as a text fitted inside its part, horizontal or along the part's longest
+                straight edge, its height stepped down by tenths of this until it fits; none: as a labelled point (docs/adr/3480). Unit: paper-mm.
             numbers: The parcel numbers the parts of a partial parcel outside the area are registered with (Yönetmelik m. 13/3,
                 docs/adr/3080), by the parcel's persistent id, one for each outside part in the parts' order: written beside each
                 outside part in the table of parts. The regulation gives no rule for them; KentOS writes none of its own.
@@ -431,6 +442,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.execute_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            number_height=number_height,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -443,6 +455,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        number_height: float | None | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -453,6 +466,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.plan_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            number_height=number_height,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -465,6 +479,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        number_height: float | None | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -475,6 +490,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.validate_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            number_height=number_height,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,
@@ -487,6 +503,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         *,
         scope: ReadjustmentScope,
         expected_revision: str | None | Unset = UNSET,
+        number_height: float | None | Unset = UNSET,
         numbers: Mapping[str, Sequence[str]] | None | Unset = UNSET,
         options: PaperInstanceOptions | Mapping[str, Any] | Unset = UNSET,
         source: SheetTemplateSource | None | Unset = UNSET,
@@ -502,6 +519,7 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         return self.answer_input(doc, ReadjustmentSheets(
             scope=scope,
             expected_revision=expected_revision,
+            number_height=number_height,
             numbers=_opt(numbers, lambda x: dict(x)),
             options=dict() if options is UNSET else _opt(options, lambda x: x),
             source=source,

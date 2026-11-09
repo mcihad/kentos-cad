@@ -11,7 +11,8 @@
 //! docs/adr/3480: an outside part given a parcel number (m. 13/3, docs/adr/3080) is written too, on a layer of the
 //! parcel's numbered pieces beside its points (“‹Ada/Parsel› dış parçalar”): the part as an area with its parcel, name
 //! and number as attributes, and a point inside it labelled with the number (`label_at`); the sheet's map shows both of
-//! the parcel's layers, its coordinate list the points only.
+//! the parcel's layers, its coordinate list the points only. docs/adr/4280: with the user's `numberHeight` the number is
+//! a text fitted inside its part instead of the point (`fitted`).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -21,6 +22,10 @@ use kentos_commands::{
     SheetsEdit, Vec2,
 };
 use kentos_domain::{Document, NewLayer};
+use kentos_geometry_core::entity::TextPlace;
+use kentos_geometry_core::geom::arrangement::{Area, Ring};
+use kentos_geometry_core::geom::bulge::{bulge_ring_area, reverse_bulge_path};
+use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
 use kentos_geometry_core::numeric::{RoundingMode, parse_decimal, subtract_exact};
 use kentos_sheet::model::VarValue;
 use kentos_sheet::ops::{Op, SetItemProps};
@@ -130,8 +135,158 @@ pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
     Some([(best[0] + best[1]) / 2.0, y])
 }
 
-/// The numbered outside parts' labels (docs/adr/3480): each outside part given a number, its name and place.
-fn labels_of(p: &ReadjustmentScopeParcel, given: Option<&[String]>) -> Vec<kentos_commands::SeparationLabel> {
+/// docs/adr/4280: the shares of the asked height a number is tried at, the largest first.
+const SHARES: [f64; 10] = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1];
+
+fn point(p: [f64; 2]) -> kentos_geometry_core::Vec2 {
+    kentos_geometry_core::Vec2::new(p[0], p[1])
+}
+
+/// A part's rings as the overlay takes them: its outer ring counter-clockwise, its holes clockwise.
+fn part_areas(part: &ScopePart) -> Vec<Area> {
+    let ring = |r: &ScopeRing, ccw: bool| {
+        let pts: Vec<_> = r.pts.iter().copied().map(point).collect();
+        if (bulge_ring_area(&pts, r.bulges.as_deref()) > 0.0) == ccw {
+            Ring { pts, bulges: r.bulges.clone() }
+        } else {
+            let back = reverse_bulge_path(&pts, r.bulges.as_deref(), true);
+            Ring { pts: back.pts, bulges: back.bulges }
+        }
+    };
+    let Some(outer) = part.rings.first() else { return Vec::new() };
+    vec![Area { outer: ring(outer, true), holes: part.rings[1..].iter().map(|h| ring(h, false)).collect() }]
+}
+
+/// The number's text: centred at `at`, turned `rotation` degrees, `height` metres tall.
+fn number_text(number: &str, at: [f64; 2], rotation: f64, height: f64) -> kentos_commands::Entity {
+    kentos_commands::Entity::Text(kentos_commands::TextEntity {
+        base: kentos_commands::EntityBase {
+            look: Default::default(),
+            id: 0,
+            layer_id: String::new(),
+            color: None,
+            attrs: BTreeMap::new(),
+            label: None,
+            symbol: None,
+            line_weight: None,
+            label_pins: Vec::new(),
+            attachments: Vec::new(),
+        },
+        p: Vec2 { x: at[0], y: at[1] },
+        text: number.to_owned(),
+        height,
+        rotation,
+        align: Some(kentos_commands::TextAlign::MiddleCenter),
+        width_factor: None,
+        mask: false,
+        label_of: None,
+        label_scale: None,
+        paragraph: Default::default(),
+        face: Default::default(),
+        path: None,
+        annotative: None,
+    })
+}
+
+/// Whether a text's box, as the drawing measures it (docs/adr/0145: its typeface's advances, 0.23 of its height under
+/// the baseline and 1.15 over it), lies inside the part: the part's overlap with the box is the box (to 1e-9 of it).
+fn text_inside(part: &[Area], text: &kentos_commands::Entity, font: kentos_geometry_core::text::Font) -> bool {
+    let shape = crate::geometry::shape(text);
+    let Some(ring) = TextPlace::of(&shape).map(|t| t.outline(font)) else { return false };
+    let block = Area { outer: Ring { pts: ring, bulges: None }, holes: Vec::new() };
+    let whole = net_area(&block);
+    let shared: f64 = intersect_area_sets(&[part.to_vec(), vec![block]]).iter().map(net_area).sum();
+    whole > 0.0 && shared >= whole * (1.0 - 1e-9)
+}
+
+/// A part turned `angle` radians about `about`.
+fn turned(part: &ScopePart, about: [f64; 2], angle: f64) -> ScopePart {
+    let (s, c) = angle.sin_cos();
+    let mut out = part.clone();
+    for r in &mut out.rings {
+        for p in &mut r.pts {
+            let (x, y) = (p[0] - about[0], p[1] - about[1]);
+            *p = [about[0] + x * c - y * s, about[1] + x * s + y * c];
+        }
+    }
+    out
+}
+
+/// docs/adr/4280: the turns a number is tried at, degrees: horizontal, then along the outer ring's longest straight edge
+/// (the first of equals), read from the left (in (−90°, 90°]), when that is not horizontal.
+fn turns(part: &ScopePart) -> Vec<f64> {
+    let mut out = vec![0.0];
+    let Some(outer) = part.rings.first() else { return out };
+    let n = outer.pts.len();
+    let mut longest: Option<(f64, [f64; 2], [f64; 2])> = None;
+    for i in 0..n {
+        let straight = outer.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0) == 0.0;
+        let (a, b) = (outer.pts[i], outer.pts[(i + 1) % n]);
+        let length = (b[0] - a[0]).hypot(b[1] - a[1]);
+        if straight && longest.is_none_or(|(l, _, _)| length > l) {
+            longest = Some((length, a, b));
+        }
+    }
+    if let Some((_, a, b)) = longest {
+        let mut angle = (b[1] - a[1]).atan2(b[0] - a[0]).to_degrees();
+        if angle > 90.0 {
+            angle -= 180.0;
+        } else if angle <= -90.0 {
+            angle += 180.0;
+        }
+        if angle != 0.0 {
+            out.push(angle);
+        }
+    }
+    out
+}
+
+/// A label's place, turn (degrees), height, share of the height asked and whether it fits.
+type Fitted = ([f64; 2], f64, f64, f64, bool);
+
+/// docs/adr/4280: where and how big a number's text stands inside its part: at each turn (`turns`), its place by
+/// `label_at` in the part turned so (the widest stretch of the middle line, turned back); the largest share of `height`
+/// (`SHARES`) whose box lies inside the part, the first turn among equals. None fits: horizontal at the least share.
+fn fitted(part: &ScopePart, number: &str, height: f64, font: kentos_geometry_core::text::Font) -> Option<Fitted> {
+    let areas = part_areas(part);
+    let origin = *part.rings.first()?.pts.first()?;
+    let mut best: Option<([f64; 2], f64, f64)> = None;
+    for turn in turns(part) {
+        let at = if turn == 0.0 {
+            label_at(part)?
+        } else {
+            let r = turn.to_radians();
+            let local = label_at(&turned(part, origin, -r))?;
+            let (s, c) = r.sin_cos();
+            let (x, y) = (local[0] - origin[0], local[1] - origin[1]);
+            [origin[0] + x * c - y * s, origin[1] + x * s + y * c]
+        };
+        for share in SHARES {
+            if best.is_some_and(|(_, _, s)| s >= share) {
+                break;
+            }
+            if text_inside(&areas, &number_text(number, at, turn, height * share), font) {
+                best = Some((at, turn, share));
+                break;
+            }
+        }
+    }
+    let least = SHARES[SHARES.len() - 1];
+    Some(match best {
+        Some((at, turn, share)) => (at, turn, height * share, share, true),
+        None => (label_at(part)?, 0.0, height * least, least, false),
+    })
+}
+
+/// The numbered outside parts' labels (docs/adr/3480): each outside part given a number, its name and place; with the
+/// user's height (paper mm) at the sheet's scale, the number's fitted text (docs/adr/4280).
+fn labels_of(
+    p: &ReadjustmentScopeParcel,
+    given: Option<&[String]>,
+    height: Option<f64>,
+    scale: u32,
+    font: kentos_geometry_core::text::Font,
+) -> Vec<kentos_commands::SeparationLabel> {
     let Some(given) = given else { return Vec::new() };
     let names = part_names(&p.parts);
     p.parts
@@ -140,7 +295,25 @@ fn labels_of(p: &ReadjustmentScopeParcel, given: Option<&[String]>) -> Vec<kento
         .filter(|(q, _)| q.side == "outside")
         .zip(given)
         .filter_map(|((q, name), number)| {
-            Some(kentos_commands::SeparationLabel { part: name.clone(), number: number.trim().to_owned(), at: label_at(q)? })
+            let number = number.trim().to_owned();
+            let mut label = kentos_commands::SeparationLabel {
+                part: name.clone(),
+                number: number.clone(),
+                at: label_at(q)?,
+                height: None,
+                rotation: None,
+                share: None,
+                fits: None,
+            };
+            if let Some(mm) = height {
+                let (at, turn, h, share, fits) = fitted(q, &number, mm * f64::from(scale) / 1000.0, font)?;
+                label.at = at;
+                label.height = Some(h);
+                label.rotation = Some(turn);
+                label.share = Some(share);
+                label.fits = Some(fits);
+            }
+            Some(label)
         })
         .collect()
 }
@@ -188,7 +361,32 @@ fn part_objects(p: &ReadjustmentScopeParcel, labels: &[kentos_commands::Separati
             },
             None,
         ));
-        out.push(object(EntityGeometry::Point { p: Vec2 { x: l.at[0], y: l.at[1] }, z: None, parts: None }, Some(l.number.clone())));
+        // docs/adr/4280: with a height, the number as its fitted text; else a point labelled with it (docs/adr/3480).
+        match (l.height, l.rotation) {
+            (Some(height), Some(rotation)) => out.push(object(
+                EntityGeometry::Text {
+                    p: Vec2 { x: l.at[0], y: l.at[1] },
+                    text: l.number.clone(),
+                    height,
+                    rotation,
+                    align: Some(kentos_commands::TextAlign::MiddleCenter),
+                    width_factor: None,
+                    mask: false,
+                    box_width: None,
+                    line_spacing: None,
+                    runs: Vec::new(),
+                    face: Default::default(),
+                    path: None,
+                    layout: None,
+                    annotative: None,
+                },
+                None,
+            )),
+            _ => out.push(object(
+                EntityGeometry::Point { p: Vec2 { x: l.at[0], y: l.at[1] }, z: None, parts: None },
+                Some(l.number.clone()),
+            )),
+        }
     }
     out
 }
@@ -423,6 +621,16 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
         }
     }
     numbers_ok(doc, &scope.parcels, &partial, input.numbers.as_ref())?;
+    // docs/adr/4280: the numbers' height on paper, the user's.
+    if let Some(mm) = input.number_height
+        && !(mm.is_finite() && mm > 0.0)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Parsel numarasının yazı boyu 0'dan büyük bir milimetre olmalı (yazılan {mm})."),
+            "numberHeight",
+        ));
+    }
     let template = template_of(input.source.as_ref())?;
     let options: InstanceOptions = serde_json::from_value(input.options.clone())
         .map_err(|e| fail(codes::INVALID_OPTIONS, format!("Şablon seçenekleri okunamadı: {e}"), "options"))?;
@@ -559,7 +767,7 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
                 points: u32::try_from(p.points.len()).unwrap_or(u32::MAX),
                 areas,
                 parts,
-                labels: labels_of(p, given),
+                labels: labels_of(p, given, input.number_height, scale, crate::geometry::drawing_font(doc.settings().drawing_font)),
             },
         });
     }
