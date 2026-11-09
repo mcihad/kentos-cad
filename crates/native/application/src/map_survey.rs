@@ -300,7 +300,7 @@ fn latest_of(survey: &MapSurvey) -> HashMap<String, String> {
 }
 
 /// The rows of the archive as they stand now.
-pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapSurveyTree, Stop> {
+pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) -> Result<MapSurveyTree, Stop> {
     map_project(doc)?;
     let target = match uid {
         Some(u) => Some(target(doc, u)?),
@@ -382,6 +382,8 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapS
         baselines,
         known: survey.known.clone(),
         adjustments: survey.adjustments.clone(),
+        // Docs/adr/4120: the known points' own places, when asked.
+        known_places: if places { crate::map_survey_places::known_places(doc, survey) } else { Vec::new() },
         object,
         stale,
         deep,
@@ -688,7 +690,7 @@ pub(crate) fn place(
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<()> {
-    match tree(cx.doc, input.deep, input.uid.as_deref()) {
+    match tree(cx.doc, input.deep, input.uid.as_deref(), input.places) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -696,7 +698,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandRes
 
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<MapSurveyTree> {
-    match tree(cx.doc, input.deep, input.uid.as_deref()) {
+    match tree(cx.doc, input.deep, input.uid.as_deref(), input.places) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -707,9 +709,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyQuery) -> CommandR
     plan(cx, &input)
 }
 
-/// The archive for a panel (and, with `uid`, what that object is), or why it does not read.
-pub fn preview(doc: &Document, deep: bool, uid: Option<&str>) -> Result<MapSurveyTree, String> {
-    tree(doc, deep, uid).map_err(|stop| stop.into_error().message)
+/// The archive for a panel (and, with `uid`, what that object is; with `places` the known points' own places,
+/// docs/adr/4120), or why it does not read.
+pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, places: bool) -> Result<MapSurveyTree, String> {
+    tree(doc, deep, uid, places).map_err(|stop| stop.into_error().message)
 }
 
 /// What one object is in the archive, read quickly, for the properties; none outside a map project with an archive,

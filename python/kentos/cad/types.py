@@ -54495,17 +54495,21 @@ class MapSurveyNetworked(_Model):
 @dataclass(kw_only=True, slots=True)
 class MapSurveyQuery(_Model):
     """Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
-    file is only looked for. `uid` also says what that object is in the archive.
+    file is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says
+    where each known point lies in the project by its own coordinates.
 
     Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
     """
     deep: bool | Unset = UNSET
+    places: bool | Unset = UNSET
     uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.deep is not UNSET:
             out["deep"] = self.deep
+        if self.places is not UNSET:
+            out["places"] = self.places
         if self.uid is not UNSET:
             out["uid"] = self.uid
         return out
@@ -54514,6 +54518,7 @@ class MapSurveyQuery(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapSurveyQuery:
         return cls(
             deep=data.get("deep", UNSET),
+            places=data.get("places", UNSET),
             uid=data.get("uid", UNSET),
         )
 
@@ -54525,6 +54530,7 @@ class MapSurveyTree(_Model):
     was deep, and the revision read.
     Attributes:
         stale: Unit: count.
+        known_places: With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.
     """
     campaigns: list[SurveyCampaignRow]
     sessions: list[SurveySessionRow]
@@ -54537,6 +54543,7 @@ class MapSurveyTree(_Model):
     adjustments: list[SurveyAdjustment] | Unset = UNSET
     baselines: list[SurveyBaselineRow] | Unset = UNSET
     known: list[SurveyKnown] | Unset = UNSET
+    known_places: list[SurveyKnownPlace] | Unset = UNSET
     object: SurveyObject | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -54555,6 +54562,8 @@ class MapSurveyTree(_Model):
             out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.known is not UNSET:
             out["known"] = [e0.to_json() for e0 in self.known]
+        if self.known_places is not UNSET:
+            out["knownPlaces"] = [e0.to_json() for e0 in self.known_places]
         if self.object is not UNSET:
             out["object"] = None if self.object is None else self.object.to_json()
         return out
@@ -54573,6 +54582,7 @@ class MapSurveyTree(_Model):
             adjustments=[SurveyAdjustment.from_json(e0) for e0 in data["adjustments"]] if "adjustments" in data else UNSET,
             baselines=[SurveyBaselineRow.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             known=[SurveyKnown.from_json(e0) for e0 in data["known"]] if "known" in data else UNSET,
+            known_places=[SurveyKnownPlace.from_json(e0) for e0 in data["knownPlaces"]] if "knownPlaces" in data else UNSET,
             object=UNSET if "object" not in data else None if data["object"] is None else SurveyObject.from_json(data["object"]),
         )
 
@@ -96206,6 +96216,85 @@ class SurveyKnown(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SurveyKnownPlace(_Model):
+    """A known point's own place in the project (docs/adr/4120): its latitude, longitude and ellipsoidal height carried
+    into the project as an accepted point's are (the epoch decision of the campaign of the first baseline on its mark,
+    else the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid
+    (`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's
+    status (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the
+    place minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).
+    Attributes:
+        id: `bn-N`.
+        dx: Unit: length.
+        dy: Unit: length.
+        dz: Unit: elevation.
+        epoch: Unit: year.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    id: str
+    mark: str
+    chain: str | None | Unset = UNSET
+    dx: float | None | Unset = UNSET
+    dy: float | None | Unset = UNSET
+    dz: float | None | Unset = UNSET
+    epoch: float | None | Unset = UNSET
+    moved: KnownMoved | None | Unset = UNSET
+    point: str | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+    x: float | None | Unset = UNSET
+    y: float | None | Unset = UNSET
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["mark"] = self.mark
+        if self.chain is not UNSET:
+            out["chain"] = self.chain
+        if self.dx is not UNSET:
+            out["dx"] = None if self.dx is None else float(self.dx)
+        if self.dy is not UNSET:
+            out["dy"] = None if self.dy is None else float(self.dy)
+        if self.dz is not UNSET:
+            out["dz"] = None if self.dz is None else float(self.dz)
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.moved is not UNSET:
+            out["moved"] = None if self.moved is None else self.moved.to_json()
+        if self.point is not UNSET:
+            out["point"] = self.point
+        if self.why is not UNSET:
+            out["why"] = self.why
+        if self.x is not UNSET:
+            out["x"] = None if self.x is None else float(self.x)
+        if self.y is not UNSET:
+            out["y"] = None if self.y is None else float(self.y)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyKnownPlace:
+        return cls(
+            id=data["id"],
+            mark=data["mark"],
+            chain=data.get("chain", UNSET),
+            dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
+            dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+            dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            moved=UNSET if "moved" not in data else None if data["moved"] is None else KnownMoved.from_json(data["moved"]),
+            point=data.get("point", UNSET),
+            why=data.get("why", UNSET),
+            x=UNSET if "x" not in data else None if data["x"] is None else float(data["x"]),
+            y=UNSET if "y" not in data else None if data["y"] is None else float(data["y"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SurveyMarkRow(_Model):
     """A mark: its sessions in the archive's order, its solutions, its accepted point."""
     mark: str
@@ -134570,6 +134659,7 @@ __all__ = [
     "SurveyFileStateName",
     "SurveyGrid",
     "SurveyKnown",
+    "SurveyKnownPlace",
     "SurveyMarkRow",
     "SurveyObject",
     "SurveyPoint",

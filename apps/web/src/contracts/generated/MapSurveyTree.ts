@@ -3,6 +3,7 @@ import type { SurveyAdjustment } from "./SurveyAdjustment";
 import type { SurveyBaselineRow } from "./SurveyBaselineRow";
 import type { SurveyCampaignRow } from "./SurveyCampaignRow";
 import type { SurveyKnown } from "./SurveyKnown";
+import type { SurveyKnownPlace } from "./SurveyKnownPlace";
 import type { SurveyMarkRow } from "./SurveyMarkRow";
 import type { SurveyObject } from "./SurveyObject";
 import type { SurveyPointRow } from "./SurveyPointRow";
@@ -14,4 +15,8 @@ import type { SurveyUseRow } from "./SurveyUseRow";
  * adjustments, docs/adr/1740), the object asked about, how many accepted points and uses are out of date, whether it
  * was deep, and the revision read.
  */
-export type MapSurveyTree = { campaigns: Array<SurveyCampaignRow>, sessions: Array<SurveySessionRow>, marks: Array<SurveyMarkRow>, points: Array<SurveyPointRow>, uses: Array<SurveyUseRow>, baselines?: Array<SurveyBaselineRow>, known?: Array<SurveyKnown>, adjustments?: Array<SurveyAdjustment>, object?: SurveyObject, stale: number, deep: boolean, revision: string, };
+export type MapSurveyTree = { campaigns: Array<SurveyCampaignRow>, sessions: Array<SurveySessionRow>, marks: Array<SurveyMarkRow>, points: Array<SurveyPointRow>, uses: Array<SurveyUseRow>, baselines?: Array<SurveyBaselineRow>, known?: Array<SurveyKnown>, adjustments?: Array<SurveyAdjustment>, 
+/**
+ * With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.
+ */
+knownPlaces?: Array<SurveyKnownPlace>, object?: SurveyObject, stale: number, deep: boolean, revision: string, };

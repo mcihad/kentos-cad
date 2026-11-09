@@ -110,6 +110,19 @@ fn sigma_mm(g: [f64; 3]) -> String {
     format!("σ {:.0}/{:.0}/{:.0} mm", g[0] * 1000.0, g[1] * 1000.0, g[2] * 1000.0)
 }
 
+/// A baseline's end on the map (docs/adr/3320, 4120): its mark's accepted point; else the own place in the project of
+/// a known point on it that is not left out; none with neither.
+fn end_of(tree: &MapSurveyTree, mark: &str) -> Option<crate::survey_baseline_marks::End> {
+    use crate::survey_baseline_marks::End;
+    if let Some(uid) = crate::map_survey_network_rows::objects_of(tree, &[mark]).into_iter().next() {
+        return Some(End::Object(uid));
+    }
+    tree.known
+        .iter()
+        .filter(|k| k.mark == mark && k.excluded.is_none())
+        .find_map(|k| tree.known_places.iter().find(|p| p.id == k.id).and_then(|p| Some(End::Known([p.x?, p.y?], mark.to_owned()))))
+}
+
 impl App {
     /// The tree as the drawing is now, read again when its revision or the depth changed.
     pub(crate) fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>> {
@@ -123,7 +136,8 @@ impl App {
         {
             return Some(answer.clone());
         }
-        let answer = map_survey::preview(&doc.model, deep, None);
+        // Docs/adr/4120: with the known points' own places, for their rows and the baselines' ends.
+        let answer = map_survey::preview(&doc.model, deep, None, true);
         *kept = Some((revision, deep, answer.clone()));
         Some(answer)
     }
@@ -149,7 +163,7 @@ impl App {
     /// `map.survey.select`: every accepted point's object selected and shown (Harita and GIS).
     pub(crate) fn select_accepted_points(&mut self) {
         let Some(doc) = self.document.as_ref() else { return };
-        let uids: Vec<String> = match map_survey::preview(&doc.model, false, None) {
+        let uids: Vec<String> = match map_survey::preview(&doc.model, false, None, false) {
             Ok(tree) => tree.points.iter().map(|p| p.uid.clone()).collect(),
             Err(why) => {
                 self.say(Level::Warn, why);
@@ -164,45 +178,75 @@ impl App {
     }
 
     /// A baseline's row (docs/adr/3320): its two ends' accepted points selected and shown, and the baseline drawn
-    /// between them on the map with its id and length, until İşareti kaldır; a mark without an accepted point says so.
+    /// between them on the map with its id and length, until İşareti kaldır. An end without an accepted point is its
+    /// known point's own place in the project (docs/adr/4120), said; a mark with neither says so.
     fn show_baseline(&mut self, id: &str) {
+        use crate::survey_baseline_marks::End;
         let Some(Ok(tree)) = self.map_survey_read() else { return };
         let Some(b) = tree.baselines.iter().find(|b| b.id == id).cloned() else { return };
-        let ends = |mark: &str| crate::map_survey_network_rows::objects_of(&tree, &[mark]).into_iter().next();
-        let (from, to) = (ends(&b.from), ends(&b.to));
-        let uids: Vec<String> = from.iter().chain(to.iter()).cloned().collect();
+        let (from, to) = (end_of(&tree, &b.from), end_of(&tree, &b.to));
+        let uids: Vec<String> = [&from, &to]
+            .into_iter()
+            .filter_map(|e| match e {
+                Some(End::Object(uid)) => Some(uid.clone()),
+                _ => None,
+            })
+            .collect();
         self.select_uids(&uids);
         match (from, to, self.document.as_ref().map(|d| d.session)) {
             (Some(from), Some(to), Some(session)) => {
+                let own: Vec<&str> = [(&from, b.from.as_str()), (&to, b.to.as_str())]
+                    .into_iter()
+                    .filter(|(e, _)| matches!(e, End::Known(..)))
+                    .map(|(_, m)| m)
+                    .collect();
                 let words = format!("{} · {:.3} m", b.id, b.length);
                 let line = crate::survey_baseline_marks::ShownLine { from, to, words, excluded: b.excluded.is_some() };
                 self.baseline_shown = Some(crate::survey_baseline_marks::Shown { session, lines: vec![line] });
+                if !own.is_empty() {
+                    self.fit_baselines();
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        format!(
+                            "{}: {} ucu kabul noktası olmadığından bilinen noktanın projedeki kendi yerinden çizildi (üçgen).",
+                            b.id,
+                            own.join(" ve ")
+                        ),
+                    );
+                }
             }
             _ => {
                 self.baseline_shown = None;
                 self.say(
                     kentos_interaction::Level::Info,
-                    format!("{} çizilemedi: {} → {} uçlarından birinin kabul noktası yok.", b.id, b.from, b.to),
+                    format!(
+                        "{} çizilemedi: {} → {} uçlarından birinin ne kabul noktası ne de projede yeri olan bilinen noktası var.",
+                        b.id, b.from, b.to
+                    ),
                 );
             }
         }
     }
 
-    /// Ağı göster (docs/adr/3720): every baseline whose two ends have accepted points drawn on the map at once, a left
-    /// out one in its own colour; their ends selected and shown; those that cannot be drawn counted.
+    /// Ağı göster (docs/adr/3720): every baseline whose two ends can be placed (an accepted point, else a known point's
+    /// own place, docs/adr/4120) drawn on the map at once, a left out one in its own colour; the accepted ends
+    /// selected and shown; the ends at known points' own places named, those that cannot be drawn counted.
     fn show_network(&mut self) {
+        use crate::survey_baseline_marks::End;
         let Some(Ok(tree)) = self.map_survey_read() else { return };
         let Some(session) = self.document.as_ref().map(|d| d.session) else { return };
-        let ends = |mark: &str| crate::map_survey_network_rows::objects_of(&tree, &[mark]).into_iter().next();
         let mut lines = Vec::new();
         let mut uids: Vec<String> = Vec::new();
+        let mut own: Vec<String> = Vec::new();
         let mut missing = 0usize;
         for b in &tree.baselines {
-            match (ends(&b.from), ends(&b.to)) {
+            match (end_of(&tree, &b.from), end_of(&tree, &b.to)) {
                 (Some(from), Some(to)) => {
-                    for u in [&from, &to] {
-                        if !uids.contains(u) {
-                            uids.push(u.clone());
+                    for (end, mark) in [(&from, &b.from), (&to, &b.to)] {
+                        match end {
+                            End::Object(u) if !uids.contains(u) => uids.push(u.clone()),
+                            End::Known(..) if !own.contains(mark) => own.push(mark.clone()),
+                            _ => {}
                         }
                     }
                     let words = format!("{} · {:.3} m", b.id, b.length);
@@ -215,15 +259,36 @@ impl App {
         let out = lines.iter().filter(|l| l.excluded).count();
         self.select_uids(&uids);
         self.baseline_shown = (drawn > 0).then_some(crate::survey_baseline_marks::Shown { session, lines });
+        if !own.is_empty() {
+            self.fit_baselines();
+        }
         let mut said = match (drawn, out) {
-            (0, _) => "Ağ çizilemedi: hiçbir bazın iki ucunun da kabul noktası yok.".to_owned(),
+            (0, _) => "Ağ çizilemedi: hiçbir bazın iki ucu da yerleştirilemiyor (kabul noktası ya da projede yeri olan bilinen nokta yok).".to_owned(),
             (n, 0) => format!("Ağ: {n} baz çizildi."),
             (n, k) => format!("Ağ: {n} baz çizildi; {k}'i dışlandı, kırmızı noktalı."),
         };
+        if drawn > 0 && !own.is_empty() {
+            said.push_str(&format!(" {} bilinen noktanın projedeki kendi yerinde (üçgen).", own.join(", ")));
+        }
         if missing > 0 && drawn > 0 {
-            said.push_str(&format!(" {missing} baz çizilemedi: uçlarından birinin kabul noktası yok."));
+            said.push_str(&format!(
+                " {missing} baz çizilemedi: uçlarından birinin ne kabul noktası ne de projede yeri olan bilinen noktası var."
+            ));
         }
         self.say(kentos_interaction::Level::Info, said);
+    }
+
+    /// The view on every drawn baseline's two ends, 96 px in from the edges (docs/adr/4120: a known point's own place
+    /// is no object of the drawing, so the selection's box would leave it out).
+    fn fit_baselines(&mut self) {
+        let Some(marks) = self.baseline_marks() else { return };
+        let ends = marks.lines.iter().flat_map(|l| [l.from, l.to]);
+        let (mut min_x, mut min_y, mut max_x, mut max_y) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        for [x, y] in ends {
+            (min_x, min_y, max_x, max_y) = (min_x.min(x), min_y.min(y), max_x.max(x), max_y.max(y));
+        }
+        let bounds = kentos_render_wgpu::Bounds { min_x, min_y, max_x, max_y };
+        self.navigating(|app| app.viewport.change(kentos_interaction::ViewChange::Fit { bounds, padding: 96.0 }));
     }
 
     fn select_uids(&mut self, uids: &[String]) {

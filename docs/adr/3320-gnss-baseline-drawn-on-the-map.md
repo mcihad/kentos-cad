@@ -59,8 +59,8 @@ haritada bazın çizilmesi (iki uç arasında geçici çizgi)”.
 
 ## Sonra
 
-- Bilinen noktanın kendi yerinden (enlem, boylamdan izdüşürülmüş) bazın çizilmesi; kabul noktası olmayan uç da
-  çizilsin.
+- ~~Bilinen noktanın kendi yerinden (enlem, boylamdan izdüşürülmüş) bazın çizilmesi; kabul noktası olmayan uç da
+  çizilsin.~~ [ADR 4120](4120-known-point-own-place-in-the-project.md).
 - ~~Bütün bazların bir arada çizilmesi (ağın görünüşü); dışlananın ayrı renkte.~~ ADR 3720 (Ağı göster).
 - GVX oturum korelasyonları; yeni noktaların hızı (ADR 2520 Sonra).
 - Web (TODOS §0.2).

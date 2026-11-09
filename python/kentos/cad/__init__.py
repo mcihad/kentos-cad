@@ -3693,6 +3693,7 @@ __all__ = [
     "SurveyFileStateName",
     "SurveyGrid",
     "SurveyKnown",
+    "SurveyKnownPlace",
     "SurveyMarkRow",
     "SurveyObject",
     "SurveyPoint",

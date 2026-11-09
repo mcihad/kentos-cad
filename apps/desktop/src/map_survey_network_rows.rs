@@ -5,7 +5,9 @@
 //! exclude and include take `bz-` and `bn-` ids). An adjustment's row selects the points it made, its button opens
 //! Ağ dengelemesi; it is out of date when one of its baselines or known points has been left out since.
 
-use kentos_commands::{MapSurveyTree, SurveyAdjustment, SurveyBaselineRow, SurveyFileState as F, SurveyKnown};
+use kentos_commands::{
+    KnownMovedBy, MapSurveyTree, SurveyAdjustment, SurveyBaselineRow, SurveyFileState as F, SurveyKnown, SurveyKnownPlace,
+};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::{Status, StatusItem};
 
@@ -103,7 +105,8 @@ fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
 }
 
 /// A known point's row: its mark and id, its epoch faint, fixed or weighted (or left out) as a pill; its place, σ,
-/// velocity and source in the tip.
+/// velocity and source in the tip, and (docs/adr/4120) its own place in the project, how far its epoch moved it and how
+/// far its mark's accepted point lies, or why it has no place.
 fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Message> {
     let (tone, words) = match (&k.excluded, k.sigma) {
         (Some(_), _) => (Status::Neutral, "Dışlandı"),
@@ -126,6 +129,9 @@ fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Messa
     if let Some(why) = &k.excluded {
         detail.push(format!("Dışlama nedeni: {why}."));
     }
+    if let Some(p) = tree.known_places.iter().find(|p| p.id == k.id) {
+        detail.extend(place_words(p));
+    }
     let meta = k.epoch.map_or_else(|| "epoksuz".to_owned(), |e| format!("{e:.4}"));
     let item = StatusItem::new(format!("bn:{}", k.id), format!("{} · {}", k.mark, k.id))
         .meta(meta)
@@ -133,6 +139,46 @@ fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Messa
         .detail(detail.join(" "))
         .on_press(msg(Event::Objects(objects_of(tree, &[&k.mark]))));
     out_or_back(item, &k.id, k.excluded.is_some())
+}
+
+/// An epoch as a sentence writes it: two decimals, a decimal comma (2026,84).
+fn epoch_words(e: f64) -> String {
+    format!("{e:.2}").replace('.', ",")
+}
+
+/// Docs/adr/4120: a known point's own place in the project, its epoch's move and its mark's accepted point's distance;
+/// or why it has no place.
+pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
+    let mut out = Vec::new();
+    let (Some(x), Some(y)) = (p.x, p.y) else {
+        if let Some(why) = &p.why {
+            out.push(format!("Projede yeri yok: {why}"));
+        }
+        return out;
+    };
+    let height = p.z.map_or_else(String::new, |z| format!(", H {z:.3}"));
+    let at = p.epoch.map_or_else(String::new, |e| format!("{} epokunda, ", epoch_words(e)));
+    let chain = if p.chain.as_deref() == Some("complete") { "zincir tam" } else { "zincir sınırlı" };
+    out.push(format!("Projede kendi yeri Y {x:.3}, X {y:.3}{height} ({at}{chain})."));
+    if let Some(m) = &p.moved {
+        let by = match m.by {
+            KnownMovedBy::Velocity => "kendi hızıyla",
+            KnownMovedBy::Grid => "hız ızgarasıyla",
+        };
+        out.push(format!(
+            "Epok farkı {} → {}, {by}: doğu {:+.3}, kuzey {:+.3}, yukarı {:+.3} m kaydı.",
+            epoch_words(m.from),
+            epoch_words(m.from + m.years),
+            m.shift[0],
+            m.shift[1],
+            m.shift[2]
+        ));
+    }
+    if let (Some(point), Some(dx), Some(dy)) = (&p.point, p.dx, p.dy) {
+        let dz = p.dz.map_or_else(String::new, |dz| format!(", kot farkı {:+.1} mm", dz * 1000.0));
+        out.push(format!("{point} kabul noktası bu yerden {:.1} mm uzakta{dz}.", dx.hypot(dy) * 1000.0));
+    }
+    out
 }
 
 /// How an accepted adjustment stands: out of date when a baseline or a known point it used is left out since (those

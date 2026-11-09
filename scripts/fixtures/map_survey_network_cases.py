@@ -1321,6 +1321,38 @@ def materialized(m):
     return m
 
 
+def query_cases():
+    """ADR 4120: `map.survey.query` with `places` on the network's archive: each known point's own place in the
+    project (map_survey_cases.Model.known_place, PROJ), its epoch moved first when it is not the decision's."""
+    out = []
+
+    def q(name, m, note=None):
+        out.append(ms.case(name, [ms.ask(m, places=True)], note, d=m))
+
+    base = networked()
+    q("Bilinen noktaların projedeki kendi yerleri: BN1 ve BN2 2005,0'da, epok kararında", base,
+      "Kabul noktaları olmadığından fark yok; zincir TUREF'ten TM30'a.")
+    later = dict(at_epoch("BN1", 2026.84), epoch=2026.84)
+    velocity = networked(known_points=[dict(own(1, "BN1"), **later,
+                                            source="TUSAGA-Aktif koordinatı ve hızı (örnek), TUREF, 2026,84"),
+                                       KNOWN[1]])
+    q("BN1 2026,84'te, kendi hızıyla 2005,0'a taşınıp projeye", velocity,
+      "Kendi hızı ızgaranın oradaki hızıdır (0,01 mm/yıl'a yuvarlanmış); yer 2005,0'daki yayımlanmışa milimetre içinde "
+      "yakındır.")
+    grid = networked(known_points=[dict(KNOWN[0], **later), KNOWN[1]])
+    grid.survey["campaigns"][0]["velocity"] = dict(VEL)
+    q("BN1 2026,84'te, kendi hızı yok: arazi ölçümünün hız ızgarasıyla 2005,0'a", grid)
+    stuck = networked(known_points=[dict(KNOWN[0], **later), KNOWN[1]])
+    q("BN1 2026,84'te, ne kendi hızı ne hız ızgarası: yeri söylenmez, nedeni söylenir", stuck)
+    lat, lon, h = given(at(0.006, -0.004, 0.012))
+    on_n1 = networked(known_points=KNOWN + [known(3, "N1", source="Yayımlanmış koordinat (örnek), TUREF, 2005,0")])
+    on_n1.survey["known"][2].update({"lat": lat, "lon": lon, "height": h})
+    q("N1 hem bilinen nokta hem kabul noktası: kendi yeri kabul noktasından 6 mm doğu, 4 mm güney, 12 mm yukarı", on_n1,
+      "Fark, yerden kabul noktası çıkarılarak (proje birimi).")
+    out.append(ms.case("Bilinen noktaların yerleri: plan aynı cevabı verir", [ms.ask(base, op="plan", places=True)], d=base))
+    return out
+
+
 def edit_cases():
     out = []
     base = BASE

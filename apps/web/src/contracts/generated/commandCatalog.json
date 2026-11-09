@@ -63099,7 +63099,7 @@
       "id": "map.survey.query",
       "version": 1,
       "title": "GNSS arşivini sorgula",
-      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı) ya da neden yeri olmadığı. Retler: not_a_map_project, invalid_uid, entity_not_found.",
       "aliases": [
         "gnssarsivi"
       ],
@@ -63117,9 +63117,12 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a\nfile is only looked for. `uid` also says what that object is in the archive.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "description": "Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a\nfile is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says\nwhere each known point lies in the project by its own coordinates.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
         "properties": {
           "deep": {
+            "type": "boolean"
+          },
+          "places": {
             "type": "boolean"
           },
           "uid": {
@@ -63160,6 +63163,13 @@
           "known": {
             "items": {
               "$ref": "#/$defs/SurveyKnown"
+            },
+            "type": "array"
+          },
+          "knownPlaces": {
+            "description": "With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.",
+            "items": {
+              "$ref": "#/$defs/SurveyKnownPlace"
             },
             "type": "array"
           },
@@ -63248,6 +63258,13 @@
           "known": {
             "items": {
               "$ref": "#/$defs/SurveyKnown"
+            },
+            "type": "array"
+          },
+          "knownPlaces": {
+            "description": "With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.",
+            "items": {
+              "$ref": "#/$defs/SurveyKnownPlace"
             },
             "type": "array"
           },
@@ -196773,6 +196790,107 @@
         "lon",
         "height",
         "srid"
+      ],
+      "type": "object"
+    },
+    "SurveyKnownPlace": {
+      "description": "A known point's own place in the project (docs/adr/4120): its latitude, longitude and ellipsoidal height carried\ninto the project as an accepted point's are (the epoch decision of the campaign of the first baseline on its mark,\nelse the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid\n(`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's\nstatus (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the\nplace minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).",
+      "properties": {
+        "chain": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dx": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dy": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "dz": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "epoch": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "year"
+        },
+        "id": {
+          "description": "`bn-N`.",
+          "type": "string"
+        },
+        "mark": {
+          "type": "string"
+        },
+        "moved": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/KnownMoved"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "point": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "why": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "x": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "id",
+        "mark"
       ],
       "type": "object"
     },

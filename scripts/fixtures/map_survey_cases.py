@@ -25,6 +25,10 @@ solutions; a surface line rests on it. Every rule, its order and its sentence is
 - Last measured: the latest session end (else start); a tie to the larger id number.
 - Replay: fixes in the order first seen; RTK sabit followed by another fix; steps between timed positions in
   milliseconds (⌊1000·Δ + 0.5⌋), the usual one the most frequent positive (a tie to the smaller), a jump ≤ 0 or > 2×.
+- ADR 4120, `places`: each known point's own place, carried as an accepted point is: the epoch decision of the campaign
+  of the first baseline on its mark (else the project's); at another epoch first by its own velocity, linearly in its
+  frame's Earth-centred X, Y, Z (PROJ: TUREF 3D → geocentric and back), else along that campaign's velocity grid by
+  PROJ, the shift east, north, up at its given place; then the chain. Its mark's accepted point and place − point.
 """
 
 import copy
@@ -61,6 +65,30 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
 FILES = ROOT / "fixtures/map-survey/v1"
 ELL = {"kind": "ellipsoidal"}
+# ADR 4120: a geographic frame's 3D system and its Earth-centred one (PROJ), for a known point's own velocity.
+GEO3D = {5252: (5251, 5250), 4326: (4979, 4978)}
+
+
+def geocentric(srid, lat, lon, h):
+    x, y, z = pyproj.Transformer.from_crs(GEO3D[srid][0], GEO3D[srid][1], always_xy=True).transform(lon, lat, h)
+    return [x, y, z]
+
+
+def geographic(srid, p):
+    lon, lat, h = pyproj.Transformer.from_crs(GEO3D[srid][1], GEO3D[srid][0], always_xy=True).transform(*p)
+    return lat, lon, h
+
+
+def enu_rows(lat, lon):
+    la, lo = math.radians(lat), math.radians(lon)
+    return [[-math.sin(lo), math.cos(lo), 0.0],
+            [-math.sin(la) * math.cos(lo), -math.sin(la) * math.sin(lo), math.cos(la)],
+            [math.cos(la) * math.cos(lo), math.cos(la) * math.sin(lo), math.sin(la)]]
+
+
+def epoch_words(e):
+    """An epoch as a sentence writes it: two decimals, a decimal comma (2026,84)."""
+    return f"{e:.2f}".replace(".", ",")
 HIZ = gc.model("hiz.tif", "Hız alanı (sentetik)")
 
 # ── The files ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -711,7 +739,68 @@ class Model:
             row["excluded"] = s["excluded"]
         return row
 
-    def tree(self, deep=False, of=None, files=None):
+    # ADR 4120: a known point's own place in the project, or why it has none.
+    def known_place(self, k):
+        sv = self.survey
+        camp_id = next((b["campaign"] for b in sv.get("baselines", []) if k["mark"] in (b["from"], b["to"])), None)
+        camp = self.get("campaigns", camp_id) if camp_id else None
+        target = self.decision(camp)
+        point = next((p for p in sv["points"] if p["mark"] == k["mark"]), None)
+        row = {"id": k["id"], "mark": k["mark"]}
+        if point:
+            row["point"] = point["id"]
+        lat, lon, h = k["lat"], k["lon"], k["height"]
+        e = k.get("epoch")
+        epoch = e
+        if e is not None and target is not None and e != target:
+            if k["srid"] not in GEO3D:
+                row["why"] = (f"EPSG:{k['srid']} kayıttaki coğrafi bir sistem değil; bilinen noktanın çerçevesini "
+                              "(4326 WGS 84, 5252 TUREF) verin.")
+                return row
+            vel = camp.get("velocity") if camp else None
+            if "velocity" in k:
+                x0 = geocentric(k["srid"], lat, lon, h)
+                now = geographic(k["srid"], [x0[i] + k["velocity"][i] * (target - e) for i in range(3)])
+                by = "velocity"
+            elif vel is not None:
+                s = gc.transformed([cv.pt(lon, lat, h)], frm={"srid": k["srid"], "epoch": e, "heights": ELL},
+                                   to={"srid": k["srid"], "epoch": target, "heights": ELL}, vel=vel)
+                q = s["result"]["output"]["points"][0]
+                now = (q["y"], q["x"], q.get("z", h))
+                by = "grid"
+            else:
+                row["why"] = (f"“{k['id']}” bilinen noktası {epoch_words(e)} epokunda, projenin epok kararı "
+                              f"{epoch_words(target)}: projeye taşımak için noktanın kendi hızı (yer merkezli VX, VY, VZ) "
+                              "ya da arazi ölçümünün hız ızgarası (Proje ayarları › Izgaralar) gerekir.")
+                return row
+            a, b = geocentric(k["srid"], lat, lon, h), geocentric(k["srid"], *now)
+            r = enu_rows(lat, lon)
+            d = [b[i] - a[i] for i in range(3)]
+            row["moved"] = {"id": k["id"], "mark": k["mark"], "by": by, "from": e, "years": target - e,
+                            "shift": [sum(r[i][j] * d[j] for j in range(3)) for i in range(3)]}
+            lat, lon, h = now
+            epoch = target
+        with_z = "heights" in self.d["settings"]
+        frm = {"srid": k["srid"], "epoch": epoch} if epoch is not None else {"srid": k["srid"]}
+        to = {"srid": 5254, "epoch": target} if target is not None else {"srid": 5254}
+        if with_z:
+            frm["heights"], to["heights"] = ELL, ELL
+        out = cv.transformed([cv.pt(lon, lat, h) if with_z else cv.pt(lon, lat)], frm=frm, to=to)["result"]["output"]
+        p = out["points"][0]
+        row["x"], row["y"] = p["x"], p["y"]
+        if "z" in p:
+            row["z"] = p["z"]
+        row["chain"] = out["chain"]["status"]
+        if target is not None or epoch is not None:
+            row["epoch"] = target if target is not None else epoch
+        if point:
+            r = point["result"]
+            row["dx"], row["dy"] = p["x"] - r["x"], p["y"] - r["y"]
+            if "z" in p and "z" in r:
+                row["dz"] = p["z"] - r["z"]
+        return row
+
+    def tree(self, deep=False, of=None, files=None, places=False):
         files = files or {}
         sv = self.survey or {"campaigns": [], "sessions": [], "solutions": [], "points": [], "uses": []}
         self.survey = sv
@@ -798,6 +887,8 @@ class Model:
             out["known"] = copy.deepcopy(sv["known"])
         if sv.get("adjustments"):
             out["adjustments"] = copy.deepcopy(sv["adjustments"])
+        if places and sv.get("known"):
+            out["knownPlaces"] = [self.known_place(k) for k in sv["known"]]
         if of is not None:
             out["object"] = self.object(of, latest)
         out["stale"] = sum(p["state"] == "stale" for p in points) + sum(u["state"] == "stale" for u in uses)
@@ -927,13 +1018,15 @@ def case(name, steps, note=None, d=None):
     return c
 
 
-def ask(m, deep=False, of=None, op="execute", expect=None, files=None):
+def ask(m, deep=False, of=None, op="execute", expect=None, files=None, places=False):
     input_ = {}
     if deep:
         input_["deep"] = True
     if of is not None:
         input_["uid"] = of
-    return step(op, input_, done(m.tree(deep, of, files)), expect or UNCHANGED, command="map.survey.query",
+    if places:
+        input_["places"] = True
+    return step(op, input_, done(m.tree(deep, of, files, places)), expect or UNCHANGED, command="map.survey.query",
                 within=WITHIN)
 
 
@@ -1475,6 +1568,9 @@ def built():
     # it imports this script as a module.
     import map_survey_network_cases as net
     e["cases"] += net.edit_cases()
+    # ADR 4120: the known points' own places on the network's archive.
+    q["cases"] += net.query_cases()
+    q["title"] += "; bilinen noktaların projedeki kendi yerleri"
     e["title"] += "; baz, bilinen nokta ve ağ dengelemesinin kabulü"
     return q, e
 

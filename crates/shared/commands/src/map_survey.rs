@@ -25,7 +25,8 @@ pub const MAP_SURVEY_NETWORK: &str = "map.survey.network";
 pub const MAP_SURVEY_NETWORK_VERSION: u32 = 1;
 
 /// Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
-/// file is only looked for. `uid` also says what that object is in the archive.
+/// file is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says
+/// where each known point lies in the project by its own coordinates.
 ///
 /// Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -40,6 +41,9 @@ pub struct MapSurveyQuery {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uid: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub places: bool,
 }
 
 /// How a session's file stands: there (looked for only), the content read, other content, not there.
@@ -358,6 +362,10 @@ pub struct MapSurveyTree {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyAdjustment>>"))]
     pub adjustments: Vec<SurveyAdjustment>,
+    /// With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyKnownPlace>>"))]
+    pub known_places: Vec<SurveyKnownPlace>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub object: Option<SurveyObject>,
@@ -906,6 +914,63 @@ pub struct KnownMoved {
     pub years: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub shift: [f64; 3],
+}
+
+/// A known point's own place in the project (docs/adr/4120): its latitude, longitude and ellipsoidal height carried
+/// into the project as an accepted point's are (the epoch decision of the campaign of the first baseline on its mark,
+/// else the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid
+/// (`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's
+/// status (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the
+/// place minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyKnownPlace {
+    /// `bn-N`.
+    pub id: String,
+    pub mark: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub x: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub y: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub z: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub chain: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub epoch: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub moved: Option<KnownMoved>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub point: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dx: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub dy: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub dz: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub why: Option<String>,
 }
 
 /// One stage of the adjustment: the marks held fixed, m0 (none without degrees of freedom), the degrees of freedom,

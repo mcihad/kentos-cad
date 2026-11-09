@@ -417,8 +417,10 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
     uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale:
     oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok;
     sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK
-    sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. Retler:
-    not_a_map_project, invalid_uid, entity_not_found.
+    sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her
+    bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız
+    ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı) ya da
+    neden yeri olmadığı. Retler: not_a_map_project, invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.survey.query"
@@ -435,6 +437,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         /,
         *,
         deep: bool | Unset = UNSET,
+        places: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -449,12 +452,15 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok
         kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve
         dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir.
-        uid verilince o nesnenin ölçüsü. Retler: not_a_map_project, invalid_uid,
-        entity_not_found.
+        uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi
+        yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle;
+        işaretinin kabul noktasından farkı) ya da neden yeri olmadığı. Retler:
+        not_a_map_project, invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
             deep:
+            places:
             uid:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -470,6 +476,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         """
         return self.execute_input(doc, MapSurveyQuery(
             deep=deep,
+            places=places,
             uid=uid,
         ), request_id=request_id, expected=expected)
 
@@ -479,6 +486,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         /,
         *,
         deep: bool | Unset = UNSET,
+        places: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> MapSurveyTree:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -486,6 +494,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         """
         return self.plan_input(doc, MapSurveyQuery(
             deep=deep,
+            places=places,
             uid=uid,
         ))
 
@@ -495,6 +504,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         /,
         *,
         deep: bool | Unset = UNSET,
+        places: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -502,6 +512,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         """
         return self.validate_input(doc, MapSurveyQuery(
             deep=deep,
+            places=places,
             uid=uid,
         ))
 
@@ -511,6 +522,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         /,
         *,
         deep: bool | Unset = UNSET,
+        places: bool | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -523,6 +535,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         """
         return self.answer_input(doc, MapSurveyQuery(
             deep=deep,
+            places=places,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)
 

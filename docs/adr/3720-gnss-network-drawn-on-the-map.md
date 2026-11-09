@@ -51,7 +51,7 @@ arada çizilmesi (ağın görünüşü); dışlananın ayrı renkte”.
 
 ## Sonra
 
-- Bilinen noktanın kendi yerinden (enlem, boylamdan izdüşürülmüş) bazın çizilmesi. Çerçeve ve epok farkıyla ne kadar
-  kaydığı söylenmeli; ADR 3320 Sonra.
+- ~~Bilinen noktanın kendi yerinden (enlem, boylamdan izdüşürülmüş) bazın çizilmesi. Çerçeve ve epok farkıyla ne kadar
+  kaydığı söylenmeli; ADR 3320 Sonra.~~ [ADR 4120](4120-known-point-own-place-in-the-project.md).
 - GVX oturum korelasyonları; yeni noktaların hızı (ADR 2520 Sonra).
 - Web (TODOS §0.2).

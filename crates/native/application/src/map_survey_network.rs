@@ -57,10 +57,10 @@ pub(crate) struct Analysis {
     pub new: Vec<NewMark>,
 }
 
-const RAD: f64 = 180.0 / std::f64::consts::PI;
+pub(crate) const RAD: f64 = 180.0 / std::f64::consts::PI;
 
 /// The ellipsoid (semi-major axis, inverse flattening) of a geographic frame of the registry.
-fn ellipsoid_of(srid: u32) -> Option<(f64, f64)> {
+pub(crate) fn ellipsoid_of(srid: u32) -> Option<(f64, f64)> {
     let system = kentos_project::crs::system(srid).filter(|s| s.kind == "geographic")?;
     match system.transform_system()? {
         kentos_geometry_core::crs::System::Geographic { datum } => Some(datum.ellipsoid()),
@@ -277,7 +277,7 @@ fn held_wrong(code: &str, message: String, prefix: &str) -> Stop {
 }
 
 /// A place's X, Y, Z (m) on a frame's ellipsoid from its latitude, longitude (degrees) and height (m).
-fn ecef((lat, lon, h): (f64, f64, f64), (a, inv_f): (f64, f64)) -> [f64; 3] {
+pub(crate) fn ecef((lat, lon, h): (f64, f64, f64), (a, inv_f): (f64, f64)) -> [f64; 3] {
     gnss::to_ecef(a, inv_f, lat / RAD, lon / RAD, h)
 }
 
@@ -331,7 +331,7 @@ fn measurement_epoch(given: Option<f64>, used: &[&SurveyBaseline]) -> Option<(f6
 /// A known point's latitude, longitude and ellipsoidal height moved from its epoch to the measurement epoch along the
 /// campaign's velocity grid, by the coordinate chain itself (cad.crs.transform, docs/adr/0631 §2); the chain's own
 /// refusal (a grid not on this device …) kept, its path the operation's.
-fn moved_to(
+pub(crate) fn moved_to(
     doc: &Document,
     grid: &VelocityModel,
     (lat, lon, h): (f64, f64, f64),
@@ -366,7 +366,7 @@ fn moved_to(
 /// A known point's latitude, longitude (degrees) and ellipsoidal height carried `years` by its own velocity
 /// (docs/adr/2520): linearly in the frame's Earth-centred X, Y, Z, X(t) = X(t₀) + V·(t − t₀) (IERS Conventions 2010
 /// §4.1), on the frame's ellipsoid both ways.
-fn by_velocity(given: (f64, f64, f64), shape: (f64, f64), v: [f64; 3], years: f64) -> (f64, f64, f64) {
+pub(crate) fn by_velocity(given: (f64, f64, f64), shape: (f64, f64), v: [f64; 3], years: f64) -> (f64, f64, f64) {
     let p = ecef(given, shape);
     let q = [p[0] + v[0] * years, p[1] + v[1] * years, p[2] + v[2] * years];
     let (lat, lon, h) = gnss::to_geodetic(shape.0, shape.1, q);
@@ -852,12 +852,12 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
 }
 
 /// The campaign's velocity grid as the chain takes it.
-fn velocity_of(campaign: Option<&SurveyCampaign>) -> Option<VelocityModel> {
+pub(crate) fn velocity_of(campaign: Option<&SurveyCampaign>) -> Option<VelocityModel> {
     campaign.and_then(|c| c.velocity.as_ref()).map(|g| VelocityModel { name: g.name.clone(), sha256: g.sha256.clone() })
 }
 
 /// An epoch as a sentence writes it: two decimals, a decimal comma (2026,84).
-fn epoch_text(e: f64) -> String {
+pub(crate) fn epoch_text(e: f64) -> String {
     format!("{e:.2}").replace('.', ",")
 }
 

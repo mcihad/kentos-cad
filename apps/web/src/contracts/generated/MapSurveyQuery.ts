@@ -2,8 +2,9 @@
 
 /**
  * Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
- * file is only looked for. `uid` also says what that object is in the archive.
+ * file is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says
+ * where each known point lies in the project by its own coordinates.
  *
  * Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
  */
-export type MapSurveyQuery = { deep?: boolean, uid?: string, };
+export type MapSurveyQuery = { deep?: boolean, uid?: string, places?: boolean, };

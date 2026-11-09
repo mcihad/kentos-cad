@@ -33,7 +33,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080 | tipli katman profili; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
@@ -537,6 +537,15 @@ Kapsam: **Harita**. Dayanak: TBC'nin vektörleri grafik görünümde seçmesi ve
 Kanıtlanan: GNSS arşivi › Bazlar'ın Ağı göster düğmesi iki ucu kabul noktası olan bütün bazları haritada birlikte çizer,
 dışlananı kırmızı noktalı; uçlar seçilir, çizilemeyenler sayılır, İşareti kaldır hepsini kaldırır; sözleşme değişmedi.
 Açık: bilinen noktanın kendi yerinden bazın çizilmesi, GVX oturum korelasyonları, yeni noktaların hızı.
+
+**9 Kasım 2026, sekizinci tur — Bilinen noktanın projedeki kendi yeri ([ADR 4120](../docs/adr/4120-known-point-own-place-in-the-project.md)).**
+Kapsam: **Harita**. Dayanak: TBC'de noktanın birden çok koordinatı ve nokta karşılaştırma raporu; Trimble Access'in
+ITRF koordinatını işin epokuna taşıması. Kanıtlanan: `map.survey.query`'nin `places`'i her bilinen noktanın projedeki
+yerini verir (epoku önce kendi hızıyla ya da hız ızgarasıyla, `moved`; sonra zincir), işaretin kabul noktasına farkını
+ya da yeri olmama nedenini; PROJ'la altı yeni bağımsız durum (eski sayılar aynı), bağımsız Python testi, MCP; masaüstünde
+bazın kabul noktası olmayan ucu bilinen noktanın yerinden (üçgen, adıyla) çizilir, Ağı göster sekiz bazı birden
+gösterir, satırın ipucu yeri ve kaymayı söyler. Açık: kabul noktası farkının kullanıcı toleransı, GVX oturum
+korelasyonları, yeni noktaların hızı.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

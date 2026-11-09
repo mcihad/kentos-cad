@@ -4,7 +4,9 @@
 //! its middle; Ağı göster (docs/adr/3720) draws every baseline whose ends have accepted points at once, the network's
 //! view, a baseline left out in the danger colour, dotted. They stay until İşareti kaldır (`data.unmark`), another
 //! row or another drawing. The ends are the accepted points' objects as the drawing holds them now: a point moved
-//! after, the line follows it; a point gone, that line is not drawn. Nothing is written.
+//! after, the line follows it; a point gone, that line is not drawn. A known point's mark without an accepted point
+//! (docs/adr/4120) is drawn at the known point's own place in the project, a triangle at that end instead of a ring.
+//! Nothing is written.
 
 use std::sync::Arc;
 
@@ -18,12 +20,19 @@ use kentos_ui::theme::{Tokens, typography};
 use crate::app::App;
 use crate::viewport::MarkColors;
 
-/// A baseline as a row or the network keeps it: the two ends' objects by their lasting ids, the words and whether it
-/// is left out (docs/adr/3720).
+/// A baseline's end: an accepted point's object by its lasting id, or a known point's own place in the project
+/// (docs/adr/4120) with its mark's name.
+#[derive(Clone, Debug, PartialEq)]
+pub enum End {
+    Object(String),
+    Known([f64; 2], String),
+}
+
+/// A baseline as a row or the network keeps it: its two ends, the words and whether it is left out (docs/adr/3720).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ShownLine {
-    pub from: String,
-    pub to: String,
+    pub from: End,
+    pub to: End,
     pub words: String,
     pub excluded: bool,
 }
@@ -35,11 +44,13 @@ pub struct Shown {
     pub lines: Vec<ShownLine>,
 }
 
-/// A baseline on the drawing: its two ends, its words and whether it is left out.
+/// A baseline on the drawing: its two ends (each a known point's own place with its mark's name, or not), its words
+/// and whether it is left out.
 #[derive(Clone, Debug, PartialEq)]
 pub struct BaselineMark {
     pub from: [f64; 2],
     pub to: [f64; 2],
+    pub known: [Option<String>; 2],
     pub words: String,
     pub excluded: bool,
 }
@@ -59,7 +70,11 @@ impl App {
         if doc.session != shown.session {
             return None;
         }
-        let at = |uid: &str| -> Option<[f64; 2]> {
+        let at = |end: &End| -> Option<[f64; 2]> {
+            let uid = match end {
+                End::Known(p, _) => return Some(*p),
+                End::Object(uid) => uid,
+            };
             let slot = doc.model.slot_of(Uuid::parse_str(uid).ok()?)?;
             match doc.model.get(slot)? {
                 Entity::Point(p) => Some([p.p.x, p.p.y]),
@@ -70,7 +85,16 @@ impl App {
             .lines
             .iter()
             .filter_map(|l| {
-                Some(BaselineMark { from: at(&l.from)?, to: at(&l.to)?, words: l.words.clone(), excluded: l.excluded })
+                Some(BaselineMark {
+                    from: at(&l.from)?,
+                    to: at(&l.to)?,
+                    known: [&l.from, &l.to].map(|e| match e {
+                        End::Known(_, name) => Some(name.clone()),
+                        End::Object(_) => None,
+                    }),
+                    words: l.words.clone(),
+                    excluded: l.excluded,
+                })
             })
             .collect();
         (!lines.is_empty()).then(|| Arc::new(BaselineMarks { lines }))
@@ -85,7 +109,8 @@ pub(crate) fn draw(frame: &mut canvas::Frame, m: &BaselineMarks, camera: &Camera
 }
 
 /// A baseline: a dashed line from its start to its end in the accent (left out, docs/adr/3720: dotted in the danger
-/// colour), an arrowhead at the end, its words at the middle on a halo, set off the line to its left.
+/// colour), an arrowhead at the end, its words at the middle on a halo, set off the line to its left; a ring at each
+/// end, a triangle at a known point's own place with its mark's name beside it (docs/adr/4120).
 fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors: &MarkColors, t: &Tokens) {
     let screen = |p: [f64; 2]| {
         let s = camera.world_to_screen(kentos_interaction::Vec2::new(p[0], p[1]));
@@ -113,8 +138,34 @@ fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors
         p.close();
     });
     frame.fill(&head, color);
-    for end in [a, b] {
-        frame.stroke(&Path::circle(end, 5.0), Stroke::default().with_color(color).with_width(2.0));
+    for (end, known) in [(a, &m.known[0]), (b, &m.known[1])] {
+        let mark = if known.is_some() {
+            // A control point's triangle, 7 px from its centre to each corner, on a halo.
+            Path::new(|p| {
+                p.move_to(Point::new(end.x, end.y - 7.0));
+                p.line_to(Point::new(end.x + 6.1, end.y + 3.5));
+                p.line_to(Point::new(end.x - 6.1, end.y + 3.5));
+                p.close();
+            })
+        } else {
+            Path::circle(end, 5.0)
+        };
+        if let Some(name) = known {
+            frame.stroke(&mark, Stroke::default().with_color(colors.halo).with_width(4.0));
+            let label = Text {
+                content: name.clone(),
+                position: Point::new(end.x + 9.0, end.y + 9.0),
+                color: colors.halo,
+                size: Pixels(typography::scaled(11.0)),
+                font: typography::ui_strong(),
+                ..Text::default()
+            };
+            for (ox, oy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
+                frame.fill_text(Text { position: label.position + Vector::new(ox, oy), ..label.clone() });
+            }
+            frame.fill_text(Text { color, ..label });
+        }
+        frame.stroke(&mark, Stroke::default().with_color(color).with_width(2.0));
     }
     let middle = Point::new((a.x + b.x) / 2.0 + uy * 10.0, (a.y + b.y) / 2.0 - ux * 10.0);
     let text = Text {
