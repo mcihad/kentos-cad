@@ -5,7 +5,8 @@ Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - §0: kavramın adı "Evre"den "Tadilat durumu"na geçti.
 - §3: araçlarda tadilat durumu (yeni çizilen, açık görünümün durumunu alır).
 - §4: DXF'te tadilat durumu katmanları; DXF görünümün gösterdiğini alır.
-- Kalanlar ayrı eklerle gelecek: tadilat projesi görünümü ve lejantı, tadilat takımı.
+- §5: Tadilat projesi görünümü (Mimarlar Odası'nın üç tekniği tek planda) ve tadilat lejantı.
+- Kalan: tadilat takımı (paftalar).
 
 ## Sorun
 
@@ -145,6 +146,35 @@ Yeni çizilen yapı öğesi, çizildiği görünümün durumunu alır; ayrı bir
 - **Bulgu (düzeltilmedi):** GDAL'ın DXF okuyucusu Türkçe harfli katman adlarını (Kapı-IPTAL) `DXF_ENCODING=UTF-8`
   verilmeden bozuk okur. EK-4 adları ASCII olduğu için bu yolu etkilemez.
 
+### 5. Tadilat projesi görünümü ve lejantı
+
+Mimarlar Odası tadilat projesini **tek planda üç teknikle** ister. Mevcut durum, Yıkım planı ve Yeni durum bunu
+vermiyordu, çünkü her biri bir durumu gizliyordu. Beşinci görünüm **Tadilat projesi** (`PhaseView::Renovation`,
+`renovation`) bütün durumları birlikte çizer:
+
+| Nesne | Çizim |
+|---|---|
+| Mevcut (ya da durumsuz) | düz kontur: duvarın düz dolgusu bu görünümde çizilmez (lejantın boş kutusu) |
+| İlave | gövdesi 45° taralı (ANSI31, görünümün ölçeğinde) |
+| İptal, geçici | kesikli |
+| Kalan duvarda kapatılan kapı/pencere (`RenovationMark::Infill`) | duvarı kesmez; pervazları arasındaki yer ilave taramayla dolar |
+| Kalan duvara açılan yeni kapı/pencere (`RenovationMark::CutIn`) | duvarı keser; kaldırdığı duvarın iki yüzü kesikli |
+
+- `Entity::renovation_mark` işareti verir. `Spatial::sync_phases` işaretleri depoya `Store::set_renovation` ile
+  verir: düz dolgu kalkar, ilave gövde taranır, dolgu ve kesik yüz parçaları eklenir. Kapatılan açıklık seçenek
+  dışındakiler gibi kesimin dışında kalır.
+- Çizim motoru dolgu açıklığını kesikli çizmez, onu depo çizer (`Phasing::of`).
+- Bu görünümde çizilen İlave olur (§3). DXF'te hiçbir şey gizlenmez; her nesne kendi durum katmanında (§4).
+- Görünüm adlı görünümün tarifinde de seçilir.
+- `.kcad` şema 219: projenin `phaseView`'u ya da bir tarifin `phase`'i `renovation` ise. Şema 218 dosyasında bu değer
+  `bad_value`. Bağımsız Python okuyucusu ve yazıcısı aynı kuralla.
+- **Tadilat lejantı** (`tool.renovationLegend`, Tadilat ▾'nin ikinci bloğu): Mimarlar Odası'nın örnek lejantı bir blok
+  olarak (`MM-XXXX-TADILATLEJANTI`, lejant katmanı) imleçten yerleşir.
+  - İçerik: başlık, ardından Mevcut düz kutu, İlave 45° taralı kutu, İptal kesikli kutu.
+  - Ölçüler pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, başlık 3,5 mm, kutu 15 × 6 mm, tarama 3,175 mm aralıkla.
+- Simgeler `phaseRenovation` ve `renovationLegend`: lejantın üç kutusu küçükte
+  (`.run/icons-m39/ikonlar.png`).
+
 ## Doğrulama
 
 - Etkileşim (`crates/native/interaction/tests/all/phase_cuts.rs`): 6 m mevcut duvar, 1,5 m'de ilave 90'lık kapı, 4 m'de
@@ -191,6 +221,26 @@ Yeni çizilen yapı öğesi, çizildiği görünümün durumunu alır; ayrı bir
   - Yıkım planında duvar kesikli, kapı yok.
   - Yeni durumda kapı var, pencere kapalı, iptal duvarın birleşim yerlerinde komşu yüzler kesintisiz.
   - ÖNCE (M38 ikilisi) açıklığın bu satırı yoktu ve yeni kapı Mevcut durumda da görünüyordu.
+- Tadilat projesi (`phase_cuts.rs` `the_renovation_project_marks_each_state`):
+  - Mevcut duvarın düz dolgusu Tümü'nde var, bu görünümde yok.
+  - İlave duvarın gövdesinde ANSI31 taraması var.
+  - İptal pencere duvarı kesmez: yalnız kapının boşluğu kalır. Pencerenin tek parçası pervazlar arasında (3,40–4,60) bir
+    tarama.
+  - Yeni kapının kendi çizgilerinin yanında iki kesikli çizgi var.
+  - Tümü'ne dönünce her şey eski hâline gelir.
+- Görünüş tablosu: `phase_cases.py` Tadilat projesi sütunuyla (mevcut ve ilave olduğu gibi, iptal ve geçici kesikli).
+- Lejant (`renovation_legend_tests.rs`):
+  - Blok adı, dört yazı (başlık ve üç sözcük), bir tarama, üçüncü kutu kesikli.
+  - Kutu eni 15 mm × pafta ölçeği.
+  - Tek adım, geri alınır.
+- KCAD 219: `renovation-view` örneği, şema 218'de `bad_value`; çok yeni şema örneği 220'ye kaydı (geçerli örnek 250).
+- Gerçek pencere, §5 (iz `fixtures/interaction/real/tadilat-projesi.txt`): rölöve dairede şu adımlar yapıldı:
+  - yatak odaları arasındaki duvar İptal;
+  - Yeni durumda salon ile yatak odası 1 arasına kapı ve salona yeni bir bölme;
+  - batı penceresi İptal;
+  - ardından Tadilat: Tadilat projesi ve Tadilat lejantı.
+
+  Sonuç: bölme taralı, pencerenin yeri taralı dolgu, iptal duvar kesikli, lejant planın altında.
 - Gerçek pencere, §3 (iz `fixtures/interaction/real/tadilat-araclar.txt`): rölöve dairede Yeni durumda salon ile yatak
   odası 1 arasına kapı konur. Kapı İlave olur; Mevcut durumda yoktur ve duvar bütündür. ÖNCE (§0'ın ikilisi) kapı
   "Duvarınki (Mevcut)" oluyor ve Mevcut durumda görünüyordu.

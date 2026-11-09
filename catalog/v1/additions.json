@@ -2960,6 +2960,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.renovationLegend",
+      "title": "Tadilat lejantı",
+      "short": "Tadilat lejantı",
+      "icon": "renovationLegend",
+      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir (docs/adr/3039): başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
+      "aliases": [
+        "TADILATLEJANTI",
+        "RENOVATIONLEGEND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.joineryList",
       "title": "Doğrama listesi",
       "short": "Doğrama listesi",
@@ -3384,7 +3398,7 @@
       "icon": "phaseAll",
       "description": "Bütün tadilat durumları olduğu gibi çizilir.",
       "aliases": [
-        "EVRETUMU"
+        "TADILATTUMU"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3397,7 +3411,7 @@
       "icon": "phaseExisting",
       "description": "Mevcut ve iptal edilecek nesneler çizilir; ilave ve geçici olanlar gizlenir (seçilmez, kenetlenmez, paftada da).",
       "aliases": [
-        "EVREMEVCUT"
+        "TADILATMEVCUT"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3410,7 +3424,7 @@
       "icon": "phaseDemolition",
       "description": "Mevcut nesneler olduğu gibi, iptal edilecekler kesikli çizilir; ilave ve geçici olanlar gizlenir.",
       "aliases": [
-        "EVREYIKIM"
+        "TADILATYIKIM"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3423,7 +3437,20 @@
       "icon": "phaseProposed",
       "description": "İlave nesneler olduğu gibi, mevcutlar soluk, geçiciler kesikli çizilir; iptal edilecekler gizlenir.",
       "aliases": [
-        "EVREYENI"
+        "TADILATYENI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.phase.renovation",
+      "title": "Tadilat: Tadilat projesi",
+      "short": "Tadilat projesi",
+      "icon": "phaseRenovation",
+      "description": "Mimarlar Odası'nın tekniğiyle bütün durumlar tek planda: mevcut düz kontur (dolgusuz), ilave taralı, iptal kesikli. Kalan duvarda kapatılan pencerenin yeri ilave taramayla dolar; mevcut duvara açılan kapının kaldırdığı duvar kesikli görünür. Bundan sonra çizilenler İlave olur.",
+      "aliases": [
+        "TADILATPROJESI"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -5277,6 +5304,8 @@
     "phaseAll": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M7.5 4v12\" stroke-width=\"1\"/>",
     "phaseExisting": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h9\" stroke-width=\"2\"/>",
     "phaseDemolition": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"2\" stroke-dasharray=\"2.5 1.8\"/>",
+    "renovationLegend": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"4\" rx=\"0.6\"/><path d=\"M11 4.5h6.5\" stroke-width=\"1\"/><rect x=\"2.5\" y=\"8\" width=\"6\" height=\"4\" rx=\"0.6\"/><path d=\"M3.3 12 7.3 8M2.5 10.3 4.8 8M5.6 12 8.5 9.1\" stroke-width=\"0.8\"/><path d=\"M11 10h6.5\" stroke-width=\"1\"/><rect x=\"2.5\" y=\"13.5\" width=\"6\" height=\"4\" rx=\"0.6\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M11 15.5h6.5\" stroke-width=\"1\"/>",
+    "phaseRenovation": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M7.5 4v12M12.5 4v12\" stroke-width=\"1\"/><path d=\"M7.5 8.5 11.5 4.5M7.5 12.5 12.5 7.5M8.5 15.5 12.5 11.5\" stroke-width=\"0.9\"/><path d=\"M13.6 7v1.6M13.6 10.2v1.6M13.6 13.4v1.6M16.4 7v1.6M16.4 10.2v1.6M16.4 13.4v1.6\" stroke-width=\"1.1\"/>",
     "phaseProposed": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\" opacity=\"0.45\"/><path d=\"M10 6.5v7M6.5 10h7\" stroke-width=\"1.8\"/>",
     "xrefAttach": "<path d=\"M4.5 2.5h7l4 4v4\"/><path d=\"M11.5 2.5v4h4\" stroke-width=\"1\"/><path d=\"M4.5 2.5v15h5\"/><path d=\"M12.6 12.6l-1.3 1.3a1.9 1.9 0 0 0 2.7 2.7l1.3-1.3\" stroke-width=\"1.2\"/><path d=\"M15.4 15.4l1.3-1.3a1.9 1.9 0 0 0-2.7-2.7l-1.3 1.3\" stroke-width=\"1.2\"/><path d=\"M13.3 15.1l1.8-1.8\" stroke-width=\"1.2\"/>",
     "xrefManager": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15\" stroke-width=\"1\"/><path d=\"M9 10.5h6M9 13.5h6\" stroke-width=\"1\"/><path d=\"M4.6 10.8l.7-.7a.9.9 0 0 1 1.3 1.3l-.7.7M5.9 13.2l-.7.7a.9.9 0 0 1-1.3-1.3l.7-.7M5 12.6l1-1\" stroke-width=\"0.9\"/>",

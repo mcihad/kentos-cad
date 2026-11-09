@@ -2021,6 +2021,28 @@ impl Entity {
         }
     }
 
+    /// How the Tadilat projesi view marks it (docs/adr/3039 §5): a door or window of its own state other than its wall's
+    /// is that wall's infill (closed up, iptal) or cut into it (ilave); otherwise by its state, none a plain outline.
+    pub fn renovation_mark<'a>(
+        &'a self,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> crate::RenovationMark {
+        use crate::{ArchPhase as P, RenovationMark as M};
+        if let Entity::Opening(o) = self {
+            let wall = by_uid(&o.opening.host).and_then(|w| w.own_phase());
+            match o.opening.phase {
+                Some(P::Demolish) if wall != Some(P::Demolish) => return M::Infill,
+                Some(P::New) if wall != Some(P::New) => return M::CutIn,
+                _ => {}
+            }
+        }
+        match self.phase(&by_uid) {
+            None | Some(P::Existing) => M::Plain,
+            Some(P::New) => M::Added,
+            Some(P::Demolish | P::Temporary) => M::Removed,
+        }
+    }
+
     /// Its own level (docs/adr/0715): a wall's, a space's, a grid's, a column's, a stair's, a ramp's, a room
     /// separator's or a block insert's (docs/adr/0733 §1).
     pub fn own_level(&self) -> Option<&str> {

@@ -253,6 +253,56 @@ impl ViewWindow {
     }
 }
 
+/// The Tadilat projesi view's marks (docs/adr/3039 §5; `Store::set_renovation`): every wall drawn without its solid
+/// fill (mevcut a plain outline), `added`'s walls with their bodies hatched (ilave), `infill`'s openings drawn as their
+/// wall's infill (a closed opening, hatched; the store leaves them out of the cuts too, `set_option_out`), `cut_in`'s
+/// openings with the wall they remove dashed.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Renovation {
+    added: IdSet,
+    infill: IdSet,
+    cut_in: IdSet,
+}
+
+impl Renovation {
+    pub fn new(
+        added: impl IntoIterator<Item = f64>,
+        infill: impl IntoIterator<Item = f64>,
+        cut_in: impl IntoIterator<Item = f64>,
+    ) -> Renovation {
+        Renovation {
+            added: added.into_iter().map(f64::to_bits).collect(),
+            infill: infill.into_iter().map(f64::to_bits).collect(),
+            cut_in: cut_in.into_iter().map(f64::to_bits).collect(),
+        }
+    }
+
+    /// Whether wall `id` is ilave.
+    pub(super) fn added(&self, id: f64) -> bool {
+        self.added.contains(&id.to_bits())
+    }
+}
+
+/// Mimarlar Odası's ilave hatch (docs/adr/3039 §5): ANSI31's 45° lines, at the view's scale.
+pub(crate) const RENOVATION_HATCH: &str = "ANSI31";
+
+/// A piece the Tadilat projesi view adds: an infill's hatch, a removed wall's dashed face.
+pub(crate) fn renovation_piece(shape: Shape, line_type: Option<&str>) -> crate::block::Piece {
+    crate::block::Piece {
+        shape,
+        color: None,
+        line_weight: None,
+        by_layer: Vec::new(),
+        gates: Vec::new(),
+        stroke: crate::block::PieceStroke {
+            line_type: line_type.map(str::to_owned),
+            ..Default::default()
+        },
+        attribute: None,
+        annotation_origin: None,
+    }
+}
+
 #[derive(Default)]
 pub struct Store {
     slots: Vec<Option<Item>>,
@@ -325,6 +375,8 @@ pub struct Store {
     /// The objects of the design options the store does not show (`set_option_out`, docs/adr/0788 §4): their walls
     /// join no wall and their openings cut no wall.
     option_out: IdSet,
+    /// The Tadilat projesi view's marks (docs/adr/3039 §5); none: another view.
+    renovation: Option<Renovation>,
     /// The objects drawn faint under the active level (`set_unpicked`, docs/adr/0715 §2): snapped to, never picked.
     unpicked: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
@@ -915,6 +967,58 @@ impl Store {
         view: crate::geom::wall::View,
     ) -> (Option<Arc<Expanded>>, Bounds) {
         match shape {
+            // Tadilat projesi (docs/adr/3039 §5): a closed opening its wall's infill, a new one the wall it removes.
+            Shape::Opening { place, .. }
+                if place.len() == 4
+                    && self.renovation.as_ref().is_some_and(|r| {
+                        r.infill.contains(&id.to_bits()) || r.cut_in.contains(&id.to_bits())
+                    }) =>
+            {
+                let b = entity_bounds_in(shape, self.font);
+                let infill = self
+                    .renovation
+                    .as_ref()
+                    .is_some_and(|r| r.infill.contains(&id.to_bits()));
+                let mut pieces = Vec::new();
+                if infill {
+                    // The jambs' points: the start's on the left and right face, then the end's.
+                    let ring = vec![place[0], place[2], place[3], place[1]];
+                    if let Some(pattern) =
+                        crate::geom::wall::component_hatch(RENOVATION_HATCH, 1.0, 0.0, view.scale)
+                    {
+                        pieces.push(renovation_piece(
+                            Shape::Hatch {
+                                ring,
+                                holes: None,
+                                pattern,
+                                assoc: None,
+                                boundary: None,
+                            },
+                            None,
+                        ));
+                    }
+                } else {
+                    if let (Some(e), _) = self.expansion_in(shape, view) {
+                        pieces.extend(e.shapes.iter().zip(&e.strokes).map(|(s, stroke)| {
+                            crate::block::Piece {
+                                shape: s.clone(),
+                                color: None,
+                                line_weight: None,
+                                by_layer: Vec::new(),
+                                gates: Vec::new(),
+                                stroke: stroke.clone(),
+                                attribute: None,
+                                annotation_origin: None,
+                            }
+                        }));
+                    }
+                    // The wall it removes: its two faces across, dashed (iptal).
+                    for (a, z) in [(place[0], place[2]), (place[1], place[3])] {
+                        pieces.push(renovation_piece(Shape::Line { a, b: z }, Some("dashed")));
+                    }
+                }
+                self.expanded_of(pieces, b)
+            }
             Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
                 let b = entity_bounds_in(shape, self.font);
                 let pieces = self.space_pieces(parts, space, false, view);

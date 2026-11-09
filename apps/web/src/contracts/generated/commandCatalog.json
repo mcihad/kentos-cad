@@ -166068,14 +166068,23 @@
       "type": "object"
     },
     "PhaseView": {
-      "description": "Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.",
-      "enum": [
-        "all",
-        "existing",
-        "demolition",
-        "proposed"
-      ],
-      "type": "string"
+      "description": "Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;\nTadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.",
+      "oneOf": [
+        {
+          "enum": [
+            "all",
+            "existing",
+            "demolition",
+            "proposed"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "renovation",
+          "description": "Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.",
+          "type": "string"
+        }
+      ]
     },
     "PickedEntity": {
       "description": "An object a click falls on and its sub-object.",

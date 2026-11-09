@@ -246,6 +246,11 @@
     - DXF: parçalar durum katmanında (`ek4_state_layer`: MM-DUVA-TUGLA-IPTAL kesikli, -ILAVE, -MEVCUT, -GECICI; taraması
       onun -T'si); görünümün gizlediği yazılmaz ve söylenir (tasarım seçenekleri gibi), duvarlar o durumdaki gibi kesilir.
       `Entity::own_phase` döşemeyi ve mahal ayırıcıyı da okur (önce okumuyordu).
+    - Tadilat projesi görünümü (`PhaseView::Renovation`, KCAD 219): Mimarlar Odası'nın üç tekniği tek planda.
+      - Mevcut düz kontur (duvarın düz dolgusu yok), ilave gövdesi ANSI31 taralı, iptal kesikli.
+      - Kalan duvarda kapatılan açıklık taralı dolgu, açılan açıklıkta kaldırılan duvar kesikli.
+      - `Entity::renovation_mark` → `Store::set_renovation`.
+      - Tadilat ▾ › Tadilat lejantı (`tool.renovationLegend`, blok MM-XXXX-TADILATLEJANTI).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

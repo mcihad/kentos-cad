@@ -885,11 +885,14 @@ pub const SCHEMA_WITH_OPENING_SPECS: u32 = 217;
 /// Schema 218 (docs/adr/3039): a door's or window's own phase (`phase` of an opening), a new door cut into an existing
 /// wall or an existing window closed up.
 pub const SCHEMA_WITH_OPENING_PHASES: u32 = 218;
+/// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view (`renovation`), the project's `phaseView` or a named view's
+/// recipe's `phase`.
+pub const SCHEMA_WITH_RENOVATION_VIEW: u32 = 219;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 216] = [
+pub const SCHEMAS: [u32; 217] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1106,6 +1109,7 @@ pub const SCHEMAS: [u32; 216] = [
     SCHEMA_WITH_ROOM_LIST,
     SCHEMA_WITH_OPENING_SPECS,
     SCHEMA_WITH_OPENING_PHASES,
+    SCHEMA_WITH_RENOVATION_VIEW,
 ];
 
 /// The file a drawing is saved as.

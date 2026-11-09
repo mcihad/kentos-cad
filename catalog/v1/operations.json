@@ -2280,6 +2280,13 @@
       ],
       "note": "Mahal çizelgesi: kat (başlık satırıyla, en alt kattan), numara, ad, döşeme, süpürgelik, duvar, tavan, kapı, pencere, denizlik ve parapet, basamak ve rıht, küpeşte ve korkuluk sütunları; toplamsız (ADR 3038)."
     },
+    "tool.renovationLegend": {
+      "level": "semantic",
+      "via": [
+        "cad.blocks.insert"
+      ],
+      "note": "Tadilat lejantının bloğu (kimliği sabit, adı MM-XXXX-TADILATLEJANTI) pafta ölçeğinde yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı (ADR 3039 §5)."
+    },
     "tool.joineryList": {
       "level": "semantic",
       "via": [
@@ -2491,6 +2498,13 @@
         "cad.settings.set"
       ],
       "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
+    },
+    "arch.phase.renovation": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Projenin arch.phaseView'u renovation (ADR 3039 §5): Mimarlar Odası'nın üç tekniği tek planda."
     },
     "arch.phase.proposed": {
       "level": "semantic",

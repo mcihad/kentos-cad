@@ -565,6 +565,22 @@
    "tests": 0
   },
   {
+   "id": "arch.phase.renovation",
+   "kind": "command",
+   "title": "Tadilat: Tadilat projesi",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u renovation (ADR 3039 §5): Mimarlar Odası'nın üç tekniği tek planda.",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.program",
    "kind": "command",
    "title": "Bina programı",
@@ -13504,6 +13520,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.renovationLegend",
+   "kind": "command",
+   "title": "Tadilat lejantı",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.insert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.insert",
+   "note": "Tadilat lejantının bloğu (kimliği sabit, adı MM-XXXX-TADILATLEJANTI) pafta ölçeğinde yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı (ADR 3039 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.repeat",

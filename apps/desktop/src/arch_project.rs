@@ -41,7 +41,9 @@ impl App {
                 PhaseView::Existing | PhaseView::Demolition => {
                     " Bundan sonra çizilenler Mevcut olur.".to_owned()
                 }
-                PhaseView::Proposed => " Bundan sonra çizilenler İlave olur.".to_owned(),
+                PhaseView::Proposed | PhaseView::Renovation => {
+                    " Bundan sonra çizilenler İlave olur.".to_owned()
+                }
             };
             self.say(
                 Level::Info,
@@ -72,6 +74,10 @@ mod tests {
             (
                 "arch.phase.existing",
                 "Tadilat görünümü: Mevcut durum. Bundan sonra çizilenler Mevcut olur.",
+            ),
+            (
+                "arch.phase.renovation",
+                "Tadilat görünümü: Tadilat projesi. Bundan sonra çizilenler İlave olur.",
             ),
             ("arch.phase.all", "Tadilat görünümü: Tümü."),
         ] {

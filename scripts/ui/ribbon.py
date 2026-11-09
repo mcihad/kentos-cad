@@ -472,7 +472,10 @@ CAD = [
         # beside it holds the storeys themselves.
         P("Proje", "archSettings", [M("Kat", [("", ["view.levels.up", "view.levels.down"]),
                 ("Kat görünümü", ["view.levels.all", "view.levels.active", "view.levels.below"])]),
-            M("Tadilat", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])]),
+            M("Tadilat", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed",
+                                  "arch.phase.renovation"]),
+                             # Mimarlar Odası's legend (docs/adr/3039 §5).
+                             ("", ["tool.renovationLegend"])]),
             S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.permitSet")],
           # Program, Şablon, Kapı ve pencere tipleri (docs/adr/0772), Oda modülleri (docs/adr/0775), Malzemeler
           # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside

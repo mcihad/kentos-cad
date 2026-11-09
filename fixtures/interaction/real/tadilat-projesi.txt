@@ -1,0 +1,78 @@
+# M39 part 2 (docs/adr/3039 §5): the survey flat; the wall between the bedrooms İptal; in Yeni durum a door between
+# Salon and Yatak odası 1 (İlave by the view) and a new partition in Salon (İlave); Salon's west window İptal; then
+# Tadilat: Tadilat projesi (Mimarlar Odası's three techniques) and Tadilat lejantı beside the plan.
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 589 600   # the wall between the bedrooms
+wait 1200
+click 1800 537  # Tadilat durumu
+wait 800
+click 1755 628  # İptal
+wait 1200
+key Escape
+wait 500
+click 1640 20
+wait 600
+type tadilat: yeni durum
+wait 1200
+key Return
+wait 2000
+click 152 75    # Kapı
+wait 1200
+move 384 531
+wait 800
+click 384 531   # into the existing wall between Salon and Yatak odası 1
+wait 1500
+key Escape
+wait 500
+key Escape
+wait 500
+click 1640 20
+wait 600
+type duvar
+wait 1200
+key Return
+wait 1500
+click 140 334   # a new partition across Salon
+wait 600
+click 378 334
+wait 600
+key Escape
+wait 500
+key Escape
+wait 500
+click 126 444   # Salon's west window
+wait 1200
+click 1800 479  # Tadilat durumu
+wait 800
+click 1785 570  # İptal
+wait 1200
+key Escape
+wait 500
+click 1640 20
+wait 600
+type tadilat: tadilat projesi
+wait 1200
+key Return
+wait 2000
+move 1300 1010
+wait 500
+shot sonra-tadilat-projesi
+click 1640 20
+wait 600
+type tadilat lejantı
+wait 1200
+key Return
+wait 1500
+click 160 830   # below the plan
+wait 1500
+key Escape
+wait 500
+move 1300 1010
+wait 500
+shot sonra-lejant

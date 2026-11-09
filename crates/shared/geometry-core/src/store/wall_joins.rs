@@ -119,6 +119,32 @@ impl Store {
         self.option_out.is_empty()
     }
 
+    /// The Tadilat projesi view's marks (docs/adr/3039 §5); none: another view. Every wall and opening is pieced again.
+    pub fn set_renovation(&mut self, marks: Option<super::Renovation>) {
+        if marks == self.renovation {
+            return;
+        }
+        self.renovation = marks;
+        let slots: Vec<u32> = (0..self.slots.len() as u32)
+            .filter(|&s| {
+                matches!(&self.slots[s as usize], Some(it)
+                    if matches!(it.shape, Shape::Wall { .. } | Shape::Opening { .. }))
+            })
+            .collect();
+        for s in slots {
+            let fresh = self.slots[s as usize]
+                .as_ref()
+                .map(|it| self.wall_expansion(it.id, &it.shape));
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[s as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = None;
+            }
+            self.loosen(s);
+        }
+        self.maybe_rebuild();
+    }
+
     /// A wall to draw again, whatever changed about its openings.
     fn touch_wall(&mut self, wall: f64) {
         let key = wall.to_bits();
@@ -177,8 +203,38 @@ impl Store {
         match (shape, self.wall_drawn.get(&id.to_bits())) {
             (Shape::Wall { pts, wall, .. }, Some(d)) => {
                 let b = entity_bounds_in(shape, self.font);
+                // Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline (no solid fill), ilave its body hatched.
+                let pieces = match &self.renovation {
+                    Some(r) => {
+                        let plain = wall::Spec {
+                            fill: None,
+                            ..wall.clone()
+                        };
+                        let mut pieces = Vec::new();
+                        if r.added(id)
+                            && let Some(pattern) =
+                                wall::component_hatch(super::RENOVATION_HATCH, 1.0, 0.0, view.scale)
+                        {
+                            for (ring, holes) in &d.fill {
+                                pieces.push(super::renovation_piece(
+                                    Shape::Hatch {
+                                        ring: ring.clone(),
+                                        holes: holes.clone(),
+                                        pattern: pattern.clone(),
+                                        assoc: None,
+                                        boundary: None,
+                                    },
+                                    None,
+                                ));
+                            }
+                        }
+                        pieces.extend(wall::pieces_of(d, pts, &plain, view));
+                        pieces
+                    }
+                    None => wall::pieces_of(d, pts, wall, view),
+                };
                 // At the view's line group (docs/adr/3013).
-                let pieces = self.with_line_group(shape, wall::pieces_of(d, pts, wall, view), view);
+                let pieces = self.with_line_group(shape, pieces, view);
                 self.expanded_of(pieces, b)
             }
             _ => self.expansion_of_in(id, shape, view),

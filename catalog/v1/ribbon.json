@@ -2334,7 +2334,14 @@
            "arch.phase.all",
            "arch.phase.existing",
            "arch.phase.demolition",
-           "arch.phase.proposed"
+           "arch.phase.proposed",
+           "arch.phase.renovation"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "tool.renovationLegend"
           ]
          }
         ]

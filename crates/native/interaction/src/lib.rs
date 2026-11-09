@@ -219,6 +219,7 @@ pub mod opening_codes_tool;
 pub mod parcel_tool;
 pub mod calc_tables;
 pub mod joinery_list_tool;
+pub mod renovation_legend_tool;
 pub mod escape_tool;
 pub mod plan_dimensions;
 pub mod revcloud;

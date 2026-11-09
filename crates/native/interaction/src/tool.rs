@@ -1464,7 +1464,8 @@ impl Context<'_> {
     }
 
     /// The tadilat durumu a new building element takes (docs/adr/3039 §3): the state of the view it is drawn in.
-    /// Mevcut durum and Yıkım planı draw the building as it stands (Mevcut), Yeni durum the works (İlave); Tümü none.
+    /// Mevcut durum and Yıkım planı draw the building as it stands (Mevcut), Yeni durum and Tadilat projesi the works
+    /// (İlave); Tümü none.
     pub fn drawn_phase(&self) -> Option<kentos_commands::ArchPhase> {
         use kentos_commands::{ArchPhase, PhaseView};
         match self
@@ -1477,7 +1478,7 @@ impl Context<'_> {
         {
             PhaseView::All => None,
             PhaseView::Existing | PhaseView::Demolition => Some(ArchPhase::Existing),
-            PhaseView::Proposed => Some(ArchPhase::New),
+            PhaseView::Proposed | PhaseView::Renovation => Some(ArchPhase::New),
         }
     }
 

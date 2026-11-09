@@ -270,3 +270,111 @@ fn what_a_tool_draws_takes_the_view_s_state() {
         .expect("the third wall");
     assert_eq!(own(&b, third), None);
 }
+
+/// Tadilat projesi (docs/adr/3039 §5; Mimarlar Odası's technique): one plan with every state. The existing wall is a
+/// plain outline (its solid fill gone), a new wall's body is hatched (ANSI31), the window closed up does not cut its
+/// wall and is its infill (a hatch between its jambs), the new door cuts its wall and shows the wall it removes dashed.
+#[test]
+fn the_renovation_project_marks_each_state() {
+    use kentos_geometry_core::store::Store;
+    let (mut b, wall) = renovation();
+    let uid = b.doc.uid(wall).unwrap().to_string();
+    run(
+        &mut b,
+        "cad.walls.edit",
+        json!({"uids": [uid], "operation": {"kind": "set", "fill": "#5A5A5A"}}),
+    );
+    run(
+        &mut b,
+        "cad.walls.create",
+        json!({"layerId": "cizim", "walls": [{
+            "pts": [{"x": E, "y": N + 3.0}, {"x": E + 6.0, "y": N + 3.0}], "width": 0.3, "justify": "center",
+            "arch": {"phase": "new"}
+        }]}),
+    );
+    let added = b
+        .doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Wall(_)))
+        .map(|e| Slot(e.base().id))
+        .find(|s| *s != wall)
+        .unwrap();
+    let opening = |b: &Bench, wide: bool| {
+        b.doc
+            .entities()
+            .find(|e| matches!(e, Entity::Opening(o) if (o.opening.width > 1.0) == wide))
+            .map(|e| Slot(e.base().id))
+            .unwrap()
+    };
+    let (door, window) = (opening(&b, false), opening(&b, true));
+    let shapes = |store: &Store, slot: Slot| -> Vec<Shape> {
+        store
+            .get(f64::from(slot.0))
+            .and_then(|it| it.expanded.clone())
+            .map(|x| x.shapes.clone())
+            .unwrap_or_default()
+    };
+    let hatches = |store: &Store, slot: Slot, name: &str| {
+        shapes(store, slot)
+            .iter()
+            .filter(|s| {
+                matches!(s, Shape::Hatch { pattern, .. }
+                    if pattern.name.as_deref().is_some_and(|n| n.eq_ignore_ascii_case(name))
+                        || pattern.kind.eq_ignore_ascii_case(name))
+            })
+            .count()
+    };
+    viewed(&mut b, PhaseView::All);
+    let solid = hatches(b.spatial.store(), wall, "solid");
+    assert!(solid > 0, "the existing wall's solid fill in Tümü");
+    viewed(&mut b, PhaseView::Renovation);
+    let store = b.spatial.store();
+    // Mevcut: a plain outline.
+    assert_eq!(hatches(store, wall, "solid"), 0, "Tümü had {solid}");
+    assert_eq!(hatches(store, wall, "ANSI31"), 0);
+    // İlave: its body hatched.
+    assert!(
+        hatches(store, added, "ANSI31") > 0,
+        "{:?}",
+        shapes(store, added)
+    );
+    // The window closed up: no hole, its infill hatched between its jambs.
+    assert_eq!(holes(&b, wall), vec![DOOR], "the window does not cut");
+    let infill = shapes(b.spatial.store(), window);
+    assert_eq!(infill.len(), 1, "{infill:?}");
+    let Shape::Hatch { ring, .. } = &infill[0] else {
+        panic!("{infill:?}")
+    };
+    let xs: Vec<f64> = ring
+        .iter()
+        .map(|p| ((p.x - E) * 100.0).round() / 100.0)
+        .collect();
+    assert_eq!(
+        (
+            xs.iter().cloned().fold(f64::MAX, f64::min),
+            xs.iter().cloned().fold(f64::MIN, f64::max)
+        ),
+        WINDOW
+    );
+    // The new door: itself, and its wall's two faces across it dashed.
+    let it = b
+        .spatial
+        .store()
+        .get(f64::from(door.0))
+        .and_then(|it| it.expanded.clone())
+        .unwrap();
+    let dashed = it
+        .shapes
+        .iter()
+        .zip(&it.strokes)
+        .filter(|(s, st)| {
+            matches!(s, Shape::Line { .. }) && st.line_type.as_deref() == Some("dashed")
+        })
+        .count();
+    assert_eq!(dashed, 2, "{:?}", it.shapes);
+    assert!(it.shapes.len() > 2, "the door's own lines too");
+    // Back to Tümü: the fill again, no marks.
+    viewed(&mut b, PhaseView::All);
+    assert_eq!(hatches(b.spatial.store(), wall, "solid"), solid);
+    assert_eq!(holes(&b, wall), vec![DOOR, WINDOW]);
+}

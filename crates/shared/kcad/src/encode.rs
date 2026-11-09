@@ -2270,6 +2270,21 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 219 (docs/adr/3039 §5): the Tadilat projesi view, the project's or a named view's recipe's.
+    let renovation = Some(kentos_contracts::PhaseView::Renovation);
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.phase_view == renovation)
+        || doc
+            .settings
+            .named_views
+            .iter()
+            .any(|v| v.recipe.as_ref().is_some_and(|r| r.phase == renovation))
+    {
+        return crate::SCHEMA_WITH_RENOVATION_VIEW;
+    }
     // Schema 218 (docs/adr/3039): a door's or window's own phase.
     let opening_phase = |e: &Entity| matches!(e, Entity::Opening(o) if o.opening.phase.is_some());
     if objs.iter().any(opening_phase)

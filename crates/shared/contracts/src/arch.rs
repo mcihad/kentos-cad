@@ -410,7 +410,8 @@ impl ArchPhase {
     }
 }
 
-/// Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.
+/// Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
+/// Tadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -422,6 +423,8 @@ pub enum PhaseView {
     Existing,
     Demolition,
     Proposed,
+    /// Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
+    Renovation,
 }
 
 /// How a phase view draws an object of a phase.
@@ -440,12 +443,31 @@ pub enum PhaseLook {
 /// The transparency a faded object is drawn at.
 pub const PHASE_FADED: f64 = 0.6;
 
+/// How the Tadilat projesi view marks an object (docs/adr/3039 §5; Mimarlar Odası: "Projede mevcut, iptal ve ilaveler
+/// üç farklı teknikle ifade edilmelidir"): mevcut a plain outline, ilave hatched, iptal dashed. A door or window closed
+/// up in a wall that stays is that wall's infill (ilave); a new one cut into a wall that stays shows the wall it removes
+/// dashed.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RenovationMark {
+    /// Mevcut, or no state: a plain outline.
+    Plain,
+    /// İlave: its body hatched.
+    Added,
+    /// İptal or geçici: dashed.
+    Removed,
+    /// A door or window closed up (iptal) in a wall that stays: the infill, hatched as ilave.
+    Infill,
+    /// A new (ilave) door or window cut into a wall that stays: itself, and the wall it removes dashed.
+    CutIn,
+}
+
 impl PhaseView {
-    pub const ALL: [PhaseView; 4] = [
+    pub const ALL: [PhaseView; 5] = [
         PhaseView::All,
         PhaseView::Existing,
         PhaseView::Demolition,
         PhaseView::Proposed,
+        PhaseView::Renovation,
     ];
 
     pub fn label(self) -> &'static str {
@@ -454,6 +476,7 @@ impl PhaseView {
             PhaseView::Existing => "Mevcut durum",
             PhaseView::Demolition => "Yıkım planı",
             PhaseView::Proposed => "Yeni durum",
+            PhaseView::Renovation => "Tadilat projesi",
         }
     }
 
@@ -463,6 +486,7 @@ impl PhaseView {
             PhaseView::Existing => "existing",
             PhaseView::Demolition => "demolition",
             PhaseView::Proposed => "proposed",
+            PhaseView::Renovation => "renovation",
         }
     }
 
@@ -482,6 +506,9 @@ impl PhaseView {
             (PhaseView::Proposed, P::Demolish) => L::Hidden,
             (PhaseView::Proposed, P::New) => L::Shown,
             (PhaseView::Proposed, P::Temporary) => L::Dashed,
+            // Mimarlar Odası's technique (docs/adr/3039 §5): the store hatches ilave and fills a closed opening.
+            (PhaseView::Renovation, P::Existing | P::New) => L::Shown,
+            (PhaseView::Renovation, P::Demolish | P::Temporary) => L::Dashed,
         }
     }
 }

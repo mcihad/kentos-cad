@@ -1502,8 +1502,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 xref_paths = paths;
             }
             "namedViews" if has.views => {
+                let at = r.position();
                 named_views =
                     views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options, has.option_combos)?;
+                // Schema 219 (docs/adr/3039 §5): a recipe's Tadilat projesi view.
+                if !has.renovation_view
+                    && named_views.iter().any(|v| {
+                        v.recipe.as_ref().is_some_and(|x| {
+                            x.phase == Some(kentos_contracts::PhaseView::Renovation)
+                        })
+                    })
+                {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "görünüm tarifinin Tadilat projesi görünümü (renovation) şema 219 ister",
+                    ));
+                }
             }
             // Schema 146 (docs/adr/0783 §2): the project's view templates, read whole as the contract's JSON.
             "viewTemplates" if has.view_templates => view_templates = views::view_templates(r)?,
@@ -1804,6 +1819,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         Code::UnknownField,
                         at,
                         "projenin tadilat görünümü şema 82'den beri yazılır",
+                    ));
+                }
+                if !has.renovation_view
+                    && a.phase_view == Some(kentos_contracts::PhaseView::Renovation)
+                {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "projenin Tadilat projesi görünümü (renovation) şema 219 ister",
                     ));
                 }
                 if !has.spaces && a.space_method.is_some() {

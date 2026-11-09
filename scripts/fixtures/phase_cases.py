@@ -5,7 +5,8 @@ Writes fixtures/arch/v1/phases.json; `--check` compares and writes nothing.
 
 - The table: in Tümü every phase as it is; Mevcut durum: existing and demolish as they are, new and temporary hidden;
   Yıkım planı: existing as it is, demolish dashed, new and temporary hidden; Yeni durum: existing faded, demolish
-  hidden, new as it is, temporary dashed. An object without a phase is as it is in every view.
+  hidden, new as it is, temporary dashed; Tadilat projesi (docs/adr/3039 §5): existing and new as they are (the store
+  hatches new), demolish and temporary dashed. An object without a phase is as it is in every view.
 - A look on an object: hidden, it is not drawn; dashed, its own line type `dashed` and no line pattern of its own;
   faded, its own transparency 0.6, or its own when that is more.
 """
@@ -17,13 +18,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/arch/v1/phases.json"
-VIEWS = ["all", "existing", "demolition", "proposed"]
+VIEWS = ["all", "existing", "demolition", "proposed", "renovation"]
 PHASES = [None, "existing", "demolish", "new", "temporary"]
 TABLE = {
     "all": {"existing": "shown", "demolish": "shown", "new": "shown", "temporary": "shown"},
     "existing": {"existing": "shown", "demolish": "shown", "new": "hidden", "temporary": "hidden"},
     "demolition": {"existing": "shown", "demolish": "dashed", "new": "hidden", "temporary": "hidden"},
     "proposed": {"existing": "faded", "demolish": "hidden", "new": "shown", "temporary": "dashed"},
+    "renovation": {"existing": "shown", "demolish": "dashed", "new": "shown", "temporary": "dashed"},
 }
 
 
@@ -64,6 +66,8 @@ def build():
         ("geçici duvar Yeni durumda kesikli", wall("temporary"), "proposed"),
         ("tadilat durumu olmayan duvar her görünümde olduğu gibi", wall(None), "demolition"),
         ("yeni duvar Tümü'nde olduğu gibi", wall("new"), "all"),
+        ("iptal edilen duvar Tadilat projesinde kesikli", wall("demolish"), "renovation"),
+        ("ilave duvar Tadilat projesinde olduğu gibi (taramasını depo çizer)", wall("new"), "renovation"),
     ]:
         lk = look(view, e.get("arch", {}).get("phase"))
         objects.append({"name": name, "view": view, "entity": e, "look": lk, "drawn": drawn(e, lk)})

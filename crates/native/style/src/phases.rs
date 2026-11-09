@@ -35,7 +35,15 @@ impl Phasing {
             return Self { looks, ..Self::default() };
         }
         for e in entities {
-            let look = view.look(e.phase(&by_uid));
+            // Tadilat projesi (docs/adr/3039 §5): a door or window closed up in a wall that stays is drawn by the store
+            // as that wall's infill, not dashed.
+            let infill = view == PhaseView::Renovation
+                && e.renovation_mark(&by_uid) == kentos_contracts::RenovationMark::Infill;
+            let look = if infill {
+                PhaseLook::Shown
+            } else {
+                view.look(e.phase(&by_uid))
+            };
             if look != PhaseLook::Shown {
                 looks.insert(e.base().id, look);
             }

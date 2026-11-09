@@ -1277,7 +1277,7 @@ VIEW_SIZE = 2.0e7
 # written only true), a phase view, a layer state's name (1 to 64 characters), the categories left out (each once, in
 # their order) and a scale's denominator from 1 to 100 000; no field at its default.
 RECIPE_CATEGORIES = ("dimensions", "tags", "texts", "hatches", "blocks", "spaces", "grids", "viewmarks")
-RECIPE_PHASES = ("all", "existing", "demolition", "proposed")
+RECIPE_PHASES = ("all", "existing", "demolition", "proposed", "renovation")
 RECIPE_DETAILS = ("schematic", "standard", "detailed")
 
 
@@ -2693,6 +2693,10 @@ def document(d):
            for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
         # A door's or window's own phase (docs/adr/3039).
         schema = max(schema, 218)
+    if ((d["settings"].get("arch") or {}).get("phaseView") == "renovation"
+            or any((v.get("recipe") or {}).get("phase") == "renovation" for v in d["settings"].get("namedViews", []))):
+        # The Tadilat projesi view (docs/adr/3039 §5).
+        schema = max(schema, 219)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3568,7 +3572,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-219.kcad"] = container(root(cmap(parts), version=uint(219)))
+    files["schema-version-220.kcad"] = container(root(cmap(parts), version=uint(220)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6388,6 +6392,11 @@ def build():
     assert phases.count(b"\x67version\x18\xda") == 1, "an opening's own phase is schema 218"
     out["opening-phases.kcad"] = container(phases)
     out["broken/opening-phases-in-schema-217.kcad"] = container(phases.replace(b"\x67version\x18\xda", b"\x67version\x18\xd9"))
+    # Schema 219 (docs/adr/3039 §5): the Tadilat projesi view; schema 218 refuses the value.
+    renovation = document(load("renovation-view.json"))
+    assert renovation.count(b"\x67version\x18\xdb") == 1, "the Tadilat projesi view is schema 219"
+    out["renovation-view.kcad"] = container(renovation)
+    out["broken/renovation-view-in-schema-218.kcad"] = container(renovation.replace(b"\x67version\x18\xdb", b"\x67version\x18\xda"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

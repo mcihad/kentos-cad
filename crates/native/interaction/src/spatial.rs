@@ -442,14 +442,41 @@ impl Spatial {
                 })
                 .collect()
         };
+        // Tadilat projesi (docs/adr/3039 §5): Mimarlar Odası's three techniques; a closed opening fills its wall, so it
+        // cuts nothing either.
+        let renovation = (phase_view == kentos_commands::PhaseView::Renovation).then(|| {
+            use kentos_commands::{Entity, RenovationMark as M};
+            let by_uid = |u: &str| {
+                Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+            };
+            let (mut added, mut infill, mut cut_in) = (Vec::new(), Vec::new(), Vec::new());
+            for e in doc.entities() {
+                let id = f64::from(e.base().id);
+                match (e, e.renovation_mark(by_uid)) {
+                    (Entity::Wall(_), M::Added) => added.push(id),
+                    (Entity::Opening(_), M::Infill) => infill.push(id),
+                    (Entity::Opening(_), M::CutIn) => cut_in.push(id),
+                    _ => {}
+                }
+            }
+            (added, infill, cut_in)
+        });
         let out: Vec<f64> = options
             .iter()
             .copied()
             .chain(phased.iter().filter(|p| p.1).map(|p| p.0))
+            .chain(renovation.iter().flat_map(|r| r.1.iter().copied()))
             .collect();
         if !(out.is_empty() && self.store.no_option_out()) {
             self.store.set_option_out(out);
         }
+        self.store
+            .set_renovation(renovation.map(|(added, infill, cut_in)| {
+                kentos_geometry_core::store::Renovation::new(added, infill, cut_in)
+            }));
         // A sheet's map edited in place shows its own level (docs/adr/0716), not the session's.
         let (view, active) = match &self.sheet_view {
             Some(v) => match &v.level {

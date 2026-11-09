@@ -441,6 +441,8 @@ pub(super) struct Features {
     pub(super) opening_specs: bool,
     /// Schema 218 (docs/adr/3039): a door's or window's own phase.
     pub(super) opening_phases: bool,
+    /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
+    pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -733,6 +735,7 @@ impl Features {
             room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
             opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
             opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
+            renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,

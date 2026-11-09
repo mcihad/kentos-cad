@@ -725,6 +725,8 @@ mod permit_set_tests;
 mod room_list_tests;
 #[cfg(test)]
 mod joinery_list_tests;
+#[cfg(test)]
+mod renovation_legend_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

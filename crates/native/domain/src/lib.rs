@@ -83,6 +83,7 @@ pub mod escape;
 pub mod room_names;
 pub mod room_openings;
 pub mod joinery_list;
+pub mod renovation_legend;
 pub mod provisions;
 pub mod title_facts;
 pub mod tag_read;

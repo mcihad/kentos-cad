@@ -5322,14 +5322,23 @@ PenCategoryName = Literal["walls", "openings", "columns", "slabs", "spaces", "di
 
 
 class PhaseView(_StrEnum):
-    """Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum."""
+    """Which tadilat durumları the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum;
+    Tadilat projesi (docs/adr/3039 §5) every state with Mimarlar Odası's three techniques.
+
+    - ``all``
+    - ``existing``
+    - ``demolition``
+    - ``proposed``
+    - ``renovation``: Tadilat projesi (docs/adr/3039 §5): mevcut a plain outline, ilave hatched, iptal dashed, in one plan.
+    """
     ALL = "all"
     EXISTING = "existing"
     DEMOLITION = "demolition"
     PROPOSED = "proposed"
+    RENOVATION = "renovation"
 
 
-PhaseViewName = Literal["all", "existing", "demolition", "proposed"]
+PhaseViewName = Literal["all", "existing", "demolition", "proposed", "renovation"]
 """The names of :class:`PhaseView`, for a plain string."""
 
 
