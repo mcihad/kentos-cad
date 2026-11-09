@@ -212,6 +212,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-10 / ADR 4260: web'in `cad.scenarios.impact` işleyicisinde `slope` (8 yeni ortak durum) ve web Senaryo ölçüleri
+  penceresinde Eğim yüzeyi / dik eşik.
 - MAP-09 / ADR 4240: web'de `cad.zoning.symbolize` işleyicisi (26 ortak durum, yeni `unknown_plan_symbol` ve
   `not_a_decision`) ve web İmar planı denetiminde Sembolü karardan ver penceresi.
 - MAP-08 / ADR 4220: web'in `.kcad` okuyucu ve yazıcısında şema 216 (`settings.parcelRegister`), web'de

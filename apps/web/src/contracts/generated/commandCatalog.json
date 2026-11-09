@@ -59487,7 +59487,7 @@
       "id": "cad.scenarios.impact",
       "version": 1,
       "title": "Senaryo ölçüleri",
-      "summary": "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı (ADR 2660), near'da yakın ve uzak alanlar ve katmanın nesneleri (ADR 3060), baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir. Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş), scenario_not_found, nothing_to_compare.",
+      "summary": "Seçilen senaryoyu yerine geçtiği mevcut durumla sayılarla, yan yana karşılaştırır: nesne sayısı, alanların toplamı (m², düzlemsel), çizgilerin uzunluğu (m), inşaat alanı (Σ alan × KAKS, m²), her birinin birimi ve yöntemi; kullanıma (field, ilk değer Kullanim) göre alanlar; anahtarıyla (key, ilk değer KararKimlik) eşlenen kararlardan değişenler (added, removed, geometry, decision, both) önce/sonra kullanım, alan ve inşaat alanıyla; veri eksikleri (KAKS'ı, kullanımı ya da anahtarı olmayan alanlar) ve varsayımlar. Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların toplamı (ADR 2660), near'da yakın ve uzak alanlar ve katmanın nesneleri (ADR 3060), baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %, from; ADR 4260): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found, nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable (slope).",
       "aliases": [
         "senaryoolculeri",
         "alternatifetkisi",
@@ -59507,7 +59507,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer.\n\nRefusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `infrastructure.layer`: no\nsuch layer), `scenario_not_found` (`scenario`: no such node, or not a scenario group),\n`nothing_to_compare` (`scenario`: none of its layers stands for a base layer).",
+        "description": "Input of `cad.scenarios.impact` v1: the scenario group's id; the field that names a decision's use (none:\n`Kullanim`), the key that matches a decision across the two sides (none: `KararKimlik`), and the stamp of an\nearlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,\ntheir values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's\narea; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;\n`infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;\n`slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.\n\nRefusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,\n`infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above\nzero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:\nnone of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),\n`not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),\n`terrain_unbuildable` (the surface cannot be made).",
         "properties": {
           "access": {
             "anyOf": [
@@ -59559,6 +59559,16 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "slope": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ImpactSlope"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
@@ -59778,7 +59788,10 @@
         "refusals": [
           "invalid_input",
           "scenario_not_found",
-          "nothing_to_compare"
+          "nothing_to_compare",
+          "not_a_road_project",
+          "unknown_terrain",
+          "terrain_unbuildable"
         ]
       },
       "examples": [
@@ -146112,6 +146125,31 @@
         "name",
         "stations",
         "of"
+      ],
+      "type": "object"
+    },
+    "ImpactSlope": {
+      "additionalProperties": false,
+      "description": "Arazi eğimi (docs/adr/4260): a terrain surface of the project (by id or name), the slope from which an area is\nsteep (percent, the rise over the run), and the uses measured (none or empty: every area). Each triangle of the\nsurface has one slope, from its plane (its normal, the cross product of two edges); an area's part on a triangle\ntakes that slope. The surface is the same on both sides.",
+      "properties": {
+        "from": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "surface": {
+          "type": "string"
+        },
+        "threshold": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "percent"
+        }
+      },
+      "required": [
+        "surface",
+        "threshold"
       ],
       "type": "object"
     },

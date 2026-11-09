@@ -20,6 +20,9 @@ use kentos_commands::{
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length};
 use kentos_geometry_core::geom::centroid::shape_centroid;
+use kentos_geometry_core::geom::arrangement::{Area, Ring};
+use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
+use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::spatial_query::{distance, geometry_of};
 use sha2::{Digest, Sha256};
 
@@ -259,8 +262,83 @@ fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::Impa
     r
 }
 
+/// Arazi eğimi (docs/adr/4260): a side's measured areas against the surface's triangles: their whole area, the part on
+/// the surface, that part's sum of area × slope, and the part on triangles whose slope is the threshold or more.
+#[derive(Default)]
+struct Slopes {
+    whole: f64,
+    on: f64,
+    weighted: f64,
+    steep: f64,
+}
+
+/// A triangle of the surface as an area, its box and its slope, percent: the rise over the run of its plane, from its
+/// normal (the cross product of two edges), as ArcGIS's Surface Slope; none for a vertical or degenerate triangle.
+fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<(Area, [f64; 4], f64)> {
+    s.triangles
+        .iter()
+        .filter_map(|t| {
+            let [a, b, c] = t.map(|i| s.vertices[i as usize]);
+            let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            if n[2] == 0.0 {
+                return None;
+            }
+            let slope = n[0].hypot(n[1]) / n[2].abs() * 100.0;
+            // Counter-clockwise, as an area's outer ring.
+            let pts = if n[2] > 0.0 { [a, b, c] } else { [a, c, b] };
+            let ring = Ring { pts: pts.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect(), bulges: None };
+            let xs = [a[0], b[0], c[0]];
+            let ys = [a[1], b[1], c[1]];
+            let bounds = [
+                xs.iter().copied().fold(f64::INFINITY, f64::min),
+                ys.iter().copied().fold(f64::INFINITY, f64::min),
+                xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+                ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+            ];
+            Some((Area { outer: ring, holes: Vec::new() }, bounds, slope))
+        })
+        .collect()
+}
+
+fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[(Area, [f64; 4], f64)]) -> Slopes {
+    let mut r = Slopes::default();
+    let every = wanted.from.iter().all(|f| f.trim().is_empty());
+    for (sh, _, area, _) in s.areas.iter().filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u)) {
+        r.whole += area;
+        let parts = areas_of_entity(sh);
+        let points = parts.iter().flat_map(|a| a.outer.pts.iter());
+        let [x0, y0, x1, y1] = points.fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
+            [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+        });
+        for (triangle, b, slope) in triangles {
+            if b[0] > x1 || b[2] < x0 || b[1] > y1 || b[3] < y0 {
+                continue;
+            }
+            let got: f64 = intersect_area_sets(&[parts.clone(), vec![triangle.clone()]]).iter().map(net_area).sum();
+            if got > 0.0 {
+                r.on += got;
+                r.weighted += got * slope;
+                if *slope >= wanted.threshold {
+                    r.steep += got;
+                }
+            }
+        }
+    }
+    r
+}
+
 /// The asked measures' own checks.
 fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
+    if let Some(s) = &input.slope
+        && !(s.threshold.is_finite() && s.threshold > 0.0)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Dik eğim eşiği 0'dan büyük bir yüzde olmalı (yazılan {}).", s.threshold),
+            "slope.threshold",
+        ));
+    }
     for (code, k) in input.impervious.iter().flatten() {
         if !(k.is_finite() && (0.0..=1.0).contains(k)) {
             return Err(fail(
@@ -457,6 +535,64 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
         for (n, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
             if n.whole > 0.0 && n.objects == 0 {
                 asked_gaps.push(format!("Altyapı katmanında ({name}) {side} nesne yok; yakın alan 0."));
+            }
+        }
+    }
+    // Arazi eğimi (docs/adr/4260): the same surface on both sides.
+    if let Some(wanted) = &input.slope {
+        crate::road_terrains::terrain_project(doc)?;
+        let id = crate::road_profiles::surface_id(doc, wanted.surface.trim(), "slope.surface")?;
+        let def = crate::road_terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+        let made = crate::road_terrains::make(doc, &def);
+        let triangles = slope_triangles(made.built()?);
+        let (x, y) = (slopes(&b, wanted, &triangles), slopes(&a, wanted, &triangles));
+        let name = &def.name;
+        let uses: Vec<&str> = wanted.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
+        let whose = if uses.is_empty() { name.clone() } else { format!("{}, {name}", uses.join(", ")) };
+        let threshold = wanted.threshold;
+        let mean = |r: &Slopes| if r.on > 0.0 { r.weighted / r.on } else { 0.0 };
+        let share = |r: &Slopes| if r.on > 0.0 { r.steep / r.on * 100.0 } else { 0.0 };
+        let off = |r: &Slopes| (r.whole - r.on).max(0.0);
+        measures.push(measure(
+            "slopeMean",
+            &format!("Ortalama eğim ({whose})"),
+            "%",
+            mean(&x),
+            mean(&y),
+            &format!(
+                "Ölçülen alanların {name} yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. Yüzeyin dışındaki kısım sayılmaz."
+            ),
+        ));
+        measures.push(measure(
+            "slopeSteep",
+            &format!("Dik alan (en az {threshold} %, {whose})"),
+            "m2",
+            x.steep,
+            y.steep,
+            &format!("Eğimi en az {threshold} % olan üçgenlere düşen alan."),
+        ));
+        measures.push(measure(
+            "slopeSteepShare",
+            "Dik alanın payı",
+            "%",
+            share(&x),
+            share(&y),
+            "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0.",
+        ));
+        measures.push(measure(
+            "slopeOff",
+            "Yüzeyin dışındaki alan",
+            "m2",
+            off(&x),
+            off(&y),
+            &format!("Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."),
+        ));
+        // A residue below a square millimetre is the overlay's rounding, not land off the surface.
+        for (r, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
+            if off(r) > 1e-6 {
+                asked_gaps.push(format!(
+                    "Ölçülen alanların bir kısmı {side} {name} yüzeyinin dışında; eğim yalnız yüzeyin üstündeki kısımdan."
+                ));
             }
         }
     }

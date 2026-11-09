@@ -45906,6 +45906,36 @@ class ImpactSections(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImpactSlope(_Model):
+    """Arazi eğimi (docs/adr/4260): a terrain surface of the project (by id or name), the slope from which an area is
+    steep (percent, the rise over the run), and the uses measured (none or empty: every area). Each triangle of the
+    surface has one slope, from its plane (its normal, the cross product of two edges); an area's part on a triangle
+    takes that slope. The surface is the same on both sides.
+    Attributes:
+        threshold: Unit: percent.
+    """
+    surface: str
+    threshold: float
+    from_: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["surface"] = self.surface
+        out["threshold"] = float(self.threshold)
+        if self.from_ is not UNSET:
+            out["from"] = list(self.from_)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImpactSlope:
+        return cls(
+            surface=data["surface"],
+            threshold=float(data["threshold"]),
+            from_=list(data["from"]) if "from" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactUse(_Model):
     """The areas of one use (the field's value; empty for none) on both sides, square metres.
     Attributes:
@@ -84347,12 +84377,15 @@ class ScenariosImpact(_Model):
     earlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,
     their values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's
     area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;
-    `infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer.
+    `infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;
+    `slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.
 
-    Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
-    `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `infrastructure.layer`: no
-    such layer), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
-    `nothing_to_compare` (`scenario`: none of its layers stands for a base layer).
+    Refusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
+    `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above
+    zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
+    none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
+    `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
+    `terrain_unbuildable` (the surface cannot be made).
     Attributes:
         impervious: Unit: 1.
     """
@@ -84363,6 +84396,7 @@ class ScenariosImpact(_Model):
     infrastructure: ImpactInfrastructure | None | Unset = UNSET
     key: str | None | Unset = UNSET
     since: str | None | Unset = UNSET
+    slope: ImpactSlope | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -84379,6 +84413,8 @@ class ScenariosImpact(_Model):
             out["key"] = self.key
         if self.since is not UNSET:
             out["since"] = self.since
+        if self.slope is not UNSET:
+            out["slope"] = None if self.slope is None else self.slope.to_json()
         return out
 
     @classmethod
@@ -84391,6 +84427,7 @@ class ScenariosImpact(_Model):
             infrastructure=UNSET if "infrastructure" not in data else None if data["infrastructure"] is None else ImpactInfrastructure.from_json(data["infrastructure"]),
             key=data.get("key", UNSET),
             since=data.get("since", UNSET),
+            slope=UNSET if "slope" not in data else None if data["slope"] is None else ImpactSlope.from_json(data["slope"]),
         )
 
 
@@ -133449,6 +133486,7 @@ __all__ = [
     "ImpactReach",
     "ImpactRegion",
     "ImpactSections",
+    "ImpactSlope",
     "ImpactTarget",
     "ImpactTargetName",
     "ImpactUse",

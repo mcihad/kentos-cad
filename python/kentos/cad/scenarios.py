@@ -13,6 +13,7 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     ImpactAccess,
     ImpactInfrastructure,
+    ImpactSlope,
     ScenarioOperation,
     ScenarioOperationName,
     ScenariosEdit,
@@ -218,9 +219,14 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
     alanlar ve katmanın nesneleri (ADR 3060), baseLinks ve alternativeLinks'te her
     ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın
     yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya
-    da bağlanma hakkı değildir. Salt okunur. Retler: invalid_input
-    (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
-    access.from/to boş), scenario_not_found, nothing_to_compare.
+    da bağlanma hakkı değildir; slope (surface, threshold %, from; ADR 4260): ölçülen
+    alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi
+    düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı,
+    slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan
+    (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input (impervious.<kullanım>
+    0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, slope.threshold
+    0'dan büyük değil), scenario_not_found, nothing_to_compare, not_a_road_project,
+    unknown_terrain, terrain_unbuildable (slope).
     """
     __slots__ = ()
     id = "cad.scenarios.impact"
@@ -243,6 +249,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
+        slope: ImpactSlope | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ScenariosImpacted:
@@ -265,9 +272,15 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         toplamı (ADR 2660), near'da yakın ve uzak alanlar ve katmanın nesneleri (ADR 3060),
         baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne,
         ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce
-        gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir. Salt okunur. Retler:
-        invalid_input (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
-        access.from/to boş), scenario_not_found, nothing_to_compare.
+        gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface,
+        threshold %, from; ADR 4260): ölçülen alanların projenin arazi yüzeyinin üçgenlerine
+        düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %),
+        ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı,
+        yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input
+        (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
+        access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found,
+        nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable
+        (slope).
 
         Args:
             doc: The drawing it works on.
@@ -278,6 +291,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             infrastructure:
             key:
             since:
+            slope:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -298,6 +312,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             infrastructure=infrastructure,
             key=key,
             since=since,
+            slope=slope,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -312,6 +327,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
+        slope: ImpactSlope | None | Unset = UNSET,
     ) -> ScenariosImpacted:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -324,6 +340,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             infrastructure=infrastructure,
             key=key,
             since=since,
+            slope=slope,
         ))
 
     def validate(
@@ -338,6 +355,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
+        slope: ImpactSlope | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -350,6 +368,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             infrastructure=infrastructure,
             key=key,
             since=since,
+            slope=slope,
         ))
 
     def answer(
@@ -364,6 +383,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         infrastructure: ImpactInfrastructure | None | Unset = UNSET,
         key: str | None | Unset = UNSET,
         since: str | None | Unset = UNSET,
+        slope: ImpactSlope | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -381,6 +401,7 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
             infrastructure=infrastructure,
             key=key,
             since=since,
+            slope=slope,
         ), op=op, request_id=request_id, expected=expected)
 
 

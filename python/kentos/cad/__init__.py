@@ -1537,6 +1537,7 @@ __all__ = [
     "ImpactReach",
     "ImpactRegion",
     "ImpactSections",
+    "ImpactSlope",
     "ImpactTarget",
     "ImpactTargetName",
     "ImpactUse",

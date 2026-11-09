@@ -67,6 +67,6 @@ eskimesi; tek puan yerine ölçütler ve veri eksikleri). Durum: taslak. İlgili
 ## Sonra
 
 - Damganın çizimde saklanması (`ScenarioInfo`'ya taban damgası, `.kcad` şeması).
-- Yaya erişimi (ağ analizi), arazi eğimi (yüzey), altyapıya yakınlık, geçirimsizlik ve risk katmanları: her biri
-  kaynağı, birimi ve tarihiyle.
+- Yaya erişimi (ağ analizi), ~~arazi eğimi (yüzey)~~ (ADR 4260), altyapıya yakınlık, geçirimsizlik ve risk katmanları:
+  her biri kaynağı, birimi ve tarihiyle.
 - Yerleşim ve yükseklik zarfı (plan/3d.md); karşılaştırmanın haritada gösterimi ve pafta raporu.

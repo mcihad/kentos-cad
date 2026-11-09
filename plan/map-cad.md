@@ -40,7 +40,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
@@ -1272,6 +1272,14 @@ aracı Altyapı bağlarını çiz (`scenarios.links`): `cad.scenarios.impact`'in
 hattın en yakın yerine) “Altyapı bağları” katmanına çizgi olarak, taraf, alan, hat ve uzaklıkla, tek geri alma adımı;
 boyu olmayan bağ söylenir. 2 İşlem durumu (komutun bağımsız başvurusundan), Python, MCP, masaüstü ve resimler. Açık:
 ağ üzerinden erişim, eğim, damganın çizimde saklanması.
+
+**9 Kasım 2026, sekizinci tur — arazi eğimi ([ADR 4260](../docs/adr/4260-scenario-terrain-slope.md)).**
+Kapsam: **Harita + CBS** (eğim yüzeyi olan projede). Araştırma: ArcGIS Pro'nun Surface Slope'u (üçgenin normalinden,
+yüzde = düşey/yatay). Kanıtlanan: `cad.scenarios.impact`'in `slope`'u (yüzey, kullanıcının dik eşiği, kullanımlar):
+alanların yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalama eğimi, dik alan ve payı, yüzeyin dışındaki alan
+(veri eksiği). 8 yeni bağımsız durum (45; kesin kesirli kırpma), Python (ızgara integrali), MCP, masaüstü (Senaryo
+ölçüleri'nde Eğim yüzeyi / dik eşik) ve resimler. Açık: ağ üzerinden erişim, damganın çizimde saklanması, eğim
+sınıfları ve bakı.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

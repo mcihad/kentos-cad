@@ -3,14 +3,17 @@
 //! stamp (stale when it changed since the report last saved this session), the data's gaps and the assumptions; a
 //! choice shows the measures, the areas by use or the decisions that changed. Raporu kaydet writes them all as CSV
 //! with the stamp and keeps the stamp for the next comparison; Erişimi çizimde göster leaves the scenario's access on
-//! the drawing (impact_reach_marks.rs, docs/adr/2260). No score picks a plan.
+//! the drawing (impact_reach_marks.rs, docs/adr/2260). No score picks a plan. docs/adr/4260: the terrain slope on a
+//! surface of the project, with the user's steep threshold.
 
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use iced::widget::container;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, ImpactAccess, ImpactInfrastructure, LayerNode, LayerNodeType, ScenariosImpact, ScenariosImpacted};
+use kentos_commands::{
+    CommandResult, ImpactAccess, ImpactInfrastructure, ImpactSlope, LayerNode, LayerNodeType, ScenariosImpact, ScenariosImpacted,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, scenarios_impact};
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
@@ -66,6 +69,13 @@ pub struct State {
     pub infra_from: String,
     /// The layers to choose from: id and name (“—” first, none).
     pub layers: Vec<(String, String)>,
+    /// docs/adr/4260, the user's values: the terrain surface (its id; empty: not asked), the steep threshold (percent)
+    /// and the uses.
+    pub slope_surface: String,
+    pub slope_threshold: String,
+    pub slope_from: String,
+    /// The project's terrain surfaces: id and name (“—” first, none).
+    pub surfaces: Vec<(String, String)>,
 }
 
 #[derive(Clone, Debug)]
@@ -80,6 +90,10 @@ pub enum Event {
     InfraLayer(String),
     InfraDistance(String),
     InfraFrom(String),
+    /// Arazi eğimi (docs/adr/4260).
+    SlopeSurface(String),
+    SlopeThreshold(String),
+    SlopeFrom(String),
     Save,
     Saved(Option<PathBuf>),
     /// Erişimi çizimde göster (docs/adr/2260).
@@ -211,12 +225,24 @@ impl App {
                 Err(_) => return Err(format!("Altyapı uzaklığı “{}” bir sayı değil.", s.infra_distance.trim())),
             }
         };
+        // docs/adr/4260: asked once a surface and a threshold are given.
+        let slope = if s.slope_surface.is_empty() || s.slope_threshold.trim().is_empty() {
+            None
+        } else {
+            match s.slope_threshold.trim().replace(',', ".").parse::<f64>() {
+                Ok(threshold) => {
+                    Some(ImpactSlope { surface: s.slope_surface.clone(), threshold, from: uses_of(&s.slope_from) })
+                }
+                Err(_) => return Err(format!("Dik eğim eşiği “{}” bir sayı değil.", s.slope_threshold.trim())),
+            }
+        };
         Ok(ScenariosImpact {
             scenario: s.scenario.clone(),
             since,
             impervious,
             access,
             infrastructure,
+            slope,
             ..ScenariosImpact::default()
         })
     }
@@ -254,7 +280,11 @@ impl App {
             return Task::none();
         };
         let layers = layer_choices(doc.model.layers().nodes());
-        self.impact = State { scenarios, scenario: first, layers, ..State::default() };
+        // docs/adr/4260: the project's terrain surfaces, “—” first (the slope not asked).
+        let surfaces = std::iter::once((String::new(), "—".to_owned()))
+            .chain(doc.model.settings().road.iter().flat_map(|r| r.surfaces.iter()).map(|s| (s.id.clone(), s.name.clone())))
+            .collect();
+        self.impact = State { scenarios, scenario: first, layers, surfaces, ..State::default() };
         self.impact_run();
         self.dialog = Some(Dialog::Impact);
         Task::none()
@@ -308,6 +338,18 @@ impl App {
             }
             Event::InfraFrom(v) => {
                 self.impact.infra_from = v;
+                self.impact_run();
+            }
+            Event::SlopeSurface(v) => {
+                self.impact.slope_surface = v;
+                self.impact_run();
+            }
+            Event::SlopeThreshold(v) => {
+                self.impact.slope_threshold = v;
+                self.impact_run();
+            }
+            Event::SlopeFrom(v) => {
+                self.impact.slope_from = v;
                 self.impact_run();
             }
             Event::Save => {
@@ -406,7 +448,18 @@ impl App {
                 .spacing(10),
             )
             .field("Altyapıda ölçülen kullanımlar", text(&s.infra_from, "boş: bütün alanlar", Event::InfraFrom, 420.0))
-            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir.");
+            // docs/adr/4260: the slope on a terrain surface; only Harita and Yol projects have surfaces.
+            .field(
+                "Eğim yüzeyi / dik eşik (%)",
+                iced::widget::row![
+                    container(crate::style::fields::select_owned(s.surfaces.clone(), &s.slope_surface, |id| msg(Event::SlopeSurface(id))))
+                        .width(290),
+                    text(&s.slope_threshold, "%", Event::SlopeThreshold, 120.0)
+                ]
+                .spacing(10),
+            )
+            .field("Eğimde ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
+            .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir. Eğim: alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden.");
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");
         match &s.answer {

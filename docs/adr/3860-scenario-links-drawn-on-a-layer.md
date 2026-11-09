@@ -52,5 +52,6 @@ yazılması”.
 
 ## Sonra
 
-- Ağ üzerinden (yol boyunca) uzaklık; eğim; risk katmanları; damganın çizimde saklanması (MAP-10'un öbür maddeleri).
+- Ağ üzerinden (yol boyunca) uzaklık; ~~eğim~~ (ADR 4260); risk katmanları; damganın çizimde saklanması (MAP-10'un öbür
+  maddeleri).
 - Web (TODOS §0.2).

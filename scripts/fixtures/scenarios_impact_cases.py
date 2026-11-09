@@ -23,12 +23,17 @@ The rules, by hand:
 - asked for (docs/adr/2660), the area near an infrastructure layer: a measured area (of the `from` uses, or every
   area) whose centroid lies within the distance of an object of the layer (lines here: the distance to their
   segments), with its share; the layer the scenario stands in for is each side's own; a side with measured areas and
-  no object on its layer a gap.
+  no object on its layer a gap;
+- asked for (docs/adr/4260), the slope on the terrain surface “Zemin” (four points, its two triangles the Delaunay
+  ones, decided here by the empty circle): each triangle's slope from its plane, 100 · √(a² + b²) for z = c + a·x + b·y;
+  each measured area clipped by each triangle (Sutherland–Hodgman, exact fractions), the parts' area-weighted mean
+  slope, the steep part (slope ≥ the threshold) and its share, the part off the surface (a gap above 1e-6 m²).
 """
 
 import copy
 import hashlib
 import json
+import math
 import struct
 import sys
 from fractions import Fraction
@@ -51,8 +56,9 @@ def node(id_, name, kind="layer", children=None, **more):
             "children": children or []}
 
 
-def tree(infra=False):
+def tree(infra=False, ground=False):
     extra = [node("altyapi", "Kanalizasyon hattı")] if infra else []
+    extra += [node("zemin", "Zemin noktaları")] if ground else []
     return extra + [node("0", "0"),
             node("imar", "İmar planı", "group", [node("karar", "Karar alanları"), node("yol", "Yollar")]),
             node("alt-a", "Alternatif A", "group", [node("alt-a-karar", "Karar alanları", replaces="karar"),
@@ -93,14 +99,17 @@ ALT = [
 ]
 
 
-def setup(base=None, alt=None, layers=None, extra=()):
+def setup(base=None, alt=None, layers=None, extra=(), work="map", surfaces=None):
     ents = [copy.deepcopy(e) for e in (base if base is not None else BASE) + (alt if alt is not None else ALT)
             + list(extra)]
     for i, e in enumerate(ents, start=1):
         e["id"] = i
+    settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                "plotScale": 1000.0, "workspace": "cad", "cadWork": work}
+    if surfaces is not None:
+        settings["road"] = {"surfaces": surfaces}
     return {"format": "kentos.document", "version": 2, "name": "Senaryo ölçüleri",
-            "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
-                         "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
+            "settings": settings,
             "origin": {"x": X0, "y": Y0}, "layers": layers or tree(), "activeLayer": "karar", "entities": ents,
             "uids": [uid(i + 1) for i in range(len(ents))], "styles": {"items": [], "categories": []}}
 
@@ -286,7 +295,8 @@ def rs(v):
     return str(int(v)) if float(v).is_integer() else repr(float(v))
 
 
-def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None, access=None, infrastructure=None):
+def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None, access=None, infrastructure=None,
+           slope=None):
     ps = pairs(s)
     bases, alts = [b for b, _ in ps], [l for _, l in ps]
     b, a = side(s, bases, field, key), side(s, alts, field, key)
@@ -356,6 +366,29 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
         for whole_, objects, where in ((xw, xn, "mevcut durumda"), (yw, yn, "senaryoda")):
             if whole_ > 0 and objects == 0:
                 asked_gaps.append(f"Altyapı katmanında ({name}) {where} nesne yok; yakın alan 0.")
+    if slope is not None:
+        name = "Zemin"
+        triangles = ground_triangles()
+        (xw, xo, xs_, xd), (yw, yo, ys_, yd) = slopes(b, slope, triangles), slopes(a, slope, triangles)
+        uses_ = [u for u in slope.get("from", []) if u.strip()]
+        whose = f"{', '.join(uses_)}, {name}" if uses_ else name
+        th = rs(slope["threshold"])
+        mean = lambda on, ws: ws / on if on > 0 else 0.0  # noqa: E731
+        share = lambda on, st: st / on * 100 if on > 0 else 0.0  # noqa: E731
+        measures.append(m("slopeMean", f"Ortalama eğim ({whose})", "%", mean(xo, xs_), mean(yo, ys_),
+                          f"Ölçülen alanların {name} yüzeyinin üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; "
+                          "üçgenin eğimi düzleminden (normali, iki kenarının vektörel çarpımı), düşeyin yataya oranı, yüzde. "
+                          "Yüzeyin dışındaki kısım sayılmaz."))
+        measures.append(m("slopeSteep", f"Dik alan (en az {th} %, {whose})", "m2", xd, yd,
+                          f"Eğimi en az {th} % olan üçgenlere düşen alan."))
+        measures.append(m("slopeSteepShare", "Dik alanın payı", "%", share(xo, xd), share(yo, yd),
+                          "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0."))
+        measures.append(m("slopeOff", "Yüzeyin dışındaki alan", "m2", max(xw - xo, 0.0), max(yw - yo, 0.0),
+                          f"Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."))
+        for whole_, on, where in ((xw, xo, "mevcut durumda"), (yw, yo, "senaryoda")):
+            if whole_ - on > 1e-6:
+                asked_gaps.append(f"Ölçülen alanların bir kısmı {where} {name} yüzeyinin dışında; eğim yalnız yüzeyin "
+                                  "üstündeki kısımdan.")
     uses = [{"code": c, "base": b["uses"].get(c, 0.0), "alternative": a["uses"].get(c, 0.0),
              "difference": a["uses"].get(c, 0.0) - b["uses"].get(c, 0.0)}
             for c in sorted(set(b["uses"]) | set(a["uses"]))]
@@ -418,6 +451,87 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
 SAME = {"revision": "same", "canUndo": False}
 
 
+# docs/adr/4260: the terrain surface “Zemin”, four points on its own layer; the blocks east of x = 125 lie off it.
+GROUND = {"A": (-10, -10, 100), "B": (125, -10, 103), "C": (125, 70, 121), "D": (-10, 80, 106)}
+
+
+def in_circle(a, b, c, d):
+    """Whether d lies inside the circle through a, b, c (counter-clockwise), exactly."""
+    rows = [[Fraction(p[0] - d[0]), Fraction(p[1] - d[1])] for p in (a, b, c)]
+    rows = [[x, y, x * x + y * y] for x, y in rows]
+    det = (rows[0][0] * (rows[1][1] * rows[2][2] - rows[1][2] * rows[2][1])
+           - rows[0][1] * (rows[1][0] * rows[2][2] - rows[1][2] * rows[2][0])
+           + rows[0][2] * (rows[1][0] * rows[2][1] - rows[1][1] * rows[2][0]))
+    return det > 0
+
+
+def ground_triangles():
+    """The surface's two triangles (counter-clockwise, local x, y) with their slopes, percent."""
+    a, b, c, d = (GROUND[k] for k in "ABCD")
+    tris = [(a, b, c), (a, c, d)] if not in_circle(a, b, c, d) else [(a, b, d), (b, c, d)]
+    out = []
+    for p, q, r in tris:
+        (x1, y1, z1), (x2, y2, z2), (x3, y3, z3) = p, q, r
+        det = Fraction((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1))
+        ga = ((z2 - z1) * (y3 - y1) - (z3 - z1) * (y2 - y1)) / det
+        gb = ((x2 - x1) * (z3 - z1) - (x3 - x1) * (z2 - z1)) / det
+        out.append(([(Fraction(p[0]), Fraction(p[1])) for p in (p, q, r)], 100 * math.sqrt(ga * ga + gb * gb)))
+    return out
+
+
+def clip(subject, triangle):
+    """Sutherland–Hodgman: the convex subject polygon inside the counter-clockwise triangle, exactly."""
+    out = list(subject)
+    for k in range(3):
+        a, b = triangle[k], triangle[(k + 1) % 3]
+        side = lambda p: (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])  # noqa: E731
+        given, out = out, []
+        for i, p in enumerate(given):
+            q = given[(i + 1) % len(given)]
+            sp, sq = side(p), side(q)
+            if sp >= 0:
+                out.append(p)
+            if (sp >= 0) != (sq >= 0):
+                t_ = sp / (sp - sq)
+                out.append((p[0] + (q[0] - p[0]) * t_, p[1] + (q[1] - p[1]) * t_))
+        if not out:
+            return []
+    return out
+
+
+def exact_area(poly):
+    n = len(poly)
+    return abs(sum(poly[i][0] * poly[(i + 1) % n][1] - poly[(i + 1) % n][0] * poly[i][1] for i in range(n))) / 2
+
+
+def slopes(sd, slope, triangles):
+    """A side's measured areas (rectangles) on the triangles: whole, on the surface, Σ area × slope, steep."""
+    every = all(not u.strip() for u in slope.get("from", []))
+    whole = on = weighted = steep = 0.0
+    for e, usage, a_ in sd["areas"]:
+        if not every and usage not in slope["from"]:
+            continue
+        whole += a_
+        rect = [(Fraction(p["x"]) - Fraction(X0), Fraction(p["y"]) - Fraction(Y0)) for p in e["pts"]]
+        for tri, s_ in triangles:
+            got = float(exact_area(clip(rect, tri))) if len(clip(rect, tri)) >= 3 else 0.0
+            if got > 0:
+                on += got
+                weighted += got * s_
+                if s_ >= slope["threshold"]:
+                    steep += got
+    return whole, on, weighted, steep
+
+
+def ground_points():
+    return [{"kind": "point", "layerId": "zemin", "attrs": {"Ad": k}, "p": P(x, y), "z": float(z)}
+            for k, (x, y, z) in GROUND.items()]
+
+
+ZEMIN = [{"id": "t-1", "name": "Zemin", "points": {"layers": ["zemin"]}}]
+SLOPE_SETUP = setup(layers=tree(ground=True), extra=ground_points(), surfaces=ZEMIN)
+
+
 def ok(name, s=None, op="plan", **kw):
     s = s or setup()
     input_ = {"scenario": "alt-a", **{k: v for k, v in kw.items() if v is not None}}
@@ -428,9 +542,10 @@ def ok(name, s=None, op="plan", **kw):
     if "impervious" in given:
         given["impervious_"] = given.pop("impervious")
     out = report(s, **given)
+    # The slope's parts come from an overlay of floats near 4 420 000 m: within a micrometre, not 1e-9.
     case = {"name": name, "steps": [{"op": op, "input": input_, "result": {
         "status": "completed", "output": None if op == "validate" else out, "warnings": []}, "expect": SAME,
-        "within": 1e-9}]}
+        "within": 1e-6 if "slope" in given else 1e-9}]}
     if s is not BASE_SETUP:
         case["setup"] = s
     return case
@@ -531,6 +646,32 @@ def cases():
                 "invalid_input", "Erişim uzaklığı 0'dan büyük olmalı (yazılan 0).", path="access.distance"),
         refused("erişen kullanım yok", {"scenario": "alt-a", "access": {"distance": 40.0, "from": [], "to": ["park"]}},
                 "invalid_input", "Erişen kullanım verilmemiş; en az bir kullanım kodu yazın.", path="access.from"),
+        # docs/adr/4260: the slope on the terrain surface “Zemin”.
+        ok("eğim: Zemin yüzeyinde, dik eşik 10 %; senaryonun doğudaki konutu yüzeyden taşar", SLOPE_SETUP,
+           slope={"surface": "t-1", "threshold": 10.0}),
+        ok("eğim yalnız konut alanlarında, yüzey adıyla", SLOPE_SETUP,
+           slope={"surface": "zemin", "threshold": 10.0, "from": ["konut"]}),
+        ok("eğim: eşik yüksek, dik alan yok", SLOPE_SETUP, slope={"surface": "Zemin", "threshold": 50.0}),
+        ok("eğim ve altyapı birlikte", setup(layers=tree(infra=True, ground=True), extra=[SEWER] + ground_points(),
+                                            surfaces=ZEMIN),
+           infrastructure={"layer": "altyapi", "distance": 40.0}, slope={"surface": "t-1", "threshold": 12.5}),
+        refused("dik eğim eşiği 0", {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 0.0}},
+                "invalid_input", "Dik eğim eşiği 0'dan büyük bir yüzde olmalı (yazılan 0).", s=SLOPE_SETUP,
+                path="slope.threshold"),
+        refused("eğim için yüzey projede yok", {"scenario": "alt-a", "slope": {"surface": "yok", "threshold": 10.0}},
+                "unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", s=SLOPE_SETUP, path="slope.surface"),
+        {"name": "eğim: arazi yüzeyi Harita ve Yol projelerinde", "setup": setup(
+            layers=tree(ground=True), extra=ground_points(), work="architecture"), "steps": [{
+            "op": "execute", "input": {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0}},
+            "result": {"status": "failed", "error": {
+                "code": "not_a_road_project",
+                "message": "Arazi yüzeyi Harita ve Yol projelerinde olur (KentOS Harita, KentOS Yol); bu çizim ikisinden "
+                           "biri değil."}}, "expect": SAME}]},
+        {"name": "eğim: tek noktalı yüzey kurulamaz", "setup": setup(
+            layers=tree(ground=True), extra=ground_points()[:1], surfaces=ZEMIN), "steps": [{
+            "op": "execute", "input": {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0}},
+            "result": {"status": "failed", "error": {"code": "terrain_unbuildable", "message": "$any"}},
+            "expect": SAME}]},
         refused("senaryo değil", {"scenario": "imar"}, "scenario_not_found",
                 "“imar” kimlikli senaryo çizimde yok. Bir senaryo grubunun kimliğini verin."),
         refused("çizimde olmayan senaryo", {"scenario": "alt-z"}, "scenario_not_found",

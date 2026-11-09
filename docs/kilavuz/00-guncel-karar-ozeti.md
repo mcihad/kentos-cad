@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Senaryo ölçülerinde arazi eğimi (9 Kasım 2026; MAP-10, [ADR 4260](../../docs/adr/4260-scenario-terrain-slope.md)).**
+  `cad.scenarios.impact`'in `slope`'u: yüzey üçgenlerinin düzleminden alan ağırlıklı ortalama eğim, kullanıcının
+  eşiğiyle dik alan ve payı, yüzey dışı alan (veri eksiği). Harita + CBS.
 - **Sembolü karardan ver (9 Kasım 2026; MAP-09, [ADR 4240](../../docs/adr/4240-zoning-symbol-from-decision.md)).**
   `cad.zoning.symbolize`: karar alanının MPYY sembolü kademesi ve Kullanım'ından (KentOS'un ad eşlemesi
   `imar-plani-semboller.json` ya da kullanıcının seçimi); karar hiç yazılmaz. Harita + CBS.

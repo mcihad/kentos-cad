@@ -19,12 +19,15 @@ pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
 /// earlier comparison (`since`) to say whether the base has changed since. Two measures more, each only when asked,
 /// their values the user's (docs/adr/2040; KentOS gives none): `impervious`, the impervious share (0–1) of each use's
 /// area; `access`, the area of the `from` uses whose centroid lies within `distance` metres of an area of the `to` uses;
-/// `infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer.
+/// `infrastructure` (docs/adr/2660), the area whose centroid lies within `distance` metres of an object of a layer;
+/// `slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.
 ///
-/// Refusals: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
-/// `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `infrastructure.layer`: no
-/// such layer), `scenario_not_found` (`scenario`: no such node, or not a scenario group),
-/// `nothing_to_compare` (`scenario`: none of its layers stands for a base layer).
+/// Refusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
+/// `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above
+/// zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
+/// none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
+/// `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
+/// `terrain_unbuildable` (the surface cannot be made).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -51,6 +54,27 @@ pub struct ScenariosImpact {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub infrastructure: Option<ImpactInfrastructure>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub slope: Option<ImpactSlope>,
+}
+
+/// Arazi eğimi (docs/adr/4260): a terrain surface of the project (by id or name), the slope from which an area is
+/// steep (percent, the rise over the run), and the uses measured (none or empty: every area). Each triangle of the
+/// surface has one slope, from its plane (its normal, the cross product of two edges); an area's part on a triangle
+/// takes that slope. The surface is the same on both sides.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ImpactSlope {
+    pub surface: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub threshold: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub from: Vec<String>,
 }
 
 /// Altyapıya yakınlık (docs/adr/2660): an infrastructure layer (a water or sewer line's, by id), the straight distance,
