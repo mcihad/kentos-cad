@@ -2,7 +2,8 @@
 //! reconciled through a data profile's classes. A candidate is a point or an open polyline on a source's layer whose
 //! class field names a class (its id, or one of its codes as the field's first word's capitals); one that keeps
 //! `Eşleştirme` (or the earlier `Uzlaştırma`) was matched before and is not read again. Candidates within the radius (points: the plane's
-//! distance; polylines: the larger of the two discrete Hausdorff ways, vertices to the other's segments) are one group,
+//! distance; polylines: the larger of the two discrete Hausdorff ways, vertices to the other's segments; docs/adr/3340:
+//! an arc's eighths too, to the other's arcs exactly) are one group,
 //! joined transitively. A group's representative of a source is its candidate with the highest confidence (none below
 //! any number; a tie to the first); the others of that source are duplicates. A group is `existing` when an asset of its
 //! one class lies within the radius of a representative, `conflict` when its classes differ, `agreed` with two sources
@@ -22,10 +23,16 @@
 //! radius, an area's own), through a grid (`box_grid`), and a group's assets there already are looked for among its
 //! class layer's objects whose boxes meet its representatives'; the answer is the all-pairs one, the work no longer
 //! grows with the square of the candidates.
+//!
+//! Arcs (docs/adr/3340): a polyline's arcs (its bulges) are curves, not chords. A polyline's points for the discrete
+//! Hausdorff are its vertices and, on each arc, the points at its sweep's seven inner eighths; a point's distance to a
+//! polyline is the least to its segments and arcs, to an arc exactly (to its circle where the point's direction from the
+//! centre lies within the sweep, else to the nearer end). A polyline's box holds its arcs' bulges.
 
 use std::collections::BTreeMap;
 
 use kentos_geometry_core::geom::arrangement::Area;
+use kentos_geometry_core::geom::bulge::{BulgeArc, bulge_arc, bulge_at};
 use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
 use kentos_geometry_core::ops::areas::areas_of_entity;
 
@@ -77,6 +84,8 @@ struct Candidate {
     z: Option<f64>,
     /// A point's place, a polyline's vertices, an area's outer ring closed (its first vertex again at its end).
     pts: Vec<Vec2>,
+    /// A polyline's edges' bulges (docs/adr/3340); empty: straight edges.
+    bulges: Vec<f64>,
     /// An area's regions and their net area (m²), for the overlap ratio.
     areas: Vec<Area>,
     area: f64,
@@ -132,27 +141,99 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     distance(p, Vec2 { x: a.x + t * dx, y: a.y + t * dy })
 }
 
-/// How far `a`'s vertices go from the polyline `b` (its segments; one vertex: the point).
-fn one_way(a: &[Vec2], b: &[Vec2]) -> f64 {
-    let mut most = 0.0f64;
-    for &p in a {
-        let near = if b.len() == 1 {
-            distance(p, b[0])
-        } else {
-            b.windows(2).map(|w| to_segment(p, w[0], w[1])).fold(f64::INFINITY, f64::min)
-        };
-        most = most.max(near);
+/// A polyline as a curve (docs/adr/3340): its vertices and its edges' bulges (none: straight).
+#[derive(Clone, Copy)]
+struct Curve<'a> {
+    pts: &'a [Vec2],
+    bulges: &'a [f64],
+}
+
+impl<'a> Curve<'a> {
+    fn of(c: &'a Candidate) -> Self {
+        Curve { pts: &c.pts, bulges: &c.bulges }
     }
-    most
+
+    /// Edge `k`'s arc; none when straight.
+    fn arc(&self, k: usize) -> Option<BulgeArc> {
+        let at = |p: Vec2| kentos_geometry_core::Vec2::new(p.x, p.y);
+        bulge_arc(at(self.pts[k]), at(self.pts[k + 1]), self.bulges.get(k).copied().unwrap_or(0.0))
+    }
+
+    /// The points the discrete Hausdorff goes from: the vertices and, on each arc, its sweep's seven inner eighths, in
+    /// order along the curve.
+    fn samples(&self) -> Vec<Vec2> {
+        let mut out = Vec::with_capacity(self.pts.len());
+        for k in 0..self.pts.len() {
+            out.push(self.pts[k]);
+            if k + 1 < self.pts.len()
+                && let Some(a) = self.arc(k)
+            {
+                for e in 1..8 {
+                    let angle = a.a0 + a.sweep * f64::from(e) / 8.0;
+                    out.push(Vec2 { x: a.c.x + a.r * angle.cos(), y: a.c.y + a.r * angle.sin() });
+                }
+            }
+        }
+        out
+    }
+}
+
+/// Whether `angle` lies within the arc's sweep from its start.
+fn within(a: &BulgeArc, angle: f64) -> bool {
+    let turn = std::f64::consts::TAU;
+    if a.sweep >= 0.0 { (angle - a.a0).rem_euclid(turn) <= a.sweep } else { (a.a0 - angle).rem_euclid(turn) <= -a.sweep }
+}
+
+/// A point's distance to an arc from `s` to `e` (docs/adr/3340): to its circle where the point's direction from the
+/// centre lies within the sweep, else to the nearer end.
+fn to_arc(p: Vec2, a: &BulgeArc, s: Vec2, e: Vec2) -> f64 {
+    let angle = (p.y - a.c.y).atan2(p.x - a.c.x);
+    let centre = Vec2 { x: a.c.x, y: a.c.y };
+    if within(a, angle) { (distance(p, centre) - a.r).abs() } else { distance(p, s).min(distance(p, e)) }
+}
+
+/// A point's distance to a curve: the least to its edges (one vertex: the point).
+fn to_curve(p: Vec2, b: Curve<'_>) -> f64 {
+    if b.pts.len() == 1 {
+        return distance(p, b.pts[0]);
+    }
+    (0..b.pts.len() - 1)
+        .map(|k| match b.arc(k) {
+            Some(a) => to_arc(p, &a, b.pts[k], b.pts[k + 1]),
+            None => to_segment(p, b.pts[k], b.pts[k + 1]),
+        })
+        .fold(f64::INFINITY, f64::min)
+}
+
+/// How far `a`'s points (its vertices and arcs' eighths) go from the curve `b`.
+fn one_way(a: Curve<'_>, b: Curve<'_>) -> f64 {
+    a.samples().into_iter().map(|p| to_curve(p, b)).fold(0.0f64, f64::max)
 }
 
 /// The discrete Hausdorff distance of two polylines: the larger of the two ways.
-fn hausdorff(a: &[Vec2], b: &[Vec2]) -> f64 {
+fn hausdorff(a: Curve<'_>, b: Curve<'_>) -> f64 {
     one_way(a, b).max(one_way(b, a))
 }
 
 fn apart(a: &Candidate, b: &Candidate) -> f64 {
-    if a.kind == Kind::Point { distance(a.p, b.p) } else { hausdorff(&a.pts, &b.pts) }
+    if a.kind == Kind::Point { distance(a.p, b.p) } else { hausdorff(Curve::of(a), Curve::of(b)) }
+}
+
+/// A polyline's box with its arcs' bulges (docs/adr/3340): its vertices' and each arc's points due east, north, west
+/// and south of its centre that lie within its sweep.
+fn curve_bounds(c: Curve<'_>) -> [f64; 4] {
+    let mut pts: Vec<Vec2> = c.pts.to_vec();
+    for k in 0..c.pts.len().saturating_sub(1) {
+        if let Some(a) = c.arc(k) {
+            for q in 0..4 {
+                let angle = std::f64::consts::FRAC_PI_2 * f64::from(q);
+                if within(&a, angle) || within(&a, angle - std::f64::consts::TAU) {
+                    pts.push(Vec2 { x: a.c.x + a.r * angle.cos(), y: a.c.y + a.r * angle.sin() });
+                }
+            }
+        }
+    }
+    bounds(&pts)
 }
 
 /// The box round a ring's vertices: west, south, east, north.
@@ -166,7 +247,7 @@ fn bounds(pts: &[Vec2]) -> [f64; 4] {
 /// widened by the radius on every side (two within the radius have meeting boxes, with room to spare), an area's own
 /// (two whose overlap ratio is above any number have a common area, so meeting boxes).
 fn reach(c: &Candidate, radius: f64) -> Bx {
-    let b = bounds(&c.pts);
+    let b = curve_bounds(Curve::of(c));
     let r = if c.kind == Kind::Area { 0.0 } else { radius };
     [b[0] - r, b[1] - r, b[2] + r, b[3] + r]
 }
@@ -181,10 +262,18 @@ fn pairs_to_test(candidates: &[Candidate], eligible: &[usize], radius: f64) -> V
 fn asset_box(e: &Entity) -> Option<Bx> {
     match e {
         Entity::Point(pt) => Some([pt.p.x, pt.p.y, pt.p.x, pt.p.y]),
-        Entity::Polyline(pl) if pl.pts.len() >= 2 => Some(bounds(&pl.pts)),
+        Entity::Polyline(pl) if pl.pts.len() >= 2 => {
+            let bulges = bulges_of(pl);
+            Some(curve_bounds(Curve { pts: &pl.pts, bulges: &bulges }))
+        }
         Entity::Polygon(pg) if pg.pts.len() >= 3 => Some(bounds(&pg.pts)),
         _ => None,
     }
+}
+
+/// A polyline's edges' bulges, edge by edge (docs/adr/3340).
+fn bulges_of(pl: &kentos_commands::PathEntity) -> Vec<f64> {
+    (0..pl.pts.len().saturating_sub(1)).map(|k| bulge_at(pl.bulges.as_deref(), k)).collect()
 }
 
 /// The overlap ratio of two areas (docs/adr/2140): their intersection's area over their union's, 0 when their boxes
@@ -313,10 +402,12 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
     let mut candidates: Vec<Candidate> = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
         let Some(source) = source_of(&e.base().layer_id) else { continue };
-        let (kind, p, z, mut pts) = match e {
-            Entity::Point(pt) => (Kind::Point, pt.p, pt.z, vec![pt.p]),
-            Entity::Polyline(pl) if !pl.closed && pl.pts.len() >= 2 => (Kind::Line, pl.pts[0], None, pl.pts.clone()),
-            Entity::Polygon(pg) if pg.pts.len() >= 3 => (Kind::Area, pg.pts[0], None, pg.pts.clone()),
+        let (kind, p, z, mut pts, bulges) = match e {
+            Entity::Point(pt) => (Kind::Point, pt.p, pt.z, vec![pt.p], Vec::new()),
+            Entity::Polyline(pl) if !pl.closed && pl.pts.len() >= 2 => {
+                (Kind::Line, pl.pts[0], None, pl.pts.clone(), bulges_of(pl))
+            }
+            Entity::Polygon(pg) if pg.pts.len() >= 3 => (Kind::Area, pg.pts[0], None, pg.pts.clone(), Vec::new()),
             _ => continue,
         };
         let (areas, area) = if kind == Kind::Area { regions(e) } else { (Vec::new(), 0.0) };
@@ -355,7 +446,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                 Some(_) => "wrongKind",
             }
         };
-        candidates.push(Candidate { slot, uid, source, class, read, confidence, kind, status, attrs, p, z, pts, areas, area });
+        candidates.push(Candidate { slot, uid, source, class, read, confidence, kind, status, attrs, p, z, pts, bulges, areas, area });
     }
     // Groups: joined within the radius, the same kind.
     let eligible: Vec<usize> = (0..candidates.len()).filter(|&i| candidates[i].status == "member").collect();
@@ -451,7 +542,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             let mut most = 0.0f64;
             for (a, &i) in reps.iter().enumerate() {
                 for &j in &reps[a + 1..] {
-                    most = most.max(hausdorff(&candidates[i].pts, &candidates[j].pts));
+                    most = most.max(hausdorff(Curve::of(&candidates[i]), Curve::of(&candidates[j])));
                 }
             }
             let c = &candidates[chosen];
@@ -504,7 +595,9 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                 let near = match (e, kind) {
                     (Entity::Point(pt), Kind::Point) => reps.iter().any(|&k| distance(candidates[k].p, pt.p) <= input.radius),
                     (Entity::Polyline(pl), Kind::Line) if pl.pts.len() >= 2 => {
-                        reps.iter().any(|&k| hausdorff(&candidates[k].pts, &pl.pts) <= input.radius)
+                        let bulges = bulges_of(pl);
+                        let there = Curve { pts: &pl.pts, bulges: &bulges };
+                        reps.iter().any(|&k| hausdorff(Curve::of(&candidates[k]), there) <= input.radius)
                     }
                     (Entity::Polygon(pg), Kind::Area) if pg.pts.len() >= 3 => {
                         let (areas, area) = regions(e);

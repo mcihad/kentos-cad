@@ -39,6 +39,12 @@ closed outer rings, `overlap` the smallest ratio between two representatives (no
 layer overlapping a representative above the ratio makes it `existing`; the written asset is the footprint with
 `Örtüşme` (3 decimals) beside Yayılım.
 
+ADR 3340 measures a polyline's arcs as arcs: an edge of bulge b has the included angle 4·atan b, the radius
+c(1 + b²)/(4|b|) and its centre on the chord's left normal at c(1 − b²)/(4b) from its middle; a polyline's points for
+the discrete Hausdorff are its vertices and each arc's points at its sweep's seven inner eighths; a point's distance to
+an arc is to its circle when its direction from the centre lies within the sweep, else to the nearer end. The written
+line keeps its bulges.
+
 ADR 2540 adds the class layer's field rules: when the class's layer has fields (the profile applied: a field with a
 domain carries the domain's list), each value of the asset (its candidates' and the decisions') that a field names
 passes ADR 0199's rule, written here for the kinds the cases use — a list's label (Turkish case folded) gives its code,
@@ -91,8 +97,11 @@ def point(layer_id, attrs, x, y, z=None):
     return e
 
 
-def line(layer_id, attrs, pts):
-    return {"kind": "polyline", "layerId": layer_id, "attrs": attrs, "pts": [pt(x, y) for x, y in pts]}
+def line(layer_id, attrs, pts, bulges=None):
+    e = {"kind": "polyline", "layerId": layer_id, "attrs": attrs, "pts": [pt(x, y) for x, y in pts]}
+    if bulges:
+        e["bulges"] = bulges
+    return e
 
 
 def area(layer_id, attrs, x0, y0, x1, y1):
@@ -121,6 +130,24 @@ OBJECTS = [
     point(L, {"Kod": "DRK", "Güven": "0.95", "Uzlaştırma": uid(0x99)}, 150.0, 5.0),          # 16 matched before (old name)
     line(L, {"Kod": "DRK", "Güven": "0.60"}, [(170.0, 0.0), (172.0, 0.0)]),                  # 17 a pole drawn as a line
 ]
+
+def arc_points(a, b, bulge, offset):
+    """ADR 3340: the points of the arc from `a` to `b` of `bulge` at its sweep's ends and eighths, `offset` metres off its
+    circle (outwards), as a second extraction draws the same kerb by its vertices."""
+    c, r, a0, sweep = arc_of(a, b, bulge)
+    return [(c[0] + (r + offset) * math.cos(a0 + sweep * e / 8.0), c[1] + (r + offset) * math.sin(a0 + sweep * e / 8.0))
+            for e in range(9)]
+
+
+# ADR 3340: kerbs with arcs. An arc 3 m off its chord and a straight line along that chord (the chord would make them
+# one group); an arc 1 m off its chord and the same kerb drawn by its vertices 2 cm off the arc.
+def arcs():
+    return [
+        line(L, {"Kod": "BRD", "Güven": "0.90"}, [(0.0, 0.0), (20.0, 0.0)], [0.3, 0.0]),               # 1 an arc …
+        line(O, {"Kod": "BRD", "Güven": "0.80"}, [(0.0, 0.05), (20.0, 0.05)]),                        # 2 … its chord
+        line(L, {"Kod": "BRD", "Güven": "0.95"}, [(40.0, 0.0), (60.0, 0.0)], [0.1, 0.0]),              # 3 an arc …
+        line(O, {"Kod": "BRD", "Güven": "0.85"}, arc_points((40.0, 0.0), (60.0, 0.0), 0.1, 0.02)),     # 4 … by its vertices
+    ]
 
 # ADR 2140: building footprints and green areas from the two extractions.
 AREAS = [
@@ -218,16 +245,69 @@ def to_segment(p, a, b):
     return dist(p, (a[0] + t * dx, a[1] + t * dy))
 
 
-def one_way(a, b):
-    most = 0.0
-    for p in a:
-        near = dist(p, b[0]) if len(b) == 1 else min(to_segment(p, b[k], b[k + 1]) for k in range(len(b) - 1))
-        most = max(most, near)
-    return most
+def arc_of(a, b, bulge):
+    """ADR 3340: an edge's arc (centre, radius, start angle, signed sweep); none when straight."""
+    if abs(bulge) <= 1e-12:
+        return None
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    chord = math.hypot(dx, dy)
+    if chord < 1e-12:
+        return None
+    k = (1.0 - bulge * bulge) / (4.0 * bulge)
+    c = ((a[0] + b[0]) / 2.0 - dy * k, (a[1] + b[1]) / 2.0 + dx * k)
+    r = chord * (1.0 + bulge * bulge) / (4.0 * abs(bulge))
+    return c, r, math.atan2(a[1] - c[1], a[0] - c[0]), 4.0 * math.atan(bulge)
 
 
-def hausdorff(a, b):
-    return max(one_way(a, b), one_way(b, a))
+def edge_bulge(bulges, k):
+    return bulges[k] if bulges and k < len(bulges) else 0.0
+
+
+def samples(pts, bulges=None):
+    """The vertices and each arc's points at its sweep's seven inner eighths, in order."""
+    out = []
+    for k, p in enumerate(pts):
+        out.append(p)
+        if k + 1 < len(pts):
+            arc = arc_of(p, pts[k + 1], edge_bulge(bulges, k))
+            if arc is not None:
+                c, r, a0, sweep = arc
+                for e in range(1, 8):
+                    angle = a0 + sweep * e / 8.0
+                    out.append((c[0] + r * math.cos(angle), c[1] + r * math.sin(angle)))
+    return out
+
+
+def within(arc, angle):
+    _, _, a0, sweep = arc
+    turn = 2.0 * math.pi
+    return (angle - a0) % turn <= sweep if sweep >= 0 else (a0 - angle) % turn <= -sweep
+
+
+def to_curve(p, pts, bulges=None):
+    if len(pts) == 1:
+        return dist(p, pts[0])
+    best = math.inf
+    for k in range(len(pts) - 1):
+        arc = arc_of(pts[k], pts[k + 1], edge_bulge(bulges, k))
+        if arc is None:
+            d = to_segment(p, pts[k], pts[k + 1])
+        else:
+            c, r, _, _ = arc
+            if within(arc, math.atan2(p[1] - c[1], p[0] - c[0])):
+                d = abs(dist(p, c) - r)
+            else:
+                d = min(dist(p, pts[k]), dist(p, pts[k + 1]))
+        best = min(best, d)
+    return best
+
+
+def one_way(a, b, ba=None, bb=None):
+    return max((to_curve(p, b, bb) for p in samples(a, ba)), default=0.0)
+
+
+def hausdorff(a, b, ba=None, bb=None):
+    return max(one_way(a, b, ba, bb), one_way(b, a, bb, ba))
 
 
 def iou(a, b):
@@ -381,10 +461,12 @@ def analyse(d, inp):
         if e["layerId"] not in src:
             continue
         poly = None
+        bulges = None
         if e["kind"] == "point":
             kind, pts = "point", [xy(e["p"])]
         elif e["kind"] == "polyline" and not e.get("closed") and len(e["pts"]) >= 2:
             kind, pts = "line", [xy(p) for p in e["pts"]]
+            bulges = list(e.get("bulges", []))[:len(pts) - 1]
         elif e["kind"] == "polygon" and len(e["pts"]) >= 3:
             ring = [xy(p) for p in e["pts"]]
             poly = Polygon(ring)
@@ -420,7 +502,7 @@ def analyse(d, inp):
             status = "member" if g == kind else "wrongKind"
         cands.append({"uid": u, "source": src[e["layerId"]], "class": ci, "read": read, "confidence": confidence,
                       "line": is_line, "kind": kind, "poly": poly, "status": status, "attrs": attrs, "pts": pts,
-                      "z": e.get("z"), "entity": e})
+                      "bulges": bulges, "z": e.get("z"), "entity": e})
     eligible = [i for i, c in enumerate(cands) if c["status"] == "member"]
     # Components by breadth-first search from each candidate not reached, in order.
     seen, comps = set(), []
@@ -439,7 +521,8 @@ def analyse(d, inp):
                 if a["kind"] == "area":
                     joined = iou(a["poly"], b["poly"]) > least
                 else:
-                    gap = hausdorff(a["pts"], b["pts"]) if a["line"] else dist(a["pts"][0], b["pts"][0])
+                    gap = hausdorff(a["pts"], b["pts"], a["bulges"], b["bulges"]) if a["line"] else \
+                        dist(a["pts"][0], b["pts"][0])
                     joined = gap <= radius
                 if joined:
                     seen.add(j)
@@ -474,7 +557,8 @@ def analyse(d, inp):
             spread = 0.0
             for a in range(len(reps)):
                 for b in range(a + 1, len(reps)):
-                    spread = max(spread, hausdorff(cands[reps[a]]["pts"], cands[reps[b]]["pts"]))
+                    spread = max(spread, hausdorff(cands[reps[a]]["pts"], cands[reps[b]]["pts"],
+                                                   cands[reps[a]]["bulges"], cands[reps[b]]["bulges"]))
             if kind == "area":
                 c = cands[chosen]["poly"].centroid
                 x, y = c.x, c.y
@@ -506,7 +590,8 @@ def analyse(d, inp):
                     if e["kind"] == "point" and kind == "point":
                         near = any(dist(cands[r]["pts"][0], xy(e["p"])) <= radius for r in reps)
                     elif e["kind"] == "polyline" and is_line and len(e["pts"]) >= 2:
-                        near = any(hausdorff(cands[r]["pts"], [xy(p) for p in e["pts"]]) <= radius for r in reps)
+                        near = any(hausdorff(cands[r]["pts"], [xy(p) for p in e["pts"]], cands[r]["bulges"],
+                                             list(e.get("bulges", []))) <= radius for r in reps)
                     elif e["kind"] == "polygon" and kind == "area" and len(e["pts"]) >= 3:
                         there = Polygon([xy(p) for p in e["pts"]])
                         near = there.area > 0 and any(iou(cands[r]["poly"], there) > least for r in reps)
@@ -652,6 +737,8 @@ def executed(d, inp):
             f = {"layerId": class_layer(d, g["class"]), "attrs": attrs}
             if first["kind"] != "point":
                 f["pts"] = copy.deepcopy(first["entity"]["pts"])
+                if first["entity"].get("bulges"):
+                    f["bulges"] = list(first["entity"]["bulges"])
             else:
                 f["p"] = {"x": g["row"]["x"], "y": g["row"]["y"]}
                 if "z" in g["row"]:
@@ -752,6 +839,14 @@ def cases():
     out.append(case("Yeniden çalıştırma: eşleştirilmiş adaylar okunmaz, insan kararı ezilmez", after,
                     step(after, BASE)))
     out.append(case("Doğrulama", d, step(d, BASE, op="validate")))
+    # ADR 3340: the arcs measured as arcs.
+    arc_drawing = setup(objects=arcs())
+    near = dict(BASE, radius=0.5)
+    out.append(case("Yaylı bordür kirişindeki düz çizgiyle eşleşmez; köşeleriyle çizilmiş eşiyle eşleşir (yay, sekizde "
+                    "birleriyle ölçülür)", arc_drawing, step(arc_drawing, near, op="plan"),
+                    "Kirişle ölçülseydi ilk yay ile düz çizgi 5 cm'de bir grup olurdu; yayın ortası 3 m ötede."))
+    out.append(case("Eşleştir: yaylı bordürle köşeleriyle çizilmiş eşi yazılır, yazılan çizgi yayını taşır", arc_drawing,
+                    step(arc_drawing, near)))
     # Refusals, in their order.
     out.append(case("Sürüm yazısı geçersiz", d, [{"op": "execute", "input": dict(BASE, expectedRevision="abc"),
                                                   "result": {"status": "failed", "error": {

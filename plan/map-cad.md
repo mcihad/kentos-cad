@@ -34,7 +34,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280 | tipli katman profili; silinenin onaylı hâli; değişen özniteliğin adı | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940 | ayrı inceleme kaydı; yaylı aday; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; kotun aralığının çizimde gösterimi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
@@ -588,6 +588,13 @@ Kapsam: **Harita**. Dayanak: CLAUDE.md §6.2; bir çiftin yakınlığı kutular�
 ızgarası (her çift bir kez, sol alt köşe kuralı), eşleştirmede yalnız uzanımları buluşan çiftler ve var olan varlığın
 ızgaradan aranması; cevap bütün çiftlerinkiyle aynı (35 ortak durum, 3000 kümelik test). Ölçüm (debug, M5): 10 000
 kümede 38,2 s'den 0,246 s'ye, 40 000 kümede 1,02 s. Açık: ayrı inceleme kaydı, yaylı aday, sürüm derlemesinde ölçüm.
+
+**9 Kasım 2026, altıncı tur — yaylı aday ([ADR 3340](../docs/adr/3340-reconcile-arc-candidates.md)).** Kapsam:
+**Harita**. Dayanak: ArcGIS Pro'nun Densify'ı (yay ölçülmeden önce kendisiyle temsil edilir), DXF'in bulge'ı.
+Kanıtlanan: `map.features.reconcile` çoklu çizginin yaylarını yay olarak ölçer: Hausdorff'un noktaları köşeler ve her
+yayın sekizde birleri, yaya uzaklık kesin; kutular yayın şişkinliğini tutar; yazılan varlık yayıyla. Başvuruda iki yeni
+durum (kirişindeki düz çizgiyle eşleşmeyen yay; köşeleriyle çizilmiş eşiyle uyuşan yay), MCP, masaüstü. Açık: ayrı
+inceleme kaydı, sürüm derlemesinde ölçüm, AI çıkarımı.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

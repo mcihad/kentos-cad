@@ -118,3 +118,75 @@ fn screens() {
         println!("{}", file.display());
     }
 }
+
+/// The shared case's kerbs with arcs (docs/adr/3340) opened.
+fn arcs_opened() -> App {
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Yaylı bordür")))
+        .cloned()
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(Module::Map);
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/3340: at a 0,5 m radius the arc 3 m off its chord and the straight line along that chord stay two singles,
+/// the arc and its copy drawn by its vertices agree; Eşleştir writes that kerb, its arc kept.
+#[test]
+fn an_arc_is_measured_as_an_arc() {
+    let mut app = arcs_opened();
+    let _ = app.update(Message::Run("map.featuresReconcile"));
+    let _ = app.update(Message::FeaturesReconcile(R::Radius(0.5)));
+    assert_eq!(
+        statuses(&app),
+        [("single".to_owned(), false), ("single".to_owned(), false), ("agreed".to_owned(), true)]
+    );
+    let before: Vec<kentos_domain::Slot> =
+        app.document.as_ref().map(|d| d.model.entities().map(|e| kentos_domain::Slot(e.base().id)).collect()).unwrap_or_default();
+    let _ = app.update(Message::FeaturesReconcile(R::Run));
+    let doc = app.document.as_ref().expect("open");
+    let written: Vec<&kentos_commands::Entity> =
+        doc.model.entities().filter(|e| !before.contains(&kentos_domain::Slot(e.base().id))).collect();
+    assert_eq!(written.len(), 1);
+    match written[0] {
+        kentos_commands::Entity::Polyline(p) => assert_eq!(p.bulges.as_deref().map(|b| b[0]), Some(0.1), "the arc kept"),
+        other => panic!("a polyline: {other:?}"),
+    }
+}
+
+/// `.run/gui-evidence/yayli-aday-3340/`: the kerbs with arcs planned at 0,5 m.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib features_reconcile_window_tests::arc_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn arc_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yayli-aday-3340");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = arcs_opened();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("map.featuresReconcile"));
+        let _ = app.update(Message::FeaturesReconcile(R::Radius(0.5)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-yayli-plan-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

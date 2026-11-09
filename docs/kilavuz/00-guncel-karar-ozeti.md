@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Detay eşleştirmede yaylı aday (9 Kasım 2026; MAP-04, [ADR 3340](../../docs/adr/3340-reconcile-arc-candidates.md)).**
+  Çoklu çizginin yayları yay olarak ölçülür (Hausdorff'a yayın sekizde birleri, yaya kesin uzaklık); kutular yayın
+  şişkinliğini tutar. Harita.
 - **GNSS bazı haritada (9 Kasım 2026; MAP-03, [ADR 3320](../../docs/adr/3320-gnss-baseline-drawn-on-the-map.md)).**
   GNSS arşivi › Bazlar satırı bazı iki ucunun kabul noktaları arasında geçici kesikli çizgi, ok ve uzunlukla çizer;
   İşareti kaldır ile gider. Harita.
