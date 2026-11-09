@@ -1,7 +1,8 @@
-//! `road.terrains.stockpile` v1 (plan/map-cad.md MAP-15, docs/adr/3140): a stockpile's volume inside a closed boundary
-//! over a base drawn from the boundary's outer corners (the lowest, highest or average of their heights on the
-//! surface, the plane fitted to them, or a height given; Pix4D's volume base surfaces), the computation the core's
-//! (`kentos_road::stockpile`). Reads only. The shared cases are `fixtures/commands/v1/road.terrains.stockpile.json`.
+//! `road.terrains.stockpile` v1 (plan/map-cad.md MAP-15, docs/adr/3140, 3940): a stockpile's volume inside a closed
+//! boundary over a base drawn from the boundary's outer corners (the lowest, highest or average of their heights on the
+//! surface, the plane fitted to them, the corners triangulated, or a height given; Pix4D's volume base surfaces), the
+//! computation the core's (`kentos_road::stockpile`). Reads only. The shared cases are
+//! `fixtures/commands/v1/road.terrains.stockpile.json`.
 
 use kentos_commands::{CommandResult, CommandWarning, TerrainsStockpile, TerrainsStockpiled};
 use kentos_domain::Document;
@@ -23,13 +24,14 @@ fn base_of(input: &TerrainsStockpile) -> Result<Base, Stop> {
         "highest" => Base::Highest,
         "average" => Base::Average,
         "fit" => Base::Fit,
+        "triangulated" => Base::Triangulated,
         "elevation" => match input.elevation {
             Some(z) if z.is_finite() => Base::Elevation(z),
             _ => return Err(invalid("Kotla taban (elevation) için sonlu bir kot verin.".into(), "elevation")),
         },
         other => {
             return Err(invalid(
-                format!("“{other}” bir taban değil: lowest, highest, average, fit ya da elevation olmalı."),
+                format!("“{other}” bir taban değil: lowest, highest, average, fit, triangulated ya da elevation olmalı."),
                 "base",
             ));
         }
@@ -61,12 +63,30 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsStockpile) -> Result<(Terra
                 "boundary",
             ));
         }
-        (Err(BaseError::Collinear), _) => Vec::new(),
+        // Corner heights fail only off the surface.
+        (Err(BaseError::Collinear | BaseError::Untriangulated(_)), _) => Vec::new(),
     };
-    let plane = stockpile::base_plane(base, &region.outer, &corners).map_err(|_| {
-        invalid("Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.".into(), "base")
-    })?;
-    let m = stockpile::measure(surface, &region, plane);
+    // A triangulated base (docs/adr/3940): the corners' triangles, each its plane; the others one plane.
+    let (plane, tin) = if base == Base::Triangulated {
+        let tin = stockpile::base_tin(&region.outer, &corners).map_err(|e| {
+            let why = match e {
+                BaseError::Untriangulated("constraints_cross") => "sınırın kenarları birbirini kesiyor",
+                _ => "köşeler bir doğru üstünde ya da üst üste",
+            };
+            invalid(format!("Sınırın köşeleri üçgenlenemiyor: {why}. Sınırı düzeltin ya da başka bir taban seçin."), "boundary")
+        })?;
+        (None, Some(tin))
+    } else {
+        let plane = stockpile::base_plane(base, &region.outer, &corners).map_err(|_| {
+            invalid("Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.".into(), "base")
+        })?;
+        (Some(plane), None)
+    };
+    let m = match (&tin, plane) {
+        (Some(tin), _) => stockpile::measure_tin(surface, &region, tin),
+        (None, Some(plane)) => stockpile::measure(surface, &region, plane),
+        (None, None) => return Err(Stop::Cancelled),
+    };
     let uncovered = (m.area - m.covered).max(0.0);
     let mut warnings = Vec::new();
     if uncovered > 1e-6 * m.area.max(1.0) {
@@ -87,19 +107,32 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsStockpile) -> Result<(Terra
         Base::Average => "köşelerin ortalama kotunda yatay düzlem".to_owned(),
         Base::Fit => "köşelere en küçük kareler düzlemi (düşey farklar)".to_owned(),
         Base::Elevation(_) => "verilen kotta yatay düzlem".to_owned(),
+        Base::Triangulated => format!(
+            "köşelerden üçgenlenmiş yüzey ({} üçgen, kısıtlı Delaunay)",
+            tin.as_ref().map_or(0, |t| t.triangles.len())
+        ),
     };
-    let notes = vec![
+    let mut notes = vec![
         format!(
             "Taban: {said}; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). Sınırın {} köşesi.",
             region.outer.len()
         ),
         "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve momentleriyle.".to_owned(),
     ];
+    // Four corners on one circle (docs/adr/3940): the triangulation is not the only one; said, with the diagonal taken.
+    for [p, q] in tin.iter().flat_map(|t| &t.undecided) {
+        notes.push(format!(
+            "Köşelerden dördü bir çemberin üstünde: tabanın üçgenlemesi tek değil. Köşegen ({:.3}, {:.3})–({:.3}, {:.3}) \
+             KentOS'un üçgenlemesinindir; öbür köşegen hacmi değiştirebilir.",
+            p[0], p[1], q[0], q[1]
+        ));
+    }
     Ok((
         TerrainsStockpiled {
             surface: id,
             base: input.base.clone(),
             plane,
+            triangles: tin.map(|t| t.triangles).unwrap_or_default(),
             corners,
             area: m.area,
             covered: m.covered,

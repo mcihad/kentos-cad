@@ -4,12 +4,14 @@
  * Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object
  * as in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or
  * `average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them
- * (the least squares of the vertical differences), `elevation` level at `elevation`. Above the base is cut (the
- * pile), below it fill (Pix4D's words). Reads only.
+ * (the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside
+ * the outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),
+ * `elevation` level at `elevation`. Above the base is cut (the pile), below it fill (Pix4D's words). Reads only.
  *
  * Refusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),
  * `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
  * that is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a
- * line for `fit`). Warnings: `terrain_no_data` (the surface does not cover the whole boundary).
+ * line for `fit`, the corners not triangulated). Warnings: `terrain_no_data` (the surface does not cover the whole
+ * boundary).
  */
 export type TerrainsStockpile = { surface: string, boundary: string, base: string, elevation?: number, };

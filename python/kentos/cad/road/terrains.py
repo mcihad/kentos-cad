@@ -2727,14 +2727,17 @@ class _RoadTerrainsStockpile(LocalCommand[TerrainsStockpile, TerrainsStockpiled,
     alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest,
     highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en
     yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri
-    toplamı en küçük olan eğimli düzlem; elevation verilen kotta (elevation) yatay
-    düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin
-    her üçgeni sınırın halkalarıyla kırpılır, farkın sıfır çizgisinde bölünür, doğrusal
-    fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z
-    = a·x + b·y + c), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği
-    alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler:
-    invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable,
-    entity_not_found, invalid_coverage.
+    toplamı en küçük olan eğimli düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış
+    halkanın içinde üçgenlenmesi (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her
+    üçgen kendi düzlemi; dört köşe bir çemberdeyse notta söylenir); elevation verilen
+    kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam
+    ikisinin toplamı. Yüzeyin her üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir
+    de tabanın üçgenleriyle) kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark
+    parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z =
+    a·x + b·y + c; üçgenlenmiş tabanda onun yerine üçgenleri), köşelerin kotları,
+    sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları.
+    Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project,
+    unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.
     """
     __slots__ = ()
     id = "road.terrains.stockpile"
@@ -2763,13 +2766,17 @@ class _RoadTerrainsStockpile(LocalCommand[TerrainsStockpile, TerrainsStockpiled,
         Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış
         köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında
         yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli
-        düzlem; elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın),
-        altı dolgudur; toplam ikisinin toplamı. Yüzeyin her üçgeni sınırın halkalarıyla
+        düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi
+        (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe
+        bir çemberdeyse notta söylenir); elevation verilen kotta (elevation) yatay düzlem.
+        Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her
+        üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle)
         kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci
-        momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c), köşelerin
-        kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve
-        alanları. Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project,
-        unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.
+        momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş
+        tabanda onun yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve
+        örtmediği alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler:
+        invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable,
+        entity_not_found, invalid_coverage.
 
         Args:
             doc: The drawing it works on.

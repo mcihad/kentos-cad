@@ -14,11 +14,14 @@ corners on a line.
 The rules, by hand (Pix4D's volume base surfaces, docs/adr/3140):
 - the outer corners' heights on the surface: the triangle's plane (exact fractions, road_surface_cases.py);
 - the base: level at the lowest, highest or average height, the plane z = a·x + b·y + c of least vertical squares
-  through them (exact normal equations, centred on the corners' mean), or level at a height given;
+  through them (exact normal equations, centred on the corners' mean), or level at a height given; or (docs/adr/3940)
+  the corners with their heights triangulated inside the outer ring (Triangle's constrained triangulation of the ring,
+  its notch eaten; the triangulation asserted the only one: no fourth corner on a triangle's circle across an inner
+  edge), each triangle its plane;
 - inside the boundary (outer ring counterclockwise, holes clockwise) each triangle of the surface clips each ring
-  (Sutherland–Hodgman, the triangle the window), the part is split where surface − base is zero, and the linear
-  difference is integrated from the parts' areas and first moments, all in exact fractions; above the base is cut,
-  below it fill, total their sum.
+  (Sutherland–Hodgman, the triangle the window), a triangulated base's triangles clip the part again, the part is split
+  where surface − base is zero, and the linear difference is integrated from the parts' areas and first moments, all in
+  exact fractions; above the base is cut, below it fill, total their sum.
 """
 
 import copy
@@ -197,13 +200,67 @@ def base_plane(kind, outer, heights, elevation=None):
     return [float(a), float(b), float(mz - a * mx - b * my)]
 
 
-def measure(outer, holes, plane):
-    """The cut, fill and areas inside the rings against the plane, exact."""
+def orient(a, b, c):
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+
+
+def base_tin(outer, heights):
+    """The corners triangulated inside the ring (docs/adr/3940): Triangle's constrained triangulation of the ring's
+    edges, the notch eaten; each triangle counterclockwise from its smallest place, the list ordered by them. Asserted
+    the only triangulation: across every inner edge the fourth corner is strictly outside the circle."""
+    xy = [(p[0], p[1]) for p in outer]
+    n = len(xy)
+    tris = rt.tri.triangulate(xy, [(k, (k + 1) % n) for k in range(n)], clip=True)
+    ring = {frozenset((k, (k + 1) % n)) for k in range(n)}
+    across = {}
+    for t in tris:
+        for k in range(3):
+            across.setdefault(frozenset((t[k], t[(k + 1) % 3])), []).append((t, t[(k + 2) % 3]))
+    for e, sides in across.items():
+        if len(sides) == 2 and e not in ring:
+            (t, _), (_, far) = sides
+            a, b, c = [xy[i] for i in (t if orient(*[xy[i] for i in t]) > 0 else (t[0], t[2], t[1]))]
+            assert rt.incircle(a, b, c, xy[far]) < 0, ("two triangulations", sorted(xy[i] for i in e))
+    out = []
+    for t in tris:
+        t = t if orient(*[xy[i] for i in t]) > 0 else [t[0], t[2], t[1]]
+        c = [[xy[i][0], xy[i][1], heights[i]] for i in t]
+        first = min(range(3), key=lambda k: (c[k][0], c[k][1]))
+        out.append([c[first], c[(first + 1) % 3], c[(first + 2) % 3]])
+    return sorted(out, key=lambda t: [(v[0], v[1]) for v in t])
+
+
+def plane_through(t, o):
+    """The plane [a, b, c] through a triangle's corners (shifted by o), exact, and its shifted corners."""
+    v = [((F(c[0]) - o[0], F(c[1]) - o[1]), F(c[2])) for c in t]
+    e1 = (v[1][0][0] - v[0][0][0], v[1][0][1] - v[0][0][1])
+    e2 = (v[2][0][0] - v[0][0][0], v[2][0][1] - v[0][0][1])
+    det = e1[0] * e2[1] - e1[1] * e2[0]
+    dz1, dz2 = v[1][1] - v[0][1], v[2][1] - v[0][1]
+    a = (dz1 * e2[1] - dz2 * e1[1]) / det
+    b = (e1[0] * dz2 - e2[0] * dz1) / det
+    return [p for p, _ in v], (a, b, v[0][1] - a * v[0][0][0] - b * v[0][0][1])
+
+
+def clip_by(poly, w):
+    for k in range(3):
+        a, b = w[k], w[(k + 1) % 3]
+        poly = keep(poly, lambda p, a=a, b=b: (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]))
+        if len(poly) < 3:
+            return []
+    return poly
+
+
+def measure(outer, holes, plane, tin=None):
+    """The cut, fill and areas inside the rings against the plane (or a triangulated base's triangles), exact."""
     o = (F(outer[0][0]), F(outer[0][1]))
     sh = lambda ring: [(F(p[0]) - o[0], F(p[1]) - o[1]) for p in ring]
     rings = [oriented(sh(outer), True)] + [oriented(sh(h), False) for h in holes]
-    pa, pb, pc = F(plane[0]), F(plane[1]), F(plane[2])
-    base_c = pa * o[0] + pb * o[1] + pc
+    if tin:
+        bases = [plane_through(t, o) for t in tin]
+    else:
+        pa, pb, pc = F(plane[0]), F(plane[1]), F(plane[2])
+        bases = [(None, (pa, pb, pa * o[0] + pb * o[1] + pc))]
     out = {"area": sum(signed_area(r) for r in rings), "covered": F(0), "cut": F(0), "fill": F(0), "cutArea": F(0),
            "fillArea": F(0)}
     for t in S["tris"]:
@@ -220,29 +277,28 @@ def measure(outer, holes, plane):
         sa = (dz1 * e2[1] - dz2 * e1[1]) / det
         sb = (e1[0] * dz2 - e2[0] * dz1) / det
         sc = v[0][1] - sa * v[0][0][0] - sb * v[0][0][1]
-        da, db, dc = sa - pa, sb - pb, sc - base_c
         for ring in rings:
-            poly = ring
-            for k in range(3):
-                a, b = v[k][0], v[(k + 1) % 3][0]
-                poly = keep(poly, lambda p, a=a, b=b: (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]))
-                if len(poly) < 3:
-                    break
-            if len(poly) < 3:
+            whole = clip_by(ring, [v[0][0], v[1][0], v[2][0]])
+            if len(whole) < 3:
                 continue
-            out["covered"] += moments(poly)[0]
-            for above in (True, False):
-                part = keep(poly, (lambda p: da * p[0] + db * p[1] + dc) if above else (lambda p: -(da * p[0] + db * p[1] + dc)))
-                if len(part) < 3:
+            for window, (ba, bb, bc) in bases:
+                poly = whole if window is None else clip_by(whole, window)
+                if len(poly) < 3:
                     continue
-                a_, sx, sy = moments(part)
-                integral = da * sx + db * sy + dc * a_
-                if above:
-                    out["cut"] += integral
-                    out["cutArea"] += a_
-                else:
-                    out["fill"] -= integral
-                    out["fillArea"] += a_
+                da, db, dc = sa - ba, sb - bb, sc - bc
+                out["covered"] += moments(poly)[0]
+                for above in (True, False):
+                    part = keep(poly, (lambda p: da * p[0] + db * p[1] + dc) if above else (lambda p: -(da * p[0] + db * p[1] + dc)))
+                    if len(part) < 3:
+                        continue
+                    a_, sx, sy = moments(part)
+                    integral = da * sx + db * sy + dc * a_
+                    if above:
+                        out["cut"] += integral
+                        out["cutArea"] += a_
+                    else:
+                        out["fill"] -= integral
+                        out["fillArea"] += a_
     return {k: float(v) for k, v in out.items()}
 
 
@@ -256,15 +312,24 @@ def answer(boundary, base, elevation=None, surface="t-1"):
     heights = corner_heights(outer)
     if isinstance(heights, int):
         heights = []
-    plane = base_plane(base, outer, heights, elevation)
-    m = measure(outer, holes, plane)
+    if base == "triangulated":
+        tin, plane = base_tin(outer, heights), None
+        said = f"köşelerden üçgenlenmiş yüzey ({len(tin)} üçgen, kısıtlı Delaunay)"
+    else:
+        tin, plane = None, base_plane(base, outer, heights, elevation)
+        said = SAID[base]
+    m = measure(outer, holes, plane, tin)
     uncovered = max(m["area"] - m["covered"], 0.0)
-    out = {"surface": "t-1", "base": base, "plane": plane}
+    out = {"surface": "t-1", "base": base}
+    if plane is not None:
+        out["plane"] = plane
+    if tin:
+        out["triangles"] = tin
     if heights:
         out["corners"] = heights
     out.update({"area": m["area"], "covered": m["covered"], "uncovered": uncovered, "cut": m["cut"], "fill": m["fill"],
                 "total": m["cut"] + m["fill"], "cutArea": m["cutArea"], "fillArea": m["fillArea"],
-                "notes": [f"Taban: {SAID[base]}; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). "
+                "notes": [f"Taban: {said}; tabanın üstü kazı (yığın), altı dolgu (Pix4D'nin hacim tabanları). "
                           f"Sınırın {len(outer)} köşesi.",
                           "Hacim yüzeyin üçgenleriyle sınırın kesişiminde kesin tümlenir: doğrusal fark, parçanın alanı ve "
                           "momentleriyle."]})
@@ -339,8 +404,8 @@ def cases():
                       "taban köşelerin yüzeydeki kotlarından çizilir. Sınırı yüzeyin içine çizin ya da kotla taban verin.",
                       "boundary"))
     refused(out, "Bilinmeyen taban", {**pent, "base": "plane"},
-            rt.failed("invalid_stockpile", "“plane” bir taban değil: lowest, highest, average, fit ya da elevation olmalı.",
-                      "base"))
+            rt.failed("invalid_stockpile", "“plane” bir taban değil: lowest, highest, average, fit, triangulated ya da "
+                      "elevation olmalı.", "base"))
     refused(out, "Kotla taban, kot yok", {**pent, "base": "elevation"},
             rt.failed("invalid_stockpile", "Kotla taban (elevation) için sonlu bir kot verin.", "elevation"))
     refused(out, "Yol ya da Harita projesi değil", {**pent, "base": "lowest"}, rt.NOT_ROAD, setup("architecture"))
@@ -357,14 +422,33 @@ def cases():
                           "da alan olmalı.", "boundary"))
     refused(out, "Köşeleri bir doğru üstünde: eğimli düzlem çizilemez", {"surface": "t-1", "boundary": B["line"], "base": "fit"},
             rt.failed("invalid_stockpile", "Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.", "base"))
+    # Köşelerden üçgenlenmiş taban (docs/adr/3940; Pix4D's Triangulated).
+    tri_ = read(out, "Beşgen, köşelerden üçgenlenmiş taban: üç üçgen, her biri kendi düzlemi", {**pent, "base": "triangulated"},
+                boundary="pentagon", base="triangulated")
+    assert len(tri_["triangles"]) == 3 and tri_["cut"] > 0, tri_
+    l_ = read(out, "L (iç bükey), üçgenlenmiş taban: girintide üçgen yok", {**ell, "base": "triangulated"}, boundary="ell",
+              base="triangulated")
+    assert len(l_["triangles"]) == 4 and abs(sum(abs(float(orient(*[(F(c[0]), F(c[1])) for c in t]))) / 2
+                                                for t in l_["triangles"]) - l_["area"]) < 1e-6, l_
+    read(out, "Üçgenlenmiş taban, yüzeyin adıyla", {"surface": "Yığın", "boundary": B["pentagon"], "base": "triangulated"},
+         op="validate", boundary="pentagon", base="triangulated")
+    refused(out, "Yüzeyi aşan sınır, üçgenlenmiş taban: dışarıdaki köşe ret", {**beyond, "base": "triangulated"},
+            rt.failed("invalid_stockpile", f"Sınırın 2. köşesi ({BEYOND[1][0]:.3f}, {BEYOND[1][1]:.3f}) yüzeyin dışında; "
+                      "taban köşelerin yüzeydeki kotlarından çizilir. Sınırı yüzeyin içine çizin ya da kotla taban verin.",
+                      "boundary"))
+    refused(out, "Köşeleri bir doğru üstünde: üçgenlenmiş taban kurulamaz",
+            {"surface": "t-1", "boundary": B["line"], "base": "triangulated"},
+            rt.failed("invalid_stockpile", "Sınırın köşeleri üçgenlenemiyor: köşeler bir doğru üstünde ya da üst üste. Sınırı "
+                      "düzeltin ya da başka bir taban seçin.", "boundary"))
     return out
 
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.terrains.stockpile", "commandVersion": 1,
            "title": "Stok hacmi (Pix4D'nin hacim tabanları)",
-           "note": "ADR 3140. Bağımsız başvuru scripts/fixtures/road_terrain_stockpile_cases.py: yüzey Triangle'ın; köşe "
-                   "kotları, taban düzlemi, kırpma ve tümleme kesin kesirlerle elle; KentOS kodu yok. Okur, yazmaz.",
+           "note": "ADR 3140, 3940. Bağımsız başvuru scripts/fixtures/road_terrain_stockpile_cases.py: yüzey ve üçgenlenmiş "
+                   "taban Triangle'ın; köşe kotları, taban düzlemi, kırpma ve tümleme kesin kesirlerle elle; KentOS kodu "
+                   "yok. Okur, yazmaz.",
            "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:

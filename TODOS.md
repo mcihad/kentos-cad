@@ -212,6 +212,7 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-15 / ADR 3940: web'in Stok hacmi'nde Üçgenlenmiş taban (`triangulated`; road.terrains.stockpile'ın 5 yeni durumu).
 - MAP-14 / ADR 3920: web'in yüzey kurucusunda Yüzey yapıştır (`paste` düzenlemesi; road.terrains.edit'in 7, query'nin 1
   yeni durumu), web'in `.kcad` okuyucu/yazıcısında şema 214 ve Arazi yüzeyleri'nin Düzenlemeler'inde Yüzey yapıştır.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i

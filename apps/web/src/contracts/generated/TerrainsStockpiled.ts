@@ -2,8 +2,14 @@
 
 /**
  * Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and
- * b zero), the outer corners' heights on the surface (none when a level base is given and a corner is off it), the
- * boundary's plan area, the part over the surface and the rest, the cut (above the base) and fill (below it) volumes
- * and their total (Pix4D's: cut + fill), the plan areas of cut and fill, and notes.
+ * b zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a
+ * level base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the
+ * cut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and
+ * fill, and notes.
  */
-export type TerrainsStockpiled = { surface: string, base: string, plane: [number, number, number], corners?: Array<number>, area: number, covered: number, uncovered: number, cut: number, fill: number, total: number, cutArea: number, fillArea: number, notes: Array<string>, };
+export type TerrainsStockpiled = { surface: string, base: string, plane?: [number, number, number], 
+/**
+ * A triangulated base's triangles (docs/adr/3940): each three corners `[x, y, z]` counterclockwise from its
+ * smallest place (x, then y), the list ordered by them.
+ */
+triangles?: Array<[[number, number, number], [number, number, number], [number, number, number]]>, corners?: Array<number>, area: number, covered: number, uncovered: number, cut: number, fill: number, total: number, cutArea: number, fillArea: number, notes: Array<string>, };

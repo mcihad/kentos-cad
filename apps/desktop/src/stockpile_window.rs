@@ -1,9 +1,9 @@
 //! Stok hacmi (docs/adr/3140; `terrain.stockpile`): a stockpile's volume inside a closed boundary over a base drawn from
 //! the boundary's corners, by `road.terrains.stockpile` (Pix4D's volume bases). The surface and the boundary on one
 //! line (the selected closed object first, else the drawing's first), the base on the next (the corners' lowest,
-//! highest or average height, the plane fitted to them, or a height typed); the summary is the command's answer: cut
-//! above the base, fill below, their total and areas, the base, the corners' heights, the warnings and notes. Reads
-//! only: nothing is written.
+//! highest or average height, the plane fitted to them, the corners triangulated (docs/adr/3940), or a height typed);
+//! the summary is the command's answer: cut above the base, fill below, their total and areas, the base, the corners'
+//! heights, the warnings and notes. Reads only: nothing is written.
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
@@ -29,6 +29,8 @@ pub enum Base {
     Average,
     #[default]
     Fit,
+    /// The corners triangulated (docs/adr/3940).
+    Triangulated,
     Elevation,
 }
 
@@ -39,6 +41,7 @@ impl Base {
             Base::Highest => "highest",
             Base::Average => "average",
             Base::Fit => "fit",
+            Base::Triangulated => "triangulated",
             Base::Elevation => "elevation",
         }
     }
@@ -51,6 +54,7 @@ impl std::fmt::Display for Base {
             Base::Highest => "En yüksek köşe",
             Base::Average => "Ortalama",
             Base::Fit => "Eğimli düzlem",
+            Base::Triangulated => "Üçgenlenmiş",
             Base::Elevation => "Kot",
         })
     }
@@ -90,6 +94,22 @@ impl State {
             base: self.base.id().to_owned(),
             elevation: (self.base == Base::Elevation).then_some(self.elevation),
         }
+    }
+}
+
+/// A triangulated base's words (docs/adr/3940): its triangles and their slopes' range, as a plane's slope is said.
+fn tin_line(triangles: &[[[f64; 3]; 3]]) -> String {
+    let slope = |t: &[[f64; 3]; 3]| {
+        let (e1, e2) = ([t[1][0] - t[0][0], t[1][1] - t[0][1]], [t[2][0] - t[0][0], t[2][1] - t[0][1]]);
+        let (dz1, dz2) = (t[1][2] - t[0][2], t[2][2] - t[0][2]);
+        let det = e1[0] * e2[1] - e1[1] * e2[0];
+        let (a, b) = ((dz1 * e2[1] - dz2 * e1[1]) / det, (e1[0] * dz2 - e2[0] * dz1) / det);
+        100.0 * a.hypot(b)
+    };
+    let slopes: Vec<f64> = triangles.iter().map(slope).filter(|s| s.is_finite()).collect();
+    match (slopes.iter().copied().reduce(f64::min), slopes.iter().copied().reduce(f64::max)) {
+        (Some(lo), Some(hi)) => format!("Taban: köşelerden {} üçgen, eğimleri %{}–%{}.", triangles.len(), fixed(lo, 2), fixed(hi, 2)),
+        _ => format!("Taban: köşelerden {} üçgen.", triangles.len()),
     }
 }
 
@@ -173,9 +193,14 @@ impl App {
     }
 
     fn stockpile_lines(&self, r: &TerrainsStockpiled, warnings: &[CommandWarning]) -> Vec<Element<'_, Message>> {
+        self.stockpile_said(r, warnings).into_iter().map(|(kind, text)| words::text_line(kind, text)).collect()
+    }
+
+    /// The summary's lines: their kind and words.
+    fn stockpile_said(&self, r: &TerrainsStockpiled, warnings: &[CommandWarning]) -> Vec<(Kind, String)> {
         let format = self.format();
         let mut lines = vec![
-            words::text_line(
+            (
                 Kind::Ok,
                 format!(
                     "Kazı (tabanın üstü) {} m³, dolgu (tabanın altı) {} m³, toplam {} m³.",
@@ -184,7 +209,7 @@ impl App {
                     fixed(r.total, 2)
                 ),
             ),
-            words::text_line(
+            (
                 Kind::Info,
                 format!(
                     "Sınırın alanı {}: kazı {}, dolgu {}{}.",
@@ -196,8 +221,25 @@ impl App {
                 ),
             ),
         ];
-        let [a, b, c] = r.plane;
-        let base = if a == 0.0 && b == 0.0 {
+        let base = match r.plane {
+            None => tin_line(&r.triangles),
+            Some([a, b, c]) => self.stockpile_plane_line(a, b, c),
+        };
+        lines.push((Kind::Info, base));
+        if let (Some(lo), Some(hi)) = (r.corners.iter().copied().reduce(f64::min), r.corners.iter().copied().reduce(f64::max)) {
+            lines.push((
+                Kind::Info,
+                format!("Köşelerin yüzeydeki kotları {}–{} m ({} köşe).", fixed(lo, 3), fixed(hi, 3), r.corners.len()),
+            ));
+        }
+        lines.extend(warnings.iter().map(|w| (Kind::Warn, w.message.clone())));
+        lines.extend(r.notes.iter().map(|n| (Kind::Info, n.clone())));
+        lines
+    }
+
+    /// A plane base's words: its height when level, else its slope and its height at the boundary's first corner.
+    fn stockpile_plane_line(&self, a: f64, b: f64, c: f64) -> String {
+        if a == 0.0 && b == 0.0 {
             format!("Taban kotu {} m.", fixed(c, 3))
         } else {
             let first = self
@@ -207,28 +249,28 @@ impl App {
                 .and_then(|g| g.outer.first().copied());
             let at = first.map_or(String::new(), |p| format!(", sınırın ilk köşesinde {} m", fixed(a * p[0] + b * p[1] + c, 3)));
             format!("Taban düzlemi: eğimi %{}{at}.", fixed(100.0 * a.hypot(b), 2))
-        };
-        lines.push(words::text_line(Kind::Info, base));
-        if let (Some(lo), Some(hi)) = (r.corners.iter().copied().reduce(f64::min), r.corners.iter().copied().reduce(f64::max)) {
-            lines.push(words::text_line(
-                Kind::Info,
-                format!("Köşelerin yüzeydeki kotları {}–{} m ({} köşe).", fixed(lo, 3), fixed(hi, 3), r.corners.len()),
-            ));
         }
-        for w in warnings {
-            lines.push(words::text_line(Kind::Warn, w.message.clone()));
+    }
+
+    /// The summary's lines as words (the tests read them).
+    #[cfg(test)]
+    pub(crate) fn stockpile_lines_text(&self) -> Vec<String> {
+        match &self.stockpile.answer {
+            Some(Ok((r, warnings))) => self.stockpile_said(r, warnings).into_iter().map(|(_, t)| t).collect(),
+            Some(Err(why)) => vec![why.clone()],
+            None => Vec::new(),
         }
-        for n in &r.notes {
-            lines.push(words::text_line(Kind::Info, n.clone()));
-        }
-        lines
     }
 
     pub(crate) fn stockpile_view(&self) -> Element<'_, Message> {
         let s = &self.stockpile;
         let base: Element<'_, Message> = {
             let choice =
-                Segmented::new([Base::Lowest, Base::Highest, Base::Average, Base::Fit, Base::Elevation], s.base, |v| msg(Event::Base(v)));
+                Segmented::new(
+                    [Base::Lowest, Base::Highest, Base::Average, Base::Fit, Base::Triangulated, Base::Elevation],
+                    s.base,
+                    |v| msg(Event::Base(v)),
+                );
             if s.base == Base::Elevation {
                 row![
                     choice,

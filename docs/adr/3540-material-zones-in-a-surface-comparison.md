@@ -112,6 +112,6 @@ bölgesi, kabarma/sıkışma katsayısı ve stok sahası ayrı parametre olsun�
 ## Sonra
 
 - Bölgelerin çizime yazılması (malzemeye göre taranmış alan ve yazı; kazı ve dolgu bölgeleriyle kesişimi).
-- Kesit yöntemiyle hacim karşılaştırması; stokta üçgenlenmiş taban (MAP-15'in öbür maddeleri).
+- Kesit yöntemiyle hacim karşılaştırması (MAP-15'in öbür maddesi; stokta üçgenlenmiş taban [ADR 3940](3940-stockpile-triangulated-base.md)'ta).
 - Malzemenin birim fiyatı ve maliyet: kaynak ve kullanıcının değeri beklenir.
 - Web (TODOS §0.2).

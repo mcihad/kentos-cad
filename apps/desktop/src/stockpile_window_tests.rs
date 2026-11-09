@@ -137,3 +137,69 @@ fn screens() {
     snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
     println!("{}", file.display());
 }
+
+/// Üçgenlenmiş (docs/adr/3940): the pentagon's and the L's answers are the shared cases', the base's triangles too; the
+/// summary says the base by its triangles, not by a plane.
+#[test]
+fn the_triangulated_base_is_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    app.selection.set([PENTAGON]);
+    let _ = app.update(Message::Run("terrain.stockpile"));
+    let _ = app.update(Message::Stockpile(E::Base(Base::Triangulated)));
+    let got = answer(&app);
+    let want = output("Beşgen, köşelerden üçgenlenmiş taban: üç üçgen, her biri kendi düzlemi");
+    same(&got, &want);
+    assert_eq!(got.plane, None);
+    let tris: Vec<[[f64; 3]; 3]> = serde_json::from_value(want["triangles"].clone()).expect("triangles");
+    assert_eq!(got.triangles.len(), tris.len());
+    for (g, w) in got.triangles.iter().zip(&tris) {
+        for k in 0..3 {
+            assert_eq!([g[k][0], g[k][1]], [w[k][0], w[k][1]], "the same corners in the same order");
+            assert!((g[k][2] - w[k][2]).abs() < 1e-9, "{g:?} {w:?}");
+        }
+    }
+    let said = app.stockpile_lines_text();
+    assert!(said.iter().any(|l| l.starts_with("Taban: köşelerden 3 üçgen, eğimleri %")), "{said:?}");
+    let ell = app.document.as_ref().and_then(|d| d.model.uid(ELL)).expect("the L").to_string();
+    let _ = app.update(Message::Stockpile(E::Boundary(ell)));
+    same(&answer(&app), &output("L (iç bükey), üçgenlenmiş taban: girintide üçgen yok"));
+}
+
+/// `.run/gui-evidence/stok-ucgenlenmis-3940/`: the window over the pentagon and the L with the triangulated base, light
+/// and wide, dark and narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib stockpile_window_tests::screens_triangulated -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_triangulated() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/stok-ucgenlenmis-3940");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.selection.set([PENTAGON]);
+        let _ = app.update(Message::Run("terrain.stockpile"));
+        let _ = app.update(Message::Stockpile(E::Base(Base::Triangulated)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, stem: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-besgen");
+        let ell = app.document.as_ref().and_then(|d| d.model.uid(ELL)).expect("the L").to_string();
+        let _ = app.update(Message::Stockpile(E::Boundary(ell)));
+        shot(&mut app, "2-l");
+    }
+}

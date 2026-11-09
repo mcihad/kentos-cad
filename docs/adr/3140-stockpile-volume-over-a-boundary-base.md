@@ -97,7 +97,7 @@ sahası”.
 
 ## Sonra
 
-- Üçgenlenmiş taban (köşelerden üçgenlenmiş yüzey, Pix4D'nin önerdiği).
+- ~~Üçgenlenmiş taban (köşelerden üçgenlenmiş yüzey, Pix4D'nin önerdiği)~~ ([ADR 3940](3940-stockpile-triangulated-base.md)).
 - Tabanın ve hacmin çizimde gösterimi; CSV.
 - Hacmin hata tahmini (yüzeyin nokta yoğunluğundan).
 - ~~Malzeme bölgesi~~ ([ADR 3540](3540-material-zones-in-a-surface-comparison.md)); kesit yöntemiyle hacim (MAP-15'in

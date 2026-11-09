@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Stokta köşelerden üçgenlenmiş taban (9 Kasım 2026; MAP-15, [ADR 3940](../../docs/adr/3940-stockpile-triangulated-base.md)).**
+  `road.terrains.stockpile`'a `triangulated`: köşeler kotlarıyla kısıtlı Delaunay'la üçgenlenir, hacim parça parça kesin
+  tümlenir; dört köşe bir çemberdeyse notta söylenir. Harita + Yol.
 - **Yüzey yapıştırma (9 Kasım 2026; MAP-14, [ADR 3920](../../docs/adr/3920-terrain-surface-paste.md)).**
   Tarifin düzenlemelerine Yüzey yapıştır (`paste`): başka bir yüzeyin üçgenleri aynen gelir, altında kalan kayıtlar
   gider; döngü yalnız tariflerden söylenir; `.kcad` şema 214. Harita + Yol.

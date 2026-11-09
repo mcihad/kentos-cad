@@ -51863,7 +51863,7 @@
       "id": "road.terrains.stockpile",
       "version": 1,
       "title": "Stok hacmi",
-      "summary": "Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli düzlem; elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her üçgeni sınırın halkalarıyla kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.",
+      "summary": "Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe bir çemberdeyse notta söylenir); elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle) kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş tabanda onun yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.",
       "aliases": [
         "stokhacmi",
         "yiginhacmi"
@@ -51882,7 +51882,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object\nas in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or\n`average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them\n(the least squares of the vertical differences), `elevation` level at `elevation`. Above the base is cut (the\npile), below it fill (Pix4D's words). Reads only.\n\nRefusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary\nthat is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a\nline for `fit`). Warnings: `terrain_no_data` (the surface does not cover the whole boundary).",
+        "description": "Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object\nas in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or\n`average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them\n(the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside\nthe outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),\n`elevation` level at `elevation`. Above the base is cut (the pile), below it fill (Pix4D's words). Reads only.\n\nRefusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),\n`not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary\nthat is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a\nline for `fit`, the corners not triangulated). Warnings: `terrain_no_data` (the surface does not cover the whole\nboundary).",
         "properties": {
           "base": {
             "type": "string"
@@ -51912,7 +51912,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero), the outer corners' heights on the surface (none when a level base is given and a corner is off it), the\nboundary's plan area, the part over the surface and the rest, the cut (above the base) and fill (below it) volumes\nand their total (Pix4D's: cut + fill), the plan areas of cut and fill, and notes.",
+        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and\nfill, and notes.",
         "properties": {
           "area": {
             "format": "double",
@@ -51968,7 +51968,10 @@
             },
             "maxItems": 3,
             "minItems": 3,
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "x-unit": "value"
           },
           "surface": {
@@ -51979,6 +51982,25 @@
             "type": "number",
             "x-unit": "volume"
           },
+          "triangles": {
+            "description": "A triangulated base's triangles (docs/adr/3940): each three corners `[x, y, z]` counterclockwise from its\nsmallest place (x, then y), the list ordered by them.",
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
           "uncovered": {
             "format": "double",
             "type": "number",
@@ -51988,7 +52010,6 @@
         "required": [
           "surface",
           "base",
-          "plane",
           "area",
           "covered",
           "uncovered",
@@ -52004,7 +52025,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero), the outer corners' heights on the surface (none when a level base is given and a corner is off it), the\nboundary's plan area, the part over the surface and the rest, the cut (above the base) and fill (below it) volumes\nand their total (Pix4D's: cut + fill), the plan areas of cut and fill, and notes.",
+        "description": "Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and\nb zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a\nlevel base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the\ncut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and\nfill, and notes.",
         "properties": {
           "area": {
             "format": "double",
@@ -52060,7 +52081,10 @@
             },
             "maxItems": 3,
             "minItems": 3,
-            "type": "array",
+            "type": [
+              "array",
+              "null"
+            ],
             "x-unit": "value"
           },
           "surface": {
@@ -52071,6 +52095,25 @@
             "type": "number",
             "x-unit": "volume"
           },
+          "triangles": {
+            "description": "A triangulated base's triangles (docs/adr/3940): each three corners `[x, y, z]` counterclockwise from its\nsmallest place (x, then y), the list ordered by them.",
+            "items": {
+              "items": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
           "uncovered": {
             "format": "double",
             "type": "number",
@@ -52080,7 +52123,6 @@
         "required": [
           "surface",
           "base",
-          "plane",
           "area",
           "covered",
           "uncovered",
@@ -52112,6 +52154,14 @@
           "title": "Yığının tabanı sınır köşelerine oturan eğimli düzlem",
           "input": {
             "base": "fit",
+            "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124",
+            "surface": "Mevcut zemin"
+          }
+        },
+        {
+          "title": "Yığının tabanı sınır köşelerinden üçgenlenmiş yüzey",
+          "input": {
+            "base": "triangulated",
             "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124",
             "surface": "Mevcut zemin"
           }

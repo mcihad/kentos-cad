@@ -45,7 +45,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
@@ -1686,6 +1686,14 @@ fark momentlerle kesin tümlenir; bölgeler 1 mm²'den çok örtüşemez; `zones
 göre katsayılı toplam); taşan bölgeye uyarı; 24 durumluk ayrı dosya (shapely'li başvuru), Python, MCP; Fark'ta Malzeme
 bölgeleri satırı (katmanın kapalı nesneleri, ad ve katsayılar öznitelikten), tablo ve çubuklar. Açık: kesit yöntemi,
 üçgenlenmiş taban, bölgelerin çizime yazılması.
+
+**9 Kasım 2026, yedinci tur — stokta köşelerden üçgenlenmiş taban ([ADR 3940](../docs/adr/3940-stockpile-triangulated-base.md)).**
+Kapsam: **Harita + Yol**. Dayanak: Pix4D'nin hacim tabanları (Triangulated: bütün köşeler bağlanır; sınır görünüyor ve
+çevre düz değilse önerilen taban), ADR 3140'ın okuması. Kanıtlanan: `road.terrains.stockpile`'a `triangulated`: dış
+köşeler yüzeydeki kotlarıyla çekirdeğin kısıtlı Delaunay'ıyla halkanın içinde üçgenlenir, her üçgen kendi düzlemi;
+hacim yüzey üçgeni × taban üçgeni parçalarında kesin tümlenir; cevapta düzlem yerine üçgenler; dört köşe bir çemberdeyse
+köşegen notta söylenir; 5 yeni bağımsız durum (30; Triangle, kesirler, üçgenlemenin tekliği doğrulanır), Python (kendi
+hesabıyla), MCP; masaüstünde Taban › Üçgenlenmiş. Açık: kesit yöntemi, bölgelerin çizime yazılması.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

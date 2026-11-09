@@ -8852,8 +8852,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_TERRAINS_STOCKPILE.into(),
             version: crate::ROAD_TERRAINS_STOCKPILE_VERSION,
             title: "Stok hacmi".into(),
-            summary: "Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli düzlem; elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. \
-                      Yüzeyin her üçgeni sınırın halkalarıyla kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları. \
+            summary: "Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe bir çemberdeyse notta söylenir); elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. \
+                      Yüzeyin her üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle) kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş tabanda onun yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları. \
                       Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage."
                 .into(),
             aliases: vec!["stokhacmi".into(), "yiginhacmi".into()],
@@ -8871,6 +8871,10 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Yığının tabanı sınır köşelerine oturan eğimli düzlem".into(),
                 input: json!({ "surface": "Mevcut zemin", "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124", "base": "fit" }),
+                output: None,
+            }, CommandExample {
+                title: "Yığının tabanı sınır köşelerinden üçgenlenmiş yüzey".into(),
+                input: json!({ "surface": "Mevcut zemin", "boundary": "0192f5d0-7c3e-7d4a-9b1e-000000000124", "base": "triangulated" }),
                 output: None,
             }],
         },

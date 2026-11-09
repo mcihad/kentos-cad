@@ -101647,13 +101647,15 @@ class TerrainsStockpile(_Model):
     """Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object
     as in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or
     `average` level at that of the boundary's outer corners' heights on the surface, `fit` the plane fitted to them
-    (the least squares of the vertical differences), `elevation` level at `elevation`. Above the base is cut (the
-    pile), below it fill (Pix4D's words). Reads only.
+    (the least squares of the vertical differences), `triangulated` the corners with their heights triangulated inside
+    the outer ring (docs/adr/3940: the core's constrained Delaunay triangulation, each triangle its plane),
+    `elevation` level at `elevation`. Above the base is cut (the pile), below it fill (Pix4D's words). Reads only.
 
     Refusals, in this order: `invalid_stockpile` (a base not one of these, an elevation missing or not finite),
     `not_a_road_project`, `unknown_terrain`, `terrain_unbuildable`, `entity_not_found`, `invalid_coverage` (a boundary
     that is not one), `invalid_stockpile` (an outer corner off the surface for a base drawn from them, the corners on a
-    line for `fit`). Warnings: `terrain_no_data` (the surface does not cover the whole boundary).
+    line for `fit`, the corners not triangulated). Warnings: `terrain_no_data` (the surface does not cover the whole
+    boundary).
     Attributes:
         elevation: Unit: elevation.
     """
@@ -101684,11 +101686,11 @@ class TerrainsStockpile(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainsStockpiled(_Model):
     """Output of `road.terrains.stockpile` v1: the surface's id, the base and its plane `z = a·x + b·y + c` (level: a and
-    b zero), the outer corners' heights on the surface (none when a level base is given and a corner is off it), the
-    boundary's plan area, the part over the surface and the rest, the cut (above the base) and fill (below it) volumes
-    and their total (Pix4D's: cut + fill), the plan areas of cut and fill, and notes.
+    b zero; a triangulated base has none but its triangles), the outer corners' heights on the surface (none when a
+    level base is given and a corner is off it), the boundary's plan area, the part over the surface and the rest, the
+    cut (above the base) and fill (below it) volumes and their total (Pix4D's: cut + fill), the plan areas of cut and
+    fill, and notes.
     Attributes:
-        plane: Unit: value.
         area: Unit: area.
         covered: Unit: area.
         uncovered: Unit: area.
@@ -101698,10 +101700,12 @@ class TerrainsStockpiled(_Model):
         cut_area: Unit: area.
         fill_area: Unit: area.
         corners: Unit: elevation.
+        plane: Unit: value.
+        triangles: A triangulated base's triangles (docs/adr/3940): each three corners `[x, y, z]` counterclockwise from its
+            smallest place (x, then y), the list ordered by them. Unit: length.
     """
     surface: str
     base: str
-    plane: list[float]
     area: float
     covered: float
     uncovered: float
@@ -101712,12 +101716,13 @@ class TerrainsStockpiled(_Model):
     fill_area: float
     notes: list[str]
     corners: list[float] | Unset = UNSET
+    plane: list[float] | None | Unset = UNSET
+    triangles: list[list[list[float]]] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["surface"] = self.surface
         out["base"] = self.base
-        out["plane"] = [float(e0) for e0 in self.plane]
         out["area"] = float(self.area)
         out["covered"] = float(self.covered)
         out["uncovered"] = float(self.uncovered)
@@ -101729,6 +101734,10 @@ class TerrainsStockpiled(_Model):
         out["notes"] = list(self.notes)
         if self.corners is not UNSET:
             out["corners"] = [float(e0) for e0 in self.corners]
+        if self.plane is not UNSET:
+            out["plane"] = None if self.plane is None else [float(e0) for e0 in self.plane]
+        if self.triangles is not UNSET:
+            out["triangles"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.triangles]
         return out
 
     @classmethod
@@ -101736,7 +101745,6 @@ class TerrainsStockpiled(_Model):
         return cls(
             surface=data["surface"],
             base=data["base"],
-            plane=[float(e0) for e0 in data["plane"]],
             area=float(data["area"]),
             covered=float(data["covered"]),
             uncovered=float(data["uncovered"]),
@@ -101747,6 +101755,8 @@ class TerrainsStockpiled(_Model):
             fill_area=float(data["fillArea"]),
             notes=list(data["notes"]),
             corners=[float(e0) for e0 in data["corners"]] if "corners" in data else UNSET,
+            plane=UNSET if "plane" not in data else None if data["plane"] is None else [float(e0) for e0 in data["plane"]],
+            triangles=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["triangles"]] if "triangles" in data else UNSET,
         )
 
 
