@@ -219,11 +219,13 @@
       "note": "Pencere cad.pipes.check'in cevabını gösterir (salt okunur): boruların eğimi, çapı, örtüsü ve bulguları; sınırlar kullanıcınındır; Bulgulu boruları seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1640). Hat profilini çiz seçilen borudan akış yönündeki hattın boykesitini cad.pipes.profile ile tek adımda çizer (ADR 1860)."
     },
     "parcels.check": {
-      "level": "query",
+      "level": "semantic",
       "via": [
-        "cad.parcels.check"
+        "cad.parcels.check",
+        "cad.parcels.records",
+        "cad.parcels.record"
       ],
-      "note": "Pencere cad.parcels.check'in cevabını gösterir (salt okunur): hesap alanı, tapu alanı, fark, 2022 Yönetmeliği Madde 8(2) yanılma sınırı, kimlik; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1400)."
+      "note": "Pencere cad.parcels.check'in cevabını gösterir (salt okunur): hesap alanı, tapu alanı, fark, 2022 Yönetmeliği Madde 8(2) yanılma sınırı, kimlik; Dışındakileri seç seçimi değiştirir, CSV kaydet tabloyu yazar (ADR 1400). Parsel kayıtları… kayıtları cad.parcels.records ile okur, Belgeyi kaydet cad.parcels.record ile tek adım yazar (ADR 4220)."
     },
     "topology.cleanReport": {
       "level": "semantic",

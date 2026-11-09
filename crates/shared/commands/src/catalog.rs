@@ -9986,6 +9986,67 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Parsel kaydı (plan/map-cad.md MAP-08, docs/adr/4220).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_RECORD.into(),
+            version: crate::CAD_PARCELS_RECORD_VERSION,
+            title: "Parsel kaydı".into(),
+            summary: "Çizimin parsel kayıtlarına bir belge yazar (ArcGIS parsel ağının kaydı gibi; ADR 4220): belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). \
+                      Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. \
+                      Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i])."
+                .into(),
+            aliases: vec!["parselkaydi".into(), "parselbelgesi".into(), "parcelrecord".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsRecord>(),
+            output: schema::<crate::ParcelsRecorded>(),
+            plan: Some(schema::<crate::ParcelsRecorded>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İfraz: 101/7 kapanır, iki yeni parsel oluşur".into(),
+                    input: json!({
+                        "document": { "name": "2026/145 ifraz", "kind": "Değişiklik", "date": "2026-03-14" },
+                        "create": [
+                            { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "statedArea": "412.35" },
+                            { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "statedArea": "311.17" }
+                        ],
+                        "close": [1]
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        // Parsel kayıtları (plan/map-cad.md MAP-08, docs/adr/4220).
+        CommandDescriptor {
+            id: crate::CAD_PARCELS_RECORDS.into(),
+            version: crate::CAD_PARCELS_RECORDS_VERSION,
+            title: "Parsel kayıtları".into(),
+            summary: "Çizimin parsel kayıtlarını çizimle birlikte okur (ADR 4220): belgeler (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi). \
+                      history ile kapanan parseller ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir."
+                .into(),
+            aliases: vec!["parselkayitlari".into(), "parselgecmisi".into(), "parcelrecords".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ParcelsRecords>(),
+            output: schema::<crate::ParcelsRecordsListed>(),
+            plan: Some(schema::<crate::ParcelsRecordsListed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample { title: "Güncel parseller ve sınırları".into(), input: json!({}), output: None },
+                CommandExample { title: "Kapanan parseller de".into(), input: json!({ "history": true }), output: None },
+            ],
+        },
         // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
         CommandDescriptor {
             id: crate::CAD_TOPOLOGY_CLEAN.into(),
@@ -16693,6 +16754,8 @@ mod tests {
                     crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyClean>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBoundaries>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecord>(e.input.clone()).map(|_| ()),
+                    crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecords>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfile>(e.input.clone()).map(|_| ()),
                     crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltCheck>(e.input.clone()).map(|_| ()),
@@ -17671,6 +17734,8 @@ mod tests {
                         crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecorded>(output.clone()).map(|_| ()),
+                        crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecordsListed>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
                         crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
                         crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),

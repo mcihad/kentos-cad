@@ -88,8 +88,8 @@ MCP: `{"tool": "cad.parcels.boundaries", "arguments": {"drawing": "…"}}`.
 
 ## Sonra
 
-- Kalıcı parsel kaydı: kaynak belge, geçerlilik zamanı, önceki/sonraki parsel (şema).
-- Kalıcı sınır kimliği ve sınırın kaynağı (ölçü, belge).
+- ~~Kalıcı parsel kaydı: kaynak belge, geçerlilik zamanı, önceki/sonraki parsel (şema).~~ ADR 4220.
+- ~~Kalıcı sınır kimliği ve sınırın kaynağı (ölçü, belge).~~ ADR 4220 (belge); kenarın belgedeki ölçüsü sonra.
 - Erişim denetimli hak, pay ve yükümlülük kayıtları.
 - Sınır grafiğinin sahnede gösterilmesi (köşe numaraları, sorunların işaretleri).
 - Yaylı sınırda eksik köşe denetimi.

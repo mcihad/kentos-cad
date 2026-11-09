@@ -514,6 +514,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub map_survey: Option<crate::MapSurvey>,
+    /// The parcel register (plan/map-cad.md MAP-08, docs/adr/4220): the documents that made and closed parcels, each
+    /// parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
+    /// absent: none (`.kcad` schema 216).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub parcel_register: Option<crate::ParcelRegister>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names

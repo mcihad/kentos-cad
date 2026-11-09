@@ -59,6 +59,8 @@ use crate::entities_grade;
 use crate::entities_drape;
 use crate::entities_raise;
 use crate::topology_clean;
+use crate::parcel_register;
+use crate::parcel_register::list_cmd as parcel_register_list;
 use crate::parcels_boundaries;
 use crate::parcels_check;
 use crate::pipes_check;
@@ -579,6 +581,8 @@ macro_rules! by_command {
             kentos_commands::CAD_PARCELS_BOUNDARIES => {
                 $then!(parcels_boundaries, kentos_commands::ParcelsBoundaries)
             }
+            kentos_commands::CAD_PARCELS_RECORD => $then!(parcel_register, kentos_commands::ParcelsRecord),
+            kentos_commands::CAD_PARCELS_RECORDS => $then!(parcel_register_list, kentos_commands::ParcelsRecords),
             kentos_commands::CAD_PIPES_CHECK => {
                 $then!(pipes_check, kentos_commands::PipesCheck)
             }

@@ -38,7 +38,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -1081,6 +1081,18 @@ değişmez). Kanıtlanan: Çizimde göster kirişli yayın şeridini (yay ile zi
 yayı şeridin genişliğine göre ince noktalar (alanı sorununkiyle %1 içinde); ekranda halkası buluşan sorunlar tek halka
 ve tek söz olur (“Komşuda eksik köşe (2) · Çakışan kenar”), yakınlaşınca ayrılır. Sözleşme değişmedi; masaüstü testi
 ve resimler. Açık: kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli), erişim denetimli hak/pay.
+
+**9 Kasım 2026, sekizinci tur — Parsel kayıtları: belge, tarihçe ve kalıcı sınır kimliği ([ADR 4220](../docs/adr/4220-parcel-register-documents-and-boundaries.md)).**
+Kapsam: **Harita + CBS** (komutlar alanı olan her projede). Araştırma: ArcGIS Pro parsel ağının kayıtları (Created
+By Record, Retired By Record, tarihî parsel, kayıt üzerinden soy, Stated Area, komşu kullanmayınca tarihî olan çizgi),
+TopoJSON'un ters yay indisi. Kanıtlanan: `.kcad` şema 216'da çizimden ayrı parsel kayıtları (belgeler, sınırlar,
+parseller; halka sınır zinciri); `cad.parcels.record` belge yazar (alanlardan parsel, önceki parselleri kapatır,
+aynı köşeli ve yaylı kenar aynı sınır, kimsenin kullanmadığı sınır kapanır; 6 yeni ret kodu), `cad.parcels.records`
+kayıtları çizimle okur (kayıttaki ve çizimdeki alan, durum, komşular, önceki ve sonraki parseller, sınırın çizili
+olup olmadığı). Kabul teknik olarak: aynı parselin iki ölçümü ve belgesi tutulur; sınır taşınınca geometrik alan,
+kaydedilince komşuluk değişir, belgenin değeri değişmez. 36 + 22 bağımsız durum, Python, MCP, masaüstü (Parsel alan
+denetimi › Parsel kayıtları…) ve resimler. Açık: ifrazda komşunun sınırının bölünmesi, kenarın belgedeki ölçüleri,
+belge taslağı ile onaylı kayıt, erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

@@ -517,6 +517,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.profile_files.is_empty())
             + usize::from(!s.standard_docs.is_empty())
             + usize::from(!s.review_notes.is_empty())
+            + usize::from(s.parcel_register.is_some())
             + usize::from(!s.approved_sheet_templates.is_empty())
             + usize::from(!s.table_styles.is_empty())
             + usize::from(!s.standard_exceptions.is_empty())
@@ -968,6 +969,21 @@ impl<'d> Encoder<'d> {
         }
         self.key("lengthDecimals");
         self.w.uint(u64::from(s.length_decimals));
+        // Schema 216 (docs/adr/4220): the parcel register, as its JSON.
+        if let Some(register) = &s.parcel_register {
+            self.key("parcelRegister");
+            self.at(Seg::Name("parcelRegister"), |e| {
+                if register.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş parsel kayıtları yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::parcel_register_problem(register) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value =
+                    serde_json::to_value(register).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
         if !s.address_locators.is_empty() {
             self.key("addressLocators");
             self.at(Seg::Name("addressLocators"), |e| {
@@ -2275,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 216 (docs/adr/4220): the parcel register.
+    if doc.settings.parcel_register.is_some() {
+        return crate::SCHEMA_WITH_PARCEL_REGISTER;
+    }
     // Schema 215 (docs/adr/4140): a review note recording a decision.
     if kentos_contracts::review_notes_have_decisions(&doc.settings.review_notes) {
         return crate::SCHEMA_WITH_REVIEW_DECISIONS;

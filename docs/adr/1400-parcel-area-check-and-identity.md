@@ -84,6 +84,6 @@ bağlamında). Durum: taslak. İlgili: [ADR 0067](0067-desktop-measure-and-parce
 - Madde 8(2) tablosunu Resmî Gazete'nin özgün metniyle karşılaştırmak.
 - Geçici koordinatlı parsellerin hata çemberi yöntemi (Madde 8(5), Madde 9 nokta konum doğruluğu tablosu).
 - Kalıcı parsel kaydı:
-  - kaynak belge, geçerlilik zamanı ve önceki/sonraki parsel bağı;
-  - mantıksal ortak sınır kimliği;
+  - ~~kaynak belge, geçerlilik zamanı ve önceki/sonraki parsel bağı;~~ ADR 4220 (belge ve tarihçe);
+  - ~~mantıksal ortak sınır kimliği;~~ ADR 4220;
   - erişim denetimli hak ve pay kayıtları (MAP-08'in kalanı).

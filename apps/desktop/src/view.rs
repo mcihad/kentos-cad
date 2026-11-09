@@ -2113,6 +2113,7 @@ impl App {
             Asking::CleanReport => self.clean_report_view(),
             Asking::ParcelsCheck => self.parcels_check_view(),
             Asking::ParcelBoundaries => self.parcel_boundaries_view(),
+            Asking::ParcelRegister => self.parcel_register_view(),
             Asking::PipesCheck => self.pipes_check_view(),
             Asking::ExchangeCheck => self.exchange_check_view(),
             Asking::Asbuilt => self.asbuilt_view(),

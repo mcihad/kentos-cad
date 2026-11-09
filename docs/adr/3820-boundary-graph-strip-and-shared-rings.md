@@ -53,7 +53,7 @@ yayın vurgulanması” ile ADR 3020'nin ve 3420'nin “aynı yerdeki sorun söz
 
 ## Sonra
 
-- Kalıcı parsel kaydı ve sınır kimliği (MAP-08'in ana açığı): saklanan bir veri modeli ister (belge, geçerlilik,
-  önceki ve sonraki parsel, mantıksal sınır); ayrı bir tasarım dilimi.
+- ~~Kalıcı parsel kaydı ve sınır kimliği (MAP-08'in ana açığı): saklanan bir veri modeli ister (belge, geçerlilik,
+  önceki ve sonraki parsel, mantıksal sınır); ayrı bir tasarım dilimi.~~ ADR 4220.
 - Erişim denetimli hak/pay; resmî kapsam.
 - Web (TODOS §0.2).

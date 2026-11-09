@@ -331,6 +331,7 @@ mod tests {
             road: None,
             map_work: None,
             map_survey: None,
+            parcel_register: None,
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             view_templates: Vec::new(),

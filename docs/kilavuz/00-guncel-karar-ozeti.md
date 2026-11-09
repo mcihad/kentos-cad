@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Parsel kayıtları (9 Kasım 2026; MAP-08, [ADR 4220](../../docs/adr/4220-parcel-register-documents-and-boundaries.md)).**
+  Çizimden ayrı `settings.parcelRegister` (`.kcad` şema 216): belgeler, parseller ve paylaşılan sınırlar (halka sınır
+  zinciri). `cad.parcels.record` belge yazar ve kapatır, `cad.parcels.records` çizimle okur. Harita + CBS.
 - **Köşe sil'de birleşen kenarın içindeki köşeler (9 Kasım 2026; MAP-07, [ADR 4200](../../docs/adr/4200-vertex-delete-carries-inner-vertices.md)).**
   Topolojik düzenleme açıkken Köşe sil iki düz kenarı birleştirince içlerindeki komşu köşeler birleşen kenarın aynı boy
   payına gider (`topology_edit::merged`); açık yolun ucu ve yay eskisi gibi. CAD (Harita + Yol) + CBS.

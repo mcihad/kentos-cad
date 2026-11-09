@@ -26,6 +26,7 @@ import type { MapWork } from "./MapWork";
 import type { NamedUcs } from "./NamedUcs";
 import type { NamedView } from "./NamedView";
 import type { NetworkDef } from "./NetworkDef";
+import type { ParcelRegister } from "./ParcelRegister";
 import type { ProjectForm } from "./ProjectForm";
 import type { ProjectProfileFile } from "./ProjectProfileFile";
 import type { ProjectRelation } from "./ProjectRelation";
@@ -289,4 +290,10 @@ mapWork?: MapWork,
  * accepted points and what was made from them; absent: none. Only a CAD project drawn for a map has it (`.kcad`
  * schema 194).
  */
-mapSurvey?: MapSurvey, };
+mapSurvey?: MapSurvey, 
+/**
+ * The parcel register (plan/map-cad.md MAP-08, docs/adr/4220): the documents that made and closed parcels, each
+ * parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
+ * absent: none (`.kcad` schema 216).
+ */
+parcelRegister?: ParcelRegister, };

@@ -2040,6 +2040,18 @@ codes! {
     /// no elevation along it (docs/adr/1860).
     INVALID_PIPE_RUN = "invalid_pipe_run", Failed, false, "Hat profili çizilemiyor; ileti nedenini söyler.";
     NOT_A_PARCEL = "not_a_parcel", Failed, false, "Nesne bir alan değil; parsel alan denetimi alanları denetler.";
+    /// Parsel kaydı (docs/adr/4220): the area has no Ada or Parsel.
+    NO_PARCEL_IDENTITY = "no_parcel_identity", Failed, false, "Alanın Ada ya da Parsel'i yok; parselin kimliği İl, İlçe, Mahalle, Ada ve Parsel birliktedir, önce yazın.";
+    /// Parsel kaydı (docs/adr/4220): another document of the drawing has the name.
+    DOCUMENT_NAME_TAKEN = "document_name_taken", Failed, false, "Parsel kayıtlarında bu adla bir belge var; belgenin adı çizimde tektir.";
+    /// Parsel kaydı (docs/adr/4220): no recorded parcel of the number.
+    UNKNOWN_PARCEL_RECORD = "unknown_parcel_record", Failed, false, "Parsel kayıtlarında bu numarada parsel yok.";
+    /// Parsel kaydı (docs/adr/4220): the recorded parcel is closed already.
+    PARCEL_CLOSED = "parcel_closed", Failed, false, "Parsel kaydı bir belgeyle kapatılmış; ancak güncel bir parsel kapatılır.";
+    /// Parsel kaydı (docs/adr/4220): the area draws a current recorded parcel the document does not close.
+    PARCEL_RECORDED = "parcel_recorded", Failed, false, "Alan güncel bir parsel kaydını çiziyor; belge önce o parseli kapatmalı.";
+    /// Parsel kaydı (docs/adr/4220): a current parcel, or another the document makes, has the identity.
+    PARCEL_IDENTITY_TAKEN = "parcel_identity_taken", Failed, false, "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı.";
     /// Senaryo ölçüleri (docs/adr/1440): a scenario none of whose layers stands for a base layer.
     NOTHING_TO_COMPARE = "nothing_to_compare", Failed, false, "Senaryonun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.";
     /// Düzenleme dağıtım taslağı (docs/adr/1460): rounded values that do not add up while the remainder rule is `reject`.

@@ -155,6 +155,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         road: _,
         map_work: _,
         map_survey: _,
+        parcel_register: _,
     } = s;
     vec![
         "srid",
@@ -210,6 +211,7 @@ fn settings_fields(s: &ProjectSettings) -> Vec<&'static str> {
         "road",
         "mapWork",
         "mapSurvey",
+        "parcelRegister",
     ]
 }
 

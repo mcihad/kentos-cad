@@ -65886,6 +65886,116 @@ class ParcelCreated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ParcelDocument(_Model):
+    """A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user
+    writes it (a plan, a deed …); the date it gives, as written; a note.
+    Attributes:
+        number: Unit: id.
+    """
+    number: int
+    name: str
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    note: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDocument:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDocumentInput(_Model):
+    """The document `cad.parcels.record` writes: its name (unique in the drawing, at most 120 characters), its kind (120)
+    and date (64) as the user writes them, a note (4000).
+    """
+    name: str
+    date: str | None | Unset = UNSET
+    kind: str | None | Unset = UNSET
+    note: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDocumentInput:
+        return cls(
+            name=data["name"],
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelDocumentRow(_Model):
+    """A document as listed: its fields and the parcels it made and closed.
+    Attributes:
+        number: Unit: id.
+        created: Unit: id.
+        closed: Unit: id.
+    """
+    number: int
+    name: str
+    created: list[int]
+    closed: list[int]
+    date: str | Unset = UNSET
+    kind: str | Unset = UNSET
+    note: str | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["name"] = self.name
+        out["created"] = list(self.created)
+        out["closed"] = list(self.closed)
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        if self.note is not UNSET:
+            out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelDocumentRow:
+        return cls(
+            number=data["number"],
+            name=data["name"],
+            created=list(data["created"]),
+            closed=list(data["closed"]),
+            date=data.get("date", UNSET),
+            kind=data.get("kind", UNSET),
+            note=data.get("note", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParcelInGraph(_Model):
     """A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its
     geometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.
@@ -65943,6 +66053,52 @@ class ParcelPlan(_Model):
             number=data["number"],
             opened=data["opened"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelRegister(_Model):
+    """The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made."""
+    documents: list[ParcelDocument]
+    boundaries: list[RecordedBoundary]
+    parcels: list[RecordedParcel]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["documents"] = [e0.to_json() for e0 in self.documents]
+        out["boundaries"] = [e0.to_json() for e0 in self.boundaries]
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelRegister:
+        return cls(
+            documents=[ParcelDocument.from_json(e0) for e0 in data["documents"]],
+            boundaries=[RecordedBoundary.from_json(e0) for e0 in data["boundaries"]],
+            parcels=[RecordedParcel.from_json(e0) for e0 in data["parcels"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelToRecord(_Model):
+    """A parcel the document makes: the area that draws it, and the area the document states, a plain decimal in square
+    metres as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none).
+    """
+    uid: str
+    stated_area: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.stated_area is not UNSET:
+            out["statedArea"] = self.stated_area
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelToRecord:
+        return cls(
+            uid=data["uid"],
+            stated_area=data.get("statedArea", UNSET),
         )
 
 
@@ -66150,6 +66306,159 @@ class ParcelsCreate(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             number=data.get("number", UNSET),
             rules=UNSET if "rules" not in data else None if data["rules"] is None else AreaRules.from_json(data["rules"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsRecord(_Model):
+    """Input of `cad.parcels.record` v1: the document, the parcels it makes (`create`) and the recorded parcels it closes
+    (`close`, their numbers); at least one of the two.
+
+    Refusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (the document's name empty, too
+    long or with a control character, its kind, date or note too long; nothing to make or close); `document_name_taken`
+    (`document.name`); for `close[i]`: `invalid_input` (given twice), `unknown_parcel_record`, `parcel_closed`; for
+    `create[i]`: `invalid_uid`, `entity_not_found`, `not_a_parcel` (not an area), `no_parcel_identity` (no Ada or
+    Parsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a
+    stated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not
+    close), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);
+    `invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).
+    Attributes:
+        close: Unit: id.
+    """
+    document: ParcelDocumentInput
+    close: list[int] | Unset = UNSET
+    create: list[ParcelToRecord] | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document.to_json()
+        if self.close is not UNSET:
+            out["close"] = list(self.close)
+        if self.create is not UNSET:
+            out["create"] = [e0.to_json() for e0 in self.create]
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsRecord:
+        return cls(
+            document=ParcelDocumentInput.from_json(data["document"]),
+            close=list(data["close"]) if "close" in data else UNSET,
+            create=[ParcelToRecord.from_json(e0) for e0 in data["create"]] if "create" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsRecorded(_Model):
+    """Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries
+    it made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.
+    Attributes:
+        document: Unit: id.
+        created: Unit: id.
+        closed: Unit: id.
+        boundaries_created: Unit: count.
+        boundaries_shared: Unit: count.
+        boundaries_closed: Unit: count.
+    """
+    document: int
+    created: list[int]
+    closed: list[int]
+    boundaries_created: int
+    boundaries_shared: int
+    boundaries_closed: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["document"] = self.document
+        out["created"] = list(self.created)
+        out["closed"] = list(self.closed)
+        out["boundariesCreated"] = self.boundaries_created
+        out["boundariesShared"] = self.boundaries_shared
+        out["boundariesClosed"] = self.boundaries_closed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsRecorded:
+        return cls(
+            document=data["document"],
+            created=list(data["created"]),
+            closed=list(data["closed"]),
+            boundaries_created=data["boundariesCreated"],
+            boundaries_shared=data["boundariesShared"],
+            boundaries_closed=data["boundariesClosed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsRecords(_Model):
+    """Input of `cad.parcels.records` v1: with `history` the closed parcels and boundaries too (none: the current ones).
+    Every document is listed. No refusal: a drawing without a register answers empty lists.
+    """
+    history: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.history is not UNSET:
+            out["history"] = self.history
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsRecords:
+        return cls(
+            history=data.get("history", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ParcelsRecordsListed(_Model):
+    """Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with
+    `history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,
+    current boundaries no longer drawn as recorded.
+    Attributes:
+        current: Unit: count.
+        closed: Unit: count.
+        changed: Unit: count.
+        missing: Unit: count.
+        moved: Unit: count.
+    """
+    documents: list[ParcelDocumentRow]
+    parcels: list[RecordedParcelRow]
+    boundaries: list[RecordedBoundaryRow]
+    current: int
+    closed: int
+    changed: int
+    missing: int
+    moved: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["documents"] = [e0.to_json() for e0 in self.documents]
+        out["parcels"] = [e0.to_json() for e0 in self.parcels]
+        out["boundaries"] = [e0.to_json() for e0 in self.boundaries]
+        out["current"] = self.current
+        out["closed"] = self.closed
+        out["changed"] = self.changed
+        out["missing"] = self.missing
+        out["moved"] = self.moved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ParcelsRecordsListed:
+        return cls(
+            documents=[ParcelDocumentRow.from_json(e0) for e0 in data["documents"]],
+            parcels=[RecordedParcelRow.from_json(e0) for e0 in data["parcels"]],
+            boundaries=[RecordedBoundaryRow.from_json(e0) for e0 in data["boundaries"]],
+            current=data["current"],
+            closed=data["closed"],
+            changed=data["changed"],
+            missing=data["missing"],
+            moved=data["moved"],
         )
 
 
@@ -75141,6 +75450,9 @@ class ProjectSettings(_Model):
         named_ucs: The project's named UCSs, in the order they were kept.
         named_views: The project's named views, in the order they were kept (docs/adr/0285 §1).
         networks: The project's networks (docs/adr/0209 §2).
+        parcel_register: The parcel register (plan/map-cad.md MAP-08, docs/adr/4220): the documents that made and closed parcels, each
+            parcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;
+            absent: none (`.kcad` schema 216).
         profile_files: The data profiles and mappings the project carries inside its file (docs/adr/0735): by name, a profile before a
             mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
             others; of a name both have, the drawing's is the one read.
@@ -75215,6 +75527,7 @@ class ProjectSettings(_Model):
     named_ucs: list[NamedUcs] | Unset = UNSET
     named_views: list[NamedView] | Unset = UNSET
     networks: list[NetworkDef] | Unset = UNSET
+    parcel_register: ParcelRegister | None | Unset = UNSET
     profile_files: list[ProjectProfileFile] | Unset = UNSET
     relations: list[ProjectRelation] | Unset = UNSET
     review_notes: list[ReviewNote] | Unset = UNSET
@@ -75306,6 +75619,8 @@ class ProjectSettings(_Model):
             out["namedViews"] = [e0.to_json() for e0 in self.named_views]
         if self.networks is not UNSET:
             out["networks"] = [e0.to_json() for e0 in self.networks]
+        if self.parcel_register is not UNSET:
+            out["parcelRegister"] = None if self.parcel_register is None else self.parcel_register.to_json()
         if self.profile_files is not UNSET:
             out["profileFiles"] = [e0.to_json() for e0 in self.profile_files]
         if self.relations is not UNSET:
@@ -75388,6 +75703,7 @@ class ProjectSettings(_Model):
             named_ucs=[NamedUcs.from_json(e0) for e0 in data["namedUcs"]] if "namedUcs" in data else UNSET,
             named_views=[NamedView.from_json(e0) for e0 in data["namedViews"]] if "namedViews" in data else UNSET,
             networks=[NetworkDef.from_json(e0) for e0 in data["networks"]] if "networks" in data else UNSET,
+            parcel_register=UNSET if "parcelRegister" not in data else None if data["parcelRegister"] is None else ParcelRegister.from_json(data["parcelRegister"]),
             profile_files=[ProjectProfileFile.from_json(e0) for e0 in data["profileFiles"]] if "profileFiles" in data else UNSET,
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             review_notes=[ReviewNote.from_json(e0) for e0 in data["reviewNotes"]] if "reviewNotes" in data else UNSET,
@@ -79300,6 +79616,278 @@ class RecordTotal(_Model):
         return cls(
             records_in=data["recordsIn"],
             records_out=data["recordsOut"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedBoundary(_Model):
+    """A boundary: from one corner to another (`from` the lesser by east, then north), its bulge from `from` to `to` (0:
+    straight), the document that made it and the one that closed it once no current parcel used it.
+    Attributes:
+        number: Unit: id.
+        from_: Unit: length.
+        to: Unit: length.
+        created_by: Unit: id.
+        bulge: Unit: 1.
+        closed_by: Unit: id.
+    """
+    number: int
+    from_: Vec2
+    to: Vec2
+    created_by: int
+    bulge: float | Unset = UNSET
+    closed_by: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["from"] = _vec2_out(self.from_)
+        out["to"] = _vec2_out(self.to)
+        out["createdBy"] = self.created_by
+        if self.bulge is not UNSET:
+            out["bulge"] = float(self.bulge)
+        if self.closed_by is not UNSET:
+            out["closedBy"] = self.closed_by
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedBoundary:
+        return cls(
+            number=data["number"],
+            from_=Vec2.from_json(data["from"]),
+            to=Vec2.from_json(data["to"]),
+            created_by=data["createdBy"],
+            bulge=float(data["bulge"]) if "bulge" in data else UNSET,
+            closed_by=data.get("closedBy", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedBoundaryRow(_Model):
+    """A recorded boundary against the drawing: its corners and bulge as recorded, its length (the arc's on an arc), its
+    documents, the parcels that use it (a current boundary's current ones) and whether every current one still draws
+    it as recorded (its area has an edge between the two corners with the bulge; a closed boundary: false).
+    Attributes:
+        number: Unit: id.
+        from_: Unit: length.
+        to: Unit: length.
+        length: Unit: length.
+        created_by: Unit: id.
+        parcels: Unit: id.
+        bulge: Unit: 1.
+        closed_by: Unit: id.
+    """
+    number: int
+    from_: list[float]
+    to: list[float]
+    length: float
+    created_by: int
+    parcels: list[int]
+    drawn: bool
+    bulge: float | Unset = UNSET
+    closed_by: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["to"] = [float(e0) for e0 in self.to]
+        out["length"] = float(self.length)
+        out["createdBy"] = self.created_by
+        out["parcels"] = list(self.parcels)
+        out["drawn"] = self.drawn
+        if self.bulge is not UNSET:
+            out["bulge"] = float(self.bulge)
+        if self.closed_by is not UNSET:
+            out["closedBy"] = self.closed_by
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedBoundaryRow:
+        return cls(
+            number=data["number"],
+            from_=[float(e0) for e0 in data["from"]],
+            to=[float(e0) for e0 in data["to"]],
+            length=float(data["length"]),
+            created_by=data["createdBy"],
+            parcels=list(data["parcels"]),
+            drawn=data["drawn"],
+            bulge=float(data["bulge"]) if "bulge" in data else UNSET,
+            closed_by=data.get("closedBy", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedParcel(_Model):
+    """A parcel as its document made it: the identity's parts as written (İl, İlçe, Mahalle, Ada, Parsel; Ada and Parsel
+    never empty), the document that made it and the one that closed it, the area the document states (a plain decimal
+    in square metres, as written; empty: none), the area that draws it while it is current, and its rings.
+    Attributes:
+        number: Unit: id.
+        created_by: Unit: id.
+        closed_by: Unit: id.
+    """
+    number: int
+    ada: str
+    parsel: str
+    created_by: int
+    rings: list[RecordedRing]
+    closed_by: int | None | Unset = UNSET
+    il: str | Unset = UNSET
+    ilce: str | Unset = UNSET
+    mahalle: str | Unset = UNSET
+    stated_area: str | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["createdBy"] = self.created_by
+        out["rings"] = [e0.to_json() for e0 in self.rings]
+        if self.closed_by is not UNSET:
+            out["closedBy"] = self.closed_by
+        if self.il is not UNSET:
+            out["il"] = self.il
+        if self.ilce is not UNSET:
+            out["ilce"] = self.ilce
+        if self.mahalle is not UNSET:
+            out["mahalle"] = self.mahalle
+        if self.stated_area is not UNSET:
+            out["statedArea"] = self.stated_area
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedParcel:
+        return cls(
+            number=data["number"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            created_by=data["createdBy"],
+            rings=[RecordedRing.from_json(e0) for e0 in data["rings"]],
+            closed_by=data.get("closedBy", UNSET),
+            il=data.get("il", UNSET),
+            ilce=data.get("ilce", UNSET),
+            mahalle=data.get("mahalle", UNSET),
+            stated_area=data.get("statedArea", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedParcelRow(_Model):
+    """A recorded parcel against the drawing: its identity, documents and stated area as recorded; the area of its
+    recorded rings; the area that draws it and that area's geometric area now; its state (`current`: drawn as
+    recorded, `changed`: drawn otherwise, `missing`: its area is gone, `closed`); its boundaries in ring order; the
+    current parcels it shares a boundary with (a current parcel's); the parcels its document closed (`before`) and
+    those the document that closed it made (`after`).
+    Attributes:
+        number: Unit: id.
+        created_by: Unit: id.
+        recorded_area: Unit: area.
+        boundaries: Unit: id.
+        neighbours: Unit: id.
+        before: Unit: id.
+        after: Unit: id.
+        area: Unit: area.
+        closed_by: Unit: id.
+    """
+    number: int
+    il: str
+    ilce: str
+    mahalle: str
+    ada: str
+    parsel: str
+    created_by: int
+    recorded_area: float
+    state: str
+    boundaries: list[int]
+    neighbours: list[int]
+    before: list[int]
+    after: list[int]
+    area: float | None | Unset = UNSET
+    closed_by: int | None | Unset = UNSET
+    stated_area: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["il"] = self.il
+        out["ilce"] = self.ilce
+        out["mahalle"] = self.mahalle
+        out["ada"] = self.ada
+        out["parsel"] = self.parsel
+        out["createdBy"] = self.created_by
+        out["recordedArea"] = float(self.recorded_area)
+        out["state"] = self.state
+        out["boundaries"] = list(self.boundaries)
+        out["neighbours"] = list(self.neighbours)
+        out["before"] = list(self.before)
+        out["after"] = list(self.after)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.closed_by is not UNSET:
+            out["closedBy"] = self.closed_by
+        if self.stated_area is not UNSET:
+            out["statedArea"] = self.stated_area
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedParcelRow:
+        return cls(
+            number=data["number"],
+            il=data["il"],
+            ilce=data["ilce"],
+            mahalle=data["mahalle"],
+            ada=data["ada"],
+            parsel=data["parsel"],
+            created_by=data["createdBy"],
+            recorded_area=float(data["recordedArea"]),
+            state=data["state"],
+            boundaries=list(data["boundaries"]),
+            neighbours=list(data["neighbours"]),
+            before=list(data["before"]),
+            after=list(data["after"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            closed_by=data.get("closedBy", UNSET),
+            stated_area=data.get("statedArea", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordedRing(_Model):
+    """One ring of a parcel: its part (0 for the first), whether it is a hole, and its boundaries in order (negative: run
+    from `to` to `from`). The ring's vertices are each boundary's start as the ring runs it.
+    Attributes:
+        edges: Unit: id.
+        part: Unit: index.
+    """
+    edges: list[int]
+    hole: bool | Unset = UNSET
+    part: int | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edges"] = list(self.edges)
+        if self.hole is not UNSET:
+            out["hole"] = self.hole
+        if self.part is not UNSET:
+            out["part"] = self.part
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordedRing:
+        return cls(
+            edges=list(data["edges"]),
+            hole=data.get("hole", UNSET),
+            part=data.get("part", UNSET),
         )
 
 
@@ -133640,13 +134228,22 @@ __all__ = [
     "ParcelBoundary",
     "ParcelCorner",
     "ParcelCreated",
+    "ParcelDocument",
+    "ParcelDocumentInput",
+    "ParcelDocumentRow",
     "ParcelInGraph",
     "ParcelPlan",
+    "ParcelRegister",
+    "ParcelToRecord",
     "ParcelsBoundaries",
     "ParcelsBounded",
     "ParcelsCheck",
     "ParcelsChecked",
     "ParcelsCreate",
+    "ParcelsRecord",
+    "ParcelsRecorded",
+    "ParcelsRecords",
+    "ParcelsRecordsListed",
     "ParkedInfo",
     "ParkedPin",
     "ParquetCompression",
@@ -134090,6 +134687,11 @@ __all__ = [
     "RecordSinkTable",
     "RecordStep",
     "RecordTotal",
+    "RecordedBoundary",
+    "RecordedBoundaryRow",
+    "RecordedParcel",
+    "RecordedParcelRow",
+    "RecordedRing",
     "RecordsCreate",
     "RecordsCreated",
     "RecordsDuplicate",

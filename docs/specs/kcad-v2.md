@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `215`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-216.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `216`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-217.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -969,6 +969,19 @@ bağlı olmalıdır (`anchors`); karar bir şey söylemeli, kabul ile ret birlik
 (`broken/review-decisions-unbound.kcad`, `broken/review-decisions-reject-with-asset.kcad`). Yazıcı 215'i bir not karar
 taşıyınca seçer; 214 ve öncesi alanı tanımaz (`unknown_field`, `broken/review-decisions-in-schema-214.kcad`). Örnek
 `review-decisions.json/.kcad`.
+
+**Şema 216** (ADR 4220; MAP-08): parsel kayıtları, `settings.parcelRegister` (JSON'u olduğu gibi): `documents`
+(`number` 1'den, tek; `name` çizimde tek, kısa etiket en çok 120; `kind` 120, `date` 64 kısa etiket; `note` en çok 4000),
+`boundaries` (`number` tek; `from` ve `to` yerleri, doğu sonra kuzey sırasıyla küçük olan başta, aynı yer değil; sonlu
+`bulge`, 0 yazılmaz; `createdBy` ve sonraki bir belge olarak `closedBy`) ve `parcels` (`number` tek; `il`, `ilce`,
+`mahalle` kısa etiket ya da yok, `ada` ve `parsel` kısa etiket; `createdBy`, `closedBy`; `statedArea` düz ondalık
+(rakamlar, bir nokta ya da virgül, en çok 64); güncelken `uid` (küçük harfli UUID), kapanınca yok; `rings`: her biri
+`part` (0, 1, 2 … sırasıyla, parça dış halkasıyla açılır), `hole` ve en az üç sınırlık `edges`; eksi numara sınırı
+`to`'dan `from`'a yürür, her sınır bir sonrakinin başladığı yerde biter). Güncel parseller ayrı alanları ve kimlikleri
+(İl/İlçe/Mahalle/Ada/Parsel) taşır, yalnız güncel sınırları kullanır; her sınır bir parselin, güncel olanı bir güncel
+parselin. Değilse `bad_value` (`broken/parcel-register-open-ring.kcad`, `broken/parcel-register-one-area.kcad`). Yazıcı
+216'yı kayıt olunca seçer; 215 ve öncesi alanı tanımaz (`unknown_field`, `broken/parcel-register-in-schema-215.kcad`).
+Örnek `parcel-register.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

@@ -596,6 +596,9 @@ SCHEMA_WITH_SURFACE_PASTES = 214
 # Schema 215: a review note records a decision a command took on a reviewer's word (`decision`: its command,
 # candidate, source, accept, class, fields, reject and asset) (docs/adr/4140).
 SCHEMA_WITH_REVIEW_DECISIONS = 215
+# Schema 216: the parcel register (`settings.parcelRegister`): documents, boundaries and parcels whose rings are chains
+# of boundaries (docs/adr/4220).
+SCHEMA_WITH_PARCEL_REGISTER = 216
 def grades_from_percent(road):
     """A road project's settings written before schema 191 (docs/adr/0977): its grades were percent, each is divided
     by 100 (the same IEEE division KentOS makes). Anything not shaped as expected is left for the checks to refuse."""
@@ -968,7 +971,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3648,6 +3651,7 @@ class _Schema:
         self.approved_values = version >= SCHEMA_WITH_APPROVED_VALUES
         self.surface_pastes = version >= SCHEMA_WITH_SURFACE_PASTES
         self.review_decisions = version >= SCHEMA_WITH_REVIEW_DECISIONS
+        self.parcel_register = version >= SCHEMA_WITH_PARCEL_REGISTER
         self.building_parts = version >= SCHEMA_WITH_BUILDING_PARTS
         self.opening_types = version >= SCHEMA_WITH_OPENING_TYPES
         self.building_program = version >= SCHEMA_WITH_BUILDING_PROGRAM
@@ -4544,6 +4548,7 @@ class _Schema:
                 **({"road": (self.road_, False)} if self.road_work else {}),
                 **({"mapWork": (self.map_work_, False)} if self.map_work else {}),
                 **({"mapSurvey": (self.map_survey_, False)} if self.map_survey else {}),
+                **({"parcelRegister": (self.parcel_register_, False)} if self.parcel_register else {}),
             }
         )(v)
         # A map's work structure is a map project's (docs/adr/1200 §2).
@@ -6393,6 +6398,141 @@ class _Schema:
             if a > b:
                 self.fail("bad_value", "profiller ve eşlemeler adlarının sırasıyla yazılır (aynı adda önce profil)")
         return lst
+
+    def parcel_register_(self, v):
+        """Schema 216 (docs/adr/4220): the parcel register, never empty: documents (number 1 or more, unique; a name,
+        unique, a short label of at most 120 characters; kind (120) and date (64) short labels; a note of at most 4000
+        characters), boundaries (number unique; two places, the lesser by east then north first, not one place; a finite
+        bulge; made by a document and closed by a later one) and parcels (number unique; İl, İlçe, Mahalle short labels
+        or none, Ada and Parsel short labels; made by a document and closed by a later one; a stated area that is a
+        plain decimal; an area (lowercase UUID) while current and none once closed; rings of three boundaries or more,
+        parts 0, 1, 2 … in order, each opening with its outline, the holes after it, each boundary ending where the next
+        starts). The current parcels hold different areas and identities and use current boundaries only; every boundary
+        is some parcel's, a current one a current parcel's."""
+        def text_ok(t):
+            return (t != "" and t.strip() == t and len(t) <= 4000
+                    and not any(unicodedata.category(c) == "Cc" and c not in "\n\t" for c in t))
+
+        def label_ok(t, most):
+            return t != "" and t.strip() == t and len(t) <= most and not any(unicodedata.category(c) == "Cc" for c in t)
+
+        def maybe(t, most):
+            return t == "" or label_ok(t, most)
+
+        def decimal_ok(t):
+            return re.fullmatch(r"[0-9]+([.,][0-9]+)?", t) is not None and len(t) <= 64
+
+        def uuid_ok(t):
+            return re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", t) is not None
+
+        def signed(x):
+            if type(x) is not int:
+                self.fail("wrong_type", "tam sayı olmalı")
+            if not -(1 << 31) <= x < (1 << 31):
+                self.fail("bad_value", f"{x} aralık dışında")
+            return x
+
+        place = self.fields({"x": (self.float, True), "y": (self.float, True)})
+        document = self.fields({"number": (self.uint(32), True), "name": (self.text, True), "kind": (self.text, False),
+                                "date": (self.text, False), "note": (self.text, False)})
+        boundary = self.fields({"number": (self.uint(32), True), "from": (place, True), "to": (place, True),
+                                "bulge": (self.float, False), "createdBy": (self.uint(32), True),
+                                "closedBy": (self.uint(32), False)})
+        ring = self.fields({"part": (self.uint(32), False), "hole": (self.bool, False),
+                            "edges": (self.array(signed), True)})
+        parcel = self.fields({"number": (self.uint(32), True), "il": (self.text, False), "ilce": (self.text, False),
+                              "mahalle": (self.text, False), "ada": (self.text, True), "parsel": (self.text, True),
+                              "createdBy": (self.uint(32), True), "closedBy": (self.uint(32), False),
+                              "statedArea": (self.text, False), "uid": (self.text, False),
+                              "rings": (self.array(ring), True)})
+        reg = self.fields({"documents": (self.array(document), True), "boundaries": (self.array(boundary), True),
+                           "parcels": (self.array(parcel), True)})(v)
+        docs, bounds, parcels = reg["documents"], reg["boundaries"], reg["parcels"]
+        if not (docs or bounds or parcels):
+            self.fail("bad_value", "boş parsel kayıtları yazılmaz")
+        if len(docs) > 10_000 or len(parcels) > 100_000 or len(bounds) > 1_000_000:
+            self.fail("bad_value", "parsel kayıtları sınırlarını aşıyor")
+        numbers, names = set(), set()
+        for d in docs:
+            if d["number"] == 0 or d["number"] in numbers:
+                self.fail("bad_value", f"{d['number']}. parsel belgesinin numarası sıfır ya da yinelenmiş")
+            numbers.add(d["number"])
+            if not (label_ok(d["name"], 120) and maybe(d.get("kind", ""), 120) and maybe(d.get("date", ""), 64)
+                    and (d.get("note", "") == "" or text_ok(d["note"]))):
+                self.fail("bad_value", f"{d['number']}. parsel belgesinin alanları geçersiz")
+            if d["name"] in names:
+                self.fail("bad_value", f"“{d['name']}” adlı parsel belgesi iki kez yazılmış")
+            names.add(d["name"])
+
+        def lived(x):
+            made, closed = x["createdBy"], x.get("closedBy")
+            return made in numbers and (closed is None or (closed in numbers and closed > made))
+
+        by = {}
+        for b in bounds:
+            n = b["number"]
+            if n == 0 or n in by:
+                self.fail("bad_value", f"{n}. sınırın numarası sıfır ya da yinelenmiş")
+            by[n] = b
+            a, z = (b["from"]["x"], b["from"]["y"]), (b["to"]["x"], b["to"]["y"])
+            if not all(math.isfinite(c) for c in a + z) or a == z or not math.isfinite(b.get("bulge", 0.0)):
+                self.fail("bad_value", f"{n}. sınırın uçları ya da yayı geçersiz")
+            if a > z:
+                self.fail("bad_value", f"{n}. sınırın başı küçük uç değil")
+            if not lived(b):
+                self.fail("bad_value", f"{n}. sınırın belgeleri geçersiz")
+        seen, areas, keys, used, used_now = set(), set(), set(), set(), set()
+        for p in parcels:
+            n = p["number"]
+            if n == 0 or n in seen:
+                self.fail("bad_value", f"{n}. parsel kaydının numarası sıfır ya da yinelenmiş")
+            seen.add(n)
+            if not (label_ok(p["ada"], 120) and label_ok(p["parsel"], 120)
+                    and all(maybe(p.get(k, ""), 120) for k in ("il", "ilce", "mahalle"))):
+                self.fail("bad_value", f"{n}. parsel kaydının kimliği geçersiz")
+            if not lived(p):
+                self.fail("bad_value", f"{n}. parsel kaydının belgeleri geçersiz")
+            if p.get("statedArea", "") != "" and not decimal_ok(p["statedArea"]):
+                self.fail("bad_value", f"{n}. parsel kaydının belgedeki alanı düz bir ondalık değil")
+            current = "closedBy" not in p
+            if current != ("uid" in p) or (current and not uuid_ok(p["uid"])):
+                self.fail("bad_value", f"{n}. parsel kaydının alanı geçersiz")
+            if current:
+                if p["uid"] in areas:
+                    self.fail("bad_value", f"“{p['uid']}” alanı iki güncel parsel kaydını çiziyor")
+                areas.add(p["uid"])
+                key = "/".join(p.get(k, "") for k in ("il", "ilce", "mahalle", "ada", "parsel"))
+                if key in keys:
+                    self.fail("bad_value", f"{key} kimlikli iki güncel parsel kaydı var")
+                keys.add(key)
+            rings = p["rings"]
+            if not rings:
+                self.fail("bad_value", f"{n}. parsel kaydının halkası yok")
+            part = 0
+            for i, r in enumerate(rings):
+                rp, hole = r.get("part", 0), r.get("hole", False)
+                opens = rp == 0 if i == 0 else rp == part + 1
+                goes_on = i > 0 and rp == part
+                if not ((opens and not hole) or (goes_on and hole)):
+                    self.fail("bad_value", f"{n}. parsel kaydının parçaları sırasız")
+                part = rp
+                edges = r["edges"]
+                if len(edges) < 3 or any(e == 0 or abs(e) not in by for e in edges):
+                    self.fail("bad_value", f"{n}. parsel kaydının halkası geçersiz bir sınır taşıyor")
+                starts = [by[abs(e)]["from"] if e > 0 else by[abs(e)]["to"] for e in edges]
+                ends = [by[abs(e)]["to"] if e > 0 else by[abs(e)]["from"] for e in edges]
+                if any(ends[k] != starts[(k + 1) % len(edges)] for k in range(len(edges))):
+                    self.fail("bad_value", f"{n}. parsel kaydının halkası uç uca değmiyor")
+                for e in edges:
+                    used.add(abs(e))
+                    if current:
+                        if "closedBy" in by[abs(e)]:
+                            self.fail("bad_value", f"{n}. güncel parsel kaydı kapanmış bir sınırı kullanıyor")
+                        used_now.add(abs(e))
+        for b in bounds:
+            if b["number"] not in used or ("closedBy" not in b and b["number"] not in used_now):
+                self.fail("bad_value", f"{b['number']}. sınırı hiçbir parsel kullanmıyor")
+        return reg
 
     def map_survey_(self, v):
         """Schema 194 (docs/adr/1340 §2, §5): a map project's GNSS archive, never empty, its empty lists unwritten: its

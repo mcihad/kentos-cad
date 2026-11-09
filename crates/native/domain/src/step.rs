@@ -734,6 +734,7 @@ fn report_of_ops(ops: &[Op]) -> StepReport {
             | Op::ReviewNotes { .. }
             | Op::MapWork { .. }
             | Op::MapSurvey { .. }
+            | Op::ParcelRegister { .. }
             | Op::PatternTables { .. }
             | Op::ApprovedSheetTemplates { .. }
             | Op::StyleTables(_) => {

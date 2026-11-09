@@ -61741,6 +61741,410 @@
       ]
     },
     {
+      "id": "cad.parcels.record",
+      "version": 1,
+      "title": "Parsel kaydı",
+      "summary": "Çizimin parsel kayıtlarına bir belge yazar (ArcGIS parsel ağının kaydı gibi; ADR 4220): belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i]).",
+      "aliases": [
+        "parselkaydi",
+        "parselbelgesi",
+        "parcelrecord"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.record` v1: the document, the parcels it makes (`create`) and the recorded parcels it closes\n(`close`, their numbers); at least one of the two.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`; `invalid_input` (the document's name empty, too\nlong or with a control character, its kind, date or note too long; nothing to make or close); `document_name_taken`\n(`document.name`); for `close[i]`: `invalid_input` (given twice), `unknown_parcel_record`, `parcel_closed`; for\n`create[i]`: `invalid_uid`, `entity_not_found`, `not_a_parcel` (not an area), `no_parcel_identity` (no Ada or\nParsel), `invalid_input` (the area given twice, an identity part past 120 characters, two vertices in one place, a\nstated area that is not a plain decimal), `parcel_recorded` (the area draws a current parcel the document does not\nclose), `parcel_identity_taken` (a current parcel the document does not close, or another it makes, has the identity);\n`invalid_input` (the register would pass its limits: 10 000 documents, 100 000 parcels, 1 000 000 boundaries).",
+        "properties": {
+          "close": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "create": {
+            "items": {
+              "$ref": "#/$defs/ParcelToRecord"
+            },
+            "type": "array"
+          },
+          "document": {
+            "$ref": "#/$defs/ParcelDocumentInput"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "document"
+        ],
+        "title": "ParcelsRecord",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries\nit made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.",
+        "properties": {
+          "boundariesClosed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "boundariesCreated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "boundariesShared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "closed": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "created": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "document": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "document",
+          "created",
+          "closed",
+          "boundariesCreated",
+          "boundariesShared",
+          "boundariesClosed",
+          "revision"
+        ],
+        "title": "ParcelsRecorded",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.record` v1: the document's number, the parcels it made and closed (numbers), the boundaries\nit made, the current boundaries its parcels share with earlier ones, and those it closed; the revision after.",
+        "properties": {
+          "boundariesClosed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "boundariesCreated": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "boundariesShared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "closed": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "created": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "document": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "id"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "document",
+          "created",
+          "closed",
+          "boundariesCreated",
+          "boundariesShared",
+          "boundariesClosed",
+          "revision"
+        ],
+        "title": "ParcelsRecorded",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_input",
+          "document_name_taken",
+          "unknown_parcel_record",
+          "parcel_closed",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_parcel",
+          "no_parcel_identity",
+          "parcel_recorded",
+          "parcel_identity_taken"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İfraz: 101/7 kapanır, iki yeni parsel oluşur",
+          "input": {
+            "close": [
+              1
+            ],
+            "create": [
+              {
+                "statedArea": "412.35",
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+              },
+              {
+                "statedArea": "311.17",
+                "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+              }
+            ],
+            "document": {
+              "date": "2026-03-14",
+              "kind": "Değişiklik",
+              "name": "2026/145 ifraz"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.parcels.records",
+      "version": 1,
+      "title": "Parsel kayıtları",
+      "summary": "Çizimin parsel kayıtlarını çizimle birlikte okur (ADR 4220): belgeler (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki yerinde hâlâ çizili mi). history ile kapanan parseller ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir.",
+      "aliases": [
+        "parselkayitlari",
+        "parselgecmisi",
+        "parcelrecords"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.parcels.records` v1: with `history` the closed parcels and boundaries too (none: the current ones).\nEvery document is listed. No refusal: a drawing without a register answers empty lists.",
+        "properties": {
+          "history": {
+            "type": "boolean"
+          }
+        },
+        "title": "ParcelsRecords",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,\ncurrent boundaries no longer drawn as recorded.",
+        "properties": {
+          "boundaries": {
+            "items": {
+              "$ref": "#/$defs/RecordedBoundaryRow"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "closed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "current": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/$defs/ParcelDocumentRow"
+            },
+            "type": "array"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/RecordedParcelRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "documents",
+          "parcels",
+          "boundaries",
+          "current",
+          "closed",
+          "changed",
+          "missing",
+          "moved"
+        ],
+        "title": "ParcelsRecordsListed",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.parcels.records` v1: the documents, the parcels and the boundaries (current ones, or all with\n`history`), and the counts: current and closed parcels, current parcels drawn otherwise and without their area,\ncurrent boundaries no longer drawn as recorded.",
+        "properties": {
+          "boundaries": {
+            "items": {
+              "$ref": "#/$defs/RecordedBoundaryRow"
+            },
+            "type": "array"
+          },
+          "changed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "closed": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "current": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "documents": {
+            "items": {
+              "$ref": "#/$defs/ParcelDocumentRow"
+            },
+            "type": "array"
+          },
+          "missing": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "moved": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "parcels": {
+            "items": {
+              "$ref": "#/$defs/RecordedParcelRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "documents",
+          "parcels",
+          "boundaries",
+          "current",
+          "closed",
+          "changed",
+          "missing",
+          "moved"
+        ],
+        "title": "ParcelsRecordsListed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": []
+      },
+      "examples": [
+        {
+          "title": "Güncel parseller ve sınırları",
+          "input": {}
+        },
+        {
+          "title": "Kapanan parseller de",
+          "input": {
+            "history": true
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.topology.clean",
       "version": 1,
       "title": "Topolojik temizlik (taşınma raporu)",
@@ -107792,6 +108196,42 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Nesne bir alan değil; parsel alan denetimi alanları denetler."
+    },
+    {
+      "code": "no_parcel_identity",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alanın Ada ya da Parsel'i yok; parselin kimliği İl, İlçe, Mahalle, Ada ve Parsel birliktedir, önce yazın."
+    },
+    {
+      "code": "document_name_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel kayıtlarında bu adla bir belge var; belgenin adı çizimde tektir."
+    },
+    {
+      "code": "unknown_parcel_record",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel kayıtlarında bu numarada parsel yok."
+    },
+    {
+      "code": "parcel_closed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Parsel kaydı bir belgeyle kapatılmış; ancak güncel bir parsel kapatılır."
+    },
+    {
+      "code": "parcel_recorded",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alan güncel bir parsel kaydını çiziyor; belge önce o parseli kapatmalı."
+    },
+    {
+      "code": "parcel_identity_taken",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte (İl/İlçe/Mahalle/Ada/Parsel) güncel bir parsel var; belge önce onu kapatmalı."
     },
     {
       "code": "nothing_to_compare",
@@ -171470,6 +171910,114 @@
       ],
       "type": "object"
     },
+    "ParcelDocument": {
+      "additionalProperties": false,
+      "description": "A document that made or closed parcels (ArcGIS's record): its name, unique in the drawing; its kind as the user\nwrites it (a plan, a deed …); the date it gives, as written; a note.",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "number",
+        "name"
+      ],
+      "type": "object"
+    },
+    "ParcelDocumentInput": {
+      "additionalProperties": false,
+      "description": "The document `cad.parcels.record` writes: its name (unique in the drawing, at most 120 characters), its kind (120)\nand date (64) as the user writes them, a note (4000).",
+      "properties": {
+        "date": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "note": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "ParcelDocumentRow": {
+      "description": "A document as listed: its fields and the parcels it made and closed.",
+      "properties": {
+        "closed": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "created": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "date": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "number",
+        "name",
+        "created",
+        "closed"
+      ],
+      "type": "object"
+    },
     "ParcelInGraph": {
       "description": "A parcel in the graph: its id, its identity as written (İl/İlçe/Mahalle/Ada/Parsel, the empty ones left out), its\ngeometric area, its boundaries in ring order (the outer ring's, then its holes' and parts'), its neighbours.",
       "properties": {
@@ -171503,6 +172051,55 @@
         "area",
         "boundaries",
         "neighbours"
+      ],
+      "type": "object"
+    },
+    "ParcelRegister": {
+      "additionalProperties": false,
+      "description": "The register: documents, boundaries and parcels, each numbered 1, 2, 3 … in the order they were made.",
+      "properties": {
+        "boundaries": {
+          "items": {
+            "$ref": "#/$defs/RecordedBoundary"
+          },
+          "type": "array"
+        },
+        "documents": {
+          "items": {
+            "$ref": "#/$defs/ParcelDocument"
+          },
+          "type": "array"
+        },
+        "parcels": {
+          "items": {
+            "$ref": "#/$defs/RecordedParcel"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "documents",
+        "boundaries",
+        "parcels"
+      ],
+      "type": "object"
+    },
+    "ParcelToRecord": {
+      "additionalProperties": false,
+      "description": "A parcel the document makes: the area that draws it, and the area the document states, a plain decimal in square\nmetres as written (none: the area's `Tapu alanı (m²)` when it has one; empty: the document states none).",
+      "properties": {
+        "statedArea": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid"
       ],
       "type": "object"
     },
@@ -177997,6 +178594,17 @@
           },
           "type": "array"
         },
+        "parcelRegister": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ParcelRegister"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The parcel register (plan/map-cad.md MAP-08, docs/adr/4220): the documents that made and closed parcels, each\nparcel as its document made it and the boundaries the parcels share, apart from the areas that draw them;\nabsent: none (`.kcad` schema 216)."
+        },
         "plotScale": {
           "description": "Plot scale denominator (1:1000 → 1000).",
           "format": "double",
@@ -181661,6 +182269,344 @@
       "required": [
         "recordsIn",
         "recordsOut"
+      ],
+      "type": "object"
+    },
+    "RecordedBoundary": {
+      "additionalProperties": false,
+      "description": "A boundary: from one corner to another (`from` the lesser by east, then north), its bulge from `from` to `to` (0:\nstraight), the document that made it and the one that closed it once no current parcel used it.",
+      "properties": {
+        "bulge": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "closedBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "id"
+        },
+        "createdBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "from": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "to": {
+          "$ref": "#/$defs/Vec2",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "number",
+        "from",
+        "to",
+        "createdBy"
+      ],
+      "type": "object"
+    },
+    "RecordedBoundaryRow": {
+      "description": "A recorded boundary against the drawing: its corners and bulge as recorded, its length (the arc's on an arc), its\ndocuments, the parcels that use it (a current boundary's current ones) and whether every current one still draws\nit as recorded (its area has an edge between the two corners with the bulge; a closed boundary: false).",
+      "properties": {
+        "bulge": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "closedBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "id"
+        },
+        "createdBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "drawn": {
+          "type": "boolean"
+        },
+        "from": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "parcels": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "to": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "number",
+        "from",
+        "to",
+        "length",
+        "createdBy",
+        "parcels",
+        "drawn"
+      ],
+      "type": "object"
+    },
+    "RecordedParcel": {
+      "additionalProperties": false,
+      "description": "A parcel as its document made it: the identity's parts as written (İl, İlçe, Mahalle, Ada, Parsel; Ada and Parsel\nnever empty), the document that made it and the one that closed it, the area the document states (a plain decimal\nin square metres, as written; empty: none), the area that draws it while it is current, and its rings.",
+      "properties": {
+        "ada": {
+          "type": "string"
+        },
+        "closedBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "id"
+        },
+        "createdBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "il": {
+          "type": "string"
+        },
+        "ilce": {
+          "type": "string"
+        },
+        "mahalle": {
+          "type": "string"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "parsel": {
+          "type": "string"
+        },
+        "rings": {
+          "items": {
+            "$ref": "#/$defs/RecordedRing"
+          },
+          "type": "array"
+        },
+        "statedArea": {
+          "type": "string"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "number",
+        "ada",
+        "parsel",
+        "createdBy",
+        "rings"
+      ],
+      "type": "object"
+    },
+    "RecordedParcelRow": {
+      "description": "A recorded parcel against the drawing: its identity, documents and stated area as recorded; the area of its\nrecorded rings; the area that draws it and that area's geometric area now; its state (`current`: drawn as\nrecorded, `changed`: drawn otherwise, `missing`: its area is gone, `closed`); its boundaries in ring order; the\ncurrent parcels it shares a boundary with (a current parcel's); the parcels its document closed (`before`) and\nthose the document that closed it made (`after`).",
+      "properties": {
+        "ada": {
+          "type": "string"
+        },
+        "after": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "area": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "area"
+        },
+        "before": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "boundaries": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "closedBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "id"
+        },
+        "createdBy": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "il": {
+          "type": "string"
+        },
+        "ilce": {
+          "type": "string"
+        },
+        "mahalle": {
+          "type": "string"
+        },
+        "neighbours": {
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "number": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "parsel": {
+          "type": "string"
+        },
+        "recordedArea": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "state": {
+          "type": "string"
+        },
+        "statedArea": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "number",
+        "il",
+        "ilce",
+        "mahalle",
+        "ada",
+        "parsel",
+        "createdBy",
+        "recordedArea",
+        "state",
+        "boundaries",
+        "neighbours",
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
+    "RecordedRing": {
+      "additionalProperties": false,
+      "description": "One ring of a parcel: its part (0 for the first), whether it is a hole, and its boundaries in order (negative: run\nfrom `to` to `from`). The ring's vertices are each boundary's start as the ring runs it.",
+      "properties": {
+        "edges": {
+          "items": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "type": "array",
+          "x-unit": "id"
+        },
+        "hole": {
+          "type": "boolean"
+        },
+        "part": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        }
+      },
+      "required": [
+        "edges"
       ],
       "type": "object"
     },

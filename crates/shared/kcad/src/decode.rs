@@ -838,6 +838,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut road = None;
     let mut map_work = None;
     let mut map_survey = None;
+    let mut parcel_register = None;
     map(r, |r, key| {
         match key {
             "srid" => srid = Some(r.uint(u64::from(u32::MAX))? as u32),
@@ -1084,6 +1085,17 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             // Schema 98 (docs/adr/0583 §3): the map's system.
             // Schema 188 (docs/adr/1200 §2): a map project's work structure, read whole and checked.
             // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, read whole and checked.
+            // Schema 216 (docs/adr/4220): the parcel register, read whole and checked.
+            "parcelRegister" if has.parcel_register => {
+                let (v, at): (kentos_contracts::ParcelRegister, usize) = objects::json_part(r, "parsel kayıtları")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş parsel kayıtları yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::parcel_register_problem(&v) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                parcel_register = Some(v);
+            }
             "mapSurvey" if has.map_survey => {
                 let (v, at): (kentos_contracts::MapSurvey, usize) = objects::json_part(r, "GNSS arşivi")?;
                 if v.is_empty() {
@@ -1957,6 +1969,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         road,
         map_work,
         map_survey,
+        parcel_register,
         source_bases,
         heights,
         coordinate_epoch,

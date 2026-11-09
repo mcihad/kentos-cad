@@ -75,6 +75,7 @@ mod impact_reach_marks;
 mod parcel_boundaries_marks;
 mod readjustment_sheet;
 mod parcel_boundaries_window;
+mod parcel_register_window;
 mod pipes_check_window;
 mod exchange_check_window;
 mod asbuilt_window;
@@ -384,6 +385,8 @@ mod parcels_check_window_tests;
 mod parcel_boundaries_marks_tests;
 #[cfg(test)]
 mod parcel_boundaries_window_tests;
+#[cfg(test)]
+mod parcel_register_window_tests;
 #[cfg(test)]
 mod pipes_check_window_tests;
 #[cfg(test)]

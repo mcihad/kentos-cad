@@ -2653,6 +2653,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Parsel kaydı (plan/map-cad.md MAP-08, docs/adr/4220).
+    Entry {
+        id: "cad.parcels.record",
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "document_name_taken",
+                "unknown_parcel_record",
+                "parcel_closed",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_parcel",
+                "no_parcel_identity",
+                "parcel_recorded",
+                "parcel_identity_taken",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    // Parsel kayıtları (plan/map-cad.md MAP-08, docs/adr/4220): read only, no refusal.
+    Entry {
+        id: "cad.parcels.records",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
     // Topolojik temizlik, taşınma raporuyla (plan/map-cad.md MAP-07, docs/adr/1262).
     Entry {
         id: "cad.topology.clean",

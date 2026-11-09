@@ -3,7 +3,8 @@
 //! is the selection's areas, else every area on the parcel layer. A choice above the table shows all, the ones
 //! outside, the ones without a readable record, or the ones whose identity (İl/İlçe/Mahalle/Ada/Parsel) is held
 //! twice; Dışındakileri seç selects the parcels outside the tolerance; CSV kaydet writes the table; Sınır grafiği…
-//! opens the same parcels' boundary graph (docs/adr/2000).
+//! opens the same parcels' boundary graph (docs/adr/2000); Parsel kayıtları… the drawing's parcel register, whose new
+//! document makes the selected areas (docs/adr/4220).
 
 use std::path::PathBuf;
 
@@ -285,8 +286,13 @@ impl App {
                 crate::parcel_boundaries_window::OPEN,
                 Some(Message::ParcelBoundaries(crate::parcel_boundaries_window::Event::Open)),
             ))
+            // Parsel kayıtları (docs/adr/4220): the register; its new document makes the selected areas.
+            .aside(words::secondary(
+                crate::parcel_register_window::OPEN,
+                Some(Message::ParcelRegister(crate::parcel_register_window::Event::Open)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
-            .width(780.0)
+            .width(920.0)
             .modal(msg(Event::Close))
     }
 
@@ -295,6 +301,9 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SELECT) => Some(msg(Event::Select)),
+            Control::Press(crate::parcel_register_window::OPEN) => {
+                Some(Message::ParcelRegister(crate::parcel_register_window::Event::Open))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

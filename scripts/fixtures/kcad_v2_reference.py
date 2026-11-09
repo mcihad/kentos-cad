@@ -371,6 +371,8 @@ def settings(s):
                 "mapWork": (opaque, False),
                 # Schema 194 (docs/adr/1340 §5): a map project's GNSS archive, as its JSON.
                 "mapSurvey": (opaque, False),
+                # Schema 216 (docs/adr/4220): the parcel register, as its JSON.
+                "parcelRegister": (opaque, False),
                 # Schema 101 (docs/adr/0598 §1): what the split and merged objects came from, as their JSON.
                 "lineage": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2680,6 +2682,9 @@ def document(d):
     if any("decision" in n for n in d["settings"].get("reviewNotes", [])):
         # A review note recording a decision (docs/adr/4140).
         schema = max(schema, 215)
+    if "parcelRegister" in d["settings"]:
+        # The parcel register (docs/adr/4220).
+        schema = max(schema, 216)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3536,7 +3541,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-216.kcad"] = container(root(cmap(parts), version=uint(216)))
+    files["schema-version-217.kcad"] = container(root(cmap(parts), version=uint(217)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5858,6 +5863,55 @@ def build():
     del rejected["settings"]["reviewNotes"][2]["decision"]["accept"]
     rejected["settings"]["reviewNotes"][2]["decision"]["reject"] = "Gölge"
     out["broken/review-decisions-reject-with-asset.kcad"] = container(document(rejected))
+    # Schema 216 (docs/adr/4220): a parcel register. Kadastro 1985 made 101/7, a 20 × 10 m rectangle; 2026/145 ifraz
+    # closed it and made 101/8 and 101/9, two squares sharing the boundary 7; the east and west boundaries (2, 4) go on,
+    # the long south and north ones (1, 3) close with the document. Schema 215 refuses the field; a ring whose
+    # boundaries do not meet and two current parcels on one area are refused.
+    def corner(x, y):
+        return {"x": 500000.0 + x, "y": 4400000.0 + y}
+
+    def boundary(number, a, b, by, closed=None):
+        out_b = {"number": number, "from": corner(*a), "to": corner(*b), "createdBy": by}
+        if closed:
+            out_b["closedBy"] = closed
+        return out_b
+
+    registered = copy.deepcopy(minimal)
+    registered["name"] = "Parsel kayıtları"
+    registered["settings"]["parcelRegister"] = {
+        "documents": [
+            {"number": 1, "name": "Kadastro 1985", "kind": "Tapu planı", "date": "1985-06-12"},
+            {"number": 2, "name": "2026/145 ifraz", "kind": "Değişiklik", "date": "2026-03-14",
+             "note": "Ölçü krokisi 2026/145."},
+        ],
+        "boundaries": [
+            boundary(1, (0, 0), (20, 0), 1, 2), boundary(2, (20, 0), (20, 10), 1),
+            boundary(3, (0, 10), (20, 10), 1, 2), boundary(4, (0, 0), (0, 10), 1),
+            boundary(5, (0, 0), (10, 0), 2), boundary(6, (10, 0), (20, 0), 2), boundary(7, (10, 0), (10, 10), 2),
+            boundary(8, (0, 10), (10, 10), 2), boundary(9, (10, 10), (20, 10), 2),
+        ],
+        "parcels": [
+            {"number": 1, "il": "Ankara", "ilce": "Çankaya", "mahalle": "Kızılay", "ada": "101", "parsel": "7",
+             "createdBy": 1, "closedBy": 2, "statedArea": "200.00", "rings": [{"edges": [1, 2, -3, -4]}]},
+            {"number": 2, "il": "Ankara", "ilce": "Çankaya", "mahalle": "Kızılay", "ada": "101", "parsel": "8",
+             "createdBy": 2, "statedArea": "100,02", "uid": "0192f5c0-4220-7000-8000-000000000101",
+             "rings": [{"edges": [5, 7, -8, -4]}]},
+            {"number": 3, "il": "Ankara", "ilce": "Çankaya", "mahalle": "Kızılay", "ada": "101", "parsel": "9",
+             "createdBy": 2, "uid": "0192f5c0-4220-7000-8000-000000000102", "rings": [{"edges": [6, 2, -9, -7]}]},
+        ],
+    }
+    out["parcel-register.json"] = json_text(registered).encode("utf-8")
+    registered_data = document(registered)
+    assert registered_data.count(b"\x67version\x18\xd8") == 1, "a parcel register is schema 216"
+    out["parcel-register.kcad"] = container(registered_data)
+    out["broken/parcel-register-in-schema-215.kcad"] = container(
+        registered_data.replace(b"\x67version\x18\xd8", b"\x67version\x18\xd7"))
+    open_ring = copy.deepcopy(registered)
+    open_ring["settings"]["parcelRegister"]["parcels"][1]["rings"][0]["edges"] = [5, 7, 8, -4]
+    out["broken/parcel-register-open-ring.kcad"] = container(document(open_ring))
+    one_area = copy.deepcopy(registered)
+    one_area["settings"]["parcelRegister"]["parcels"][2]["uid"] = "0192f5c0-4220-7000-8000-000000000101"
+    out["broken/parcel-register-one-area.kcad"] = container(document(one_area))
     # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
     # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
     # reason and an unknown decision are refused.

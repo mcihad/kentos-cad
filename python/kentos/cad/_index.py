@@ -190,6 +190,8 @@ COMMANDS: dict[str, Any] = {
     "cad.parcels.boundaries": parcels.boundaries,
     "cad.parcels.check": parcels.check,
     "cad.parcels.create": parcels.create,
+    "cad.parcels.record": parcels.record,
+    "cad.parcels.records": parcels.records,
     "cad.pipes.check": pipes.check,
     "cad.pipes.profile": pipes.profile,
     "cad.plotstyles.import": plotstyles.import_,
