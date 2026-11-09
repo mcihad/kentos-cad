@@ -58567,6 +58567,8 @@ class OpeningEntity(Entity):
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         overrides: The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
+        phase: Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+            its wall's.
         show_swing: The swing's arc is drawn. Absent: it is.
         side: The side it opens to. Absent: the path's left.
         sill: Its sill's height above the floor, metres. Unit: elevation.
@@ -58610,6 +58612,7 @@ class OpeningEntity(Entity):
     operation: OpeningOperation | OpeningOperationName | Unset = UNSET
     order: int | None | Unset = UNSET
     overrides: list[OpeningTypeField | OpeningTypeFieldName] | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     show_swing: bool | Unset = UNSET
     side: OpeningSide | OpeningSideName | Unset = UNSET
     sill: float | None | Unset = UNSET
@@ -58674,6 +58677,8 @@ class OpeningEntity(Entity):
             out["order"] = self.order
         if self.overrides is not UNSET:
             out["overrides"] = [_enum_out(e0) for e0 in self.overrides]
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.show_swing is not UNSET:
             out["showSwing"] = self.show_swing
         if self.side is not UNSET:
@@ -58727,6 +58732,7 @@ class OpeningEntity(Entity):
             operation=_enum_in(OpeningOperation, data["operation"]) if "operation" in data else UNSET,
             order=data.get("order", UNSET),
             overrides=[_enum_in(OpeningTypeField, e0) for e0 in data["overrides"]] if "overrides" in data else UNSET,
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             show_swing=data.get("showSwing", UNSET),
             side=_enum_in(OpeningSide, data["side"]) if "side" in data else UNSET,
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),
@@ -115977,6 +115983,8 @@ class SetOpeningsOperation(OpeningsOperation):
         inset: A flue's distance from its face to its cavity, metres; null: centred. Unit: length.
         leaves: Unit: count.
         number: Its mark; null: none.
+        phase: Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:
+            its wall's.
         sill: Unit: elevation.
         swing: Degrees; null: 90. Unit: deg.
         unset: Its construction's fields taken away.
@@ -115993,6 +116001,7 @@ class SetOpeningsOperation(OpeningsOperation):
     leaves: int | None | Unset = UNSET
     number: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     show_swing: bool | None | Unset = UNSET
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
     sill: float | None | Unset = UNSET
@@ -116022,6 +116031,8 @@ class SetOpeningsOperation(OpeningsOperation):
             out["number"] = self.number
         if self.operation is not UNSET:
             out["operation"] = None if self.operation is None else _enum_out(self.operation)
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.show_swing is not UNSET:
             out["showSwing"] = self.show_swing
         if self.side is not UNSET:
@@ -116049,6 +116060,7 @@ class SetOpeningsOperation(OpeningsOperation):
             leaves=data.get("leaves", UNSET),
             number=data.get("number", UNSET),
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             show_swing=data.get("showSwing", UNSET),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),

@@ -99,9 +99,15 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
+    // Its own phase (docs/adr/3039 §1); null: its wall's.
+    if let Some(v) = c.phase {
+        f.phase = v;
+    }
     // Its construction (docs/adr/0772 §3): the fields given set, those unset taken away.
     if let Some(b) = &c.build
-        && let Some(map) = serde_json::to_value(b).ok().and_then(|v| v.as_object().cloned())
+        && let Some(map) = serde_json::to_value(b)
+            .ok()
+            .and_then(|v| v.as_object().cloned())
     {
         for (k, v) in map {
             if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
@@ -241,7 +247,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             if c == &OpeningChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da evre verin.".into(),
                     "operation",
                 ));
             }

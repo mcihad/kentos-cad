@@ -98,6 +98,8 @@ type ScaledKey = (
     kentos_sheet::units::Mdeg,
     // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
     Option<(u64, u64, i32, i32)>,
+    // A map showing a phase other than the drawing's (docs/adr/3039 §2).
+    Option<kentos_commands::PhaseView>,
 );
 
 /// The drawing as the maps at one scale draw it (docs/adr/0323 §2): a reading copy with the annotative
@@ -163,6 +165,8 @@ impl SheetMaps {
         level: Option<&kentos_sheet::kinds::MapLevel>,
         detail: Option<kentos_commands::WallDetail>,
         options: &[kentos_commands::OptionChoice],
+        // The map's own phase view (docs/adr/0774 §3); none: the drawing's.
+        phase: Option<kentos_commands::PhaseView>,
         main: &Spatial,
     ) -> Option<Rc<Scaled>> {
         // A model camera can draw more detail than this paper map, even at the same plot scale.
@@ -178,11 +182,21 @@ impl SheetMaps {
                     ));
         let scale = view.scale;
         let annotation = view.annotation_denominator();
+        // A map showing a phase other than the drawing's joins and cuts its walls as that phase stands
+        // (docs/adr/3039 §2).
+        let drawn = drawing
+            .model
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        let phased = phase.filter(|v| *v != drawn);
         let axes = kentos_native_application::road_plan_axes::has_axes(&drawing.model);
         let room = match (axes, view.center, clip) {
-            (true, Some(c), Some((w, h))) => {
-                Some(kentos_native_application::road_plan_axes::Room::of_map([c.x, c.y], w, h, scale))
-            }
+            (true, Some(c), Some((w, h))) => Some(
+                kentos_native_application::road_plan_axes::Room::of_map([c.x, c.y], w, h, scale),
+            ),
             _ => None,
         };
         let key = (
@@ -203,7 +217,15 @@ impl SheetMaps {
             options.to_vec(),
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             view.rotation,
-            room.map(|r| (r.center[0].to_bits(), r.center[1].to_bits(), clip.map_or(0, |c| c.0), clip.map_or(0, |c| c.1))),
+            room.map(|r| {
+                (
+                    r.center[0].to_bits(),
+                    r.center[1].to_bits(),
+                    clip.map_or(0, |c| c.0),
+                    clip.map_or(0, |c| c.1),
+                )
+            }),
+            phased,
         );
         let upper = key.6.is_some().then_some(level).flatten();
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
@@ -217,8 +239,17 @@ impl SheetMaps {
                 .then(|| drawing.model.at_scale(annotation))
                 .flatten()
                 .or_else(|| {
-                    (walls || unscoped || axes || upper.is_some() || !options.is_empty())
-                        .then(|| drawing.model.reading_copy())
+                    (walls
+                        || unscoped
+                        || axes
+                        || upper.is_some()
+                        || !options.is_empty()
+                        || phased.is_some())
+                    .then(|| drawing.model.reading_copy())
+                })
+                .map(|model| match phased {
+                    Some(v) => model.with_phase_view(v),
+                    None => model,
                 })
                 // A road project's alignments on a layer of their own (docs/adr/0982): the model has no object for them.
                 .map(|model| {
@@ -840,12 +871,12 @@ impl SheetPainter<'_> {
         let level = r.primitive.and_then(|m| m.level.as_ref());
         let detail = r.primitive.and_then(|m| m.wall_detail);
         let options = r.primitive.map_or(&[][..], |m| &m.options[..]);
-        *keep = self
-            .drawing
-            .and_then(|d| {
-                let clip = r.primitive.map(|m| (m.clip.width, m.clip.height));
-                self.maps.scaled(d, r.view, clip, level, detail, options, self.spatial)
-            });
+        let phase = r.primitive.and_then(|m| m.phase);
+        *keep = self.drawing.and_then(|d| {
+            let clip = r.primitive.map(|m| (m.clip.width, m.clip.height));
+            self.maps
+                .scaled(d, r.view, clip, level, detail, options, phase, self.spatial)
+        });
         match keep.as_ref().and_then(|s| s.view.as_ref()) {
             Some((d, sp)) => (Some(d), sp),
             None => (self.drawing, self.spatial),
@@ -2195,13 +2226,15 @@ mod tests {
             serde_json::from_value(serde_json::json!({"scale":100.,"rotation":0})).unwrap();
         let maps = SheetMaps::default();
         let copied = maps
-            .scaled(doc, &view, None, None, None, &[], &main)
+            .scaled(doc, &view, None, None, None, &[], None, &main)
             .expect("separate paper index despite equal project scale");
         let (_, paper) = copied.view.as_ref().unwrap();
         assert_eq!(paper.store().wall_view().detail, Detail::Schematic);
         assert_eq!(paper.store().wall_view().scale, 100.);
         main.set_screen_wall_scale(&doc.model, Some(10.));
-        let again = maps.scaled(doc, &view, None, None, None, &[], &main).unwrap();
+        let again = maps
+            .scaled(doc, &view, None, None, None, &[], None, &main)
+            .unwrap();
         assert!(
             Rc::ptr_eq(&copied, &again),
             "camera motion does not rebuild the paper cache"
@@ -2209,7 +2242,8 @@ mod tests {
         assert_eq!(doc.model.to_snapshot_v2(), before);
         main.set_screen_wall_scale(&doc.model, None);
         assert!(
-            maps.scaled(doc, &view, None, None, None, &[], &main).is_none(),
+            maps.scaled(doc, &view, None, None, None, &[], None, &main)
+                .is_none(),
             "matching ordinary paper index may still be shared"
         );
     }
@@ -2255,10 +2289,70 @@ mod tests {
                 .expect("a view");
         let maps = SheetMaps::default();
         let copy = maps
-            .scaled(&doc, &view, None, None, None, &[], &main)
+            .scaled(&doc, &view, None, None, None, &[], None, &main)
             .expect("a copy at 1:200");
         let (_, spatial) = copy.view.as_ref().expect("its drawing");
         assert_eq!(spatial.ghost_total(), 1);
+    }
+
+    /// docs/adr/3039 §2: a map on the screen showing a phase other than the drawing's draws from a copy whose walls
+    /// are cut as that phase stands; the drawing (Mevcut durum: the window's hole, not the new door's) stays as it is.
+    #[test]
+    fn a_map_with_its_own_phase_draws_a_copy_cut_as_it_stands() {
+        use kentos_geometry_core::entity::Shape;
+        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+            "../../../fixtures/kcad/v2/opening-phases.json"
+        ))
+        .expect("the sample");
+        let doc = Document::from_v2(snapshot, None).expect("opens");
+        let main = Spatial::of(&doc.model);
+        let holes = |s: &Spatial| -> Vec<(f64, f64)> {
+            let x = s
+                .store()
+                .get(1.0)
+                .and_then(|it| it.expanded.clone())
+                .expect("the wall's pieces");
+            let mut runs: Vec<(f64, f64)> = x
+                .shapes
+                .iter()
+                .filter_map(|p| match p {
+                    Shape::Polyline { pts, .. }
+                        if pts.len() == 2 && pts.iter().all(|q| (q.y - 0.15).abs() < 1e-6) =>
+                    {
+                        Some((pts[0].x.min(pts[1].x), pts[0].x.max(pts[1].x)))
+                    }
+                    _ => None,
+                })
+                .collect();
+            runs.sort_by(|a, b| a.0.total_cmp(&b.0));
+            let cm = |v: f64| (v * 100.0).round() / 100.0;
+            runs.windows(2)
+                .filter(|w| w[1].0 - w[0].1 > 1e-6)
+                .map(|w| (cm(w[0].1), cm(w[1].0)))
+                .collect()
+        };
+        assert_eq!(holes(&main), vec![(3.4, 4.6), (5.1, 5.7)]);
+        let view: kentos_sheet::display::MapViewPrim =
+            serde_json::from_value(serde_json::json!({"scale": 50.0, "rotation": 0}))
+                .expect("a view");
+        let maps = SheetMaps::default();
+        let proposed = Some(kentos_commands::PhaseView::Proposed);
+        let copy = maps
+            .scaled(&doc, &view, None, None, None, &[], proposed, &main)
+            .expect("a copy of its own");
+        let (_, spatial) = copy.view.as_ref().expect("its drawing");
+        assert_eq!(
+            holes(spatial),
+            vec![(1.05, 1.95), (5.1, 5.7)],
+            "Yeni durum: the door cut, the window closed"
+        );
+        // The drawing's own phase: no copy for it.
+        let existing = Some(kentos_commands::PhaseView::Existing);
+        assert!(
+            maps.scaled(&doc, &view, None, None, None, &[], existing, &main)
+                .is_none()
+        );
+        assert_eq!(holes(&main), vec![(3.4, 4.6), (5.1, 5.7)]);
     }
 
     #[test]

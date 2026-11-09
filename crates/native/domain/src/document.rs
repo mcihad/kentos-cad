@@ -330,6 +330,14 @@ impl Document {
         }
     }
 
+    /// This reading copy drawn in the phase view `view` (docs/adr/3039 §2): a sheet's map showing a phase of its own
+    /// joins and cuts its walls as that phase stands. Its settings change without an edit: a copy is only read.
+    pub fn with_phase_view(mut self, view: kentos_contracts::PhaseView) -> Document {
+        let arch = self.settings.arch.get_or_insert_with(Default::default);
+        arch.phase_view = (view != kentos_contracts::PhaseView::All).then_some(view);
+        self
+    }
+
     /// A [`Document::reading_copy`] without the fields `names` (docs/adr/0743 §2): their values gone from every
     /// object and their definitions from every layer. What a file an agent writes is made from; the objects
     /// that hold none of them stay shared.

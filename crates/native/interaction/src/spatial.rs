@@ -414,8 +414,41 @@ impl Spatial {
             .into_iter()
             .map(|s| f64::from(s.0))
             .collect();
-        if !(options.is_empty() && self.store.no_option_out()) {
-            self.store.set_option_out(options.iter().copied());
+        // The objects the phase view hides (docs/adr/0346 §2), its walls and openings left out of the joins and cuts
+        // too (docs/adr/3039 §2): a new door in an existing wall leaves the existing plan's wall whole.
+        let phase_view = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        let phased: Vec<(f64, bool)> = if phase_view == kentos_commands::PhaseView::All {
+            Vec::new()
+        } else {
+            let by_uid = |u: &str| {
+                Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+            };
+            doc.entities()
+                .filter(|e| phase_view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
+                .map(|e| {
+                    let joins = matches!(
+                        e,
+                        kentos_commands::Entity::Wall(_) | kentos_commands::Entity::Opening(_)
+                    );
+                    (f64::from(e.base().id), joins)
+                })
+                .collect()
+        };
+        let out: Vec<f64> = options
+            .iter()
+            .copied()
+            .chain(phased.iter().filter(|p| p.1).map(|p| p.0))
+            .collect();
+        if !(out.is_empty() && self.store.no_option_out()) {
+            self.store.set_option_out(out);
         }
         // A sheet's map edited in place shows its own level (docs/adr/0716), not the session's.
         let (view, active) = match &self.sheet_view {
@@ -491,19 +524,13 @@ impl Spatial {
         } else {
             self.store.set_unpicked(unpicked(&self.level_looks));
         }
-        let view = doc
-            .settings()
-            .arch
-            .as_ref()
-            .and_then(|a| a.phase_view)
-            .unwrap_or_default();
         let levels = self
             .level_looks
             .hidden
             .iter()
             .map(|&id| f64::from(id))
             .chain(options.iter().copied());
-        if view == kentos_commands::PhaseView::All {
+        if phase_view == kentos_commands::PhaseView::All {
             if self.level_looks.hidden.is_empty() && options.is_empty() {
                 if !self.store.no_phase_hidden() {
                     self.store.set_phase_hidden(std::iter::empty());
@@ -513,18 +540,7 @@ impl Spatial {
             }
             return;
         }
-        let by_uid = |u: &str| {
-            Uuid::parse_str(u)
-                .ok()
-                .and_then(|u| doc.slot_of(u))
-                .and_then(|s| doc.get(s))
-        };
-        let hidden: Vec<f64> = doc
-            .entities()
-            .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
-            .map(|e| f64::from(e.base().id))
-            .chain(levels)
-            .collect();
+        let hidden: Vec<f64> = phased.iter().map(|p| p.0).chain(levels).collect();
         self.store.set_phase_hidden(hidden);
     }
 

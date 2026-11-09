@@ -872,7 +872,9 @@ Dayanak S19.
 - Etiketler duvar çizgisine binmez (M0'daki çakışmalar yok).
 - Kapı ölçüsünde 90/210 yazar.
 
-#### ADV-17 — Tadilat grafik dili [ ]
+#### ADV-17 — Tadilat grafik dili [~]
+
+_Durum (9 Kasım 2026):_ M39 1. bölüm yapıldı ([ADR 3039](../docs/adr/3039-renovation-graphic-language.md)): kapı ve pencerenin kendi evresi (KCAD 218; Öznitelikler'de Evre: Duvarınki, Mevcut, Kapatılacak, Yeni, Geçici); evre görünümünün gizlediği duvar birleşmez, gizlediği açıklık kesmez (mevcut duvara açılan kapı Mevcut durumda delik bırakmaz, kapatılan pencerenin yeri Yeni durumda dolu); kendi evresini gösteren pafta haritası kendi kopyasından kesilir. Kalanlar: araçlarda evre, tadilat görünümü ve lejantı (MO: mevcut düz, ilave taramalı, iptal kesikli), tadilat takımı, DXF evre katmanları.
 
 **Kullanıcı sonucu:** Mevcut, yıkılacak ve yeni bir bakışta ayrılır; üç evre paftası aynı modelden çıkar. Dayanak S21.
 
@@ -1159,7 +1161,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler **(M36, ADR 3036: yapıldı; Metraj ▾ › Otopark hesabı ve Sığınak hesabı canlı tabloları; Otopark Yön. 4/1-ç, 5/1-j, 8/3–4, Ek-1; Sığınak Yön. 7/a–c, 8/a, 8/c; eksik yer ve alan Denetim › Mevzuat'ta)** |
 | M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla **(M37, ADR 3037: PDF/A-2b ve kendi denetimi; MO anteti, künye çizimde, 57/10 tablosu çizimden; Proje › Ruhsat takımı: bilgi, vaziyet, kat planları ve hesap paftası, EK-2 adlı PDF/A yayın; yapıldı)** |
 | M38 | Mahal listesi ve grafik doğrama listesi | ADV-24 | 57(29) listesi; tip görünüşleri **(M38, ADR 3038: mahalde denizlik, basamak ve korkuluk kaplaması; Çizelge ▾ › Mahal listesi kat kat, kapı ve pencere kodlarıyla; takımda LS/MHL paftası; tipte kasa-kanat ve U değeri, TS 825:2024 denetimi; Etiket ▾ › Doğrama listesi: Türkiye'nin açılım çizgisiyle görünüşler, canlı blok; takımda 1/50 LS/MMC paftası; yapıldı)** |
-| M39 | Tadilat grafik dili | ADV-17 | Üç evre paftası |
+| M39 | Tadilat grafik dili | ADV-17 | Üç evre paftası **(M39 1. bölüm, ADR 3039: açıklığın kendi evresi, evreye göre birleşim ve kesim; sürüyor)** |
 
 ### Faz 4 — Yapı modeli ve türetilmiş çizimler
 

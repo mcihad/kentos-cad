@@ -234,6 +234,10 @@
       `extent`.
     - `kentos_interaction::joinery_list_tool` (`tool.joineryList`, Etiket ▾), `calc_tables` `Kind::JoineryList`
       (`CalcTable.scale` 50) → `ListSheet.scaled` → `Page.scaled` (antet ölçeği yazar).
+  - **Tadilat: açıklığın evresi (M39 1. bölüm, [ADR 3039](../adr/3039-renovation-graphic-language.md)):** kapı ve
+    pencerenin kendi evresi (`phase`, KCAD 218; yoksa duvarınki); Öznitelikler'de Evre (açıklığın yıkılması
+    "Kapatılacak"); evre görünümünün gizlediği duvar birleşmez, gizlediği açıklık duvarı kesmez (ekran, PDF ve ekrandaki
+    pafta; kendi evreli harita kendi kopyasından). Dayanak PAİY 4(1)(y), 4(1)(dddd), 58; Mimarlar Odası tadilat tekniği.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

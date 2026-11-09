@@ -337,6 +337,16 @@ pub struct OpeningChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
+    /// Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:
+    /// its wall's.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::ArchPhase>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchPhase>"))]
+    pub phase: Option<Option<crate::ArchPhase>>,
     /// Its construction's fields given (docs/adr/0772 §3); each set, the others stay. Boxed: the operations' enum
     /// stays small.
     #[serde(default, skip_serializing_if = "Option::is_none")]

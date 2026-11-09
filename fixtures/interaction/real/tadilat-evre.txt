@@ -1,0 +1,76 @@
+# M39 part 1 (docs/adr/3039): the acceptance flat as a survey (every wall Mevcut: its walls' arch.phase written
+# existing by the reference writer); in the window: the wall between the bedrooms Yıkılacak, a new door between Salon
+# and Yatak odası 1 (Evre: Yeni), Salon's west window Kapatılacak; then Mevcut durum, Yıkım planı and Yeni durum.
+# BEFORE (M38) runs the same steps without the openings' Evre rows (they had none).
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 589 600   # the wall between the bedrooms
+wait 1200
+click 1800 537  # Evre
+wait 800
+click 1755 628  # Yıkılacak
+wait 1200
+key Escape
+wait 500
+click 152 75    # Kapı
+wait 1200
+move 384 531
+wait 800
+click 384 531   # in the wall between Salon and Yatak odası 1
+wait 1500
+shot sonra-kapi-yerlesti
+key Escape
+wait 500
+key Escape
+wait 500
+click 384 531
+wait 1200
+shot sonra-kapi-secili
+click 1800 479  # Evre
+wait 800
+shot sonra-kapi-evre
+click 1785 598  # Yeni
+wait 1200
+key Escape
+wait 500
+click 126 444   # Salon's west window
+wait 1200
+click 1800 479  # Evre
+wait 800
+click 1785 570  # Kapatılacak
+wait 1200
+shot sonra-pencere-kapatilacak
+key Escape
+wait 500
+click 1640 20
+wait 600
+type evre: mevcut durum
+wait 1200
+key Return
+wait 2000
+move 1300 1010
+wait 500
+shot sonra-mevcut-durum
+click 1640 20
+wait 600
+type evre: yıkım planı
+wait 1200
+key Return
+wait 2000
+move 1300 1010
+wait 500
+shot sonra-yikim-plani
+click 1640 20
+wait 600
+type evre: yeni durum
+wait 1200
+key Return
+wait 2000
+move 1300 1010
+wait 500
+shot sonra-yeni-durum

@@ -118,8 +118,12 @@ impl Document {
     fn schedule_takes(&self, e: &Entity, filter: Option<&ScheduleFilter>) -> bool {
         let Some(f) = filter else { return true };
         let arch = match e {
+            // An opening's own phase first (docs/adr/3039 §1), its wall's otherwise.
             Entity::Opening(o) => self.tag_target(&o.opening.host).and_then(|w| match w {
-                Entity::Wall(w) => Some(w.wall.arch),
+                Entity::Wall(w) => Some(kentos_contracts::ArchInfo {
+                    phase: o.opening.phase.or(w.wall.arch.phase),
+                    ..w.wall.arch
+                }),
                 _ => None,
             }),
             Entity::Space(s) => Some(s.space.arch.clone()),

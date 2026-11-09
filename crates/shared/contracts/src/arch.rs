@@ -408,6 +408,15 @@ impl ArchPhase {
             ArchPhase::Temporary => "Geçici",
         }
     }
+
+    /// Its word for a door's or window's own phase (docs/adr/3039 §1): an opening of its own taken away in a wall that
+    /// stays is closed up (Mimarlar Odası's “iptal”), not pulled down: “Kapatılacak”.
+    pub fn opening_label(self) -> &'static str {
+        match self {
+            ArchPhase::Demolish => "Kapatılacak",
+            other => other.label(),
+        }
+    }
 }
 
 /// Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum.

@@ -122,14 +122,36 @@ pub fn store_for_viewport(
         store.set_filtered(out.into_iter().map(|s| (s, true)));
     }
     // The design options not shown (docs/adr/0788 §4): neither drawn, picked nor snapped to; their walls join
-    // nothing and their openings cut nothing.
-    let options: Vec<f64> = doc.option_out().into_iter().map(|s| f64::from(s.0)).collect();
-    if !options.is_empty() {
-        store.set_option_out(options.iter().copied());
+    // nothing and their openings cut nothing. A paper map's phase view hides walls and openings so too
+    // (docs/adr/3039 §2).
+    let options: Vec<f64> = doc
+        .option_out()
+        .into_iter()
+        .map(|s| f64::from(s.0))
+        .collect();
+    let mut out = options.clone();
+    if scope.is_some() {
+        let view = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        out.extend(crate::viewport_scope::phase_out(doc, view));
     }
-    let mut hidden = if scope.is_some() { crate::viewport_scope::hidden_entities(doc) } else { options };
-    hidden.extend(doc.entities().filter(|e| !doc.isolation_shown(kentos_domain::Slot(e.base().id)))
-        .map(|e| f64::from(e.base().id)));
+    if !out.is_empty() {
+        store.set_option_out(out);
+    }
+    let mut hidden = if scope.is_some() {
+        crate::viewport_scope::hidden_entities(doc)
+    } else {
+        options
+    };
+    hidden.extend(
+        doc.entities()
+            .filter(|e| !doc.isolation_shown(kentos_domain::Slot(e.base().id)))
+            .map(|e| f64::from(e.base().id)),
+    );
     store.set_phase_hidden(hidden);
     if let Some(scope) = scope {
         crate::viewport_scope::apply_boundary(&mut store, scope);

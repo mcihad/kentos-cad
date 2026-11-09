@@ -81,6 +81,27 @@ pub fn apply_boundary(store: &mut Store, scope: &Viewport) {
     store.set_scope_visible(Some(inside));
 }
 
+/// The walls and openings the phase view `view` hides (docs/adr/3039 §2): they join no wall and cut none, as a design
+/// option not shown (docs/adr/0788 §4), so a phase's plan draws its walls as they stand in it: a new door cut into an
+/// existing wall leaves the existing plan's wall whole, a window closed up leaves the new plan's wall whole, a wall
+/// pulled down takes its corners with it.
+pub fn phase_out(doc: &Document, view: kentos_commands::PhaseView) -> Vec<f64> {
+    if view == kentos_commands::PhaseView::All {
+        return Vec::new();
+    }
+    let by_uid = |u: &str| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    };
+    doc.entities()
+        .filter(|e| matches!(e, Entity::Wall(_) | Entity::Opening(_)))
+        .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
+        .map(|e| f64::from(e.base().id))
+        .collect()
+}
+
 /// The paper source's hidden construction phases and non-plotting PDF underlays are not pick/snap targets.
 pub fn hidden_entities(doc: &Document) -> Vec<f64> {
     let view = doc

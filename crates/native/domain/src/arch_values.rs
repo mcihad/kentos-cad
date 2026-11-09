@@ -265,9 +265,14 @@ impl Document {
                         )),
                     }),
                     "level" => wall.and_then(|w| self.level_name(&w.arch)).map(Text),
-                    "phase" => wall
-                        .and_then(|w| w.arch.phase)
-                        .map(|p| Text(p.label().to_owned())),
+                    // Its own phase first, said as an opening's (docs/adr/3039 §1: Kapatılacak), its wall's otherwise.
+                    "phase" => x
+                        .phase
+                        .map(|p| Text(p.opening_label().to_owned()))
+                        .or_else(|| {
+                            wall.and_then(|w| w.arch.phase)
+                                .map(|p| Text(p.label().to_owned()))
+                        }),
                     _ => None,
                 }
             }

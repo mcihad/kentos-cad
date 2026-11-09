@@ -152,6 +152,9 @@ type ScaledKey = (
     kentos_sheet::units::Mdeg,
     // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
     Option<(u64, u64, i32, i32)>,
+    // A map showing a phase other than the drawing's (docs/adr/3039 §2): its walls joined and cut as it stands; the
+    // view's name.
+    Option<&'static str>,
 );
 
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
@@ -253,6 +256,15 @@ impl<'a> MapDrawer<'a> {
             .level
             .as_ref()
             .filter(|l| crate::layers::shows_from_above(doc, l));
+        // A map showing a phase other than the drawing's (docs/adr/0774 §3) joins and cuts its walls as that phase
+        // stands (docs/adr/3039 §2): a new door in an existing wall is no hole in the existing plan.
+        let drawn = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        let phased = m.phase.filter(|v| *v != drawn);
         let key = (
             at.to_bits(),
             annotation.to_bits(),
@@ -264,17 +276,23 @@ impl<'a> MapDrawer<'a> {
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             m.view.rotation,
             self.axes.then(|| (center.x.to_bits(), center.y.to_bits(), m.clip.width, m.clip.height)),
+            phased.map(kentos_contracts::PhaseView::name),
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_with(doc, at, m.wall_detail);
         let options = !m.options.is_empty();
         let axes = self.axes;
-        if (self.annotative || walls || axes || upper.is_some() || options) && !self.scaled.contains_key(&key) {
+        let copied = walls || axes || upper.is_some() || options || phased.is_some();
+        if (self.annotative || copied) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
                 .then(|| doc.at_scale(annotation))
                 .flatten()
-                .or_else(|| (walls || axes || upper.is_some() || options).then(|| doc.reading_copy()))
+                .or_else(|| copied.then(|| doc.reading_copy()))
+                .map(|copy| match phased {
+                    Some(view) => copy.with_phase_view(view),
+                    None => copy,
+                })
                 // A road project's alignments on a layer of their own (docs/adr/0982): the model has no object for them.
                 .map(|copy| {
                     if !axes {
@@ -679,4 +697,97 @@ pub fn current_user() -> String {
     std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod phase_tests {
+    use super::*;
+
+    /// The holes in the wall's face (y = +0.15) as `store` draws it, metres from its start, to the centimetre.
+    fn holes(store: &kentos_geometry_core::store::Store, wall: f64) -> Vec<(f64, f64)> {
+        use kentos_geometry_core::entity::Shape;
+        let x = store
+            .get(wall)
+            .and_then(|it| it.expanded.clone())
+            .expect("the wall's pieces");
+        let mut runs: Vec<(f64, f64)> = x
+            .shapes
+            .iter()
+            .filter_map(|s| match s {
+                Shape::Polyline { pts, .. }
+                    if pts.len() == 2 && pts.iter().all(|p| (p.y - 0.15).abs() < 1e-6) =>
+                {
+                    Some((pts[0].x.min(pts[1].x), pts[0].x.max(pts[1].x)))
+                }
+                _ => None,
+            })
+            .collect();
+        runs.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let cm = |v: f64| (v * 100.0).round() / 100.0;
+        runs.windows(2)
+            .filter(|w| w[1].0 - w[0].1 > 1e-6)
+            .map(|w| (cm(w[0].1), cm(w[1].0)))
+            .collect()
+    }
+
+    /// A map showing a phase other than the drawing's (docs/adr/0774 §3) draws from a copy of its own whose walls are
+    /// joined and cut as that phase stands (docs/adr/3039 §2): the drawing shows Mevcut durum (the window's hole, not
+    /// the new door's), the map Yeni durum (the door's hole, the window closed up).
+    #[test]
+    fn a_map_with_its_own_phase_cuts_its_walls_as_that_phase_stands() {
+        let snapshot: kentos_contracts::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/opening-phases.json"
+        ))
+        .unwrap();
+        let doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let spatial = Spatial::of(&doc);
+        let wall = 1.0;
+        // The window's and the passage's holes (the passage is its wall's, Mevcut); not the new door's.
+        assert_eq!(
+            holes(spatial.store(), wall),
+            vec![(3.4, 4.6), (5.1, 5.7)],
+            "the drawing: Mevcut durum"
+        );
+        let library = library_of(&doc);
+        let mut maps = MapDrawer::new(&doc, &spatial, &library, None);
+        let map = |phase: Option<&str>| -> kentos_sheet::display::MapPrim {
+            let mut m = serde_json::json!({
+                "item": "m1",
+                "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+                "rotation": 0,
+                "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+                "layers": {"type": "all"},
+                "extent": [-1.0, -2.0, 7.0, 2.0]
+            });
+            if let Some(p) = phase {
+                m["phase"] = serde_json::json!(p);
+            }
+            serde_json::from_value(m).unwrap()
+        };
+        let book = SheetBook::default();
+        let _ = maps.draw(&book, &map(Some("proposed")), "page");
+        let copies: Vec<&(Document, Spatial)> =
+            maps.scaled.values().filter_map(Option::as_ref).collect();
+        assert_eq!(copies.len(), 1, "the map's own copy");
+        let (copy, copied) = copies[0];
+        assert_eq!(
+            copy.settings().arch.as_ref().and_then(|a| a.phase_view),
+            Some(kentos_contracts::PhaseView::Proposed)
+        );
+        assert_eq!(
+            holes(copied.store(), wall),
+            vec![(1.05, 1.95), (5.1, 5.7)],
+            "the map: Yeni durum"
+        );
+        // A map showing the drawing's own phase, or none, draws from the drawing.
+        let _ = maps.draw(&book, &map(Some("existing")), "page");
+        let _ = maps.draw(&book, &map(None), "page");
+        assert_eq!(
+            maps.scaled.values().filter(|v| v.is_some()).count(),
+            1,
+            "no other copy"
+        );
+        // The drawing itself is untouched.
+        assert_eq!(holes(spatial.store(), wall), vec![(3.4, 4.6), (5.1, 5.7)]);
+    }
 }

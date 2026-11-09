@@ -2047,6 +2047,42 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
             geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
             geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
+            // Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up.
+            // Duvarınki: its wall's, which it says.
+            let wall_phase = kentos_domain::Uuid::parse_str(&x.host)
+                .ok()
+                .and_then(|u| doc.model.slot_of(u))
+                .and_then(|s| doc.model.get(s))
+                .and_then(Entity::own_phase);
+            let walls = wall_phase.map_or_else(
+                || "Duvarınki".to_owned(),
+                |p| format!("Duvarınki ({})", p.label()),
+            );
+            let phase_name = x
+                .phase
+                .map_or_else(|| walls.clone(), |p| p.opening_label().to_owned());
+            let mut phases = vec![pick(
+                walls,
+                x.phase.is_none(),
+                set(OpeningChange {
+                    phase: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            )];
+            phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
+                let change = set(OpeningChange {
+                    phase: Some(Some(p)),
+                    ..Default::default()
+                });
+                pick(
+                    p.opening_label().to_owned(),
+                    x.phase == Some(p),
+                    change,
+                    None,
+                )
+            }));
+            geo.push(Row::text("Evre", phase_name.clone()).editor(select(phase_name, phases)));
             // A niche's or flue's face, depth and a flue's distance from its face (docs/adr/0719).
             if x.form.is_recess() {
                 let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]

@@ -153958,6 +153958,17 @@
           },
           "type": "array"
         },
+        "phase": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchPhase"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:\nits wall's."
+        },
         "place": {
           "description": "Its jambs: the start jamb's points on its wall's left and right face, then the end jamb's; written from its\nwall by the document.",
           "items": {
@@ -155374,6 +155385,17 @@
                   "type": "null"
                 }
               ]
+            },
+            "phase": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ArchPhase"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up; null:\nits wall's."
             },
             "showSwing": {
               "type": [

@@ -607,6 +607,7 @@ impl OpeningType {
             build: self.build.clone(),
             place: vec![crate::entity::Vec2 { x: 0.0, y: 0.0 }; 4],
             broken: None,
+            phase: None,
         };
         if f.build.as_ref().is_some_and(OpeningBuild::is_empty) {
             f.build = None;

@@ -1992,17 +1992,26 @@ impl Entity {
             Entity::Stair(x) => x.stair.arch.phase,
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
+            Entity::Opening(x) => x.opening.phase,
             _ => None,
         }
     }
 
-    /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening's its wall's, a tag's its object's
-    /// (`by_uid` finds an object by its persistent id).
-    pub fn phase<'a>(&'a self, by_uid: impl Fn(&str) -> Option<&'a Entity>) -> Option<crate::ArchPhase> {
+    /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening without one its wall's
+    /// (docs/adr/3039 §1), a tag's its object's (`by_uid` finds an object by its persistent id).
+    pub fn phase<'a>(
+        &'a self,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> Option<crate::ArchPhase> {
+        let opening = |o: &crate::OpeningEntity| {
+            o.opening
+                .phase
+                .or_else(|| by_uid(&o.opening.host).and_then(|w| w.own_phase()))
+        };
         match self {
-            Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+            Entity::Opening(o) => opening(o),
             Entity::Tag(t) => by_uid(&t.tag.of).and_then(|e| match e {
-                Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+                Entity::Opening(o) => opening(o),
                 other => other.own_phase(),
             }),
             other => other.own_phase(),

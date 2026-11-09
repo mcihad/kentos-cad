@@ -434,6 +434,7 @@ mod tests {
                 build: None,
                 place: Vec::new(),
                 broken: None,
+                phase: None,
             };
             let (s0, s1) = (at - width / 2.0, at + width / 2.0);
             f.place = [(s0, 0.15), (s0, -0.15), (s1, 0.15), (s1, -0.15)]
@@ -540,6 +541,7 @@ mod tests {
                         .map(|(x, y)| Vec2 { x, y })
                         .collect(),
                     broken: None,
+                    phase: None,
                 },
             })
         };

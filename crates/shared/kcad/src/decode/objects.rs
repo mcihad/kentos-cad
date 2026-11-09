@@ -439,6 +439,8 @@ pub(super) struct Features {
     pub(super) room_list: bool,
     /// Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value.
     pub(super) opening_specs: bool,
+    /// Schema 218 (docs/adr/3039): a door's or window's own phase.
+    pub(super) opening_phases: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -730,6 +732,7 @@ impl Features {
             provision_tables: schema >= crate::SCHEMA_WITH_PROVISION_TABLES,
             room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
             opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
+            opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -2533,6 +2536,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::BadValue,
             "döner merdivenin bükümü (bulges) şema 117 ister",
+        ));
+    }
+    // Schema 218 (docs/adr/3039): a door's or window's own phase.
+    if matches!(&entity, Entity::Opening(o) if o.opening.phase.is_some()) && !has.opening_phases {
+        return Err(r.fail(
+            Code::UnknownField,
+            "kapı ve pencerenin kendi evresi (phase) şema 218 ister",
         ));
     }
     // Schema 216 (docs/adr/3038): the room list's finishes and a spaces schedule's room list columns.

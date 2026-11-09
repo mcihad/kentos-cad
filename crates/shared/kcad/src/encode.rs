@@ -2270,6 +2270,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 218 (docs/adr/3039): a door's or window's own phase.
+    let opening_phase = |e: &Entity| matches!(e, Entity::Opening(o) if o.opening.phase.is_some());
+    if objs.iter().any(opening_phase)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(opening_phase))
+    {
+        return crate::SCHEMA_WITH_OPENING_PHASES;
+    }
     // Schema 217 (docs/adr/3038): a door or window type's frame and leaves and its U value.
     if doc
         .settings

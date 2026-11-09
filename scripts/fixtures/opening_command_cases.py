@@ -389,6 +389,9 @@ def stored(f):
     out["place"] = f["place"]
     if f.get("broken"):
         out["broken"] = f["broken"]
+    # Its own phase (docs/adr/3039 §1); none: its wall's.
+    if f.get("phase") is not None:
+        out["phase"] = f["phase"]
     return out
 
 
@@ -895,7 +898,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.", "operation"), None, None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da evre verin.", "operation"), None, None
         for key, name in (("width", "Genişlik"), ("swing", "Açılma açısı"), ("frame", "Kasa"), ("sill", "Denizlik"), ("head", "Lento"),
                           ("depth", "Derinlik"), ("inset", "Yüzden uzaklık")):
             if ch.get(key) is not None and not math.isfinite(ch[key]):
@@ -1100,6 +1103,8 @@ def edit_cases():
         ("Değiştir: genişlik ortası yerinde kalarak büyür, numara yazılır", {"kind": "set", "width": 1.0, "number": "K2"}),
         ("Değiştir: açı, açılım yayı kapalı, kasa kaldırılır", {"kind": "set", "swing": 110.0, "showSwing": False, "frame": None}),
         ("Değiştir: biçim pencere, iki kanat, denizlik ve lento", {"kind": "set", "form": "window", "leaves": 2, "sill": 1.0, "head": 2.3}),
+        # Its own phase (docs/adr/3039 §1): a new door cut into an existing wall.
+        ("Değiştir: kendi evresi yeni (mevcut duvara açılan kapı)", {"kind": "set", "phase": "new"}),
         ("Taşı: duvar boyunca 1,5 m", {"kind": "move", "by": 1.5}),
         ("Taşı: yeni konumu 6 m", {"kind": "move", "at": 6.0}),
         ("Çevir: açılış yanı", {"kind": "flip", "what": "side"}),
@@ -1112,6 +1117,13 @@ def edit_cases():
     ]:
         d, made = fresh(door)
         c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op})])
+    # Its own phase taken away: its wall's again (docs/adr/3039 §1).
+    d, made = fresh(door)
+    c.add("Değiştir: kendi evresi kapatılacak, sonra kaldırılır ve duvarınkini alır", [
+        made,
+        edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "phase": "demolish"}}),
+        edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "phase": None}}),
+    ])
     d, made = fresh(door)
     step = edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "move", "by": 1.0}})
     c.add("tek adım “Açıklığı düzenle”, geri alınır", [made, step,

@@ -385,6 +385,11 @@ pub struct OpeningFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<OpeningBreak>,
+    /// Its own phase (docs/adr/3039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+    /// its wall's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase: Option<crate::ArchPhase>,
 }
 
 /// An opening in a wall (docs/adr/0341).

@@ -60,6 +60,7 @@ mod navigate;
 mod nurbs;
 mod overlap;
 mod param_grips;
+mod phase_cuts;
 mod photos;
 mod pick_objects;
 mod polygon;
