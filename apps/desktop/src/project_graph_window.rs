@@ -6,22 +6,27 @@
 //! graph as JSON: every drawing's recipe (command, version, input), its sources' stamps then and now, the system.
 //! Tariften üret (docs/adr/3240; `road.project.produce`) draws a saved recipe's drawings in this project, one undo
 //! step: what it drew and what it left (a drawing the project has, one that does not draw here) are said above the
-//! table, which is read again.
+//! table, which is read again. Since docs/adr/3640 the recipe picked is shown first: its plan (what would be drawn,
+//! left, and where each of the recipe's layers goes: found by its name, added with the recipe's look) and a choice per
+//! recipe layer of this project's layer to draw on instead; Üret draws it, Vazgeç drops it.
 
 use std::path::PathBuf;
 
+use iced::widget::container;
 use iced::{Element, Task};
 use kentos_commands::{
-    RoadEdgeKind as E, RoadGraphKind as G, RoadNodeState as S, RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
+    CommandResult, RoadEdgeKind as E, RoadGraphKind as G, RoadLayerMatch, RoadNodeState as S, RoadProjectGraph,
+    RoadProjectProduce, RoadProjectProduced,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_project_graph, road_project_produce};
 use kentos_ui::widget::grow::Grows;
-use kentos_ui::widget::{Dialog as Frame, Segmented};
+use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
 use crate::road_dialog::{col, num, sheet};
+use crate::style::fields;
 use crate::traces::Control;
 
 pub const TITLE: &str = "İş grafiği";
@@ -30,6 +35,11 @@ pub const OPEN: &str = "İş grafiği…";
 const CLOSE: &str = "Kapat";
 const SAVE: &str = "Tarifi kaydet…";
 const PRODUCE: &str = "Tariften üret…";
+/// The picked recipe drawn, or dropped (docs/adr/3640).
+const CONFIRM: &str = "Üret";
+const CANCEL: &str = "Vazgeç";
+/// A recipe layer left to its name: found by it, or added with the recipe's look.
+const AUTO: &str = "";
 
 /// Which drawings the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -54,6 +64,75 @@ pub struct State {
     pub answer: Option<Result<RoadProjectGraph, String>>,
     /// The last Tariften üret's answer (docs/adr/3240).
     pub produced: Option<RoadProjectProduced>,
+    /// The recipe picked, before it is drawn (docs/adr/3640).
+    pub recipe: Option<Recipe>,
+}
+
+/// A recipe picked for Tariften üret (docs/adr/3640): its file; each layer its drawings go on (its id and name in the
+/// recipe) with the layer of this project chosen for it (empty: by its name, or added); the plan of it as chosen and
+/// the plan's warnings.
+#[derive(Debug)]
+pub struct Recipe {
+    pub path: PathBuf,
+    pub layers: Vec<(String, String, String)>,
+    pub plan: Result<RoadProjectProduced, String>,
+    pub warnings: Vec<String>,
+}
+
+impl Recipe {
+    /// The layers chosen, as `road.project.produce`'s `layers`.
+    fn given(&self) -> std::collections::BTreeMap<String, String> {
+        self.layers.iter().filter(|(_, _, to)| !to.is_empty()).map(|(from, _, to)| (from.clone(), to.clone())).collect()
+    }
+}
+
+/// The layers a recipe file's drawings go on, each once in the recipe's order: its id and name (the recipe's definition;
+/// a recipe from before: the id). None when the file is not read (the plan says why).
+pub fn recipe_layers(path: &std::path::Path) -> Vec<(String, String)> {
+    let Some(graph) = std::fs::read(path).ok().and_then(|b| serde_json::from_slice::<RoadProjectGraph>(&b).ok()) else {
+        return Vec::new();
+    };
+    let mut out: Vec<(String, String)> = Vec::new();
+    for r in graph.nodes.iter().filter_map(|n| n.recipe.as_ref()) {
+        let Some(id) = r.input.get("layerId").and_then(serde_json::Value::as_str) else { continue };
+        if !out.iter().any(|(x, _)| x == id) {
+            out.push((id.to_owned(), r.layer.as_ref().map_or_else(|| id.to_owned(), |l| l.name.clone())));
+        }
+    }
+    out
+}
+
+/// What the picked recipe would do (docs/adr/3640): the drawings it would draw and leave, where each recipe layer goes.
+pub fn plan_lines(r: &Recipe) -> Vec<(Kind, String)> {
+    let mut lines = Vec::new();
+    let out = match &r.plan {
+        Ok(out) => out,
+        Err(why) => return vec![(Kind::Error, why.clone())],
+    };
+    if out.produced.is_empty() {
+        lines.push((Kind::Info, "Bu tariften üretilecek yeni çizim yok.".to_owned()));
+    } else {
+        let list: Vec<String> = out.produced.iter().map(|p| format!("{} ({})", p.from, p.source.name)).collect();
+        lines.push((Kind::Info, format!("Üretilecek: {} çizim: {}.", out.produced.len(), list.join(", "))));
+    }
+    for l in &out.layers {
+        lines.push(match l.how {
+            RoadLayerMatch::Name => (Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name)),
+            RoadLayerMatch::Created => {
+                (Kind::Info, format!("“{}” katmanı bu projede yok; tarifteki rengi, çizgi türü ve kalınlığıyla eklenecek.", l.name))
+            }
+            RoadLayerMatch::Given => (Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name)),
+            RoadLayerMatch::Id => (Kind::Info, format!("“{}” katmanına kimliğiyle (eski tarif).", l.to_name)),
+        });
+    }
+    for l in &out.left {
+        let kind = if l.why == "exists" { Kind::Info } else { Kind::Warn };
+        lines.push((kind, format!("Tarifin {} çizimi bırakılacak: {}", l.drawing, l.message)));
+    }
+    for w in &r.warnings {
+        lines.push((Kind::Warn, w.clone()));
+    }
+    lines
 }
 
 #[derive(Clone, Debug)]
@@ -64,6 +143,11 @@ pub enum Event {
     Saved(Option<PathBuf>),
     Produce,
     Picked(Option<PathBuf>),
+    /// A recipe layer's layer here chosen (docs/adr/3640): its place in the recipe's layers, the layer's id (empty: by
+    /// its name, or added).
+    Layer(usize, String),
+    Confirm,
+    Cancel,
     Close,
 }
 
@@ -89,6 +173,18 @@ pub fn produced_lines(out: &RoadProjectProduced) -> Vec<(Kind, String)> {
             Kind::Ok,
             format!("Tariften üretildi: {} çizim, {objects} nesne: {}.", out.produced.len(), list.join(", ")),
         ));
+    }
+    // Where the recipe's layers went (docs/adr/3640); a recipe from before, by the layer's id, is no news.
+    for l in &out.layers {
+        match l.how {
+            RoadLayerMatch::Created => lines.push((
+                Kind::Info,
+                format!("“{}” katmanı tarifteki rengi, çizgi türü ve kalınlığıyla eklendi.", l.name),
+            )),
+            RoadLayerMatch::Name => lines.push((Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name))),
+            RoadLayerMatch::Given => lines.push((Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name))),
+            RoadLayerMatch::Id => {}
+        }
     }
     for l in &out.left {
         lines.push((Kind::Info, format!("Tarifin {} çizimi bırakıldı: {}", l.drawing, l.message)));
@@ -181,10 +277,36 @@ impl App {
         }
     }
 
-    /// Tariften üret (docs/adr/3240): the recipe's drawings drawn in this project, one undo step; the graph read again.
-    pub(crate) fn project_graph_produce(&mut self, path: PathBuf) {
+    /// The picked recipe planned as chosen (docs/adr/3640): nothing written.
+    fn project_graph_plan(&mut self) {
         let Some(doc) = self.document.as_mut() else { return };
-        let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, expected_revision: None };
+        let Some(r) = self.project_graph.recipe.as_mut() else { return };
+        let input = RoadProjectProduce { path: r.path.display().to_string(), drawings: None, layers: r.given(), expected_revision: None };
+        (r.plan, r.warnings) = match road_project_produce::plan(&ExecutionContext::new(&mut doc.model), &input) {
+            CommandResult::Completed { output, warnings } => {
+                // The added layers are said by the plan's own line.
+                let said = warnings.into_iter().filter(|w| w.code != "recipe_layer_created").map(|w| w.message).collect();
+                (Ok(output), said)
+            }
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => (Err(error.message), Vec::new()),
+            other => (Err(format!("Tariften üret planlanamadı ({other:?}).")), Vec::new()),
+        };
+    }
+
+    /// A recipe picked (docs/adr/3640): shown with its plan before anything is drawn.
+    pub(crate) fn project_graph_preview(&mut self, path: PathBuf) {
+        let layers = recipe_layers(&path).into_iter().map(|(id, name)| (id, name, AUTO.to_owned())).collect();
+        self.project_graph.recipe = Some(Recipe { path, layers, plan: Err(String::new()), warnings: Vec::new() });
+        self.project_graph_plan();
+    }
+
+    /// Tariften üret (docs/adr/3240): the recipe's drawings drawn in this project with the layers chosen (docs/adr/3640),
+    /// one undo step; the graph read again.
+    pub(crate) fn project_graph_produce(&mut self) {
+        let Some(r) = self.project_graph.recipe.take() else { return };
+        let Some(doc) = self.document.as_mut() else { return };
+        let path = r.path.clone();
+        let input = RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: r.given(), expected_revision: None };
         let result = road_project_produce::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let left = if out.left.is_empty() { String::new() } else { format!("; {} çizim bırakıldı", out.left.len()) };
@@ -230,8 +352,16 @@ impl App {
                     |p| msg(Event::Picked(p)),
                 );
             }
-            Event::Picked(Some(path)) => self.project_graph_produce(path),
+            Event::Picked(Some(path)) => self.project_graph_preview(path),
             Event::Picked(None) => {}
+            Event::Layer(k, to) => {
+                if let Some((_, _, chosen)) = self.project_graph.recipe.as_mut().and_then(|r| r.layers.get_mut(k)) {
+                    *chosen = to;
+                }
+                self.project_graph_plan();
+            }
+            Event::Confirm => self.project_graph_produce(),
+            Event::Cancel => self.project_graph.recipe = None,
             Event::Close => {
                 self.project_graph = State::default();
                 self.dialog = None;
@@ -290,9 +420,41 @@ impl App {
             "Bu süzgeçte çizim yok.",
             300.0,
         );
-        let body = Grows::new()
-            .spacing(12.0)
-            .width(iced::Fill)
+        let mut body = Grows::new().spacing(12.0).width(iced::Fill);
+        // The recipe picked (docs/adr/3640): its layers' choices and its plan, drawn only on Üret.
+        if let Some(r) = &s.recipe {
+            let here: Vec<(String, String)> = std::iter::once((AUTO.to_owned(), "Adıyla bul, yoksa ekle".to_owned()))
+                .chain(
+                    self.document
+                        .iter()
+                        .flat_map(|d| d.model.layers().leaves().into_iter().map(|n| (n.id.clone(), n.name.clone())).collect::<Vec<_>>()),
+                )
+                .collect();
+            let file = r.path.file_name().map_or_else(|| r.path.display().to_string(), |n| n.to_string_lossy().into_owned());
+            let mut form = Form::new().label_width(170.0).section("Tariften üret").field("Tarif", kentos_ui::label::body(file));
+            for (k, (_, name, to)) in r.layers.iter().enumerate() {
+                form = form.field(
+                    format!("“{name}” katmanı"),
+                    container(fields::select_owned(here.clone(), to, move |v| msg(Event::Layer(k, v)))).width(260),
+                );
+            }
+            if !r.layers.is_empty() {
+                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki rengi, çizgi türü ve kalınlığıyla eklenir. Başka bir katmana çizmek için seçin.");
+            }
+            // What it would do, read before Üret.
+            let ready = matches!(&r.plan, Ok(out) if !out.produced.is_empty());
+            form = form
+                .wide(words::summary(plan_lines(r).into_iter().map(|(kind, said)| words::text_line(kind, said)).collect()))
+                .row(
+                    iced::widget::row![
+                        words::primary(CONFIRM, ready.then(|| msg(Event::Confirm))),
+                        words::secondary(CANCEL, Some(msg(Event::Cancel)))
+                    ]
+                    .spacing(8),
+                );
+            body = body.push(form);
+        }
+        let body = body
             .push(words::summary(lines))
             .push(Segmented::new([Show::All, Show::Outdated], s.show, |v| msg(Event::Show(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
@@ -311,6 +473,8 @@ impl App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(PRODUCE) => Some(msg(Event::Produce)),
+            Control::Press(CONFIRM) => Some(msg(Event::Confirm)),
+            Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

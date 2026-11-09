@@ -2,12 +2,17 @@
 
 /**
  * Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
- * `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for.
+ * `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
+ * `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
+ * Layer Translator); a layer not given goes by its name (Map Same) or is added.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
  * `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
  * that draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the
- * recipe's); and a drawing command's own refusal (a source not in this project, a layer not here, gone or locked), the
- * recipe's drawing named in its words: nothing is written.
+ * recipe's); `unknown_recipe_layer` (at `layers`: a key not a layer of the recipe's drawings), `layer_not_found`,
+ * `not_a_layer`, `service_layer`, `layer_locked` (at `layers.<id>`: the layer given here); `ambiguous_recipe_layer`
+ * (at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a
+ * source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
+ * written.
  */
-export type RoadProjectProduce = { path: string, drawings?: Array<string>, expectedRevision?: string, };
+export type RoadProjectProduce = { path: string, drawings?: Array<string>, layers?: { [key in string]: string }, expectedRevision?: string, };

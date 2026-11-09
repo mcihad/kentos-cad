@@ -50,7 +50,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240 | bütçe; çizimin kendi hesabının içinde durdurma; katmanların adla eşlenmesi | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640 | bütçe (gerçek veriyle ölçüm); öbür çizimlerin kendi hesabının içinde durması; tarif katmanının grubu ve tam stili | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -2027,6 +2027,17 @@ katman kimliğiyle kalır; var olan çizim (aynı komut, kaynak, katman) bırak�
 hepsi istenince çizilmeyen nedeniyle bırakılır; sürüm denetimi, başka sistem uyarısı, ilerleme ve durdurma. 31 bağımsız
 durum (tarifler elle, sıfır hatları başvurusundan), Python'da iki projenin aynı çizgileri, MCP, İş grafiği'nde
 Tariften üret…. Açık: bütçe, çizimin kendi hesabının içinde durdurma, katmanların adla eşlenmesi.
+
+**9 Kasım 2026, altıncı tur — tarifin katmanları adıyla, çizimin kendi hesabının içinde durdurma ([ADR 3640](../docs/adr/3640-recipe-layers-and-stop-within-a-drawing.md)).**
+Kapsam: **Harita + Yol**. Dayanak: AutoCAD'in Layer Translator'ı (Map Same, Map, New), QGIS'in QgsFeedback'i (iş
+parçacığı durdurmayı düzenli yoklar; alt adımın ilerlemesi bütünün aralığında). Kanıtlanan: İş grafiği'nin tarifi
+çizimin katmanının tanımını (ad, renk, çizgi türü, kalınlık) taşır; Tariften üret katmanı `layers` ile verilen, yoksa
+katlanmış adıyla bulunan, yoksa tanımıyla eklenen katmana çizer (kullanılmayan eklenen katman geri alınır, iki aynı adlı
+katman sorulur); cevapta `layers`; 15 yeni bağımsız durum (46), Python ve MCP; koridorun şevli planı kesit kesit ilerler
+ve durdurmayı kesitler arasında duyar, yeniden üretimde ve üretimde her çizim işin ilerlemesinden kendi payını alır;
+İş grafiği'nde tarif önce gösterilir (katman seçimi, plan, Üret/Vazgeç). Bulunan: İş grafiği'nin MCP testi ADR 2840'tan
+beri kırıktı (yakalanan revizyon), düzeltildi. Açık: bütçe (ölçüm ister), öbür çizimlerin kendi hesabının içinde durması,
+tarif katmanının grubu ve tam stili.
 
 ## Uygulama sırası ve sahiplik
 

@@ -9,10 +9,16 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
     s.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,"io.modelcontextprotocol/clientInfo":{"name":"project-graph-test","version":"1"},"io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone()
 }
 
-/// `want` with its `$any` and `$current` places taken from `got`, the rest as it is.
+/// `want` with its `$any` and `$current` places taken from `got`, and a revision a step captured (`$r1`, docs/adr/2840)
+/// where `got` has a revision's text; the rest as it is.
 fn filled(want: &Value, got: &Value) -> Value {
     match (want, got) {
         (Value::String(s), _) if s == "$any" || s == "$current" => got.clone(),
+        (Value::String(s), Value::String(g))
+            if s.strip_prefix("$r").is_some_and(|n| n.parse::<u32>().is_ok()) && g.parse::<u64>().is_ok() =>
+        {
+            got.clone()
+        }
         (Value::Object(w), Value::Object(g)) => {
             Value::Object(w.iter().map(|(k, v)| (k.clone(), g.get(k).map_or_else(|| v.clone(), |x| filled(v, x)))).collect())
         }

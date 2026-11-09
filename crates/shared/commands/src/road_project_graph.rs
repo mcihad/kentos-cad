@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::RoadNodeState;
+use crate::{LineType, RoadNodeState};
 
 pub const ROAD_PROJECT_GRAPH: &str = "road.project.graph";
 pub const ROAD_PROJECT_GRAPH_VERSION: u32 = 1;
@@ -64,6 +64,23 @@ pub enum RoadGraphKind {
     Sheet,
 }
 
+/// A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it
+/// takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
+/// `road.project.produce` finds the layer by this name; where none is, it adds one with this look.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RoadRecipeLayer {
+    pub id: String,
+    pub name: String,
+    pub color: String,
+    pub line_type: LineType,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
+    pub line_weight: f64,
+}
+
 /// How a drawing is made again: its command and the version that draws it again (a record keeps no version; every
 /// drawing command is v1), its input as kept (its main source by id), how many objects it wrote and how many of them
 /// are there now, and the stamp of its objects as written (16 hex digits).
@@ -93,6 +110,10 @@ pub struct RoadDrawingRecipe {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub revision: Option<String>,
+    /// Its layer's definition (docs/adr/3640); none: a recipe from before, or its layer is gone (it goes by its id).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer: Option<RoadRecipeLayer>,
 }
 
 /// A node: what it is, its id and name, how it stands and why (a layer: current, or gone; a sheet: stale when it shows

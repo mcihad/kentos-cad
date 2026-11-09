@@ -20,6 +20,22 @@ use crate::trim::relay;
 
 pub(crate) type Refused = Box<CommandResult<()>>;
 
+/// The parts of a drawing's share of a job's progress (docs/adr/3640).
+const SHARE: u64 = 1000;
+
+/// Runs `f` with the job's progress narrowed to drawing `k` of `total` (docs/adr/3640, QGIS's sub-range feedback): a
+/// drawing that tells its own progress (a corridor's sections) moves within its share; the stop stays the job's.
+pub(crate) fn in_share<T>(cx: &mut ExecutionContext<'_>, k: u64, total: u64, f: impl FnOnce(&mut ExecutionContext<'_>) -> T) -> T {
+    let Some(job) = cx.job else { return f(cx) };
+    let share = job.span(k * SHARE, SHARE, total * SHARE);
+    let call = cx.call.take();
+    let mut inner = ExecutionContext { doc: &mut *cx.doc, store: cx.store, call, job: Some(&share) };
+    let out = f(&mut inner);
+    let call = inner.call.take();
+    cx.call = call;
+    out
+}
+
 /// Runs drawing command `command` on `input` (a drawing's or, docs/adr/3240, a recipe's; `id` names it in a refusal):
 /// its check, the objects `remove` removed (a drawing drawn again: its own; a new one: none), then its write in the step
 /// it runs in. Answers the objects written and the command's warnings, or its refusal (nothing written: the check runs
@@ -158,15 +174,16 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
     if !drawings.is_empty() {
         cx.doc.name_step("Yeniden üret");
     }
-    // Run as a job (docs/adr/2440): its progress a drawing at a time, a stop heard between the drawings; the job's copy
-    // is dropped, so a stopped rebuild writes nothing.
+    // Run as a job (docs/adr/2440): its progress a drawing at a time, a stop heard between the drawings and (docs/adr/3640)
+    // within a drawing that listens (a corridor's sections, in its share of the progress); the job's copy is dropped,
+    // so a stopped rebuild writes nothing.
     let total = drawings.len() as u64;
     for (k, d) in drawings.iter().enumerate() {
         cx.progress(k as u64, total);
         if cx.stopped() {
             return CommandResult::Cancelled;
         }
-        match redraw(cx, d) {
+        match in_share(cx, k as u64, total, |cx| redraw(cx, d)) {
             Ok((r, w)) => {
                 rebuilt.push(r);
                 warnings.extend(w);
@@ -345,5 +362,20 @@ mod tests {
         let names: Vec<&str> = output.rebuilt.iter().map(|r| r.drawing.as_str()).collect();
         assert_eq!(names, ["cz-1", "cz-2"]);
         assert_eq!(job.fraction(), Some(1.0));
+    }
+
+    /// docs/adr/3640: a drawing's own progress (a corridor's sections) is told within its share of the job's; the stop
+    /// within the share is the job's.
+    #[test]
+    fn a_drawing_s_progress_is_told_within_its_share() {
+        let mut doc = two_stale();
+        let job = Progress::default();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        in_share(&mut cx, 1, 4, |cx| cx.progress(500, 1000));
+        assert_eq!(job.fraction(), Some(0.375));
+        assert!(!in_share(&mut cx, 2, 4, |cx| cx.stopped()));
+        job.stop();
+        assert!(in_share(&mut cx, 2, 4, |cx| cx.stopped()));
     }
 }

@@ -82,6 +82,20 @@ pub fn drawing_within(doc: &Document, d: &RoadDrawingDef, (lo, hi): ([f64; 2], [
     })
 }
 
+/// The definition of the layer drawing `d` went on (docs/adr/3640): its id, name and look; none when the layer is gone
+/// or not a layer.
+fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::RoadRecipeLayer> {
+    let id = d.input.get("layerId")?.as_str()?;
+    let node = doc.layers().get(id)?;
+    (node.kind == kentos_commands::LayerNodeType::Layer).then(|| kentos_commands::RoadRecipeLayer {
+        id: id.to_owned(),
+        name: node.name.clone(),
+        color: node.style.color.clone(),
+        line_type: node.style.line_type,
+        line_weight: node.style.line_weight,
+    })
+}
+
 fn recipe_of(doc: &Document, d: &RoadDrawingDef) -> RoadDrawingRecipe {
     let (_, present) = road_drawings::objects_stamp(doc, &d.uids);
     RoadDrawingRecipe {
@@ -93,6 +107,7 @@ fn recipe_of(doc: &Document, d: &RoadDrawingDef) -> RoadDrawingRecipe {
         digest: d.digest.clone(),
         made: d.version,
         revision: d.revision.clone(),
+        layer: recipe_layer(doc, d),
     }
 }
 

@@ -10,7 +10,8 @@ road_project_cases.py's (ADR 0911's rules, the stamps by hand); the graph is bui
 - then the tree's rows in its order; a drawing carries its recipe: its command, version 1, its input as kept (the main
   source by id), its objects written and there now (the objects' stamp is the command's: `$any`); a drawing a step
   drew keeps the version that drew it (1) and the revision its write made (docs/adr/2840): the revision a
-  `captureRevision` step takes right after the step that drew it, or drew it again;
+  `captureRevision` step takes right after the step that drew it, or drew it again; and (docs/adr/3640) its layer's
+  definition (id, name, colour, line type, line weight), as the setup's layer holds it;
 - edges: a surface's layers build it; a row is made on its parent in the tree (not a drawing: its sources say it); every
   source a drawing keeps, in the record's order, the first the main one, its stamp then and now (none: gone; a
   definition's stamp of its grades as KentOS holds them, road_grades.py, as the file is written); a sheet's
@@ -149,6 +150,24 @@ def layer_names(layers, out=None):
     return out
 
 
+def layer_nodes(layers, out=None):
+    out = {} if out is None else out
+    for n in layers:
+        out[n["id"]] = n
+        layer_nodes(n.get("children", []), out)
+    return out
+
+
+def layer_def(st, lid):
+    """Docs/adr/3640: the definition of the layer a drawing went on (id, name, colour, line type, line weight), as the
+    setup's layer holds it; none for a group or a layer not in the drawing."""
+    n = layer_nodes(st.setup["layers"]).get(lid)
+    if n is None or n.get("type", "layer") != "layer":
+        return None
+    s = n["style"]
+    return {"id": lid, "name": n["name"], "color": s["color"], "lineType": s["lineType"], "lineWeight": s["lineWeight"]}
+
+
 def layers_of(surface):
     out = []
     for lid in surface.get("points", {}).get("layers", []) + surface.get("breaklines", {}).get("layers", []):
@@ -186,6 +205,8 @@ def graph(st, deep=False, book_=None, boxes=None):
             # Docs/adr/2840: the version that drew it and the revision its write made, as its record keeps them.
             if "rev" in d:
                 g["recipe"].update({"made": 1, "revision": "$" + d["rev"]})
+            if (ld := layer_def(st, input_.get("layerId"))) is not None:
+                g["recipe"]["layer"] = ld
         nodes.append(g)
     edges = []
     for k, n in enumerate(tree["nodes"]):

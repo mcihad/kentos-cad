@@ -189,6 +189,26 @@ pub(crate) fn make_with(
     templates: &[kentos_commands::TemplateDef],
     points: bool,
 ) -> Result<Made, Stop> {
+    solve(doc, def, templates, points, &|_, _| false)
+}
+
+/// The parts of the whole a corridor's progress is told in (docs/adr/3640): a share per region, a section at a time.
+pub(crate) const TICKS: u64 = 1000;
+
+/// [`make`] telling `tick` how far it has come (`done` of `total`) before each section it solves; `tick` answering true
+/// stops it there, cancelled (docs/adr/3640: a job's stop heard between a corridor's sections, not only between the
+/// drawings).
+pub(crate) fn make_ticked(doc: &Document, def: &CorridorDef, points: bool, tick: &dyn Fn(u64, u64) -> bool) -> Result<Made, Stop> {
+    solve(doc, def, doc.road_templates(), points, tick)
+}
+
+fn solve(
+    doc: &Document,
+    def: &CorridorDef,
+    templates: &[kentos_commands::TemplateDef],
+    points: bool,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Made, Stop> {
     let built = alignment_of(doc, def)?;
     let length = built.core.length;
     let ranges: Vec<[f64; 2]> = def.regions.iter().map(|r| [r.from, r.to]).collect();
@@ -324,8 +344,15 @@ pub(crate) fn make_with(
             ),
             _ => bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.".into()),
         })?;
-        let mut sampled: Vec<(Station, Option<Cross>)> =
-            list.iter().map(|st| (*st, at(st.station))).collect();
+        // The region's sections, a share of the progress each; a stop heard between them (docs/adr/3640).
+        let whole = def.regions.len() as u64 * TICKS;
+        let mut sampled: Vec<(Station, Option<Cross>)> = Vec::with_capacity(list.len());
+        for (i, st) in list.iter().enumerate() {
+            if tick(ri as u64 * TICKS + i as u64 * TICKS / list.len() as u64, whole) {
+                return Err(Stop::Cancelled);
+            }
+            sampled.push((*st, at(st.station)));
+        }
         if let Some(r) = &def.refine {
             // The sections between measured and the stations refined (docs/adr/0939 §2), within the stations left.
             let tol = kentos_road::sampling::Tolerance { plan: r.plan, height: r.height, least: r.least };

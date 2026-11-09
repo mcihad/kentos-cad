@@ -113,7 +113,9 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-20, beşinci tur. Durum: taslak. ADR 2440
 
 ## Sonra
 
-- Katmanların da adla eşlenmesi ya da tarife katman tanımlarının (ad, stil) girmesi.
-- Bellek ve CPU bütçesi; bir çizimin kendi hesabının içinde durdurma (koridorun kesitleri arasında).
+- ~~Katmanların da adla eşlenmesi ya da tarife katman tanımlarının (ad, stil) girmesi.~~ ADR 3640 (ad, renk, çizgi türü,
+  kalınlık; grup ve tam stil açık).
+- Bellek ve CPU bütçesi; ~~bir çizimin kendi hesabının içinde durdurma (koridorun kesitleri arasında)~~ ADR 3640
+  (koridorun şevli planı).
 - Ölçüm arşivinin zincire bağlanması; atlas sayfalarının denetimi.
 - Web (TODOS §0.2).

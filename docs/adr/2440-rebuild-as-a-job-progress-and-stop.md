@@ -77,7 +77,7 @@ Tarih: 2026-11-08. plan/map-cad.md MAP-20, üçüncü tur. Durum: taslak. Plan s
 
 ## Sonra
 
-- Bellek ve CPU bütçesi; bir çizimin kendi hesabının içinde durdurma (koridorun kesitleri arasında).
+- Bellek ve CPU bütçesi; ~~bir çizimin kendi hesabının içinde durdurma (koridorun kesitleri arasında)~~ ADR 3640.
 - Çizim kaydında işlem sürümü ve çıktı revizyonu (`.kcad` şema 207).
 - ~~Tariften başka bir projede yeniden üretim.~~ ADR 3240 (Tariften üret).
 - Atlas sayfalarının denetimi.

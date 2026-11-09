@@ -6337,6 +6337,20 @@ RoadKindName = Literal["road", "footway", "cycleway"]
 """The names of :class:`RoadKind`, for a plain string."""
 
 
+class RoadLayerMatch(_StrEnum):
+    """How a recipe layer was found here (docs/adr/3640): `given` in `layers`, by its `name`, by its `id` (a recipe from
+    before, keeping no definition), or `created` with the recipe's look.
+    """
+    GIVEN = "given"
+    NAME = "name"
+    ID = "id"
+    CREATED = "created"
+
+
+RoadLayerMatchName = Literal["given", "name", "id", "created"]
+"""The names of :class:`RoadLayerMatch`, for a plain string."""
+
+
 class RoadNodeKind(_StrEnum):
     """What a row of the project tree is.
 
@@ -81044,6 +81058,7 @@ class RoadDrawingRecipe(_Model):
         version: Unit: version.
         written: Unit: count.
         objects: Unit: count.
+        layer: Its layer's definition (docs/adr/3640); none: a recipe from before, or its layer is gone (it goes by its id).
         made: The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209. Unit: version.
         revision: The drawing's revision its write made, as its record keeps it (docs/adr/2840).
     """
@@ -81053,6 +81068,7 @@ class RoadDrawingRecipe(_Model):
     written: int
     objects: int
     digest: str
+    layer: RoadRecipeLayer | None | Unset = UNSET
     made: int | None | Unset = UNSET
     revision: str | None | Unset = UNSET
 
@@ -81064,6 +81080,8 @@ class RoadDrawingRecipe(_Model):
         out["written"] = self.written
         out["objects"] = self.objects
         out["digest"] = self.digest
+        if self.layer is not UNSET:
+            out["layer"] = None if self.layer is None else self.layer.to_json()
         if self.made is not UNSET:
             out["made"] = self.made
         if self.revision is not UNSET:
@@ -81079,6 +81097,7 @@ class RoadDrawingRecipe(_Model):
             written=data["written"],
             objects=data["objects"],
             digest=data["digest"],
+            layer=UNSET if "layer" not in data else None if data["layer"] is None else RoadRecipeLayer.from_json(data["layer"]),
             made=data.get("made", UNSET),
             revision=data.get("revision", UNSET),
         )
@@ -81234,6 +81253,37 @@ class RoadNode(_Model):
             objects=data.get("objects", UNSET),
             parent=data.get("parent", UNSET),
             why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadProducedLayer(_Model):
+    """A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
+    it was found; in the order the drawings first use them.
+    """
+    from_: str
+    name: str
+    to: str
+    to_name: str
+    how: RoadLayerMatch | RoadLayerMatchName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["name"] = self.name
+        out["to"] = self.to
+        out["toName"] = self.to_name
+        out["how"] = _enum_out(self.how)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadProducedLayer:
+        return cls(
+            from_=data["from"],
+            name=data["name"],
+            to=data["to"],
+            to_name=data["toName"],
+            how=_enum_in(RoadLayerMatch, data["how"]),
         )
 
 
@@ -81631,17 +81681,23 @@ class RoadProjectGraphQuery(_Model):
 @dataclass(kw_only=True, slots=True)
 class RoadProjectProduce(_Model):
     """Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);
-    `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for.
+    `drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;
+    `layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the
+    Layer Translator); a layer not given goes by its name (Map Same) or is added.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,
     `file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one
     that draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the
-    recipe's); and a drawing command's own refusal (a source not in this project, a layer not here, gone or locked), the
-    recipe's drawing named in its words: nothing is written.
+    recipe's); `unknown_recipe_layer` (at `layers`: a key not a layer of the recipe's drawings), `layer_not_found`,
+    `not_a_layer`, `service_layer`, `layer_locked` (at `layers.<id>`: the layer given here); `ambiguous_recipe_layer`
+    (at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a
+    source not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is
+    written.
     """
     path: str
     drawings: list[str] | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -81650,6 +81706,8 @@ class RoadProjectProduce(_Model):
             out["drawings"] = None if self.drawings is None else list(self.drawings)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
         return out
 
     @classmethod
@@ -81658,6 +81716,7 @@ class RoadProjectProduce(_Model):
             path=data["path"],
             drawings=UNSET if "drawings" not in data else None if data["drawings"] is None else list(data["drawings"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
         )
 
 
@@ -81665,15 +81724,20 @@ class RoadProjectProduce(_Model):
 class RoadProjectProduced(_Model):
     """Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:
     this project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).
+    Attributes:
+        layers: The layers the produced drawings went on (docs/adr/3640).
     """
     produced: list[RoadDrawingProduced]
     revision: str
+    layers: list[RoadProducedLayer] | Unset = UNSET
     left: list[RoadDrawingLeft] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["produced"] = [e0.to_json() for e0 in self.produced]
         out["revision"] = self.revision
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
         return out
@@ -81683,6 +81747,7 @@ class RoadProjectProduced(_Model):
         return cls(
             produced=[RoadDrawingProduced.from_json(e0) for e0 in data["produced"]],
             revision=data["revision"],
+            layers=[RoadProducedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             left=[RoadDrawingLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
@@ -81807,6 +81872,40 @@ class RoadProjectTree(_Model):
             deep=data["deep"],
             auto_rebuild=data["autoRebuild"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RoadRecipeLayer(_Model):
+    """A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it
+    takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
+    `road.project.produce` finds the layer by this name; where none is, it adds one with this look.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    id: str
+    name: str
+    color: str
+    line_type: LineType | LineTypeName
+    line_weight: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["color"] = self.color
+        out["lineType"] = _enum_out(self.line_type)
+        out["lineWeight"] = float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RoadRecipeLayer:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            color=data["color"],
+            line_type=_enum_in(LineType, data["lineType"]),
+            line_weight=float(data["lineWeight"]),
         )
 
 
@@ -133257,11 +133356,14 @@ __all__ = [
     "RoadGraphNode",
     "RoadKind",
     "RoadKindName",
+    "RoadLayerMatch",
+    "RoadLayerMatchName",
     "RoadNode",
     "RoadNodeKind",
     "RoadNodeKindName",
     "RoadNodeState",
     "RoadNodeStateName",
+    "RoadProducedLayer",
     "RoadProducedSource",
     "RoadProfileLengths",
     "RoadProfileListed",
@@ -133278,6 +133380,7 @@ __all__ = [
     "RoadProjectRebuild",
     "RoadProjectRebuilt",
     "RoadProjectTree",
+    "RoadRecipeLayer",
     "RoadSettings",
     "RoadSheetDef",
     "RoadSheetLaid",

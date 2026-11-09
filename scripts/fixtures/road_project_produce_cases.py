@@ -17,7 +17,12 @@ rules, by hand:
 - named drawings are all drawn or none, a command's refusal with the recipe's drawing named; every drawing asked, one
   the command refuses here is left with its words (`refused`);
 - a recipe saved in a project of another system is warned; its inputs are taken as they are;
-- the file, the recipe and the names asked are checked before anything is drawn.
+- the file, the recipe and the names asked are checked before anything is drawn;
+- a drawing's layer (docs/adr/3640): the one `layers` gives for its recipe layer; else, the recipe keeping the layer's
+  definition, the one layer here of that name folded as Katmanları çevir folds it (I → ı, İ → i, then lower case;
+  two of them: asked, the drawing left or, named, refused), or one added last with the recipe's colour, line type and
+  weight, said as a warning and taken away again when no drawing went on it; a recipe from before, the layer's id. The
+  answer lists each recipe layer the produced drawings went on, in the order they first did, and how it was found.
 
 No KentOS code.
 
@@ -52,12 +57,38 @@ NOT_ROAD = {"status": "failed", "error": {"code": "not_a_road_project", "message
                                           "(KentOS Yol, KentOS Harita) olur; bu çizim ikisinden biri değil."}}
 
 
-def drawing(id_, inp, command=ZERO, version=1, objects=1):
-    return (id_, command, version, inp, objects)
+def drawing(id_, inp, command=ZERO, version=1, objects=1, layer=None):
+    return (id_, command, version, inp, objects, layer)
 
 
 TWO = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "sifir"}),
        drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "sifir"}, objects=2)]
+
+
+def walk(layers, out=None):
+    out = {} if out is None else out
+    for n in layers:
+        out[n["id"]] = n
+        walk(n.get("children", []), out)
+    return out
+
+
+# This project's layers by id (road_terrain_zeroline_cases.py's setup).
+LAYERS = walk(zc.setup(work="road")["layers"])
+
+
+def ldef(id_, name, color="#E5484D", line_type="continuous", weight=0.5):
+    """Docs/adr/3640: a recipe layer's definition, as İş grafiği writes it."""
+    return {"id": id_, "name": name, "color": color, "lineType": line_type, "lineWeight": weight}
+
+
+K7 = ldef("k-7", "Sıfır hattı")
+K9 = ldef("k-9", "Kazı sınırı", color="#2A9D8F", line_type="dashed", weight=0.35)
+K11 = ldef("k-11", "Ova sınırı", color="#264653", line_type="dotted", weight=0.18)
+TWO_K = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-7"}, layer=K7),
+         drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "k-7"}, objects=2, layer=K7)]
+TWO_NEW = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-9"}, layer=K9),
+           drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "k-9"}, objects=2, layer=K9)]
 
 
 def recipe(drawings, sources=SOURCES, epsg="EPSG:5254", system="TUREF / TM30"):
@@ -65,11 +96,13 @@ def recipe(drawings, sources=SOURCES, epsg="EPSG:5254", system="TUREF / TM30"):
     their sources' edges (the main one first, its stamp then and now)."""
     nodes = [{"kind": "surface", "id": sid, "name": name, "state": "current"} for sid, name in sources]
     edges = []
-    for id_, command, version, inp, objects in drawings:
+    for id_, command, version, inp, objects, layer in drawings:
         k = len(nodes)
         nodes.append({"kind": "drawing", "id": id_, "name": WORDS.get(command, "Yol çizimi"), "state": "current",
                       "recipe": {"command": command, "version": version, "input": inp, "written": objects,
                                  "objects": objects, "digest": "0123456789abcdef", "made": 1, "revision": "7"}})
+        if layer is not None:
+            nodes[-1]["recipe"]["layer"] = layer
         for field, main in (("base", True), ("comparison", False)):
             at = next((i for i, n in enumerate(nodes[:len(sources)]) if n["id"] == inp.get(field)), None)
             if at is not None:
@@ -104,6 +137,17 @@ FILES = {
     "baska-surum.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "sifir"}, version=2)]),
     "cizimsiz.json": recipe([]),
     "tarif-degil.json": {"format": "kentos.field-package", "version": 1},
+    # Docs/adr/3640: recipes keeping their layers' definitions.
+    "katman-adli.json": recipe(TWO_K),
+    "katman-buyuk-harfli.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-7"},
+                                                layer=dict(K7, name="SIFIR HATTI"))]),
+    "katman-kimligi-cakisan.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "drenaj"},
+                                                   layer=dict(K7, id="drenaj"))]),
+    "yeni-katmanli.json": recipe(TWO_NEW),
+    "yeni-katmanli-eksik.json": recipe(TWO_K + [drawing("cz-3", {"base": "a-1", "comparison": "a-5", "layerId": "k-11"},
+                                                        layer=K11)], sources=SOURCES + [("a-1", "Ova")]),
+    "tanimi-tutmayan.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-7"},
+                                            layer=dict(K7, id="k-8"))]),
 }
 
 
@@ -157,18 +201,40 @@ def both(written=True, first="cz-1", second="cz-2"):
     return [produced("cz-1", first, "Düz", "Tümsek", written), produced("cz-2", second, "Teras", "Set", written)]
 
 
+def went(from_, to=None, how="id", name=None, to_name=None):
+    """Docs/adr/3640: a recipe layer the produced drawings went on: its id and name in the recipe (a recipe from before:
+    the layer's name here), the layer here (its name: the setup's, else `to_name`) and how it was found."""
+    to = from_ if to is None else to
+    here = to_name if to_name is not None else LAYERS[to]["name"]
+    return {"from": from_, "name": here if name is None else name, "to": to, "toName": here, "how": how}
+
+
+SIFIR = [went("sifir")]
+CREATED = {"code": "recipe_layer_created", "message": "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki "
+           "tanımıyla (renk, çizgi türü, kalınlık) eklendi.", "path": "layers"}
+
+
+def doubled():
+    """The project with a second layer of the zero line's name (folded the same): which one is asked."""
+    s = zc.setup(work="road")
+    twin = copy.deepcopy(next(n for n in s["layers"] if n["id"] == "sifir"))
+    twin.update({"id": "sifir-2", "name": "SIFIR HATTI"})
+    s["layers"].append(twin)
+    return s
+
+
 def cases():
     out = []
     path = fx("sifir-hatlari.json")
-    two = {"produced": both(), "revision": "$current"}
+    two = {"produced": both(), "layers": SIFIR, "revision": "$current"}
     out.append(case("Tarifin iki sıfır hattı bu projede: kaynaklar adlarıyla", step({"path": path}, done(two)),
                     note="a-5 Düz → t-5, a-10 Tümsek → t-10 (bir kapalı çizgi); a-6 Teras → t-6, Set adıyla (iki açık "
                          "çizgi)"))
-    out.append(case("Plan yazmaz", step({"path": path}, done({"produced": both(False), "revision": "$current"}),
-                                       op="plan")))
+    out.append(case("Plan yazmaz", step({"path": path}, done({"produced": both(False), "layers": SIFIR,
+                                                             "revision": "$current"}), op="plan")))
     out.append(case("Doğrulama yazmaz", step({"path": path}, done(None), op="validate")))
     out.append(case("Yalnız biri", step({"path": path, "drawings": ["cz-2"]},
-                                       done({"produced": [produced("cz-2", "cz-1", "Teras", "Set")],
+                                       done({"produced": [produced("cz-2", "cz-1", "Teras", "Set")], "layers": SIFIR,
                                              "revision": "$current"}))))
     left_both = [{"drawing": "cz-1", "why": "exists", "message": EXISTS},
                  {"drawing": "cz-2", "why": "exists", "message": EXISTS}]
@@ -179,17 +245,17 @@ def cases():
               "result": {"status": "completed", "output": ANY, "warnings": []}}
     out.append(case("Projede aynı çizim var: bırakılır, öbürü üretilir", direct,
                     step({"path": path}, done({"produced": [produced("cz-2", "cz-2", "Teras", "Set")],
-                                               "left": [left_both[0]], "revision": "$current"}))))
+                                               "left": [left_both[0]], "layers": SIFIR, "revision": "$current"}))))
     elsewhere = dict(direct, input={"base": "Düz", "comparison": "Tümsek", "layerId": "drenaj"})
     out.append(case("Başka katmandaki aynı çizim: yine üretilir", elsewhere,
-                    step({"path": path}, done({"produced": both(first="cz-2", second="cz-3"),
+                    step({"path": path}, done({"produced": both(first="cz-2", second="cz-3"), "layers": SIFIR,
                                                "revision": "$current"}))))
     out.append(case("Tarifin katmanı başka: o katmana", step({"path": fx("baska-katmanli.json")},
                                                          done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
-                                                               "revision": "$current"}))))
+                                                               "layers": [went("drenaj")], "revision": "$current"}))))
     out.append(case("Harita projesinde de", step({"path": path, "drawings": ["cz-1"]},
                                                  done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
-                                                       "revision": "$current"})), setup="$harita"))
+                                                       "layers": SIFIR, "revision": "$current"})), setup="$harita"))
     other = {"code": "recipe_other_system", "message": "Tarif TUREF / TM36 (EPSG:5256) projesinde kaydedilmiş; bu proje "
              "TUREF / TM30 (EPSG:5254). Girdiler aynen alınır.", "path": "path"}
     out.append(case("Başka sistemde kaydedilmiş tarif: uyarıyla", step({"path": fx("baska-sistem.json")},
@@ -200,16 +266,17 @@ def cases():
                                                                      done(two, [local]))))
     out.append(case("Tarifin kimlikleri bu projede başka yüzeylerin: adlar seçer",
                     step({"path": fx("kimlik-cakisan.json")},
-                         done({"produced": [produced("cz-1", "cz-1", "Teras", "Set")], "revision": "$current"})),
+                         done({"produced": [produced("cz-1", "cz-1", "Teras", "Set")], "layers": SIFIR,
+                               "revision": "$current"})),
                     note="tarifte t-5 Teras, t-9 Set; burada t-5 Düz: kimlikle çizilseydi Düz ile Set"))
     out.append(case("Adlar büyük küçük harf farkıyla", step({"path": fx("buyuk-harfli.json")},
                                                          done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
-                                                               "revision": "$current"}))))
+                                                               "layers": SIFIR, "revision": "$current"}))))
     ova = "“Ova” kimlikli ya da adlı yüzey projede yok."
     out.append(case("Bütün çizimler: projede olmayan yüzeyin çizimi bırakılır",
                     step({"path": fx("eksik-kaynakli.json")},
                          done({"produced": both(), "left": [{"drawing": "cz-3", "why": "refused", "message": ova}],
-                               "revision": "$current"}))))
+                               "layers": SIFIR, "revision": "$current"}))))
     out.append(case("Adıyla istenen çizimin yüzeyi projede yok: ret",
                     step({"path": fx("eksik-kaynakli.json"), "drawings": ["cz-1", "cz-3"]},
                          failed("unknown_terrain", f"Tarifin “cz-3” çizimi (Sıfır hattı): {ova}", "base"))))
@@ -222,17 +289,19 @@ def cases():
                          done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
                                "left": [{"drawing": "cz-4", "why": "refused", "message": "“sifir-a” kimlikli katman "
                                          "çizimde yok. Var olan bir katmanın kimliğini verin."}],
-                               "revision": "$current"}))))
+                               "layers": SIFIR, "revision": "$current"}))))
     hidden = {"code": "layer_hidden", "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.", "path": "layerId"}
     out.append(case("Gizli katmana: komutun uyarısıyla", step({"path": fx("gizli-katmanli.json")},
                                                           done({"produced": [produced("cz-1", "cz-1", "Teras", "Set")],
-                                                                "revision": "$current"}, [hidden]))))
+                                                                "layers": [went("gizli")], "revision": "$current"},
+                                                               [hidden]))))
     out.append(case("Adıyla istenen çizimin katmanı kilitli: ret",
                     step({"path": fx("kilitli-katmanli.json"), "drawings": ["cz-1"]},
                          failed("layer_locked", "Tarifin “cz-1” çizimi (Sıfır hattı): “Kilitli” katmanı kilitli. Kilidi "
                                 "Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.", "layerId"))))
     out.append(case("Adıyla istenen çizimin katmanı bir grup: ret",
                     step({"path": fx("grup-katmanli.json"), "drawings": ["cz-1"]}, failed("not_a_layer", ANY, "layerId"))))
+    out += layer_cases()
     # The file and the recipe.
     out.append(case("Tarifte olmayan çizim", step({"path": path, "drawings": ["cz-9"]},
                                                  failed("unknown_drawing", "Tarifte “cz-9” kimlikli çizim yok.",
@@ -262,6 +331,84 @@ def cases():
     return out
 
 
+def layer_cases():
+    """Docs/adr/3640: the recipe's layers by their definitions: by name, added, asked, given."""
+    out = []
+    named = fx("katman-adli.json")
+    by_name = [went("k-7", "sifir", "name", "Sıfır hattı")]
+    out.append(case("Katman adıyla: tarifin kimliği başka", step({"path": named},
+                                                              done({"produced": both(), "layers": by_name,
+                                                                    "revision": "$current"})),
+                    note="tarifte k-7 “Sıfır hattı”; burada sifir"))
+    out.append(case("Katman adı Türkçe büyük harflerle", step({"path": fx("katman-buyuk-harfli.json")},
+                                                           done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                                                                 "layers": [went("k-7", "sifir", "name", "SIFIR HATTI")],
+                                                                 "revision": "$current"})),
+                    note="“SIFIR HATTI” katlanınca “sıfır hattı” (I → ı)"))
+    out.append(case("Katmanın kimliği bu projede başka katmanın: ad seçer",
+                    step({"path": fx("katman-kimligi-cakisan.json")},
+                         done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                               "layers": [went("drenaj", "sifir", "name", "Sıfır hattı")], "revision": "$current"})),
+                    note="tarifte drenaj “Sıfır hattı”; burada drenaj Drenaj: kimlikle çizilseydi Drenaj'a"))
+    new = fx("yeni-katmanli.json")
+    created = [went("k-9", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı")]
+    left_both = [{"drawing": "cz-1", "why": "exists", "message": EXISTS},
+                 {"drawing": "cz-2", "why": "exists", "message": EXISTS}]
+    out.append(case("Projede olmayan katman tarifteki tanımıyla eklenir; ikinci kez adıyla bulunur",
+                    step({"path": new}, done({"produced": both(), "layers": created, "revision": "$current"},
+                                             [CREATED])),
+                    step({"path": new}, done({"produced": [], "left": left_both, "revision": "$current"}),
+                         expect=SAME)))
+    out.append(case("Plan eklenecek katmanı söyler, yazmaz",
+                    step({"path": new}, done({"produced": both(False), "layers": created, "revision": "$current"},
+                                             [CREATED]), op="plan")))
+    ova = "“Ova” kimlikli ya da adlı yüzey projede yok."
+    out.append(case("Bütün çizimler: eklenen katmana çizilemeyen çizim bırakılır, katman geri alınır",
+                    step({"path": fx("yeni-katmanli-eksik.json")},
+                         done({"produced": both(), "left": [{"drawing": "cz-3", "why": "refused", "message": ova}],
+                               "layers": by_name, "revision": "$current"}))))
+    out.append(case("Adıyla istenen, eklenecek katmanlı çizimin yüzeyi yok: ret, katman da eklenmez",
+                    step({"path": fx("yeni-katmanli-eksik.json"), "drawings": ["cz-3"]},
+                         failed("unknown_terrain", f"Tarifin “cz-3” çizimi (Sıfır hattı): {ova}", "base"))))
+    twice = ("Projede “Sıfır hattı” adlı 2 katman var (sifir, sifir-2); tarifin katmanının hangisi olduğunu layers ile "
+             "verin.")
+    out.append(case("Aynı adlı iki katman: bütün çizimlerde bırakılır",
+                    step({"path": named}, done({"produced": [], "left": [
+                        {"drawing": "cz-1", "why": "refused", "message": twice},
+                        {"drawing": "cz-2", "why": "refused", "message": twice}], "revision": "$current"}),
+                         expect=SAME), setup="$cift"))
+    out.append(case("Aynı adlı iki katman, adıyla istenen çizim: ret",
+                    step({"path": named, "drawings": ["cz-1"]},
+                         failed("ambiguous_recipe_layer", f"Tarifin “cz-1” çizimi (Sıfır hattı): {twice}", "layers")),
+                    setup="$cift"))
+    out.append(case("Aynı adlı iki katman: layers ile verilen",
+                    step({"path": named, "layers": {"k-7": "sifir-2"}},
+                         done({"produced": both(), "layers": [went("k-7", "sifir-2", "given", "Sıfır hattı",
+                                                                   to_name="SIFIR HATTI")],
+                               "revision": "$current"})), setup="$cift"))
+    out.append(case("Verilen katman adıyla bulunandan önce gelir",
+                    step({"path": named, "layers": {"k-7": "drenaj"}},
+                         done({"produced": both(), "layers": [went("k-7", "drenaj", "given", "Sıfır hattı")],
+                               "revision": "$current"}))))
+    out.append(case("layers'ta tarifte olmayan katman",
+                    step({"path": named, "layers": {"zz": "sifir"}},
+                         failed("unknown_recipe_layer", "Tarifte “zz” kimlikli katmana çizilen çizim yok; layers'ın "
+                                "anahtarı tarifin bir katmanı olmalı.", "layers"))))
+    out.append(case("layers'ta projede olmayan katman",
+                    step({"path": named, "layers": {"k-7": "yok"}},
+                         failed("layer_not_found", "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini "
+                                "verin.", "layers.k-7"))))
+    out.append(case("layers'ta kilitli katman",
+                    step({"path": named, "layers": {"k-7": "kilitli"}},
+                         failed("layer_locked", "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka "
+                                "bir katmanı etkinleştirin.", "layers.k-7"))))
+    out.append(case("Tarifin katman tanımı girdisinin katmanı değil",
+                    step({"path": fx("tanimi-tutmayan.json")},
+                         failed("invalid_project_recipe", "Tarifteki “cz-1” çiziminin katman tanımı (k-8) girdisinin "
+                                "katmanı (k-7) değil.", "path"))))
+    return out
+
+
 def main():
     found = cases()
     for c in found:
@@ -269,9 +416,11 @@ def main():
             c["setup"] = zc.setup(work="architecture")
         elif c.get("setup") == "$harita":
             c["setup"] = zc.setup(work="map")
+        elif c.get("setup") == "$cift":
+            c["setup"] = doubled()
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.project.produce", "commandVersion": 1,
            "title": "Tariften üret",
-           "note": "ADR 3240. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
+           "note": "ADR 3240, 3640. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
                    "graf biçimi) fixtures/recipes/v1 altında elle yazılır; sıfır hatlarının çizgi sayısı "
                    "road_terrain_zeroline_cases.py'den; KentOS kodu yok.",
            "setup": zc.setup(work="road"), "cases": found}

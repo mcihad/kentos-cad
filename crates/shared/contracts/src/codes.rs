@@ -942,6 +942,12 @@ codes! {
     /// A warning: the recipe was saved in a project of another coordinate system; its inputs are taken as they are
     /// (docs/adr/3240).
     RECIPE_OTHER_SYSTEM = "recipe_other_system", Warning, false, "Tarif başka koordinat sistemindeki bir projede kaydedilmiş.";
+    /// `layers` names a layer no drawing of the recipe goes on (docs/adr/3640).
+    UNKNOWN_RECIPE_LAYER = "unknown_recipe_layer", Failed, false, "layers'ın anahtarı tarifteki çizimlerin bir katmanı değil.";
+    /// A recipe layer's name held by more than one layer of this project: which one is given in `layers` (docs/adr/3640).
+    AMBIGUOUS_RECIPE_LAYER = "ambiguous_recipe_layer", Failed, false, "Tarifin katmanının adı bu projede birden çok katmanda var; layers ile hangisi olduğunu verin.";
+    /// A warning: a recipe layer this project has none of by its name was added with the recipe's look (docs/adr/3640).
+    RECIPE_LAYER_CREATED = "recipe_layer_created", Warning, false, "Tarifin katmanı bu projede yoktu; tarifteki tanımıyla eklendi.";
     /// A road drawing changed by hand: named without `edited` it is refused; drawn again by itself it is left, said as a
     /// warning (docs/adr/0911 §3).
     DRAWING_EDITED = "drawing_edited", Failed, false, "Yol çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.";

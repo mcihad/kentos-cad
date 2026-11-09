@@ -185,6 +185,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   komut başsız).
 - MAP-19 / ADR 3620: `cad.asbuilt.check`'in web işleyicisinde `kind` ve `control` (62 ortak durum) ve web'in Uygulama
   kontrolü penceresinde İş türü, izleme formu (Bu dönem, Önceki dönem, Kontrol noktaları) ve hareket sözleriyle tablo.
+- MAP-20 / ADR 3640: web'in `road.project.graph` işleyicisinde tarifin `layer`'ı, `road.project.produce`'unda `layers`
+  (verilen, adıyla, eklenen; 46 ortak durum) ve web'in İş grafiği'nde Tariften üret önizlemesi; koridor çözümünün web
+  işinde kesitler arasında durdurma.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

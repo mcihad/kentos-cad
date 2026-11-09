@@ -6,23 +6,28 @@
 //! layer) is left: `road.project.rebuild` draws it again. Named drawings are all drawn or none (a command's refusal,
 //! the recipe's drawing named in its words); every drawing asked, one that does not draw here is left with the
 //! command's words. Each drawing is kept as a drawing of this project; the progress goes a drawing at a time and a stop
-//! is heard between them (docs/adr/2440). The shared cases are `fixtures/commands/v1/road.project.produce.json`.
+//! is heard between them (docs/adr/2440). A drawing's layer (docs/adr/3640): the one `layers` gives for its recipe
+//! layer; else, the recipe keeping the layer's definition, the layer of that name here (folded, as Katmanları çevir
+//! finds a standard layer; two of them: which one is asked), or one added with the recipe's look (kept only when a
+//! drawing went on it); a recipe from before, by the layer's id. The shared cases are
+//! `fixtures/commands/v1/road.project.produce.json`.
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, RoadDrawingLeft, RoadDrawingProduced, RoadGraphKind as G, RoadProducedSource,
-    RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
+    CommandResult, CommandWarning, RoadDrawingLeft, RoadDrawingProduced, RoadGraphKind as G,
+    RoadLayerMatch, RoadProducedLayer, RoadProducedSource, RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
+    RoadRecipeLayer, fold_name,
 };
-use kentos_domain::Document;
+use kentos_domain::{Document, NewLayer, default_style};
 use serde_json::Value;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::road_drawings;
-use crate::road_project_rebuild::run_drawing;
+use crate::road_project_rebuild::{in_share, run_drawing};
 use crate::trim::relay;
 
 /// The input's field a layer goes by: it stays as the recipe keeps it.
@@ -32,18 +37,57 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
-/// A recipe's drawing to draw here: its id in the recipe, its command, its input with the recipe's sources by name.
+/// A recipe's drawing to draw here: its id in the recipe, its command, its input with the recipe's sources by name; its
+/// layer's id in the recipe and the layer's definition the recipe keeps (docs/adr/3640).
 struct Wanted {
     from: String,
     command: String,
     input: BTreeMap<String, Value>,
+    layer_from: Option<String>,
+    layer: Option<RoadRecipeLayer>,
 }
 
 struct Asked {
     wanted: Vec<Wanted>,
     /// Drawings named: a command's refusal refuses them all; none named, the drawing is left with its words.
     named: bool,
+    /// The layers given: a recipe layer's id → this project's (docs/adr/3640).
+    given: BTreeMap<String, String>,
     warnings: Vec<CommandWarning>,
+}
+
+/// Where a recipe drawing's layer is here (docs/adr/3640).
+enum Place {
+    Here(String, RoadLayerMatch),
+    /// No layer of its name: one is added with the recipe's look.
+    Create(RoadRecipeLayer),
+    /// More than one layer of its name: their ids.
+    Ambiguous(String, Vec<String>),
+}
+
+/// Where `w`'s layer is here: given; by the recipe's definition, the layer of its name (folded), or to be added; a
+/// recipe from before, its id. None: the drawing's input names no layer.
+fn place(doc: &Document, w: &Wanted, given: &BTreeMap<String, String>) -> Option<Place> {
+    let from = w.layer_from.as_deref()?;
+    if let Some(to) = given.get(from) {
+        return Some(Place::Here(to.clone(), RoadLayerMatch::Given));
+    }
+    let Some(def) = &w.layer else { return Some(Place::Here(from.to_owned(), RoadLayerMatch::Id)) };
+    let want = fold_name(def.name.trim());
+    let hits: Vec<String> =
+        doc.layers().leaves().into_iter().filter(|n| fold_name(n.name.trim()) == want).map(|n| n.id.clone()).collect();
+    Some(match hits.len() {
+        0 => Place::Create(def.clone()),
+        1 => Place::Here(hits[0].clone(), RoadLayerMatch::Name),
+        _ => Place::Ambiguous(def.name.clone(), hits),
+    })
+}
+
+/// `input` with its layer `id`.
+fn on_layer(input: &BTreeMap<String, Value>, id: &str) -> BTreeMap<String, Value> {
+    let mut out = input.clone();
+    out.insert(LAYER.to_owned(), Value::String(id.to_owned()));
+    out
 }
 
 /// The kinds of a recipe's nodes whose ids a drawing's input names its sources by.
@@ -164,7 +208,38 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
             .iter()
             .map(|(k, v)| (k.clone(), if k == LAYER { v.clone() } else { by_name(v.clone(), &names) }))
             .collect();
-        wanted.push(Wanted { from: id.to_owned(), command: r.command.clone(), input });
+        let layer_from = r.input.get(LAYER).and_then(Value::as_str).map(str::to_owned);
+        if let Some(def) = &r.layer
+            && layer_from.as_deref() != Some(def.id.as_str())
+        {
+            return Err(refuse(
+                codes::INVALID_PROJECT_RECIPE,
+                format!(
+                    "Tarifteki “{id}” çiziminin katman tanımı ({}) girdisinin katmanı ({}) değil.",
+                    def.id,
+                    layer_from.as_deref().unwrap_or("yok")
+                ),
+                "path",
+            ));
+        }
+        wanted.push(Wanted { from: id.to_owned(), command: r.command.clone(), input, layer_from, layer: r.layer.clone() });
+    }
+    // The layers given (docs/adr/3640): each a layer of the recipe's drawings, each a layer here that takes objects.
+    let theirs: Vec<&str> = graph
+        .nodes
+        .iter()
+        .filter_map(|n| n.recipe.as_ref())
+        .filter_map(|r| r.input.get(LAYER).and_then(Value::as_str))
+        .collect();
+    for (from, to) in &input.layers {
+        if !theirs.contains(&from.as_str()) {
+            return Err(refuse(
+                codes::UNKNOWN_RECIPE_LAYER,
+                format!("Tarifte “{from}” kimlikli katmana çizilen çizim yok; layers'ın anahtarı tarifin bir katmanı olmalı."),
+                "layers",
+            ));
+        }
+        checks::layer_at(doc, to, &format!("layers.{from}"))?;
     }
     let mut warnings = Vec::new();
     let settings = doc.settings();
@@ -182,15 +257,16 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
             path: Some("path".into()),
         });
     }
-    Ok(Asked { wanted, named: input.drawings.is_some(), warnings })
+    Ok(Asked { wanted, named: input.drawings.is_some(), given: input.layers.clone(), warnings })
 }
 
-/// Whether the project has the drawing: the same command from the same main source on the same layer.
-fn exists(doc: &Document, w: &Wanted, field: &str, main: &str) -> bool {
-    let layer = w.input.get(LAYER);
+/// Whether the project has the drawing: the same command from the same main source on the same layer (`input`'s, the
+/// layer found here).
+fn exists(doc: &Document, command: &str, input: &BTreeMap<String, Value>, field: &str, main: &str) -> bool {
+    let layer = input.get(LAYER);
     doc.road_drawings()
         .iter()
-        .any(|d| d.command == w.command && d.input.get(field).and_then(Value::as_str) == Some(main) && d.input.get(LAYER) == layer)
+        .any(|d| d.command == command && d.input.get(field).and_then(Value::as_str) == Some(main) && d.input.get(LAYER) == layer)
 }
 
 /// A command's refusal with the recipe's drawing named in its words.
@@ -213,6 +289,9 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
     let mut left = Vec::new();
     let mut warnings = asked.warnings;
     let mut stepped = false;
+    // The layers the drawings went on, and those added here with whether a drawing went on them (docs/adr/3640).
+    let mut layers: Vec<RoadProducedLayer> = Vec::new();
+    let mut added: Vec<(String, String, bool)> = Vec::new();
     let total = asked.wanted.len() as u64;
     for (k, w) in asked.wanted.iter().enumerate() {
         cx.progress(k as u64, total);
@@ -221,9 +300,50 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
         }
         let Some(main) = road_drawings::main_of(&w.command) else { continue };
         let words = crate::road_project::drawing_words(&w.command);
-        let text = w.input.get(main.1).and_then(Value::as_str).unwrap_or_default();
+        // The drawing's layer here: found, to be added, or asked (two of its name).
+        let (input, found) = match place(cx.doc, w, &asked.given) {
+            None => (w.input.clone(), None),
+            Some(Place::Here(id, how)) => (on_layer(&w.input, &id), Some((id, how))),
+            Some(Place::Create(def)) => {
+                if !stepped {
+                    cx.doc.name_step("Tariften üret");
+                    stepped = true;
+                }
+                let mut new = NewLayer::layer(def.name.trim());
+                new.style = kentos_commands::LayerStyle {
+                    color: def.color.clone(),
+                    line_type: def.line_type,
+                    line_weight: def.line_weight,
+                    ..default_style()
+                };
+                match cx.doc.add_layer_at(new, None, None, Some("Tariften üret"), false) {
+                    Ok(id) => {
+                        added.push((id.clone(), def.name.trim().to_owned(), false));
+                        (on_layer(&w.input, &id), Some((id, RoadLayerMatch::Created)))
+                    }
+                    Err(r) => return Stop::failed(error(codes::LAYER_REFUSED, r.0, Some("layers".into()))).into(),
+                }
+            }
+            Some(Place::Ambiguous(name, ids)) => {
+                let message = format!(
+                    "Projede “{name}” adlı {} katman var ({}); tarifin katmanının hangisi olduğunu layers ile verin.",
+                    ids.len(),
+                    ids.join(", ")
+                );
+                if asked.named {
+                    return relay(naming(
+                        Stop::failed(error(codes::AMBIGUOUS_RECIPE_LAYER, message, Some("layers".into()))).into(),
+                        &w.from,
+                        words,
+                    ));
+                }
+                left.push(RoadDrawingLeft { drawing: w.from.clone(), why: "refused".into(), message });
+                continue;
+            }
+        };
+        let text = input.get(main.1).and_then(Value::as_str).unwrap_or_default();
         let here = road_drawings::resolve(cx.doc, main.0, text);
-        if here.as_deref().is_some_and(|id| exists(cx.doc, w, main.1, id)) {
+        if here.as_deref().is_some_and(|id| exists(cx.doc, &w.command, &input, main.1, id)) {
             left.push(RoadDrawingLeft {
                 drawing: w.from.clone(),
                 why: "exists".into(),
@@ -235,9 +355,21 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             cx.doc.name_step("Tariften üret");
             stepped = true;
         }
-        match run_drawing(cx, &w.from, &w.command, &w.input, &[]) {
+        match in_share(cx, k as u64, total, |cx| run_drawing(cx, &w.from, &w.command, &input, &[])) {
             Ok((uids, said)) => {
-                let drawing = match road_drawings::keep(cx.doc, &w.command, &w.input, main, &uids, None) {
+                if let Some((id, how)) = found {
+                    if let Some(a) = added.iter_mut().find(|a| a.0 == id) {
+                        a.2 = true;
+                    }
+                    let from = w.layer_from.clone().unwrap_or_default();
+                    if !layers.iter().any(|l| l.from == from) {
+                        // A recipe from before keeps no name: the layer's here.
+                        let to_name = cx.doc.layers().get(&id).map(|n| n.name.clone()).unwrap_or_default();
+                        let name = w.layer.as_ref().map_or_else(|| to_name.clone(), |d| d.name.clone());
+                        layers.push(RoadProducedLayer { from, name, to: id, to_name, how });
+                    }
+                }
+                let drawing = match road_drawings::keep(cx.doc, &w.command, &input, main, &uids, None) {
                     Ok(d) => d,
                     Err(stop) => return stop.into(),
                 };
@@ -262,8 +394,23 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             },
         }
     }
+    // A layer added for drawings none of which went on it is taken away again; one kept is said (docs/adr/3640).
+    for (id, name, used) in added {
+        if used {
+            warnings.push(CommandWarning {
+                code: codes::RECIPE_LAYER_CREATED.into(),
+                message: format!("Tarifin “{name}” katmanı bu projede yoktu; tarifteki tanımıyla (renk, çizgi türü, kalınlık) eklendi."),
+                path: Some("layers".into()),
+            });
+        } else {
+            let _ = cx.doc.remove_layer(&id);
+        }
+    }
     cx.progress(total, total);
-    CommandResult::Completed { output: RoadProjectProduced { produced, left, revision: cx.doc.revision().to_string() }, warnings }
+    CommandResult::Completed {
+        output: RoadProjectProduced { produced, left, layers, revision: cx.doc.revision().to_string() },
+        warnings,
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
@@ -316,7 +463,7 @@ mod tests {
         let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = Document::from_snapshot_v2(snapshot).expect("opens");
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/recipes/v1/sifir-hatlari.json");
-        (doc, RoadProjectProduce { path: path.display().to_string(), drawings: None, expected_revision: None })
+        (doc, RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: Default::default(), expected_revision: None })
     }
 
     /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.

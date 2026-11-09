@@ -25021,7 +25021,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -37638,7 +37645,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -50280,7 +50294,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r2"
+          "revision": "$r2",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -62898,7 +62919,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r2"
+          "revision": "$r2",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -75501,7 +75529,14 @@
           "objects": 0,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -88106,7 +88141,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -100708,7 +100750,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -125683,7 +125732,14 @@
           "objects": 1,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "sifir",
+           "name": "Sıfır hattı",
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.5
+          }
          }
         },
         {
@@ -191233,7 +191289,14 @@
           "objects": 134,
           "digest": "$any",
           "made": 1,
-          "revision": "$r2"
+          "revision": "$r2",
+          "layer": {
+           "id": "0",
+           "name": "0",
+           "color": "ink",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          }
          }
         },
         {
@@ -191360,7 +191423,14 @@
           "objects": 293,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "0",
+           "name": "0",
+           "color": "ink",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          }
          }
         },
         {
@@ -194292,7 +194362,14 @@
           "objects": 293,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "0",
+           "name": "0",
+           "color": "ink",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          }
          }
         },
         {
@@ -197291,7 +197368,14 @@
           "objects": 4,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "korkuluk",
+           "name": "Korkuluk",
+           "color": "ink",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          }
          }
         }
        ],
@@ -200091,7 +200175,14 @@
           "objects": 2,
           "digest": "$any",
           "made": 1,
-          "revision": "$r1"
+          "revision": "$r1",
+          "layer": {
+           "id": "korkuluk",
+           "name": "Korkuluk",
+           "color": "ink",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          }
          }
         },
         {

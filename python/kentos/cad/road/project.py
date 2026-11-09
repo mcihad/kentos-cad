@@ -266,18 +266,26 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
     bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla
     (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir;
     girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit,
-    koridor…) bu projede adıyla bulunur, katman kimliğiyle kalır. Projede aynı komutla,
-    aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır
-    (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler
-    (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi
-    iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada
-    çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin
-    çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje
-    ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında
-    duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş;
-    girdiler aynen alınır) ve çizim komutlarının uyarıları. Retler: invalid_revision,
-    revision_conflict, not_a_road_project, invalid_file_path, file_not_found,
-    invalid_project_recipe, unknown_drawing ve çizim komutlarının retleri.
+    koridor…) bu projede adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin
+    katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa
+    burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane
+    ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman
+    (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın
+    layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id,
+    created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş
+    çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in).
+    drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri:
+    komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır;
+    verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
+    sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
+    nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
+    çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
+    başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
+    (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
+    file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
+    ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
+    service_layer, layer_locked'u ve çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.produce"
@@ -296,6 +304,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         path: str,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layers: Mapping[str, str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProjectProduced:
@@ -304,24 +313,33 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un
         çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin
         projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede
-        adıyla bulunur, katman kimliğiyle kalır. Projede aynı komutla, aynı ana kaynaktan,
-        aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi
-        road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki
-        kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak
-        bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te
-        refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir
-        (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak
-        ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar:
-        recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen
-        alınır) ve çizim komutlarının uyarıları. Retler: invalid_revision,
+        adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin katmanına verdiği bu
+        projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman
+        (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da
+        tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona
+        çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın layers'ı çizimlerin
+        gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler.
+        Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim
+        left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse
+        yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi,
+        tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün
+        çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her
+        çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş
+        grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma
+        çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki
+        projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı
+        tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision,
         revision_conflict, not_a_road_project, invalid_file_path, file_not_found,
-        invalid_project_recipe, unknown_drawing ve çizim komutlarının retleri.
+        invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
+        ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
+        service_layer, layer_locked'u ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.
             path:
             drawings:
             expected_revision:
+            layers:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -338,6 +356,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
             path=path,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
+            layers=_opt(layers, lambda x: dict(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -348,6 +367,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         path: str,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layers: Mapping[str, str] | Unset = UNSET,
     ) -> RoadProjectProduced:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -356,6 +376,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
             path=path,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
+            layers=_opt(layers, lambda x: dict(x)),
         ))
 
     def validate(
@@ -366,6 +387,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         path: str,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layers: Mapping[str, str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -374,6 +396,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
             path=path,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
+            layers=_opt(layers, lambda x: dict(x)),
         ))
 
     def answer(
@@ -384,6 +407,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         path: str,
         drawings: Sequence[str] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        layers: Mapping[str, str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -397,6 +421,7 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
             path=path,
             drawings=_opt(drawings, lambda x: list(x)),
             expected_revision=expected_revision,
+            layers=_opt(layers, lambda x: dict(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

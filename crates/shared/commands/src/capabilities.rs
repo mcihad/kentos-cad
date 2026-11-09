@@ -2431,15 +2431,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     // A recipe's drawings drawn in another project (plan/map-cad.md MAP-20, docs/adr/3240): the drawing commands'
-    // refusals come through with the recipe's drawing named.
+    // refusals come through with the recipe's drawing named; its layers by name, given or added (docs/adr/3640).
     Entry {
         id: "road.project.produce",
         refusals: &[
             &["not_a_road_project", "invalid_file_path", "file_not_found", "invalid_project_recipe", "unknown_drawing"],
             &["unknown_terrain", "layer_not_found", "layer_locked", "not_a_layer"],
+            &["unknown_recipe_layer", "ambiguous_recipe_layer"],
             REVISION,
         ],
-        warnings: &["recipe_other_system", "layer_hidden"],
+        warnings: &["recipe_other_system", "layer_hidden", "recipe_layer_created"],
         targets: none,
     },
     Entry {

@@ -56015,7 +56015,7 @@
       "id": "road.project.produce",
       "version": 1,
       "title": "Tariften üret",
-      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur, katman kimliğiyle kalır. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing ve çizim komutlarının retleri.",
+      "summary": "Bir tarifin (İş grafiği'nin Tarifi kaydet… ile yazdığı road.project.graph cevabı, mutlak .json yolu: path) çizimlerini bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict, not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u ve çizim komutlarının retleri.",
       "aliases": [
         "tariftenuret"
       ],
@@ -56033,7 +56033,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);\n`drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,\n`file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one\nthat draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the\nrecipe's); and a drawing command's own refusal (a source not in this project, a layer not here, gone or locked), the\nrecipe's drawing named in its words: nothing is written.",
+        "description": "Input of `road.project.produce` v1: `path`, the recipe (an absolute `.json` path: İş grafiği's Tarifi kaydet…);\n`drawings`, only these of its drawings (their ids in the recipe), none: every drawing it holds a recipe for;\n`layers` (docs/adr/3640), a recipe layer's id → the layer of this project its drawings go on (AutoCAD's Map in the\nLayer Translator); a layer not given goes by its name (Map Same) or is added.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`; `invalid_file_path`,\n`file_not_found`, `invalid_project_recipe` (at `path`: not a recipe, no drawing in it, a drawing's command not one\nthat draws or its version not the one this KentOS draws); `unknown_drawing` (at `drawings`: not one of the\nrecipe's); `unknown_recipe_layer` (at `layers`: a key not a layer of the recipe's drawings), `layer_not_found`,\n`not_a_layer`, `service_layer`, `layer_locked` (at `layers.<id>`: the layer given here); `ambiguous_recipe_layer`\n(at `layers`: a named drawing's layer name held by more than one layer here); and a drawing command's own refusal (a\nsource not in this project, a layer not here, gone or locked), the recipe's drawing named in its words: nothing is\nwritten.",
         "properties": {
           "drawings": {
             "items": {
@@ -56050,6 +56050,12 @@
               "null"
             ]
           },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
           "path": {
             "type": "string"
           }
@@ -56064,6 +56070,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:\nthis project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).",
         "properties": {
+          "layers": {
+            "description": "The layers the produced drawings went on (docs/adr/3640).",
+            "items": {
+              "$ref": "#/$defs/RoadProducedLayer"
+            },
+            "type": "array"
+          },
           "left": {
             "items": {
               "$ref": "#/$defs/RoadDrawingLeft"
@@ -56091,6 +56104,13 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.project.produce` v1, and its plan: the drawings drawn in the recipe's order, those left (`exists`:\nthis project has the drawing; `rebuild` draws it again) and the revision after (a plan: before, no objects).",
         "properties": {
+          "layers": {
+            "description": "The layers the produced drawings went on (docs/adr/3640).",
+            "items": {
+              "$ref": "#/$defs/RoadProducedLayer"
+            },
+            "type": "array"
+          },
           "left": {
             "items": {
               "$ref": "#/$defs/RoadDrawingLeft"
@@ -56125,12 +56145,15 @@
           "layer_not_found",
           "layer_locked",
           "not_a_layer",
+          "unknown_recipe_layer",
+          "ambiguous_recipe_layer",
           "invalid_revision",
           "revision_conflict"
         ],
         "warnings": [
           "recipe_other_system",
-          "layer_hidden"
+          "layer_hidden",
+          "recipe_layer_created"
         ]
       },
       "examples": [
@@ -103878,6 +103901,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Tarif başka koordinat sistemindeki bir projede kaydedilmiş."
+    },
+    {
+      "code": "unknown_recipe_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "layers'ın anahtarı tarifteki çizimlerin bir katmanı değil."
+    },
+    {
+      "code": "ambiguous_recipe_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarifin katmanının adı bu projede birden çok katmanda var; layers ile hangisi olduğunu verin."
+    },
+    {
+      "code": "recipe_layer_created",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tarifin katmanı bu projede yoktu; tarifteki tanımıyla eklendi."
     },
     {
       "code": "drawing_edited",
@@ -182836,6 +182877,17 @@
           "additionalProperties": true,
           "type": "object"
         },
+        "layer": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RoadRecipeLayer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its layer's definition (docs/adr/3640); none: a recipe from before, or its layer is gone (it goes by its id)."
+        },
         "made": {
           "description": "The version that drew it, as its record keeps it (docs/adr/2840); none: a record from before schema 209.",
           "format": "uint32",
@@ -183075,6 +183127,16 @@
         }
       ]
     },
+    "RoadLayerMatch": {
+      "description": "How a recipe layer was found here (docs/adr/3640): `given` in `layers`, by its `name`, by its `id` (a recipe from\nbefore, keeping no definition), or `created` with the recipe's look.",
+      "enum": [
+        "given",
+        "name",
+        "id",
+        "created"
+      ],
+      "type": "string"
+    },
     "RoadNode": {
       "description": "A row of the project tree: what it is, its id and name, its parent's index (none: a top row), how it stands and\nwhy in sentences; a drawing's command and how many of its objects the drawing holds now.",
       "properties": {
@@ -183177,6 +183239,34 @@
       ],
       "type": "string"
     },
+    "RoadProducedLayer": {
+      "description": "A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how\nit was found; in the order the drawings first use them.",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "how": {
+          "$ref": "#/$defs/RoadLayerMatch"
+        },
+        "name": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "toName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "name",
+        "to",
+        "toName",
+        "how"
+      ],
+      "type": "object"
+    },
     "RoadProducedSource": {
       "description": "The main source a produced drawing was drawn from in this project: its kind, id and name.",
       "properties": {
@@ -183225,6 +183315,36 @@
         "alignment",
         "revision",
         "stale"
+      ],
+      "type": "object"
+    },
+    "RoadRecipeLayer": {
+      "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look.",
+      "properties": {
+        "color": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "lineType": {
+          "$ref": "#/$defs/LineType"
+        },
+        "lineWeight": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "paper-mm"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "color",
+        "lineType",
+        "lineWeight"
       ],
       "type": "object"
     },
