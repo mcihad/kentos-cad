@@ -178,7 +178,8 @@ impl Document {
         w: &kentos_contracts::WallFields,
     ) -> (f64, Option<f64>) {
         let length = bulge_path_length(&core(&w.pts), w.bulges.as_deref(), w.closed);
-        let height = w.height.or_else(|| self.level_height(&w.arch));
+        // Up to the slab over it within its storey (docs/adr/3040 §1).
+        let height = self.wall_height(w);
         let openings: f64 = uid
             .map(|u| {
                 self.openings_of(u)
@@ -386,7 +387,7 @@ impl Document {
                     }
                     "thickness" | "width" => Some(Length(x.width)),
                     "length" => Some(Length(length)),
-                    "height" => x.height.or_else(|| self.level_height(&x.arch)).map(Length),
+                    "height" => self.wall_height(x).map(Length),
                     "area" => net.map(Area),
                     "volume" => net.map(|n| Volume(n * x.width)),
                     "level" => self.level_name(&x.arch).map(Text),

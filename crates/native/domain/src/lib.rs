@@ -99,6 +99,7 @@ mod step;
 mod store;
 mod wall_candidates;
 pub mod wall_pieces;
+mod wall_height;
 mod style_overrides;
 pub mod table_cells;
 pub mod text_fields;

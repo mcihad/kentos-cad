@@ -1475,12 +1475,37 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     )
                 })
                 .collect();
-            let clean_text = if x.cleanup { "Önceliğe göre" } else { "Kapalı" };
-            geo.push(Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)));
-            let height = x.height.map_or_else(|| "Katın".to_owned(), |h| f.length_bare(h));
+            let clean_text = if x.cleanup {
+                "Önceliğe göre"
+            } else {
+                "Kapalı"
+            };
+            geo.push(
+                Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)),
+            );
+            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/3040 §1): where the
+            // number comes from, and the number.
+            let height = match x.height {
+                Some(h) => f.length_bare(h),
+                None => {
+                    let from = if doc.model.wall_under_slab(x) {
+                        "Üst döşemenin altı"
+                    } else {
+                        "Katın"
+                    };
+                    doc.model.wall_height(x).map_or_else(
+                        || from.to_owned(),
+                        |h| format!("{from} · {}", f.length_bare(h)),
+                    )
+                }
+            };
             geo.push(
                 Row::figure("Yükseklik", height)
-                    .unit(if x.height.is_some() { f.length_unit_label() } else { "" })
+                    .unit(if x.height.is_some() {
+                        f.length_unit_label()
+                    } else {
+                        ""
+                    })
                     .editor(number(Field::WallHeight(slot))),
             );
             let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();

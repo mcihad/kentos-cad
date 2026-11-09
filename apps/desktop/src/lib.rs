@@ -729,6 +729,8 @@ mod joinery_list_tests;
 mod renovation_legend_tests;
 #[cfg(test)]
 mod renovation_set_tests;
+#[cfg(test)]
+mod wall_height_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

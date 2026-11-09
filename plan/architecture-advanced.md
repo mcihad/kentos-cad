@@ -1170,7 +1170,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 
 | Sıra | İş | Paket | Görünen sonuç |
 |---|---|---|---|
-| M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları |
+| M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları **(M40 1. bölüm, ADR 3040: duvar üst döşemenin altında biter, katın yüksekliğini geçmez; kat yüksekliği değişince üstteki katlar ve duvar tepeleri izler; sürüyor)** |
 | M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama |
 | M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti |
 | M43 | Görünüş türetimi | ADV-19 | Dört cephe |

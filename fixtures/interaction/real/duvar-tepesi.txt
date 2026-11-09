@@ -1,0 +1,49 @@
+# M40 1. bölüm (docs/adr/3040 §1): a two-storey building (15 × 6 m, no slab). The ground storey's partition at 5 m:
+# its height floor to floor. On 1. kat a slab by the walls' outer faces (Döşeme, 15 cm); back on the ground storey the
+# partition stops under it. Proje ayarları › Mimari: the ground storey 3.00 → 3.24, the storey above follows as it is
+# typed; saved, the partition follows.
+fit KentOS Mimari — Bina
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 1148 57    # Kat ▾
+wait 800
+click 1180 174   # Kat görünümü: Yalnız etkin kat
+wait 1200
+click 526 560    # the ground storey's partition at 5 m
+wait 1200
+shot 01-duvar-doseme-yok
+key Escape
+wait 500
+key ctrl+Up      # 1. kat
+wait 1200
+click 532 57     # Döşeme
+wait 1200
+click 760 560    # inside the building: its walls' outer faces
+wait 2000
+key Escape
+wait 600
+shot 02-doseme
+key ctrl+Down    # Zemin kat
+wait 1200
+click 526 560
+wait 1200
+shot 03-duvar-doseme-alti
+key Escape
+wait 500
+click 1258 57    # Mimari ayarları
+wait 2000
+click 1235 796   # Zemin kat's Kat yüksekliği
+wait 400
+key ctrl+a
+type 3.24
+wait 1000
+shot 04-ayarlar-zincir
+click 1395 919   # Kaydet
+wait 2000
+click 526 560
+wait 1200
+shot 05-duvar-324

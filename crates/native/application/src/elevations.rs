@@ -6,8 +6,9 @@
 //!   to its end when clockwise). A curved side is not unrolled (`curvedSide`).
 //! - The walls on the space's level whose left or right face lies on the side (parallel, within 1 mm) cover the
 //!   stretch their straight segments' ends project onto; a stretch no face covers is open (`open`).
-//! - Its height is the space's (floor to ceiling); else the lowest of its walls' heights (a wall's own, else its
-//!   level's); else not known: only the floor line is drawn. A wall lower than it draws its top across its stretch.
+//! - Its height is the space's (floor to ceiling); else the lowest of its walls' heights (a wall's own, else up to the
+//!   slab over it within its storey, else its level's: docs/adr/3040 §1); else not known: only the floor line is drawn.
+//!   A wall lower than it draws its top across its stretch.
 //! - An opening of one of those walls draws its jambs where its points on the side's face project, from its sill (absent:
 //!   the floor) to its head; without a head its jambs are dashed up to the side's height (`headUnknown`). A niche is seen
 //!   only from its own face; a flue never (`flue`); an opening not where its wall says is not drawn (`brokenOpening`).
@@ -169,15 +170,6 @@ pub(crate) fn draw(
     let settings = doc.settings();
     let h = PAPER * settings.plot_scale;
     let level = s.space.arch.level.clone();
-    let level_height = level.as_ref().and_then(|id| {
-        settings
-            .arch
-            .as_ref()?
-            .levels
-            .iter()
-            .find(|l| &l.id == id)?
-            .height
-    });
     // The sides: every outer ring's edges, part by part.
     struct Edge {
         a: Vec2,
@@ -372,7 +364,8 @@ pub(crate) fn draw(
                     left,
                     lo,
                     hi,
-                    height: f.height.or(level_height),
+                    // Up to the slab over it within its storey (docs/adr/3040 §1).
+                    height: doc.wall_height(f),
                 });
             }
         }

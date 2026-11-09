@@ -1,7 +1,8 @@
 //! Proje ayarları › Mimari (docs/adr/0339 §3, §6): the project's levels, a row each (Ad, Kot, Kat yüksekliği; up,
 //! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Uygulama, Ayrıntılı). What
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
-//! which keeps a level a wall names.
+//! which keeps a level a wall names. A level's height changed moves the levels above by as much (docs/adr/3040 §1): the
+//! storeys sit on each other, and the walls under the slab of the one above follow.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Length};
@@ -43,6 +44,9 @@ pub struct Row {
     pub elevation: String,
     pub height: String,
     pub prefix: String,
+    /// Its last height that read as a number: what a new one moves the levels above by (typed away and again, the
+    /// move is from it).
+    pub stacked: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -266,6 +270,7 @@ pub fn rows(arch: Option<&ArchSettings>) -> Vec<Row> {
                 name: l.name.clone(),
                 elevation: shown(Some(l.elevation)),
                 height: shown(l.height),
+                stacked: l.height,
                 prefix: a
                     .space_number_prefixes
                     .get(&l.id)
@@ -295,6 +300,7 @@ pub fn new_row(rows: &[Row]) -> Row {
         elevation: shown(Some(elevation)),
         height: "3".to_owned(),
         prefix: String::new(),
+        stacked: Some(3.0),
     }
 }
 
@@ -304,13 +310,47 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
     match e {
         Edit::Name(t) => r.name = t,
         Edit::Elevation(t) => r.elevation = t,
-        Edit::Height(t) => r.height = t,
+        Edit::Height(t) => {
+            r.height = t;
+            stack(rows, i);
+        }
         Edit::Prefix(t) => r.prefix = t,
         Edit::Up if i > 0 => rows.swap(i, i - 1),
         Edit::Down if i + 1 < n => rows.swap(i, i + 1),
         Edit::Up | Edit::Down => {}
         Edit::Delete => {
             rows.remove(i);
+        }
+    }
+}
+
+/// Row `i`'s height now read as a number moves the levels at or above its top by the change (docs/adr/3040 §1): a
+/// storey's height and the elevations above it stay one stack, as Türkiye's sections give them (±0.00, +3.00, +6.00).
+/// A level whose elevation does not read stays; a height that does not read moves nothing until it does.
+fn stack(rows: &mut [Row], i: usize) {
+    let Some(r) = rows.get(i) else { return };
+    let (Ok(Some(new)), Some(old)) = (number(&r.height), r.stacked) else {
+        return;
+    };
+    let Ok(Some(foot)) = number(&r.elevation) else {
+        rows[i].stacked = Some(new);
+        return;
+    };
+    let delta = new - old;
+    rows[i].stacked = Some(new);
+    if delta.abs() < 1e-9 {
+        return;
+    }
+    let top = foot + old;
+    for (j, above) in rows.iter_mut().enumerate() {
+        if j == i {
+            continue;
+        }
+        if let Ok(Some(e)) = number(&above.elevation)
+            && e >= top - 1e-6
+        {
+            // To the millimetre: 3.0 + 0.2 + 0.04 reads 3.24, not 3.2400000000000002.
+            above.elevation = shown(Some(((e + delta) * 1000.0).round() / 1000.0));
         }
     }
 }
@@ -749,6 +789,41 @@ mod tests {
             "spaceNumberPrefixes":{"zemin":"Z-"}
         }))
         .unwrap()
+    }
+
+    /// A storey's height changed moves the levels above by as much (docs/adr/3040 §1), typed away and again too; a
+    /// level below stays.
+    #[test]
+    fn a_storey_s_height_moves_the_levels_above() {
+        let a: ArchSettings = serde_json::from_value(serde_json::json!({"levels":[
+            {"id":"bodrum","name":"Bodrum kat","elevation":-3.0,"height":3.0},
+            {"id":"zemin","name":"Zemin kat","elevation":0.0,"height":3.0},
+            {"id":"k1","name":"1. kat","elevation":3.0,"height":3.0},
+            {"id":"k2","name":"2. kat","elevation":6.0,"height":3.0}
+        ]}))
+        .unwrap();
+        let mut form = rows(Some(&a));
+        let elevations =
+            |form: &[Row]| -> Vec<String> { form.iter().map(|r| r.elevation.clone()).collect() };
+        let before = elevations(&form);
+        for t in ["3.", "3.2", "3.24"] {
+            edit(&mut form, 1, Edit::Height(t.to_owned()));
+        }
+        let after = elevations(&form);
+        assert_eq!(after[0], before[0], "the level below stays");
+        assert_eq!(after[1], before[1], "its own elevation stays");
+        assert_eq!(
+            [number(&after[2]).unwrap(), number(&after[3]).unwrap()],
+            [Some(3.24), Some(6.24)]
+        );
+        // Typed away and again: from the last height that read.
+        edit(&mut form, 1, Edit::Height(String::new()));
+        edit(&mut form, 1, Edit::Height("3".to_owned()));
+        let back = elevations(&form);
+        assert_eq!(
+            [number(&back[2]).unwrap(), number(&back[3]).unwrap()],
+            [Some(3.0), Some(6.0)]
+        );
     }
 
     /// Planın kesme yüksekliği as typed (docs/adr/3012): a comma or a point, empty the default, outside 0.30–3.00 m or

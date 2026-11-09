@@ -4046,3 +4046,53 @@ fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
     let line = sections.len();
     assert!(line > 1);
 }
+
+/// A wall without a height of its own (docs/adr/3040 §1): its Yükseklik says where its height comes from and the
+/// number: its storey's, else under the slab over it; a slab of the storey above drawn, 15 cm thick, it is 2.850.
+#[test]
+fn a_wall_s_height_row_says_it_stops_under_the_slab_over_it() {
+    use kentos_commands::Workspace;
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    settings.arch = Some(
+        serde_json::from_value(json!({"levels": [
+            {"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0},
+            {"id": "k1", "name": "1. kat", "elevation": 3.0, "height": 3.0}
+        ]}))
+        .unwrap(),
+    );
+    doc.set_settings(settings);
+    let wall = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+            "pts":[{"x":0.,"y":2.},{"x":6.,"y":2.}], "width":0.2, "arch":{"level":"zemin"}
+        }))
+        .unwrap(),
+    );
+    select(&mut app, &[wall]);
+    let height = |app: &App| -> String {
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, rows)| rows)
+            .find(|r| r.label == "Yükseklik")
+            .expect("Yükseklik")
+            .value
+            .to_string()
+    };
+    assert_eq!(height(&app), "Katın · 3.000");
+    add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"slab", "id":0, "layerId":"parsel", "attrs":{},
+            "parts":[{"outer":{"pts":[{"x":-1.,"y":-1.},{"x":8.,"y":-1.},{"x":8.,"y":5.},{"x":-1.,"y":5.}]}}],
+            "thickness":0.15, "arch":{"level":"k1"}
+        }))
+        .unwrap(),
+    );
+    assert_eq!(height(&app), "Üst döşemenin altı · 2.850");
+}

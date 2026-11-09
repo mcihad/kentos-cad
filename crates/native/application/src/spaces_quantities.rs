@@ -256,7 +256,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     x.bulges.as_deref(),
                     x.closed,
                 );
-                let height = x.height.or_else(|| level_height(doc, &x.arch));
+                // Up to the slab over it within its storey (docs/adr/3040 §1): the wall as built.
+                let height = doc.wall_height(x);
                 let id = uid(e);
                 let openings = on_wall.get(&id).cloned().unwrap_or_default();
                 let openings_area = total(openings.iter().map(|(_, a)| *a));
