@@ -2908,6 +2908,11 @@ impl App {
                     }
                     _ => Default::default(),
                 };
+                // The grids it names found beside it too: a delivery package's izgaralar/ (docs/adr/3580).
+                let grids = match doc.path.clone() {
+                    Some(path) if doc.cloud_source().is_none() => kentos_native_application::project_grids::find(&doc.model, &path),
+                    _ => Vec::new(),
+                };
                 match doc.cloud_source() {
                     Some(source) => self.say(
                         Level::Success,
@@ -2935,6 +2940,11 @@ impl App {
                 // The level and view the drawing was saved with (docs/adr/0720 §1).
                 self.say_level_state();
                 self.say_located(&located);
+                // Docs/adr/3580: the grids taken from beside the file, and any it names that are nowhere.
+                if let Some(words) = kentos_native_application::project_grids::said(&grids) {
+                    let lost = grids.iter().any(|g| matches!(g.place.name(), "missing" | "changed" | "unread"));
+                    self.say(if lost { Level::Warn } else { Level::Info }, words);
+                }
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
                 self.remember_file();
                 // The health check on opening, when asked for (docs/adr/1009).

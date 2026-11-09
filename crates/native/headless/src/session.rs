@@ -38,6 +38,8 @@ pub struct Session {
     jobs: crate::rpc::Jobs,
     /// What opening found of the bound files (docs/adr/0506).
     located: kentos_native_application::source_places::Located,
+    /// The grids the project names and where opening found them (docs/adr/3580): a package's `izgaralar/` read in.
+    grids: Vec<kentos_native_application::project_grids::GridFound>,
 }
 
 impl Session {
@@ -84,8 +86,11 @@ impl Session {
         let (mut doc, legacy) = files::read(path)?;
         // Bound GeoPackages moved with the project are found again (docs/adr/0506).
         let located = kentos_native_application::source_places::relocate(&mut doc, path);
+        // The grids it names found beside it too: a delivery package's izgaralar/ (docs/adr/3580).
+        let grids = kentos_native_application::project_grids::find(&doc, path);
         let mut session = Self::of(doc, Some(path.to_path_buf()), legacy);
         session.located = located;
+        session.grids = grids;
         Ok(session)
     }
 
@@ -112,6 +117,7 @@ impl Session {
             group: None,
             jobs: crate::rpc::Jobs::default(),
             located: Default::default(),
+            grids: Vec::new(),
         }
     }
 
@@ -338,6 +344,15 @@ impl Session {
             }
             fields.insert("legacy".into(), json!(self.legacy));
             if let Some(source) = &self.opened_cad { fields.insert("openedCad".into(), source.clone()); }
+            // Docs/adr/3580: the grids the project names and where opening found them.
+            if !self.grids.is_empty() {
+                let grids: Vec<Value> = self
+                    .grids
+                    .iter()
+                    .map(|g| json!({"name": g.name, "sha256": g.sha256, "kind": g.kind.name(), "setting": g.setting, "place": g.place.name()}))
+                    .collect();
+                fields.insert("grids".into(), Value::Array(grids));
+            }
         }
         summary
     }

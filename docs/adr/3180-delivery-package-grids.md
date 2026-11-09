@@ -69,8 +69,8 @@ bilgisi bu ADR'de yoktur.”
 
 ## Sonra
 
-- Paketten açılan projede ızgaraların kendiliğinden bulunması: komutlar `izgaralar/`'a da baksın ya da açılışta
-  kütüphaneye eklensin.
+- ~~Paketten açılan projede ızgaraların kendiliğinden bulunması: komutlar `izgaralar/`'a da baksın ya da açılışta
+  kütüphaneye eklensin.~~ [ADR 3580](3580-package-grids-found-on-opening.md): açılışta yerinde okunur, kitaplık yazılmaz.
 - Proje içinde adı olmayan ızgaralar (bir komutun bir kez kullandığı NTv2): kullanım kaydı yoksa paket onları bilemez.
 - DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerin ATTRIB'i (MAP-17'nin öbür maddeleri).
 - Web (TODOS §0.2).

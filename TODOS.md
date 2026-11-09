@@ -179,6 +179,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   Yüzey analizi › Fark'ında Malzeme bölgeleri satırı, tablosu ve çubukları.
 - MAP-16 / ADR 3560: web'in `.kcad` okuyucu/yazıcısında şema 212 (`cad.pipes.profile` çizimi, `network` kaynağı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme) ve web'in proje ağacında ağ satırı; tutulan çizimlerin nesne damgası `id`'siz.
+- MAP-17 / ADR 3580: web'de açılan projenin adladığı ızgaraların paketin `izgaralar/`'ından bulunması (tarayıcıda klasör
+  erişimi; web'in ızgara kitaplığı IndexedDB'de).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

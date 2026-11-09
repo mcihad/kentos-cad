@@ -47,7 +47,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240 | bütçe; çizimin kendi hesabının içinde durdurma; katmanların adla eşlenmesi | — |
@@ -1747,6 +1747,13 @@ yüksekliklerin geoidi, kampanyaların hız ızgarası) cihazın kütüphanesind
 taşır; yeni dosya türü `grid`; adı olup dosyası olmayan ızgara ayarının yeriyle bırakılır ve söylenir; Rust birim testi,
 bağımsız Python (hashlib), MCP; masaüstü iletisi ızgara sayısını söyler. Açık: paketten açılan projede ızgaraların
 kendiliğinden bulunması, DXF'te TABLE ve ATTRIB.
+
+**9 Kasım 2026, altıncı tur — paketten açılan projede ızgaraların bulunması ([ADR 3580](../docs/adr/3580-package-grids-found-on-opening.md)).**
+Kapsam: **CAD + CBS**. Araştırma: PROJ ızgarayı çalışma klasöründe de arar. Kanıtlanan: dosyadan açılışta projenin
+adladığı her ızgara çekirdekte, cihazın kitaplığında, yoksa proje dosyasının yanındaki `izgaralar/`'da (SHA-256'sı
+denetlenerek) aranır ve oradan çekirdeğe okunur; kitaplık yazılmaz; masaüstü iletisi ve başsız özetin `grids`'i;
+çekirdek birim testi, MCP (tek başına ret, paketten cevap), bağımsız Python, masaüstü. DXF'te TABLE: ACAD_TABLE AutoCAD
+ya da bağımsız bir okuyucuyla doğrulanamadığı için açık kaldı. Açık: ATTRIB, TABLE.
 
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 

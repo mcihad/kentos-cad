@@ -185,6 +185,8 @@ pub mod entities_flatten;
 pub mod entities_pick;
 pub mod entities_relate;
 pub mod crs_models;
+/// The grids a project names found beside its file (docs/adr/3580).
+pub mod project_grids;
 pub mod crs_transform;
 pub mod entities_select;
 pub mod entities_vertex;

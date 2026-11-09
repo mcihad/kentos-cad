@@ -335,3 +335,80 @@ fn screens() {
         picture(&mut app, "3-gomuldu");
     }
 }
+
+/// A package written by hand in `folder`: the sample drawing with its heights on a geoid model of its own (TG-20 with
+/// its last node moved three millimetres: no other test, nor the device's library, holds it) as `harita.kcad`, the
+/// model in `izgaralar/` under its SHA-256. Answers the project file and the model's SHA-256.
+fn package_with_own_geoid(folder: &std::path::Path) -> (PathBuf, String) {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let mut bytes = std::fs::read(root.join("fixtures/geoid/v1/tg.gtx")).expect("the geoid");
+    let n = bytes.len();
+    let last = f32::from_be_bytes(bytes[n - 4..].try_into().expect("four bytes")) + 0.003;
+    bytes[n - 4..].copy_from_slice(&last.to_be_bytes());
+    let sha = kentos_native_application::crs_models::sha256(&bytes);
+    std::fs::create_dir_all(folder.join("izgaralar")).expect("a folder");
+    std::fs::write(folder.join("izgaralar").join(format!("{sha}.gtx")), &bytes).expect("writes");
+    let mut drawing: serde_json::Value =
+        serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+    drawing["settings"]["heights"] =
+        serde_json::json!({ "kind": "orthometric", "verticalSrid": 5775, "geoid": { "name": "TG-20 (paket)", "sha256": sha } });
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(drawing).expect("reads");
+    let path = folder.join("harita.kcad");
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).expect("writes");
+    (path, sha)
+}
+
+/// docs/adr/3580: a project opened from its package finds the geoid model it names in `izgaralar/` beside it (its
+/// SHA-256 checked), says so, and the commands find it in the core; the device's library is not written.
+#[test]
+fn a_package_s_grid_is_found_when_it_is_opened() {
+    let folder = scratch("paket-izgara-acilis");
+    let (path, sha) = package_with_own_geoid(&folder);
+    let mut app = crate::files_testing::app_with_drawing();
+    let snapshot = kentos_kcad::decode(&std::fs::read(&path).expect("reads")).expect("decodes");
+    let doc = crate::document::Document::from_v2(snapshot, Some(path.clone())).expect("opens");
+    let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
+    let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
+    assert!(
+        said.iter().any(|l| l.contains("izgaralar/ klasöründen 1 ızgara kullanılıyor") && l.contains("TG-20 (paket)")),
+        "{said:?}"
+    );
+    let kind = kentos_native_application::crs_models::ModelKind::Geoid;
+    assert!(kentos_native_application::crs_models::load(&sha, kind, Some(&folder.join("bos"))).is_ok(), "in the core");
+}
+
+/// docs/adr/3580: the drawing opened from its package, its message in the status bar and the history;
+/// `.run/gui-evidence/paket-izgara-acilis-3580/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange::package_tests::found_grid_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn found_grid_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paket-izgara-acilis-3580");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let folder = scratch(&format!("paket-izgara-acilis-{name}"));
+        let (path, _) = package_with_own_geoid(&folder);
+        let mut app = crate::files_testing::app_with_drawing();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(crate::app::Message::WindowResized(size));
+        let snapshot = kentos_kcad::decode(&std::fs::read(&path).expect("reads")).expect("decodes");
+        let doc = crate::document::Document::from_v2(snapshot, Some(path.clone())).expect("opens");
+        let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
+        let _ = app.update(crate::app::Message::Run("view.zoomExtents"));
+        let _ = app.update(crate::app::Message::CommandHistoryToggled);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: crate::app::Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("acilis-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
