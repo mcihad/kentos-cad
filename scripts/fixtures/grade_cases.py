@@ -9,6 +9,14 @@ The rule, by hand: the horizontal length along the path from `from` to each vert
 chord, an arc edge with bulge b its arc: θ = 4·atan|b|, r = chord / (2·sin(θ/2)), length r·θ); the grade g = (end −
 start) / L or the one given; each vertex start + g·s, the last the end as given (or start + g·L); the start is the one
 given, else the vertex's own elevation. Vertices outside the range keep theirs.
+
+The high or low point (docs/adr/3380, Civil 3D's Insert High/Low Elevation Point), by hand: the line from the start
+rising `ahead` and the line from the end rising `back` towards the start meet at s = (end − start + back·L) / (ahead +
+back); none when the grades are parallel or s is not strictly inside (0, L). On the edge holding s at the fraction t of
+its length: t within 10⁻⁹ of an end is that vertex (none when it is the range's start or end), else a new vertex there:
+on a straight edge the chord's point, on an arc the start's radius turned by t of the arc's angle about the centre (the
+centre on the chord's left normal at r·cos(θ/2), θ = 4·atan(b) signed), the halves' bulges tan(t·θ/4) and
+tan((1 − t)·θ/4). Vertices up to s take start + ahead·d, after it end + back·(L − d); the point start + ahead·s.
 """
 
 import copy
@@ -90,6 +98,131 @@ def graded(e, frm, to, start=None, end=None, grade=None):
 SAME = {"revision": "same", "canUndo": False}
 
 
+def turned(c, a, angle):
+    """`a` turned about `c` by `angle` (counter-clockwise positive)."""
+    dx, dy = a["x"] - c["x"], a["y"] - c["y"]
+    ca, sa = math.cos(angle), math.sin(angle)
+    return {"x": c["x"] + dx * ca - dy * sa, "y": c["y"] + dx * sa + dy * ca}
+
+
+def arc_centre(a, b, bulge):
+    """The centre of the arc from `a` to `b` of `bulge`: on the chord's left normal (right for a clockwise arc)."""
+    c = math.hypot(b["x"] - a["x"], b["y"] - a["y"])
+    theta = 4.0 * math.atan(bulge)
+    r = c / (2.0 * math.sin(abs(theta) / 2.0))
+    d = r * math.cos(theta / 2.0) * (1.0 if theta > 0 else -1.0)
+    nx, ny = -(b["y"] - a["y"]) / c, (b["x"] - a["x"]) / c
+    return {"x": (a["x"] + b["x"]) / 2.0 + nx * d, "y": (a["y"] + b["y"]) / 2.0 + ny * d}, theta
+
+
+class NoPoint(Exception):
+    def __init__(self, why, along=None, length=None):
+        super().__init__(why)
+        self.why, self.along, self.length = why, along, length
+
+
+def peaked(e, frm, to, start=None, end=None, ahead=None, back=None):
+    """The object through its high or low point and the command's answer, by the rule above."""
+    pts, bulges, zs = path(e)
+    s0 = start if start is not None else zs[frm]
+    z1 = end if end is not None else zs[to]
+    lens = [edge(pts[i], pts[i + 1], bulges[i] if i < len(bulges) else 0.0) for i in range(frm, to)]
+    along = [0.0]
+    for x in lens:
+        along.append(along[-1] + x)
+    L = along[-1]
+    if ahead + back == 0.0:
+        raise NoPoint("parallel")
+    s = (z1 - s0 + back * L) / (ahead + back)
+    if not (0.0 < s < L):
+        raise NoPoint("outside", s, L)
+    k = next(k for k in range(len(lens)) if lens[k] > 0.0 and s <= along[k + 1])
+    t = min(max((s - along[k]) / lens[k], 0.0), 1.0)
+    i = frm + k
+    if t <= 1e-9 or t >= 1.0 - 1e-9:
+        v = k if t <= 1e-9 else k + 1
+        if v in (0, len(lens)):
+            raise NoPoint("outside", s, L)
+        at_vertex, d_at, p = frm + v, along[v], pts[frm + v]
+    else:
+        at_vertex, d_at = None, s
+        b = bulges[i] if i < len(bulges) else 0.0
+        if b == 0.0:
+            a_, b_ = pts[i], pts[i + 1]
+            p = {"x": a_["x"] + (b_["x"] - a_["x"]) * t, "y": a_["y"] + (b_["y"] - a_["y"]) * t}
+            halves = [0.0, 0.0]
+        else:
+            c, theta = arc_centre(pts[i], pts[i + 1], b)
+            p = turned(c, pts[i], theta * t)
+            halves = [math.tan(theta * t / 4.0), math.tan(theta * (1.0 - t) / 4.0)]
+    z = s0 + ahead * d_at
+    new = []
+    for v, d in enumerate(along):
+        if v == 0:
+            new.append(s0)
+        elif v == len(along) - 1:
+            new.append(z1)
+        elif at_vertex == frm + v:
+            new.append(z)
+        elif d <= d_at:
+            new.append(s0 + ahead * d)
+        else:
+            new.append(z1 + back * (L - d))
+    kind = "high" if ahead > 0 and back > 0 else "low" if ahead < 0 and back < 0 else "break"
+    after = copy.deepcopy(e)
+    all_zs = list(zs) if e["kind"] != "line" else [e.get("za"), e.get("zb")]
+    for j, v in enumerate(new):
+        all_zs[frm + j] = v
+    if at_vertex is not None:
+        index, inserted, out_zs = at_vertex, False, new
+        after["zs"] = all_zs
+    else:
+        index, inserted = i + 1, True
+        out_zs = new[:k + 1] + [z] + new[k + 1:]
+        all_zs.insert(i + 1, z)
+        if e["kind"] == "line":
+            after = {"kind": "polyline", "id": e["id"], "layerId": e["layerId"], "attrs": e["attrs"],
+                     "pts": [e["a"], p, e["b"]], "zs": all_zs}
+        else:
+            after["pts"] = pts[:i + 1] + [p] + pts[i + 1:]
+            if "bulges" in e:
+                bs = list(bulges)
+                after["bulges"] = bs[:i] + halves + bs[i + 1:]
+            after["zs"] = all_zs
+    point = {"index": index, "inserted": inserted, "along": d_at, "x": p["x"], "y": p["y"], "z": z, "kind": kind}
+    out = {"length": L, "start": s0, "end": z1, "grade": ahead, "zs": out_zs, "back": back, "point": point}
+    return after, out
+
+
+def peak_ok(name, slot, frm, to, op="execute", **kw):
+    """A high or low point case; coordinates within 10⁻⁶ m (two computations of a point near 4 400 000 m)."""
+    e = ENTS[slot - 1]
+    after, out = peaked(e, frm, to, **kw)
+    input_ = {"uid": uid(slot), "from": frm, "to": to, **{k: v for k, v in kw.items() if v is not None}}
+    result = {"status": "completed", "output": dict(out, revision="$current"), "warnings": []}
+    if op != "execute":
+        return {"name": name, "steps": [{"op": op, "input": input_, "result": result, "expect": SAME, "within": 1e-6}]}
+    keys = ["kind", "pts", "bulges", "zs", "a", "b", "za", "zb"]
+    return {"name": name, "steps": [
+        {"op": "execute", "input": input_, "result": result, "within": 1e-6,
+         "expect": {"revision": "changed", "canUndo": True, "fields": {str(slot): {k: after.get(k) for k in keys}}}},
+        {"op": "undo", "returns": "Eğimle kot ver", "within": 1e-6,
+         "expect": {"fields": {str(slot): {k: e.get(k) for k in keys}}}}]}
+
+
+def outside_message(slot, frm, to, **kw):
+    try:
+        peaked(ENTS[slot - 1], frm, to, **kw)
+    except NoPoint as n:
+        assert n.why == "outside", n.why
+        # Three decimals as the message writes them: not at a half, where two roundings could part.
+        for v in (n.along, n.length):
+            assert abs(v * 1000 - math.floor(v * 1000) - 0.5) > 1e-6, v
+        return (f"İki eğim aralığın içinde kesişmiyor: kesişme yol boyunca başlangıçtan {n.along:.3f} m'de, aralık 0 "
+                f"ile {n.length:.3f} m arası (uçlar sayılmaz). Eğimleri ya da kotları değiştirin.")
+    raise AssertionError("a point")
+
+
 def ok(name, slot, frm, to, op="execute", **kw):
     e = ENTS[slot - 1]
     g = graded(e, frm, to, **kw)
@@ -154,6 +287,35 @@ def cases():
         refused("Sürüm yazısı geçersiz", {"uid": uid(1), "from": 0, "to": 1, "grade": 0.01, "expectedRevision": "abc"},
                 "invalid_revision", "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. "
                 "Sürümü belgeden ya da komutun planından alın.", "expectedRevision"),
+        # Yüksek/alçak nokta (ADR 3380).
+        peak_ok("Yüksek nokta düz kenarda: yeni köşe, kendi kotlarından; geri alma", 1, 0, 3, ahead=0.04, back=0.01),
+        peak_ok("Yüksek nokta yaylı kenarda: iki yarı aynı çemberde", 1, 0, 3, ahead=0.03, back=0.02),
+        peak_ok("Alçak nokta: plan yazmaz", 1, 0, 3, op="plan", ahead=-0.02, back=-0.03),
+        peak_ok("Ne yüksek ne alçak: eğim değişir", 1, 0, 3, ahead=0.02, back=-0.005),
+        peak_ok("Kesişme ara köşeye düşer: köşe eklenmez, ona kot verilir", 1, 0, 2, end=850.625, ahead=0.0625,
+                back=0.03125),
+        peak_ok("Çizgi Köşe ekle'deki gibi çoklu çizgi olur", 2, 0, 1, end=899.0, ahead=0.02, back=0.03),
+        peak_ok("Alanın dış halkası: başlangıç ve bitiş verilir", 3, 0, 3, start=120.0, end=119.5, ahead=0.01, back=0.015),
+        refused("Eğim ile yüksek/alçak nokta birlikte", {"uid": uid(1), "from": 0, "to": 3, "grade": 0.02, "ahead": 0.03,
+                                                         "back": 0.02}, "invalid_input",
+                "Eğim (grade) ile başlangıçtan ve bitişten eğimler (ahead, back) birlikte verilmez: ya sabit eğim ya "
+                "yüksek/alçak nokta.", "grade"),
+        refused("Yalnız başlangıçtan eğim", {"uid": uid(1), "from": 0, "to": 3, "ahead": 0.03}, "invalid_input",
+                "Yüksek/alçak nokta iki eğimle bulunur: başlangıçtan eğimi (ahead) ve bitişten eğimi (back) birlikte verin.",
+                "back"),
+        refused("Yalnız bitişten eğim", {"uid": uid(1), "from": 0, "to": 3, "back": 0.02}, "invalid_input",
+                "Yüksek/alçak nokta iki eğimle bulunur: başlangıçtan eğimi (ahead) ve bitişten eğimi (back) birlikte verin.",
+                "ahead"),
+        refused("Bitiş köşesinin kotu yok", {"uid": uid(1), "from": 0, "to": 2, "ahead": 0.03, "back": 0.02},
+                "elevation_missing", "2. köşenin kotu yok; bitiş kotunu (end) verin.", "end"),
+        refused("Paralel eğimler kesişmez", {"uid": uid(1), "from": 0, "to": 3, "ahead": 0.02, "back": -0.02},
+                "no_intersection", "Başlangıçtan ve bitişten eğimler paralel (biri öbürünün eksisi): hiçbir yerde "
+                "kesişmezler. Eğimlerden birini değiştirin.", "back"),
+        refused("Kesişme aralığın dışında", {"uid": uid(1), "from": 0, "to": 3, "ahead": 0.05, "back": -0.03},
+                "no_intersection", outside_message(1, 0, 3, ahead=0.05, back=-0.03), "back"),
+        refused("Kesişme bitişte: uçlar sayılmaz", {"uid": uid(1), "from": 0, "to": 2, "end": 854.375, "ahead": 0.0625,
+                                                    "back": 0.03125},
+                "no_intersection", outside_message(1, 0, 2, end=854.375, ahead=0.0625, back=0.03125), "back"),
         {"name": "Beklenen sürüm eski: çatışma", "steps": [{"op": "execute", "input": {
             "uid": uid(1), "from": 0, "to": 1, "grade": 0.01, "expectedRevision": "7"}, "result": {
             "status": "conflict", "error": {"code": "revision_conflict", "message":
@@ -165,8 +327,8 @@ def cases():
 
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.entities.grade", "commandVersion": 1,
-           "title": "Eğimle kot ver", "note": "ADR 1290. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu ve "
-           "kotlar elle; KentOS kodu yok.", "setup": setup(), "cases": cases()}
+           "title": "Eğimle kot ver", "note": "ADR 1290, 3380. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay "
+           "boyu, kotlar, yüksek/alçak noktanın yeri ve yayın yarıları elle; KentOS kodu yok.", "setup": setup(), "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text

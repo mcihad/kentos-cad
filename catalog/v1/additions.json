@@ -177,7 +177,7 @@
       "title": "Eğimle kot ver…",
       "short": "Eğimle kot",
       "icon": "gradeBetween",
-      "description": "Seçili çizginin, çoklu çizginin ya da alanın iki köşesi arasına sabit eğimle kot verir (cad.entities.grade; Civil 3D'nin Set Grade/Slope Between Points'i gibi): başlangıç kotu, sonra bitiş kotu ya da eğim (%); aradaki köşeler yol boyunca yatay uzaklıklarına göre kot alır. Pencere önizlemedir; tek geri alma adımı. Harita ve Yol'da.",
+      "description": "Seçili çizginin, çoklu çizginin ya da alanın iki köşesi arasına sabit eğimle kot verir (cad.entities.grade; Civil 3D'nin Set Grade/Slope Between Points'i gibi): başlangıç kotu, sonra bitiş kotu ya da eğim (%); aradaki köşeler yol boyunca yatay uzaklıklarına göre kot alır. Yüksek/alçak nokta: başlangıçtan ve bitişten iki eğim, kesiştikleri yere köşe eklenir (Insert High/Low Elevation Point gibi). Pencere önizlemedir; tek geri alma adımı. Harita ve Yol'da.",
       "aliases": ["EGIMLEKOT", "SETGRADE"],
       "shortcuts": [],
       "category": "Değiştir",

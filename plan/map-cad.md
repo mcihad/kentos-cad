@@ -36,7 +36,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüksek/alçak nokta ekleme | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
@@ -765,6 +765,14 @@ Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Set Grade/Slope Betwee
 alır. Kanıtlanan: pencere açıkken başlangıç ve bitiş köşeleri Köşe tablosununki gibi halkalanır, aradaki yol (yayı yay
 boyunca) vurgu renginde çizilir; Sahneden seç'te bitiş beklenirken yalnız başlangıç; kapanınca kalkar; masaüstü testi ve
 resimler. Komut değişmedi. Açık: çok parçalı nesne, dönen ve yaylı referans bağı, yüksek/alçak nokta ekleme.
+
+**9 Kasım 2026, altıncı tur — Eğimle kot ver'de yüksek/alçak nokta ([ADR 3380](../docs/adr/3380-grade-high-low-point.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: Civil 3D'nin Insert High/Low Elevation Point'i (başlangıçtan ileri, bitişten
+geri eğim; kesişme yoksa çözüm yok) ve Grading Elevation Editor'ün geri eğimi. Kanıtlanan: `cad.entities.grade`'in
+`ahead` ve `back`'i iki eğimin kesiştiği yere köşe ekler (yaylı kenarda iki yarı aynı çemberde, çizgi çoklu çizgi olur;
+ara köşeye düşerse eklenmez), noktaya kadar ileri, sonra geri eğimle kot verir; paralel ya da aralık dışı kesişme
+`no_intersection`. 14 yeni ortak durum (bağımsız başvuru), Python, MCP, masaüstü (Hedef › Yüksek/alçak nokta, önizlemede
+noktanın yeri ve halkası) ve resimler. Açık: çok parçalı nesne, dönen ve yaylı referans bağı, eğimle yükselt/alçalt.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

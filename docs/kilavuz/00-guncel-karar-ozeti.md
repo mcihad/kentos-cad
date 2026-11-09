@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Eğimle kot ver'de yüksek/alçak nokta (9 Kasım 2026; MAP-06, [ADR 3380](../../docs/adr/3380-grade-high-low-point.md)).**
+  `cad.entities.grade`'in `ahead`/`back`'i: başlangıçtan ve bitişten iki eğimin kesiştiği yere köşe (yay çemberinde
+  kalır), iki kola göre kotlar; paralel ya da aralık dışı `no_intersection`. Pencerede Hedef › Yüksek/alçak nokta. CAD.
 - **Kot çubuğu (9 Kasım 2026; MAP-05, [ADR 3360](../../docs/adr/3360-network-height-bars-drawn.md)).** Ağ kabulünde
   elipslerle birlikte her noktanın kot yarı aralığı, elipsle aynı büyütmede çentikli düşey çubuk (`ellipses.heights`).
   Harita.

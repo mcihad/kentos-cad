@@ -2609,10 +2609,19 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
     kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü
     yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca
     yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını
-    korur. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim ve köşelerin
-    yeni kotları. Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision,
-    revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place,
-    invalid_input, elevation_missing, layer_locked.
+    korur. Yüksek/alçak nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR
+    3380): grade yerine ahead (başlangıçtan aralığın içine eğim) ve back (bitişten
+    başlangıca doğru eğim), artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi
+    kotu. İki eğimin kesiştiği yere köşe eklenir (yaylı kenarda iki yarı yayın
+    çemberinde kalır; çizgi Köşe ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa
+    ona kot verilir; ona kadar köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın
+    yatay uzunluğu, başlangıç ve bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back
+    geri eğim), köşelerin yeni kotları (eklenen dahil) ve point: noktanın köşe sırası,
+    eklenip eklenmediği, başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break).
+    Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict,
+    invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input,
+    elevation_missing, no_intersection (eğimler paralel ya da aralığın içinde
+    kesişmiyor), layer_locked.
     """
     __slots__ = ()
     id = "cad.entities.grade"
@@ -2631,6 +2640,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         uid: str,
         from_: int,
         to: int,
+        ahead: float | None | Unset = UNSET,
+        back: float | None | Unset = UNSET,
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
@@ -2643,17 +2654,27 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya
         bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir;
         bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla
-        (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Cevap:
-        aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim ve köşelerin yeni kotları.
-        Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict,
-        invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input,
-        elevation_missing, layer_locked.
+        (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Yüksek/alçak
+        nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR 3380): grade yerine
+        ahead (başlangıçtan aralığın içine eğim) ve back (bitişten başlangıca doğru eğim),
+        artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi kotu. İki eğimin kesiştiği
+        yere köşe eklenir (yaylı kenarda iki yarı yayın çemberinde kalır; çizgi Köşe
+        ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa ona kot verilir; ona kadar
+        köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın yatay uzunluğu, başlangıç ve
+        bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back geri eğim), köşelerin yeni
+        kotları (eklenen dahil) ve point: noktanın köşe sırası, eklenip eklenmediği,
+        başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break). Tek geri alma adımı
+        “Eğimle kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid,
+        entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing,
+        no_intersection (eğimler paralel ya da aralığın içinde kesişmiyor), layer_locked.
 
         Args:
             doc: The drawing it works on.
             uid:
             from_: Unit: index.
             to: Unit: index.
+            ahead: The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up). Unit: grade.
+            back: The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end). Unit: grade.
             end: Unit: elevation.
             expected_revision:
             grade: Unit: grade.
@@ -2674,6 +2695,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             uid=uid,
             from_=from_,
             to=to,
+            ahead=ahead,
+            back=back,
             end=end,
             expected_revision=expected_revision,
             grade=grade,
@@ -2688,6 +2711,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         uid: str,
         from_: int,
         to: int,
+        ahead: float | None | Unset = UNSET,
+        back: float | None | Unset = UNSET,
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
@@ -2700,6 +2725,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             uid=uid,
             from_=from_,
             to=to,
+            ahead=ahead,
+            back=back,
             end=end,
             expected_revision=expected_revision,
             grade=grade,
@@ -2714,6 +2741,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         uid: str,
         from_: int,
         to: int,
+        ahead: float | None | Unset = UNSET,
+        back: float | None | Unset = UNSET,
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
@@ -2726,6 +2755,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             uid=uid,
             from_=from_,
             to=to,
+            ahead=ahead,
+            back=back,
             end=end,
             expected_revision=expected_revision,
             grade=grade,
@@ -2740,6 +2771,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
         uid: str,
         from_: int,
         to: int,
+        ahead: float | None | Unset = UNSET,
+        back: float | None | Unset = UNSET,
         end: float | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         grade: float | None | Unset = UNSET,
@@ -2757,6 +2790,8 @@ class _EntitiesGrade(LocalCommand[EntitiesGrade, EntitiesGraded, EntitiesGraded]
             uid=uid,
             from_=from_,
             to=to,
+            ahead=ahead,
+            back=back,
             end=end,
             expected_revision=expected_revision,
             grade=grade,

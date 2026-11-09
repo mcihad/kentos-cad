@@ -4,7 +4,7 @@
  "command": "cad.entities.grade",
  "commandVersion": 1,
  "title": "Eğimle kot ver",
- "note": "ADR 1290. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu ve kotlar elle; KentOS kodu yok.",
+ "note": "ADR 1290, 3380. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu, kotlar, yüksek/alçak noktanın yeri ve yayın yarıları elle; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -991,6 +991,1066 @@
        "code": "invalid_revision",
        "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
        "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüksek nokta düz kenarda: yeni köşe, kendi kotlarından; geri alma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.04,
+      "back": 0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 127.95595112510077,
+       "start": 850.0,
+       "end": 851.25,
+       "grade": 0.04,
+       "zs": [
+        850.0,
+        851.2,
+        852.0236476090008,
+        851.829559511251,
+        851.25
+       ],
+       "back": 0.01,
+       "point": {
+        "index": 2,
+        "inserted": true,
+        "along": 50.59119022502015,
+        "x": 500030.0,
+        "y": 4400020.591190225,
+        "z": 852.0236476090008,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400020.591190225
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         851.2,
+         852.0236476090008,
+         851.829559511251,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yüksek nokta yaylı kenarda: iki yarı aynı çemberde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.03,
+      "back": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 127.95595112510077,
+       "start": 850.0,
+       "end": 851.25,
+       "grade": 0.03,
+       "zs": [
+        850.0,
+        850.9,
+        852.1,
+        852.2854714135012,
+        851.25
+       ],
+       "back": 0.02,
+       "point": {
+        "index": 3,
+        "inserted": true,
+        "along": 76.1823804500403,
+        "x": 500034.17292404413,
+        "y": 4400035.452029978,
+        "z": 852.2854714135012,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500034.17292404413,
+          "y": 4400035.452029978
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.04949941195495306,
+         0.43962011934936707,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         850.9,
+         852.1,
+         852.2854714135012,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alçak nokta: plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": -0.02,
+      "back": -0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 127.95595112510077,
+       "start": 850.0,
+       "end": 851.25,
+       "grade": -0.02,
+       "zs": [
+        850.0,
+        849.4,
+        848.9645285864988,
+        849.511321466247,
+        851.25
+       ],
+       "back": -0.03,
+       "point": {
+        "index": 2,
+        "inserted": true,
+        "along": 51.773570675060455,
+        "x": 500030.0,
+        "y": 4400021.773570675,
+        "z": 848.9645285864988,
+        "kind": "low"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ne yüksek ne alçak: eğim değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.02,
+      "back": -0.005
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 127.95595112510077,
+       "start": 850.0,
+       "end": 851.25,
+       "grade": 0.02,
+       "zs": [
+        850.0,
+        850.6,
+        850.8136269924993,
+        850.9602202443745,
+        851.25
+       ],
+       "back": -0.005,
+       "point": {
+        "index": 2,
+        "inserted": true,
+        "along": 40.681349624966415,
+        "x": 500030.0,
+        "y": 4400010.681349625,
+        "z": 850.8136269924993,
+        "kind": "break"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400010.681349625
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         850.6,
+         850.8136269924993,
+         850.9602202443745,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişme ara köşeye düşer: köşe eklenmez, ona kot verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2,
+      "end": 850.625,
+      "ahead": 0.0625,
+      "back": 0.03125
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 70.0,
+       "start": 850.0,
+       "end": 850.625,
+       "grade": 0.0625,
+       "zs": [
+        850.0,
+        851.875,
+        850.625
+       ],
+       "back": 0.03125,
+       "point": {
+        "index": 1,
+        "inserted": false,
+        "along": 30.0,
+        "x": 500030.0,
+        "y": 4400000.0,
+        "z": 851.875,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         851.875,
+         850.625,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "1": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500030.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500080.0,
+          "y": 4400040.0
+         },
+         {
+          "x": 500100.0,
+          "y": 4400040.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         0.0,
+         0.5,
+         0.0,
+         0.0
+        ],
+        "zs": [
+         850.0,
+         null,
+         null,
+         851.25,
+         null
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizgi Köşe ekle'deki gibi çoklu çizgi olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000002",
+      "from": 0,
+      "to": 1,
+      "end": 899.0,
+      "ahead": 0.02,
+      "back": 0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 100.0,
+       "start": 900.0,
+       "end": 899.0,
+       "grade": 0.02,
+       "zs": [
+        900.0,
+        900.8,
+        899.0
+       ],
+       "back": 0.03,
+       "point": {
+        "index": 1,
+        "inserted": true,
+        "along": 40.0,
+        "x": 500024.0,
+        "y": 4400132.0,
+        "z": 900.8,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400100.0
+         },
+         {
+          "x": 500024.0,
+          "y": 4400132.0
+         },
+         {
+          "x": 500060.0,
+          "y": 4400180.0
+         }
+        ],
+        "bulges": null,
+        "zs": [
+         900.0,
+         900.8,
+         899.0
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "2": {
+        "kind": "line",
+        "pts": null,
+        "bulges": null,
+        "zs": null,
+        "a": {
+         "x": 500000.0,
+         "y": 4400100.0
+        },
+        "b": {
+         "x": 500060.0,
+         "y": 4400180.0
+        },
+        "za": 900.0,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Alanın dış halkası: başlangıç ve bitiş verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000003",
+      "from": 0,
+      "to": 3,
+      "start": 120.0,
+      "end": 119.5,
+      "ahead": 0.01,
+      "back": 0.015
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 110.0,
+       "start": 120.0,
+       "end": 119.5,
+       "grade": 0.01,
+       "zs": [
+        120.0,
+        120.4,
+        120.46,
+        120.1,
+        119.5
+       ],
+       "back": 0.015,
+       "point": {
+        "index": 2,
+        "inserted": true,
+        "along": 45.99999999999999,
+        "x": 500240.0,
+        "y": 4400006.0,
+        "z": 120.46,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "3": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 500200.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500240.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500240.0,
+          "y": 4400006.0
+         },
+         {
+          "x": 500240.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500200.0,
+          "y": 4400030.0
+         }
+        ],
+        "bulges": null,
+        "zs": [
+         120.0,
+         120.4,
+         120.46,
+         120.1,
+         119.5
+        ],
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "3": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 500200.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500240.0,
+          "y": 4400000.0
+         },
+         {
+          "x": 500240.0,
+          "y": 4400030.0
+         },
+         {
+          "x": 500200.0,
+          "y": 4400030.0
+         }
+        ],
+        "bulges": null,
+        "zs": null,
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğim ile yüksek/alçak nokta birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "grade": 0.02,
+      "ahead": 0.03,
+      "back": 0.02
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Eğim (grade) ile başlangıçtan ve bitişten eğimler (ahead, back) birlikte verilmez: ya sabit eğim ya yüksek/alçak nokta.",
+       "path": "grade"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız başlangıçtan eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.03
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yüksek/alçak nokta iki eğimle bulunur: başlangıçtan eğimi (ahead) ve bitişten eğimi (back) birlikte verin.",
+       "path": "back"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yalnız bitişten eğim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "back": 0.02
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "Yüksek/alçak nokta iki eğimle bulunur: başlangıçtan eğimi (ahead) ve bitişten eğimi (back) birlikte verin.",
+       "path": "ahead"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bitiş köşesinin kotu yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2,
+      "ahead": 0.03,
+      "back": 0.02
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "elevation_missing",
+       "message": "2. köşenin kotu yok; bitiş kotunu (end) verin.",
+       "path": "end"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Paralel eğimler kesişmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.02,
+      "back": -0.02
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_intersection",
+       "message": "Başlangıçtan ve bitişten eğimler paralel (biri öbürünün eksisi): hiçbir yerde kesişmezler. Eğimlerden birini değiştirin.",
+       "path": "back"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişme aralığın dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 3,
+      "ahead": 0.05,
+      "back": -0.03
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_intersection",
+       "message": "İki eğim aralığın içinde kesişmiyor: kesişme yol boyunca başlangıçtan -129.434 m'de, aralık 0 ile 127.956 m arası (uçlar sayılmaz). Eğimleri ya da kotları değiştirin.",
+       "path": "back"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kesişme bitişte: uçlar sayılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000001",
+      "from": 0,
+      "to": 2,
+      "end": 854.375,
+      "ahead": 0.0625,
+      "back": 0.03125
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_intersection",
+       "message": "İki eğim aralığın içinde kesişmiyor: kesişme yol boyunca başlangıçtan 70.000 m'de, aralık 0 ile 70.000 m arası (uçlar sayılmaz). Eğimleri ya da kotları değiştirin.",
+       "path": "back"
       }
      },
      "expect": {

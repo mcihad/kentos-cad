@@ -5,14 +5,18 @@
 //! on the drawing, each the path's vertex nearest it within the pick aperture (docs/adr/2180). While the window is open
 //! the range is marked on the drawing: its start and end vertices ringed, the path between them drawn over in the
 //! accent, arcs as points along them; while the end is being picked, the start alone (docs/adr/2980).
+//!
+//! docs/adr/3380: Hedef chooses the grade, the end's elevation or the high or low point (Yüksek/alçak nokta): the end's
+//! elevation, the grade from the start and the grade from the end (each from its vertex into the range, up positive);
+//! the preview says where the point falls (a new vertex between two, or an existing one) and rings it on the drawing.
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, Entity};
+use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, Entity, GradePointKind, GradedPoint};
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, entities_grade};
-use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Switch};
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -22,6 +26,43 @@ pub const TITLE: &str = "Eğimle kot ver";
 const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
 const PICK: &str = "Sahneden seç";
+
+/// What the range's end is given by (docs/adr/3380): the grade, the end's elevation or the high or low point.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Target {
+    #[default]
+    Grade,
+    End,
+    Peak,
+}
+
+impl std::fmt::Display for Target {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Target::Grade => "Eğim",
+            Target::End => "Bitiş kotu",
+            Target::Peak => "Yüksek/alçak nokta",
+        })
+    }
+}
+
+/// The point's name as the preview and the message say it.
+fn kind_words(k: GradePointKind) -> &'static str {
+    match k {
+        GradePointKind::High => "Yüksek nokta",
+        GradePointKind::Low => "Alçak nokta",
+        GradePointKind::Break => "Eğimin değiştiği nokta",
+    }
+}
+
+/// Where the point falls, the vertices numbered from 1: “2. ile 3. köşe arasına yeni köşe” or “2. köşeye”.
+fn place_words(p: &GradedPoint) -> String {
+    if p.inserted {
+        format!("{}. ile {}. köşe arasına yeni köşe", p.index, p.index + 1)
+    } else {
+        format!("{}. köşeye (köşe eklenmez)", p.index + 1)
+    }
+}
 
 /// Which end of the range a click on the drawing gives (docs/adr/2180).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -38,11 +79,14 @@ pub struct State {
     pub from: f64,
     pub to: f64,
     pub start: f64,
-    /// By the end's elevation (else by the grade).
-    pub by_end: bool,
+    /// What the end is given by.
+    pub target: Target,
     pub end: f64,
     /// Percent.
     pub percent: f64,
+    /// The high or low point's grades from the start and from the end, percent.
+    pub ahead: f64,
+    pub back: f64,
     pub plan: Option<Result<EntitiesGraded, String>>,
     /// The end a click on the drawing is awaited for (Sahneden seç).
     pub picking: Option<Pick>,
@@ -53,9 +97,11 @@ pub enum Event {
     From(f64),
     To(f64),
     Start(f64),
-    ByEnd(bool),
+    Target(Target),
     End(f64),
     Percent(f64),
+    Ahead(f64),
+    Back(f64),
     /// Sahneden seç: the range by two clicks, its start then its end.
     Pick,
     Apply,
@@ -74,8 +120,10 @@ impl App {
             from: (s.from.max(1.0) as u32) - 1,
             to: (s.to.max(1.0) as u32) - 1,
             start: Some(s.start),
-            end: s.by_end.then_some(s.end),
-            grade: (!s.by_end).then_some(s.percent / 100.0),
+            end: (s.target != Target::Grade).then_some(s.end),
+            grade: (s.target == Target::Grade).then_some(s.percent / 100.0),
+            ahead: (s.target == Target::Peak).then_some(s.ahead / 100.0),
+            back: (s.target == Target::Peak).then_some(s.back / 100.0),
             expected_revision: None,
         }
     }
@@ -120,9 +168,11 @@ impl App {
             from: 1.0,
             to: n as f64,
             start: z0.unwrap_or(0.0),
-            by_end: false,
+            target: Target::Grade,
             end: z0.unwrap_or(0.0),
             percent: 2.0,
+            ahead: 2.0,
+            back: 2.0,
             plan: None,
             picking: None,
         };
@@ -136,9 +186,11 @@ impl App {
             Event::From(v) => self.grade.from = v.round(),
             Event::To(v) => self.grade.to = v.round(),
             Event::Start(v) => self.grade.start = v,
-            Event::ByEnd(on) => self.grade.by_end = on,
+            Event::Target(t) => self.grade.target = t,
             Event::End(v) => self.grade.end = v,
             Event::Percent(v) => self.grade.percent = v,
+            Event::Ahead(v) => self.grade.ahead = v,
+            Event::Back(v) => self.grade.back = v,
             Event::Pick => {
                 self.start_grade_pick(Pick::Start);
                 return Task::none();
@@ -148,16 +200,26 @@ impl App {
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
                 match entities_grade::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
-                        self.say(
-                            Level::Success,
-                            format!(
+                        let f = self.format();
+                        let said = match &output.point {
+                            Some(p) => format!(
+                                "Eğimle kot verildi: {} {}, kot {}; {} köşe, {} → {} (tek adımda geri alınır).",
+                                kind_words(p.kind),
+                                place_words(p),
+                                f.length(p.z),
+                                output.zs.len(),
+                                f.length(output.start),
+                                f.length(output.end)
+                            ),
+                            None => format!(
                                 "Eğimle kot verildi: {} köşe, %{:.3} eğim, {:.3} → {:.3} m (tek adımda geri alınır).",
                                 output.zs.len(),
                                 output.grade * 100.0,
                                 output.start,
                                 output.end
                             ),
-                        );
+                        };
+                        self.say(Level::Success, said);
                         self.grade = State::default();
                         self.dialog = None;
                     }
@@ -222,7 +284,14 @@ impl App {
                     .into_iter()
                     .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
                     .collect();
-                (path, vec![pts[from], pts[to]])
+                // The high or low point the preview found, ringed with the range's ends (docs/adr/3380).
+                let point = match &self.grade.plan {
+                    Some(Ok(EntitiesGraded { point: Some(p), .. })) if self.grade.target == Target::Peak => {
+                        Some(kentos_commands::Vec2 { x: p.x, y: p.y })
+                    }
+                    _ => None,
+                };
+                (path, [pts[from], pts[to]].into_iter().chain(point).collect())
             }
             None => (Vec::new(), Vec::new()),
         }
@@ -284,11 +353,8 @@ impl App {
         let s = &self.grade;
         // One label column, every box the same width (the owner: a form's fields line up).
         const BOX: f32 = 140.0;
-        let target: Element<'_, Message> = if s.by_end {
-            NumberInput::new(s.end, |v| msg(Event::End(v))).step(0.1).decimals(3).point().width(BOX).into()
-        } else {
-            NumberInput::new(s.percent, |v| msg(Event::Percent(v))).step(0.1).decimals(3).point().width(BOX).into()
-        };
+        let end = || NumberInput::new(s.end, |v| msg(Event::End(v))).step(0.1).decimals(3).point().width(BOX);
+        let percent = |v: f64, on: fn(f64) -> Event| NumberInput::new(v, move |x| msg(on(x))).step(0.1).decimals(3).point().width(BOX);
         // The chosen vertices where they are, as the drawing writes coordinates (Y, X).
         let pts = self.grade_vertices();
         let f = self.format();
@@ -315,9 +381,30 @@ impl App {
                 at(s.to)
             ))
             .field("Başlangıç kotu (m)", NumberInput::new(s.start, |v| msg(Event::Start(v))).step(0.1).decimals(3).point().width(BOX))
-            .row(Switch::new(s.by_end, |on| msg(Event::ByEnd(on))).label("Eğim yerine bitiş kotunu ver"))
-            .field(if s.by_end { "Bitiş kotu (m)" } else { "Eğim (%)" }, target);
+            .field("Hedef", Segmented::new([Target::Grade, Target::End, Target::Peak], s.target, |t| msg(Event::Target(t))));
+        let form = match s.target {
+            Target::Grade => form.field("Eğim (%)", percent(s.percent, Event::Percent)),
+            Target::End => form.field("Bitiş kotu (m)", end()),
+            Target::Peak => form
+                .field("Bitiş kotu (m)", end())
+                .field("Başlangıçtan eğim (%)", percent(s.ahead, Event::Ahead))
+                .field("Bitişten eğim (%)", percent(s.back, Event::Back))
+                .help("Her eğim kendi köşesinden aralığın içine doğrudur, artı yukarı; ikisinin kesiştiği yere köşe eklenir."),
+        };
         let line = match &s.plan {
+            Some(Ok(EntitiesGraded { point: Some(at), zs, .. })) => words::text_line(
+                Kind::Ok,
+                format!(
+                    "{}: {} (Y {}, X {}), başlangıçtan {}, kot {}; {} köşenin kotu değişecek.",
+                    kind_words(at.kind),
+                    place_words(at),
+                    f.coord(at.x),
+                    f.coord(at.y),
+                    f.length(at.along),
+                    f.length(at.z),
+                    zs.len()
+                ),
+            ),
             Some(Ok(p)) => words::text_line(
                 Kind::Ok,
                 format!(
@@ -334,7 +421,11 @@ impl App {
         };
         let about = words::text_line(
             Kind::Info,
-            "Aradaki köşeler yol boyunca yatay uzaklıklarına göre (yaylı kenar yayı boyunca) kot alır; aralığın dışındakiler kotlarını korur.",
+            if s.target == Target::Peak {
+                "Noktaya kadar köşeler başlangıçtan, sonrakiler bitişten eğimle kot alır (yaylı kenar yayı boyunca); aralığın dışındakiler kotlarını korur."
+            } else {
+                "Aradaki köşeler yol boyunca yatay uzaklıklarına göre (yaylı kenar yayı boyunca) kot alır; aralığın dışındakiler kotlarını korur."
+            },
         );
         let body = Column::new().spacing(12).push(form).push(words::summary(vec![about, line]));
         let ready = matches!(s.plan, Some(Ok(_)));

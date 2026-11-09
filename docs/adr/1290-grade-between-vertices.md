@@ -43,7 +43,7 @@ Tarih: 2026-11-06. plan/map-cad.md MAP-06 (alt madde: hedef kot/eğim). Durum: t
 
 ## Sonra
 
-- Köşeleri sahneden seçmek (iki tıkla aralık; yapıldı, [ADR 2180](2180-grade-range-picked-on-the-drawing.md)), yüksek/alçak nokta ekleme, eğimle yükselt/alçalt (Raise/Lower by
+- Köşeleri sahneden seçmek (iki tıkla aralık; yapıldı, [ADR 2180](2180-grade-range-picked-on-the-drawing.md)), yüksek/alçak nokta ekleme (yapıldı, [ADR 3380](3380-grade-high-low-point.md)), eğimle yükselt/alçalt (Raise/Lower by
   Reference), yüzeyden kot alma.
 - Kalıcı ilişkinin harita tasarımında kullanıcı kararıyla kurulması (paralel kaydırmada “ilişkiyi koru”), ortak sınır ve
   çok parçalı nesne (MAP-06'nın kalanı).

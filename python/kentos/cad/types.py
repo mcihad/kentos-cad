@@ -2727,6 +2727,19 @@ GradeLimitName = Literal["rise", "fall"]
 """The names of :class:`GradeLimit`, for a plain string."""
 
 
+class GradePointKind(_StrEnum):
+    """Which the point is: `high` (both grades rise towards it), `low` (both fall towards it) or `break` (neither: one
+    grade gives way to another).
+    """
+    HIGH = "high"
+    LOW = "low"
+    BREAK = "break"
+
+
+GradePointKindName = Literal["high", "low", "break"]
+"""The names of :class:`GradePointKind`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -32895,15 +32908,21 @@ class EntitiesFlattened(_Model):
 @dataclass(kw_only=True, slots=True)
 class EntitiesGrade(_Model):
     """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
-    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade.
+    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+    or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
+    `end` or else the end vertex's own.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
     (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
-    `invalid_input` (both or neither of `end` and `grade`, a number not finite, a range of no length),
-    `elevation_missing` (no start given and the vertex has none), `layer_locked`.
+    `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+    alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
+    and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
+    two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
     Attributes:
         from_: Unit: index.
         to: Unit: index.
+        ahead: The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up). Unit: grade.
+        back: The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end). Unit: grade.
         end: Unit: elevation.
         grade: Unit: grade.
         start: Unit: elevation.
@@ -32911,6 +32930,8 @@ class EntitiesGrade(_Model):
     uid: str
     from_: int
     to: int
+    ahead: float | None | Unset = UNSET
+    back: float | None | Unset = UNSET
     end: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
@@ -32921,6 +32942,10 @@ class EntitiesGrade(_Model):
         out["uid"] = self.uid
         out["from"] = self.from_
         out["to"] = self.to
+        if self.ahead is not UNSET:
+            out["ahead"] = None if self.ahead is None else float(self.ahead)
+        if self.back is not UNSET:
+            out["back"] = None if self.back is None else float(self.back)
         if self.end is not UNSET:
             out["end"] = None if self.end is None else float(self.end)
         if self.expected_revision is not UNSET:
@@ -32937,6 +32962,8 @@ class EntitiesGrade(_Model):
             uid=data["uid"],
             from_=data["from"],
             to=data["to"],
+            ahead=UNSET if "ahead" not in data else None if data["ahead"] is None else float(data["ahead"]),
+            back=UNSET if "back" not in data else None if data["back"] is None else float(data["back"]),
             end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
@@ -32947,13 +32974,16 @@ class EntitiesGrade(_Model):
 @dataclass(kw_only=True, slots=True)
 class EntitiesGraded(_Model):
     """Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,
-    the grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.
+    the grade (rise over run; for the high or low point the grade ahead, and `back` the grade back), each vertex's new
+    elevation from `from` to `to` (an added vertex among them), the high or low point (`point`, docs/adr/3380) and the
+    drawing's revision.
     Attributes:
         length: Unit: length.
         start: Unit: elevation.
         end: Unit: elevation.
         grade: Unit: grade.
         zs: Unit: elevation.
+        back: Unit: grade.
     """
     length: float
     start: float
@@ -32961,6 +32991,8 @@ class EntitiesGraded(_Model):
     grade: float
     zs: list[float]
     revision: str
+    back: float | None | Unset = UNSET
+    point: GradedPoint | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -32970,6 +33002,10 @@ class EntitiesGraded(_Model):
         out["grade"] = float(self.grade)
         out["zs"] = [float(e0) for e0 in self.zs]
         out["revision"] = self.revision
+        if self.back is not UNSET:
+            out["back"] = None if self.back is None else float(self.back)
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else self.point.to_json()
         return out
 
     @classmethod
@@ -32981,6 +33017,8 @@ class EntitiesGraded(_Model):
             grade=float(data["grade"]),
             zs=[float(e0) for e0 in data["zs"]],
             revision=data["revision"],
+            back=UNSET if "back" not in data else None if data["back"] is None else float(data["back"]),
+            point=UNSET if "point" not in data else None if data["point"] is None else GradedPoint.from_json(data["point"]),
         )
 
 
@@ -41184,6 +41222,50 @@ class GpkgTileZoom(_Model):
             pixel=[float(e0) for e0 in data["pixel"]],
             tiles=data["tiles"],
             formats=list(data["formats"]) if "formats" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GradedPoint(_Model):
+    """The high or low point of `cad.entities.grade` (docs/adr/3380): its vertex after the write (0-based), whether that
+    vertex was added (else an existing one lay there), its horizontal distance from the start along the path, its place
+    and elevation, and which it is.
+    Attributes:
+        index: Unit: index.
+        along: Unit: length.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: elevation.
+    """
+    index: int
+    inserted: bool
+    along: float
+    x: float
+    y: float
+    z: float
+    kind: GradePointKind | GradePointKindName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["inserted"] = self.inserted
+        out["along"] = float(self.along)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        out["kind"] = _enum_out(self.kind)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GradedPoint:
+        return cls(
+            index=data["index"],
+            inserted=data["inserted"],
+            along=float(data["along"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+            kind=_enum_in(GradePointKind, data["kind"]),
         )
 
 
@@ -131021,6 +131103,9 @@ __all__ = [
     "GpkgTilesModeName",
     "GradeLimit",
     "GradeLimitName",
+    "GradePointKind",
+    "GradePointKindName",
+    "GradedPoint",
     "GradientShape",
     "GradientShapeName",
     "GrantRole",

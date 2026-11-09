@@ -1,6 +1,7 @@
 //! Eğimle kot ver (grade_window.rs, docs/adr/1290): the shared cases' polyline (a straight and an arc edge) selected,
 //! the window previews 2 % from its own start elevation; Uygula writes one undo step; by end elevation the grade
-//! follows; a text selected is refused; Harita and Yol offer it, GIS and Mimari do not. And its pictures.
+//! follows; a text selected is refused; Harita and Yol offer it, GIS and Mimari do not. And its pictures. The high or
+//! low point (docs/adr/3380): the preview says where it falls and rings it; Uygula adds the vertex in one undo step.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -42,7 +43,7 @@ fn a_grade_previews_and_writes_one_step() {
     assert_eq!(zs(&app)[4], None, "one step");
     // By the end's elevation: the grade follows.
     let _ = app.update(Message::Run("tool.grade"));
-    let _ = app.update(Message::Grade(G::ByEnd(true)));
+    let _ = app.update(Message::Grade(G::Target(crate::grade_window::Target::End)));
     let _ = app.update(Message::Grade(G::End(851.0)));
     let p = app.grade.plan.clone().expect("a plan").expect("previewed");
     assert!((p.grade - 1.0 / p.length).abs() < 1e-12);
@@ -247,5 +248,105 @@ fn range_screens() {
         let file = out.join(format!("aralik-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
+    }
+}
+
+/// Yüksek/alçak nokta (docs/adr/3380): vertices 1 to 4 of the shared polyline, its own 851.25 m at the end, 4 % from the
+/// start and 1 % from the end; the preview is the shared case's point (a new vertex between the 2nd and 3rd), ringed
+/// with the range's ends; Uygula adds it, one undo takes it back; parallel grades are said and Uygula stays off.
+#[test]
+fn a_high_point_previews_ringed_and_adds_a_vertex() {
+    use crate::grade_window::Target;
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.entities.grade.json")).expect("cases");
+    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Yüksek nokta düz"))).expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    let mut app = opened(Some(Module::Map));
+    app.selection.set([Slot(1)]);
+    let _ = app.update(Message::Run("tool.grade"));
+    for e in [G::To(4.0), G::Target(Target::Peak), G::End(851.25), G::Ahead(4.0), G::Back(1.0)] {
+        let _ = app.update(Message::Grade(e));
+    }
+    let p = app.grade.plan.clone().expect("a plan").expect("previewed");
+    let at = p.point.clone().expect("a point");
+    assert_eq!((at.index, at.inserted, at.kind), (2, true, kentos_commands::GradePointKind::High));
+    assert!((at.x - want["point"]["x"].as_f64().expect("x")).abs() < 1e-6 && (at.z - want["point"]["z"].as_f64().expect("z")).abs() < 1e-9);
+    // Ringed with the range's ends.
+    let (_, ringed) = app.grade_marks();
+    assert_eq!(ringed.len(), 3);
+    assert!((ringed[2].x - at.x).abs() < 1e-9 && (ringed[2].y - at.y).abs() < 1e-9);
+    let _ = app.update(Message::Grade(G::Apply));
+    let pts = |app: &App| match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
+        Some(kentos_commands::Entity::Polyline(p)) => p.pts.len(),
+        _ => panic!("the polyline"),
+    };
+    assert_eq!(pts(&app), 6, "the vertex added");
+    assert!((zs(&app)[2].expect("its elevation") - at.z).abs() < 1e-9);
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(pts(&app), 5, "one step");
+    // Parallel grades: said, nothing to apply.
+    let _ = app.update(Message::Run("tool.grade"));
+    for e in [G::To(4.0), G::Target(Target::Peak), G::Ahead(2.0), G::Back(-2.0)] {
+        let _ = app.update(Message::Grade(e));
+    }
+    let Some(Err(why)) = app.grade.plan.clone() else { panic!("refused") };
+    assert!(why.contains("paralel"), "{why}");
+}
+
+/// The high point previewed beside the window, light wide and dark narrow, and the polyline after Uygula,
+/// `.run/gui-evidence/yuksek-nokta-3380/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib grade_window_tests::peak_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn peak_screens() {
+    use crate::grade_window::Target;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yuksek-nokta-3380");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        app.selection.set([Slot(1)]);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let pts = match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
+            Some(kentos_commands::Entity::Polyline(p)) => p.pts.clone(),
+            _ => panic!("the polyline"),
+        };
+        // The polyline in the left third, where the window does not cover it.
+        let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.x), b.max(p.x)));
+        let (y0, y1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p.y), b.max(p.y)));
+        let w = x1 - x0 + 10.0;
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds { min_x: x0 - 5.0, min_y: y0 - 15.0, max_x: x0 - 5.0 + 3.2 * w, max_y: y1 + 15.0 },
+            24.0,
+        );
+        let _ = app.update(Message::Run("tool.grade"));
+        for e in [G::To(4.0), G::Target(Target::Peak), G::End(851.25), G::Ahead(4.0), G::Back(1.0)] {
+            let _ = app.update(Message::Grade(e));
+        }
+        app.selection.set(Vec::new());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("onizleme-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        if theme == "light" {
+            // After Uygula: the vertex on the polyline, its vertices shown by selecting it.
+            let _ = app.update(Message::Grade(G::Apply));
+            app.selection.set([Slot(1)]);
+            snapshot.settle(&mut app, App::view, &mut update);
+            let file = out.join(format!("uygulandi-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        }
     }
 }

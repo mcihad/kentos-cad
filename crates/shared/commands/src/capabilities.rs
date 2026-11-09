@@ -2460,6 +2460,7 @@ const ENTRIES: &[Entry] = &[
                 "wrong_place",
                 "invalid_input",
                 "elevation_missing",
+                "no_intersection",
                 "layer_locked",
             ],
         ],

@@ -9469,8 +9469,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_ENTITIES_GRADE.into(),
             version: crate::CAD_ENTITIES_GRADE_VERSION,
             title: "Eğimle kot ver".into(),
-            summary: "Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim ve köşelerin yeni kotları. Tek geri alma adımı “Eğimle kot ver”. \
-                      Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing, layer_locked."
+            summary: "Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Yüksek/alçak nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR 3380): grade yerine ahead (başlangıçtan aralığın içine eğim) ve back (bitişten başlangıca doğru eğim), artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi kotu. İki eğimin kesiştiği yere köşe eklenir (yaylı kenarda iki yarı yayın çemberinde kalır; çizgi Köşe ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa ona kot verilir; ona kadar köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back geri eğim), köşelerin yeni kotları (eklenen dahil) ve point: noktanın köşe sırası, eklenip eklenmediği, başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break). Tek geri alma adımı “Eğimle kot ver”. \
+                      Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing, no_intersection (eğimler paralel ya da aralığın içinde kesişmiyor), layer_locked."
                 .into(),
             aliases: vec!["egimlekot".into(), "setgrade".into()],
             effect: CommandEffect::Document,
@@ -9484,11 +9484,18 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::EntitiesGraded>(),
             plan: Some(schema::<crate::EntitiesGraded>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "İlk köşeden dördüncüye %2 eğimle".into(),
-                input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "from": 0, "to": 3, "start": 850.0, "grade": 0.02 }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "İlk köşeden dördüncüye %2 eğimle".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "from": 0, "to": 3, "start": 850.0, "grade": 0.02 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yüksek nokta: başlangıçtan %3, bitişten %2 yukarı".into(),
+                    input: json!({ "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "from": 0, "to": 3, "ahead": 0.03, "back": 0.02 }),
+                    output: None,
+                },
+            ],
         },
         // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
         CommandDescriptor {

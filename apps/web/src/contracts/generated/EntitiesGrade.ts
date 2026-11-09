@@ -2,11 +2,23 @@
 
 /**
  * Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
- * outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade.
+ * outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+ * or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
+ * `end` or else the end vertex's own.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
  * (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
- * `invalid_input` (both or neither of `end` and `grade`, a number not finite, a range of no length),
- * `elevation_missing` (no start given and the vertex has none), `layer_locked`.
+ * `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+ * alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
+ * and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
+ * two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
  */
-export type EntitiesGrade = { uid: string, from: number, to: number, start?: number, end?: number, grade?: number, expectedRevision?: string, };
+export type EntitiesGrade = { uid: string, from: number, to: number, start?: number, end?: number, grade?: number, 
+/**
+ * The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up).
+ */
+ahead?: number, 
+/**
+ * The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end).
+ */
+back?: number, expectedRevision?: string, };

@@ -56177,7 +56177,7 @@
       "id": "cad.entities.grade",
       "version": 1,
       "title": "Eğimle kot ver",
-      "summary": "Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim ve köşelerin yeni kotları. Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing, layer_locked.",
+      "summary": "Bir çizginin, çoklu çizginin ya da alanın dış halkasının from'dan to'ya köşelerine sabit eğimle kot verir (Civil 3D'nin Set Grade/Slope Between Points'i gibi; ADR 1290): başlangıç kotu start (yoksa köşenin kendi kotu), sonra ya bitiş kotu end (eğim ondan çıkar) ya eğim grade (düşey bölü yatay: 0,02 %2'dir; bitiş ondan çıkar); aradaki her köşe başlangıçtan yol boyunca yatay uzaklığıyla (yaylı kenar yayı boyunca). Aralık dışındaki köşeler kotlarını korur. Yüksek/alçak nokta (Civil 3D'nin Insert High/Low Elevation Point'i gibi; ADR 3380): grade yerine ahead (başlangıçtan aralığın içine eğim) ve back (bitişten başlangıca doğru eğim), artı yukarı; bitiş kotu end ya da bitiş köşesinin kendi kotu. İki eğimin kesiştiği yere köşe eklenir (yaylı kenarda iki yarı yayın çemberinde kalır; çizgi Köşe ekle'deki gibi çoklu çizgi olur), orada bir köşe varsa ona kot verilir; ona kadar köşeler ileri, sonrakiler geri eğimle. Cevap: aralığın yatay uzunluğu, başlangıç ve bitiş kotu, eğim (yüksek/alçak noktada ileri eğim, back geri eğim), köşelerin yeni kotları (eklenen dahil) ve point: noktanın köşe sırası, eklenip eklenmediği, başlangıçtan uzaklığı, yeri, kotu ve türü (high, low, break). Tek geri alma adımı “Eğimle kot ver”. Retler: invalid_revision, revision_conflict, invalid_uid, entity_not_found, not_a_path, wrong_place, invalid_input, elevation_missing, no_intersection (eğimler paralel ya da aralığın içinde kesişmiyor), layer_locked.",
       "aliases": [
         "egimlekot",
         "setgrade"
@@ -56196,8 +56196,26 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`, a number not finite, a range of no length),\n`elevation_missing` (no start given and the vertex has none), `layer_locked`.",
+        "description": "Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's\nouter ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;\nor, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being\n`end` or else the end vertex's own.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`\n(not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),\n`invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`\nalone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given\nand the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the\ntwo grades parallel, or meeting outside the range or at its start or end), `layer_locked`.",
         "properties": {
+          "ahead": {
+            "description": "The high or low point's grade ahead: from the start into the range, rise over run (0.02 is 2 % up).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
+          "back": {
+            "description": "The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
           "end": {
             "format": "double",
             "type": [
@@ -56255,8 +56273,16 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.",
+        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run; for the high or low point the grade ahead, and `back` the grade back), each vertex's new\nelevation from `from` to `to` (an added vertex among them), the high or low point (`point`, docs/adr/3380) and the\ndrawing's revision.",
         "properties": {
+          "back": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
           "end": {
             "format": "double",
             "type": "number",
@@ -56271,6 +56297,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "point": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GradedPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "revision": {
             "type": "string"
@@ -56302,8 +56338,16 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run), each vertex's new elevation from `from` to `to`, and the drawing's revision.",
+        "description": "Output of `cad.entities.grade` v1 (and its plan): the range's horizontal length, its start's and end's elevations,\nthe grade (rise over run; for the high or low point the grade ahead, and `back` the grade back), each vertex's new\nelevation from `from` to `to` (an added vertex among them), the high or low point (`point`, docs/adr/3380) and the\ndrawing's revision.",
         "properties": {
+          "back": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "grade"
+          },
           "end": {
             "format": "double",
             "type": "number",
@@ -56318,6 +56362,16 @@
             "format": "double",
             "type": "number",
             "x-unit": "length"
+          },
+          "point": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/GradedPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "revision": {
             "type": "string"
@@ -56357,6 +56411,7 @@
           "wrong_place",
           "invalid_input",
           "elevation_missing",
+          "no_intersection",
           "layer_locked"
         ]
       },
@@ -56367,6 +56422,16 @@
             "from": 0,
             "grade": 0.02,
             "start": 850.0,
+            "to": 3,
+            "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+          }
+        },
+        {
+          "title": "Yüksek nokta: başlangıçtan %3, bitişten %2 yukarı",
+          "input": {
+            "ahead": 0.03,
+            "back": 0.02,
+            "from": 0,
             "to": 3,
             "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
           }
@@ -106667,7 +106732,7 @@
       "code": "elevation_missing",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Başlangıç köşesinin kotu yok; başlangıç kotunu verin."
+      "meaning": "Başlangıç ya da bitiş köşesinin kotu yok; o kotu verin."
     },
     {
       "code": "clean_beyond_acceptance",
@@ -139750,6 +139815,62 @@
         "fall"
       ],
       "type": "string"
+    },
+    "GradePointKind": {
+      "description": "Which the point is: `high` (both grades rise towards it), `low` (both fall towards it) or `break` (neither: one\ngrade gives way to another).",
+      "enum": [
+        "high",
+        "low",
+        "break"
+      ],
+      "type": "string"
+    },
+    "GradedPoint": {
+      "description": "The high or low point of `cad.entities.grade` (docs/adr/3380): its vertex after the write (0-based), whether that\nvertex was added (else an existing one lay there), its horizontal distance from the start along the path, its place\nand elevation, and which it is.",
+      "properties": {
+        "along": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "index": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "inserted": {
+          "type": "boolean"
+        },
+        "kind": {
+          "$ref": "#/$defs/GradePointKind"
+        },
+        "x": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "y": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "z": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        }
+      },
+      "required": [
+        "index",
+        "inserted",
+        "along",
+        "x",
+        "y",
+        "z",
+        "kind"
+      ],
+      "type": "object"
     },
     "GradientShape": {
       "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
