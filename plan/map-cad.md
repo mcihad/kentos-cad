@@ -22,12 +22,12 @@ tamamlanma işaretleri ve başka ajanın çalışma alanındaki değişiklikleri
 değiştirilmemiştir. Aşağıdaki maddelerin tamamı **açıktır**; mevcut temellerin
 listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 
-## Durum özeti (8 Kasım 2026)
+## Durum özeti (9 Kasım 2026)
 
 Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
-yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Üçüncü tur her satırın ilk işini MAP-01'den
-sırayla alır.
+yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
+sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
