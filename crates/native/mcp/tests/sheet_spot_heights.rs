@@ -1,7 +1,9 @@
 //! The summits' and pits' heights through a real AI host (plan/map-cad.md MAP-14, docs/adr/2320): the shared cases'
 //! drawing opened as a .kcad file over MCP. `road.terrains.sheetcontours` with `spots` plans each case's
 //! characteristic points: the hill's summit, the summit outside the building, the bowl's pit; with `slopes`, the
-//! corners of the slopes' top and bottom lines with the surface's heights, the summit first (docs/adr/3120).
+//! corners of the slopes' top and bottom lines with the surface's heights, the summit first (docs/adr/3120); with
+//! `points`, the surveyor's chosen points, a measured one with its own height and the surface's beside it, after the
+//! slopes (docs/adr/3520).
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -9,12 +11,14 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
     s.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,"io.modelcontextprotocol/clientInfo":{"name":"sheet-spot-heights-test","version":"1"},"io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone()
 }
 
-const CASES: [&str; 5] = [
+const CASES: [&str; 7] = [
     "Tepe kotu planı yazmaz",
     "Tepe kotu detaylarla: binanın içindeki köşe sayılmaz",
     "Çukur kotu: çukurun en içteki kapalı eğrisinde en alçak köşe",
     "Şev kotları planı yazmaz (1/5000)",
     "Tepe ve şev kotları birlikte: tepe önce, şevler sonra (1/5000)",
+    "Seçilen noktalar planı yazmaz (1/5000)",
+    "Şevler ve seçilen noktalar birlikte: şevler önce (1/5000)",
 ];
 
 #[test]
@@ -42,6 +46,11 @@ fn the_spot_heights_over_mcp_are_the_cases() {
             assert_eq!((&g["kind"], &g["text"]), (&w["kind"], &w["text"]), "{name}");
             for key in ["x", "y", "z"] {
                 assert!((g[key].as_f64().unwrap() - w[key].as_f64().unwrap()).abs() < 1e-9, "{name} {key}");
+            }
+            // A measured chosen point carries the surface's height too; the others none.
+            match (g["surface"].as_f64(), w["surface"].as_f64()) {
+                (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{name} surface"),
+                (a, b) => assert_eq!(a, b, "{name} surface"),
             }
         }
     }

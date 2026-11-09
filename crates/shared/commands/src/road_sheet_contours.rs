@@ -95,7 +95,7 @@ pub fn contour_rules_default() -> Option<ContourRules> {
 /// Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
 /// the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
 /// their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
-/// `slopes.top`, `slopes.bottom`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
+/// `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
 /// `invalid_contours` (more than 10 000 levels), `no_contours`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -135,6 +135,11 @@ pub struct TerrainsSheetContours {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub slopes: Option<SheetSlopes>,
+    /// The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
+    /// takes a spot height, its own measured height when it has one, else the surface's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub points: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub rules: Option<ContourRules>,
@@ -194,8 +199,9 @@ pub struct SheetContourLabel {
 
 /// A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
 /// with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
-/// (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there; its place and height, and
-/// the height to the decimetre as written.
+/// (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
+/// (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+/// height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -210,6 +216,10 @@ pub struct SheetSpot {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub z: f64,
     pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub surface: Option<f64>,
 }
 
 /// Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,

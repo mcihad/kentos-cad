@@ -68,7 +68,8 @@ kotları (şev sınırı çizgisinden)”.
 
 ## Sonra
 
-- Ölçmecinin seçtiği öbür noktalar (m. 78(1)(ğ)'nin “gerekli görülen diğer noktalar”ı): bir nokta katmanı.
-- Noktanın kendi ölçülmüş kotunun yüzeyinkinden ayrıldığı yerin bildirilmesi.
+- ~~Ölçmecinin seçtiği öbür noktalar (m. 78(1)(ğ)'nin “gerekli görülen diğer noktalar”ı): bir nokta katmanı.~~
+  [ADR 3520](3520-sheet-chosen-point-heights.md).
+- ~~Noktanın kendi ölçülmüş kotunun yüzeyinkinden ayrıldığı yerin bildirilmesi.~~ ADR 3520: notta en büyük fark ve yeri.
 - Yüzey birleştirme; bölgesel yeniden kurma (MAP-14'ün öbür maddeleri).
 - Web (TODOS §0.2).

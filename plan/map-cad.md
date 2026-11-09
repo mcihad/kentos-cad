@@ -44,7 +44,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
@@ -1473,6 +1473,15 @@ kadar; yönetmelik hangi noktanın karakteristik olduğunu söylemez), Ek-3 0004
 `slopes` (üst ve dip katmanları): çizgi ve çoklu çizgilerin köşeleri, ortak köşe bir kez, kot yüzeyden, yüzeyin dışındaki
 köşe sayılır; tepe ve çukurdan sonra `slopeTop`, `slopeBottom`; üç ret; 44 ortak durum (36'dan), Python, MCP; masaüstünde
 Şevler (ğ) satırı, katmanlar adlarından. Açık: ölçmecinin seçtiği öbür noktalar, yüzey birleştirme, bölgesel yeniden kurma.
+
+**9 Kasım 2026, altıncı tur — ölçmecinin seçtiği noktaların kotları ([ADR 3520](../docs/adr/3520-sheet-chosen-point-heights.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY m. 78(1)(ğ) (“gerekli görülen diğer noktalar” işaretlenerek kotları dm'ye
+kadar; hangileri olduğunu yönetmelik söylemez), m. 63, Ek-3 0004; Civil 3D 2023 kılavuzu (yüzeyden kot ile noktanın kendi
+kotu ayrı, değiştirmek açık komut). Kanıtlanan: `road.terrains.sheetcontours`'a `points` (nokta katmanları): kendi kotu
+varsa o (yüzeyinki `surface`'ta), yoksa yüzeyden; aynı yer bir kez; kotsuz ve yüzey dışındaki nokta sayılır; yalnız kot
+yazısı yazılır; not en büyük farkı ve yerini söyler; `chosen` türü şevlerden sonra; iki ret; 49 ortak durum (44'ten),
+Python, MCP; masaüstünde Seçilen noktalar (ğ) satırı. Açık: yüzey birleştirme, bölgesel yeniden kurma, fark eşiği ve
+m. 63(2) yerleşimi (kaynak beklenir).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

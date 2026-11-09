@@ -19,7 +19,11 @@
 //!   beside a point.
 //! - Asked for (`slopes`, docs/adr/3120; Article 78(1)(ğ)'s slopes, their bottoms and tops): every corner of a line or
 //!   polyline on the slopes' top layers, then on their bottom layers, in the drawing's order, once per place, its
-//!   height the surface's there (none off the surface: counted), written as the summits' are. A slope line that is
+//!   height the surface's there (none off the surface: counted), written as the summits' are. Asked for (`points`,
+//!   docs/adr/3520; Article 78(1)(ğ)'s other points the surveyor chose): every point on those layers (each of a
+//!   multi-point's), in the drawing's order, once per place, its own measured height when it has one (the surface's
+//!   kept beside it, the most they part said), else the surface's (none off it: counted); only its height is written,
+//!   the point being the surveyor's. A slope line that is
 //!   one of the surface's breaklines has its corners among the surface's vertices: the same height.
 //! - The auxiliary lines take the package's pattern (Ek-3 0003, docs/adr/2720) as the project line type “Yardımcı eğri
 //!   (‹package›)”, added to the project's types when it has none of the name (the project's own kept when it has); the
@@ -104,6 +108,7 @@ fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -
                 y: v[1],
                 z: v[2],
                 text: decimetre(v[2]),
+                surface: None,
             });
         }
     }
@@ -111,6 +116,36 @@ fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -
 }
 
 /// A height to the decimetre as written, half up (docs/adr/2320).
+/// The points the surveyor chose (docs/adr/3520): each point on `layers` (a multi-point's each), in the drawing's order,
+/// once per place; its own height when it has one (with the surface's there, if any), else the surface's; the points
+/// with neither are counted, not written; and how many take their own height.
+fn chosen_spots(doc: &kentos_domain::Document, surface: &Surface, layers: &[String]) -> (Vec<SheetSpot>, usize, usize) {
+    let mut out = Vec::new();
+    let mut seen: Vec<P> = Vec::new();
+    let (mut off, mut measured) = (0, 0);
+    for e in doc.entities().filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id)) {
+        let Entity::Point(p) = e else { continue };
+        let all = std::iter::once((p.p, p.z)).chain(p.parts.iter().flatten().map(|q| (q.p, q.z)));
+        for (at, own) in all {
+            let c = [at.x, at.y];
+            if seen.contains(&c) {
+                continue;
+            }
+            seen.push(c);
+            let ground = surface.height(c[0], c[1]).z;
+            match (own, ground) {
+                (Some(z), g) => {
+                    measured += 1;
+                    out.push(SheetSpot { kind: "chosen".into(), x: c[0], y: c[1], z, text: decimetre(z), surface: g });
+                }
+                (None, Some(z)) => out.push(SheetSpot { kind: "chosen".into(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
+                (None, None) => off += 1,
+            }
+        }
+    }
+    (out, off, measured)
+}
+
 fn decimetre(z: f64) -> String {
     format!("{:.1}", (z * 10.0 + 0.5).floor() / 10.0)
 }
@@ -140,7 +175,7 @@ fn slope_spots(doc: &kentos_domain::Document, surface: &Surface, slopes: &SheetS
                 }
                 seen.push(c);
                 match surface.height(c[0], c[1]).z {
-                    Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z) }),
+                    Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
                     None => off += 1,
                 }
             }
@@ -311,7 +346,8 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     // Spot heights need the package's text height (Ek-3 0004): without it they are not written (no height invented).
     let summits = input.spots.unwrap_or(false);
     let slopes = input.slopes.as_ref().filter(|s| !s.top.is_empty() || !s.bottom.is_empty());
-    let spot_height = match (summits || slopes.is_some(), rules.spot_height) {
+    let chosen = !input.points.is_empty();
+    let spot_height = match (summits || slopes.is_some() || chosen, rules.spot_height) {
         (false, _) => None,
         (true, Some(h)) if positive(h) => Some(h),
         (true, _) => {
@@ -320,7 +356,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
                 format!(
                     "{} paketi kot noktası yazısının yüksekliğini (spotHeight, Ek-3 0004) vermiyor; {} kotları yazılmaz.",
                     rules.id,
-                    if summits { "tepe ve çukur" } else { "şev" }
+                    if summits { "tepe ve çukur" } else if slopes.is_some() { "şev" } else { "seçilen noktaların" }
                 ),
                 "rules",
             ));
@@ -361,6 +397,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
                 return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
             }
         }
+    }
+    if let Some(l) = input.points.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
+        return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), "points"));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let own = common::surfaces(doc);
@@ -445,6 +484,22 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         slope_found.iter().filter(|s| s.kind == "slopeBottom").count(),
     );
     spots.extend(slope_found);
+    let (chosen_found, chosen_off, measured) = if chosen { chosen_spots(doc, surface, &input.points) } else { (Vec::new(), 0, 0) };
+    let chosen_note = chosen.then(|| {
+        let mut parts = Vec::new();
+        let widest = chosen_found
+            .iter()
+            .filter_map(|s| s.surface.map(|g| ((s.z - g).abs(), s)))
+            .fold(None::<(f64, &SheetSpot)>, |best, (d, s)| if best.is_none_or(|(b, _)| d > b) { Some((d, s)) } else { best });
+        if let Some((d, s)) = widest {
+            parts.push(format!(" Kendi kotu yüzeyinkinden en çok {d:.3} m ayrılıyor (Y {:.3}, X {:.3}).", s.x, s.y));
+        }
+        if chosen_off > 0 {
+            parts.push(format!(" Kendi kotu olmayan ve yüzeyin dışında kalan {chosen_off} nokta yazılmadı."));
+        }
+        (chosen_found.len(), measured, parts.concat())
+    });
+    spots.extend(chosen_found);
     let every = rules.label_every / mm;
     let labels: Vec<SheetContourLabel> = if labels_on {
         lines.iter().filter(|l| l.kind == "major").flat_map(|l| labels(surface, &l.points, l.closed, l.z, every)).collect()
@@ -485,6 +540,11 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             note.push_str(&format!(" Yüzeyin dışındaki {slope_off} köşe yazılmadı."));
         }
         notes.push(note);
+    }
+    if let (Some(h), Some((n, measured, tail))) = (spot_height, &chosen_note) {
+        notes.push(format!(
+            "Ölçmecinin seçtiği {n} noktanın kotu dm'ye kadar yazıldı ({h} mm, m. 78(1)(ğ)): kendi kotu olan {measured} nokta kendi kotuyla, öbürleri yüzeyden; yalnız kot yazılır, nokta ölçmecinindir.{tail}"
+        ));
     }
     // docs/adr/2720: the auxiliary lines drawn with the package's pattern as a project line type of its own name.
     let pattern = (!rules.auxiliary_pattern.is_empty() && lines.iter().any(|l| l.kind == "auxiliary"))
@@ -587,7 +647,10 @@ fn objects(c: &Checked) -> Vec<NewObject> {
     // The spot heights (docs/adr/2320): a point at the vertex and its height beside it, half the text's height right.
     let spot = r.spot_height.unwrap_or(0.0) * f64::from(c.out.scale) / 1000.0;
     for s in &c.out.spots {
-        out.push(plain(EntityGeometry::Point { p: Vec2 { x: s.x, y: s.y }, z: Some(s.z), parts: None }, None, false));
+        // A chosen point is the surveyor's (docs/adr/3520): only its height is written.
+        if s.kind != "chosen" {
+            out.push(plain(EntityGeometry::Point { p: Vec2 { x: s.x, y: s.y }, z: Some(s.z), parts: None }, None, false));
+        }
         out.push(plain(
             EntityGeometry::Text {
                 layout: None,

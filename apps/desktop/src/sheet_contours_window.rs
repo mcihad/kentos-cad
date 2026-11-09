@@ -3,7 +3,9 @@
 //! interval (empty: the package's for the scale) on the next, the rules (e) and (f) as ticks, the detail layers (g) as
 //! ticks; the summary is the command's plan, counted by kind, with its notes. Çiz writes them in one undo step.
 //! Şevler (ğ, docs/adr/3120): a tick and the layers of the slopes' tops and bottoms (guessed from their names, left
-//! out of the details), whose lines' corners take spot heights.
+//! out of the details), whose lines' corners take spot heights. Seçilen noktalar (ğ, docs/adr/3520): a tick and the
+//! layer of the points the surveyor chose (guessed from its name: seçilen, karakteristik, kot noktası), each taking its
+//! own height or the surface's.
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
@@ -46,6 +48,9 @@ pub struct State {
     pub slopes: bool,
     pub slope_top: String,
     pub slope_bottom: String,
+    /// The surveyor's chosen points (ğ, docs/adr/3520): ticked, and their layer ("" none).
+    pub chosen: bool,
+    pub chosen_layer: String,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
 }
 
@@ -63,6 +68,8 @@ pub enum Event {
     Slopes(bool),
     SlopeTop(String),
     SlopeBottom(String),
+    Chosen(bool),
+    ChosenLayer(String),
     Draw,
     Close,
 }
@@ -91,6 +98,7 @@ impl State {
                 top: [&self.slope_top].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
                 bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
             }),
+            points: if self.chosen && !self.chosen_layer.is_empty() { vec![self.chosen_layer.clone()] } else { Vec::new() },
             ..Default::default()
         })
     }
@@ -160,9 +168,10 @@ impl App {
                 .unwrap_or_default()
         };
         let (slope_top, slope_bottom) = (slope(&["üst", "ust"]), slope(&["dip", "dib", "alt", "taban"]));
+        let chosen_layer = named(&["seçilen", "secilen", "karakteristik", "kot noktası", "kot noktasi"]).into_iter().next().unwrap_or_default();
         let details: Vec<String> = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"])
             .into_iter()
-            .filter(|d| *d != slope_top && *d != slope_bottom)
+            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer)
             .collect();
         self.sheet_contours = State {
             surfaces,
@@ -179,6 +188,8 @@ impl App {
             slopes: false,
             slope_top,
             slope_bottom,
+            chosen: false,
+            chosen_layer,
             answer: None,
         };
         self.sheet_contours_run();
@@ -229,6 +240,8 @@ impl App {
             Event::Slopes(v) => s.slopes = v,
             Event::SlopeTop(v) => s.slope_top = v,
             Event::SlopeBottom(v) => s.slope_bottom = v,
+            Event::Chosen(v) => s.chosen = v,
+            Event::ChosenLayer(v) => s.chosen_layer = v,
             Event::Draw => {
                 self.sheet_contours_draw();
                 return Task::none();
@@ -250,7 +263,7 @@ impl App {
             .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
         let mut ticks = row![].spacing(14).align_y(Center);
         for (id, name) in &s.layers {
-            if *id == s.layer || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom)) {
+            if *id == s.layer || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom)) || (s.chosen && *id == s.chosen_layer) {
                 continue;
             }
             let on = s.details.contains(id);
@@ -300,6 +313,19 @@ impl App {
                     container(fields::select_owned(choices.clone(), &s.slope_top, |v| msg(Event::SlopeTop(v)))).width(190),
                     label::caption("Dibi"),
                     container(fields::select_owned(choices, &s.slope_bottom, |v| msg(Event::SlopeBottom(v)))).width(190)
+                ]
+                .spacing(10)
+                .align_y(Center)
+            })
+            // docs/adr/3520: the surveyor's other points (m. 78(1)(ğ)).
+            .field("Seçilen noktalar (ğ)", {
+                let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
+                choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
+                row![
+                    words::check(s.chosen, "Nokta kotları", Some(msg(Event::Chosen(!s.chosen)))),
+                    label::caption("Katman"),
+                    container(fields::select_owned(choices, &s.chosen_layer, |v| msg(Event::ChosenLayer(v)))).width(190),
+                    label::caption("Kendi kotu varsa o, yoksa yüzeyden")
                 ]
                 .spacing(10)
                 .align_y(Center)

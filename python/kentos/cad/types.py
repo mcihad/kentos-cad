@@ -86169,18 +86169,21 @@ class SheetSourceChanges(_Model):
 class SheetSpot(_Model):
     """A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex
     with the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`
-    (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there; its place and height, and
-    the height to the decimetre as written.
+    (docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point
+    (docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the
+    height to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).
     Attributes:
         x: Unit: length.
         y: Unit: length.
         z: Unit: elevation.
+        surface: Unit: elevation.
     """
     kind: str
     x: float
     y: float
     z: float
     text: str
+    surface: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -86189,6 +86192,8 @@ class SheetSpot(_Model):
         out["y"] = float(self.y)
         out["z"] = float(self.z)
         out["text"] = self.text
+        if self.surface is not UNSET:
+            out["surface"] = None if self.surface is None else float(self.surface)
         return out
 
     @classmethod
@@ -86199,6 +86204,7 @@ class SheetSpot(_Model):
             y=float(data["y"]),
             z=float(data["z"]),
             text=data["text"],
+            surface=UNSET if "surface" not in data else None if data["surface"] is None else float(data["surface"]),
         )
 
 
@@ -100937,11 +100943,13 @@ class TerrainsSheetContours(_Model):
     Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
     the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
     their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
-    `slopes.top`, `slopes.bottom`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
+    `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
     `invalid_contours` (more than 10 000 levels), `no_contours`.
     Attributes:
         base: Unit: elevation.
         interval: Unit: length.
+        points: The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
+            takes a spot height, its own measured height when it has one, else the surface's.
         scale: Unit: scale.
     """
     surface: str
@@ -100952,6 +100960,7 @@ class TerrainsSheetContours(_Model):
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: bool | None | Unset = UNSET
+    points: list[str] | Unset = UNSET
     rules: ContourRules | None | Unset = UNSET
     scale: int | None | Unset = UNSET
     slopes: SheetSlopes | None | Unset = UNSET
@@ -100974,6 +100983,8 @@ class TerrainsSheetContours(_Model):
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
             out["labels"] = self.labels
+        if self.points is not UNSET:
+            out["points"] = list(self.points)
         if self.rules is not UNSET:
             out["rules"] = None if self.rules is None else self.rules.to_json()
         if self.scale is not UNSET:
@@ -100997,6 +101008,7 @@ class TerrainsSheetContours(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=data.get("labels", UNSET),
+            points=list(data["points"]) if "points" in data else UNSET,
             rules=UNSET if "rules" not in data else None if data["rules"] is None else ContourRules.from_json(data["rules"]),
             scale=data.get("scale", UNSET),
             slopes=UNSET if "slopes" not in data else None if data["slopes"] is None else SheetSlopes.from_json(data["slopes"]),

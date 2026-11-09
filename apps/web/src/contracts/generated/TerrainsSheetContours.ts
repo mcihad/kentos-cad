@@ -13,7 +13,12 @@ import type { SheetSlopes } from "./SheetSlopes";
  * Refusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none
  * the package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without
  * their text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,
- * `slopes.top`, `slopes.bottom`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
+ * `slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,
  * `invalid_contours` (more than 10 000 levels), `no_contours`.
  */
-export type TerrainsSheetContours = { surface: string, layerId: string, scale?: number, interval?: number, base?: number, details?: Array<string>, steep?: boolean, auxiliary?: boolean, labels?: boolean, spots?: boolean, slopes?: SheetSlopes, rules?: ContourRules, expectedRevision?: string, };
+export type TerrainsSheetContours = { surface: string, layerId: string, scale?: number, interval?: number, base?: number, details?: Array<string>, steep?: boolean, auxiliary?: boolean, labels?: boolean, spots?: boolean, slopes?: SheetSlopes, 
+/**
+ * The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
+ * takes a spot height, its own measured height when it has one, else the surface's.
+ */
+points?: Array<string>, rules?: ContourRules, expectedRevision?: string, };

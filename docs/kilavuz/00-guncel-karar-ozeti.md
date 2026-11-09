@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Pafta eğrilerinde seçilen noktaların kotları (9 Kasım 2026; MAP-14, [ADR 3520](../../docs/adr/3520-sheet-chosen-point-heights.md)).**
+  `road.terrains.sheetcontours`'a `points` (m. 78(1)(ğ)'nin “gerekli görülen diğer noktalar”ı): kendi kotu varsa o,
+  yoksa yüzeyden; yalnız kot yazısı; not en büyük ölçü–yüzey farkını söyler. Harita + Yol.
 - **Bulutta ters matris ve dönüşüm geçmişi (9 Kasım 2026; MAP-13, [ADR 3500](../../docs/adr/3500-point-cloud-inverse-and-history.md)).**
   Dönüşüm uygula'da Tersini uygula (`Affine::inverse`, sabit hesap sırası); yazılan bulut Kaynak ve Dönüşümler
   özniteliklerini taşır, zincirde geçmiş büyür. Harita + CBS.

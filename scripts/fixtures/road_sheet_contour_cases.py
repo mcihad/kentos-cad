@@ -80,6 +80,9 @@ TWO = [(500.0, 500.0, 850.0), (510.0, 500.0, 851.0)]
 SLOPE_TOP = [(110.0, 30.0), (111.5, 75.0), (109.0, 120.0), (110.5, 165.0)]
 SLOPE_TOP_LINE = ((110.5, 165.0), (110.0, 320.0))
 SLOPE_BOTTOM = [(90.0, 30.0), (88.5, 75.0), (91.0, 120.0), (89.5, 165.0), (90.0, 190.0)]
+# docs/adr/3520: the chosen points (x, y, their own height or none).
+CHOSEN = [(100.0, 60.0, 858.62), (95.0, 140.0, None), (130.0, 330.0, 902.4), (150.0, 330.0, None)]
+CHOSEN_TWO = [(60.0, 100.0), (95.0, 140.0)]
 
 
 def bowl_points():
@@ -98,6 +101,7 @@ BOWL = bowl_points()
 
 LAYERS = [rt.node("0", "0"), rt.node("zemin", "Zemin"), rt.node("bina", "Bina"), rt.node("yol", "Yol"),
           rt.node("sev", "Şev sınırı"), rt.node("sev-ust", "Şev üstü"), rt.node("sev-dip", "Şev dibi"),
+          rt.node("secilen", "Seçilen noktalar"),
           rt.node("az", "Az nokta"), rt.node("cukur", "Çukur"),
           rt.node("esyukselti", "Eş yükselti"),
           rt.node("arazi", "Arazi", [rt.node("ek", "Ek")]), {**rt.node("kilitli", "Kilitli"), "locked": True},
@@ -119,6 +123,11 @@ def entities():
     ents.append(("polyline", "sev-ust", {"pts": [P(*p) for p in SLOPE_TOP]}))
     ents.append(("line", "sev-ust", {"a": P(*SLOPE_TOP_LINE[0]), "b": P(*SLOPE_TOP_LINE[1])}))
     ents.append(("polyline", "sev-dip", {"pts": [P(*p) for p in SLOPE_BOTTOM]}))
+    # docs/adr/3520: the surveyor's chosen points, after the slopes: one measured on the slope, one without a height,
+    # a two-part point (the second part a place already taken), one measured off the surface, one off it without.
+    for x, y, z in CHOSEN:
+        ents.append(("point", "secilen", {"p": P(x, y), **({"z": z} if z is not None else {})}))
+    ents.append(("point", "secilen", {"p": P(*CHOSEN_TWO[0]), "parts": [{"p": P(*CHOSEN_TWO[1])}]}))
     return ents
 
 
@@ -390,8 +399,36 @@ def details_of(layers):
     return [d for d in out if d]
 
 
+def chosen_spots(s, layers):
+    """docs/adr/3520: each point on the layers (a multi-point's each part), in the drawing's order, once per place; its
+    own height when it has one (the surface's beside it when inside), else the surface's (none: counted); and how many
+    take their own height."""
+    out, seen, off, own_count = [], [], 0, 0
+    for k, layer, g in ENTS:
+        if layer not in layers or k != "point":
+            continue
+        places = [((g["p"]["x"], g["p"]["y"]), g.get("z"))] + [((q["p"]["x"], q["p"]["y"]), q.get("z"))
+                                                                  for q in g.get("parts", [])]
+        for c, own in places:
+            if c in seen:
+                continue
+            seen.append(c)
+            h = rt.height(s, c)
+            ground = h["z"] if h["place"] == "inside" else None
+            z = own if own is not None else ground
+            if z is None:
+                off += 1
+                continue
+            own_count += own is not None
+            spot = {"kind": "chosen", "x": c[0], "y": c[1], "z": z, "text": f"{math.floor(z * 10.0 + 0.5) / 10.0:.1f}"}
+            if own is not None and ground is not None:
+                spot["surface"] = ground
+            out.append(spot)
+    return out, off, own_count
+
+
 def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary=True, labels=True, rules=None,
-          spots=False, surface=None, slopes=None):
+          spots=False, surface=None, slopes=None, points=None):
     rules = rules or RULES
     if interval is None:
         interval = next(i["interval"] for i in rules["intervals"] if i["scale"] == scale)
@@ -457,6 +494,20 @@ def sheet(scale=1000, interval=None, base=0.0, details=(), steep=True, auxiliary
             note += f" Yüzeyin dışındaki {off} köşe yazılmadı."
         notes.append(note)
         found = found + more
+    if points:
+        picked, off, own_count = chosen_spots(s, points)
+        measured = [m for m in picked if "surface" in m]
+        note = (f"Ölçmecinin seçtiği {len(picked)} noktanın kotu dm'ye kadar yazıldı ({num(rules['spotHeight'])} mm, "
+                f"m. 78(1)(ğ)): kendi kotu olan {own_count} nokta kendi kotuyla, öbürleri yüzeyden; yalnız kot "
+                "yazılır, nokta ölçmecinindir.")
+        if measured:
+            wide = max(measured, key=lambda m: abs(m["z"] - m["surface"]))
+            note += (f" Kendi kotu yüzeyinkinden en çok {abs(wide['z'] - wide['surface']):.3f} m ayrılıyor "
+                     f"(Y {wide['x']:.3f}, X {wide['y']:.3f}).")
+        if off:
+            note += f" Kendi kotu olmayan ve yüzeyin dışında kalan {off} nokta yazılmadı."
+        notes.append(note)
+        found = found + picked
     # docs/adr/2720: the auxiliary lines take the package's pattern (Ek-3 0003) as a project line type of its name.
     pattern = None
     if rules.get("auxiliaryPattern") and any(l["kind"] == "auxiliary" for l in lines):
@@ -492,7 +543,8 @@ def drawn(cases, name, input_, op="execute", layer="esyukselti", warns=(), note=
     written = op == "execute"
     if written:
         out["uids"] = "$any"
-    count = len(out["lines"]) + len(out["labels"]) + 2 * len(out.get("spots", []))
+    # A chosen point's height alone is written (docs/adr/3520); every other spot a point and its height.
+    count = len(out["lines"]) + len(out["labels"]) + sum(1 if sp["kind"] == "chosen" else 2 for sp in out.get("spots", []))
     expect = ({"canUndo": True, "canRedo": False, "dirty": True, "revision": "changed",
                "ids": list(range(1, N + count + 1)), "road": rt.road_of(SURFACES)}
               if written else {**rt.UNCHANGED, "ids": list(range(1, N + 1))})
@@ -556,6 +608,16 @@ def cases():
     drawn(out, "Tepe ve şev kotları birlikte: tepe önce, şevler sonra (1/5000)", {"scale": 5000, "spots": True,
           "slopes": both}, scale=5000, spots=True, slopes=both)
     drawn(out, "Boş şev katmanları: şev kotu istenmemiş sayılır (1/5000)", {"scale": 5000, "slopes": {}}, scale=5000)
+    # docs/adr/3520: the surveyor's other points (m. 78(1)(ğ)).
+    picked = drawn(out, "Seçilen noktalar: kendi kotu olan kendisiyle, olmayan yüzeyden; iki parçalı noktanın aynı yeri bir "
+                   "kez, yüzeyin dışında kotsuz nokta sayılır (1/5000)", {"scale": 5000, "points": ["secilen"]},
+                   scale=5000, points=["secilen"])
+    kinds = [(s_["kind"], "surface" in s_) for s_ in picked["spots"]]
+    assert kinds == [("chosen", True), ("chosen", False), ("chosen", False), ("chosen", False)], kinds
+    drawn(out, "Seçilen noktalar planı yazmaz (1/5000)", {"scale": 5000, "points": ["secilen"]}, op="plan",
+          scale=5000, points=["secilen"])
+    drawn(out, "Şevler ve seçilen noktalar birlikte: şevler önce (1/5000)", {"scale": 5000, "slopes": both,
+          "points": ["secilen"]}, scale=5000, slopes=both, points=["secilen"])
     # docs/adr/2720: the auxiliary pattern added as a project line type in the same step; the project's own kept.
     plain_out = sheet()
     assert plain_out.get("pattern"), "the default package draws auxiliary lines with its pattern"
@@ -601,6 +663,11 @@ def cases():
     refused(out, "Şev kotları, kot noktası yazı yüksekliği vermeyen paket", {"slopes": both, "rules": no_spot},
             rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
                       "Ek-3 0004) vermiyor; şev kotları yazılmaz.", "rules"))
+    refused(out, "Seçilen noktalar, kot noktası yazı yüksekliği vermeyen paket", {"points": ["secilen"], "rules": no_spot},
+            rt.failed("invalid_contours", "bohhbuy-2018-m78 paketi kot noktası yazısının yüksekliğini (spotHeight, "
+                      "Ek-3 0004) vermiyor; seçilen noktaların kotları yazılmaz.", "rules"))
+    refused(out, "Olmayan seçilen nokta katmanı", {"points": ["yok"]},
+            rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "points"))
     refused(out, "Olmayan şev üstü katmanı", {"slopes": {"top": ["yok"]}},
             rt.failed("layer_not_found", "“yok” katmanı çizimde yok.", "slopes.top"))
     refused(out, "Olmayan şev dibi katmanı", {"slopes": {"top": ["sev-ust"], "bottom": ["yok"]}},

@@ -170,6 +170,79 @@ fn the_slope_heights_are_the_shared_case_s() {
     assert_eq!(after, before + r.lines.len() + r.labels.len() + 2 * r.spots.len());
 }
 
+/// docs/adr/3520: Seçilen noktalar's layer guessed from its name; ticked, the chosen points' heights are the shared
+/// case's (the measured one with the surface's beside it, the others from the surface; the one off the surface without
+/// a height said); Çiz writes their heights alone, the points being the surveyor's.
+#[test]
+fn the_chosen_points_heights_are_the_shared_case_s() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("terrain.sheetContours"));
+    assert_eq!(app.sheet_contours.chosen_layer, "secilen");
+    let _ = app.update(Message::SheetContours(E::Chosen(true)));
+    let r = app.sheet_contours.answer.clone().expect("an answer").expect("planned");
+    let case = cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Seçilen noktalar: kendi")))
+        .expect("the case")["steps"][0]["result"]["output"]["spots"]
+        .clone();
+    let want = case.as_array().expect("spots");
+    assert_eq!(r.spots.len(), want.len());
+    for (got, w) in r.spots.iter().zip(want) {
+        assert_eq!((got.kind.as_str(), got.x, got.y, got.text.as_str()), ("chosen", w["x"].as_f64().expect("x"), w["y"].as_f64().expect("y"), w["text"].as_str().expect("text")));
+        assert!((got.z - w["z"].as_f64().expect("z")).abs() < 1e-9);
+        assert_eq!(got.surface.is_some(), w.get("surface").is_some());
+    }
+    assert!(r.notes.iter().any(|n| n.contains("en çok 0.145 m ayrılıyor") && n.contains("1 nokta yazılmadı")), "{:?}", r.notes);
+    let before = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    let _ = app.update(Message::SheetContours(E::Draw));
+    let after = app.document.as_ref().map(|d| d.model.entities().count()).unwrap_or(0);
+    assert_eq!(after, before + r.lines.len() + r.labels.len() + r.spots.len(), "one height each");
+}
+
+/// docs/adr/3520: the window with Nokta kotları ticked, the drawing after Çiz and close to the measured point; light
+/// wide and dark narrow, `.run/gui-evidence/secilen-noktalar-3520/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib sheet_contours_window_tests::chosen_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn chosen_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/secilen-noktalar-3520");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("terrain.sheetContours"));
+        let _ = app.update(Message::SheetContours(E::Chosen(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::SheetContours(E::Draw));
+        let b = kentos_commands::Bounds { min_x: 50.0, min_y: 45.0, max_x: 115.0, max_y: 150.0 };
+        app.navigating(|a| a.zoom_to_bounds(&b));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        // Close to the point with its own height (858.62 written 858.6, the surface 0.145 m off).
+        let b = kentos_commands::Bounds { min_x: 84.0, min_y: 52.0, max_x: 116.0, max_y: 68.0 };
+        app.navigating(|a| a.zoom_to_bounds(&b));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("3-yakin-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
 /// `.run/gui-evidence/sev-kotlari-3120/`: the window with Şev kotları ticked, and the drawing at the scarp after Çiz.
 ///
 /// ```text

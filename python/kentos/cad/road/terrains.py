@@ -2289,13 +2289,17 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
     kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse
     (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu
     çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır,
-    yazılmaz (ADR 3120). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş
-    yükselti eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003:
-    kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi
-    olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa
-    projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project,
-    invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision,
-    revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.
+    yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği
+    noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta),
+    yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin
+    dışındaki nokta sayılır (ADR 3520). 3B çoklu çizgi ve yazı olarak tek geri alma
+    adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini
+    (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı
+    eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje
+    ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını
+    söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer,
+    layer_locked, invalid_revision, revision_conflict, unknown_terrain,
+    terrain_unbuildable, no_contours.
     """
     __slots__ = ()
     id = "road.terrains.sheetcontours"
@@ -2319,6 +2323,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        points: Sequence[str] | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         slopes: SheetSlopes | None | Unset = UNSET,
@@ -2341,11 +2346,14 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin
         spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları)
         şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları
-        yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120). 3B
-        çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”.
-        Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi,
-        1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip
-        projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki
+        yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120);
+        istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş
+        kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot
+        yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR
+        3520). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti
+        eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5
+        mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak
+        alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki
         kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project,
         invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision,
         revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.
@@ -2360,6 +2368,8 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             expected_revision:
             interval: Unit: length.
             labels:
+            points: The layers of the points the surveyor chose (BÖHHBÜY m. 78(1)(ğ)'s other points, docs/adr/3520): each point
+                takes a spot height, its own measured height when it has one, else the surface's.
             rules:
             scale: Unit: scale.
             slopes:
@@ -2386,6 +2396,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            points=_opt(points, lambda x: list(x)),
             rules=rules,
             scale=scale,
             slopes=slopes,
@@ -2406,6 +2417,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        points: Sequence[str] | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         slopes: SheetSlopes | None | Unset = UNSET,
@@ -2424,6 +2436,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            points=_opt(points, lambda x: list(x)),
             rules=rules,
             scale=scale,
             slopes=slopes,
@@ -2444,6 +2457,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        points: Sequence[str] | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         slopes: SheetSlopes | None | Unset = UNSET,
@@ -2462,6 +2476,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            points=_opt(points, lambda x: list(x)),
             rules=rules,
             scale=scale,
             slopes=slopes,
@@ -2482,6 +2497,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        points: Sequence[str] | Unset = UNSET,
         rules: ContourRules | None | Unset = UNSET,
         scale: int | None | Unset = UNSET,
         slopes: SheetSlopes | None | Unset = UNSET,
@@ -2505,6 +2521,7 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            points=_opt(points, lambda x: list(x)),
             rules=rules,
             scale=scale,
             slopes=slopes,
