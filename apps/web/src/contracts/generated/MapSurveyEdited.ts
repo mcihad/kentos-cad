@@ -17,7 +17,11 @@ bars?: number,
 /**
  * The ellipses' labels a network wrote (docs/adr/3760).
  */
-labels?: number, stale: number, 
+labels?: number, 
+/**
+ * Of them, those moved off east to a free place, and those with no free place left east (docs/adr/4160).
+ */
+labelsMoved?: number, labelsCrowded?: number, stale: number, 
 /**
  * The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
  */

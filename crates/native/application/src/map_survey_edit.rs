@@ -154,6 +154,9 @@ struct Change {
     /// A network's error ellipses and the use they are recorded in, its place in the archive (docs/adr/2960).
     drawn: Vec<Entity>,
     drawn_use: Option<usize>,
+    /// Docs/adr/4160: the labels moved off east, and those crowded.
+    labels_moved: u32,
+    labels_crowded: u32,
 }
 
 impl Change {
@@ -171,6 +174,8 @@ impl Change {
             warnings: Vec::new(),
             drawn: Vec::new(),
             drawn_use: None,
+            labels_moved: 0,
+            labels_crowded: 0,
         }
     }
 }
@@ -654,6 +659,9 @@ fn network(
     // Each point's error ellipse, recorded as made from the points at their revisions now (docs/adr/2960).
     if let Some(with) = ellipses {
         let mut points = Vec::new();
+        // Each station's ellipse and (docs/adr/3360) height bar first: the labels keep clear of them all.
+        let mut stations: Vec<(String, Vec2, kentos_commands::ErrorEllipse)> = Vec::new();
+        let mut shapes: Vec<(Entity, Option<Entity>)> = Vec::new();
         for n in &a.new {
             let Ok(placed) = &n.placed else { continue };
             let Some(e) = a.out.stations.iter().find(|s| s.mark == n.mark).and_then(|s| s.ellipse.as_ref()) else {
@@ -661,17 +669,36 @@ fn network(
             };
             let at = Vec2 { x: placed.x, y: placed.y };
             let turn = crate::network_ellipses::convergence(doc, at, &n.mark)?;
-            change.drawn.push(crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn));
-            // Docs/adr/3360: and its height's half-interval as a bar, recorded with it.
-            if with.heights {
-                change.drawn.push(crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
-            }
-            // Docs/adr/3760: and its label, recorded with it.
-            if with.labels {
-                change.drawn.push(crate::network_ellipses::label(&n.mark, &da, at, e, with, doc.settings().plot_scale));
-            }
+            let bar = with.heights.then(|| crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
+            shapes.push((crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn), bar));
+            stations.push((n.mark.clone(), at, e.clone()));
             if let Some(p) = next.points.iter().find(|p| p.mark == n.mark) {
                 points.push(PointRevision { point: p.id.clone(), revision: p.result.revision });
+            }
+        }
+        // Docs/adr/3760, 4160: each label at its first free place, recorded with them.
+        let labels = if with.labels {
+            let obstacles: Vec<Entity> =
+                shapes.iter().flat_map(|(e, b)| std::iter::once(e.clone()).chain(b.clone())).collect();
+            let (labels, moved, crowded) = crate::network_ellipses::placed_labels(
+                doc,
+                &stations,
+                &obstacles,
+                with,
+                &da,
+                doc.settings().plot_scale,
+            );
+            change.labels_moved = moved;
+            change.labels_crowded = crowded;
+            labels
+        } else {
+            Vec::new()
+        };
+        for (i, (ellipse, bar)) in shapes.into_iter().enumerate() {
+            change.drawn.push(ellipse);
+            change.drawn.extend(bar);
+            if let Some(l) = labels.get(i) {
+                change.drawn.push(l.clone());
             }
         }
         if !change.drawn.is_empty() {
@@ -1514,6 +1541,8 @@ fn output(doc: &Document, c: &Change, uid: Option<String>, revision: String) -> 
         ellipses: c.drawn.iter().filter(|e| matches!(e, Entity::Ellipse(_))).count() as u32,
         bars: c.drawn.iter().filter(|e| matches!(e, Entity::Polyline(_))).count() as u32,
         labels: c.drawn.iter().filter(|e| matches!(e, Entity::Text(_))).count() as u32,
+        labels_moved: c.labels_moved,
+        labels_crowded: c.labels_crowded,
         stale: stale_count(doc, &c.survey),
         records: c.records.clone(),
         revision,

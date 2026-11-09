@@ -54318,6 +54318,8 @@ class MapSurveyEdited(_Model):
         bars: The height bars a network drew beside them (docs/adr/3360). Unit: count.
         ellipses: The error ellipses a network drew (docs/adr/2960). Unit: count.
         labels: The ellipses' labels a network wrote (docs/adr/3760). Unit: count.
+        labels_crowded: Unit: count.
+        labels_moved: Of them, those moved off east to a free place, and those with no free place left east (docs/adr/4160). Unit: count.
         observations: Unit: count.
         point_revision: Unit: version.
         records: The records a file brought (`baselines`) or the accepted points a network made or made again (`network`).
@@ -54329,6 +54331,8 @@ class MapSurveyEdited(_Model):
     ellipses: int | Unset = UNSET
     id: str | None | Unset = UNSET
     labels: int | Unset = UNSET
+    labels_crowded: int | Unset = UNSET
+    labels_moved: int | Unset = UNSET
     observations: int | Unset = UNSET
     point_revision: int | None | Unset = UNSET
     records: list[str] | Unset = UNSET
@@ -54347,6 +54351,10 @@ class MapSurveyEdited(_Model):
             out["id"] = self.id
         if self.labels is not UNSET:
             out["labels"] = self.labels
+        if self.labels_crowded is not UNSET:
+            out["labelsCrowded"] = self.labels_crowded
+        if self.labels_moved is not UNSET:
+            out["labelsMoved"] = self.labels_moved
         if self.observations is not UNSET:
             out["observations"] = self.observations
         if self.point_revision is not UNSET:
@@ -54368,6 +54376,8 @@ class MapSurveyEdited(_Model):
             ellipses=data.get("ellipses", UNSET),
             id=data.get("id", UNSET),
             labels=data.get("labels", UNSET),
+            labels_crowded=data.get("labelsCrowded", UNSET),
+            labels_moved=data.get("labelsMoved", UNSET),
             observations=data.get("observations", UNSET),
             point_revision=data.get("pointRevision", UNSET),
             records=list(data["records"]) if "records" in data else UNSET,

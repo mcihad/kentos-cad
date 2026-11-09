@@ -409,10 +409,16 @@ impl App {
                 (n, 0) => format!(", {n} hata elipsi {} kat büyütülerek çizildi", self.survey_network.magnify),
                 (n, b) => format!(", {n} hata elipsi ve {b} kot çubuğu {} kat büyütülerek çizildi", self.survey_network.magnify),
             };
-            // Docs/adr/3760: and their labels.
+            // Docs/adr/3760: and their labels; docs/adr/4160: those moved off east, those with no free place.
             let drawn = match out.labels {
                 0 => drawn,
                 l => format!("{drawn}; {l} etiket yazıldı"),
+            };
+            let drawn = match (out.labels_moved, out.labels_crowded) {
+                (0, 0) => drawn,
+                (m, 0) => format!("{drawn} ({m}'i elipse ya da etikete düşmesin diye başka yana kondu)"),
+                (0, c) => format!("{drawn} ({c}'i için boş yer yok, doğuda çakışıyor)"),
+                (m, c) => format!("{drawn} ({m}'i başka yana kondu; {c}'i için boş yer yok, doğuda çakışıyor)"),
             };
             self.say(
                 Level::Success,

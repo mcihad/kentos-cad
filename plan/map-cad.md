@@ -35,7 +35,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
@@ -761,6 +761,14 @@ okunan çizim yazıyı ister. Kanıtlanan: `ellipses.labels` ile kabul her elips
 dayanan kaydında; cevapta `labels`; yükseklik 0 reddedilir; Ağ dengelemesi'nde Etiket kutusu. 3 yeni bağımsız durum
 (121), MCP, masaüstü ve resimler. Açık: etiketin komşu elipsle çakışınca kaydırılması, robust kestirim, seyrek çözüm,
 ağırlıklı benzerlik.
+
+**9 Kasım 2026, sekizinci tur — etiketin boş yere konması ([ADR 4160](../docs/adr/4160-network-ellipse-label-places.md)).**
+Kapsam: **Harita**. Dayanak: QGIS'in nokta etiketinin kartografik yerleşimi (sağ üst, sol üst, sağ alt, sol alt, sağ
+orta, sol orta, üst, alt; engel nesneler; gerekirse çakışma). Kanıtlanan: elips etiketi önce doğuda; oraya elips, kot
+çubuğu ya da önceki etiket düşerse sırayla ilk boş yerde, hiçbiri boş değilse doğuda çakışıyor sayılır; kutu çizimin
+yazı tipiyle ölçülür, elips kendi ekseninde birim çembere ölçeklenerek sınanır; cevapta `labelsMoved`, `labelsCrowded`.
+fontTools'la ölçen bağımsız başvuruda yeni durum (N1'in etiketi 15 m ötedeki N6 yüzünden sağ üstte), Python, MCP,
+masaüstü ve resimler; eski etiket durumları aynı. Açık: robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

@@ -1193,17 +1193,128 @@ def height_bar(mark, da, at, e, with_):
     return {"kind": "polyline", "layerId": with_["layer"], "attrs": attrs, "pts": [{"x": a, "y": b} for a, b in pts]}
 
 
-def ellipse_label(mark, da, at, e, with_, plot_scale):
+# ADR 4160: the places round an ellipse a label tries, in order: east (ADR 3760's, QGIS's middle right), then QGIS's
+# cartographic order (top right, top left, bottom right, bottom left, middle left, top, bottom); the unit direction
+# from the point and the alignment there.
+S2 = math.sqrt(0.5)
+PLACES = [(1.0, 0.0, "middleLeft"), (S2, S2, "bottomLeft"), (-S2, S2, "bottomRight"), (S2, -S2, "topLeft"),
+          (-S2, -S2, "topRight"), (-1.0, 0.0, "middleRight"), (0.0, 1.0, "bottomCenter"), (0.0, -1.0, "topCenter")]
+# Where an alignment's point stands on the text: along its width (left 0, centre ½, right 1) and up from its baseline
+# (bottom: 0.2 of its height under it; middle: half its height over it; top: its height over it), ADR 0145 §1.
+ALONG = {"Left": 0.0, "Center": 0.5, "Right": 1.0}
+RISE = {"bottom": -0.2, "middle": 0.5, "top": 1.0}
+
+
+def advances():
+    """The drawing's default typeface (Barlow, weight 500) by fontTools: each letter's advance in thousandths of an
+    em, rounded."""
+    from fontTools.ttLib import TTFont
+    font = TTFont(ROOT / "apps/desktop/assets/fonts/drawing/Barlow-500.ttf")
+    upem, cmap, hmtx = font["head"].unitsPerEm, font.getBestCmap(), font["hmtx"]
+    return {chr(c): round(hmtx[g][0] * 1000 / upem) for c, g in cmap.items()}
+
+
+ADVANCE = advances()
+
+
+def label_frame(lab):
+    """A label's box as the drawing measures one line of text (ADR 0145): its letters' advances times its height wide,
+    from 0.2 of 1.15 heights under its baseline to 1.15 heights over it; placed by its alignment."""
+    h = lab["height"]
+    w = sum(ADVANCE[c] for c in lab["text"]) / 1000.0 * h
+    vertical = next(k for k in RISE if lab["align"].startswith(k))
+    horizontal = lab["align"][len(vertical):]
+    ox, base = lab["p"]["x"] - ALONG[horizontal] * w, lab["p"]["y"] - RISE[vertical] * h
+    return (ox, base - 0.2 * 1.15 * h, ox + w, base + 1.15 * h)
+
+
+def frames_meet(a, b):
+    return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
+
+
+def from_origin(p, q):
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    n = dx * dx + dy * dy
+    t = min(max(-(p[0] * dx + p[1] * dy) / n, 0.0), 1.0) if n > 0 else 0.0
+    return math.hypot(p[0] + t * dx, p[1] + t * dy)
+
+
+def segment_meets(f, p, q):
+    """A segment through a box's inside (Liang–Barsky; along an edge is not)."""
+    t0, t1 = 0.0, 1.0
+    for d, lo, hi, at in ((q[0] - p[0], f[0], f[2], p[0]), (q[1] - p[1], f[1], f[3], p[1])):
+        if d == 0.0:
+            if at <= lo or at >= hi:
+                return False
+            continue
+        a, b = sorted(((lo - at) / d, (hi - at) / d))
+        t0, t1 = max(t0, a), min(t1, b)
+        if t0 >= t1:
+            return False
+    return True
+
+
+def ellipse_meets(f, ent):
+    """A box meets an ellipse when its centre is inside it or, in the ellipse's frame scaled to the unit circle, an edge
+    of the box comes nearer than 1."""
+    c, m, ratio = ent["c"], ent["major"], ent["ratio"]
+    a = math.hypot(m["x"], m["y"])
+    b = a * ratio
+    if not (a > 0 and b > 0):
+        return segment_meets(f, (c["x"] - m["x"], c["y"] - m["y"]), (c["x"] + m["x"], c["y"] + m["y"]))
+    if f[0] < c["x"] < f[2] and f[1] < c["y"] < f[3]:
+        return True
+    ux, uy = m["x"] / a, m["y"] / a
+
+    def to(x, y):
+        dx, dy = x - c["x"], y - c["y"]
+        return ((dx * ux + dy * uy) / a, (-dx * uy + dy * ux) / b)
+    k = [to(f[0], f[1]), to(f[2], f[1]), to(f[2], f[3]), to(f[0], f[3])]
+    return any(from_origin(k[i], k[(i + 1) % 4]) < 1.0 for i in range(4))
+
+
+def label_meets(f, o):
+    if o["kind"] == "ellipse":
+        return ellipse_meets(f, o)
+    if o["kind"] == "polyline":
+        pts = [(p["x"], p["y"]) for p in o["pts"]]
+        return any(segment_meets(f, pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+    return frames_meet(f, label_frame(o))
+
+
+def ellipse_label(mark, da, at, e, with_, plot_scale, place=0):
     """ADR 3760: an ellipse's label: its semi-axes in millimetres to a tenth (with the bars the half-interval too),
-    the label height on paper (2.5 mm when not given) at the plot scale, its middle left at the point's place plus the
-    magnified semi-major axis and the height."""
+    the label height on paper (2.5 mm when not given) at the plot scale; ADR 4160: at `place` of PLACES, the point's
+    place plus that direction times the magnified semi-major axis and the height (east: its middle left)."""
     h = with_.get("labelHeight", 2.5) * plot_scale / 1000.0
     text = f"a {e['major'] * 1000.0:.1f} · b {e['minor'] * 1000.0:.1f} mm"
     if with_.get("heights"):
         text += f" · h ±{e['up'] * 1000.0:.1f} mm"
+    ux, uy, align = PLACES[place]
+    d = e["major"] * with_["scale"] + h
     return {"kind": "text", "layerId": with_["layer"], "attrs": {"İşaret": mark, "Dengeleme": da},
-            "p": {"x": at[0] + e["major"] * with_["scale"] + h, "y": at[1]}, "text": text, "height": h, "rotation": 0.0,
-            "align": "middleLeft"}
+            "p": {"x": at[0] + ux * d, "y": at[1] + uy * d}, "text": text, "height": h, "rotation": 0.0,
+            "align": align}
+
+
+LAST_LABELS = [0, 0]
+
+
+def placed_labels(stations, obstacles, with_, da, plot_scale):
+    """ADR 4160: each station's label, in their order, at the first place whose box meets no ellipse, no height bar and
+    no label placed before it; with none free east, crowded. The labels, how many moved, how many crowded."""
+    out, moved, crowded = [], 0, 0
+    for mark, at, e in stations:
+        free = next((k for k in range(len(PLACES))
+                     if not any(label_meets(label_frame(ellipse_label(mark, da, at, e, with_, plot_scale, k)), o)
+                                for o in obstacles + out)), None)
+        if free is None:
+            crowded += 1
+        elif free > 0:
+            moved += 1
+        out.append(ellipse_label(mark, da, at, e, with_, plot_scale, free or 0))
+    LAST_LABELS[:] = [moved, crowded]
+    return out, moved, crowded
 
 
 def accept(m, inp, layer="gnss", ellipses=None):
@@ -1270,31 +1381,39 @@ def accept(m, inp, layer="gnss", ellipses=None):
     if ellipses:
         rows = {r["mark"]: r for r in out["stations"]}
         uids, points = [], []
+        # Every ellipse and bar first: the labels keep clear of them all (ADR 4160).
+        drawn = []
         for n in facts["new"]:
             e = rows[n["mark"]].get("ellipse")
             if e is None:
                 continue
+            at_ = (n["placed"]["x"], n["placed"]["y"])
+            bar_ = height_bar(n["mark"], da, at_, e, ellipses) if ellipses.get("heights") else None
+            drawn.append((n, e, at_, ellipse_entity(n["mark"], da, at_, e, ellipses), bar_))
+        labels = []
+        if ellipses.get("labels"):
+            obstacles = [o for _, _, _, ent_, bar_ in drawn for o in (ent_, bar_) if o is not None]
+            labels, moved, crowded = placed_labels([(n["mark"], at_, e) for n, e, at_, _, _ in drawn], obstacles,
+                                                   ellipses, da, after.d["settings"]["plotScale"])
+        for i, (n, e, at_, ent, bar) in enumerate(drawn):
             at = max(after.entities) + 1
-            ent = ellipse_entity(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses)
             ent["id"] = at
             after.entities[at] = ent
             after.uids[at] = f"$uidOf:{at}"
             uids.append(f"$uidOf:{at}")
             fields[str(at)] = {k: ent[k] for k in ("layerId", "attrs", "c", "major", "ratio", "t0", "t1")}
             # ADR 3360: the height's half-interval as a bar beside it, recorded with it.
-            if ellipses.get("heights"):
+            if bar is not None:
                 bt = max(after.entities) + 1
-                bar = height_bar(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses)
                 bar["id"] = bt
                 after.entities[bt] = bar
                 after.uids[bt] = f"$uidOf:{bt}"
                 uids.append(f"$uidOf:{bt}")
                 fields[str(bt)] = {k: bar[k] for k in ("layerId", "attrs", "pts")}
             # ADR 3760: its label beside it, recorded with it.
-            if ellipses.get("labels"):
+            if labels:
                 lt = max(after.entities) + 1
-                lab = ellipse_label(n["mark"], da, (n["placed"]["x"], n["placed"]["y"]), e, ellipses,
-                                    after.d["settings"]["plotScale"])
+                lab = labels[i]
                 lab["id"] = lt
                 after.entities[lt] = lab
                 after.uids[lt] = f"$uidOf:{lt}"
@@ -1505,6 +1624,25 @@ def edit_cases():
                              {"id": da, "records": records, "ellipses": 3, "labels": 3}, "Ağ dengelemesini kabul et",
                              extra={"ids": sorted(after_l5.entities), "fields": fields}, then_undo=False),
                        d=with_known))
+    # ADR 4160: N6 15 m east of N1: N1's label east would lie over N6's ellipse, so it goes to the top right; N6's own
+    # stays east.
+    TRUE["N6"] = at(15.0, 0.0, 0.5)
+    near_err = {("N1", "N6"): (0.0004, -0.0006, 0.0011), ("BN1", "N6"): (-0.0008, 0.0005, -0.0012),
+                ("N4", "N6"): (0.0007, 0.0009, 0.0010)}
+    near_vectors = VECTORS + [vector(f, t, err) for (f, t), err in near_err.items()]
+    near_net = networked(baselines=[record(k + 1, v) for k, v in enumerate(near_vectors)])
+    with_n = {"layer": "gnss", "scale": 1000.0, "labels": True}
+    after_n, _, da, records, fields = accept(near_net, {}, ellipses=with_n)
+    moved, crowded = LAST_LABELS
+    assert (moved, crowded) == (1, 0), LAST_LABELS
+    answer = {"id": da, "records": records, "ellipses": 4, "labels": 4, "labelsMoved": moved}
+    out.append(ms.case("Ağı kabul et, etiketler: N1'in doğusundaki etiketi 15 m ötedeki N6'nın elipsine düşer, sağ üste "
+                       "geçer; N6'nınki doğuda kalır",
+                       write(near_net, after_n, {"op": "network", "ellipses": with_n}, answer,
+                             "Ağ dengelemesini kabul et", extra={"ids": sorted(after_n.entities), "fields": fields}),
+                       "Yerler sırayla denenir: doğu, sağ üst, sol üst, sağ alt, sol alt, batı, üst, alt (QGIS'in "
+                       "kartografik sırası, doğu önde); etiketin kutusu çizimin yazı tipiyle (Barlow 500) ölçülür.",
+                       d=near_net))
     out.append(ms.case("Ağı kabul et, hata elipsleri: etiket yüksekliği 0", [refusal(
         {"op": "network", "ellipses": {"layer": "gnss", "scale": 1000.0, "labels": True, "labelHeight": 0.0}},
         "invalid_survey_value", "Elips etiketinin kâğıttaki yüksekliği 0'dan büyük olmalı (mm); 0 verildi.",

@@ -54,6 +54,7 @@ etiketi (yarı eksenler mm): yazı nesnesinin boyu ve yeri için ölçek kuralı
 
 ## Sonra
 
-- Etiketin komşu elipsle ya da başka bir yazıyla çakışınca kaydırılması (bugün yer kuralı tek).
+- ~~Etiketin komşu elipsle ya da başka bir yazıyla çakışınca kaydırılması (bugün yer kuralı tek).~~
+  [ADR 4160](4160-network-ellipse-label-places.md).
 - Robust kestirim; seyrek çözüm; ağırlıklı benzerlik (MAP-05'in kalanı).
 - Web (TODOS §0.2).
