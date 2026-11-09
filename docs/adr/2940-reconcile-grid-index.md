@@ -67,5 +67,5 @@ Süre artık aday sayısıyla doğrusal büyüyor. İki kod aynı grup sayısın
 ## Sonra
 
 - Ayrı inceleme kaydı; ~~yaylı aday~~ (ADR 3340); AI çıkarımı (MAP-04'ün kalanı).
-- Sürüm derlemesinde ve gerçek bir çıkarımın adaylarıyla ölçüm.
+- ~~Sürüm derlemesinde~~ (ADR 3740) ve gerçek bir çıkarımın adaylarıyla ölçüm.
 - Web (TODOS §0.2).

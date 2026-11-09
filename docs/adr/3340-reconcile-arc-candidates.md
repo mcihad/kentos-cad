@@ -61,5 +61,5 @@ uzaklığı” ve ADR 2940'ın “yaylı aday”ı.
 ## Sonra
 
 - Ayrı inceleme kaydı (kararların öznitelik değil kayıt olarak tutulması); AI çıkarımı (MAP-04'ün kalanı).
-- Sürüm derlemesinde ve gerçek bir çıkarımın adaylarıyla ölçüm (ADR 2940 Sonra).
+- ~~Sürüm derlemesinde~~ (ADR 3740) ve gerçek bir çıkarımın adaylarıyla ölçüm (ADR 2940 Sonra).
 - Web (TODOS §0.2).

@@ -34,7 +34,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680 | tipli katman profili; silineni onaylı hâline geri getirme; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700 | Poligon'da trigonometrik kotla bacağın kendi yüksekliği; EPSG'nin çokgen kullanım alanları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bilinen noktanın kendi yerinden bazın çizilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
@@ -619,6 +619,11 @@ Kanıtlanan: `map.features.reconcile` çoklu çizginin yaylarını yay olarak ö
 yayın sekizde birleri, yaya uzaklık kesin; kutular yayın şişkinliğini tutar; yazılan varlık yayıyla. Başvuruda iki yeni
 durum (kirişindeki düz çizgiyle eşleşmeyen yay; köşeleriyle çizilmiş eşiyle uyuşan yay), MCP, masaüstü. Açık: ayrı
 inceleme kaydı, sürüm derlemesinde ölçüm, AI çıkarımı.
+
+**9 Kasım 2026, yedinci tur — sürüm derlemesinde ölçüm ([ADR 3740](../docs/adr/3740-reconcile-measured-in-a-release-build.md)).**
+Kapsam: **Harita**. Aynı commit ve veriyle debug ve sürüm: 40 000 küme (88 000 aday) 1,042 s ve 0,215 s; 100 000 küme
+(220 000 aday) 2,676 s ve 0,567 s; iki derlemede grup sayıları aynı, süre doğrusala yakın. Kod değişmedi. Açık: gerçek
+çıkarımın adaylarıyla ölçüm, ayrı inceleme kaydı, AI çıkarımı.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Detay eşleştirmenin sürüm derlemesinde ölçümü (9 Kasım 2026; MAP-04, [ADR 3740](../../docs/adr/3740-reconcile-measured-in-a-release-build.md)).**
+  `map.features.reconcile`'ın planı sürümde 40 000 kümede 0,215 s, 100 000 kümede 0,567 s (debug 1,042 ve 2,676 s);
+  aynı commit ve veri, Apple M5. Kod değişmedi. Harita.
 - **GNSS ağının haritada görünüşü (9 Kasım 2026; MAP-03, [ADR 3720](../../docs/adr/3720-gnss-network-drawn-on-the-map.md)).**
   GNSS arşivi › Bazlar › Ağı göster: iki ucu kabul noktası olan bütün bazlar haritada, dışlanan kırmızı noktalı; hiçbir
   şey yazılmaz. Harita.
