@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Ayırma çapında dış parçanın numarası çizimde (9 Kasım 2026; MAP-11, [ADR 3480](../../docs/adr/3480-separation-sheet-piece-numbers-drawn.md)).**
+  Numaralı dış parça parselin “dış parçalar” katmanında alan olarak (Parsel, Kısım, ParselNo) ve içinde numaralı
+  noktayla; Koordinat listesi yalnız köşeleri okur; cevapta `labels`. Harita + CBS.
 - **Senaryoda alanın en yakın hatta bağı (9 Kasım 2026; MAP-10, [ADR 3460](../../docs/adr/3460-scenario-area-to-nearest-line.md)).**
   `cad.scenarios.impact`'in `near`'ı her ölçülen alanı en yakın altyapı nesnesine bağlar (nesne, merkez, en yakın yer,
   uzaklık; eşitlerde çizimde önce gelen); Çizimde göster bağları çizer. Harita + CBS.

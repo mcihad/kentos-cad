@@ -217,6 +217,31 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
     let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
     let _ = app.update(Message::Readjustment(R::MakeSheets));
     assert_eq!(app.dialog, None, "the sheets are made");
+    // docs/adr/3480: on 101/10's layer of numbered pieces each part as an area with its number, and a point inside it
+    // labelled with the number; the points' layer keeps the corners only (the coordinate list reads it).
+    let doc = &app.document.as_ref().expect("open").model;
+    let named_layer = |name: &str| doc.layers().leaves().into_iter().find(|l| l.name == name).map(|l| l.id.clone());
+    let corners = named_layer("101/10").expect("101/10's points");
+    assert!(doc.entities().filter(|e| e.base().layer_id == corners).all(|e| matches!(e, kentos_commands::Entity::Point(_)) && e.base().attrs.contains_key("Nokta")));
+    let layer = named_layer("101/10 dış parçalar").expect("101/10's pieces");
+    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    let parts: Vec<_> = on.iter().filter(|e| matches!(e, kentos_commands::Entity::Polygon(_))).collect();
+    let numbers: Vec<&str> = parts.iter().map(|e| e.base().attrs["ParselNo"].as_str()).collect();
+    assert_eq!(numbers, ["101/24", "101/25"]);
+    for part in &parts {
+        let kentos_commands::Entity::Polygon(area) = part else { unreachable!() };
+        let number = &part.base().attrs["ParselNo"];
+        let point = on
+            .iter()
+            .find_map(|e| match e {
+                kentos_commands::Entity::Point(q) if e.base().label.as_deref() == Some(number.as_str()) => Some(q.p),
+                _ => None,
+            })
+            .expect("its label");
+        let (x0, x1) = area.pts.iter().fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.x), b.max(q.x)));
+        let (y0, y1) = area.pts.iter().fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.y), b.max(q.y)));
+        assert!(point.x > x0 && point.x < x1 && point.y > y0 && point.y < y1, "{number} inside its part");
+    }
 }
 
 /// docs/adr/2680: Çapın paftaları over a drawing where a parcel partly inside has no Ada says so and writes nothing;
@@ -368,6 +393,41 @@ fn numbers_screens() {
             let pdf = kentos_plot::book::book_pdf(doc, &[], "KentOS", "2026-11-09").expect("a PDF");
             std::fs::write(out.join("paftalar.pdf"), &pdf.bytes).expect("writes");
         }
+    }
+}
+
+/// docs/adr/3480: 101/10's sheet after Dış parça no, its two pieces outside drawn with their numbers inside; and the
+/// drawing on 101/10; light wide and dark narrow, `.run/gui-evidence/dis-parca-no-3480/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::label_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn label_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-no-3480");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = named();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("readjustment.distribute"));
+        let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+        let _ = app.update(Message::Readjustment(R::Numbers("101/10: 101/24, 101/25".into())));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let _ = app.update(Message::Readjustment(R::MakeSheets));
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pafta-101-10-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
     }
 }
 

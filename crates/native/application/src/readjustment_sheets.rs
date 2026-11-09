@@ -7,6 +7,11 @@
 //! reads the parcel's, its tables take the areas and the parts written with the policy's places and rounding. The
 //! points, the layers and the sheets are one undo step “Ayırma çapı paftaları”. The shared cases are
 //! `fixtures/commands/v1/cad.readjustment.sheets.json`.
+//!
+//! docs/adr/3480: an outside part given a parcel number (m. 13/3, docs/adr/3080) is written too, on a layer of the
+//! parcel's numbered pieces beside its points (“‹Ada/Parsel› dış parçalar”): the part as an area with its parcel, name
+//! and number as attributes, and a point inside it labelled with the number (`label_at`); the sheet's map shows both of
+//! the parcel's layers, its coordinate list the points only.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -25,6 +30,8 @@ use kentos_sheet::{ItemKind, MapView, create, expr, fit, template};
 use crate::checks::{self, Stop, error};
 use crate::{ExecutionContext, codes, readjustment_scope, sheets_edit, sheets_fit};
 
+/// The layer of a parcel's numbered pieces outside is named “‹Ada/Parsel› dış parçalar” (docs/adr/3480).
+const PIECES: &str = "dış parçalar";
 /// The template when none is given: KentOS's separation sheet.
 pub const DEFAULT_TEMPLATE: &str = "sys:ayirma-capi";
 /// The undo step's name.
@@ -77,6 +84,113 @@ pub fn part_names(parts: &[ScopePart]) -> Vec<String> {
             if of > 1 { format!("{word} {n}") } else { word.to_owned() }
         })
         .collect()
+}
+
+/// Where an outside part's number stands (docs/adr/3480): on the horizontal line at the half height of the outer
+/// ring's corners, the middle of the widest stretch inside the part (its rings' crossings paired in order; a straight
+/// edge crosses when its ends lie on either side, the upper end counted; an arc where its circle meets the line within
+/// its sweep, its end not counted); the first of equals. Inside the part whatever its shape.
+pub fn label_at(part: &ScopePart) -> Option<[f64; 2]> {
+    let outer = part.rings.first()?;
+    let (lo, hi) = outer.pts.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p[1]), hi.max(p[1])));
+    let y = (lo + hi) / 2.0;
+    let mut xs: Vec<f64> = Vec::new();
+    for r in &part.rings {
+        let n = r.pts.len();
+        for i in 0..n {
+            let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
+            let bulge = r.bulges.as_ref().and_then(|v| v.get(i).copied()).unwrap_or(0.0);
+            if bulge == 0.0 {
+                if (a[1] > y) != (b[1] > y) {
+                    xs.push(a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]));
+                }
+                continue;
+            }
+            // The arc's circle: its centre on the chord's normal, the sweep 4·atan(bulge) from `a`.
+            let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
+            let k = (1.0 - bulge * bulge) / (4.0 * bulge);
+            let (cx, cy) = ((a[0] + b[0]) / 2.0 - dy * k, (a[1] + b[1]) / 2.0 + dx * k);
+            let r_ = dx.hypot(dy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs());
+            let h = r_ * r_ - (y - cy) * (y - cy);
+            if h < 0.0 {
+                continue;
+            }
+            let sweep = 4.0 * bulge.atan();
+            let a0 = (a[1] - cy).atan2(a[0] - cx);
+            for x in [cx - h.sqrt(), cx + h.sqrt()] {
+                let d = (((y - cy).atan2(x - cx) - a0) * sweep.signum()).rem_euclid(std::f64::consts::TAU);
+                if d < sweep.abs() {
+                    xs.push(x);
+                }
+            }
+        }
+    }
+    xs.sort_by(f64::total_cmp);
+    let best = xs.chunks_exact(2).max_by(|p, q| (p[1] - p[0]).total_cmp(&(q[1] - q[0])).then(std::cmp::Ordering::Greater))?;
+    Some([(best[0] + best[1]) / 2.0, y])
+}
+
+/// The numbered outside parts' labels (docs/adr/3480): each outside part given a number, its name and place.
+fn labels_of(p: &ReadjustmentScopeParcel, given: Option<&[String]>) -> Vec<kentos_commands::SeparationLabel> {
+    let Some(given) = given else { return Vec::new() };
+    let names = part_names(&p.parts);
+    p.parts
+        .iter()
+        .zip(&names)
+        .filter(|(q, _)| q.side == "outside")
+        .zip(given)
+        .filter_map(|((q, name), number)| {
+            Some(kentos_commands::SeparationLabel { part: name.clone(), number: number.trim().to_owned(), at: label_at(q)? })
+        })
+        .collect()
+}
+
+/// The numbered outside parts as objects (docs/adr/3480): each part as an area and a point at its label's place, both
+/// with the parcel, the part's name and its number as attributes; the point labelled with the number.
+fn part_objects(p: &ReadjustmentScopeParcel, labels: &[kentos_commands::SeparationLabel]) -> Vec<NewObject> {
+    let names = part_names(&p.parts);
+    let mut out = Vec::new();
+    for l in labels {
+        let Some(q) = p.parts.iter().zip(&names).find(|(_, n)| **n == l.part).map(|(q, _)| q) else { continue };
+        let attrs = BTreeMap::from([
+            ("Parsel".to_owned(), p.parcel.clone()),
+            ("Kısım".to_owned(), l.part.clone()),
+            ("ParselNo".to_owned(), l.number.clone()),
+        ]);
+        let ring = |r: &ScopeRing| kentos_commands::RingGeometry {
+            pts: r.pts.iter().map(|c| Vec2 { x: c[0], y: c[1] }).collect(),
+            bulges: r.bulges.clone(),
+            zs: None,
+        };
+        let Some(outer) = q.rings.first() else { continue };
+        let object = |geometry: EntityGeometry, label: Option<String>| NewObject {
+            geometry,
+            color: None,
+            line_weight: None,
+            line_type: None,
+            line_pattern: None,
+            attrs: Some(attrs.clone()),
+            label,
+            symbol: None,
+            label_of: None,
+            label_scale: None,
+            transparency: None,
+            order: None,
+        };
+        let holes: Vec<_> = q.rings[1..].iter().map(ring).collect();
+        out.push(object(
+            EntityGeometry::Polygon {
+                pts: ring(outer).pts,
+                bulges: outer.bulges.clone(),
+                holes: (!holes.is_empty()).then_some(holes),
+                zs: None,
+                parts: None,
+            },
+            None,
+        ));
+        out.push(object(EntityGeometry::Point { p: Vec2 { x: l.at[0], y: l.at[1] }, z: None, parts: None }, Some(l.number.clone())));
+    }
+    out
 }
 
 /// A ring as point numbers, closed by its first: “1-2-3-4-1”.
@@ -415,6 +529,7 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
                 points: u32::try_from(p.points.len()).unwrap_or(u32::MAX),
                 areas,
                 parts,
+                labels: labels_of(p, given),
             },
         });
     }
@@ -467,7 +582,33 @@ fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<Readjustmen
                 return crate::trim::relay(other);
             }
         }
-        layers.push(layer);
+        // The numbered pieces outside on a layer of their own beside the points (docs/adr/3480): the coordinate list
+        // reads the points only, the map shows both.
+        let mut own = vec![layer.clone()];
+        if !p.out.labels.is_empty() {
+            let pieces = match cx.doc.add_layer(NewLayer::layer(format!("{} {PIECES}", p.parcel.parcel)), Some(&group), false) {
+                Ok(id) => id,
+                Err(r) => {
+                    cx.doc.cancel_group(step);
+                    return fail(codes::LAYER_NOT_FOUND, r.to_string(), "scope").into();
+                }
+            };
+            let create = EntitiesCreate {
+                layer_id: pieces.clone(),
+                objects: part_objects(&p.parcel, &p.out.labels),
+                operation: None,
+                expected_revision: None,
+            };
+            match crate::create::write_in(cx, create) {
+                CommandResult::Completed { output, .. } => uids.extend(output.created),
+                other => {
+                    cx.doc.cancel_group(step);
+                    return crate::trim::relay(other);
+                }
+            }
+            own.push(pieces);
+        }
+        layers.push(own);
     }
     // Every point layer of the group now, the ones made before too: each map shows its own parcel's only.
     let all: Vec<String> = cx
@@ -478,10 +619,11 @@ fn write(cx: &mut ExecutionContext<'_>, laid: Laid) -> CommandResult<Readjustmen
         .unwrap_or_default();
     let mut ops: Vec<serde_json::Value> = Vec::new();
     let mut sheets = Vec::new();
-    for (p, layer) in planned.into_iter().zip(layers) {
+    for (p, mine) in planned.into_iter().zip(layers) {
+        let layer = mine[0].clone();
         let mut own: Vec<Op> = p.ops;
         let frozen: Vec<serde_json::Value> =
-            all.iter().filter(|c| **c != layer).map(|c| serde_json::json!({"layer": c, "frozen": true})).collect();
+            all.iter().filter(|c| !mine.contains(c)).map(|c| serde_json::json!({"layer": c, "frozen": true})).collect();
         if !frozen.is_empty() {
             own.push(Op::SetItemProps(SetItemProps {
                 id: p.map.clone(),

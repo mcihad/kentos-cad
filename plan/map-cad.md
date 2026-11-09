@@ -41,7 +41,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; bağların katmana yazılması | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
@@ -1191,6 +1191,14 @@ parçalarına verilmiş numaralar Kısımlar'da adın yanında (“Girmeyen 1 ·
 parsel, aynı numara, boş); 34 ortak durum, MCP; masaüstünde Dış parça no kutusu (“101/10: 101/24, 101/25; …”);
 şablonun Kısım sütunu 31 mm. KentOS numara vermez. Açık: tescil bildirimi (TKGM'nin biçimi), numaranın çizimde yazılması,
 değer esaslı dağıtım, m. 8(5), ikinci kabul.
+
+**9 Kasım 2026, altıncı tur — dış parçanın numarası çizimde ([ADR 3480](../docs/adr/3480-separation-sheet-piece-numbers-drawn.md)).**
+Kapsam: **Harita ve CBS**. Araştırma: yönetmeliğin m. 13(3)'ü (dış parçalar aynı çapta, her biri numarasıyla tescil;
+numaranın çapta yeri yazılmaz). Kanıtlanan: `cad.readjustment.sheets` numaralı her dış parçayı parselin “dış parçalar”
+katmanına yazar: parça alan olarak (Parsel, Kısım, ParselNo) ve içinde numarasıyla etiketli nokta (orta yükseklikteki
+yatay çizginin parçanın içindeki en geniş aralığının ortası); çapın Koordinat listesi yalnız köşeleri okur; cevapta
+`labels`. Ortak durumlar (bağımsız başvuru, yeni durum), Python, MCP, masaüstü ve resimler. Açık: yazının dar parçaya
+sığması, değer esaslı dağıtım, tescil bildirimi.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

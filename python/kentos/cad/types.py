@@ -84797,6 +84797,34 @@ class SensorsLatestAnswer(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SeparationLabel(_Model):
+    """An outside part's parcel number on the drawing (docs/adr/3480): the part's name on the sheet (“Girmeyen 1”), the
+    number as given (trimmed) and its place: the middle of the widest stretch of the part's horizontal line at the half
+    height of its outer ring's corners (inside the part whatever its shape).
+    Attributes:
+        at: Unit: m.
+    """
+    part: str
+    number: str
+    at: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["part"] = self.part
+        out["number"] = self.number
+        out["at"] = [float(e0) for e0 in self.at]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SeparationLabel:
+        return cls(
+            part=data["part"],
+            number=data["number"],
+            at=[float(e0) for e0 in data["at"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SeparationSheet(_Model):
     """A separation sheet: its id and name, its parcel (uid and `Ada/Parsel`), the layer its points are on (none in a plan),
     its map's scale (1:N) and centre (east, north; m), how many points it numbers, and the rows written in its tables of
@@ -84805,6 +84833,8 @@ class SeparationSheet(_Model):
         scale: Unit: scale.
         center: Unit: m.
         points: Unit: count.
+        labels: The numbered outside parts written on the drawing (docs/adr/3480): each part's name, its parcel number and
+            where the number stands inside it; none when no numbers are given.
     """
     sheet: str
     name: str
@@ -84815,6 +84845,7 @@ class SeparationSheet(_Model):
     points: int
     areas: list[list[str]]
     parts: list[list[str]]
+    labels: list[SeparationLabel] | Unset = UNSET
     layer: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -84828,6 +84859,8 @@ class SeparationSheet(_Model):
         out["points"] = self.points
         out["areas"] = [list(e0) for e0 in self.areas]
         out["parts"] = [list(e0) for e0 in self.parts]
+        if self.labels is not UNSET:
+            out["labels"] = [e0.to_json() for e0 in self.labels]
         if self.layer is not UNSET:
             out["layer"] = self.layer
         return out
@@ -84844,6 +84877,7 @@ class SeparationSheet(_Model):
             points=data["points"],
             areas=[list(e0) for e0 in data["areas"]],
             parts=[list(e0) for e0 in data["parts"]],
+            labels=[SeparationLabel.from_json(e0) for e0 in data["labels"]] if "labels" in data else UNSET,
             layer=data.get("layer", UNSET),
         )
 
@@ -133048,6 +133082,7 @@ __all__ = [
     "SensorsIngested",
     "SensorsLatest",
     "SensorsLatestAnswer",
+    "SeparationLabel",
     "SeparationSheet",
     "SequencePaperPointNaming",
     "SeriesSide",

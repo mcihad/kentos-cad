@@ -91,6 +91,26 @@ pub struct SeparationSheet {
     pub points: u32,
     pub areas: Vec<Vec<String>>,
     pub parts: Vec<Vec<String>>,
+    /// The numbered outside parts written on the drawing (docs/adr/3480): each part's name, its parcel number and
+    /// where the number stands inside it; none when no numbers are given.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SeparationLabel>>"))]
+    pub labels: Vec<SeparationLabel>,
+}
+
+/// An outside part's parcel number on the drawing (docs/adr/3480): the part's name on the sheet (“Girmeyen 1”), the
+/// number as given (trimmed) and its place: the middle of the widest stretch of the part's horizontal line at the half
+/// height of its outer ring's corners (inside the part whatever its shape).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SeparationLabel {
+    pub part: String,
+    pub number: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub at: [f64; 2],
 }
 
 /// Output of `cad.readjustment.sheets` v1, and its plan: the point layers' group (none in a plan), the sheets in the

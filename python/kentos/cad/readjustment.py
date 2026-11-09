@@ -346,12 +346,16 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
     parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların
     tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların
     sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS
-    numara vermez. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte
-    onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…),
-    no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options
-    (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen
-    girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara), not_fixed_map,
-    separation_sheet_exists (pafta ya da nokta katmanı zaten var).
+    numara vermez; numaralı her dış parça parselin katmanına da yazılır (ADR 3480):
+    parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla
+    etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin
+    parçanın içindeki en geniş aralığının ortası); cevapta labels. Tek geri alma adımı.
+    Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay
+    vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity,
+    duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin
+    özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını
+    tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists (pafta ya
+    da nokta katmanı zaten var).
     """
     __slots__ = ()
     id = "cad.readjustment.sheets"
@@ -391,13 +395,17 @@ class _ReadjustmentSheets(LocalCommand[ReadjustmentSheets, ReadjustmentSheetsMad
         adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin
         özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel
         numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın
-        yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez. Tek geri alma
-        adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS
-        onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels,
-        no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da
-        parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça
-        sayısını tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists
-        (pafta ya da nokta katmanı zaten var).
+        yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez; numaralı her
+        dış parça parselin katmanına da yazılır (ADR 3480): parça alan olarak (Parsel,
+        Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın
+        köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş
+        aralığının ortası); cevapta labels. Tek geri alma adımı. Taslaktır: çaplar
+        parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler:
+        kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel,
+        unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap),
+        invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da
+        aynı numara), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı
+        zaten var).
 
         Args:
             doc: The drawing it works on.

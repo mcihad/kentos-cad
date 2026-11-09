@@ -20,7 +20,12 @@ The rules, by hand (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13, as
   written computed area and the record, exactly (the record's places or the policy's, the more); what the part outside
   keeps (the scope's registered − inside, m. 31/2); “—” for what is not there; the table of parts: Giren / Girmeyen (numbered on a side with more than one), the outer ring's
   numbers closed by its first, each hole's after it, the area as above;
-- the book then lists the sheets (A4 portrait, the template's nine items, the map and its scale).
+- the book then lists the sheets (A4 portrait, the template's nine items, the map and its scale);
+- docs/adr/3480: each outside part given a number, its label: the part's name and the number (trimmed), at the middle
+  of the widest stretch inside the part of the horizontal line at the half height of its outer ring's corners (each
+  ring's crossings of the line, in order, paired: a straight edge crosses when its ends lie on either side, the upper
+  end counted, at the interpolated x; an arc where its circle meets the line within its sweep from its start, its end
+  not counted); the first of equal stretches.
 """
 
 import copy
@@ -114,6 +119,57 @@ def areas(p, scale, mode):
             ["Girmeyen kısma kalan (tescilli − giren)", p.get("outsideRecorded", "—")]]
 
 
+def label_at(part):
+    """docs/adr/3480: where an outside part's number stands, by the rule above (the arcs' circles from the bulge)."""
+    outer = part["rings"][0]["pts"]
+    y = (min(q[1] for q in outer) + max(q[1] for q in outer)) / 2
+    xs = []
+    for ring in part["rings"]:
+        pts, bulges = ring["pts"], ring.get("bulges") or [0.0] * len(ring["pts"])
+        for i, a in enumerate(pts):
+            b, bulge = pts[(i + 1) % len(pts)], bulges[i]
+            if bulge == 0:
+                if (a[1] > y) != (b[1] > y):
+                    xs.append(a[0] + (y - a[1]) * (b[0] - a[0]) / (b[1] - a[1]))
+                continue
+            theta = 4 * math.atan(bulge)
+            chord = math.hypot(b[0] - a[0], b[1] - a[1])
+            r = chord / (2 * math.sin(abs(theta) / 2))
+            mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
+            # The centre on the chord's left normal at r·cos(θ/2), the right one for a clockwise arc.
+            d = r * math.cos(theta / 2) * (1 if theta > 0 else -1)
+            nx, ny = -(b[1] - a[1]) / chord, (b[0] - a[0]) / chord
+            cx, cy = mx + nx * d, my + ny * d
+            h = r * r - (y - cy) ** 2
+            if h < 0:
+                continue
+            a0 = math.atan2(a[1] - cy, a[0] - cx)
+            for x in (cx - math.sqrt(h), cx + math.sqrt(h)):
+                turn = ((math.atan2(y - cy, x - cx) - a0) * (1 if theta > 0 else -1)) % (2 * math.pi)
+                if turn < abs(theta):
+                    xs.append(x)
+    xs.sort()
+    pairs = [(xs[k], xs[k + 1]) for k in range(0, len(xs) - 1, 2)]
+    best = max(pairs, key=lambda q: q[1] - q[0]) if pairs else None
+    for q in pairs:  # the first of equals
+        if q[1] - q[0] == best[1] - best[0]:
+            best = q
+            break
+    return [(best[0] + best[1]) / 2, y]
+
+
+def labels(p, numbers):
+    """docs/adr/3480: each numbered outside part's name, number and place."""
+    if numbers is None:
+        return []
+    out, k = [], 0
+    for n, part in zip(names(p["parts"]), p["parts"]):
+        if part["side"] == "outside":
+            out.append({"part": n, "number": numbers[k].strip(), "at": label_at(part)})
+            k += 1
+    return out
+
+
 def part_rows(p, scale, mode, numbers=None):
     """The table of parts; with the parcel numbers given for its outside parts (m. 13/3, docs/adr/3080), each outside
     part's name says its number."""
@@ -148,7 +204,8 @@ def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None):
         name = f"{WORD} {p['parcel']}"
         rows.append({"sheet": sid, "name": name, "uid": p["uid"], "parcel": p["parcel"], "scale": s, "center": centre,
                      "points": len(p["points"]), "areas": areas(p, scale, mode),
-                     "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"]))})
+                     "parts": part_rows(p, scale, mode, (numbers or {}).get(p["uid"])),
+                     **({"labels": labels(p, (numbers or {}).get(p["uid"]))} if (numbers or {}).get(p["uid"]) else {})})
         listing.append({"id": sid, "name": name, "width": 210.0, "height": 297.0,
                         "items": len(TEMPLATE["sheet"]["items"]),
                         "maps": [{"item": f"{sid}-item-{MAP_AT}", "name": MAP_NAME, "scale": float(s)}]})
@@ -228,6 +285,9 @@ def cases():
         # docs/adr/3080: the parcel numbers of the parts outside, as the user writes them (m. 13/3).
         ok("dışarıda kalan iki parçanın parsel numaraları yazılınca Kısımlar'da adlarıyla (m. 13/3)", [P(10)],
            numbers={rs.uid(P(10) + 1): ["101/24", " 101/25 "]}),
+        ok("üç parselin dış parçaları numaralı: her parça ve numarası parselin katmanında, numara parçanın içinde",
+           three, numbers={rs.uid(P(3) + 1): ["101/30"], rs.uid(P(6) + 1): ["101/31"],
+                           rs.uid(P(10) + 1): ["101/24", "101/25"]}),
         refused("parsel numaraları: parça sayısı tutmuyor", {"scope": scope_input([P(10)]),
                 "numbers": {rs.uid(P(10) + 1): ["101/24"]}}, "invalid_input",
                 "“101/10” parselinin düzenleme dışında 2 parçası var; 1 parsel numarası verildi.",

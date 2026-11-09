@@ -58712,7 +58712,7 @@
       "id": "cad.readjustment.sheets",
       "version": 1,
       "title": "Ayırma çapı paftaları",
-      "summary": "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).",
+      "summary": "Düzenleme sınırına kısmen giren her parsel için bir ayırma çapı paftası yapar (Arazi ve Arsa Düzenlemeleri Hakkında Yönetmelik m. 13: parsel başına bir çap, dışarıda kalan bütün parçalar aynı çapta). Sayılar ve parçalar cad.readjustment.scope'un (scope: onun girdisi): tescilli ve hesaplanan yüzölçümü, fark, yanılma sınırı, giren ve girmeyen kısım; parçaların sınırları paftanın numaralı noktalarıyla (1-2-3-4-1). Noktalar çizime yazılır: her parselinki “Ayırma çapı noktaları” grubunda parselin adını taşıyan kendi katmanında, numaralarıyla etiketli; paftanın haritası parsele standart ölçekte sığar (%5 kenar payı; options.scale verilirse o ölçekte ortalanır) ve öbür parsellerin nokta katmanlarını dondurur, koordinat listesi parselin katmanını okur, Yüzölçümleri ve Kısımlar tabloları politikanın basamağı ve yuvarlamasıyla yazılır. Şablon yoksa KentOS'un ayırma çapı (sys:ayirma-capi); kendi şablonunda harita kimlikli sabit görünüm penceresi gerekir, koordinatlar, yuzolcumleri ve kisimlar varsa doldurulur. Pafta adı “Ayırma çapı ‹Ada/Parsel›”; il, ilce, mahalle, ada, parsel soruları parselin özniteliklerinden. numbers: dışarıda kalan parçaların tescil edileceği parsel numaraları (m. 13/3), parselin kimliğiyle parçaların sırasında; Kısımlar'da adın yanında yazılır (“Girmeyen 1 · parsel 101/24”), KentOS numara vermez; numaralı her dış parça parselin katmanına da yazılır (ADR 3480): parça alan olarak (Parsel, Kısım, ParselNo öznitelikleriyle) ve içinde numarasıyla etiketli bir nokta (parçanın köşelerinin orta yüksekliğindeki yatay çizginin parçanın içindeki en geniş aralığının ortası); cevapta labels. Tek geri alma adımı. Taslaktır: çaplar parselasyon planıyla birlikte onaylanır (m. 13/2), KentOS onay vermez. Retler: kapsamın kendi retleri (scope.…), no_partial_parcels, no_identity, duplicate_parcel, unknown_template, invalid_options (ad, merkez ya da parselin özniteliğine cevap), invalid_input (numbers: kısmen girmeyen parsel, parça sayısını tutmayan, boş ya da aynı numara), not_fixed_map, separation_sheet_exists (pafta ya da nokta katmanı zaten var).",
       "aliases": [
         "ayirmacapipaftalari",
         "capinpaftalari"
@@ -185663,6 +185663,33 @@
       ],
       "type": "object"
     },
+    "SeparationLabel": {
+      "description": "An outside part's parcel number on the drawing (docs/adr/3480): the part's name on the sheet (“Girmeyen 1”), the\nnumber as given (trimmed) and its place: the middle of the widest stretch of the part's horizontal line at the half\nheight of its outer ring's corners (inside the part whatever its shape).",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "number": {
+          "type": "string"
+        },
+        "part": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "part",
+        "number",
+        "at"
+      ],
+      "type": "object"
+    },
     "SeparationSheet": {
       "description": "A separation sheet: its id and name, its parcel (uid and `Ada/Parsel`), the layer its points are on (none in a plan),\nits map's scale (1:N) and centre (east, north; m), how many points it numbers, and the rows written in its tables of\nareas (the item, square metres) and parts (the part, its boundary as point numbers, square metres).",
       "properties": {
@@ -185684,6 +185711,13 @@
           "minItems": 2,
           "type": "array",
           "x-unit": "m"
+        },
+        "labels": {
+          "description": "The numbered outside parts written on the drawing (docs/adr/3480): each part's name, its parcel number and\nwhere the number stands inside it; none when no numbers are given.",
+          "items": {
+            "$ref": "#/$defs/SeparationLabel"
+          },
+          "type": "array"
         },
         "layer": {
           "type": [

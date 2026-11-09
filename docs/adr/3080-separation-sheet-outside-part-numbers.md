@@ -73,6 +73,7 @@ numarası (m. 13(3))”.
 ## Sonra
 
 - Tescil bildirimi (m. 22(1)(ğ)): TKGM'nin biçimi beklenir.
-- Dış parçanın numarasının çizimde, parçanın içinde yazılması; parçanın öznitelik olarak saklanması.
+- Dış parçanın numarasının çizimde, parçanın içinde yazılması; parçanın öznitelik olarak saklanması. Yapıldı:
+  [ADR 3480](3480-separation-sheet-piece-numbers-drawn.md).
 - Kapsam dışı kimlikte retin parseli adıyla söylemesi (bugün kimlikle; masaüstü adıyla söylüyor).
 - Web (TODOS §0.2).
