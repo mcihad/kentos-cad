@@ -62,5 +62,5 @@ gösterilmesi”.
 
 - Kesişen borunun dış duvarı ve et kalınlığı (ADR 2760 Sonra).
 - Seçili satırın çizimde öne çıkarılması (ADR 3020'deki gibi).
-- Yüzey kaplaması; profilin canlı güncellenmesi (MAP-16'nın öbür maddeleri).
+- Yüzey kaplaması (MAP-16'nın öbür maddesi); ~~profilin canlı güncellenmesi~~ [ADR 3560](3560-pipe-profile-kept-with-its-network.md).
 - Web (TODOS §0.2).

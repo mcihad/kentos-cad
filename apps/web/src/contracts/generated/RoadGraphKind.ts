@@ -3,4 +3,4 @@
 /**
  * What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet.
  */
-export type RoadGraphKind = "layer" | "surface" | "alignment" | "profile" | "sections" | "superelevation" | "junction" | "template" | "corridor" | "volume" | "haul" | "guardrail" | "culvert" | "wall" | "platform" | "sheetSet" | "pay" | "drawing" | "sheet";
+export type RoadGraphKind = "layer" | "surface" | "alignment" | "profile" | "sections" | "superelevation" | "junction" | "template" | "corridor" | "volume" | "haul" | "guardrail" | "culvert" | "wall" | "platform" | "sheetSet" | "pay" | "network" | "drawing" | "sheet";

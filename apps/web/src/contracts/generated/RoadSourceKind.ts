@@ -3,4 +3,4 @@
 /**
  * What kind of road source a drawing depends on (docs/adr/0911 §1).
  */
-export type RoadSourceKind = "surface" | "alignment" | "profile" | "template" | "sections" | "superelevation" | "corridor" | "guardrail" | "culvert" | "wall" | "junction" | "platform";
+export type RoadSourceKind = "surface" | "alignment" | "profile" | "template" | "sections" | "superelevation" | "corridor" | "guardrail" | "culvert" | "wall" | "junction" | "platform" | "network";

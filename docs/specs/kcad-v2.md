@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `211`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-212.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `212`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-213.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -933,6 +933,18 @@ listeninkinden farklı ya da 16 haneden başka özet `bad_value` (`broken/map-wo
 `broken/map-work-approved-parts-short-digest.kcad`). Boş liste yazılmaz. Yazıcı 211'i bir öğe parçaları taşıyınca seçer;
 210 ve öncesinde alan bilinmez (`unknown_field`, `broken/map-work-approved-parts-in-schema-210.kcad`). Örnek
 `map-work-approved-parts.json/.kcad`.
+
+**Şema 212** (ADR 3560; MAP-16): bir altyapı ağının hat profili çizimi (`cad.pipes.profile`), yol ya da harita projesinin
+`road.drawings`'inde kaynaklarının damgalarıyla. Kaynak türlerine `network` eklenir: ana kaynak ağdır (girdinin
+`network`'ü ağın kimliğiyle), zemini okunan yüzey (`ground.surface`) ve kesişen ağ (`crossing.network`) öbür kaynaklardır.
+Ağın damgası `{"network": tanım, "objects": [kenar ve düğüm katmanlarındaki nesneler, çizim sırasıyla]}`'nin kanonik
+JSON'unun (sayılar kayan noktalı) SHA-256'sının ilk 16 hanesidir; katmanın süzgeci uygulanmaz. Kaydın biçimi şema 198'inki
+ve 209'unkidir. Yazıcı 212'yi böyle bir çizim ya da `network` kaynağı varken seçer; 211 ve öncesi komutu ve türü
+tanımaz, `bad_value` sayar (`broken/pipe-profile-drawing-in-schema-211.kcad`). Örnek `map-pipe-profile.json/.kcad`.
+
+Aynı adımda (ADR 3560) çizimin nesnelerinin damgası (`digest`) nesnelerin belgedeki sayısı (`id`) olmadan hesaplanır:
+dosya yeniden okununca sayılar sıklaşır, kimlik kalıcı kimliktir. Daha önce sayıyla yazılmış kayıt, sayılar değişmedikçe
+elle değişmemiş sayılır; yeniden çizilince sayısız damgayı alır. Biçim değişmez (damga yine 16 hane).
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

@@ -46,7 +46,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
@@ -1658,6 +1658,15 @@ düşey açıklığıyla, her yakın geçiş kesikli çizgi ve açıklığıyla;
 yanlış taraf kırmızı; bilinmeyen turuncu; öbürü yeşil); İşareti kaldır'a dek kalır, çizim değişince yeniden hesaplanır
 (eskimez). Komut değişmedi. Açık: kesişen borunun dış duvarı, seçili satırın öne çıkarılması, yüzey kaplaması, profilin
 canlı güncellenmesi.
+
+**9 Kasım 2026, altıncı tur — hat profilinin ağıyla tutulması ([ADR 3560](../docs/adr/3560-pipe-profile-kept-with-its-network.md)).**
+Kapsam: **Harita + Yol + CBS** (tutma Harita ve Yol'da). Araştırma: Civil 3D'de planda yapılan değişiklik profil
+görünüşündeki parçalara yansır; Bentley'in profil koşusu yardımı güncellemeyi söylemez. Kanıtlanan: yeni kaynak türü ağ
+(tanımı ve katmanlarındaki nesneler); `cad.pipes.profile` ağıyla (zemin yüzeyi ve kesişen ağla da) tutulur, ağ değişince
+eskir, `road.project.rebuild` ve kendiliğinden yeniden üretim çizer; proje ağacında ve İş grafiğinde ağ düğümü; `.kcad`
+şema 212; tutulan çizimlerin kaydedilip açılınca “elle değişti” görünmesi düzeltildi (nesnelerin damgası `id`'siz); 73
+proje ağacı durumu, Python, MCP, masaüstü. Açık: yüzey kaplaması, kesişen borunun dış duvarı, denetimin açık pencerede
+yeniden okunması.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

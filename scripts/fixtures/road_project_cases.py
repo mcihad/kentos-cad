@@ -35,6 +35,7 @@ import road_section_command_cases as scmd  # noqa: E402
 import road_terrain_command_cases as tc  # noqa: E402
 import road_volume_command_cases as vc  # noqa: E402
 import road_wall_cases as wv  # noqa: E402
+import pipes_profile_cases as ppc  # noqa: E402
 import road_terrain_zeroline_cases as zc  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
@@ -48,13 +49,14 @@ WORDS = {"road.alignments.label": "Km yazıları", "road.profiles.draw": "Boykes
          "road.sections.draw": "Enkesit çizimi", "road.corridors.draw": "Şevli plan",
          "road.guardrails.draw": "Korkuluk çizimi", "road.culverts.draw": "Menfez çizimi",
          "road.walls.draw": "Duvar çizimi", "road.junctions.draw": "Kavşak çizimi",
-         "road.terrains.contours": "Eş yükselti eğrileri", "road.terrains.zeroline": "Sıfır hattı"}
+         "road.terrains.contours": "Eş yükselti eğrileri", "road.terrains.zeroline": "Sıfır hattı",
+         "cad.pipes.profile": "Hat profili"}
 KIND_WORDS = {"surface": "yüzey", "alignment": "aks", "profile": "boykesit", "template": "tip kesit",
               "sections": "kesit takımı", "superelevation": "dever", "corridor": "koridor", "guardrail": "otokorkuluk",
-              "culvert": "menfez", "wall": "istinat duvarı", "junction": "kavşak"}
+              "culvert": "menfez", "wall": "istinat duvarı", "junction": "kavşak", "network": "ağ"}
 KIND_NAMED = {"surface": "yüzeyi", "alignment": "aksı", "profile": "boykesiti", "template": "tip kesiti",
               "sections": "kesit takımı", "superelevation": "deveri", "corridor": "koridoru", "guardrail": "otokorkuluğu",
-              "culvert": "menfezi", "wall": "istinat duvarı", "junction": "kavşağı"}
+              "culvert": "menfezi", "wall": "istinat duvarı", "junction": "kavşağı", "network": "ağı"}
 LISTS = {"surface": "surfaces", "alignment": "alignments", "profile": "profiles", "template": "templates",
          "sections": "sections", "superelevation": "superelevations", "corridor": "corridors",
          "guardrail": "guardrails", "culvert": "culverts", "wall": "walls", "junction": "junctions"}
@@ -63,7 +65,8 @@ MAIN = {"road.alignments.label": ("alignment", "alignment"), "road.profiles.draw
         "road.sections.draw": ("sections", "set"), "road.corridors.draw": ("corridor", "corridor"),
         "road.guardrails.draw": ("guardrail", "guardrail"), "road.culverts.draw": ("culvert", "culvert"),
         "road.walls.draw": ("wall", "wall"), "road.junctions.draw": ("junction", "junction"),
-        "road.terrains.contours": ("surface", "surface"), "road.terrains.zeroline": ("surface", "base")}
+        "road.terrains.contours": ("surface", "surface"), "road.terrains.zeroline": ("surface", "base"),
+        "cad.pipes.profile": ("network", "network")}
 
 
 def base(work="road", road=None):
@@ -106,6 +109,8 @@ class State:
         return self.setup["settings"].get("road") or {}
 
     def find(self, kind, id_):
+        if kind == "network":
+            return next((x for x in self.setup["settings"].get("networks", []) if x["id"] == id_), None)
         return next((x for x in self.road.get(LISTS[kind], []) if x["id"] == id_), None)
 
     def name(self, kind, id_):
@@ -123,6 +128,11 @@ class State:
         x = self.find(kind, id_)
         if x is None:
             return None
+        if kind == "network":
+            # Docs/adr/3560: the definition and the objects of its edge and junction layers; only whether it changed is
+            # read here (the tree says no stamp), so the objects are taken as the steps leave them.
+            layers = {l["layer"] for l in x.get("edges", []) + x.get("junctions", [])}
+            return stamp({"network": x, "objects": [e for e in self.setup["entities"] if e["layerId"] in layers]})
         return self.surface_digest(x)[:16] if kind == "surface" else stamp(x)
 
     def sources(self, kind, id_, out=None):
@@ -162,7 +172,7 @@ class State:
         return out
 
     def resolve(self, kind, text):
-        xs = self.road.get(LISTS[kind], [])
+        xs = self.setup["settings"].get("networks", []) if kind == "network" else self.road.get(LISTS[kind], [])
         x = next((x for x in xs if x["id"] == text), None) or next((x for x in xs if x["name"].lower() == text.lower()), None)
         return x["id"]
 
@@ -172,6 +182,12 @@ class State:
         out = self.sources(kind, self.resolve(kind, input_[field]))
         if command == "road.terrains.zeroline":
             self.sources("surface", self.resolve("surface", input_["comparison"]), out)
+        if command == "cad.pipes.profile":
+            # Docs/adr/3560: the surface its ground is read from, the network whose pipes cross it.
+            if input_.get("ground", {}).get("from") == "surface":
+                self.sources("surface", self.resolve("surface", input_["ground"]["surface"]), out)
+            if "crossing" in input_:
+                self.sources("network", self.resolve("network", input_["crossing"]["network"]), out)
         return out
 
     def draw(self, command, input_, n):
@@ -353,6 +369,10 @@ def tree(st, deep=False):
             if any(line["stale"] for row in q["rows"] for line in row["lines"]):
                 state, why = "stale", ["Metrajın kaynaklarından biri eskidi."]
         push(node("pay", "pay", f"Poz defteri · {b['source']} {b['version']}", None, state, why))
+    for n in st.setup["settings"].get("networks", []):
+        if any(d["main"] == ("network", n["id"]) for d in st.drawings):
+            at = push(node("network", n["id"], n["name"], None, "current"))
+            drawings("network", n["id"], at)
     for d in st.drawings:
         if not any(n["kind"] == "drawing" and n["id"] == d["id"] for n in nodes):
             place(d, None)
@@ -386,6 +406,9 @@ def count(st, command, input_):
         # The zero lines of the two lattices (road_terrain_zeroline_cases.py's reference).
         b, c = (st.resolve("surface", input_[f]) for f in ("base", "comparison"))
         return len(zc.zero_lines(b, c)[0])
+    if command == "cad.pipes.profile":
+        # The run's profile as pipes_profile_cases.py counts it (an attribute the profile does not read changes nothing).
+        return ppc.profile(input_["network"], input_["start"], diameter=input_.get("diameter"), ground_=input_.get("ground"))[1]
     raise ValueError(command)
 
 
@@ -459,6 +482,33 @@ def map_setup(auto=False):
     if auto:
         s["settings"]["road"]["autoRebuild"] = True
     return s
+
+
+# ── A map project's pipe run profile kept with its network (docs/adr/3560) ─────────────────────────────────────────
+PIPE_PROFILE = ("cad.pipes.profile", {"network": "atiksu", "start": ppc.P_UID("P1"),
+                                      "inverts": {"from": "fields", "start": "Akar baş", "end": "Akar son"},
+                                      "diameter": {"field": "Çap", "unit": "mm"}, "ground": {"from": "surface", "surface": "Zemin"},
+                                      "layerId": "profil", "at": [487000.0, 4419700.0]})
+
+
+def pipes_setup(auto=False):
+    """pipes_profile_cases.py's map project (the sewer and storm networks, the ground surface); `auto`: drawing again by
+    itself on."""
+    s = ppc.setup("map")
+    if auto:
+        s["settings"]["road"]["autoRebuild"] = True
+    return s
+
+
+def changed_pipe(st, warnings=()):
+    """P1's material written (an attribute the profile does not read): the sewer network's objects change, its stamp
+    too."""
+    uid = ppc.P_UID("P1")
+    e = next(e for e, u in zip(st.setup["entities"], st.setup["uids"]) if u == uid)
+    e["attrs"] = {**e["attrs"], "Malzeme": "PVC"}
+    return {**step("execute", {"uids": [uid], "attrs": {"Malzeme": "PVC"}, "operation": "attributes"},
+                   {"status": "completed", "output": "$any", "warnings": list(warnings)}),
+            "command": "cad.entities.set"}
 
 
 def changed_height(st, warnings=()):
@@ -570,6 +620,14 @@ def cases():
     a = drawn(st, ZEROLINE)
     b = changed_height(st)
     add("Harita projesi: tümseğin bir kotu değişince sıfır hattı eskir", [a, b, asked(st)], sm)
+    # Docs/adr/3560: a pipe run profile under its network; a pipe's attribute changed makes it stale.
+    sp = pipes_setup()
+    st = State(sp)
+    add("Harita projesi: hat profili ağının altında, güncel", [drawn(st, PIPE_PROFILE), asked(st)], sp)
+    st = State(sp)
+    a = drawn(st, PIPE_PROFILE)
+    b = changed_pipe(st)
+    add("Harita projesi: ağın bir borusu değişince hat profili güncel değil", [a, b, asked(st)], sp)
     return out
 
 
@@ -724,6 +782,12 @@ def rebuild_cases():
     a = drawn(st, ZEROLINE)
     b = changed_height(st)
     add("Harita projesi: eskiyen sıfır hattı yeniden üretilir", [a, b, rebuilt(st, {}), {**asked(st), "expect": {"revision": "same"}}], sm)
+    # Docs/adr/3560: the stale pipe run profile drawn again from its network.
+    sp = pipes_setup()
+    st = State(sp)
+    a = drawn(st, PIPE_PROFILE)
+    b = changed_pipe(st)
+    add("Harita projesi: eskiyen hat profili ağından yeniden üretilir", [a, b, rebuilt(st, {}), {**asked(st), "expect": {"revision": "same"}}], sp)
     return out
 
 
@@ -840,6 +904,19 @@ def edit_cases():
          "command": "road.terrains.edit"}
     add("Harita projesinde açıkken yüzey değişince sıfır hattı aynı adımda yeniden üretilir",
         [a, b, {**asked(st), "expect": {"revision": "same"}}], sm)
+    # Docs/adr/3560: on, the step that changes a pipe draws the pipe run profile again.
+    sp = pipes_setup(auto=True)
+    st = State(sp)
+    a = drawn(st, PIPE_PROFILE)
+    uid = ppc.P_UID("P1")
+    e = next(e for e, u in zip(st.setup["entities"], st.setup["uids"]) if u == uid)
+    e["attrs"] = {**e["attrs"], "Malzeme": "PVC"}
+    rebuild(st, st.drawings[0])
+    b = {**step("execute", {"uids": [uid], "attrs": {"Malzeme": "PVC"}, "operation": "attributes"},
+                {"status": "completed", "output": "$any", "warnings": rebuilt_by_itself(st, ["cz-1"])}),
+         "command": "cad.entities.set"}
+    add("Harita projesinde açıkken ağın borusu değişince hat profili aynı adımda yeniden üretilir",
+        [a, b, {**asked(st), "expect": {"revision": "same"}}], sp)
     return out
 
 

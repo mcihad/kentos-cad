@@ -399,6 +399,8 @@ pub(super) struct Features {
     pub(super) road_approval_sources: bool,
     /// Schema 205: two surfaces' cut and fill zones kept as a drawing (docs/adr/1840).
     pub(super) cutfill_drawings: bool,
+    /// Schema 212: a pipe run profile kept as a drawing, a network its source (docs/adr/3560).
+    pub(super) pipe_profile_drawings: bool,
     pub(super) work_stamps: bool,
     /// Schema 207: a known point's own velocity (docs/adr/2520).
     pub(super) known_velocities: bool,
@@ -696,6 +698,7 @@ impl Features {
             road_cloud_conversions: schema >= crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS,
             road_approval_sources: schema >= crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES,
             cutfill_drawings: schema >= crate::SCHEMA_WITH_CUTFILL_DRAWINGS,
+            pipe_profile_drawings: schema >= crate::SCHEMA_WITH_PIPE_PROFILE_DRAWINGS,
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,

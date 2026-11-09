@@ -53,6 +53,8 @@ pub enum RoadNodeKind {
     Platform,
     SheetSet,
     Pay,
+    /// A utility network a pipe run profile was drawn from (docs/adr/3560).
+    Network,
     Drawing,
 }
 

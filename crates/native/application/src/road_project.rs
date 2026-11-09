@@ -26,6 +26,7 @@ pub(crate) fn drawing_words(command: &str) -> &'static str {
         "road.terrains.contours" => "Eş yükselti eğrileri",
         "road.terrains.zeroline" => "Sıfır hattı",
         "road.terrains.cutfill" => "Kazı ve dolgu bölgeleri",
+        "cad.pipes.profile" => "Hat profili",
         _ => "Yol çizimi",
     }
 }
@@ -45,6 +46,7 @@ fn kind_words(kind: K) -> &'static str {
         K::Wall => "istinat duvarı",
         K::Junction => "kavşak",
         K::Platform => "platform",
+        K::Network => "ağ",
     }
 }
 
@@ -63,6 +65,7 @@ fn kind_named(kind: K) -> &'static str {
         K::Wall => "istinat duvarı",
         K::Junction => "kavşağı",
         K::Platform => "platformu",
+        K::Network => "ağı",
     }
 }
 
@@ -122,7 +125,8 @@ pub(crate) fn drawing_state(doc: &Document, d: &RoadDrawingDef) -> (S, Vec<Strin
     if missing {
         why.push(format!("{} nesnesinden {} tanesi çizimde yok.", d.uids.len(), d.uids.len() - present));
     }
-    let edited = !missing && digest != d.digest;
+    // A record kept before docs/adr/3560 stamped its objects with their numbers in the document: it matches that way.
+    let edited = !missing && digest != d.digest && road_drawings::objects_stamp_numbered(doc, &d.uids) != d.digest;
     if edited {
         why.push("Nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.".into());
     }
@@ -388,6 +392,18 @@ impl Tree<'_> {
         }
     }
 
+    /// The utility networks a pipe run profile was drawn from (docs/adr/3560), each with its drawings under it; a network
+    /// is a source, its own state always current.
+    fn networks(&mut self) {
+        let doc = self.doc;
+        for n in &doc.settings().networks {
+            if doc.road_drawings().iter().any(|d| d.sources.first().is_some_and(|m| m.kind == K::Network && m.id == n.id)) {
+                let at = self.push(N::Network, &n.id, &n.name, None, S::Current, Vec::new());
+                self.drawings(K::Network, &n.id, at);
+            }
+        }
+    }
+
     /// The drawings whose main source is gone: top rows at the end.
     fn orphans(&mut self) {
         let doc = self.doc;
@@ -421,6 +437,7 @@ pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> 
     t.alignments();
     t.corridors();
     t.sheets_and_pay();
+    t.networks();
     t.orphans();
     let count = |f: &dyn Fn(&RoadNode) -> bool| u32::try_from(t.nodes.iter().filter(|n| f(n)).count()).unwrap_or(u32::MAX);
     let stale = count(&|n| n.state == S::Stale);

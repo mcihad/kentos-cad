@@ -3,4 +3,4 @@
 /**
  * What a row of the project tree is.
  */
-export type RoadNodeKind = "surface" | "alignment" | "profile" | "sections" | "superelevation" | "junction" | "template" | "corridor" | "volume" | "haul" | "guardrail" | "culvert" | "wall" | "platform" | "sheetSet" | "pay" | "drawing";
+export type RoadNodeKind = "surface" | "alignment" | "profile" | "sections" | "superelevation" | "junction" | "template" | "corridor" | "volume" | "haul" | "guardrail" | "culvert" | "wall" | "platform" | "sheetSet" | "pay" | "network" | "drawing";

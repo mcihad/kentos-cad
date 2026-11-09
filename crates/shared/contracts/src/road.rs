@@ -131,7 +131,7 @@ pub struct RoadSettings {
 }
 
 /// The road commands that draw (docs/adr/0911 §1): what a drawing's `command` is.
-pub const ROAD_DRAWING_COMMANDS: [&str; 12] = [
+pub const ROAD_DRAWING_COMMANDS: [&str; 13] = [
     "road.alignments.label",
     "road.profiles.draw",
     "road.sections.draw",
@@ -146,6 +146,9 @@ pub const ROAD_DRAWING_COMMANDS: [&str; 12] = [
     "road.terrains.zeroline",
     // Two surfaces' cut and fill zones (docs/adr/1840), kept since `.kcad` schema 205.
     "road.terrains.cutfill",
+    // A utility network's pipe run profile (docs/adr/1860), kept with its network since `.kcad` schema 212
+    // (docs/adr/3560).
+    "cad.pipes.profile",
 ];
 /// The most drawings a project keeps, sources a drawing names and objects it holds.
 pub const MAX_ROAD_DRAWINGS: usize = 1000;
@@ -171,6 +174,8 @@ pub enum RoadSourceKind {
     Wall,
     Junction,
     Platform,
+    /// A utility network (docs/adr/3560): its definition and the objects of its layers.
+    Network,
 }
 
 /// A source a drawing was made from: its kind, id and the stamp of what it was (docs/adr/0911 §1).

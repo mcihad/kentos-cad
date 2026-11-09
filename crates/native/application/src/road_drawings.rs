@@ -9,7 +9,9 @@
 //! through a file and came back with `20` for `20.0` is the same). The closure: a profile names its alignment (an
 //! offset alignment its base too) and its surface; a sample line set its alignment, profile, template, surface and
 //! superelevation; a superelevation its alignment; a corridor its alignment, profile, its regions' templates, surface
-//! and superelevation; a guardrail, culvert and wall its corridor; a junction its legs' alignments.
+//! and superelevation; a guardrail, culvert and wall its corridor; a junction its legs' alignments. A utility network's
+//! (docs/adr/3560), of its definition and the objects of its edge and junction layers: a pipe run profile follows its
+//! network, the surface its ground is read from and the network whose pipes cross it.
 
 use std::collections::BTreeMap;
 
@@ -42,8 +44,25 @@ fn find<'a, T>(list: &'a [T], id: &str, of: impl Fn(&T) -> &str) -> Option<&'a T
     list.iter().find(|x| of(x) == id)
 }
 
+/// A utility network's stamp (docs/adr/3560): of its definition and the objects of its edge and junction layers as
+/// they are, in the drawing's order. A layer's filter is not applied: an object it leaves out now may count later.
+fn network_stamp(doc: &Document, id: &str) -> Option<String> {
+    let def = doc.settings().networks.iter().find(|n| n.id == id)?;
+    let layers: std::collections::BTreeSet<&str> =
+        def.edges.iter().map(|l| l.layer.as_str()).chain(def.junctions.iter().map(|l| l.layer.as_str())).collect();
+    let objects: Vec<Value> = doc
+        .entities()
+        .filter(|e| layers.contains(e.base().layer_id.as_str()))
+        .map(|e| serde_json::to_value(e).unwrap_or(Value::Null))
+        .collect();
+    Some(stamp(&serde_json::json!({ "network": def, "objects": objects })))
+}
+
 /// A source's stamp now; none when the project has no such source.
 pub(crate) fn stamp_now(doc: &Document, kind: RoadSourceKind, id: &str) -> Option<String> {
+    if kind == RoadSourceKind::Network {
+        return network_stamp(doc, id);
+    }
     let road = doc.settings().road.as_ref()?;
     Some(match kind {
         RoadSourceKind::Surface => {
@@ -61,6 +80,7 @@ pub(crate) fn stamp_now(doc: &Document, kind: RoadSourceKind, id: &str) -> Optio
         RoadSourceKind::Wall => stamp(find(&road.walls, id, |s| &s.id)?),
         RoadSourceKind::Junction => stamp(find(&road.junctions, id, |s| &s.id)?),
         RoadSourceKind::Platform => stamp(find(&road.platforms, id, |s| &s.id)?),
+        RoadSourceKind::Network => return None,
     })
 }
 
@@ -81,7 +101,7 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
     let Some(road) = doc.settings().road.as_ref() else { return };
     let mut named: Vec<(K, String)> = Vec::new();
     match kind {
-        K::Surface | K::Template => {}
+        K::Surface | K::Template | K::Network => {}
         K::Alignment => {
             if let Some(o) = find(&road.alignments, id, |s| &s.id).and_then(|a| a.offset_of.as_ref()) {
                 named.push((K::Alignment, o.alignment.clone()));
@@ -133,18 +153,38 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
     }
 }
 
-/// The objects `uids` as they are now, in order (an absent one `null`), stamped; and how many are present.
-pub(crate) fn objects_stamp(doc: &Document, uids: &[String]) -> (String, usize) {
+/// The objects `uids` as they are now, in order (an absent one `null`), each without its number in this document, and
+/// how many are present; the stamp of the list as `numbered` asks: an object's `id` is renumbered when the file is read
+/// again (docs/adr/3560: a drawing drawn again, or an object before it deleted, saved and opened read as changed by
+/// hand), its uid is its identity.
+fn objects_list(doc: &Document, uids: &[String], numbered: bool) -> (String, usize) {
     let mut present = 0;
     let list: Vec<Value> = uids
         .iter()
         .map(|u| {
             let entity = Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
             present += usize::from(entity.is_some());
-            entity.map_or(Value::Null, |e| serde_json::to_value(e).unwrap_or(Value::Null))
+            entity.map_or(Value::Null, |e| {
+                let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
+                if !numbered && let Value::Object(o) = &mut v {
+                    o.remove("id");
+                }
+                v
+            })
         })
         .collect();
     (stamp(&Value::Array(list)), present)
+}
+
+/// The objects `uids` as they are now stamped (their numbers in this document left out), and how many are present.
+pub(crate) fn objects_stamp(doc: &Document, uids: &[String]) -> (String, usize) {
+    objects_list(doc, uids, false)
+}
+
+/// The stamp a record kept before docs/adr/3560 wrote: the objects' numbers in it. Such a record is not changed by hand
+/// while this still matches; drawn again, it takes the stamp without them.
+pub(crate) fn objects_stamp_numbered(doc: &Document, uids: &[String]) -> String {
+    objects_list(doc, uids, true).0
 }
 
 /// A drawing command's main source: its kind and the input's field naming it.
@@ -163,6 +203,7 @@ pub(crate) fn main_of(command: &str) -> Option<(RoadSourceKind, &'static str)> {
         "road.terrains.contours" => (K::Surface, "surface"),
         "road.terrains.zeroline" => (K::Surface, "base"),
         "road.terrains.cutfill" => (K::Surface, "base"),
+        "cad.pipes.profile" => (K::Network, "network"),
         _ => return None,
     })
 }
@@ -183,6 +224,7 @@ pub(crate) fn version_of(command: &str) -> u32 {
         "road.terrains.contours" => kentos_commands::ROAD_TERRAINS_CONTOURS_VERSION,
         "road.terrains.zeroline" => kentos_commands::ROAD_TERRAINS_ZEROLINE_VERSION,
         "road.terrains.cutfill" => kentos_commands::ROAD_TERRAINS_CUTFILL_VERSION,
+        "cad.pipes.profile" => kentos_commands::CAD_PIPES_PROFILE_VERSION,
         _ => 1,
     }
 }
@@ -190,6 +232,9 @@ pub(crate) fn version_of(command: &str) -> u32 {
 /// The (id, name) of the project's sources of `kind`.
 fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
     use RoadSourceKind as K;
+    if kind == K::Network {
+        return doc.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+    }
     let Some(r) = doc.settings().road.as_ref() else { return Vec::new() };
     fn pairs<T>(list: &[T], f: impl Fn(&T) -> (&String, &String)) -> Vec<(String, String)> {
         list.iter().map(f).map(|(i, n)| (i.clone(), n.clone())).collect()
@@ -207,6 +252,7 @@ fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
         K::Wall => pairs(&r.walls, |x| (&x.id, &x.name)),
         K::Junction => pairs(&r.junctions, |x| (&x.id, &x.name)),
         K::Platform => pairs(&r.platforms, |x| (&x.id, &x.name)),
+        K::Network => Vec::new(),
     }
 }
 
@@ -274,6 +320,19 @@ pub(crate) fn keep<I: Serialize>(
                 && let Some(id) = comparison.and_then(|t| resolve(doc, RoadSourceKind::Surface, &t))
             {
                 add(doc, RoadSourceKind::Surface, &id, &mut all);
+            }
+            // Docs/adr/3560: a pipe run profile follows the surface its ground is read from and the network whose pipes
+            // cross it as well as its own network.
+            if command == "cad.pipes.profile" {
+                let v = serde_json::to_value(input).unwrap_or(Value::Null);
+                let ground = v.pointer("/ground/surface").and_then(Value::as_str).map(str::to_owned);
+                if let Some(id) = ground.and_then(|t| resolve(doc, RoadSourceKind::Surface, &t)) {
+                    add(doc, RoadSourceKind::Surface, &id, &mut all);
+                }
+                let crossing = v.pointer("/crossing/network").and_then(Value::as_str).map(str::to_owned);
+                if let Some(id) = crossing.and_then(|t| resolve(doc, RoadSourceKind::Network, &t)) {
+                    add(doc, RoadSourceKind::Network, &id, &mut all);
+                }
             }
             all
         },

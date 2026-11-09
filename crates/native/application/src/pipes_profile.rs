@@ -565,25 +565,43 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<Pi
     }
 }
 
-/// Draws the profile, one undo step “Hat profili”.
+/// Writes the profile's objects in the step it runs in (`road.project.rebuild` draws a kept profile again with it).
+pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<PipesProfiled> {
+    let c = match check(cx.doc, input) {
+        Ok(c) => c,
+        Err(stop) => return stop.into(),
+    };
+    let create = EntitiesCreate {
+        layer_id: input.layer_id.clone(),
+        objects: objects(cx.doc, &c, input.at, input.diameter.is_some()),
+        operation: Some(CreateOperation::PipeProfile),
+        expected_revision: None,
+    };
+    match crate::create::write_in(cx, create) {
+        CommandResult::Completed { output, warnings } => CommandResult::Completed {
+            output: PipesProfiled { uids: output.created, revision: output.revision, ..c.out },
+            warnings,
+        },
+        other => crate::trim::relay(other),
+    }
+}
+
+/// Draws the profile, one undo step “Hat profili”. In a Harita or Yol project the drawing is kept with its network
+/// (docs/adr/3560; the surface its ground is read from and the crossing network too): the project's tree says when a
+/// pipe or a structure changed since, and `road.project.rebuild` (or drawing again by itself) draws it again.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: PipesProfile) -> CommandResult<PipesProfiled> {
     crate::call::recorded(cx, kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION, input, |cx, input| {
-        let c = match check(cx.doc, &input) {
-            Ok(c) => c,
-            Err(stop) => return stop.into(),
-        };
-        let create = EntitiesCreate {
-            layer_id: input.layer_id.clone(),
-            objects: objects(cx.doc, &c, input.at, input.diameter.is_some()),
-            operation: Some(CreateOperation::PipeProfile),
-            expected_revision: None,
-        };
-        match crate::create::write_in(cx, create) {
-            CommandResult::Completed { output, warnings } => CommandResult::Completed {
-                output: PipesProfiled { uids: output.created, revision: output.revision, ..c.out },
-                warnings,
-            },
-            other => crate::trim::relay(other),
+        let r = draw(cx, &input);
+        if !crate::road_terrains::holds_surfaces(cx.doc.settings().cad_work) {
+            return r;
         }
+        crate::road_drawings::kept(
+            cx,
+            kentos_commands::CAD_PIPES_PROFILE,
+            &input,
+            (kentos_commands::RoadSourceKind::Network, "network"),
+            r,
+            |o| &o.uids,
+        )
     })
 }

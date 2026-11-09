@@ -6258,7 +6258,29 @@ RoadEditOperationName = Literal["set", "rebind", "remove"]
 
 
 class RoadGraphKind(_StrEnum):
-    """What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet."""
+    """What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet.
+
+    - ``layer``
+    - ``surface``
+    - ``alignment``
+    - ``profile``
+    - ``sections``
+    - ``superelevation``
+    - ``junction``
+    - ``template``
+    - ``corridor``
+    - ``volume``
+    - ``haul``
+    - ``guardrail``
+    - ``culvert``
+    - ``wall``
+    - ``platform``
+    - ``sheetSet``
+    - ``pay``
+    - ``drawing``
+    - ``sheet``
+    - ``network``: A utility network a pipe run profile was drawn from (docs/adr/3560).
+    """
     LAYER = "layer"
     SURFACE = "surface"
     ALIGNMENT = "alignment"
@@ -6278,9 +6300,10 @@ class RoadGraphKind(_StrEnum):
     PAY = "pay"
     DRAWING = "drawing"
     SHEET = "sheet"
+    NETWORK = "network"
 
 
-RoadGraphKindName = Literal["layer", "surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing", "sheet"]
+RoadGraphKindName = Literal["layer", "surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing", "sheet", "network"]
 """The names of :class:`RoadGraphKind`, for a plain string."""
 
 
@@ -6301,7 +6324,27 @@ RoadKindName = Literal["road", "footway", "cycleway"]
 
 
 class RoadNodeKind(_StrEnum):
-    """What a row of the project tree is."""
+    """What a row of the project tree is.
+
+    - ``surface``
+    - ``alignment``
+    - ``profile``
+    - ``sections``
+    - ``superelevation``
+    - ``junction``
+    - ``template``
+    - ``corridor``
+    - ``volume``
+    - ``haul``
+    - ``guardrail``
+    - ``culvert``
+    - ``wall``
+    - ``platform``
+    - ``sheetSet``
+    - ``pay``
+    - ``drawing``
+    - ``network``: A utility network a pipe run profile was drawn from (docs/adr/3560).
+    """
     SURFACE = "surface"
     ALIGNMENT = "alignment"
     PROFILE = "profile"
@@ -6319,9 +6362,10 @@ class RoadNodeKind(_StrEnum):
     SHEET_SET = "sheetSet"
     PAY = "pay"
     DRAWING = "drawing"
+    NETWORK = "network"
 
 
-RoadNodeKindName = Literal["surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing"]
+RoadNodeKindName = Literal["surface", "alignment", "profile", "sections", "superelevation", "junction", "template", "corridor", "volume", "haul", "guardrail", "culvert", "wall", "platform", "sheetSet", "pay", "drawing", "network"]
 """The names of :class:`RoadNodeKind`, for a plain string."""
 
 
@@ -6347,7 +6391,22 @@ RoadNodeStateName = Literal["current", "new", "stale", "unbuildable", "unsolved"
 
 
 class RoadSourceKind(_StrEnum):
-    """What kind of road source a drawing depends on (docs/adr/0911 §1)."""
+    """What kind of road source a drawing depends on (docs/adr/0911 §1).
+
+    - ``surface``
+    - ``alignment``
+    - ``profile``
+    - ``template``
+    - ``sections``
+    - ``superelevation``
+    - ``corridor``
+    - ``guardrail``
+    - ``culvert``
+    - ``wall``
+    - ``junction``
+    - ``platform``
+    - ``network``: A utility network (docs/adr/3560): its definition and the objects of its layers.
+    """
     SURFACE = "surface"
     ALIGNMENT = "alignment"
     PROFILE = "profile"
@@ -6360,9 +6419,10 @@ class RoadSourceKind(_StrEnum):
     WALL = "wall"
     JUNCTION = "junction"
     PLATFORM = "platform"
+    NETWORK = "network"
 
 
-RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform"]
+RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sections", "superelevation", "corridor", "guardrail", "culvert", "wall", "junction", "platform", "network"]
 """The names of :class:`RoadSourceKind`, for a plain string."""
 
 

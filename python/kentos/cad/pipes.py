@@ -246,7 +246,10 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
     height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası,
     zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca,
     Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri
-    alma adımı “Hat profili”. Retler: invalid_pipe_check, unknown_network,
+    alma adımı “Hat profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560;
+    zemin yüzeyi ve kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince
+    Proje ağacında güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden
+    üretim aynı girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network,
     not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
     invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer,
     layer_locked, invalid_revision, revision_conflict.
@@ -294,7 +297,10 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası,
         zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca,
         Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri
-        alma adımı “Hat profili”. Retler: invalid_pipe_check, unknown_network,
+        alma adımı “Hat profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560;
+        zemin yüzeyi ve kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince
+        Proje ağacında güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden
+        üretim aynı girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network,
         not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
         invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer,
         layer_locked, invalid_revision, revision_conflict.

@@ -2667,6 +2667,10 @@ def document(d):
     if any("approvedParts" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
         # And its objects' parts' digests (docs/adr/3280).
         schema = max(schema, 211)
+    if any(x.get("command") == "cad.pipes.profile" or any(s.get("kind") == "network" for s in x.get("sources", []))
+           for x in d["settings"].get("road", {}).get("drawings", [])):
+        # A pipe run profile kept as a drawing, a network its source (docs/adr/3560).
+        schema = max(schema, 212)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3523,7 +3527,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-212.kcad"] = container(root(cmap(parts), version=uint(212)))
+    files["schema-version-213.kcad"] = container(root(cmap(parts), version=uint(213)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6072,6 +6076,12 @@ def build():
         broken_parts = copy.deepcopy(kept_parts)
         change(broken_parts)
         out[f"broken/map-work-approved-parts-{name}.kcad"] = container(document(broken_parts))
+    # Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, its network a source; 211 knows neither.
+    piped = document(load("map-pipe-profile.json"))
+    assert piped.count(b"\x67version\x18\xd4") == 1, "a pipe run profile's drawing is schema 212"
+    out["map-pipe-profile.kcad"] = container(piped)
+    out["broken/pipe-profile-drawing-in-schema-211.kcad"] = container(
+        piped.replace(b"\x67version\x18\xd4", b"\x67version\x18\xd3"))
     # Schema 193 (docs/adr/1201 §1): the items' files with their paths from the project file's folder (one inside it,
     # one beside it); schema 192 refuses the field, an absolute, a climbing and an empty relative path are refused.
     rel = load("map-work-relative.json")

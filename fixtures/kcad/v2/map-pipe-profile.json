@@ -1,0 +1,309 @@
+{
+ "format": "kentos.document",
+ "version": 2,
+ "name": "Hat profili tutulan çizim",
+ "settings": {
+  "srid": 5254,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "deg",
+  "plotScale": 1000.0,
+  "workspace": "cad",
+  "cadWork": "map",
+  "drawingFont": "barlow",
+  "road": {
+   "surfaces": [
+    {
+     "id": "t-zemin",
+     "name": "Mevcut zemin",
+     "points": {
+      "layers": [
+       "zemin"
+      ]
+     },
+     "breaklines": {
+      "uids": [
+       "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16"
+      ]
+     },
+     "boundary": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17",
+     "tolerance": 0.005,
+     "maxEdge": 60.0,
+     "clouds": [
+      {
+       "layer": "zemin",
+       "clouds": [
+        "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e18"
+       ],
+       "classes": [
+        2
+       ],
+       "returns": "last",
+       "cell": 1.0,
+       "zTolerance": 0.25,
+       "read": 182400,
+       "kept": 21530,
+       "coverage": 0.982,
+       "density": 11.4,
+       "errorMax": 0.084,
+       "errorRms": 0.012,
+       "outside": 37
+      }
+     ],
+     "excluded": [
+      {
+       "x": 485120.5,
+       "y": 4420310.25
+      },
+      {
+       "x": 485402.0,
+       "y": 4420118.75
+      }
+     ]
+    }
+   ],
+   "platforms": [
+    {
+     "id": "p-1",
+     "name": "Depo platformu",
+     "revision": 2,
+     "corners": [
+      [
+       100.0,
+       100.0
+      ],
+      [
+       140.0,
+       100.0
+      ],
+      [
+       140.0,
+       130.0
+      ],
+      [
+       100.0,
+       130.0
+      ]
+     ],
+     "base": [
+      100.0,
+      100.0,
+      112.5
+     ],
+     "grade": 0.01,
+     "direction": 90.0,
+     "cut": 1.5,
+     "fill": 2.0,
+     "step": 5.0,
+     "fan": 15.0,
+     "reach": 100.0,
+     "surface": "t-zemin"
+    }
+   ],
+   "drawings": [
+    {
+     "id": "cz-1",
+     "command": "cad.pipes.profile",
+     "input": {
+      "network": "atiksu",
+      "start": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+      "inverts": {
+       "kind": "attributes",
+       "upstream": "Akar1",
+       "downstream": "Akar2"
+      },
+      "ground": {
+       "kind": "surface",
+       "surface": "t-zemin"
+      },
+      "layerId": "0",
+      "at": [
+       0.0,
+       0.0
+      ]
+     },
+     "sources": [
+      {
+       "kind": "network",
+       "id": "atiksu",
+       "digest": "2468ace013579bdf"
+      },
+      {
+       "kind": "surface",
+       "id": "t-zemin",
+       "digest": "00ff00ff00ff00ff"
+      }
+     ],
+     "uids": [
+      "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+     ],
+     "digest": "0f1e2d3c4b5a6978",
+     "version": 1,
+     "revision": "12"
+    }
+   ],
+   "autoRebuild": true
+  }
+ },
+ "origin": {
+  "x": 0.0,
+  "y": 0.0
+ },
+ "layers": [
+  {
+   "id": "0",
+   "name": "0",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "zemin",
+   "name": "Zemin",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8B6B3E",
+    "lineType": "continuous",
+    "lineWeight": 0.18
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "0",
+ "entities": [
+  {
+   "kind": "line",
+   "id": 1,
+   "layerId": "0",
+   "attrs": {},
+   "a": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "b": {
+    "x": 12.5,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "point",
+   "id": 2,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z1"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 0.0
+   },
+   "z": 100.0
+  },
+  {
+   "kind": "point",
+   "id": 3,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z2"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 0.0
+   },
+   "z": 101.5
+  },
+  {
+   "kind": "point",
+   "id": 4,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z3"
+   },
+   "p": {
+    "x": 40.0,
+    "y": 30.0
+   },
+   "z": 103.25
+  },
+  {
+   "kind": "point",
+   "id": 5,
+   "layerId": "zemin",
+   "attrs": {
+    "Ad": "Z4"
+   },
+   "p": {
+    "x": 0.0,
+    "y": 30.0
+   },
+   "z": 102.0
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "zemin",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 5.0,
+     "y": 15.0
+    },
+    {
+     "x": 35.0,
+     "y": 15.0
+    }
+   ],
+   "zs": [
+    101.0,
+    102.5
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "0",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 0.0,
+     "y": 0.0
+    },
+    {
+     "x": 40.0,
+     "y": 0.0
+    },
+    {
+     "x": 40.0,
+     "y": 30.0
+    },
+    {
+     "x": 0.0,
+     "y": 30.0
+    }
+   ]
+  }
+ ],
+ "uids": [
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e14",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e15",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16",
+  "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e17"
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

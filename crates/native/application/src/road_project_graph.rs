@@ -41,6 +41,7 @@ fn kind_of(n: N) -> G {
         N::Platform => G::Platform,
         N::SheetSet => G::SheetSet,
         N::Pay => G::Pay,
+        N::Network => G::Network,
         N::Drawing => G::Drawing,
     }
 }
@@ -59,6 +60,7 @@ fn source_kind(k: K) -> G {
         K::Wall => G::Wall,
         K::Junction => G::Junction,
         K::Platform => G::Platform,
+        K::Network => G::Network,
     }
 }
 

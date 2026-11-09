@@ -64,6 +64,7 @@ pub(crate) fn run_drawing(
         "road.platforms.draw" => again!(road_platforms_draw, k::PlatformsDraw),
         "road.terrains.zeroline" => again!(road_terrains_zeroline, k::TerrainsZeroLine),
         "road.terrains.cutfill" => again!(road_terrains_cutfill, k::TerrainsCutFill),
+        "cad.pipes.profile" => again!(pipes_profile, k::PipesProfile),
         _ => again!(road_terrains_contours, k::TerrainsContours),
     })
 }

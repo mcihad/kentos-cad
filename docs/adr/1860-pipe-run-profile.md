@@ -96,7 +96,8 @@ MCP: `{"tool": "cad.pipes.profile", ...}`.
 
 ## Sonra
 
-- Profilin kaynaklarıyla tutulması (boru ya da yüzey değişince eskimesi ve yeniden üretimi).
+- ~~Profilin kaynaklarıyla tutulması (boru ya da yüzey değişince eskimesi ve yeniden üretimi).~~
+  [ADR 3560](3560-pipe-profile-kept-with-its-network.md).
 - Bacanın genişliği, kesişen başka hatlar ve disiplinler arası düşey açıklık.
 - Profil üstünde akarın düzenlenmesi.
 - İller Bankası şartnamesi okunursa bantların sırası ve ölçüleri.

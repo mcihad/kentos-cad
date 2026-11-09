@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Hat profili ağıyla tutulur (9 Kasım 2026; MAP-16, [ADR 3560](../../docs/adr/3560-pipe-profile-kept-with-its-network.md)).**
+  Yeni kaynak türü ağ; ağ değişince profil Proje ağacında güncel değil, yeniden üretilir; `.kcad` şema 212. Tutulan
+  çizimlerin nesne damgası artık `id`'siz (kaydedip açınca “elle değişti” hatası giderildi). Harita + Yol.
 - **Yüzey farkında malzeme bölgeleri (9 Kasım 2026; MAP-15, [ADR 3540](../../docs/adr/3540-material-zones-in-a-surface-comparison.md)).**
   `road.terrains.compare`'e `zones` (malzemenin adı, kapalı sınır, kendi kazı/dolgu katsayıları): her bölgede kesin TIN–TIN
   farkı, bölge dışı ve malzemeye göre katsayılı toplam; bölgeler örtüşemez. Harita + Yol.

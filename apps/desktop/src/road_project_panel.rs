@@ -156,6 +156,7 @@ fn kind_words(kind: N) -> &'static str {
         N::Platform => "Platform",
         N::SheetSet => "Pafta takımı",
         N::Pay => "Poz metrajı",
+        N::Network => "Ağ",
         N::Drawing => "Çizim",
     }
 }
@@ -178,6 +179,8 @@ fn editor_of(kind: N) -> Option<(&'static str, &'static str)> {
         N::Platform => ("platform.editor", "platformEditor"),
         N::SheetSet => ("road.sheets", "roadSheets"),
         N::Pay => ("payItems.editor", "payItemsEditor"),
+        // Docs/adr/3560: a network a pipe run profile was drawn from opens Boru hattı denetimi, where the profile is drawn.
+        N::Network => ("pipes.check", "pipesCheck"),
         N::Drawing => return None,
     })
 }

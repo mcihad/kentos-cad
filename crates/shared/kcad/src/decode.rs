@@ -1911,6 +1911,13 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         if !has.cutfill_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.cutfill") {
             return Err(relation("road", "kazı ve dolgu bölgeleri çizimi şema 205'ten önce yazılmaz (road.terrains.cutfill)", r));
         }
+        // A pipe run profile's drawing and a network as a drawing's source (docs/adr/3560) are schema 212's, in any
+        // project.
+        if !has.pipe_profile_drawings
+            && v.drawings.iter().any(|d| d.command == "cad.pipes.profile" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Network))
+        {
+            return Err(relation("road", "hat profili çizimi ve ağ kaynağı şema 212'den önce yazılmaz (cad.pipes.profile)", r));
+        }
         // A drawing record's version and revision (docs/adr/2840) are schema 209's.
         if !has.drawing_provenance && v.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some()) {
             return Err(relation("road", "çizim kaydının işlem sürümü ve çıktı revizyonu şema 209'dan önce yazılmaz", r));

@@ -60492,7 +60492,7 @@
       "id": "cad.pipes.profile",
       "version": 1,
       "title": "Hat profili",
-      "summary": "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict.",
+      "summary": "Bir altyapı ağında cazibeli hattın boykesitini (kanal boykesiti) bir katmana (layerId) çizer. Hat başlangıç borusundan (start, uid) akış yönünde (ağın yön alanı) ilerler; tek borunun çıktığı her düğümden geçer, istenen bitiş borusunda (end), çıkışta (outlet) ya da çatalda (split) biter. Değerler cad.pipes.check'inkidir: akar kotları (iki öznitelik ya da köşe kotları), çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çizim road.profiles.draw'unki gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560; zemin yüzeyi ve kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict.",
       "aliases": [
         "hatprofili",
         "kanalboykesiti",
@@ -182862,28 +182862,37 @@
     },
     "RoadGraphKind": {
       "description": "What a node of the graph is: a layer a surface is made of, a row of the project tree, or a sheet.",
-      "enum": [
-        "layer",
-        "surface",
-        "alignment",
-        "profile",
-        "sections",
-        "superelevation",
-        "junction",
-        "template",
-        "corridor",
-        "volume",
-        "haul",
-        "guardrail",
-        "culvert",
-        "wall",
-        "platform",
-        "sheetSet",
-        "pay",
-        "drawing",
-        "sheet"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "layer",
+            "surface",
+            "alignment",
+            "profile",
+            "sections",
+            "superelevation",
+            "junction",
+            "template",
+            "corridor",
+            "volume",
+            "haul",
+            "guardrail",
+            "culvert",
+            "wall",
+            "platform",
+            "sheetSet",
+            "pay",
+            "drawing",
+            "sheet"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "network",
+          "description": "A utility network a pipe run profile was drawn from (docs/adr/3560).",
+          "type": "string"
+        }
+      ]
     },
     "RoadGraphNode": {
       "description": "A node: what it is, its id and name, how it stands and why (a layer: current, or gone; a sheet: stale when it shows\na drawing not up to date); a drawing's recipe.",
@@ -183001,26 +183010,35 @@
     },
     "RoadNodeKind": {
       "description": "What a row of the project tree is.",
-      "enum": [
-        "surface",
-        "alignment",
-        "profile",
-        "sections",
-        "superelevation",
-        "junction",
-        "template",
-        "corridor",
-        "volume",
-        "haul",
-        "guardrail",
-        "culvert",
-        "wall",
-        "platform",
-        "sheetSet",
-        "pay",
-        "drawing"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "surface",
+            "alignment",
+            "profile",
+            "sections",
+            "superelevation",
+            "junction",
+            "template",
+            "corridor",
+            "volume",
+            "haul",
+            "guardrail",
+            "culvert",
+            "wall",
+            "platform",
+            "sheetSet",
+            "pay",
+            "drawing"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "network",
+          "description": "A utility network a pipe run profile was drawn from (docs/adr/3560).",
+          "type": "string"
+        }
+      ]
     },
     "RoadNodeState": {
       "description": "How a row stands: up to date; a surface never accepted; its sources changed; a surface that does not build; a\ncorridor with unsolved stretches; an approved volume as approved, or its sources changed; a drawing some of whose\nobjects are gone, whose objects were changed by hand, or whose source is gone.",
@@ -183441,21 +183459,30 @@
     },
     "RoadSourceKind": {
       "description": "What kind of road source a drawing depends on (docs/adr/0911 §1).",
-      "enum": [
-        "surface",
-        "alignment",
-        "profile",
-        "template",
-        "sections",
-        "superelevation",
-        "corridor",
-        "guardrail",
-        "culvert",
-        "wall",
-        "junction",
-        "platform"
-      ],
-      "type": "string"
+      "oneOf": [
+        {
+          "enum": [
+            "surface",
+            "alignment",
+            "profile",
+            "template",
+            "sections",
+            "superelevation",
+            "corridor",
+            "guardrail",
+            "culvert",
+            "wall",
+            "junction",
+            "platform"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "network",
+          "description": "A utility network (docs/adr/3560): its definition and the objects of its layers.",
+          "type": "string"
+        }
+      ]
     },
     "RoadSurfaceSource": {
       "additionalProperties": false,

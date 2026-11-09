@@ -270,3 +270,100 @@ fn job_screens() {
         shot(&mut app, "2-bitti");
     }
 }
+
+/// pipes_profile_cases.py's Harita project (the sewer and storm networks, the ground surface).
+fn pipes_app() -> App {
+    // The network is built by İşlemler's tools, as the app registers them at its start.
+    kentos_processing::command::register_as("desktop");
+    let (mut app, _) = App::boot(None);
+    app.program = Some(kentos_launch::Module::Map);
+    let cases: Value = serde_json::from_str(include_str!("../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// The sewer's run from P1, as Boru hattı denetimi draws it (pipes_profile_cases.py's first case).
+fn pipe_profile() -> Value {
+    json!({"network": "atiksu", "start": "0192f640-1640-7000-8000-0000000000f1",
+           "inverts": {"from": "fields", "start": "Akar baş", "end": "Akar son"}, "diameter": {"field": "Çap", "unit": "mm"},
+           "ground": {"from": "surface", "surface": "Zemin"}, "layerId": "profil", "at": [487000.0, 4419700.0]})
+}
+
+/// P1's material written: an attribute the profile does not read, so the profile drawn again has as many objects.
+fn pipe_material(app: &mut App) {
+    crate::program_scenes::command(
+        app,
+        "cad.entities.set",
+        json!({"uids": ["0192f640-1640-7000-8000-0000000000f1"], "attrs": {"Malzeme": "PVC"}, "operation": "attributes"}),
+    );
+}
+
+/// docs/adr/3560: a pipe run profile drawn in a Harita project is kept with its network: the tree has Atıksu with Hat
+/// profili under it; P1's material written makes it stale, Hepsini yeniden üret draws it again in place (as many
+/// objects), and the project saves (schema 212).
+#[test]
+fn a_pipe_profile_goes_stale_when_its_network_changes_and_is_drawn_again() {
+    use kentos_commands::RoadNodeKind as N;
+    let mut app = pipes_app();
+    let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "profil").count());
+    crate::program_scenes::command(&mut app, "cad.pipes.profile", pipe_profile());
+    let drawn = count(&app);
+    assert_eq!(drawn, 112, "the shared case's objects");
+    let t = tree(&app);
+    let at = t.nodes.iter().position(|n| n.kind == N::Network).expect("the network");
+    assert_eq!(t.nodes[at].name, "Atıksu");
+    let profile = t.nodes.iter().find(|n| n.kind == N::Drawing).expect("the profile");
+    assert_eq!((profile.name.as_str(), profile.state, profile.parent), ("Hat profili · Profil", S::Current, Some(at as u32)));
+    pipe_material(&mut app);
+    let t = tree(&app);
+    let profile = t.nodes.iter().find(|n| n.kind == N::Drawing).expect("the profile");
+    assert_eq!(profile.state, S::Stale, "{profile:?}");
+    assert_eq!(profile.why, ["“Atıksu” ağı çizildiğinden beri değişti."]);
+    rebuild(&mut app, P::Rebuild(None, false));
+    assert!(tree(&app).nodes.iter().filter(|n| n.kind == N::Drawing).all(|d| d.state == S::Current));
+    assert_eq!(count(&app), drawn, "drawn again in place");
+    let doc = app.document.as_ref().expect("a drawing");
+    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2()).expect("a map project with its profile saves");
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd4"), "schema 212");
+}
+
+/// docs/adr/3560: the profile stale after P1 changed, then drawn again; light wide and dark narrow,
+/// `.run/gui-evidence/hat-profili-canli-3560/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib road_project_panel_tests::pipe_profile_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn pipe_profile_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/hat-profili-canli-3560");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = pipes_app();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        crate::program_scenes::command(&mut app, "cad.pipes.profile", pipe_profile());
+        pipe_material(&mut app);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks.close(Panel::Properties);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, file: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-hat-profili-guncel-degil");
+        rebuild(&mut app, P::Rebuild(None, false));
+        shot(&mut app, "2-yeniden-uretildi");
+    }
+}
