@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Kirişlerle çizilmiş yay (9 Kasım 2026; MAP-08, [ADR 3420](../../docs/adr/3420-boundary-arc-drawn-with-chords.md)).**
+  Sınır grafiğinde `approxArc`: yayı köşeleri yayda (1 µm ya da `arcTolerance`) duran bir sınır zinciriyle çizen komşu;
+  şeridin alanı ve en geniş yeri; zincirin köşeleri ayrıca eksik köşe sayılmaz. Harita + CBS.
 - **Değişen kenarın içindeki komşu köşeler (9 Kasım 2026; MAP-07, [ADR 3400](../../docs/adr/3400-inner-vertices-follow-a-changed-edge.md)).**
   Topolojik düzenlemede tutamaç, Köşe tablosu, Esnet ve köşe komutu kenarın içindeki komşu köşeleri kenarın aynı kesrine
   taşır (`topology_follow::neighbours`); yayı değişen kenarda komşu parçalar yayın parçası olur. CAD + CBS.

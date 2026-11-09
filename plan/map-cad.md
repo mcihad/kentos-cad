@@ -38,7 +38,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
-| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
+| MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
@@ -950,6 +950,14 @@ Kapsam: ADR 2000'deki gibi. Kanıtlanan: tabloda satıra basılınca seçilir; �
 vurgu renginde öne çıkarır (sınır eğrisi boyunca, köşe ve sorun çift halkayla, adıyla), kimliğiyle tutulur ve çizim
 değişince yeniden bulunur; masaüstü testi ve resimler. Komut değişmedi. Açık: kalıcı parsel kaydı ve sınır kimliği,
 yaklaşık yay, aynı yerdeki sorunların üst üste binen sözleri, erişim denetimli hak/pay.
+
+**9 Kasım 2026, altıncı tur — kirişlerle çizilmiş yay ([ADR 3420](../docs/adr/3420-boundary-arc-drawn-with-chords.md)).**
+Kapsam: ADR 2000'deki gibi. Araştırma: ArcGIS Pro'nun Densify'ı (yayın kirişlerle temsili ve en büyük sapma), parsel
+ağının örtmeme ve boşluksuzluk kuralları, dairesel segment. Kanıtlanan: `approxArc` sorunu: yay sınırının iki köşesi
+arasında, köşeleri yayın üstünde (1 µm'de ya da kullanıcının `arcTolerance`'ında) duran sınır zinciri; şeridin alanı ve en
+geniş yeri; zincirin köşeleri ayrıca eksik köşe sayılmaz; yayın kendi parçalarından oluşan zincir yayın bölünmesidir,
+eksik köşe kalır. 6 yeni ortak durum (mpmath başvurusu), Python, MCP, masaüstü (uzaklık kutusu, Fark sütunu) ve resimler.
+Açık: kalıcı parsel kaydı ve sınır kimliği, aynı yerdeki sözler, zincirin çizimde vurgusu, erişim denetimli hak/pay.
 
 ### MAP-09 — İmarı sembol çiziminden tipli ve denetlenebilir plan modeline taşı [ ]
 

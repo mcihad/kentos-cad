@@ -27,7 +27,17 @@ The rules, by hand (the ADR's):
   difference) and the distance between their middles, at the middle of the two middles; problems by kind
   (missingVertex, splitCorner, overlap, arcChord), then by their corner or first boundary, then by the boundary;
 - a parcel: its identity's parts written (İl/İlçe/Mahalle/Ada/Parsel), its net area (outer rings less their holes),
-  its boundaries in ring order, its neighbours across them in the drawing's order.
+  its boundaries in ring order, its neighbours across them in the drawing's order;
+- approxArc (docs/adr/3420): for each arc boundary in order, the corners on it: its ends and the corners within the
+  tolerance (`arcTolerance`, at least 1 µm) of its circle (through its ends and middle, mpmath) on its middle's side of
+  the chord, each at the fraction of the arc's angle from the lower end (the way round that passes the middle). From
+  the lower end a chain goes each time by a boundary other than the arc to the nearest of these corners farther along
+  (the lower boundary on a tie); reaching the higher end through at least one corner, one problem: the arc and the
+  chain's boundaries; the area between the two closed curves (the shoelace of the chain's corners exactly, relative to
+  the lower end, plus each chain boundary's segment; the arc's segment); the widest place: the most of the distances
+  between a chain boundary's middle and the arc's point at the middle of its corners' fractions, at the middle of the
+  two; the chain's corners are no missingVertex of that arc; a chain of the arc's own parts only (each bulge the
+  arc's between its fractions, within 1e-9) is the arc split, no approxArc; problems by kind (…, arcChord, approxArc).
 """
 
 import json
@@ -130,13 +140,20 @@ MISMATCH = [
 ]
 
 
+def middle_mp(a, b, bulge):
+    """The curve's middle in mpmath (the float `middle` rounds near 4 400 000 m to a nanometre)."""
+    A, B = [mp.mpf(v) for v in a], [mp.mpf(v) for v in b]
+    dx, dy = B[0] - A[0], B[1] - A[1]
+    return [(A[0] + B[0]) / 2 + dy * bulge / 2, (A[1] + B[1]) / 2 - dx * bulge / 2]
+
+
 def segment_mp(a, b, bulge):
     """The area between the chord from `a` to `b` and its curve through the middle `middle(a, b, bulge)`, signed as the
     bulge: the circle through the ends and the middle (mpmath), r²/2 (θ − sin θ) with θ the angle the chord subtends."""
     if bulge == 0:
         return mp.mpf(0)
     A, B = [mp.mpf(v) for v in a], [mp.mpf(v) for v in b]
-    M = [mp.mpf(v) for v in middle(a, b, bulge)]
+    M = middle_mp(a, b, bulge)
     bx, by, mx, my = B[0] - A[0], B[1] - A[1], M[0] - A[0], M[1] - A[1]
     d = 2 * (bx * my - by * mx)
     ox = (my * (bx * bx + by * by) - by * (mx * mx + my * my)) / d
@@ -155,7 +172,7 @@ def arc_near(p, a, b, bulge):
     """Whether `p` is within 1 µm of the arc from `a` to `b`: of the circle through its ends and middle, and strictly
     on the middle's side of the chord."""
     P_, A, B = ([mp.mpf(v) for v in q] for q in (p, a, b))
-    M = [mp.mpf(v) for v in middle(a, b, bulge)]
+    M = middle_mp(a, b, bulge)
     cross = lambda o, u, v: (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0])  # noqa: E731
     if cross(A, B, P_) * cross(A, B, M) <= 0:
         return False
@@ -166,6 +183,49 @@ def arc_near(p, a, b, bulge):
     oy = (bx * (mx * mx + my * my) - mx * (bx * bx + by * by)) / d
     r = mp.sqrt(ox * ox + oy * oy)
     return abs(mp.sqrt((P_[0] - A[0] - ox) ** 2 + (P_[1] - A[1] - oy) ** 2) - r) <= NEAR
+
+
+def circumcentre(a, b, bulge):
+    """The circle through the arc's ends and its middle (mpmath): its centre and radius, absolute."""
+    A, B = [mp.mpf(v) for v in a], [mp.mpf(v) for v in b]
+    M = middle_mp(a, b, bulge)
+    bx, by, mx, my = B[0] - A[0], B[1] - A[1], M[0] - A[0], M[1] - A[1]
+    d = 2 * (bx * my - by * mx)
+    ox = (my * (bx * bx + by * by) - by * (mx * mx + my * my)) / d
+    oy = (bx * (mx * mx + my * my) - mx * (bx * bx + by * by)) / d
+    return (A[0] + ox, A[1] + oy), mp.sqrt(ox * ox + oy * oy)
+
+
+def arc_fraction(p, a, b, bulge, tol):
+    """Where p lies on the arc from a to b (the way round through its middle), as the fraction of its angle; None when
+    farther than `tol` from its circle or not strictly on the middle's side of the chord."""
+    P_, A, B = ([mp.mpf(v) for v in q] for q in (p, a, b))
+    M = middle_mp(a, b, bulge)
+    cross = lambda o, u, v: (u[0] - o[0]) * (v[1] - o[1]) - (u[1] - o[1]) * (v[0] - o[0])  # noqa: E731
+    if cross(A, B, P_) * cross(A, B, M) <= 0:
+        return None
+    (ox, oy), r = circumcentre(a, b, bulge)
+    if abs(mp.sqrt((P_[0] - ox) ** 2 + (P_[1] - oy) ** 2) - r) > tol:
+        return None
+    ang = lambda q: mp.atan2(q[1] - oy, q[0] - ox)  # noqa: E731
+    two = 2 * mp.pi
+    ccw = (ang(B) - ang(A)) % two
+    if (ang(M) - ang(A)) % two < ccw:
+        return (ang(P_) - ang(A)) % two / ccw
+    return (ang(A) - ang(P_)) % two / (two - ccw)
+
+
+def arc_at(a, b, bulge, t):
+    """The arc's point at the fraction t of its angle from a, the way round through its middle."""
+    (ox, oy), r = circumcentre(a, b, bulge)
+    A, B = [mp.mpf(v) for v in a], [mp.mpf(v) for v in b]
+    M = middle_mp(a, b, bulge)
+    ang = lambda q: mp.atan2(q[1] - oy, q[0] - ox)  # noqa: E731
+    two = 2 * mp.pi
+    ccw = (ang(B) - ang(A)) % two
+    sweep = ccw if (ang(M) - ang(A)) % two < ccw else ccw - two
+    angle = ang(A) + sweep * t
+    return [ox + r * mp.cos(angle), oy + r * mp.sin(angle)]
 
 
 def setup(entities, work="map", more=()):
@@ -232,8 +292,9 @@ def middle(a, b, bulge):
     return [(a[0] + b[0]) / 2 + dy * bulge / 2, (a[1] + b[1]) / 2 - dx * bulge / 2]
 
 
-def graph(entities, chosen):
-    """`chosen`: the entities' indices in the order they are taken."""
+def graph(entities, chosen, tolerance=None):
+    """`chosen`: the entities' indices in the order they are taken; `tolerance`: `arcTolerance` (none: 1 µm)."""
+    tol = max(tolerance or 0.0, NEAR)
     ents = [entities[i] for i in chosen]
     uids = [uid(i + 1) for i in chosen]
     places = sorted({p for e in ents for pts, _, _ in rings(e) for p in pts})
@@ -290,10 +351,73 @@ def graph(entities, chosen):
         if right is not None:
             b["right"] = uids[right]
         boundaries.append(b)
+    # docs/adr/3420: arcs drawn with chords, before the missing corners (a chain's corners are none of its arc's).
+    folded = set()
+    at_ends = {}
+    for j, (lo, hi, _, _) in enumerate(edges):
+        at_ends.setdefault(lo, []).append(j)
+        at_ends.setdefault(hi, []).append(j)
+    for j in order:
+        lo, hi, bulge, sides = edges[j]
+        if bulge == 0:
+            continue
+        a, b = places[lo], places[hi]
+        on = {lo: mp.mpf(0), hi: mp.mpf(1)}
+        for c, p in enumerate(places):
+            if c not in (lo, hi):
+                t = arc_fraction(p, a, b, bulge, tol)
+                if t is not None:
+                    on[c] = t
+        if len(on) < 3:
+            continue
+        at, t_at, chain = lo, mp.mpf(0), []
+        while at != hi:
+            steps = []
+            for f in at_ends.get(at, []):
+                if f == j:
+                    continue
+                other = edges[f][1] if edges[f][0] == at else edges[f][0]
+                if other in on and on[other] > t_at:
+                    steps.append((on[other], bid[f], f, other))
+            if not steps:
+                break
+            t, _, f, other = min(steps)
+            chain.append((f, at, other))
+            at, t_at = other, t
+        if at != hi or len(chain) < 2:
+            continue
+        # The arc's own parts only (each bulge the arc's between its fractions): the arc split, no chords.
+        if all(abs((edges[f][2] if edges[f][0] == u else -edges[f][2]) - mp.tan(4 * mp.atan(bulge) * (on[w] - on[u]) / 4))
+               <= 1e-9 for f, u, w in chain):
+            continue
+        # The strip: the chain's closed curve (shoelace exactly, relative to the lower end, plus its segments) against
+        # the arc's (its segment).
+        ring = [places[lo]] + [places[w] for _, _, w in chain]
+        q = [(F(x) - F(a[0]), F(y) - F(a[1])) for x, y in ring]
+        n = len(q)
+        shoelace = sum(q[i][0] * q[(i + 1) % n][1] - q[(i + 1) % n][0] * q[i][1] for i in range(n)) / 2
+        chain_area = mp.mpf(shoelace.numerator) / shoelace.denominator
+        widest = None
+        for f, u, w in chain:
+            forward = edges[f][2] if edges[f][0] == u else -edges[f][2]
+            chain_area += segment_mp(places[u], places[w], forward)
+            mid = arc_at(a, b, bulge, (on[u] + on[w]) / 2)
+            own = middle(places[u], places[w], forward)
+            gap = mp.sqrt((mid[0] - own[0]) ** 2 + (mid[1] - own[1]) ** 2)
+            if widest is None or gap > widest[0]:
+                widest = (gap, [float((mid[0] + own[0]) / 2), float((mid[1] + own[1]) / 2)])
+        area = abs(segment_mp(a, b, bulge) - chain_area)
+        on_parcels = sorted({k for k, _ in sides} | {k for f, _, _ in chain for k, _ in edges[f][3]})
+        for _, _, w in chain:
+            if w != hi:
+                folded.add((w, j))
+        problems.append((4, bid[j], {"kind": "approxArc", "at": widest[1], "parcels": [uids[k] for k in on_parcels],
+                                     "boundaries": [f"S{bid[j] + 1}"] + [f"S{bid[f] + 1}" for f, _, _ in chain],
+                                     "area": float(area), "gap": float(widest[0])}))
     for c, p in enumerate(places):
         for j in order:
             lo, hi, bulge, sides = edges[j]
-            if c in (lo, hi):
+            if c in (lo, hi) or (c, j) in folded:
                 continue
             a, b = places[lo], places[hi]
             if bulge != 0:
@@ -346,14 +470,43 @@ def graph(entities, chosen):
             "shared": shared, "outer": outer}
 
 
+# Arcs drawn with chords (docs/adr/3420): A1's top is R1's arc (bulge 0.2 over 20 m, radius 26); A2 above it draws the
+# arc with three corners on it at a quarter, a half and three quarters of its angle; A3 the same corners rounded to the
+# centimetre; A4 with corners on the arc at a tenth, a half and nine tenths of it whose middle one is joined to neither
+# (A4 goes up between them); A5 draws the arc with chords on its own while a T junction (A6's corner) stands on it too.
+def quarter_points(fractions):
+    """The points of A1's arc at these fractions of its angle from its lower corner (300, 10)."""
+    return [tuple(float(v) for v in arc_at((300.0 + X0, 10.0 + Y0), (320.0 + X0, 10.0 + Y0), -0.2, mp.mpf(t)))
+            for t in fractions]
+
+
+def local(q):
+    return (q[0] - X0, q[1] - Y0)
+
+
+Q = [local(q) for q in quarter_points(["0.25", "0.5", "0.75"])]
+QR = [(round(x, 2), round(y, 2)) for x, y in Q]
+T = [local(q) for q in quarter_points(["0.1", "0.5", "0.9"])]
+APPROX = [
+    parcel([(300, 0), (320, 0), (320, 10), (300, 10)], ident(51), bulges=[0, 0, 0.2, 0]),
+    parcel([(300, 10), *Q, (320, 10), (320, 25), (300, 25)], ident(52)),
+    parcel([(300, 10), *QR, (320, 10), (320, 25), (300, 25)], ident(53)),
+    parcel([(300, 10), T[0], (305, 25), (315, 25), T[2], (320, 10), (320, 30), (300, 30)], ident(54)),
+    parcel([(300, 10), *T, (320, 10), (320, 25), (300, 25)], ident(55)),
+    parcel([T[1], (312, 30), (308, 30)], ident(56)),
+]
+
+
 # ── The cases ──────────────────────────────────────────────────────────────────────────────────────────────────────
-def ok(name, entities, chosen=None, op="execute", given=None, setup_=None):
+def ok(name, entities, chosen=None, op="execute", given=None, setup_=None, tolerance=None):
     all_ = [i for i, e in enumerate(entities) if e.get("kind") == "polygon" and e.get("layerId") == "parsel"]
     picked = chosen if chosen is not None else all_
     inp = {} if chosen is None else {"uids": [uid(i + 1) for i in chosen]}
     if given is not None:
         inp = given
-    out = None if op == "validate" else graph(entities, picked)
+    if tolerance is not None:
+        inp = {**inp, "arcTolerance": tolerance}
+    out = None if op == "validate" else graph(entities, picked, tolerance)
     case = {"name": name, "steps": [{"op": op, "input": inp, "result": {"status": "completed", "output": out, "warnings": []},
                                      "expect": SAME, "within": W}]}
     if setup_ is not None:
@@ -376,6 +529,7 @@ def cases():
     sp = setup(PROBLEMS)
     sa = setup(ARCS)
     sm = setup(MISMATCH)
+    sx = setup(APPROX)
     return [
         ok("temiz ada: ortak sınırlar, köşede birleşen üç parsel, yaylı dış sınır, delik, saat yönü, iki parça, yaylı ortak sınır",
            CLEAN),
@@ -407,6 +561,21 @@ def cases():
         ok("iki yay uyuşmuyor: aynı yana 1 m ve 0,5 m kabaran yaylar arasındaki şerit", MISMATCH, [2, 3], setup_=sm),
         ok("iki yay karşı yanlara kabarıyor: şerit iki parçanın toplamı, ortada 1,5 m", MISMATCH, [4, 5], setup_=sm),
         ok("uyuşmayan üç sınır bir arada: her biri kendi sorunu", MISMATCH, setup_=sm),
+        # docs/adr/3420: an arc drawn with chords.
+        ok("yay kirişlerle çizilmiş: üç ara köşe yayın üstünde; tek sorun, köşeler ayrıca eksik köşe sayılmaz", APPROX,
+           [0, 1], setup_=sx),
+        ok("santimetreye yuvarlanmış köşeler uzaklık verilmeden: yalnız tam tepedeki köşe eksik köşe, yaklaşık yay yok",
+           APPROX, [0, 2],
+           setup_=sx),
+        ok("santimetreye yuvarlanmış köşeler 1 cm'lik uzaklıkla: yaklaşık yay", APPROX, [0, 2], setup_=sx,
+           tolerance=0.01),
+        ok("zincir kopuk: ortadaki köşe yayın komşusuna bağlı değil; köşeler eksik köşe kalır", APPROX, [0, 3],
+           setup_=sx),
+        ok("eşit olmayan kirişler; zincirin ortadaki köşesinde T birleşimi: en geniş yer uzun kirişte", APPROX,
+           [0, 4, 5], setup_=sx),
+        refused("yayın kirişlerle çizimi için eksi uzaklık", {"arcTolerance": -0.01}, "invalid_input",
+                "Yayın kirişlerle çizimi için uzaklık (arcTolerance) sıfır ya da artı bir sayı olmalı (metre).",
+                "arcTolerance"),
         ok("plan aynı grafiği verir", CLEAN, op="plan"),
         ok("doğrulama", CLEAN, op="validate"),
         ok("CBS projesinde de", CLEAN, [0, 1, 2], setup_=setup(CLEAN, "gis")),
@@ -422,7 +591,7 @@ def cases():
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.parcels.boundaries", "commandVersion": 1,
            "title": "Sınır grafiği",
-           "note": "ADR 2000, 2220. Bağımsız başvuru scripts/fixtures/parcel_boundaries_cases.py: köşeler, sınırlar, iki yanın "
+           "note": "ADR 2000, 2220, 2620, 3420. Bağımsız başvuru scripts/fixtures/parcel_boundaries_cases.py: köşeler, sınırlar, iki yanın "
                    "parselleri, alanlar, boylar ve sorunlar ADR'nin kurallarıyla elle (yayın çemberi uçlarından ve "
                    "ortasından, mpmath); KentOS kodu yok.",
            "setup": setup(CLEAN), "cases": cases()}

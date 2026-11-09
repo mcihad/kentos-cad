@@ -11,7 +11,10 @@
 //! - `overlap`: one edge on three or more parcels;
 //! - `arcChord`: two boundaries between the same two corners, one an arc and the other its chord, or two different arcs
 //!   (docs/adr/2620): the parcels disagree on the boundary's shape, a sliver lies between them (a gap or an overlap);
-//!   its area and how far apart the two are at their middles.
+//!   its area and how far apart the two are at their middles;
+//! - `approxArc` (docs/adr/3420): an arc boundary that another parcel draws with chords: a chain of boundaries from one
+//!   of the arc's corners to the other through corners on the arc (within 1 µm of it, or `arcTolerance`); the strip
+//!   between the arc and the chain, its widest place. The chain's corners are not listed again as `missingVertex`.
 //!
 //! The ids are the graph's, from the geometry (`K1`… by east then north, `S1`… by their corners'): the same geometry
 //! gives the same ids; they are no lasting record. The geometric areas never touch a recorded one. The shared cases
@@ -24,9 +27,12 @@ use ts_rs::TS;
 pub const CAD_PARCELS_BOUNDARIES: &str = "cad.parcels.boundaries";
 pub const CAD_PARCELS_BOUNDARIES_VERSION: u32 = 1;
 
-/// Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`).
+/// Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`), and how far from an
+/// arc boundary a corner may lie and still be the arc's in an `approxArc` chain (docs/adr/3420; none: 1 µm, as every
+/// other rule; the larger of the two).
 ///
-/// Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).
+/// Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area), `invalid_input`
+/// (`arcTolerance` negative or not finite).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -36,6 +42,10 @@ pub struct ParcelsBoundaries {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub uids: Option<Vec<String>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub arc_tolerance: Option<f64>,
 }
 
 /// A corner: its id, place and the parcels with a vertex there (in the drawing's order).
@@ -90,8 +100,8 @@ pub struct ParcelInGraph {
     pub neighbours: Vec<String>,
 }
 
-/// What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap` or `arcChord`; where; the
-/// parcels.
+/// What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;
+/// where; the parcels.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -102,16 +112,19 @@ pub struct BoundaryProblem {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: [f64; 2],
     pub parcels: Vec<String>,
-    /// `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order.
+    /// `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order. `approxArc` (docs/adr/3420):
+    /// the arc, then the chain's boundaries from the arc's lower corner to its higher.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub boundaries: Vec<String>,
-    /// `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim.
+    /// `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim. `approxArc`: the area
+    /// between the arc and the chain.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m2")))]
     pub area: Option<f64>,
-    /// `arcChord`: how far apart the two curves are at their middles.
+    /// `arcChord`: how far apart the two curves are at their middles. `approxArc`: the most, over the chain's
+    /// boundaries, of how far each one's middle is from the arc's point at the middle of its angle (`at` between them).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]

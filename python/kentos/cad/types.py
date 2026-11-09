@@ -19887,13 +19887,16 @@ class BlocksReplaced(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BoundaryProblem(_Model):
-    """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap` or `arcChord`; where; the
-    parcels.
+    """What keeps the geometry from a clean graph: `missingVertex`, `splitCorner`, `overlap`, `arcChord` or `approxArc`;
+    where; the parcels.
     Attributes:
         at: Unit: length.
-        area: `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim. Unit: m2.
-        boundaries: `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order.
-        gap: `arcChord`: how far apart the two curves are at their middles. Unit: m.
+        area: `arcChord`: the area between the two curves, the sliver one parcel lacks or both claim. `approxArc`: the area
+            between the arc and the chain. Unit: m2.
+        boundaries: `arcChord` (docs/adr/2620): the two boundaries between the same corners, in order. `approxArc` (docs/adr/3420):
+            the arc, then the chain's boundaries from the arc's lower corner to its higher.
+        gap: `arcChord`: how far apart the two curves are at their middles. `approxArc`: the most, over the chain's
+            boundaries, of how far each one's middle is from the arc's point at the middle of its angle (`at` between them). Unit: m.
     """
     kind: str
     at: list[float]
@@ -65168,14 +65171,22 @@ class ParcelPlan(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ParcelsBoundaries(_Model):
-    """Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`).
+    """Input of `cad.parcels.boundaries` v1: the parcels (none: every area on the parcel layer `parsel`), and how far from an
+    arc boundary a corner may lie and still be the arc's in an `approxArc` chain (docs/adr/3420; none: 1 µm, as every
+    other rule; the larger of the two).
 
-    Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area).
+    Refusals: `invalid_uid` and `entity_not_found` (`uids[i]`), `not_a_parcel` (`uids[i]`: not an area), `invalid_input`
+    (`arcTolerance` negative or not finite).
+    Attributes:
+        arc_tolerance: Unit: m.
     """
+    arc_tolerance: float | None | Unset = UNSET
     uids: list[str] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.arc_tolerance is not UNSET:
+            out["arcTolerance"] = None if self.arc_tolerance is None else float(self.arc_tolerance)
         if self.uids is not UNSET:
             out["uids"] = None if self.uids is None else list(self.uids)
         return out
@@ -65183,6 +65194,7 @@ class ParcelsBoundaries(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> ParcelsBoundaries:
         return cls(
+            arc_tolerance=UNSET if "arcTolerance" not in data else None if data["arcTolerance"] is None else float(data["arcTolerance"]),
             uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
         )
 

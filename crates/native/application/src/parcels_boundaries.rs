@@ -18,9 +18,19 @@
 //!   segments r²/2 (θ − sin θ), each signed as its bulge) and the distance between their middles (|b₁ − b₂|·c/2), at the
 //!   middle of the two middles; problems in order of kind, then of their first corner or boundary, then of the
 //!   boundary;
-//! - a parcel's neighbours: the parcels across its boundaries, in the drawing's order.
+//! - a parcel's neighbours: the parcels across its boundaries, in the drawing's order;
+//! - `approxArc` (docs/adr/3420): for each arc boundary in order, its corners: its ends and the corners within the
+//!   tolerance (`arcTolerance`, at least 1 µm) of its circle strictly on its side of the chord, each at the fraction of
+//!   the arc's angle from its lower end. The chain from the lower end goes each time by the boundary (not the arc) to
+//!   the nearest of the arc's corners farther along (the lowest boundary on a tie); reaching the higher end through at
+//!   least one corner, the arc is drawn with chords: the strip's area is the difference of the two closed curves' areas
+//!   (the arc and its chord; the chain and the chord), each relative to the lower end (shoelace plus the segments); the
+//!   widest place is the most of the distances between each chain boundary's middle and the arc's point at the middle
+//!   of its two corners' fractions, `at` the middle of the two. The chain's corners are not `missingVertex` of that arc.
+//!   A chain whose every boundary is the arc's own part (its bulge the arc's between its fractions, within 1e-9) is the
+//!   arc split at corners it lacks: no `approxArc`, the corners stay `missingVertex`.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{
     BoundaryProblem, CommandResult, Entity, ParcelBoundary, ParcelCorner, ParcelInGraph, ParcelsBoundaries, ParcelsBounded,
@@ -132,6 +142,31 @@ fn on_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> bool {
     ((px - o.x).hypot(py - o.y) - r).abs() <= NEAR
 }
 
+/// Where `p` lies on the arc from `a` to `b` with `bulge` (non-zero), as the fraction of the arc's angle from `a`: within
+/// `tol` of its circle and strictly on the arc's side of the chord (docs/adr/3420).
+fn along_arc(p: Vec2, a: Vec2, b: Vec2, bulge: f64, tol: f64) -> Option<f64> {
+    let (ux, uy) = (b.x - a.x, b.y - a.y);
+    let (px, py) = (p.x - a.x, p.y - a.y);
+    if (ux * py - uy * px) * bulge >= 0.0 {
+        return None;
+    }
+    let (o, r) = circle(a, b, bulge);
+    if ((px - o.x).hypot(py - o.y) - r).abs() > tol {
+        return None;
+    }
+    let theta = 4.0 * bulge.atan();
+    let a0 = (-o.y).atan2(-o.x);
+    let d = (((py - o.y).atan2(px - o.x) - a0) * theta.signum()).rem_euclid(std::f64::consts::TAU);
+    Some(d / theta.abs())
+}
+
+/// The arc's point at the fraction `t` of its angle from `a`.
+fn arc_point(a: Vec2, b: Vec2, bulge: f64, t: f64) -> [f64; 2] {
+    let (o, r) = circle(a, b, bulge);
+    let angle = (-o.y).atan2(-o.x) + 4.0 * bulge.atan() * t;
+    [a.x + o.x + r * angle.cos(), a.y + o.y + r * angle.sin()]
+}
+
 /// A boundary's box: its ends'; an arc of at most a half circle's grown by its rise on every side (it bows no farther
 /// from its chord, nor past its ends along it), a greater arc's its circle's.
 fn boundary_box(a: Vec2, b: Vec2, bulge: f64) -> [f64; 4] {
@@ -190,6 +225,16 @@ fn parcels_of<'d>(doc: &'d Document, input: &ParcelsBoundaries) -> Result<Vec<&'
 
 fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop> {
     let parcels = parcels_of(doc, input)?;
+    if let Some(t) = input.arc_tolerance
+        && !(t.is_finite() && t >= 0.0)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Yayın kirişlerle çizimi için uzaklık (arcTolerance) sıfır ya da artı bir sayı olmalı (metre).".into(),
+            "arcTolerance".into(),
+        ));
+    }
+    let tolerance = input.arc_tolerance.unwrap_or(0.0).max(NEAR);
     let uid_of = |e: &Entity| doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
     let uids: Vec<String> = parcels.iter().map(|e| uid_of(e)).collect();
     let shapes: Vec<Shape> = parcels.iter().map(|e| shape(e)).collect();
@@ -313,11 +358,124 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             }
         }
     }
+    // Arcs drawn with chords (docs/adr/3420): the arc's corners by a grid of their own, the chain by the boundaries at
+    // each corner.
+    let mut corner_grid: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
+    for (c, p) in corners.iter().enumerate() {
+        corner_grid.entry((cell(p.x), cell(p.y))).or_default().push(c);
+    }
+    let mut at_ends: Vec<Vec<usize>> = vec![Vec::new(); corners.len()];
+    for (e, edge) in edges.iter().enumerate() {
+        at_ends[edge.lo].push(e);
+        at_ends[edge.hi].push(e);
+    }
+    let mut folded: BTreeSet<(usize, usize)> = BTreeSet::new();
+    for &e in &order {
+        let edge = &edges[e];
+        if edge.bulge == 0.0 {
+            continue;
+        }
+        let (a, b) = (corners[edge.lo], corners[edge.hi]);
+        let [x0, y0, x1, y1] = boundary_box(a, b, edge.bulge);
+        if ![x0, y0, x1, y1].iter().all(|v| v.is_finite()) {
+            continue;
+        }
+        let mut on: BTreeMap<usize, f64> = BTreeMap::new();
+        on.insert(edge.lo, 0.0);
+        on.insert(edge.hi, 1.0);
+        for gx in cell(x0 - tolerance)..=cell(x1 + tolerance) {
+            for gy in cell(y0 - tolerance)..=cell(y1 + tolerance) {
+                for &c in corner_grid.get(&(gx, gy)).into_iter().flatten() {
+                    if c != edge.lo && c != edge.hi
+                        && let Some(t) = along_arc(corners[c], a, b, edge.bulge, tolerance)
+                    {
+                        on.insert(c, t);
+                    }
+                }
+            }
+        }
+        if on.len() < 3 {
+            continue;
+        }
+        // The chain: from the lower end, each time to the nearest of the arc's corners farther along.
+        let (mut at, mut t_at) = (edge.lo, 0.0);
+        let mut chain: Vec<(usize, usize, usize)> = Vec::new();
+        while at != edge.hi {
+            let next = at_ends[at]
+                .iter()
+                .filter(|&&f| f != e)
+                .filter_map(|&f| {
+                    let other = if edges[f].lo == at { edges[f].hi } else { edges[f].lo };
+                    on.get(&other).filter(|&&t| t > t_at).map(|&t| (t, boundary_id[f], f, other))
+                })
+                .min_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)));
+            let Some((t, _, f, other)) = next else { break };
+            chain.push((f, at, other));
+            (at, t_at) = (other, t);
+        }
+        if at != edge.hi || chain.len() < 2 {
+            continue;
+        }
+        // A chain of the arc's own parts (each boundary's bulge the arc's between its two fractions) is the arc split at
+        // corners it lacks: those stay missing corners, nothing is drawn with chords.
+        let theta = 4.0 * edge.bulge.atan();
+        let own_parts = chain.iter().all(|&(f, u, w)| {
+            let forward = if edges[f].lo == u { edges[f].bulge } else { -edges[f].bulge };
+            (forward - (theta * (on[&w] - on[&u]) / 4.0).tan()).abs() <= BULGE
+        });
+        if own_parts {
+            continue;
+        }
+        // The strip: the arc's closed curve against the chain's, both closed by the chord, relative to the lower end.
+        let c = (b.x - a.x).hypot(b.y - a.y);
+        let mut ring: Vec<Vec2> = vec![Vec2::new(0.0, 0.0)];
+        let mut segments = 0.0;
+        let mut widest: Option<(f64, [f64; 2])> = None;
+        for &(f, u, w) in &chain {
+            let (pu, pw) = (corners[u], corners[w]);
+            ring.push(Vec2::new(pw.x - a.x, pw.y - a.y));
+            let forward = if edges[f].lo == u { edges[f].bulge } else { -edges[f].bulge };
+            segments += segment((pw.x - pu.x).hypot(pw.y - pu.y), forward);
+            let mid = arc_point(a, b, edge.bulge, (on[&u] + on[&w]) / 2.0);
+            let own = middle(pu, pw, forward);
+            let gap = (mid[0] - own[0]).hypot(mid[1] - own[1]);
+            if widest.is_none_or(|(g, _)| gap > g) {
+                widest = Some((gap, [(mid[0] + own[0]) / 2.0, (mid[1] + own[1]) / 2.0]));
+            }
+        }
+        let n = ring.len();
+        let shoelace: f64 = (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum::<f64>() / 2.0;
+        let area = (segment(c, edge.bulge) - (shoelace + segments)).abs();
+        let Some((gap, place)) = widest else { continue };
+        let mut on_parcels: Vec<usize> = edge.sides.iter().map(|s| s.parcel).collect();
+        for &(f, _, w) in &chain {
+            on_parcels.extend(edges[f].sides.iter().map(|s| s.parcel));
+            if w != edge.hi {
+                folded.insert((w, e));
+            }
+        }
+        on_parcels.sort_unstable();
+        on_parcels.dedup();
+        let mut named = vec![sid(e)];
+        named.extend(chain.iter().map(|&(f, ..)| sid(f)));
+        problems.push((
+            4,
+            boundary_id[e],
+            BoundaryProblem {
+                kind: "approxArc".into(),
+                at: place,
+                parcels: on_parcels.iter().map(|&k| uids[k].clone()).collect(),
+                boundaries: named,
+                area: Some(area),
+                gap: Some(gap),
+            },
+        ));
+    }
     for (c, p) in corners.iter().enumerate() {
         let Some(near) = grid.get(&(cell(p.x), cell(p.y))) else { continue };
         for &e in near.iter().map(|n| &order[*n]) {
             let edge = &edges[e];
-            if edge.lo == c || edge.hi == c {
+            if edge.lo == c || edge.hi == c || folded.contains(&(c, e)) {
                 continue;
             }
             let (a, b) = (corners[edge.lo], corners[edge.hi]);

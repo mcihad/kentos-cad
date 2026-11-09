@@ -32,6 +32,8 @@ const ROOM: (f32, f32) = (34.0, 16.0);
 pub struct Shown {
     pub session: u64,
     pub uids: Option<Vec<String>>,
+    /// The window's distance for arcs drawn with chords (docs/adr/3420; none: 1 µm).
+    pub tolerance: Option<f64>,
     /// The row chosen when Çizimde göster was pressed (docs/adr/3020).
     pub focus: Option<Focus>,
     made: RefCell<Option<(u64, u64, Option<Arc<GraphMarks>>)>>,
@@ -39,7 +41,7 @@ pub struct Shown {
 
 impl Shown {
     pub fn new(session: u64, uids: Option<Vec<String>>) -> Self {
-        Self { session, uids, focus: None, made: RefCell::new(None) }
+        Self { session, uids, tolerance: None, focus: None, made: RefCell::new(None) }
     }
 }
 
@@ -160,7 +162,7 @@ impl App {
         {
             return made.clone();
         }
-        let input = ParcelsBoundaries { uids: shown.uids.clone() };
+        let input = ParcelsBoundaries { uids: shown.uids.clone(), arc_tolerance: shown.tolerance };
         let made = parcels_boundaries::preview(&doc.model, &input).ok().map(|g| {
             let mut marks = GraphMarks::of(&g);
             // The chosen row, found again in the graph as it is now (docs/adr/3020).

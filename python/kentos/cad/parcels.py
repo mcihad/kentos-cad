@@ -41,10 +41,15 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
     kısmen ortak; düz sınırda dikmesinin ayağı uçların arasında, yaylı sınırda yayın
     çemberinde ve kirişin yay yanında), splitCorner (1 µm'den yakın iki ayrı köşe:
     tesadüfen çakışan koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda
-    iki parselin kenarı). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri
-    verir), kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları.
-    Salt okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid,
-    entity_not_found, not_a_parcel (uids[i]).
+    iki parselin kenarı), arcChord (aynı iki köşe arasında yay ile kiriş ya da iki
+    farklı yay; ADR 2620), approxArc (ADR 3420: yaylı sınırı komşu kirişlerle çizmiş:
+    yayın bir köşesinden öbürüne, köşeleri yayın üstünde (1 µm'de ya da arcTolerance
+    metrede) duran sınır zinciri; yay ile zincir arasındaki şeridin alanı ve en geniş
+    yeri; zincirin köşeleri ayrıca missingVertex sayılmaz). Kimlikler geometriden
+    türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa
+    parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı
+    alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel
+    (uids[i]), invalid_input (arcTolerance eksi ya da sonlu değil).
     """
     __slots__ = ()
     id = "cad.parcels.boundaries"
@@ -60,6 +65,7 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         doc: Document,
         /,
         *,
+        arc_tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -74,14 +80,20 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         sınırın orada köşesi yok: sınır yalnız kısmen ortak; düz sınırda dikmesinin ayağı
         uçların arasında, yaylı sınırda yayın çemberinde ve kirişin yay yanında),
         splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç
-        ya da daha çok parselin, ya da bir yanda iki parselin kenarı). Kimlikler geometriden
-        türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa
-        parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı
-        alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel
-        (uids[i]).
+        ya da daha çok parselin, ya da bir yanda iki parselin kenarı), arcChord (aynı iki
+        köşe arasında yay ile kiriş ya da iki farklı yay; ADR 2620), approxArc (ADR 3420:
+        yaylı sınırı komşu kirişlerle çizmiş: yayın bir köşesinden öbürüne, köşeleri yayın
+        üstünde (1 µm'de ya da arcTolerance metrede) duran sınır zinciri; yay ile zincir
+        arasındaki şeridin alanı ve en geniş yeri; zincirin köşeleri ayrıca missingVertex
+        sayılmaz). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri verir),
+        kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları. Salt
+        okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid,
+        entity_not_found, not_a_parcel (uids[i]), invalid_input (arcTolerance eksi ya da
+        sonlu değil).
 
         Args:
             doc: The drawing it works on.
+            arc_tolerance: Unit: m.
             uids:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -96,6 +108,7 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, ParcelsBoundaries(
+            arc_tolerance=arc_tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -104,12 +117,14 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         doc: Document,
         /,
         *,
+        arc_tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> ParcelsBounded:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, ParcelsBoundaries(
+            arc_tolerance=arc_tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -118,12 +133,14 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         doc: Document,
         /,
         *,
+        arc_tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, ParcelsBoundaries(
+            arc_tolerance=arc_tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ))
 
@@ -132,6 +149,7 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         doc: Document,
         /,
         *,
+        arc_tolerance: float | None | Unset = UNSET,
         uids: Sequence[str] | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -143,6 +161,7 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, ParcelsBoundaries(
+            arc_tolerance=arc_tolerance,
             uids=_opt(uids, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 

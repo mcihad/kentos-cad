@@ -56,5 +56,5 @@ tesadüfen çakışan koordinatları olmasın. Mantıksal sınır kimliği üzer
 - Kalıcı parsel kaydı ve sınır kimliği (MAP-08'in ana açığı).
 - Tablodaki satırın çizimde vurgulanması. Yapıldı: [ADR 3020](3020-boundary-graph-row-on-the-drawing.md).
 - Yayın kirişlerle (birçok köşeyle) yaklaşık çizildiği komşu: sınır grafiğinde “yaklaşık yay” (bugün eksik köşe değil,
-  yay ile birden çok kiriş ayrı sınırlar).
+  yay ile birden çok kiriş ayrı sınırlar). Yapıldı: [ADR 3420](3420-boundary-arc-drawn-with-chords.md).
 - Web (TODOS §0.2).

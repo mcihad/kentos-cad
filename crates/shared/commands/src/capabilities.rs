@@ -2618,7 +2618,7 @@ const ENTRIES: &[Entry] = &[
     // Sınır grafiği (plan/map-cad.md MAP-08, docs/adr/2000).
     Entry {
         id: "cad.parcels.boundaries",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_parcel"]],
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_parcel", "invalid_input"]],
         warnings: &[],
         targets: none,
     },

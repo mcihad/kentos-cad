@@ -4,7 +4,8 @@
 //! (their corners, length, the parcel on each side), the corners (their place and parcels) or the problems (where and
 //! which parcels); Sorunluları seç selects the parcels a problem names; Çizimde göster closes the window and leaves the
 //! graph's marks on the drawing (parcel_boundaries_marks.rs, docs/adr/2220). A row pressed is chosen: Çizimde göster
-//! then goes to it and the marks bring it forward (docs/adr/3020). Nothing is written.
+//! then goes to it and the marks bring it forward (docs/adr/3020). Nothing is written. docs/adr/3420: an arc another
+//! parcel draws with chords is one problem; the window's distance lets a neighbour's rounded corners count as the arc's.
 
 use iced::{Element, Task};
 use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
@@ -12,7 +13,7 @@ use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::parcels_boundaries;
 use kentos_ui::widget::grow::Grows;
-use kentos_ui::widget::{Dialog as Frame, Segmented};
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -52,6 +53,8 @@ pub struct State {
     pub answer: Option<Result<ParcelsBounded, String>>,
     /// The row pressed, in the table shown (docs/adr/3020).
     pub chosen: Option<usize>,
+    /// How far from an arc a neighbour's corner may lie in a chain of chords, m (docs/adr/3420; 0: 1 µm).
+    pub tolerance: f64,
 }
 
 #[derive(Clone, Debug)]
@@ -60,6 +63,8 @@ pub enum Event {
     Show(Show),
     /// A row of the table pressed: Çizimde göster goes to it (docs/adr/3020).
     Choose(usize),
+    /// The distance for arcs drawn with chords (docs/adr/3420).
+    Tolerance(f64),
     Select,
     /// Çizimde göster (docs/adr/2220).
     Draw,
@@ -78,6 +83,8 @@ pub fn problem_word(kind: &str) -> &'static str {
         "overlap" => "Çakışan kenar",
         // docs/adr/2620: one side an arc, the other its chord (or another arc).
         "arcChord" => "Yay ile kiriş uyuşmuyor",
+        // docs/adr/3420: an arc another parcel draws with chords.
+        "approxArc" => "Yay kirişlerle çizilmiş",
         _ => "Sorun",
     }
 }
@@ -89,15 +96,23 @@ pub fn problem_short(kind: &str) -> &'static str {
         "splitCorner" => "Ayrık köşe",
         "overlap" => "Çakışan kenar",
         "arcChord" => "Yay ile kiriş",
+        "approxArc" => "Kirişli yay",
         _ => "Sorun",
     }
 }
 
 /// A problem's size (docs/adr/2620): an arc and chord mismatch's boundaries, its sliver's area and how far apart the
-/// two curves are at their middles; none for the others.
+/// two curves are at their middles; an arc drawn with chords' (docs/adr/3420): the arc, the chain's first and last
+/// boundary and its count, the strip's area and its widest place; none for the others.
 pub fn problem_size(p: &kentos_commands::BoundaryProblem, f: &kentos_interaction::Format) -> String {
-    match (p.area, p.gap) {
-        (Some(area), Some(gap)) => format!("{} · {}, ortada {}", p.boundaries.join(" ile "), f.area(area), f.length(gap)),
+    match (p.kind.as_str(), p.area, p.gap, p.boundaries.as_slice()) {
+        ("approxArc", Some(area), Some(gap), [arc, first, .., last]) => format!(
+            "{arc} ile {first}–{last} ({} kiriş) · {}, en geniş {}",
+            p.boundaries.len() - 1,
+            f.area(area),
+            f.length(gap)
+        ),
+        (_, Some(area), Some(gap), _) => format!("{} · {}, ortada {}", p.boundaries.join(" ile "), f.area(area), f.length(gap)),
         _ => "—".into(),
     }
 }
@@ -151,7 +166,8 @@ pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> V
 
 impl App {
     fn parcel_boundaries_run(&mut self) {
-        let input = ParcelsBoundaries { uids: self.parcel_boundaries.uids.clone() };
+        let s = &self.parcel_boundaries;
+        let input = ParcelsBoundaries { uids: s.uids.clone(), arc_tolerance: (s.tolerance > 0.0).then_some(s.tolerance) };
         let Some(doc) = self.document.as_ref() else { return };
         self.parcel_boundaries.answer = Some(parcels_boundaries::preview(&doc.model, &input));
     }
@@ -176,6 +192,11 @@ impl App {
                 self.parcel_boundaries.chosen = None;
             }
             Event::Choose(i) => self.parcel_boundaries.chosen = Some(i),
+            Event::Tolerance(v) => {
+                self.parcel_boundaries.tolerance = v.max(0.0);
+                self.parcel_boundaries.chosen = None;
+                self.parcel_boundaries_run();
+            }
             Event::Select => {
                 let Some(Ok(g)) = &self.parcel_boundaries.answer else { return Task::none() };
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
@@ -206,6 +227,8 @@ impl App {
                 let bounds = focus.as_ref().and_then(|f| f.bounds(g, all)).or(all);
                 let mut shown = crate::parcel_boundaries_marks::Shown::new(doc.session, self.parcel_boundaries.uids.clone());
                 shown.focus = focus;
+                let tolerance = self.parcel_boundaries.tolerance;
+                shown.tolerance = (tolerance > 0.0).then_some(tolerance);
                 self.parcel_graph = Some(shown);
                 self.parcel_boundaries = State::default();
                 self.dialog = None;
@@ -254,11 +277,12 @@ impl App {
                     lines.push(words::text_line(
                         Kind::Error,
                         format!(
-                            "{problems} sorun: {} komşuda eksik köşe, {} ayrık köşe, {} çakışan kenar, {} yay ile kiriş uyuşmazlığı. Ortak sınır yalnız koordinatların çakışmasıyla değil, iki parselin aynı sınırıyla kurulur.",
+                            "{problems} sorun: {} komşuda eksik köşe, {} ayrık köşe, {} çakışan kenar, {} yay ile kiriş uyuşmazlığı, {} kirişlerle çizilmiş yay. Ortak sınır yalnız koordinatların çakışmasıyla değil, iki parselin aynı sınırıyla kurulur.",
                             by("missingVertex"),
                             by("splitCorner"),
                             by("overlap"),
-                            by("arcChord")
+                            by("arcChord"),
+                            by("approxArc")
                         ),
                     ));
                 }
@@ -291,10 +315,19 @@ impl App {
             ],
         };
         let table = sheet_chosen(cols, table_rows, "Gösterilecek satır yok.", 300.0, s.chosen, |i| msg(Event::Choose(i)));
+        // docs/adr/3420: how far a neighbour's corner may lie from an arc it draws with chords.
+        let tolerance = Form::new()
+            .label_width(260.0)
+            .field(
+                "Kirişli yayda köşenin yaya uzaklığı (m)",
+                NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v))).step(0.001).decimals(3).point().width(140.0),
+            )
+            .help("0: yalnız yayın üstündeki köşeler (1 µm). Komşunun köşeleri yuvarlanmışsa yuvarlamanın payını yazın.");
         let body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
             .push(words::summary(lines))
+            .push(tolerance)
             .push(Segmented::new([Show::Boundaries, Show::Corners, Show::Problems], s.show, |v| msg(Event::Show(v))))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         Frame::new(TITLE)

@@ -30,6 +30,80 @@ fn opened(name: Option<&str>) -> App {
 }
 
 const PROBLEMS: &str = "sorunlu ada: T birleşimi, 0,4 µm ayrık köşeler, bir yanda iki parsel";
+const APPROX: &str = "santimetreye yuvarlanmış köşeler 1 cm'lik uzaklıkla: yaklaşık yay";
+
+/// docs/adr/3420: the neighbour drawing A1's arc with chords, its corners rounded to the centimetre. Without a distance
+/// only the corner at the arc's top (exactly on it) is a missing corner; with 0.01 m the arc drawn with chords is one
+/// problem with the case's boundaries, strip and widest place, said in the Fark column and the summary.
+#[test]
+fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
+    let mut app = opened(Some(APPROX));
+    app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
+    let _ = app.update(Message::Run("parcels.check"));
+    let _ = app.update(Message::ParcelBoundaries(B::Open));
+    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    assert_eq!(g.problems.iter().map(|p| p.kind.as_str()).collect::<Vec<_>>(), ["missingVertex"]);
+    let _ = app.update(Message::ParcelBoundaries(B::Tolerance(0.01)));
+    let g = app.parcel_boundaries.answer.clone().expect("an answer").expect("read");
+    let c = cases();
+    let want = &c["cases"].as_array().expect("cases").iter().find(|x| x["name"] == APPROX).expect("the case")["steps"][0]
+        ["result"]["output"]["problems"][0];
+    assert_eq!(g.problems.len(), 1);
+    let got = &g.problems[0];
+    assert_eq!((got.kind.as_str(), serde_json::to_value(&got.boundaries).expect("json")), ("approxArc", want["boundaries"].clone()));
+    let close = |a: Option<f64>, key: &str| (a.expect(key) - want[key].as_f64().expect(key)).abs() < 1e-9;
+    assert!(close(got.area, "area") && close(got.gap, "gap"), "{got:?}");
+    let f = app.format();
+    let shown = rows(&g, Show::Problems, &f);
+    assert_eq!(shown[0][0], "Yay kirişlerle çizilmiş");
+    let b = &got.boundaries;
+    assert_eq!(
+        shown[0][4],
+        format!("{} ile {}–{} (4 kiriş) · {}, en geniş {}", b[0], b[1], b[4], f.area(got.area.expect("area")), f.length(got.gap.expect("gap")))
+    );
+}
+
+/// docs/adr/3420: the window with the distance 0.01 m and the problem listed, then on the drawing; light wide and dark
+/// narrow, `.run/gui-evidence/kirisli-yay-3420/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib parcel_boundaries_window_tests::approx_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn approx_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kirisli-yay-3420");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (draw, file) in [(false, "1-pencere"), (true, "2-cizimde")] {
+            let mut app = opened(Some(APPROX));
+            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            app.apply_settings();
+            let _ = app.update(Message::WindowResized(size));
+            app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
+            let _ = app.update(Message::Run("view.zoomExtents"));
+            let _ = app.update(Message::Run("parcels.check"));
+            let _ = app.update(Message::ParcelBoundaries(B::Open));
+            let _ = app.update(Message::ParcelBoundaries(B::Tolerance(0.01)));
+            let _ = app.update(Message::ParcelBoundaries(B::Show(Show::Problems)));
+            if draw {
+                let _ = app.update(Message::ParcelBoundaries(B::Choose(0)));
+                let _ = app.update(Message::ParcelBoundaries(B::Draw));
+                app.selection.clear();
+            }
+            let mut snapshot = Snapshot::new(size).expect("a renderer");
+            let mut update = |app: &mut App, m: Message| {
+                let _ = app.update(m);
+            };
+            snapshot.settle(&mut app, App::view, &mut update);
+            let path = out.join(format!("{file}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            println!("{}", path.display());
+        }
+    }
+}
 const MISMATCH: &str = "uyuşmayan üç sınır bir arada: her biri kendi sorunu";
 
 /// docs/adr/2620: an arc against its chord, two arcs the same way and two arcs opposite ways, each a problem with its
