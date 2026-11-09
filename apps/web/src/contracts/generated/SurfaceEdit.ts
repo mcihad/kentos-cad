@@ -6,4 +6,4 @@
  * between the corners at two places; Kenar çevir is the other diagonal of two triangles) and Üçgen sil (the kept
  * triangle at the place goes).
  */
-export type SurfaceEdit = { "op": "addPoint", x: number, y: number, z: number, } | { "op": "setHeight", x: number, y: number, z: number, } | { "op": "addEdge", ax: number, ay: number, bx: number, by: number, } | { "op": "removeTriangle", x: number, y: number, };
+export type SurfaceEdit = { "op": "addPoint", x: number, y: number, z: number, } | { "op": "setHeight", x: number, y: number, z: number, } | { "op": "addEdge", ax: number, ay: number, bx: number, by: number, } | { "op": "removeTriangle", x: number, y: number, } | { "op": "paste", terrain: string, };

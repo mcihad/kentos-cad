@@ -38,7 +38,9 @@ pub struct Left {
     pub id: String,
     /// The list that names it: `points`, `breaklines`, `boundary`, `voids`.
     pub role: &'static str,
-    /// `missing` (not in the drawing), `no_height`, `arc_edge`, `wrong_kind`, `not_closed`, `too_few`.
+    /// `missing` (not in the drawing), `no_height`, `arc_edge`, `wrong_kind`, `not_closed`, `too_few`; an edit's
+    /// `occupied`, `no_point`, and a paste's `no_surface`, `cycle` (it comes back to a surface being made) or
+    /// `unbuildable` (docs/adr/3920).
     pub why: &'static str,
 }
 
@@ -103,13 +105,35 @@ pub fn layer_set<'a>(tree: &'a [LayerNode], named: &'a [String]) -> (BTreeSet<&'
     (set, missing)
 }
 
-/// A surface's input from the drawing's layer tree and objects (in the drawing's order).
+/// A surface's input from the drawing's layer tree and objects (in the drawing's order), of a definition that pastes
+/// no other surface (a paste edit finds none: `missing`).
 pub fn gather<'a>(
     def: &TerrainSurfaceDef,
     tree: &[LayerNode],
     objects: impl IntoIterator<Item = SourceObject<'a>>,
 ) -> Gathered {
+    gather_among(def, &[], tree, objects)
+}
+
+/// A surface's input as [`gather`], its paste edits (docs/adr/3920) finding the surfaces they paste among `others`
+/// (the project's surfaces; `def`'s own place there is passed over: a surface does not paste itself).
+pub fn gather_among<'a>(
+    def: &TerrainSurfaceDef,
+    others: &[TerrainSurfaceDef],
+    tree: &[LayerNode],
+    objects: impl IntoIterator<Item = SourceObject<'a>>,
+) -> Gathered {
     let objects: Vec<SourceObject<'a>> = objects.into_iter().collect();
+    gather_in(def, others, tree, &objects)
+}
+
+/// [`gather_among`] on the objects collected.
+pub(crate) fn gather_in<'a>(
+    def: &TerrainSurfaceDef,
+    others: &[TerrainSurfaceDef],
+    tree: &[LayerNode],
+    objects: &[SourceObject<'a>],
+) -> Gathered {
     let by_uid: BTreeMap<&str, &SourceObject<'a>> = objects.iter().map(|o| (o.uid, o)).collect();
     let mut left = Vec::new();
     let leave = |left: &mut Vec<Left>, id: &str, role: &'static str, why: &'static str| {
@@ -137,7 +161,7 @@ pub fn gather<'a>(
             }
         }
         let named: BTreeSet<&str> = sources.uids.iter().map(String::as_str).collect();
-        for o in &objects {
+        for o in objects {
             let by_name = named.contains(o.uid);
             if !by_name && !layers.contains(o.entity.base().layer_id.as_str()) {
                 continue;
@@ -186,7 +210,8 @@ pub fn gather<'a>(
 
     // The edits (ADR 1560 §2), in their order: a point where no record is; a height for every point record and
     // breakline vertex at the place; the edges and the triangles taken out go to the core, which says back the ones
-    // it cannot do.
+    // it cannot do; a pasted surface (docs/adr/3920, `crate::paste`) takes the place of the records made so far where
+    // its kept triangles lie, its corners and edges coming in.
     let mut edges = Vec::new();
     let mut removed = Vec::new();
     for (k, e) in def.edits.iter().enumerate() {
@@ -222,6 +247,19 @@ pub fn gather<'a>(
             }
             SurfaceEdit::AddEdge { ax, ay, bx, by } => edges.push(ForcedEdge { from: [ax, ay], to: [bx, by], edit }),
             SurfaceEdit::RemoveTriangle { x, y } => removed.push(RemovedAt { at: [x, y], edit }),
+            SurfaceEdit::Paste { ref terrain } => match crate::paste::pasted(&def.id, terrain, others, tree, objects) {
+                Err(why) => leave(&mut left, &id, "edits", why),
+                Ok(cover) => {
+                    points.retain(|p| !cover.covers(p.x, p.y));
+                    breaklines = std::mem::take(&mut breaklines).into_iter().flat_map(|b| cover.runs(b)).collect();
+                    points.extend(cover.corners().into_iter().map(|[x, y, z]| SpotPoint { x, y, z, source: Some(id.clone()) }));
+                    breaklines.extend(cover.edges().into_iter().map(|[p, q]| Breakline {
+                        points: vec![p, q],
+                        closed: false,
+                        source: Some(id.clone()),
+                    }));
+                }
+            },
         }
     }
 

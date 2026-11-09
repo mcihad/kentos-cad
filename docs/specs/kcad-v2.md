@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `213`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-214.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `214`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-215.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -954,6 +954,13 @@ Sayısı listeninkinden farklı (`broken/map-work-approved-values-not-one-to-one
 (4 194 304 bayt, UTF-8) uzun liste `bad_value`. Boş liste yazılmaz. Yazıcı 213'ü bir öğe değerleri taşıyınca seçer; 212
 ve öncesinde alan bilinmez (`unknown_field`, `broken/map-work-approved-values-in-schema-212.kcad`). Örnek
 `map-work-approved-values.json/.kcad`.
+
+**Şema 214** (ADR 3920; MAP-14): yüzey yapıştırma. `road.surfaces[].edits`'e (şema 196) yeni bir düzenleme:
+`{"op": "paste", "terrain": "<kimlik>"}`, projenin başka bir yüzeyi. Boş (ya da yalnız boşluk) kimlik ve yüzeyin kendi
+kimliği `bad_value` (`broken/surface-pastes-no-id.kcad`, `broken/surface-pastes-itself.kcad`). Projede olmayan ya da
+döngüye giren yüzey dosyada geçerlidir; yüzey kurulurken söylenir. Yazıcı 214'ü bir yüzey yapıştırma taşıyınca seçer;
+213 ve öncesi düzenlemeyi tanımaz (`unknown_field`, `broken/surface-pastes-in-schema-213.kcad`). Örnek
+`surface-pastes.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

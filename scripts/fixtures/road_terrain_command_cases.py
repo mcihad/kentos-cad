@@ -72,21 +72,33 @@ LAYERS = [node("0", "0"), node("zemin", "Zemin"), node("kirik", "Kırık hatlar"
           node("arazi", "Arazi", [node("ek", "Ek noktalar")]), node("esyukselti", "Eş yükselti"),
           {**node("kilitli", "Kilitli"), "locked": True}, {**node("gizli", "Gizli"), "visible": False}]
 
+# Yüzey yapıştır (docs/adr/3920): a pad on `dolgu`, its toe and its top closed breaklines (areas with heights); the toe is
+# convex (the pad's hull) and the pad's triangulation is one (asserted where it is made). Only the paste cases' drawing
+# holds them; the other cases' surfaces name neither the layer nor the objects.
+PAD_TOE = [(10.0, 6.0, 101.0), (30.0, 7.0, 101.5), (29.0, 24.0, 102.5), (11.0, 23.0, 102.0)]
+PAD_TOP = [(15.0, 11.0, 103.0), (25.0, 11.5, 103.0), (24.0, 19.0, 103.0), (16.0, 18.5, 103.0)]
+PAD = [("polygon", "dolgu", {"pts": [P(x, y) for x, y, _ in ring], "zs": [z for _, _, z in ring]})
+       for ring in (PAD_TOE, PAD_TOP)]
+ALL_ENTITIES = ENTITIES + PAD
+ALL_UIDS = [U(i + 1) for i in range(len(ALL_ENTITIES))]
+PAD_LAYERS = LAYERS + [node("dolgu", "Dolgu")]
+
 
 def entity_json(slot, kind, layer, geo):
     return {"kind": kind, "id": slot, "layerId": layer, "attrs": {}, **copy.deepcopy(geo)}
 
 
-def setup(surfaces=None, work="road"):
+def setup(surfaces=None, work="road", pad=False):
     settings = {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow"}
     if surfaces:
         settings["road"] = {"surfaces": surfaces}
+    entities = ALL_ENTITIES if pad else ENTITIES
     return {
         "format": "kentos.document", "version": 2, "name": "Yol yüzeyleri", "settings": settings,
-        "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(LAYERS), "activeLayer": "0",
-        "entities": [entity_json(i + 1, k, l, g) for i, (k, l, g) in enumerate(ENTITIES)],
-        "uids": list(UIDS), "styles": {"items": [], "categories": []},
+        "origin": {"x": 0.0, "y": 0.0}, "layers": copy.deepcopy(PAD_LAYERS if pad else LAYERS), "activeLayer": "0",
+        "entities": [entity_json(i + 1, k, l, g) for i, (k, l, g) in enumerate(entities)],
+        "uids": list(ALL_UIDS[:len(entities)]), "styles": {"items": [], "categories": []},
     }
 
 
@@ -105,7 +117,7 @@ def find_node(nodes, id_):
 def layer_set(named):
     out, missing = set(), []
     for id_ in named:
-        n = find_node(LAYERS, id_)
+        n = find_node(PAD_LAYERS, id_)
         if n is None:
             missing.append(id_)
             continue
@@ -158,8 +170,9 @@ def ring_of(kind, g):
     return [xy(p) for p in g["pts"]]
 
 
-def gather(d):
-    by_uid = {u: (k, l, g) for u, (k, l, g) in zip(UIDS, ENTITIES)}
+def gather(d, others=()):
+    """The surface d's input, its pastes (docs/adr/3920) finding their surfaces among `others`."""
+    by_uid = {u: (k, l, g) for u, (k, l, g) in zip(ALL_UIDS, ALL_ENTITIES)}
     left, points, breaklines = [], [], []
     for role in ("points", "breaklines"):
         src = d.get(role, {})
@@ -167,7 +180,7 @@ def gather(d):
         uids = src.get("uids", [])
         left += [(m, role, "missing") for m in missing]
         left += [(u, role, "missing") for u in uids if u not in by_uid]
-        for uid, (kind, layer, g) in zip(UIDS, ENTITIES):
+        for uid, (kind, layer, g) in zip(ALL_UIDS, ALL_ENTITIES):
             named = uid in uids
             if not named and layer not in layers:
                 continue
@@ -219,6 +232,15 @@ def gather(d):
                 left.append((eid, "edits", "no_point"))
         elif e["op"] == "addEdge":
             edges.append(((e["ax"], e["ay"]), (e["bx"], e["by"]), k))
+        elif e["op"] == "paste":
+            why, cover = pasted(d["id"], e["terrain"], others)
+            if why:
+                left.append((eid, "edits", why))
+            else:
+                points = [q for q in points if not cover.covers((q[0], q[1]))]
+                breaklines = [r for b in breaklines for r in cover.runs(b)]
+                points += [(x, y, z, eid) for x, y, z in cover.corners()]
+                breaklines += [([list(a), list(b)], False, eid) for a, b in cover.edges()]
         else:
             removed.append(((e["x"], e["y"]), k))
 
@@ -390,6 +412,180 @@ def strictly_around(xy, t, q):
     return (s1 > 0 and s2 > 0 and s3 > 0) or (s1 < 0 and s2 < 0 and s3 < 0)
 
 
+# ── Yüzey yapıştır (docs/adr/3920) ──────────────────────────────────────────────────────────────────────────────────
+
+def reaches(others, start, target):
+    """Whether `target` is pasted, at any depth, by the surface `start`."""
+    todo, seen = [start], {start}
+    while todo:
+        cur = todo.pop()
+        d = next((o for o in others if o["id"] == cur), None)
+        for e in (d or {}).get("edits", []):
+            if e["op"] == "paste":
+                if e["terrain"] == target:
+                    return True
+                if e["terrain"] not in seen:
+                    seen.add(e["terrain"])
+                    todo.append(e["terrain"])
+    return False
+
+
+def pasted(into, terrain, others):
+    """(why not, cover): the surface `terrain` as made on its own, or why it is not pasted."""
+    d = next((o for o in others if o["id"] == terrain), None)
+    if d is None:
+        return "no_surface", None
+    if terrain == into or reaches(others, terrain, into):
+        return "cycle", None
+    g, _ = gather(d, others)
+    try:
+        s = build(g)
+    except Unbuildable:
+        return "unbuildable", None
+    one_triangulation(s, g)
+    return None, Cover(s)
+
+
+def incircle(a, b, c, d):
+    """Positive when d is inside the circle through a, b, c (counter-clockwise), exactly."""
+    m = [(F(p[0]) - F(d[0]), F(p[1]) - F(d[1])) for p in (a, b, c)]
+    m = [(x, y, x * x + y * y) for x, y in m]
+    return (m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+            + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+
+
+def ambiguous(s, g):
+    """The quadrilaterals of the surface whose diagonal neither a piece of a breakline or ring nor the circle decides
+    (their four corners on one circle): two triangulations of the corners and pieces differ only inside them. Each is
+    (u, v, w, f): the diagonal u–v, the corners beside it. Every other edge two triangles share is strictly Delaunay."""
+    at = {(x, y): i for i, (x, y) in enumerate(s["xy"])}
+    pieces = set()
+    for pts, closed, _ in g["breaklines"]:
+        ids = [at[(p[0], p[1])] for p in pts]
+        n = len(ids)
+        pieces |= {frozenset((ids[k], ids[(k + 1) % n])) for k in range(n - 1 + (1 if closed else 0))}
+    rings = ([g["boundary"][0]] if g["boundary"] else []) + [r for r, _ in g["voids"]]
+    for ring in rings:
+        ids = [at[tuple(p)] for p in ring]
+        pieces |= {frozenset((ids[k], ids[(k + 1) % len(ids)])) for k in range(len(ids))}
+    whole, _ = tri.split_at_points(s["xy"], [tuple(e) for e in pieces])
+    pieces = {frozenset(e) for e in whole}
+    opposite = {}
+    for t in s["tris"]:
+        for k in range(3):
+            e = frozenset((t[k], t[(k + 1) % 3]))
+            opposite.setdefault(e, []).append((t, t[(k + 2) % 3]))
+    quads = []
+    for e, sides in opposite.items():
+        if len(sides) == 2 and e not in pieces:
+            (t, w), (_, f) = sides
+            a, b, c = [s["xy"][i] for i in ccw(s["xy"], t)]
+            v = incircle(a, b, c, s["xy"][f])
+            assert v <= 0, f"edge {sorted(s['xy'][i] for i in e)} is not Delaunay"
+            if v == 0:
+                u, x = sorted(e)
+                quads.append((s["xy"][u], s["xy"][x], s["xy"][w], s["xy"][f]))
+    return quads
+
+
+def one_triangulation(s, g):
+    """The surface's triangulation is the only one of its corners and pieces, so Triangle's and KentOS's are the same
+    triangles (a pasted surface's: its edges are the input's, the digest's)."""
+    quads = ambiguous(s, g)
+    assert not quads, f"two triangulations: {quads}"
+
+
+def decided(quads, q):
+    """Whether the place is outside every quadrilateral two triangulations differ in (its edges round it are both's)."""
+    for u, x, w, f in quads:
+        inside = strictly_around([u, x, w], (0, 1, 2), q) or strictly_around([u, x, f], (0, 1, 2), q)
+        on = orient(u, x, q) == 0 and min(u[0], x[0]) <= q[0] <= max(u[0], x[0]) and \
+            min(u[1], x[1]) <= q[1] <= max(u[1], x[1]) and tuple(q) not in (tuple(u), tuple(x))
+        if inside or on:
+            return False
+    return True
+
+
+def ccw(xy, t):
+    return t if orient(xy[t[0]], xy[t[1]], xy[t[2]]) > 0 else (t[0], t[2], t[1])
+
+
+def meets(p, q, c, d):
+    """Whether the closed pieces pq and cd meet, crossing or touching (exact)."""
+    d1, d2, d3, d4 = orient(c, d, p), orient(c, d, q), orient(p, q, c), orient(p, q, d)
+    if (d1 > 0 > d2 or d1 < 0 < d2) and (d3 > 0 > d4 or d3 < 0 < d4):
+        return True
+
+    def within(u, v, w):
+        return min(u[0], v[0]) <= w[0] <= max(u[0], v[0]) and min(u[1], v[1]) <= w[1] <= max(u[1], v[1])
+    return (d1 == 0 and within(c, d, p)) or (d2 == 0 and within(c, d, q)) or (d3 == 0 and within(p, q, c)) or (
+        d4 == 0 and within(p, q, d))
+
+
+class Cover:
+    """A pasted surface: its kept triangles (counter-clockwise), the outline (the edges one of them alone has), its
+    corners and edges."""
+
+    def __init__(self, s):
+        self.xy, self.z = s["xy"], s["z"]
+        self.tris = [ccw(self.xy, t) for t in s["tris"]]
+        count = {}
+        for t in self.tris:
+            for k in range(3):
+                e = tuple(sorted((t[k], t[(k + 1) % 3])))
+                count[e] = count.get(e, 0) + 1
+        self.outline = [e for e, n in count.items() if n == 1]
+        self.pairs = sorted(count)
+
+    def covers(self, q):
+        return any(orient(self.xy[a], self.xy[b], q) >= 0 and orient(self.xy[b], self.xy[c], q) >= 0
+                   and orient(self.xy[c], self.xy[a], q) >= 0 for a, b, c in self.tris)
+
+    def crosses(self, p, q):
+        return any(meets(p, q, self.xy[i], self.xy[j]) for i, j in self.outline)
+
+    def runs(self, b):
+        pts, closed, source = b
+        n = len(pts)
+        if n < (3 if closed else 2):
+            return [] if any(self.covers((c[0], c[1])) for c in pts) else [b]
+        pieces = n if closed else n - 1
+        keep = []
+        for k in range(pieces):
+            p, q = (pts[k][0], pts[k][1]), (pts[(k + 1) % n][0], pts[(k + 1) % n][1])
+            keep.append(not self.covers(p) and not self.covers(q) and not self.crosses(p, q))
+        if all(keep):
+            return [b]
+        start = keep.index(False) + 1 if closed else 0
+        out, run = [], []
+        for j in range(pieces):
+            k = (start + j) % pieces
+            if keep[k]:
+                if not run:
+                    run.append(pts[k])
+                run.append(pts[(k + 1) % n])
+            elif run:
+                out.append((run, False, source))
+                run = []
+        if run:
+            out.append((run, False, source))
+        return out
+
+    def corner(self, i):
+        return (self.xy[i][0], self.xy[i][1], self.z[i])
+
+    def corners(self):
+        used = sorted({i for t in self.tris for i in t})
+        return sorted((self.corner(i) for i in used), key=lambda c: (c[0], c[1]))
+
+    def edges(self):
+        out = []
+        for i, j in self.pairs:
+            a, b = self.corner(i), self.corner(j)
+            out.append((a, b) if (a[0], a[1]) <= (b[0], b[1]) else (b, a))
+        return sorted(out, key=lambda e: (e[0][0], e[0][1], e[1][0], e[1][1]))
+
+
 def figures(s):
     area = F(0)
     used = set()
@@ -532,7 +728,10 @@ WHY = {"missing": "çizimde yok", "no_height": "kotu eksik", "arc_edge": "yaylı
        "not_closed": "kapalı değil", "too_few": "köşesi az",
        "occupied": "o yerde zaten bir kayıt var; kotunu Kot değiştir ile verin",
        "no_point": "o yerde nokta ya da kırık hat köşesi yok", "no_corner": "bir ucu yüzeyin köşesi değil",
-       "crosses": "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor", "no_triangle": "o yerde yüzeyin üçgeni yok"}
+       "crosses": "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor", "no_triangle": "o yerde yüzeyin üçgeni yok",
+       "no_surface": "projede bu kimlikli yüzey yok",
+       "cycle": "yapıştırılan yüzey, doğrudan ya da başka bir yüzey üzerinden, bu yüzeyi yapıştırıyor",
+       "unbuildable": "yapıştırılan yüzey kaynaklarından kurulamıyor"}
 PROBLEM = {
     "too_few_points": "kotlu yer üçten az ya da hepsi bir doğru üstünde",
     "height_ambiguous": "bir yerde iki farklı kot var",
@@ -545,9 +744,9 @@ def rust_float(v):
     return str(int(v)) if float(v).is_integer() else repr(float(v))
 
 
-def made(d):
-    """(gathered, left, digest, surface or Unbuildable)"""
-    g, left = gather(d)
+def made(d, others=()):
+    """(gathered, left, digest, surface or Unbuildable); its pastes find their surfaces among `others`."""
+    g, left = gather(d, others)
     try:
         s = build(g)
     except Unbuildable as e:
@@ -555,17 +754,17 @@ def made(d):
     return g, left, digest(g), s
 
 
-def all_left(d):
+def all_left(d, others=()):
     """What the gathering left, then the edits the surface could not do (ADR 1560)."""
-    _, left, _, s = made(d)
+    _, left, _, s = made(d, others)
     if not isinstance(s, Unbuildable):
         left = left + [(f"edits[{k}]", "edits", why) for k, why in s["skipped"]]
     return left
 
 
-def report(d):
-    _, _, dig, s = made(d)
-    left = all_left(d)
+def report(d, others=()):
+    _, _, dig, s = made(d, others)
+    left = all_left(d, others)
     unbuildable = isinstance(s, Unbuildable)
     built = d.get("built")
     state = "unbuildable" if unbuildable else ("new" if built is None else "current" if built == dig else "stale")
@@ -583,8 +782,8 @@ def report(d):
     return out
 
 
-def warnings(d):
-    left = all_left(d)
+def warnings(d, others=()):
+    left = all_left(d, others)
     return [{"code": "terrain_source_left", "message": f"{i} ({ROLE[r]}) kullanılamadı: {WHY[w]}.", "path": r}
             for i, r, w in left]
 
@@ -595,9 +794,9 @@ def unbuildable_error(d):
     return failed("terrain_unbuildable", f"Kaynaklardan yüzey kurulamıyor: {PROBLEM[s.code]}{place}.")
 
 
-def accepted(d):
+def accepted(d, others=()):
     d = copy.deepcopy(d)
-    d["built"] = made(d)[2]
+    d["built"] = made(d, others)[2]
     return d
 
 
@@ -841,6 +1040,39 @@ def edit_cases():
     refused("Eski sürüme göre hazırlanmış", {"operation": "accept", "id": "t-3", "expectedRevision": "41"}, CONFLICT)
     refused("Geçersiz beklenen sürüm", {"operation": "remove", "id": "t-3", "expectedRevision": "-1"},
             failed("invalid_revision", "Beklenen sürüm “-1” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.", "expectedRevision"))
+    # Yüzey yapıştır (docs/adr/3920): the pad (its own surface, t-5) pasted into the ground; the drawing holds the pad.
+    pad = accepted({"id": "t-5", "name": "Dolgu", "breaklines": {"layers": ["dolgu"]}})
+    pstart = start + [pad]
+
+    def pasting(name, edits, note=None, list_=None):
+        lst = list_ or pstart
+        e = {k: v for k, v in base.items() if k != "built"}
+        e["edits"] = edits
+        e2 = {**e, "built": base["built"]}
+        after = [e2 if x["id"] == "t-2" else x for x in lst]
+        out = {"surfaces": after, "surface": report(e2, lst), "revision": "$current"}
+        cases.append({"name": name, **({"note": note} if note else {}), "setup": setup(lst, pad=True),
+                      "steps": [step("execute", {"operation": "set", "surface": e}, completed(out, warnings(e2, lst)),
+                                     {**WRITTEN, "road": road_of(after)}, W)]})
+    pasting("Yüzey yapıştır: dolgu yüzeyi zemine yapıştırılır", [{"op": "paste", "terrain": "t-5"}],
+            "dolgunun altındaki kayıtlar ve onu kesen kırık hat gider; dolgunun köşeleri ve kenarları gelir, üçgenleri "
+            "aynen kurulur")
+    pasting("Yüzey yapıştır: sonra verilen kot dolgunun köşesinde",
+            [{"op": "paste", "terrain": "t-5"}, {"op": "setHeight", "x": 15.0, "y": 11.0, "z": 103.25}])
+    pasting("Yüzey yapıştır: önce eklenen nokta dolgunun altında kalır",
+            [{"op": "addPoint", "x": 20.0, "y": 20.0, "z": 99.0}, {"op": "paste", "terrain": "t-5"}])
+    pasting("Yüzey yapıştır: olmayan yüzey söylenir", [{"op": "paste", "terrain": "t-9"}])
+    pasting("Yüzey yapıştır: kurulamayan yüzey söylenir", [{"op": "paste", "terrain": "t-4"}])
+    # Not accepted: the ground it pastes has two triangulations (the breaklines' ends are on one circle), so its digest
+    # is not one; the case does not make it.
+    back = {"id": "t-5", "name": "Dolgu", "breaklines": {"layers": ["dolgu"]}, "edits": [{"op": "paste", "terrain": "t-2"}]}
+    cstart = start + [back]
+    pasting("Yüzey yapıştır: geri yapıştıran yüzey döngü olur", [{"op": "paste", "terrain": "t-5"}],
+            "dolgu zemini yapıştırıyor; zemin dolguyu yapıştıramaz, kendi kaynaklarıyla kurulur", cstart)
+    refused("set'te kendini yapıştıran yüzey", {"operation": "set", "surface": {**renamed, "edits": [{"op": "paste", "terrain": "t-2"}]}},
+            failed("invalid_terrain", "Yüzey kurallarına uymuyor: yüzey kendini yapıştıramaz.", "surface.edits[0]"))
+    refused("set'te kimliksiz yapıştırma", {"operation": "set", "surface": {**renamed, "edits": [{"op": "paste", "terrain": " "}]}},
+            failed("invalid_terrain", "Yüzey kurallarına uymuyor: yapıştırılacak yüzeyin kimliği boş.", "surface.edits[0]"))
     return file("road.terrains.edit", "Arazi yüzeyini düzenle (plan/road.md Y2.3, ADR 0900 §11)",
                 "scripts/fixtures/road_terrain_command_cases.py yazar; KentOS kodu yok. `expect.road` projenin yol ayarlarıdır.",
                 setup(start), cases)
@@ -917,6 +1149,28 @@ def query_cases():
             failed("no_terrain", "Kot ve kesit bir yüzeyde sorulur: yüzeyin kimliğini ya da adını (surface) verin.", "surface"))
     refused("Tek yerli hat", {"surface": "t-2", "along": [[1.0, 1.0]]},
             failed("invalid_places", "Kesit hattı en az iki yerden oluşur.", "along"))
+    # Yüzey yapıştır (docs/adr/3920): the ground with the pad pasted; on the pad its own planes, round it the ground's.
+    pad = accepted({"id": "t-8", "name": "Dolgu", "breaklines": {"layers": ["dolgu"]}})
+    son = {"id": "t-9", "name": "Son zemin", "points": {"layers": ["zemin"]}, "breaklines": {"layers": ["kirik"]},
+           "boundary": BOUND, "edits": [{"op": "paste", "terrain": "t-8"}]}
+    pstart = start + [pad, son]
+    son = accepted(son, pstart)
+    pstart = start + [pad, son]
+    g_son = gather(son, pstart)[0]
+    s_son = build(g_son)
+    pplaces = [[20.0, 15.0], [12.5, 8.0], [35.0, 25.0], [21.0, 24.0], [5.0, 15.0]]
+    # The ground's boundary corners (2, 2), (38, 2) and its breakline's ends (10, 5), (30, 5) are on one circle: the
+    # strip between has two triangulations; no place asked is in it.
+    quads = ambiguous(s_son, g_son)
+    assert all(decided(quads, q) for q in pplaces), quads
+    cases.append({"name": "Yapıştırılmış yüzeyde kot: dolgunun üstünde, şevinde, dışında",
+                  "note": "dolgunun üstü 103 m; şevi dolgunun düzlemleri; dışarıda zeminin üçgenleri, dolguyu kesen "
+                          "kırık hat yok",
+                  "setup": setup(pstart, pad=True),
+                  "steps": [step("execute", {"surface": "t-9", "at": pplaces},
+                                 completed({"surfaces": [report(son, pstart)],
+                                            "heights": [height(s_son, q) for q in pplaces], "interpolation": "linear"}),
+                                 {**UNCHANGED, "road": road_of(pstart)}, W)]})
     return file("road.terrains.query", "Arazi yüzeyini sorgula (plan/road.md Y2.3, ADR 0900 §11)",
                 "scripts/fixtures/road_terrain_command_cases.py yazar; kotlar ve kesitler kesirlerle Triangle'ın üçgenleri "
                 "üstünde; KentOS kodu yok. Sorgu hiçbir şey yazmaz.",

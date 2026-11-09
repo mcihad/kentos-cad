@@ -201,7 +201,8 @@ impl Tree<'_> {
         let doc = self.doc;
         let uids: Vec<(String, &kentos_commands::Entity)> = doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
         for def in crate::road_terrains::surfaces(doc) {
-            let g = sources::gather(def, doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity }));
+            let all = crate::road_terrains::surfaces(doc);
+            let g = sources::gather_among(def, all, doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity }));
             let (mut state, mut why) = match g.state(def) {
                 SurfaceState::Current => (S::Current, Vec::new()),
                 SurfaceState::Stale => (S::Stale, vec!["Yüzeyin kaynakları kabul edildiğinden beri değişti.".to_owned()]),

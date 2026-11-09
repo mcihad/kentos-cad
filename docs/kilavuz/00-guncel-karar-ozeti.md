@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Yüzey yapıştırma (9 Kasım 2026; MAP-14, [ADR 3920](../../docs/adr/3920-terrain-surface-paste.md)).**
+  Tarifin düzenlemelerine Yüzey yapıştır (`paste`): başka bir yüzeyin üçgenleri aynen gelir, altında kalan kayıtlar
+  gider; döngü yalnız tariflerden söylenir; `.kcad` şema 214. Harita + Yol.
 - **Nokta bulutunda son dönüşümü geri alma (9 Kasım 2026; MAP-13, [ADR 3900](../../docs/adr/3900-point-cloud-undo-last-transform.md)).**
   Dönüşüm uygula › Son dönüşümü geri al: geçmişin son matrisinin tersi uygulanır, adım geçmişten düşer. Harita + CBS.
 - **Dış parça numarasının retinde parselin adı ve nedeni (9 Kasım 2026; MAP-11, [ADR 3880](../../docs/adr/3880-outside-part-number-refusal-names-the-parcel.md)).**

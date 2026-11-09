@@ -11925,6 +11925,7 @@ class SurfaceEdit(_Union):
     - :class:`SetHeightSurfaceEdit` (``op: setHeight``)
     - :class:`AddEdgeSurfaceEdit` (``op: addEdge``)
     - :class:`RemoveTriangleSurfaceEdit` (``op: removeTriangle``)
+    - :class:`PasteSurfaceEdit` (``op: paste``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "op"
@@ -127463,6 +127464,27 @@ class RemoveTriangleSurfaceEdit(SurfaceEdit):
 
 
 @dataclass(kw_only=True, slots=True)
+class PasteSurfaceEdit(SurfaceEdit):
+    """Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil
+    3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go
+    and its corners and edges come in; the rest is triangulated anew round it.
+    """
+    TAG_VALUE: ClassVar[str] = "paste"
+    terrain: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "paste"}
+        out["terrain"] = self.terrain
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PasteSurfaceEdit:
+        return cls(
+            terrain=data["terrain"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TraverseSurveyWork(SurveyWork):
     """Poligon hesabı (docs/adr/0070): from `start` oriented on `back`, the angles (at the start, at every new point
     and, oriented at the end, at the end) and the legs' lengths; a connected traverse ends on `end` (oriented on
@@ -130546,7 +130568,7 @@ _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSub
 _SUPERELEVATION_METHOD: dict[str, type[SuperelevationMethod]] = {"curves": CurvesSuperelevationMethod, "stations": StationsSuperelevationMethod}
 
 
-_SURFACE_EDIT: dict[str, type[SurfaceEdit]] = {"addPoint": AddPointSurfaceEdit, "setHeight": SetHeightSurfaceEdit, "addEdge": AddEdgeSurfaceEdit, "removeTriangle": RemoveTriangleSurfaceEdit}
+_SURFACE_EDIT: dict[str, type[SurfaceEdit]] = {"addPoint": AddPointSurfaceEdit, "setHeight": SetHeightSurfaceEdit, "addEdge": AddEdgeSurfaceEdit, "removeTriangle": RemoveTriangleSurfaceEdit, "paste": PasteSurfaceEdit}
 
 
 _SURVEY_WORK: dict[str, type[SurveyWork]] = {"traverse": TraverseSurveyWork, "polar": PolarSurveyWork, "forward": ForwardSurveyWork, "resection": ResectionSurveyWork}
@@ -132999,6 +133021,7 @@ __all__ = [
     "PasteConflictsName",
     "PasteRenamed",
     "PasteReport",
+    "PasteSurfaceEdit",
     "PatLineProblem",
     "PathArrayLayout",
     "PathEntity",

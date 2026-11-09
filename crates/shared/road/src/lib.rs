@@ -49,6 +49,7 @@ pub mod haul_fleet;
 pub mod haul_network;
 pub mod haul_plan;
 pub mod junction;
+mod paste;
 pub mod platform_water;
 pub mod profile;
 pub mod protected;

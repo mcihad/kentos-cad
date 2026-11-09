@@ -195499,6 +195499,24 @@
             "y"
           ],
           "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil\n3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go\nand its corners and edges come in; the rest is triangulated anew round it.",
+          "properties": {
+            "op": {
+              "const": "paste",
+              "type": "string"
+            },
+            "terrain": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "op",
+            "terrain"
+          ],
+          "type": "object"
         }
       ]
     },

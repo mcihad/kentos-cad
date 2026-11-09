@@ -437,6 +437,11 @@ pub enum SurfaceEdit {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         y: f64,
     },
+    /// Yüzey yapıştır (docs/adr/3920; `.kcad` schema 214): another surface of the project, by its id, pasted in as Civil
+    /// 3D's Paste Surface and OpenRoads' Merge do: where its kept triangles lie, this surface's records made so far go
+    /// and its corners and edges come in; the rest is triangulated anew round it.
+    #[serde(rename_all = "camelCase")]
+    Paste { terrain: String },
 }
 
 /// The most edits one surface keeps.
@@ -455,6 +460,7 @@ impl SurfaceEdit {
             }
             Self::AddEdge { ax, ay, bx, by } if ax == bx && ay == by => Some("kenarın iki ucu aynı yerde"),
             Self::RemoveTriangle { x, y } if !finite(&[*x, *y]) => Some("silinen üçgenin yeri sonlu iki sayı olmalı"),
+            Self::Paste { terrain } if terrain.trim().is_empty() => Some("yapıştırılacak yüzeyin kimliği boş"),
             _ => None,
         }
     }
@@ -1986,6 +1992,10 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         }
         if let Some((k, words)) = s.edits.iter().enumerate().find_map(|(k, e)| e.problem().map(|w| (k, w))) {
             return fail(at(&format!("edits[{k}]")), words);
+        }
+        // Docs/adr/3920: a surface does not paste itself (another surface pasting it back is said when it is made).
+        if let Some(k) = s.edits.iter().position(|e| matches!(e, SurfaceEdit::Paste { terrain } if *terrain == s.id)) {
+            return fail(at(&format!("edits[{k}]")), "yüzey kendini yapıştıramaz");
         }
     }
     alignments_problem(&road.alignments)

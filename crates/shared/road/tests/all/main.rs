@@ -34,6 +34,7 @@ mod volume_uncertainty;
 mod volume_progress;
 mod surfaces;
 mod sources;
+mod paste;
 mod sampling;
 mod superelevation;
 mod superelevation_physics;

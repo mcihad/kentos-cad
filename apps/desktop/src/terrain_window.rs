@@ -93,12 +93,19 @@ pub struct Window {
     pub(crate) edits_pane: bool,
     pub(crate) edit_z: String,
     pub(crate) edit_report: Option<TerrainReport>,
+    /// Yüzey yapıştır (docs/adr/3920): the saved surface chosen to paste into the chosen one.
+    pub(crate) paste_from: Option<String>,
 }
 
 impl Window {
     /// The chosen surface's definition as the window has it.
     pub(crate) fn chosen_def(&self) -> Option<&TerrainSurfaceDef> {
         self.chosen.and_then(|i| self.rows.get(i)).map(|r| &r.def)
+    }
+
+    /// The definitions as the project has them (the surfaces a paste may name: docs/adr/3920).
+    pub(crate) fn kept(&self) -> &[TerrainSurfaceDef] {
+        &self.kept
     }
 
     /// An edit at the end of the chosen surface's edits.
@@ -134,6 +141,9 @@ pub enum Event {
     EditZ(String),
     EditUndo,
     EditClear,
+    /// Yüzey yapıştır (docs/adr/3920): the saved surface to paste chosen, then pasted (an edit at the end).
+    PasteFrom(String),
+    Paste,
     /// LandXML al…: the file to take, asked; then the file chosen (none: given up).
     LandXml,
     LandXmlChosen(Option<std::path::PathBuf>),
@@ -222,6 +232,7 @@ impl App {
             edits_pane: false,
             edit_z: String::new(),
             edit_report: None,
+            paste_from: None,
         });
         self.dialog = Some(Dialog::Terrains);
         self.refresh_edit_report();
@@ -353,6 +364,14 @@ impl App {
                     r.def.edits.clear();
                 }
             }
+            Event::PasteFrom(id) => w.paste_from = Some(id),
+            Event::Paste => match (chosen, w.paste_from.clone()) {
+                (Some(r), Some(terrain)) if terrain != r.def.id => {
+                    r.def.edits.push(kentos_commands::SurfaceEdit::Paste { terrain });
+                }
+                (Some(_), Some(_)) => warning = Some("Yüzey kendini yapıştıramaz; başka bir yüzey seçin."),
+                _ => warning = Some("Yapıştırılacak yüzeyi seçin."),
+            },
             Event::Interval(text) => w.interval = text,
             Event::Major(text) => w.major = text,
             Event::ContourLayer(id) => w.layer = Some(id),
@@ -754,7 +773,8 @@ impl App {
                 .push(
                     label::caption(
                         "Düzenlemeler yüzeyin tarifindedir: Kaydet onları yazar, yüzey her kurulduğunda sırayla \
-                         uygulanır. Bugünkü kaynaklarla yapılamayan düzenleme silinmez, söylenir.",
+                         uygulanır. Bugünkü kaynaklarla yapılamayan düzenleme silinmez, söylenir. Yapıştırılan \
+                         yüzeyin üçgenleri olduğu gibi gelir, altında kalan kayıtlar çıkar.",
                     )
                     .style(muted),
                 )
@@ -807,6 +827,11 @@ impl App {
             Control::Press("Düzenlemeler") => Some(msg(Event::Pane(true))),
             Control::Press(crate::terrain_edits::UNDO_EDIT) => Some(msg(Event::EditUndo)),
             Control::Press(crate::terrain_edits::CLEAR_EDITS) => Some(msg(Event::EditClear)),
+            Control::Press(crate::terrain_edits::PASTE) => Some(msg(Event::Paste)),
+            Control::Pick(crate::terrain_edits::PASTE_FROM, name) => match w.kept.iter().find(|k| k.name == name) {
+                Some(k) => Some(msg(Event::PasteFrom(k.id.clone()))),
+                None => return Err(format!("“{TITLE}” penceresinde “{name}” adlı kayıtlı yüzey yok")),
+            },
             Control::Press(words) => match w.rows.iter().position(|r| r.def.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

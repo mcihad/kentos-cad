@@ -98,5 +98,5 @@ yüzeyinkinden ayrıldığı yerin bildirilmesi.
 - m. 63(2)'nin yerleşik alanda yaklaşık 2 cm'de bir kot noktası: hangi noktaların seçileceği ölçmecinindir. KentOS'un
   önereceği bir yerleştirme kuralı kaynak ister.
 - Farkın bir eşiği aşınca uyarı olması: eşik yönetmelikte yok, kaynak beklenir.
-- Yüzey birleştirme; bölgesel yeniden kurma (MAP-14'ün öbür maddeleri).
+- Bölgesel yeniden kurma (MAP-14'ün öbür maddesi; yüzey birleştirme [ADR 3920](3920-terrain-surface-paste.md)'de).
 - Web (TODOS §0.2).

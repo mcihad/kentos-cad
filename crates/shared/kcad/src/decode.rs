@@ -1587,6 +1587,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.surface_edits && v.surfaces.iter().any(|s| !s.edits.is_empty()) {
                     return Err(r.fail_at(Code::UnknownField, at, "yüzey düzenlemeleri şema 196 ister"));
                 }
+                // Schema 214 (docs/adr/3920): a surface's edit that pastes another surface.
+                if !has.surface_pastes && crate::encode::road_has_pastes(&v) {
+                    return Err(r.fail_at(Code::UnknownField, at, "yüzey yapıştırma şema 214 ister"));
+                }
                 if !has.road_pavement && road_has_pavement(&v) {
                     return Err(r.fail_at(Code::UnknownField, at, "tip kesitin üstyapısı ve kübajın kuralı şema 166 ister"));
                 }

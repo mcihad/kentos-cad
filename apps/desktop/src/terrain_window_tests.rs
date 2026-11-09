@@ -369,3 +369,165 @@ fn screens_edits() {
         println!("{}", file.display());
     }
 }
+
+/// The shared paste case's drawing (`road.terrains.query.json`, docs/adr/3920): the ground's surfaces and the pad
+/// (`Dolgu`, t-8) on `dolgu`, without the surface that pastes it.
+fn pad_app(work: &str) -> App {
+    pad_app_keeping(work, &[])
+}
+
+/// [`pad_app`] with only the surfaces named (none: all but the one that pastes).
+fn pad_app_keeping(work: &str, keep: &[&str]) -> App {
+    let (mut app, _) = App::boot(None);
+    let cases: serde_json::Value =
+        serde_json::from_str(include_str!("../../../fixtures/commands/v1/road.terrains.query.json")).expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Yapıştırılmış yüzeyde kot")))
+        .expect("the paste case");
+    let mut setup = case["setup"].clone();
+    setup["settings"]["cadWork"] = serde_json::json!(work);
+    setup["settings"]["road"]["surfaces"]
+        .as_array_mut()
+        .expect("surfaces")
+        .retain(|s| s["id"] != "t-9" && (keep.is_empty() || keep.iter().any(|k| s["id"] == *k)));
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// The window's row of the surface named so.
+fn row_of(app: &App, name: &str) -> usize {
+    app.terrain_window.as_ref().expect("the window").kept().iter().position(|k| k.name == name).expect("a surface")
+}
+
+#[test]
+fn a_saved_surface_is_pasted_into_another_and_kaydet_writes_the_paste() {
+    use crate::terrain_edits::{PASTE, PASTE_FROM};
+    use crate::traces::Control;
+    use kentos_commands::SurfaceEdit;
+    let mut app = pad_app("map");
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    let open = row_of(&app, "Açık zemin");
+    send(&mut app, W::Choose(open));
+    send(&mut app, W::Pane(true));
+    // Nothing chosen yet: Yüzey yapıştır says so.
+    send(&mut app, W::Paste);
+    assert!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).is_some_and(|d| d.edits.is_empty()));
+    // Dolgu by its name, as a trace does.
+    let pick = app.terrain_control(Control::Pick(PASTE_FROM, "Dolgu")).expect("the box").expect("a message");
+    let _ = app.update(pick);
+    let press = app.terrain_control(Control::Press(PASTE)).expect("the button").expect("a message");
+    let _ = app.update(press);
+    let w = app.terrain_window.as_ref().expect("the window");
+    assert_eq!(w.chosen_def().expect("a surface").edits, vec![SurfaceEdit::Paste { terrain: "t-8".into() }]);
+    let report = w.edit_report.as_ref().expect("made with its edits");
+    assert!(report.left.iter().all(|l| l.role != "edits"), "{:?}", report.left);
+    send(&mut app, W::Save);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let made = kentos_native_application::road_terrains::made_surfaces(doc);
+    let surface = |id: &str| made.iter().find(|(d, _, _)| d.id == id).and_then(|(_, _, s)| s.clone()).expect("made");
+    let (pad, son) = (surface("t-8"), surface("t-3"));
+    // Every triangle of the pad is the ground's now, by its corners' places.
+    let corners = |s: &kentos_road::surface::Surface, t: [u32; 3]| {
+        let mut c = t.map(|i| (s.vertices[i as usize][0].to_bits(), s.vertices[i as usize][1].to_bits()));
+        c.sort_unstable();
+        c
+    };
+    let all: Vec<_> = son.triangles.iter().map(|t| corners(&son, *t)).collect();
+    assert!(pad.triangles.iter().all(|t| all.contains(&corners(&pad, *t))));
+    let top = son.height(20.0, 15.0).z.expect("on the pad");
+    assert!((top - 103.0).abs() < 1e-9, "{top}");
+}
+
+#[test]
+fn a_paste_back_is_a_cycle_and_a_surface_does_not_paste_itself() {
+    let mut app = pad_app("map");
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    let (open, pad) = (row_of(&app, "Açık zemin"), row_of(&app, "Dolgu"));
+    send(&mut app, W::Choose(open));
+    send(&mut app, W::PasteFrom("t-8".into()));
+    send(&mut app, W::Paste);
+    send(&mut app, W::Save);
+    // Dolgu pasting Açık zemin back: said, not done; Dolgu stays its own.
+    let _ = app.update(Message::Run("terrain.surfaces"));
+    send(&mut app, W::Choose(pad));
+    send(&mut app, W::PasteFrom("t-3".into()));
+    send(&mut app, W::Paste);
+    let w = app.terrain_window.as_ref().expect("the window");
+    let report = w.edit_report.as_ref().expect("made with its edits");
+    let left: Vec<(&str, &str)> = report.left.iter().map(|l| (l.id.as_str(), l.why.as_str())).collect();
+    assert_eq!(left, [("edits[0]", "cycle")]);
+    assert_eq!(report.figures.as_ref().map(|f| f.triangles), Some(10), "the pad's own triangles");
+    // Itself: no edit, a warning.
+    send(&mut app, W::EditClear);
+    send(&mut app, W::PasteFrom("t-8".into()));
+    send(&mut app, W::Paste);
+    assert!(app.terrain_window.as_ref().and_then(|w| w.chosen_def()).is_some_and(|d| d.edits.is_empty()));
+}
+
+/// Yüzey yapıştır's row, the table with the paste and a refused paste back, and the ground drawn with the pad in it,
+/// wide light and narrow dark; `.run/gui-evidence/yuzey-yapistir-3920/`:
+///
+/// ```text
+/// cargo test -p kentos-desktop --lib terrain_window_tests::screens_paste -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "writes pictures"]
+fn screens_paste() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yuzey-yapistir-3920");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = pad_app("map");
+        app.program = Some(kentos_launch::Module::Map);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        let open = row_of(&app, "Açık zemin");
+        send(&mut app, W::Choose(open));
+        send(&mut app, W::Pane(true));
+        send(&mut app, W::PasteFrom("t-8".into()));
+        send(&mut app, W::Paste);
+        // A paste of a surface that cannot be made (Az nokta: two points) is said in the table.
+        send(&mut app, W::PasteFrom("t-5".into()));
+        send(&mut app, W::Paste);
+        send(&mut app, W::PasteFrom("t-8".into()));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-yapistir-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        // The drawing with Açık zemin and Dolgu alone: the pad's edges (red: they are the pasted surface's
+        // breaklines now) inside the ground's triangles.
+        let mut app = pad_app_keeping("map", &["t-3", "t-8"]);
+        app.program = Some(kentos_launch::Module::Map);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        // A renderer of its own: the drawing area's size is told to a new app on its first layout.
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::RibbonTab("terrain"));
+        let _ = app.update(Message::Run("terrain.surfaces"));
+        send(&mut app, W::Choose(0));
+        send(&mut app, W::PasteFrom("t-8".into()));
+        send(&mut app, W::Paste);
+        send(&mut app, W::Save);
+        app.selection.clear();
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-yuzey-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

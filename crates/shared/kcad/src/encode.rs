@@ -2227,6 +2227,11 @@ fn place_count(p: &kentos_contracts::PatternPlace) -> usize {
 
 /// Whether the settings give an annotation height (docs/adr/0205 §1): a
 /// field with none is not written.
+/// Whether a surface of the road settings pastes another (docs/adr/3920).
+pub(crate) fn road_has_pastes(r: &kentos_contracts::RoadSettings) -> bool {
+    r.surfaces.iter().any(|s| s.edits.iter().any(|e| matches!(e, kentos_contracts::SurfaceEdit::Paste { .. })))
+}
+
 fn has_heights(s: &ProjectSettings) -> bool {
     s.annotation
         .as_ref()
@@ -2270,6 +2275,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 214 (docs/adr/3920): a terrain surface's edit that pastes another surface.
+    if doc.settings.road.as_ref().is_some_and(road_has_pastes) {
+        return crate::SCHEMA_WITH_SURFACE_PASTES;
+    }
     // Schema 213 (docs/adr/3680): a map work item's approval with its objects' values.
     if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_approved_values) {
         return crate::SCHEMA_WITH_APPROVED_VALUES;

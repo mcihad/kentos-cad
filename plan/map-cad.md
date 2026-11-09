@@ -44,7 +44,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540 | kesit yöntemi; stokta üçgenlenmiş taban; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
@@ -1578,6 +1578,17 @@ varsa o (yüzeyinki `surface`'ta), yoksa yüzeyden; aynı yer bir kez; kotsuz ve
 yazısı yazılır; not en büyük farkı ve yerini söyler; `chosen` türü şevlerden sonra; iki ret; 49 ortak durum (44'ten),
 Python, MCP; masaüstünde Seçilen noktalar (ğ) satırı. Açık: yüzey birleştirme, bölgesel yeniden kurma, fark eşiği ve
 m. 63(2) yerleşimi (kaynak beklenir).
+
+**9 Kasım 2026, yedinci tur — yüzey yapıştırma ([ADR 3920](../docs/adr/3920-terrain-surface-paste.md)).** Kapsam:
+**Harita + Yol**. Dayanak: Civil 3D 2023 “To Paste Surfaces” (yapıştırılan, kapladığı kısmın yerine geçer; Edits'e Paste
+Surface öğesi olarak eklenir), OpenRoads “Create Complex Terrain Model” (Merge ortak alanda birincil modelin verisini
+atar, ortak kenarların çevresini yeniden üçgenler; sıra kritik); ikisi 9 Kasım 2026'da okundu. Kanıtlanan: tarifin sıralı
+düzenlemelerine `paste` (projenin başka bir yüzeyi): kaplanan kayıtlar ve dış çizgiye değen kırık hat parçaları gider,
+yapıştırılanın köşeleri ve kenarları gelir, üçgenleri aynen kurulur; sonraki düzenlemeler köşelerine de uygulanır;
+olmayan, döngüye giren (yalnız tariflerden karar) ve kurulamayan yüzey söylenir, kendini yapıştırma ret; yapıştırılan
+değişince yapıştıran eskir; `.kcad` şema 214; 7 + 1 bağımsız durum (Triangle, kesirler; dolgunun üçgenlemesinin tekliği
+doğrulanır), Python `road.paste`, MCP; masaüstünde Düzenlemeler'e Yapıştırılacak yüzey ve Yüzey yapıştır. Açık: bölgesel
+yeniden kurma, fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

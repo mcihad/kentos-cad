@@ -2486,6 +2486,7 @@ __all__ = [
     "PasteConflictsName",
     "PasteRenamed",
     "PasteReport",
+    "PasteSurfaceEdit",
     "PatLineProblem",
     "PathArrayLayout",
     "PathEntity",

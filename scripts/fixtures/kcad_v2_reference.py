@@ -2674,6 +2674,9 @@ def document(d):
     if any("approvedValues" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
         # A map work item's approval with its objects' values (docs/adr/3680).
         schema = max(schema, 213)
+    if any(e.get("op") == "paste" for s in d["settings"].get("road", {}).get("surfaces", []) for e in s.get("edits", [])):
+        # A terrain surface's edit that pastes another surface (docs/adr/3920).
+        schema = max(schema, 214)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3530,7 +3533,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-214.kcad"] = container(root(cmap(parts), version=uint(214)))
+    files["schema-version-215.kcad"] = container(root(cmap(parts), version=uint(215)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5907,6 +5910,22 @@ def build():
     pointless = copy.deepcopy(edited)
     pointless["settings"]["road"]["surfaces"][0]["edits"][2].update({"bx": 0.0, "by": 0.0})
     out["broken/surface-edits-edge-of-no-length.kcad"] = container(document(pointless))
+    # Schema 214 (docs/adr/3920): a second surface pastes the first (then a point is added on it); schema 213 refuses
+    # the paste, a surface pasting itself and a paste naming no surface are refused.
+    pasted = copy.deepcopy(edited)
+    pasted["settings"]["road"]["surfaces"].append(
+        {"id": "t-son", "name": "Son zemin", "points": {"layers": ["zemin"]},
+         "edits": [{"op": "paste", "terrain": "t-zemin"}, {"op": "addPoint", "x": 25.0, "y": 5.0, "z": 100.75}]})
+    out["surface-pastes.json"] = json_text(pasted).encode("utf-8")
+    pasted_data = document(pasted)
+    assert pasted_data.count(b"\x67version\x18\xd6") == 1, "a surface's paste is schema 214"
+    out["surface-pastes.kcad"] = container(pasted_data)
+    out["broken/surface-pastes-in-schema-213.kcad"] = container(
+        pasted_data.replace(b"\x67version\x18\xd6", b"\x67version\x18\xd5"))
+    for name, terrain in (("itself", "t-son"), ("no-id", " ")):
+        wrong = copy.deepcopy(pasted)
+        wrong["settings"]["road"]["surfaces"][1]["edits"][0]["terrain"] = terrain
+        out[f"broken/surface-pastes-{name}.kcad"] = container(document(wrong))
     surveyed = load("map-survey.json")
     surveyed_data = document(surveyed)
     assert surveyed_data.count(b"\x67version\x18\xc2") == 1, "a map's GNSS archive is schema 194"

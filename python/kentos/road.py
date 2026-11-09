@@ -11,7 +11,9 @@ time they are asked for, so a surface never disagrees with its sources. The comm
 - :func:`accept`: a surface made again from its changed sources, accepted;
 - :func:`heights`: the heights at places (none outside and in a void, never extrapolated);
 - :func:`section`: the ground line along a line: where it crosses the triangles' edges, with stations;
-- :func:`contours`: the contour lines every ``interval`` metres written on a layer (Eş yükselti eğrileri).
+- :func:`contours`: the contour lines every ``interval`` metres written on a layer (Eş yükselti eğrileri);
+- :func:`paste`: another surface pasted into a surface (Yüzey yapıştır, docs/adr/3920): its triangles come in as they
+  are, the surface's records under them go, the rest is triangulated round them.
 
 Points are ``(east, north)`` in metres in the project's plane. A refusal raises the SDK's command errors in the apps'
 words (``not_a_road_project``, ``terrain_unbuildable`` …).
@@ -19,12 +21,15 @@ words (``not_a_road_project``, ``terrain_unbuildable`` …).
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Iterable, Sequence
 from typing import Any
 
 from .cad.document import Document
 from .cad.road import terrains as _terrains
+from .cad._runtime import UNSET
 from .cad.types import (
+    PasteSurfaceEdit,
     SurfaceSources,
     TerrainHeight,
     TerrainReport,
@@ -103,4 +108,18 @@ def contours(
     return _terrains.contours(doc, **args)
 
 
-__all__ = ["accept", "contours", "create", "heights", "remove", "section", "surfaces"]
+def paste(doc: Document, into: str, surface: str) -> TerrainsWritten:
+    """Pastes the surface ``surface`` into the surface ``into`` (their ids), at the end of its edits (Yüzey yapıştır,
+    docs/adr/3920): where ``surface``'s triangles lie, ``into``'s records made so far go and those triangles come in as
+    they are. Written with the definition; ``into`` is out of date until accepted. A paste that comes back to ``into``,
+    names no surface or one that is not made is written and said (the report's ``left``: ``cycle``, ``no_surface``,
+    ``unbuildable``); one of ``into`` itself is refused (``invalid_terrain``)."""
+    road = doc.settings.road
+    defined = next((d for d in (road.surfaces if road else []) if d.id == into), None)
+    if defined is None:
+        return _terrains.edit(doc, operation="accept", id=into)  # refused in the apps' words: unknown_terrain
+    edits = [*(defined.edits or []), PasteSurfaceEdit(terrain=surface)]
+    return _terrains.edit(doc, operation="set", surface=dataclasses.replace(defined, edits=edits, built=UNSET))
+
+
+__all__ = ["accept", "contours", "create", "heights", "paste", "remove", "section", "surfaces"]

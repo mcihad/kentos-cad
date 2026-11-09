@@ -3,6 +3,8 @@
 //! Kot, or the surface's there); Kot değiştir gives the corner nearest the click the window's Kot; Kenar çevir puts in
 //! the other diagonal of the two triangles beside the edge nearest the click (their quadrilateral convex, the edge no
 //! breakline or ring); Üçgen sil takes out the triangle clicked (its centroid kept, so a later rebuild finds it again).
+//! Yüzey yapıştır (docs/adr/3920) pastes another saved surface, chosen by its name, as Civil 3D's Paste Surface: its
+//! triangles come in as they are, this surface's records under it go.
 //! The edits are the definition's: Kaydet writes them with it (`road.terrains.edit` set), the surface made again from
 //! its sources then says the ones that no longer fit.
 
@@ -69,8 +71,8 @@ impl fmt::Display for EditTool {
 }
 
 /// An edit's words for the table: what, where (to the centimetre, to tell it; the definition keeps the place
-/// exactly), the height.
-fn edit_row(e: &SurfaceEdit) -> (String, String, String) {
+/// exactly) or the surface pasted (its name), the height.
+fn edit_row(e: &SurfaceEdit, name_of: impl Fn(&str) -> String) -> (String, String, String) {
     let m = |v: f64| format!("{v:.2}");
     match *e {
         SurfaceEdit::AddPoint { x, y, z } => ("Nokta ekle".into(), format!("{}, {}", m(x), m(y)), format!("{z:.3}")),
@@ -79,6 +81,7 @@ fn edit_row(e: &SurfaceEdit) -> (String, String, String) {
             ("Kenar".into(), format!("{}, {} – {}, {}", m(ax), m(ay), m(bx), m(by)), String::new())
         }
         SurfaceEdit::RemoveTriangle { x, y } => ("Üçgen sil".into(), format!("{}, {}", m(x), m(y)), String::new()),
+        SurfaceEdit::Paste { ref terrain } => ("Yapıştır".into(), format!("“{}” yüzeyi", name_of(terrain)), String::new()),
     }
 }
 
@@ -247,6 +250,23 @@ impl App {
         };
         let tools = row(EditTool::ALL.map(tool)).spacing(6).wrap();
         let height = kentos_ui::widget::text_field("yüzeyin kotu", z).on_input(|t| Message::Terrains(Event::EditZ(t)));
+        // Yüzey yapıştır (docs/adr/3920): a saved surface other than this one, by its name.
+        let kept = self.terrain_window.as_ref().map_or(&[][..], |w| w.kept());
+        let others: Vec<&TerrainSurfaceDef> = kept.iter().filter(|k| k.id != def.id).collect();
+        let ids: Vec<String> = others.iter().map(|k| k.id.clone()).collect();
+        let from = self.terrain_window.as_ref().and_then(|w| w.paste_from.as_ref());
+        let chosen = from.and_then(|id| ids.iter().position(|i| i == id));
+        let select = kentos_ui::widget::select::Select::new(
+            others.iter().map(|k| kentos_ui::widget::select::Choice::new(k.name.clone())),
+            chosen,
+            move |i| Message::Terrains(Event::PasteFrom(ids[i].clone())),
+        )
+        .placeholder(if others.is_empty() { "kayıtlı başka yüzey yok" } else { "yüzey seçin" });
+        let paste = button(row![icon(from_web(Some("surfacePaste"))).size(16.0), label::body(PASTE)].spacing(6).align_y(Center))
+            .on_press_maybe(chosen.map(|_| Message::Terrains(Event::Paste)))
+            .padding(kentos_ui::theme::metrics::action())
+            .style(style::button::secondary);
+        let name_of = |id: &str| kept.iter().find(|k| k.id == id).map_or_else(|| id.to_owned(), |k| k.name.clone());
         let why_of = |k: usize| {
             report.and_then(|r| {
                 r.left
@@ -260,7 +280,7 @@ impl App {
             .iter()
             .enumerate()
             .map(|(k, e)| {
-                let (what, at, h) = edit_row(e);
+                let (what, at, h) = edit_row(e, name_of);
                 let state = match (report, why_of(k)) {
                     (None, _) => "kaydedilince",
                     (Some(_), Some(_)) => "yapılamadı",
@@ -271,7 +291,8 @@ impl App {
             })
             .collect();
         let table = sheet(
-            vec![num("Sıra", 36.0), col("İşlem", 92.0), col("Yer (Y, X)", 176.0), num("Kot (m)", 66.0), col("Durum", 96.0)],
+            // As wide as the pane with each cell's pads (no sideways bar): the widths are the words'.
+            vec![num("Sıra", 36.0), col("İşlem", 86.0), col("Yer (Y, X)", 150.0), num("Kot (m)", 62.0), col("Durum", 80.0)],
             rows,
             "Düzenleme yok. Bir araç seçip çizimde tıklayın.",
             160.0,
@@ -280,6 +301,9 @@ impl App {
             (0..def.edits.len()).filter_map(|k| why_of(k).map(|why| format!("{}. düzenleme yapılamadı: {why}.", k + 1))).collect();
         let mut col = column![
             row![iced::widget::container(words::field("Kot (m)", height, None)).width(110), tools]
+                .spacing(12)
+                .align_y(iced::alignment::Vertical::Bottom),
+            row![iced::widget::container(words::field(PASTE_FROM, select, None)).width(240), paste]
                 .spacing(12)
                 .align_y(iced::alignment::Vertical::Bottom),
             table,
@@ -300,6 +324,9 @@ impl App {
 /// Sonuncuyu kaldır and Hepsini kaldır: the edits taken back from the definition (Kaydet writes it).
 pub const UNDO_EDIT: &str = "Sonuncuyu kaldır";
 pub const CLEAR_EDITS: &str = "Düzenlemeleri temizle";
+/// Yüzey yapıştır (docs/adr/3920): the saved surface's box and the button that pastes it.
+pub const PASTE_FROM: &str = "Yapıştırılacak yüzey";
+pub const PASTE: &str = "Yüzey yapıştır";
 
 #[cfg(test)]
 mod tests {

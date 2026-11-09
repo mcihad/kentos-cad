@@ -103,6 +103,7 @@ Tarih: 2026-11-07. plan/map-cad.md MAP-14, ikinci dilim. Alt madde: “Nokta ekl
 
 ## Sonra
 
-- Sınır ve kırık hattın pencereden düzenlenmesi (bugün kaynak nesnenin düzenlenmesi), yüzey birleştir.
+- Sınır ve kırık hattın pencereden düzenlenmesi (bugün kaynak nesnenin düzenlenmesi). Yüzey birleştirme
+  [ADR 3920](3920-terrain-surface-paste.md)'de (Yüzey yapıştır, şema 214).
 - Bölgesel yeniden kurma ve bağlı eğri/profil/hacmin yüzey revizyonuna bağlanması.
 - Düzenlemeyi kapatma (silmeden), düzenleme listesinde sıra değiştirme.

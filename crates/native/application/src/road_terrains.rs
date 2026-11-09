@@ -70,14 +70,17 @@ pub(crate) struct Made {
 pub(crate) fn sources_digest(doc: &Document, def: &TerrainSurfaceDef) -> String {
     let uids: Vec<(String, &kentos_commands::Entity)> =
         doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();
-    sources::gather(def, doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity })).digest
+    sources::gather_among(def, surfaces(doc), doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity }))
+        .digest
 }
 
 pub(crate) fn make(doc: &Document, def: &TerrainSurfaceDef) -> Made {
     let uids: Vec<(String, &kentos_commands::Entity)> =
         doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();
-    let gathered = sources::gather(
+    // Docs/adr/3920: a paste edit finds the surface it pastes among the project's.
+    let gathered = sources::gather_among(
         def,
+        surfaces(doc),
         doc.layers().nodes(),
         uids.iter().map(|(uid, entity)| SourceObject { uid, entity }),
     );
@@ -209,6 +212,9 @@ pub fn why_words(why: &str) -> &'static str {
         "no_corner" => "bir ucu yüzeyin köşesi değil",
         "crosses" => "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor",
         "no_triangle" => "o yerde yüzeyin üçgeni yok",
+        "no_surface" => "projede bu kimlikli yüzey yok",
+        "cycle" => "yapıştırılan yüzey, doğrudan ya da başka bir yüzey üzerinden, bu yüzeyi yapıştırıyor",
+        "unbuildable" => "yapıştırılan yüzey kaynaklarından kurulamıyor",
         _ => "köşesi az",
     }
 }

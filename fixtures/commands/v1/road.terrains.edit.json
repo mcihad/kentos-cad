@@ -7616,6 +7616,5315 @@
           }
         }
       ]
+    },
+    {
+      "name": "Yüzey yapıştır: dolgu yüzeyi zemine yapıştırılır",
+      "note": "dolgunun altındaki kayıtlar ve onu kesen kırık hat gider; dolgunun köşeleri ve kenarları gelir, üçgenleri aynen kurulur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-5"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "52bd27ddd8530d12ad73359dd62e26ad88381fef7bc7b897d3399a02e83681cd",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 19,
+                  "triangles": 24,
+                  "constrained": 22,
+                  "area": 936.0,
+                  "merged": 34,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.25333333333333,
+                  "maxZ": 103.05829015544042
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yüzey yapıştır: sonra verilen kot dolgunun köşesinde",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-5"
+                },
+                {
+                  "op": "setHeight",
+                  "x": 15.0,
+                  "y": 11.0,
+                  "z": 103.25
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 15.0,
+                      "y": 11.0,
+                      "z": 103.25
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "13515ee45d666db08aaf1fcccaea1643ba6a54e6b2e4b6f0acae9ab8f4c9f530",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 19,
+                  "triangles": 24,
+                  "constrained": 22,
+                  "area": 936.0,
+                  "merged": 34,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.25333333333333,
+                  "maxZ": 103.25
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    },
+                    {
+                      "op": "setHeight",
+                      "x": 15.0,
+                      "y": 11.0,
+                      "z": 103.25
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yüzey yapıştır: önce eklenen nokta dolgunun altında kalır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "addPoint",
+                  "x": 20.0,
+                  "y": 20.0,
+                  "z": 99.0
+                },
+                {
+                  "op": "paste",
+                  "terrain": "t-5"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 20.0,
+                      "z": 99.0
+                    },
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "stale",
+                "digest": "7f95274a4a046c5468c036ecc366ef283211dc6ce88b5e6576357a4f9b1db1f5",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  }
+                ],
+                "figures": {
+                  "vertices": 19,
+                  "triangles": 24,
+                  "constrained": 22,
+                  "area": 936.0,
+                  "merged": 34,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.25333333333333,
+                  "maxZ": 103.05829015544042
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "addPoint",
+                      "x": 20.0,
+                      "y": 20.0,
+                      "z": 99.0
+                    },
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yüzey yapıştır: olmayan yüzey söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-9"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-9"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "no_surface"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: projede bu kimlikli yüzey yok.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-9"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yüzey yapıştır: kurulamayan yüzey söylenir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-4"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-4"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "unbuildable"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: yapıştırılan yüzey kaynaklarından kurulamıyor.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-4"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "built": "becfda89cf446d9b0b4a99532001f8b59efed42bb27f668b36a6b474481eb07f"
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "Yüzey yapıştır: geri yapıştıran yüzey döngü olur",
+      "note": "dolgu zemini yapıştırıyor; zemin dolguyu yapıştıramaz, kendi kaynaklarıyla kurulur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Yol yüzeyleri",
+        "settings": {
+          "srid": 5254,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 1000.0,
+          "workspace": "cad",
+          "cadWork": "road",
+          "drawingFont": "barlow",
+          "road": {
+            "surfaces": [
+              {
+                "id": "t-1",
+                "name": "Eski zemin",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                  ]
+                },
+                "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+              },
+              {
+                "id": "t-2",
+                "name": "Zemin",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+              },
+              {
+                "id": "t-3",
+                "name": "Eskimiş",
+                "points": {
+                  "layers": [
+                    "zemin"
+                  ]
+                },
+                "breaklines": {
+                  "layers": [
+                    "kirik"
+                  ]
+                },
+                "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                "built": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "id": "t-4",
+                "name": "Az nokta",
+                "points": {
+                  "uids": [
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                    "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                  ]
+                }
+              },
+              {
+                "id": "t-5",
+                "name": "Dolgu",
+                "breaklines": {
+                  "layers": [
+                    "dolgu"
+                  ]
+                },
+                "edits": [
+                  {
+                    "op": "paste",
+                    "terrain": "t-2"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "zemin",
+            "name": "Zemin",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kirik",
+            "name": "Kırık hatlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "sinir",
+            "name": "Sınırlar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "arazi",
+            "name": "Arazi",
+            "type": "group",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [
+              {
+                "id": "ek",
+                "name": "Ek noktalar",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "ink",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          },
+          {
+            "id": "esyukselti",
+            "name": "Eş yükselti",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "gizli",
+            "name": "Gizli",
+            "type": "layer",
+            "visible": false,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "dolgu",
+            "name": "Dolgu",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "z": 100.0
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 0.0
+            },
+            "z": 101.5
+          },
+          {
+            "kind": "point",
+            "id": 3,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.25
+          },
+          {
+            "kind": "point",
+            "id": 4,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 0.0,
+              "y": 30.0
+            },
+            "z": 102.0
+          },
+          {
+            "kind": "point",
+            "id": 5,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 21.0,
+              "y": 24.0
+            },
+            "z": 102.75
+          },
+          {
+            "kind": "point",
+            "id": 6,
+            "layerId": "zemin",
+            "attrs": {},
+            "p": {
+              "x": 10.0,
+              "y": 26.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "zemin",
+            "attrs": {},
+            "a": {
+              "x": 1.0,
+              "y": 29.0
+            },
+            "b": {
+              "x": 3.0,
+              "y": 29.0
+            }
+          },
+          {
+            "kind": "polyline",
+            "id": 8,
+            "layerId": "kirik",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 5.0,
+                "y": 15.0
+              },
+              {
+                "x": 35.0,
+                "y": 15.0
+              }
+            ],
+            "zs": [
+              101.0,
+              102.5
+            ]
+          },
+          {
+            "kind": "line",
+            "id": 9,
+            "layerId": "kirik",
+            "attrs": {},
+            "a": {
+              "x": 10.0,
+              "y": 5.0
+            },
+            "b": {
+              "x": 30.0,
+              "y": 5.0
+            },
+            "za": 100.5,
+            "zb": 101.25
+          },
+          {
+            "kind": "polygon",
+            "id": 10,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 2.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 2.0
+              },
+              {
+                "x": 38.0,
+                "y": 28.0
+              },
+              {
+                "x": 2.0,
+                "y": 28.0
+              }
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 11,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 18.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 8.0
+              },
+              {
+                "x": 24.0,
+                "y": 12.0
+              },
+              {
+                "x": 18.0,
+                "y": 12.0
+              }
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 12,
+            "layerId": "sinir",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 28.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 19.0
+              },
+              {
+                "x": 32.0,
+                "y": 22.0
+              },
+              {
+                "x": 28.0,
+                "y": 22.0
+              }
+            ],
+            "closed": true
+          },
+          {
+            "kind": "polyline",
+            "id": 13,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 25.0
+              },
+              {
+                "x": 14.0,
+                "y": 27.0
+              }
+            ],
+            "zs": [
+              102.0,
+              102.5
+            ],
+            "bulges": [
+              0.25,
+              0.0
+            ]
+          },
+          {
+            "kind": "polyline",
+            "id": 14,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 26.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 24.0
+              },
+              {
+                "x": 30.0,
+                "y": 27.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 15,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 40.0,
+              "y": 30.0
+            },
+            "z": 103.75
+          },
+          {
+            "kind": "point",
+            "id": 16,
+            "layerId": "ek",
+            "attrs": {},
+            "p": {
+              "x": 31.0,
+              "y": 10.0
+            },
+            "z": 101.75
+          },
+          {
+            "kind": "polygon",
+            "id": 17,
+            "layerId": "0",
+            "attrs": {},
+            "pts": [
+              {
+                "x": -5.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": -5.0
+              },
+              {
+                "x": 45.0,
+                "y": 35.0
+              },
+              {
+                "x": -5.0,
+                "y": 35.0
+              }
+            ]
+          },
+          {
+            "kind": "point",
+            "id": 18,
+            "layerId": "0",
+            "attrs": {},
+            "p": {
+              "x": 20.0,
+              "y": 15.0
+            },
+            "z": 104.0
+          },
+          {
+            "kind": "polygon",
+            "id": 19,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 10.0,
+                "y": 6.0
+              },
+              {
+                "x": 30.0,
+                "y": 7.0
+              },
+              {
+                "x": 29.0,
+                "y": 24.0
+              },
+              {
+                "x": 11.0,
+                "y": 23.0
+              }
+            ],
+            "zs": [
+              101.0,
+              101.5,
+              102.5,
+              102.0
+            ]
+          },
+          {
+            "kind": "polygon",
+            "id": 20,
+            "layerId": "dolgu",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 15.0,
+                "y": 11.0
+              },
+              {
+                "x": 25.0,
+                "y": 11.5
+              },
+              {
+                "x": 24.0,
+                "y": 19.0
+              },
+              {
+                "x": 16.0,
+                "y": 18.5
+              }
+            ],
+            "zs": [
+              103.0,
+              103.0,
+              103.0,
+              103.0
+            ]
+          }
+        ],
+        "uids": [
+          "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000004",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000005",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000007",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000008",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000009",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000b",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000c",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000d",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000e",
+          "0192f5a0-7c3e-7d4a-9b1e-00000000000f",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000010",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000011",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000012",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000013",
+          "0192f5a0-7c3e-7d4a-9b1e-000000000014"
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-5"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-2"
+                    }
+                  ]
+                }
+              ],
+              "surface": {
+                "id": "t-2",
+                "name": "Zemin",
+                "state": "current",
+                "digest": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507",
+                "left": [
+                  {
+                    "id": "0192f5a0-7c3e-7d4a-9b1e-000000000006",
+                    "role": "points",
+                    "why": "no_height"
+                  },
+                  {
+                    "id": "edits[0]",
+                    "role": "edits",
+                    "why": "cycle"
+                  }
+                ],
+                "figures": {
+                  "vertices": 13,
+                  "triangles": 12,
+                  "constrained": 6,
+                  "area": 936.0,
+                  "merged": 0,
+                  "split": 0,
+                  "trimmed": 0,
+                  "minZ": 100.16,
+                  "maxZ": 103.1343137254902
+                },
+                "algorithm": "kentos.cdt/1"
+              },
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "terrain_source_left",
+                "message": "0192f5a0-7c3e-7d4a-9b1e-000000000006 (nokta) kullanılamadı: kotu eksik.",
+                "path": "points"
+              },
+              {
+                "code": "terrain_source_left",
+                "message": "edits[0] (düzenleme) kullanılamadı: yapıştırılan yüzey, doğrudan ya da başka bir yüzey üzerinden, bu yüzeyi yapıştırıyor.",
+                "path": "edits"
+              }
+            ]
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": true,
+            "revision": "changed",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-5"
+                    }
+                  ],
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                },
+                {
+                  "id": "t-5",
+                  "name": "Dolgu",
+                  "breaklines": {
+                    "layers": [
+                      "dolgu"
+                    ]
+                  },
+                  "edits": [
+                    {
+                      "op": "paste",
+                      "terrain": "t-2"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "within": 1e-09
+        }
+      ]
+    },
+    {
+      "name": "set'te kendini yapıştıran yüzey",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Mevcut zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": "t-2"
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_terrain",
+              "message": "Yüzey kurallarına uymuyor: yüzey kendini yapıştıramaz.",
+              "path": "surface.edits[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set'te kimliksiz yapıştırma",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": "set",
+            "surface": {
+              "id": "t-2",
+              "name": "Mevcut zemin",
+              "points": {
+                "layers": [
+                  "zemin"
+                ]
+              },
+              "breaklines": {
+                "layers": [
+                  "kirik"
+                ]
+              },
+              "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+              "edits": [
+                {
+                  "op": "paste",
+                  "terrain": " "
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_terrain",
+              "message": "Yüzey kurallarına uymuyor: yapıştırılacak yüzeyin kimliği boş.",
+              "path": "surface.edits[0]"
+            }
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "road": {
+              "surfaces": [
+                {
+                  "id": "t-1",
+                  "name": "Eski zemin",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000003",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000004"
+                    ]
+                  },
+                  "built": "0645d9481a0f3dbda5925e67f8ce1797c3a025af5d89daa49ee634c08b8c8174"
+                },
+                {
+                  "id": "t-2",
+                  "name": "Zemin",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0779a6ca44d2fa3e4a734f6ab2d6508bae36bcbcf97546a1070d29b1ab69a507"
+                },
+                {
+                  "id": "t-3",
+                  "name": "Eskimiş",
+                  "points": {
+                    "layers": [
+                      "zemin"
+                    ]
+                  },
+                  "breaklines": {
+                    "layers": [
+                      "kirik"
+                    ]
+                  },
+                  "boundary": "0192f5a0-7c3e-7d4a-9b1e-00000000000a",
+                  "built": "0000000000000000000000000000000000000000000000000000000000000000"
+                },
+                {
+                  "id": "t-4",
+                  "name": "Az nokta",
+                  "points": {
+                    "uids": [
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000001",
+                      "0192f5a0-7c3e-7d4a-9b1e-000000000002"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   ]
 }
