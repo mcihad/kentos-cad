@@ -149,9 +149,40 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         );
     }
     let doc = &mut app.document.as_mut().expect("a drawing").model;
+    // The calculation tables the drawing lacks, made beside it (docs/adr/3037 §3).
+    let tables = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    let labels: Vec<&str> = tables.iter().map(|t| t.label).collect();
+    assert_eq!(
+        labels,
+        [
+            "Metrekare cetveli",
+            "Emsal ve TAKS",
+            "Kat irtifakı",
+            "Otopark hesabı",
+            "Sığınak hesabı"
+        ]
+    );
+    let made_tables = doc
+        .entities()
+        .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
+        .count();
+    assert_eq!(made_tables, 5);
+    // Found, not made again.
+    let again = kentos_interaction::calc_tables::ensure(doc).expect("the tables");
+    assert_eq!(again, tables);
+    assert_eq!(
+        doc.entities()
+            .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
+            .count(),
+        5
+    );
     let input = kentos_native_application::permit_set::PermitSet {
         phase: kentos_sheet::permit::Phase::Permit,
         values: particulars(),
+        tables: tables
+            .iter()
+            .map(|t| (t.label.to_owned(), t.bounds))
+            .collect(),
     };
     let (edited, made) = kentos_native_application::permit_set::execute(
         &mut kentos_native_application::ExecutionContext::new(doc),
@@ -169,7 +200,8 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "UP-01 Proje bilgileri",
             "UP-02 Vaziyet planı",
             "UP-03 Zemin kat planı",
-            "UP-04 1. kat planı"
+            "UP-04 1. kat planı",
+            "UP-05 Mimari hesap raporu"
         ]
     );
     assert_eq!(
@@ -206,6 +238,20 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
         assert!(
             plan.iter().any(|x| x.contains(want)),
             "{want} in the title block: {plan:?}"
+        );
+    }
+    // The calculation sheet: a locked map on each table, captioned, at the plot scale; the tables' own rows.
+    let calc = texts(&app, &made[4].sheet);
+    for want in [
+        "Metrekare cetveli — Ölçek 1/100",
+        "Otopark hesabı — Ölçek 1/100",
+        "Sığınak hesabı — Ölçek 1/100",
+        "UP-05",
+        "260457_00_MM_XXXX_HS_MIR_NNN_01_000",
+    ] {
+        assert!(
+            calc.iter().any(|x| x.contains(want)),
+            "{want} on the calculation sheet: {calc:?}"
         );
     }
     // Published as PDF/A-2 files named by EK-2.
@@ -247,6 +293,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
             "260457_00_MM_XXXX_PL_VAZ_NNN_01_000.pdf",
             "260457_00_MM_XXXX_PL_MMC_K00_01_000.pdf",
             "260457_00_MM_XXXX_PL_MMC_K01_01_000.pdf",
+            "260457_00_MM_XXXX_HS_MIR_NNN_01_000.pdf",
         ]
     );
     for n in &names {

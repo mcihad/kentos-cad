@@ -1,6 +1,6 @@
 # 3037 — Türk anteti, pafta takımları ve PDF/A
 
-Tarih: 2026-11-09. Durum: kabul, 1. ve 2. bölüm (M37; ADV-24; plan S22).
+Tarih: 2026-11-09. Durum: kabul (M37, üç bölüm; ADV-24; plan S22).
 
 ## Sorun
 
@@ -182,6 +182,28 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
   - "Paftaları oluştur" takımı kurar ve Paftaları toplu yayınla'yı açar: takım seçili, her pafta ayrı dosya, PDF/A,
     EK-2 adı, klasör "Ruhsat-<tarih>", Denetle yapılmış. Kullanıcı Yayınla'ya basar.
 
+### §3 Hesap paftası (3. bölüm)
+
+- **Mimari hesap raporu** (EK-2 2.8.1: "TAKS hesabı, emsal hesabı, otopark hesabı, ağaç hesabı, toprak kazı hesabı,
+  sığınak hesabı …"; PAİY 57(2)(a)): takımın son paftası.
+  - EK-2 kodu HS (hesap), MIR (mimari hesap raporu), NNN.
+  - MO'nun sırasıyla çizimlerden sonra gelir; MO otopark hesabını cephelerden sonra sayar.
+- **Tablolar** (`kentos_interaction::calc_tables::ensure`): metrekare cetveli (kat kat bölüm çizelgesi), Emsal ve
+  TAKS, Kat irtifakı, Otopark hesabı, Sığınak hesabı.
+  - Çizimin canlı tablosu varsa olduğu gibi alınır; ikinci çağrı yeni tablo kurmaz.
+  - Yoksa çizimin sağına, birbirinin altına, çizim ölçeğinin tablo yüksekliğiyle kurulur. Metraj ▾'nün elle koyduğu
+    tabloların aynısıdır (ADR 3029–3031, 3036).
+  - Çizimin dolduramayacağı tablo kurulmaz: imar durumu yoksa Emsal, bağımsız bölüm yoksa kat irtifakı, otopark ve
+    sığınak.
+- **Pafta:**
+  - Her tabloya şablonun haritasının bir kopyası düşer: kilitli, katsız, çizim ölçeğinde, tablonun kutusuna
+    ortalanmış, boyu tablonun kâğıttaki boyu.
+  - Haritanın üstünde "<ad> — Ölçek 1/100" başlığı durur. Kuzey oku yoktur.
+  - Yerleşim soldan sağa satırlardır (8 mm aralık, 6 mm başlık).
+- **Kâğıt:** takımın kâğıdı hesap paftası da sığacak biçimde seçilir. Tablolar A0'a da sığmazsa takım hesap paftasız
+  kurulur.
+- **Masaüstü:** Paftaları oluştur tabloları ve paftaları tek geri alma adımında ("Ruhsat takımı") kurar.
+
 ## Ölçüm
 
 - **Renk profili:** Little CMS (Pillow ImageCms) üretilen profili açtı: "sRGB IEC61966-2.1", mntr, RGB, XYZ, 2.1.
@@ -230,13 +252,26 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
     - Ghostscript üçünü çizdi; pdftotext "MAHALLE", "Mimari / Ruhsat takımı" ve dosya adını çıkarır.
   - Resimler: `m37-ruhsat-serit.png`, `m37-ruhsat-pencere.png`, `m37-ruhsat-yayin.png`, `m37-paftalar.png`,
     `m37-teslim-pdf.png`, `m37-simge.png`.
+- **Test, §3:**
+  - `permit::the_calculation_sheet_shows_each_table_at_the_plot_scale`:
+    - yerleşim (30, 26), (118, 26), (30, 90) mm; odadan geniş ya da uzun tablo sığmaz;
+    - iki harita 80 × 50 mm, kilitli, katsız, 1/100, tablo ortasında; başlık; kuzey oku yok; HS/MIR/NNN.
+  - Uçtan uca test:
+    - beş tablo kuruldu, ikinci çağrı aynı beşini buldu;
+    - takım UP-01…05, hesap paftasında "Otopark hesabı — Ölçek 1/100" ve EK-2 adı;
+    - yayın beş PDF/A dosyası, beşincisi `260457_00_MM_XXXX_HS_MIR_NNN_01_000.pdf`.
+- **Gerçek pencere, §3:**
+  - Aynı senaryoyla beş pafta açıldı; kat irtifakı tablosunun genişliği yüzünden takım A2'ye çıktı.
+  - Teslimde beş dosyanın beşi "PDF/A-2b · uygun · 0 bulgu".
+  - pdftotext hesap paftasının tablolarını metin olarak okur ("Toplam (kesir bir üste, 8/4)").
+  - Resim: `m37-hesap-paftasi.png`.
 - **Bağımsız doğrulama:** veraPDF'i (Maven Central, jbang) bu oturumda çalıştırma izni verilmedi. PDF/A'ya
   uygunluğun resmî doğrulaması veraPDF ile yapılmalıdır.
 
 ## Sonraki adımlar
 
-- **Hesap paftası (EK-2 2.8.1, "MIR"):** takıma metrekare cetveli, emsal ve TAKS, kat irtifakı, otopark ve sığınak
-  tablolarının paftası (M37 3. bölüm).
+- Ağaç hesabı (PAİY 23/6) ve toprak kazı hesabı tabloları; hesap paftasının tablolarını birden çok paftaya bölmek.
+- Takımda paftaların kendi kâğıdı (bugün takımın tek kâğıdı var; tablolar yüzünden planlar da A2'ye çıkabiliyor).
 - **A4 katlama izleri:** DIN 824'ün ölçüleri (210 mm ilk katlama, 190 mm aralık) yalnız ikincil kaynaklarda okundu;
   Türk karşılığı bulunamadı. Tahminle çizilmedi.
 - Çatı planı (ADV-20), kesit ve görünüşler (ADV-19) takıma kendi işleriyle girer.

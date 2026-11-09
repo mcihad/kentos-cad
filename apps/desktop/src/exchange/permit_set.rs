@@ -146,21 +146,29 @@ impl App {
                 }
             }
             Event::Make => {
-                let input = kentos_native_application::permit_set::PermitSet {
+                let mut input = kentos_native_application::permit_set::PermitSet {
                     phase: s.phase,
                     values: s
                         .fields
                         .iter()
                         .map(|f| (f.name.to_owned(), f.value.clone()))
                         .collect(),
+                    tables: Vec::new(),
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
+                // The calculation tables and the sheets: one undo step (docs/adr/3037 §3).
+                let group = doc.model.begin_group("Ruhsat takımı");
+                let tables = kentos_interaction::calc_tables::ensure(&mut doc.model);
+                if let Ok(t) = &tables {
+                    input.tables = t.iter().map(|c| (c.label.to_owned(), c.bounds)).collect();
+                }
                 let made = kentos_native_application::permit_set::execute(
                     &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
                     &input,
                 );
+                doc.model.end_group(group);
                 match made {
                     Err(why) => {
                         if let Some(Window::PermitSet(s)) = &mut self.exchange {

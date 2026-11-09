@@ -213,3 +213,85 @@ fn a_permit_set_is_made_in_mo_s_order_with_its_file_names_fields() {
             .all(|i| i.kind.type_name() != "northArrow")
     );
 }
+
+/// The calculation sheet (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each table at the plot scale, its size the
+/// table's on paper, a caption over it, from the left in rows; EK-2's HS, MIR, NNN.
+#[test]
+fn the_calculation_sheet_shows_each_table_at_the_plot_scale() {
+    // A row while the width holds: 80 + 8 + 80 < 190 mm (A3's room), the third under them.
+    let places = permit::shelf(Paper::A3, &[[80.0, 50.0], [80.0, 50.0], [80.0, 40.0]]).unwrap();
+    assert_eq!(places, [[30.0, 26.0], [118.0, 26.0], [30.0, 90.0]]);
+    assert_eq!(
+        permit::shelf(Paper::A3, &[[200.0, 10.0]]),
+        None,
+        "wider than the room"
+    );
+    assert_eq!(
+        permit::shelf(Paper::A3, &[[50.0, 300.0]]),
+        None,
+        "taller than the room"
+    );
+    let template = system_template(permit::TEMPLATE).expect("the MO sheet");
+    let paper = PaperChoice {
+        paper: Paper::A3,
+        orientation: Orientation::Landscape,
+    };
+    let page = Page::tables(
+        vec![
+            ("Otopark hesabı".into(), [20.0, 0.0, 28.0, 5.0]),
+            ("Sığınak hesabı".into(), [20.0, -7.0, 28.0, -2.0]),
+        ],
+        100,
+    );
+    let made = permit::permit_sheets(
+        &SheetBook::default(),
+        template,
+        Phase::Permit,
+        paper,
+        &[page],
+        true,
+        |s| create::ids_for(template, s),
+    )
+    .unwrap();
+    assert_eq!(made.made[0].title, "Mimari hesap raporu");
+    let book = made.ops.iter().fold(SheetBook::default(), |b, op| {
+        ops::apply(&b, op).unwrap().book
+    });
+    let s = &book.sheets[0];
+    let text = |v: &str| Some(VarValue::Text(v.into()));
+    assert_eq!(
+        (
+            answer(s, "dosya_turu").cloned(),
+            answer(s, "dosya_tipi").cloned(),
+            answer(s, "kat_konum").cloned()
+        ),
+        (text("HS"), text("MIR"), text("NNN"))
+    );
+    let maps: Vec<&kentos_sheet::Item> = s
+        .items
+        .iter()
+        .filter(|i| matches!(i.kind, ItemKind::Map(_)))
+        .collect();
+    assert_eq!(maps.len(), 2, "a map a table, the template's own gone");
+    for (m, centre) in maps.iter().zip([[24.0, 2.5], [24.0, -4.5]]) {
+        // 8 × 5 m at 1/100: 80 × 50 mm.
+        assert_eq!((m.frame.width, m.frame.height), (80_000, 50_000));
+        let ItemKind::Map(map) = &m.kind else {
+            unreachable!()
+        };
+        assert!(map.view_locked && map.level.is_none());
+        let kentos_sheet::MapView::Fixed(f) = &map.view else {
+            panic!("fixed")
+        };
+        assert_eq!(f.scale, 100);
+        let c = f.center.unwrap();
+        assert_eq!([c.x, c.y], centre);
+    }
+    assert!(s.items.iter().any(
+        |i| matches!(&i.kind, ItemKind::Text(t) if t.content == "Sığınak hesabı — Ölçek 1/100")
+    ));
+    assert!(
+        s.items.iter().all(|i| i.kind.type_name() != "northArrow"),
+        "no north on a sheet of tables"
+    );
+}

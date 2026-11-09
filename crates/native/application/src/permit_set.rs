@@ -28,6 +28,9 @@ pub struct PermitSet {
     pub phase: Phase,
     /// Particulars written into the drawing's variables first (name, text); an empty text clears one.
     pub values: Vec<(String, String)>,
+    /// The calculation tables the set's “Mimari hesap raporu” shows (their names and boxes, metres), in its order;
+    /// none: no such sheet (`kentos_interaction::calc_tables::ensure` makes and finds them).
+    pub tables: Vec<(String, [f64; 4])>,
 }
 
 /// `variables` with the particulars it lacks added (their defaults; the work's name the drawing's) and `values`
@@ -118,7 +121,11 @@ fn union(a: Option<[f64; 4]>, b: [f64; 4]) -> [f64; 4] {
 }
 
 /// The set's pages for `phase` and the paper they go on.
-pub(crate) fn pages(doc: &Document, phase: Phase) -> Result<(Vec<Page>, PaperChoice), Stop> {
+pub(crate) fn pages(
+    doc: &Document,
+    phase: Phase,
+    tables: &[(String, [f64; 4])],
+) -> Result<(Vec<Page>, PaperChoice), Stop> {
     let levels = doc
         .settings()
         .arch
@@ -180,9 +187,26 @@ pub(crate) fn pages(doc: &Document, phase: Phase) -> Result<(Vec<Page>, PaperCho
         .and_then(|e| sheets_fit::extent_of(doc, std::iter::once(e)));
     let site = parcel.map_or(ground.1, |p| union(Some(p), ground.1));
     let scale = phase.scale();
+    // The tables are drawn at the plot scale's height: shown at it.
+    let plot = doc.settings().plot_scale.round().max(1.0) as u32;
+    let table_sizes: Vec<[f64; 2]> = tables.iter().map(|(_, b)| on_paper(*b, plot)).collect();
+    let fits_tables =
+        |p: kentos_sheet::Paper| table_sizes.is_empty() || permit::shelf(p, &table_sizes).is_some();
     let (paper, site_scale) = [500, 1000]
         .into_iter()
-        .find_map(|s| permit::paper_for(&[on_paper(plans, scale), on_paper(site, s)]).map(|p| (p, s)))
+        .find_map(|s| {
+            let sizes = [on_paper(plans, scale), on_paper(site, s)];
+            // The smallest paper the drawings and the tables fit; the drawings' alone when the tables fit none.
+            permit::PAPERS
+                .into_iter()
+                .find(|p| permit::fits(*p, &sizes) && fits_tables(*p))
+                .map(|paper| PaperChoice {
+                    paper,
+                    orientation: kentos_sheet::Orientation::Landscape,
+                })
+                .or_else(|| permit::paper_for(&sizes))
+                .map(|p| (p, s))
+        })
         .ok_or_else(|| {
             Stop::failed(error(
                 "permit_set_too_large",
@@ -203,11 +227,19 @@ pub(crate) fn pages(doc: &Document, phase: Phase) -> Result<(Vec<Page>, PaperCho
             scale,
         ));
     }
+    // The calculation sheet last (MO: the parking calculation after the drawings), when its tables fit the paper.
+    if !tables.is_empty() && fits_tables(paper.paper) {
+        out.push(Page::tables(tables.to_vec(), plot));
+    }
     Ok((out, paper))
 }
 
 /// The set's sheets' change of the book, through `cad.sheets.edit`'s input.
-pub(crate) fn edit(doc: &Document, phase: Phase) -> Result<(SheetsEdit, Vec<permit::Made>), Stop> {
+pub(crate) fn edit(
+    doc: &Document,
+    phase: Phase,
+    tables: &[(String, [f64; 4])],
+) -> Result<(SheetsEdit, Vec<permit::Made>), Stop> {
     let template = template::system_template(permit::TEMPLATE).ok_or_else(|| {
         Stop::failed(error(
             "unknown_template",
@@ -215,7 +247,7 @@ pub(crate) fn edit(doc: &Document, phase: Phase) -> Result<(SheetsEdit, Vec<perm
             Some("source".into()),
         ))
     })?;
-    let (pages, paper) = pages(doc, phase)?;
+    let (pages, paper) = pages(doc, phase, tables)?;
     let (book, _) = match doc.sheets() {
         Some(s) => kentos_sheet::project::read_project_sheets(s)
             .map_err(|e| Stop::failed(error("book_unreadable", e.message, None)))?,
@@ -262,7 +294,8 @@ pub fn execute(
     let mut settings = cx.doc.settings().clone();
     settings.variables = with_particulars(&settings.variables, cx.doc.name(), &input.values);
     cx.doc.set_settings(settings);
-    let (edit, made) = edit(cx.doc, input.phase).map_err(|s| s.into_error().message)?;
+    let (edit, made) =
+        edit(cx.doc, input.phase, &input.tables).map_err(|s| s.into_error().message)?;
     match sheets_edit::execute(cx, edit) {
         CommandResult::Completed { output, .. } => Ok((output, made)),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),

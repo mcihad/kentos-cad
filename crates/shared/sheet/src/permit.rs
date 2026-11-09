@@ -74,6 +74,8 @@ pub enum PageKind {
     Site,
     /// A storey's plan.
     Plan,
+    /// The calculation tables (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each, at the plot scale.
+    Tables,
 }
 
 /// One sheet of the set.
@@ -89,6 +91,8 @@ pub struct Page {
     pub file_type: &'static str,
     pub file_kind: &'static str,
     pub place: String,
+    /// The tables a calculation sheet shows: their names and boxes, metres.
+    pub views: Vec<(String, [f64; 4])>,
 }
 
 impl Page {
@@ -102,6 +106,7 @@ impl Page {
             file_type: "GN",
             file_kind: "MMC",
             place: "NNN".into(),
+            views: Vec::new(),
         }
     }
 
@@ -115,6 +120,7 @@ impl Page {
             file_type: "PL",
             file_kind: "VAZ",
             place: "NNN".into(),
+            views: Vec::new(),
         }
     }
 
@@ -134,8 +140,53 @@ impl Page {
             file_type: "PL",
             file_kind: "MMC",
             place: place.to_owned(),
+            views: Vec::new(),
         }
     }
+
+    /// The calculation sheet: `views` (name, box) at the plot `scale` (EK-2: HS, MIR, NNN).
+    pub fn tables(views: Vec<(String, [f64; 4])>, scale: u32) -> Page {
+        Page {
+            kind: PageKind::Tables,
+            title: "Mimari hesap raporu".into(),
+            level: None,
+            center: None,
+            scale: Some(scale),
+            file_type: "HS",
+            file_kind: "MIR",
+            place: "NNN".into(),
+            views,
+        }
+    }
+}
+
+/// Whether `sizes` (paper mm) each fit the map's room on landscape `paper`, a tenth to spare.
+pub fn fits(paper: Paper, sizes: &[[f64; 2]]) -> bool {
+    map_room(paper).is_some_and(|[w, h]| sizes.iter().all(|s| s[0] * 1.1 <= w && s[1] * 1.1 <= h))
+}
+
+/// Where each of `sizes` (paper mm) goes in the map's room on `paper` (left, top, mm from the page's corner): from the
+/// left in the given order, a row while the width holds, a 6 mm caption over each; none when they do not fit.
+pub fn shelf(paper: Paper, sizes: &[[f64; 2]]) -> Option<Vec<[f64; 2]>> {
+    let [w, h] = map_room(paper)?;
+    let (left, top, gap, caption) = (30.0, 20.0, 8.0, 6.0);
+    let (mut x, mut y, mut row) = (0.0f64, 0.0f64, 0.0f64);
+    let mut out = Vec::with_capacity(sizes.len());
+    for s in sizes {
+        if s[0] > w {
+            return None;
+        }
+        if x > 0.0 && x + s[0] > w {
+            (x, y, row) = (0.0, y + row + gap, 0.0);
+        }
+        if y + caption + s[1] > h {
+            return None;
+        }
+        out.push([left + x, top + y + caption]);
+        x += s[0] + gap;
+        row = row.max(caption + s[1]);
+    }
+    Some(out)
 }
 
 /// The set's publication's file names (EK-2 Tablo 2.1): the project's code and building, discipline MM, no item (XXXX),
@@ -221,10 +272,7 @@ pub const PAPERS: [Paper; 4] = [Paper::A3, Paper::A2, Paper::A1, Paper::A0];
 pub fn paper_for(sizes: &[[f64; 2]]) -> Option<PaperChoice> {
     PAPERS
         .into_iter()
-        .find(|p| {
-            map_room(*p)
-                .is_some_and(|[w, h]| sizes.iter().all(|s| s[0] * 1.1 <= w && s[1] * 1.1 <= h))
-        })
+        .find(|p| fits(*p, sizes))
         .map(|paper| PaperChoice {
             paper,
             orientation: Orientation::Landscape,
@@ -471,7 +519,7 @@ pub fn permit_sheets(
         // The template's items are the instance's by their place (`create::ids_for`).
         let map_item = ids.items.get(map_at).cloned().unwrap_or_default();
         let north_item = north_at.and_then(|k| ids.items.get(k).cloned());
-        if !north || page.kind == PageKind::Info {
+        if !north || matches!(page.kind, PageKind::Info | PageKind::Tables) {
             drop_items(sheet, &|id: &String| Some(id) == north_item.as_ref());
         }
         match page.kind {
@@ -487,6 +535,61 @@ pub fn permit_sheets(
                 for mut item in info_items(&paper, &subset, pages.len())? {
                     item.id = format!("{}-{}", ids.sheet, item.id);
                     sheet.items.push(item);
+                }
+            }
+            PageKind::Tables => {
+                // The template's map, cloned for each table: locked at the plot scale on the table's box.
+                let template_map = sheet.items.iter().find(|i| i.id == map_item).cloned();
+                drop_items(sheet, &|id: &String| *id == map_item);
+                let scale = page.scale.unwrap_or(100);
+                let k = 1000.0 / f64::from(scale);
+                let sizes: Vec<[f64; 2]> = page
+                    .views
+                    .iter()
+                    .map(|(_, b)| [(b[2] - b[0]) * k, (b[3] - b[1]) * k])
+                    .collect();
+                let places = shelf(paper.paper, &sizes).ok_or_else(|| {
+                    SheetError::at(
+                        "permit_tables_do_not_fit",
+                        "pages",
+                        format!(
+                            "Hesap tabloları {} kâğıda sığmıyor.",
+                            paper.paper.id().to_uppercase()
+                        ),
+                    )
+                })?;
+                let um = |mm: f64| (mm * 1000.0).round() as i32;
+                for (n, ((name, b), (at, size))) in
+                    page.views.iter().zip(places.iter().zip(&sizes)).enumerate()
+                {
+                    if let Some(mut map) = template_map.clone() {
+                        map.id = format!("{}-tablo-{}", ids.sheet, n + 1);
+                        map.name = name.clone();
+                        map.frame =
+                            crate::RectUm::new(um(at[0]), um(at[1]), um(size[0]), um(size[1]));
+                        map.constraints = Default::default();
+                        if let ItemKind::Map(m) = &mut map.kind {
+                            if let crate::MapView::Fixed(f) = &mut m.view {
+                                f.center = Some(crate::GroundPoint {
+                                    x: b[0] + (b[2] - b[0]) / 2.,
+                                    y: b[1] + (b[3] - b[1]) / 2.,
+                                });
+                                f.scale = scale;
+                                f.ratio = None;
+                            }
+                            m.level = None;
+                            m.view_locked = true;
+                        }
+                        sheet.items.push(map);
+                    }
+                    let caption: Item = serde_json::from_value(json!({
+                        "id": format!("{}-tablo-{}-baslik", ids.sheet, n + 1),
+                        "name": format!("{name} başlığı"),
+                        "frame": {"left": um(at[0]), "top": um(at[1] - 6.0), "width": um(size[0].max(40.0)), "height": 5000},
+                        "kind": {"type": "text", "content": format!("{name} — Ölçek 1/{scale}"), "style": {"size": 2600, "weight": 700}}
+                    }))
+                    .map_err(|e| SheetError::new("bad_template", format!("Tablo başlığı kurulamadı: {e}")))?;
+                    sheet.items.push(caption);
                 }
             }
             PageKind::Site | PageKind::Plan => {

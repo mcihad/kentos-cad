@@ -212,6 +212,8 @@
       `kentos_native_application::permit_set` (künye → `set_settings`, takım → `cad.sheets.edit`) + masaüstü
       `exchange/permit_set.rs` (Mimari › Proje › Ruhsat takımı; sonra Paftaları toplu yayınla hazır ve denetlenmiş).
       Yayın adında `{@ad}` (`naming_value_missing`).
+    - `kentos_interaction::calc_tables::ensure`: hesap tabloları (metrekare cetveli, emsal, kat irtifakı, otopark,
+      sığınak) bulunur ya da çizimin sağına kurulur → `PermitSet.tables` → `PageKind::Tables` (`permit::shelf`, HS/MIR).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
