@@ -50,6 +50,16 @@ FLAGS = ["proposed", "outsideHorizontal", "outsideVertical", "outsideSurface", "
          "noHeight", "offSurface"]
 
 
+# Docs/adr/3620: a monitoring job's two epochs, on their own layers after the rest (the earlier objects keep their ids).
+# The marks M1–M5 and the control points K1, K2 at the first epoch; at the second M1 moved 5 mm, M2 25 mm, M3 settled
+# 15 mm, M4 1 mm, K1 not at all, K2 10 mm, M5 not measured and M6 new.
+EPOCH1 = [("M1", 10.0, 60.0, 100.0), ("M2", 20.0, 60.0, 100.5), ("M3", 30.0, 60.0, 101.0), ("M4", 40.0, 60.0, 101.2),
+          ("M5", 50.0, 60.0, 101.4), ("K1", 0.0, 50.0, 99.0), ("K2", 60.0, 50.0, 99.5)]
+EPOCH2 = [("M1", 10.003, 60.004, 99.998, "0.002"), ("M2", 20.02, 60.015, 100.5, "0.002"), ("M3", 30.0, 60.0, 100.985, None),
+          ("M4", 40.001, 60.0, 101.201, "0.012"), ("K1", 0.0, 50.0, 99.0, "0.001"), ("K2", 60.006, 50.008, 99.5, "0.001"),
+          ("M6", 70.0, 60.0, 101.6, None)]
+
+
 def uid(n):
     return f"0192f700-1700-7000-8000-{n:012x}"
 
@@ -108,7 +118,8 @@ def P(x, y):
 
 def setup(work="map"):
     layers = [layer("0", "0"), layer("zemin", "Tasarım yüzeyi"), layer("tasarim", "Tasarım noktaları"),
-              layer("bordur", "Bordür"), layer("olcum", "Ölçülen"), layer("bos", "Boş")]
+              layer("bordur", "Bordür"), layer("olcum", "Ölçülen"), layer("bos", "Boş"),
+              layer("donem1", "Birinci dönem"), layer("donem2", "İkinci dönem")]
     ents = []
 
     def add(e):
@@ -137,6 +148,14 @@ def setup(work="map"):
         if z is not None:
             e["z"] = z
         add(e)
+    # Docs/adr/3620: the monitoring job's epochs.
+    for name, x, y, z in EPOCH1:
+        add({"kind": "point", "layerId": "donem1", "attrs": {"Ad": name}, "p": P(x, y), "z": z})
+    for name, x, y, z, s in EPOCH2:
+        attrs = {"Ad": name}
+        if s is not None:
+            attrs["Hassasiyet"] = s
+        add({"kind": "point", "layerId": "donem2", "attrs": attrs, "p": P(x, y), "z": z})
     settings = {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
                 "plotScale": 1000.0, "workspace": "cad", "cadWork": work, "drawingFont": "barlow"}
     if work in ("map", "road"):
@@ -159,6 +178,12 @@ def ids():
     n += len(LINES)
     measured = [uid(n + 1 + i) for i in range(len(MEASURED))]
     return design, lines, measured
+
+
+def epoch_ids():
+    """Docs/adr/3620: the persistent ids of the first and the second epoch's points."""
+    n = 121 + len(DESIGN) + len(LINES) + len(MEASURED)
+    return [uid(n + 1 + i) for i in range(len(EPOCH1))], [uid(n + 1 + len(EPOCH1) + i) for i in range(len(EPOCH2))]
 
 
 def number(text):
@@ -331,16 +356,20 @@ def package_block(manifest, i, path):
 
 
 def report(design=True, surface=True, lines=True, search=None, horizontal=None, vertical=None, quality=None,
-           expected=None, quality_field=True, plan=None, ground=G):
+           expected=None, quality_field=True, plan=None, ground=G, measured=None):
     """`plan`: the design compared, (points, lines, their ids), the package's (docs/adr/2820); none: the drawing's.
     `ground`: the surface compared, the drawing's G or the package's PG (docs/adr/3220)."""
     d_ids, l_ids, m_ids = ids()
     DESIGN_, LINES_ = DESIGN, LINES
+    MEASURED_ = MEASURED
+    if measured is not None:
+        # Docs/adr/3620: a monitoring job's second epoch measured against its first.
+        MEASURED_, m_ids = measured
     if plan is not None:
         DESIGN_, LINES_, (d_ids, l_ids) = plan[0], plan[1], plan[2]
     names = [n for n, *_ in DESIGN_] if design else []
     claimed = set()
-    for name, *_ in MEASURED:
+    for name, *_ in MEASURED_:
         hits = [i for i, n in enumerate(names) if n == name]
         if len(hits) == 1:
             claimed.add(hits[0])
@@ -348,7 +377,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
     out, counts = [], {"within": 0, "outside": 0, "unmatched": 0, "ambiguous": 0}
     low = 0
     hs, vs = [], []
-    for k, (name, x, y, z, s) in enumerate(MEASURED):
+    for k, (name, x, y, z, s) in enumerate(MEASURED_):
         flags = []
         hits = [i for i, n in enumerate(names) if n == name] if name else []
         match, by, amb = None, None, False
@@ -459,7 +488,37 @@ def inp(**over):
     return d
 
 
+def monitoring_answer(i):
+    """Docs/adr/3620: the second epoch measured against the first by name (no surface, line, place, package); the
+    control points matched at both epochs, moved when a limit is broken, missing when not matched."""
+    e1, e2 = epoch_ids()
+    out = report(design=True, surface=False, lines=False, search=None, horizontal=i.get("horizontal"),
+                 vertical=i.get("vertical"), quality=i.get("quality"), expected=i.get("expectedDesign"),
+                 quality_field="qualityField" in i, plan=(EPOCH1, [], (e1, [])), measured=(EPOCH2, e2))
+    out["kind"] = "monitoring"
+    if i.get("control"):
+        c = {"checked": [], "moved": [], "missing": []}
+        for name in i["control"]:
+            name = name.strip()
+            p = next((p for p in out["points"] if p["name"] == name and p.get("by") == "name"), None)
+            if p is None:
+                c["missing"].append(name)
+                continue
+            c["checked"].append(name)
+            if "outsideHorizontal" in p["flags"] or "outsideVertical" in p["flags"]:
+                c["moved"].append(name)
+        out["control"] = c
+    return order(out)
+
+
 def answer(i):
+    if i.get("kind") == "monitoring":
+        return monitoring_answer(i)
+    if i.get("kind") is not None:
+        # The as-built and stakeout jobs check the design alike; the kind given is said back.
+        out = answer({k: v for k, v in i.items() if k != "kind"})
+        out["kind"] = i["kind"]
+        return order(out)
     pkg = i.get("package")
     if i.get("packageDesign"):
         return package_design_answer(i)
@@ -485,7 +544,8 @@ def answer(i):
 
 # The answer's keys in the contract's order: the digest and the changes first.
 ORDER = ["designDigest", "designChanged", "surfaceChanged", "points", "missing", "within", "outside", "unmatched",
-         "ambiguous", "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package"]
+         "ambiguous", "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package", "kind",
+         "control"]
 
 
 def order(out):
@@ -591,7 +651,43 @@ def cases():
                 "surface"),
         refused("kurulamayan yüzey", inp(surface="Boş"), "terrain_unbuildable", "$any", None),
         refused("CBS projesinde yüzey", FULL, NOT_MAP[0], NOT_MAP[1], None, setup_=setup("gis")),
-    ] + package_cases()
+    ] + package_cases() + monitoring_cases()
+
+
+WATCH = {"kind": "monitoring", "measured": "donem2", "design": "donem1", "horizontal": 0.008, "vertical": 0.01,
+         "qualityField": "Hassasiyet", "quality": 0.01, "control": ["K1", "K2"]}
+
+
+def monitoring_cases():
+    """Docs/adr/3620: the jobs' kinds; a monitoring job's two epochs and control points."""
+    w = monitoring_answer(WATCH)
+    st = {p["name"]: (p["status"], p["flags"]) for p in w["points"]}
+    assert st["M1"] == ("within", []) and st["M2"] == ("outside", ["outsideHorizontal"]), (st["M1"], st["M2"])
+    assert st["M3"] == ("outside", ["outsideVertical"]) and st["M6"][0] == "unmatched", (st["M3"], st["M6"])
+    assert "lowQuality" in st["M4"][1] and w["control"]["moved"] == ["K2"]
+    assert [m["name"] for m in w["missing"]] == ["M5"]
+    watch = lambda **over: {**{k: v for k, v in WATCH.items() if k not in over}, **{k: v for k, v in over.items() if v is not None}}  # noqa: E731
+    bad = "invalid_asbuilt_check"
+    foreign = ("İzleme işi önceki dönemin noktalarıyla adla karşılaştırılır; yüzey, çizgi, yerle eşleme ve saha paketi "
+               "tasarım denetimlerinindir.")
+    return [
+        ok("izleme: iki dönem adla, sınırı aşan hareketler, oynayan kontrol noktası, yeni ve ölçülmeyen nokta", WATCH),
+        ok("izleme: sabit kontrol noktası", watch(control=["K1"])),
+        ok("izleme: ölçülmeyen kontrol noktası söylenir", watch(control=["K1", "K9"])),
+        ok("izleme: sınırsız yalnız hareketler", {"kind": "monitoring", "measured": "donem2", "design": "donem1"}),
+        ok("izleme: uygula salt okunur", WATCH, op="execute"),
+        ok("aplikasyon kontrolü işi: tasarım denetimi, türü cevapta", {**FULL, "kind": "stakeout"}),
+        ok("as-built işi açıkça: türü cevapta", {**FULL, "kind": "asBuilt"}),
+        refused("izlemede önceki dönem yok", {"kind": "monitoring", "measured": "donem2"}, bad,
+                "İzleme işinde önceki dönemin noktalarının katmanını (design) verin; noktalar adla karşılaştırılır.", "design"),
+        refused("izlemede yüzey", watch(surface="Tasarım"), bad, foreign, "surface"),
+        refused("izlemede çizgiler", watch(lines="bordur"), bad, foreign, "lines"),
+        refused("izlemede yerle eşleme", watch(search=0.5), bad, foreign, "search"),
+        refused("izlemede saha paketi", watch(package="/tmp/saha-paketi.zip"), bad, foreign, "package"),
+        refused("izleme dışında kontrol noktası", {**FULL, "control": ["K1"]}, bad,
+                "Kontrol noktaları izleme işinindir (kind: monitoring).", "control"),
+        refused("boş kontrol noktası adı", watch(control=["K1", " "]), bad, "Kontrol noktasının adı boş; adını yazın.", "control"),
+    ]
 
 
 PKG = "$fixture:asbuilt/v1/files/saha-paketi.zip"

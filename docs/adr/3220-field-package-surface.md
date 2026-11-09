@@ -107,5 +107,5 @@ kendisi (bugün yalnız kaynak özeti): yüzey farkının da paketin yüzeyiyle 
 
 - Paketin yüzeyini TTM ya da DXF 3B yüz olarak da yazmak (cihazın kendi biçimleri; MAP-19'un “cihaz biçimleri”).
 - Yüzeye en yakın uzaklık (Trimble Access'in “Measure to surface”i); bugün düşey fark.
-- İş türleri (as-built, aplikasyon, deformasyon) ve zaman serisi; yetkili inceleme kaydı.
+- ~~İş türleri (as-built, aplikasyon, deformasyon)~~ ADR 3620; zaman serisi; yetkili inceleme kaydı.
 - Web (TODOS §0.2).

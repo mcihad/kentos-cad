@@ -49,7 +49,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240 | bütçe; çizimin kendi hesabının içinde durdurma; katmanların adla eşlenmesi | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -1930,6 +1930,15 @@ tasarımıyla kontrolde yüzey farkı paketin yüzeyiyledir (SHA-256'ya geri oku
 yüzeyinin paketinkinden başka olduğunu söyler. Başvuruda 6 yeni durum (5 cm alçak, yarım yüzeyli paket; zincirli
 yaz-denetle), Python'da `yuzey.xml`'i değiştiren bağımsız test, MCP, masaüstü uyarısı. Açık: yüzeye en yakın uzaklık,
 cihaz biçimleri (TTM), iş türleri ve zaman serisi, yetkili inceleme kaydı, canlı cihaz.
+
+**9 Kasım 2026, altıncı tur — iş türleri ve izleme ([ADR 3620](../docs/adr/3620-asbuilt-job-kinds-and-monitoring.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: TBC'nin Monitor Point Movement'ı (ilk dönem başvuru, noktalar adla, uyarı ve
+alarm eşikleri), Trimble Access'in dönem karşılaştırması ve TBC'nin as-staked farkları (proje toleransıyla işaret).
+Kanıtlanan: `cad.asbuilt.check`'e `kind` (`asBuilt`, `stakeout`, `monitoring`) ve `control`; izlemede bu dönem önceki
+dönemle yalnız adla karşılaştırılır (fark = hareket), yüzey, çizgi, yerle eşleme ve paket reddedilir; kontrol noktaları
+`checked`/`moved`/`missing`; başvuruya iki dönem katmanı ve 14 durum (62), Python'un aritmetiğiyle hareketler ve ters
+koşu, MCP; Uygulama kontrolü'nde İş türü, izleme formu ve hareket sözleriyle tablo. Açık: zaman serisi (ikiden çok
+dönem), uyarı ve alarm eşikleri, dönemlerin CRS ve epoğu, anlamlılık sınaması, yetkili inceleme kaydı.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

@@ -4,7 +4,8 @@
 //! Dışındakileri seç selects the points not within; CSV kaydet writes the table; nothing is written to the drawing.
 //! Harita, Yol and GIS offer it, Mimari does not. The returned record's field package gives the design digest and the
 //! limits the form leaves empty (docs/adr/2420); paketin tasarımıyla compares the record with the package's own design
-//! (docs/adr/2820). And its pictures.
+//! (docs/adr/2820). İzleme (docs/adr/3620) sets the second epoch against the first by name with the control points; the
+//! form drops the design parts and the result speaks of movement. And its pictures.
 
 use kentos_launch::Module;
 use serde_json::Value;
@@ -374,6 +375,94 @@ fn package_design_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-paketin-tasarimi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
+/// The monitoring job of the shared cases typed in the form (docs/adr/3620).
+fn watch(app: &mut App) {
+    for e in [
+        A::Kind(2),
+        A::Measured("donem2".into()),
+        A::Design("donem1".into()),
+        A::Horizontal("0,008".into()),
+        A::Vertical("0,01".into()),
+        A::QualityField("Hassasiyet".into()),
+        A::Quality("0,01".into()),
+        A::Control("K1, K2".into()),
+    ] {
+        let _ = app.update(Message::Asbuilt(e));
+    }
+}
+
+#[test]
+fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
+    let mut app = opened(Some(Module::Map));
+    let revision = app.document.as_ref().map(|d| d.model.revision());
+    let _ = app.update(Message::Run("asbuilt.check"));
+    watch(&mut app);
+    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let all = cases();
+    let case = all["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("izleme: iki dönem adla")))
+        .expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    for (key, got) in [("within", r.within), ("outside", r.outside), ("unmatched", r.unmatched), ("ambiguous", r.ambiguous), ("lowQuality", r.low_quality)] {
+        assert_eq!(Value::from(got), want[key], "{key}");
+    }
+    assert_eq!(r.kind, Some(kentos_commands::AsbuiltKind::Monitoring));
+    let c = r.control.clone().expect("the control points");
+    assert_eq!((c.checked, c.moved, c.missing), (vec!["K1".to_owned(), "K2".to_owned()], vec!["K2".to_owned()], Vec::<String>::new()));
+    // The design parts the window guessed stay out of a monitoring job (no surface difference, no line).
+    assert_eq!((app.asbuilt.surface.as_str(), app.asbuilt.lines.as_str()), ("t-1", "bordur"));
+    assert!(r.points.iter().all(|p| p.surface.is_none() && p.normal.is_none()));
+    let table = crate::asbuilt_window::csv(&r);
+    assert!(table.starts_with("Nokta;Nesne;Önceki dönemin noktası;"), "{table}");
+    assert!(table.contains("Sınırı aştı") && table.contains("Yeni nokta") && table.contains("yatay sınırı aştı"), "{table}");
+    // Back to the as-built job: the design check as before, no kind said.
+    for e in [A::Kind(0), A::Measured("olcum".into()), A::Design("tasarim".into())] {
+        let _ = app.update(Message::Asbuilt(e));
+    }
+    let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    assert_eq!((r.kind, r.control.is_none()), (None, true));
+    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+}
+
+/// `.run/gui-evidence/izleme-3620/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib asbuilt_window_tests::monitoring_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn monitoring_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/izleme-3620");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("asbuilt.check"));
+        watch(&mut app);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-izleme-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        let _ = app.update(Message::Asbuilt(A::Show(Show::Faults)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-hareket-edenler-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

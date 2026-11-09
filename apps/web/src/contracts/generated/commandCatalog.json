@@ -59874,8 +59874,15 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
+          "control": {
+            "description": "A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond\nthe limits says the two epochs do not rest on one datum (or the mark moved).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "design": {
             "type": [
               "string",
@@ -59901,6 +59908,17 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points\nmeasured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package."
           },
           "lines": {
             "type": [
@@ -59975,11 +59993,33 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "control": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltControl"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A monitoring job's control points (docs/adr/3620)."
+          },
           "designChanged": {
             "type": "boolean"
           },
           "designDigest": {
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The job's kind, as asked (docs/adr/3620)."
           },
           "lowQuality": {
             "format": "uint32",
@@ -60088,11 +60128,33 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "control": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltControl"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A monitoring job's control points (docs/adr/3620)."
+          },
           "designChanged": {
             "type": "boolean"
           },
           "designDigest": {
             "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltKind"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The job's kind, as asked (docs/adr/3620)."
           },
           "lowQuality": {
             "format": "uint32",
@@ -115310,6 +115372,44 @@
         "items"
       ],
       "type": "object"
+    },
+    "AsbuiltControl": {
+      "description": "A monitoring job's control points as found (docs/adr/3620): those matched at both epochs, those of them beyond a\nlimit, and those not measured at both.",
+      "properties": {
+        "checked": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "missing": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "moved": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "checked",
+        "moved",
+        "missing"
+      ],
+      "type": "object"
+    },
+    "AsbuiltKind": {
+      "description": "What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation\nmeasurement as their own jobs): what was built against the design, stakes against their design points, or the same\nmarks at two epochs (physical movement, never a design change).",
+      "enum": [
+        "asBuilt",
+        "stakeout",
+        "monitoring"
+      ],
+      "type": "string"
     },
     "AsbuiltMissing": {
       "description": "A design point no measured point matched.",

@@ -44,7 +44,9 @@ pub const ASBUILT_FLAGS: [&str; 8] = [
 /// digest the field record was made against.
 ///
 /// Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
-/// attribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;
+/// attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
+/// job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
+/// monitoring job, an empty control point's name); the package's (docs/adr/2420;
 /// at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
 /// field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
 /// `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -106,6 +108,44 @@ pub struct AsbuiltCheck {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub package_design: bool,
+    /// The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points
+    /// measured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kind: Option<AsbuiltKind>,
+    /// A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond
+    /// the limits says the two epochs do not rest on one datum (or the mark moved).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub control: Vec<String>,
+}
+
+/// What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation
+/// measurement as their own jobs): what was built against the design, stakes against their design points, or the same
+/// marks at two epochs (physical movement, never a design change).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AsbuiltKind {
+    #[default]
+    AsBuilt,
+    Stakeout,
+    Monitoring,
+}
+
+/// A monitoring job's control points as found (docs/adr/3620): those matched at both epochs, those of them beyond a
+/// limit, and those not measured at both.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AsbuiltControl {
+    pub checked: Vec<String>,
+    pub moved: Vec<String>,
+    pub missing: Vec<String>,
 }
 
 /// The field package a check was given (docs/adr/2420): the file, its stamp, the drawing's revision and the design
@@ -279,4 +319,12 @@ pub struct AsbuiltChecked {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub package: Option<AsbuiltPackage>,
+    /// The job's kind, as asked (docs/adr/3620).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub kind: Option<AsbuiltKind>,
+    /// A monitoring job's control points (docs/adr/3620).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub control: Option<AsbuiltControl>,
 }

@@ -11,12 +11,17 @@
 //! file's name is asked, the drawing is not changed. Kaydın saha paketi (docs/adr/2420) checks the record with the
 //! package it was made with; paketin tasarımıyla (docs/adr/2820) compares it with that package's own design, and its
 //! own surface when it carries one (docs/adr/3220: `yuzey.xml`, the drawing's later surface change said as a warning).
+//!
+//! İş türü (docs/adr/3620): the as-built and the stakeout check set the points against the design; İzleme sets this
+//! epoch's marks against an earlier epoch's by name (their movement, never a design change), with the control points
+//! that should not move. The form then shows only the epochs, the control points and the movement limits, and the
+//! result speaks of movement.
 
 use std::path::PathBuf;
 
 use iced::widget::{container, row, text_editor};
 use iced::{Center, Element, Task};
-use kentos_commands::{AsbuiltCheck, AsbuiltChecked, AsbuiltPoint, CommandResult, Entity, FieldPackage};
+use kentos_commands::{AsbuiltCheck, AsbuiltChecked, AsbuiltKind, AsbuiltPoint, CommandResult, Entity, FieldPackage};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, asbuilt_check, field_package};
@@ -84,7 +89,14 @@ pub struct State {
     pub record_package: String,
     /// The record checked with the package's own design, not the drawing's (docs/adr/2820).
     pub record_design: bool,
+    /// The job's kind (docs/adr/3620): 0 as-built, 1 stakeout check, 2 monitoring.
+    pub kind: usize,
+    /// A monitoring job's control points, by name, comma separated.
+    pub control: String,
 }
+
+/// The jobs' words, in the kind's order (docs/adr/3620).
+pub(crate) const KINDS: [&str; 3] = ["Yapılanın kontrolü (as-built)", "Aplikasyon kontrolü", "İzleme (dönemsel hareket)"];
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -111,6 +123,9 @@ pub enum Event {
     DropPackage,
     /// The package's own design compared (docs/adr/2820).
     PackageDesign(bool),
+    /// The job's kind and a monitoring job's control points (docs/adr/3620).
+    Kind(usize),
+    Control(String),
     Close,
 }
 
@@ -127,6 +142,32 @@ pub fn status_word(s: &str) -> &'static str {
         "ambiguous" => "Belirsiz",
         _ => "—",
     }
+}
+
+/// A monitoring job's status in words (docs/adr/3620): a mark beyond a limit has moved; one not at the earlier epoch
+/// is new.
+pub fn watch_status_word(s: &str) -> &'static str {
+    match s {
+        "within" => "Sınır içinde",
+        "outside" => "Sınırı aştı",
+        "unmatched" => "Yeni nokta",
+        "ambiguous" => "Belirsiz",
+        _ => "—",
+    }
+}
+
+/// A monitoring job's flag in words (docs/adr/3620).
+pub fn watch_flag_word(f: &str) -> &'static str {
+    match f {
+        "outsideHorizontal" => "yatay sınırı aştı",
+        "outsideVertical" => "düşey sınırı aştı",
+        other => flag_word(other),
+    }
+}
+
+/// Whether the answer is a monitoring job's (docs/adr/3620).
+fn watched(r: &AsbuiltChecked) -> bool {
+    r.kind == Some(AsbuiltKind::Monitoring)
 }
 
 /// A flag in words.
@@ -168,7 +209,13 @@ fn opt(v: &str) -> Option<String> {
 
 /// The table as CSV (metres as computed).
 pub fn csv(r: &AsbuiltChecked) -> String {
-    let mut out = String::from("Nokta;Nesne;Tasarım noktası;Eşleme;ΔDoğu (m);ΔKuzey (m);ΔKot (m);Yatay (m);Yüzeye göre (m);Çizgiye göre (m);σ (m);Durum;İşaretler\n");
+    let watch = watched(r);
+    let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) =
+        if watch { (watch_status_word, watch_flag_word) } else { (status_word, flag_word) };
+    let mut out = format!(
+        "Nokta;Nesne;{};Eşleme;ΔDoğu (m);ΔKuzey (m);ΔKot (m);Yatay (m);Yüzeye göre (m);Çizgiye göre (m);σ (m);Durum;İşaretler\n",
+        if watch { "Önceki dönemin noktası" } else { "Tasarım noktası" }
+    );
     let o = |v: Option<f64>| v.map(|v| v.to_string()).unwrap_or_default();
     for p in &r.points {
         out.push_str(&format!(
@@ -184,8 +231,8 @@ pub fn csv(r: &AsbuiltChecked) -> String {
             o(p.surface),
             o(p.normal),
             o(p.sigma),
-            status_word(&p.status),
-            p.flags.iter().map(|f| flag_word(f)).collect::<Vec<_>>().join(", ")
+            status(&p.status),
+            p.flags.iter().map(|f| flag(f)).collect::<Vec<_>>().join(", ")
         ));
     }
     out
@@ -269,20 +316,33 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
 impl App {
     fn asbuilt_input(&self) -> Result<AsbuiltCheck, String> {
         let s = &self.asbuilt;
+        // A monitoring job (docs/adr/3620) sets the earlier epoch's marks by name: the design's other parts stay out.
+        let watch = s.kind == 2;
+        let unless = |v: Option<String>| if watch { None } else { v };
         Ok(AsbuiltCheck {
             measured: s.measured.clone(),
             design: opt(&s.design),
-            surface: opt(&s.surface),
-            lines: opt(&s.lines),
+            surface: unless(opt(&s.surface)),
+            lines: unless(opt(&s.lines)),
             field: opt(&s.field),
-            search: limit(&s.search, "Arama yarıçapı")?,
+            search: if watch { None } else { limit(&s.search, "Arama yarıçapı")? },
             horizontal: limit(&s.horizontal, "Yatay tolerans")?,
             vertical: limit(&s.vertical, "Düşey tolerans")?,
             quality_field: opt(&s.quality_field),
             quality: limit(&s.quality, "Kalite sınırı")?,
             expected_design: None,
-            package: opt(&s.record_package),
-            package_design: s.record_design && !s.record_package.is_empty(),
+            package: unless(opt(&s.record_package)),
+            package_design: !watch && s.record_design && !s.record_package.is_empty(),
+            kind: match s.kind {
+                1 => Some(kentos_commands::AsbuiltKind::Stakeout),
+                2 => Some(kentos_commands::AsbuiltKind::Monitoring),
+                _ => None,
+            },
+            control: if watch {
+                s.control.split([',', ';']).map(str::trim).filter(|c| !c.is_empty()).map(str::to_owned).collect()
+            } else {
+                Vec::new()
+            },
         })
     }
 
@@ -420,6 +480,8 @@ impl App {
         match event {
             Event::Measured(v) => s.measured = v,
             Event::Design(v) => s.design = v,
+            Event::Kind(k) => s.kind = k.min(2),
+            Event::Control(v) => s.control = v,
             Event::Lines(v) => s.lines = v,
             Event::Surface(v) => s.surface = v,
             Event::Field(v) => s.field = v,
@@ -532,10 +594,18 @@ impl App {
             v
         };
         let package = !(s.design.is_empty() && s.lines.is_empty());
-        let form = Form::new()
+        // A monitoring job (docs/adr/3620): this epoch's and the earlier epoch's marks, the control points and the
+        // movement limits; no design parts, no field package.
+        let watch = s.kind == 2;
+        let kinds: Vec<(String, String)> = KINDS.iter().enumerate().map(|(i, k)| (i.to_string(), (*k).to_owned())).collect();
+        let mut form = Form::new()
             .label_width(170.0)
             .field(
-                "Ölçülen",
+                "İş türü",
+                container(fields::select_owned(kinds, &s.kind.to_string(), |v| msg(Event::Kind(v.parse().unwrap_or(0))))).width(260),
+            )
+            .field(
+                if watch { "Bu dönem" } else { "Ölçülen" },
                 row![
                     container(fields::select_owned(s.layers.clone(), &s.measured, |v| msg(Event::Measured(v)))).width(200),
                     label::caption("Ad alanı"),
@@ -543,8 +613,17 @@ impl App {
                 ]
                 .spacing(8)
                 .align_y(Center),
+            );
+        form = if watch {
+            form.field(
+                "Önceki dönem",
+                container(fields::select_owned(with_none(&s.layers), &s.design, |v| msg(Event::Design(v)))).width(200),
             )
-            .field(
+            .help("Noktalar adla eşlenir; fark bu dönem − önceki dönem, yani noktanın hareketi.")
+            .field("Kontrol noktaları", text(&s.control, "ör. K1, K2", Event::Control, 260.0))
+            .help("Oynamaması gereken noktalar: biri sınırı aşarsa iki dönem aynı datumda değildir ya da nokta oynamıştır.")
+        } else {
+            form.field(
                 "Tasarım noktaları",
                 row![
                     container(fields::select_owned(with_none(&s.layers), &s.design, |v| msg(Event::Design(v)))).width(200),
@@ -579,8 +658,10 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
+        };
+        form = form
             .field(
-                "Tolerans yatay / düşey (m)",
+                if watch { "Hareket sınırı yatay / düşey (m)" } else { "Tolerans yatay / düşey (m)" },
                 row![text(&s.horizontal, "—", Event::Horizontal, 80.0), text(&s.vertical, "—", Event::Vertical, 80.0)]
                     .spacing(8)
                     .align_y(Center),
@@ -594,42 +675,59 @@ impl App {
                 ]
                 .spacing(8)
                 .align_y(Center),
-            )
-            .section("Saha paketi")
-            .field(
-                "Kalite notları",
-                text_editor(&s.notes)
-                    .placeholder("Her satır bir not: başlanacak kontrol noktaları, kot sistemi, alet…")
-                    .on_action(|a| msg(Event::Notes(a)))
-                    .height(56)
-                    .padding(6)
-                    .size(kentos_ui::theme::typography::body()),
-            )
-            .help("Tasarım noktaları, çizgileri, yüzey, toleranslar ve kalite sınırı notlarla tek .zip olur; çizim değişmez.")
-            .row(words::secondary(PACKAGE, package.then(|| msg(Event::Package))));
+            );
+        if !watch {
+            form = form
+                .section("Saha paketi")
+                .field(
+                    "Kalite notları",
+                    text_editor(&s.notes)
+                        .placeholder("Her satır bir not: başlanacak kontrol noktaları, kot sistemi, alet…")
+                        .on_action(|a| msg(Event::Notes(a)))
+                        .height(56)
+                        .padding(6)
+                        .size(kentos_ui::theme::typography::body()),
+                )
+                .help("Tasarım noktaları, çizgileri, yüzey, toleranslar ve kalite sınırı notlarla tek .zip olur; çizim değişmez.")
+                .row(words::secondary(PACKAGE, package.then(|| msg(Event::Package))));
+        }
         let mut lines = Vec::new();
         let mut rows = Vec::new();
         let mut faults = 0;
         match &s.answer {
             Some(Ok(r)) => {
                 faults = r.points.iter().filter(|p| p.status != "within").count();
+                let watch = watched(r);
                 lines.push(words::text_line(
                     if r.outside + r.unmatched + r.ambiguous == 0 { Kind::Ok } else { Kind::Warn },
-                    format!(
-                        "{} ölçülen nokta: {} içinde, {} dışında, {} eşleşmedi, {} belirsiz; {} tasarım noktası ölçülmedi.",
-                        r.points.len(),
-                        r.within,
-                        r.outside,
-                        r.unmatched,
-                        r.ambiguous,
-                        r.missing.len()
-                    ),
+                    if watch {
+                        format!(
+                            "Bu dönemde {} nokta: {} sınır içinde, {} sınırı aştı, {} önceki dönemde yok, {} belirsiz; önceki dönemin {} noktası bu dönemde ölçülmedi.",
+                            r.points.len(),
+                            r.within,
+                            r.outside,
+                            r.unmatched,
+                            r.ambiguous,
+                            r.missing.len()
+                        )
+                    } else {
+                        format!(
+                            "{} ölçülen nokta: {} içinde, {} dışında, {} eşleşmedi, {} belirsiz; {} tasarım noktası ölçülmedi.",
+                            r.points.len(),
+                            r.within,
+                            r.outside,
+                            r.unmatched,
+                            r.ambiguous,
+                            r.missing.len()
+                        )
+                    },
                 ));
                 let o = |v: Option<f64>| v.map_or("—".to_owned(), |v| f.length(v));
                 lines.push(words::text_line(
                     Kind::Info,
                     format!(
-                        "Eşlenenler: yatay KOH {}, en büyük {}; düşey KOH {}, en büyük {}.",
+                        "{}: yatay KOH {}, en büyük {}; düşey KOH {}, en büyük {}.",
+                        if watch { "Hareketler" } else { "Eşlenenler" },
                         o(r.rms_horizontal),
                         o(r.max_horizontal),
                         o(r.rms_vertical),
@@ -639,7 +737,11 @@ impl App {
                 if r.low_quality > 0 {
                     lines.push(words::text_line(
                         Kind::Warn,
-                        format!("{} noktanın σ'sı kalite sınırının üstünde: ölçüm çözümü zayıf, yapım hatası sayılmadı.", r.low_quality),
+                        format!(
+                            "{} noktanın σ'sı kalite sınırının üstünde: ölçüm çözümü zayıf, {} sayılmadı.",
+                            r.low_quality,
+                            if watch { "hareket" } else { "yapım hatası" }
+                        ),
                     ));
                 }
                 // With the package's own design (docs/adr/2820) and surface (docs/adr/3220) the record is checked against
@@ -650,6 +752,26 @@ impl App {
                 if let Some(p) = &r.package {
                     lines.extend(package_lines(p, &f));
                 }
+                // A monitoring job's control points (docs/adr/3620).
+                if let Some(c) = &r.control {
+                    if !c.moved.is_empty() {
+                        lines.push(words::text_line(
+                            Kind::Warn,
+                            format!(
+                                "Kontrol noktası oynadı: {}. İki dönem aynı datumda değil ya da nokta sabit değil; hareketleri buna göre okuyun.",
+                                c.moved.join(", ")
+                            ),
+                        ));
+                    } else if !c.checked.is_empty() {
+                        lines.push(words::text_line(Kind::Ok, format!("Kontrol noktaları sabit: {}.", c.checked.join(", "))));
+                    }
+                    if !c.missing.is_empty() {
+                        lines.push(words::text_line(
+                            Kind::Warn,
+                            format!("İki dönemde de ölçülmeyen kontrol noktası: {}.", c.missing.join(", ")),
+                        ));
+                    }
+                }
                 if !r.missing.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
@@ -658,16 +780,31 @@ impl App {
                 }
                 lines.push(words::text_line(
                     Kind::Info,
-                    "Farklar ölçülen − tasarım; çizgiye göre uzaklık çizgi yönünün solunda artı. Sınırlar sizin (boş: denetlenmez); çizime bir şey yazılmaz.",
+                    if watch {
+                        "Farklar bu dönem − önceki dönem, yani noktanın hareketi. Sınırlar sizin (boş: denetlenmez); çizime bir şey yazılmaz."
+                    } else {
+                        "Farklar ölçülen − tasarım; çizgiye göre uzaklık çizgi yönünün solunda artı. Sınırlar sizin (boş: denetlenmez); çizime bir şey yazılmaz."
+                    },
                 ));
                 for p in r.points.iter().filter(|p| s.show == Show::All || p.status != "within") {
-                    rows.push(point_row(p));
+                    rows.push(if watch { watch_row(p) } else { point_row(p) });
                 }
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
-        let table = sheet(
+        // A monitoring job's table (docs/adr/3620): the movement and its horizontal length; no design columns.
+        let columns = if matches!(&s.answer, Some(Ok(r)) if watched(r)) {
+            vec![
+                col("Nokta", 70.0),
+                num("ΔDoğu", 70.0),
+                num("ΔKuzey", 70.0),
+                num("ΔKot", 70.0),
+                num("Yatay", 70.0),
+                col("Durum", 110.0),
+                col("İşaretler", 230.0),
+            ]
+        } else {
             vec![
                 col("Nokta", 70.0),
                 col("Tasarım", 70.0),
@@ -678,11 +815,9 @@ impl App {
                 num("Çizgi", 70.0),
                 col("Durum", 80.0),
                 col("İşaretler", 230.0),
-            ],
-            rows,
-            "Bu süzgeçte nokta yok.",
-            260.0,
-        );
+            ]
+        };
+        let table = sheet(columns, rows, "Bu süzgeçte nokta yok.", 260.0);
         let body = Grows::new()
             .spacing(12.0)
             .width(iced::Fill)
@@ -712,6 +847,21 @@ impl App {
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
+}
+
+/// A monitoring job's row (docs/adr/3620): the mark, its movement and the movement's horizontal length.
+fn watch_row(p: &AsbuiltPoint) -> Vec<String> {
+    let o = |v: Option<f64>| v.map(mm).unwrap_or_default();
+    vec![
+        p.name.clone(),
+        o(p.de),
+        o(p.dn),
+        o(p.dh),
+        // A length, never negative: no sign.
+        p.horizontal.map(|v| format!("{v:.3}").replace('.', ",")).unwrap_or_default(),
+        watch_status_word(&p.status).to_owned(),
+        p.flags.iter().map(|f| watch_flag_word(f)).collect::<Vec<_>>().join(", "),
+    ]
 }
 
 fn point_row(p: &AsbuiltPoint) -> Vec<String> {

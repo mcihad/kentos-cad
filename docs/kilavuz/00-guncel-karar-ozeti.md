@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Uygulama kontrolünün iş türleri ve izleme (9 Kasım 2026; MAP-19, [ADR 3620](../../docs/adr/3620-asbuilt-job-kinds-and-monitoring.md)).**
+  `cad.asbuilt.check`'e `kind` (as-built, aplikasyon, izleme) ve `control`: izlemede bu dönem önceki dönemle adla
+  karşılaştırılır (fark = hareket; yüzey, çizgi, yer, paket reddedilir), oynayan kontrol noktası söylenir. Harita + Yol + CBS.
 - **Atlas sayfalarının kaynak dökümü (9 Kasım 2026; MAP-18, [ADR 3600](../../docs/adr/3600-atlas-page-sources.md)).**
   `file.export.atlas`'ın cevabında her sayfanın kaynakları (kendi nesnesi önce, haritaların sayfadaki zeminine değenler) ve
   nesne özetleri; Atlası PDF yap önizlemesinde Kaynak sütunu. CAD + CBS.

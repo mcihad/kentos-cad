@@ -13,6 +13,8 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AsbuiltCheck,
     AsbuiltChecked,
+    AsbuiltKind,
+    AsbuiltKindName,
 )
 
 if TYPE_CHECKING:
@@ -62,10 +64,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         /,
         *,
         measured: str,
+        control: Sequence[str] | Unset = UNSET,
         design: str | None | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
+        kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
         package_design: bool | Unset = UNSET,
@@ -107,10 +111,14 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         Args:
             doc: The drawing it works on.
             measured:
+            control: A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond
+                the limits says the two epochs do not rest on one datum (or the mark moved).
             design:
             expected_design:
             field:
             horizontal: Unit: length.
+            kind: The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points
+                measured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package.
             lines:
             package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
                 design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
@@ -139,10 +147,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         """
         return self.execute_input(doc, AsbuiltCheck(
             measured=measured,
+            control=_opt(control, lambda x: list(x)),
             design=design,
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
+            kind=kind,
             lines=lines,
             package=package,
             package_design=package_design,
@@ -159,10 +169,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         /,
         *,
         measured: str,
+        control: Sequence[str] | Unset = UNSET,
         design: str | None | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
+        kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
         package_design: bool | Unset = UNSET,
@@ -177,10 +189,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         """
         return self.plan_input(doc, AsbuiltCheck(
             measured=measured,
+            control=_opt(control, lambda x: list(x)),
             design=design,
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
+            kind=kind,
             lines=lines,
             package=package,
             package_design=package_design,
@@ -197,10 +211,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         /,
         *,
         measured: str,
+        control: Sequence[str] | Unset = UNSET,
         design: str | None | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
+        kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
         package_design: bool | Unset = UNSET,
@@ -215,10 +231,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         """
         return self.validate_input(doc, AsbuiltCheck(
             measured=measured,
+            control=_opt(control, lambda x: list(x)),
             design=design,
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
+            kind=kind,
             lines=lines,
             package=package,
             package_design=package_design,
@@ -235,10 +253,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         /,
         *,
         measured: str,
+        control: Sequence[str] | Unset = UNSET,
         design: str | None | Unset = UNSET,
         expected_design: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         horizontal: float | None | Unset = UNSET,
+        kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET,
         lines: str | None | Unset = UNSET,
         package: str | None | Unset = UNSET,
         package_design: bool | Unset = UNSET,
@@ -258,10 +278,12 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         """
         return self.answer_input(doc, AsbuiltCheck(
             measured=measured,
+            control=_opt(control, lambda x: list(x)),
             design=design,
             expected_design=expected_design,
             field=field,
             horizontal=horizontal,
+            kind=kind,
             lines=lines,
             package=package,
             package_design=package_design,

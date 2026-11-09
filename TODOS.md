@@ -183,6 +183,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   erişimi; web'in ızgara kitaplığı IndexedDB'de).
 - MAP-18 / ADR 3600: web'in atlas penceresinde sayfaların kaynak sayısı (`AtlasPageInfo.sources`, `AtlasExported.objects`;
   komut başsız).
+- MAP-19 / ADR 3620: `cad.asbuilt.check`'in web işleyicisinde `kind` ve `control` (62 ortak durum) ve web'in Uygulama
+  kontrolü penceresinde İş türü, izleme formu (Bu dönem, Önceki dönem, Kontrol noktaları) ve hareket sözleriyle tablo.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

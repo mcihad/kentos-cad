@@ -573,6 +573,20 @@ ArrayFindKindName = Literal["line", "grid", "lattice", "polar", "path"]
 """The names of :class:`ArrayFindKind`, for a plain string."""
 
 
+class AsbuiltKind(_StrEnum):
+    """What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation
+    measurement as their own jobs): what was built against the design, stakes against their design points, or the same
+    marks at two epochs (physical movement, never a design change).
+    """
+    AS_BUILT = "asBuilt"
+    STAKEOUT = "stakeout"
+    MONITORING = "monitoring"
+
+
+AsbuiltKindName = Literal["asBuilt", "stakeout", "monitoring"]
+"""The names of :class:`AsbuiltKind`, for a plain string."""
+
+
 class AssetKind(_StrEnum):
     """What a linked file is.
 
@@ -16847,7 +16861,9 @@ class AsbuiltCheck(_Model):
     digest the field record was made against.
 
     Refusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty
-    attribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;
+    attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
+    job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
+    monitoring job, an empty control point's name); the package's (docs/adr/2420;
     at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
     field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
     `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -16855,7 +16871,11 @@ class AsbuiltCheck(_Model):
     `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
     (more than 100 000 measured points).
     Attributes:
+        control: A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond
+            the limits says the two epochs do not rest on one datum (or the mark moved).
         horizontal: Unit: length.
+        kind: The job's kind (docs/adr/3620): `asBuilt` (none), `stakeout` or `monitoring`. A monitoring job sets the points
+            measured against an earlier epoch's (`design`: its layer), by name alone: no surface, line, place or package.
         package: The field package (`cad.field.package`'s `.zip`, an absolute path) the record was made with (docs/adr/2420): its
             design digest is the one expected, its acceptance limits apply where this input gives none (its quality limit
             only with `qualityField`), its system, epoch and heights are set against the project's.
@@ -16869,10 +16889,12 @@ class AsbuiltCheck(_Model):
         vertical: Unit: length.
     """
     measured: str
+    control: list[str] | Unset = UNSET
     design: str | None | Unset = UNSET
     expected_design: str | None | Unset = UNSET
     field: str | None | Unset = UNSET
     horizontal: float | None | Unset = UNSET
+    kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET
     lines: str | None | Unset = UNSET
     package: str | None | Unset = UNSET
     package_design: bool | Unset = UNSET
@@ -16885,6 +16907,8 @@ class AsbuiltCheck(_Model):
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["measured"] = self.measured
+        if self.control is not UNSET:
+            out["control"] = list(self.control)
         if self.design is not UNSET:
             out["design"] = self.design
         if self.expected_design is not UNSET:
@@ -16893,6 +16917,8 @@ class AsbuiltCheck(_Model):
             out["field"] = self.field
         if self.horizontal is not UNSET:
             out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
         if self.lines is not UNSET:
             out["lines"] = self.lines
         if self.package is not UNSET:
@@ -16915,10 +16941,12 @@ class AsbuiltCheck(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> AsbuiltCheck:
         return cls(
             measured=data["measured"],
+            control=list(data["control"]) if "control" in data else UNSET,
             design=data.get("design", UNSET),
             expected_design=data.get("expectedDesign", UNSET),
             field=data.get("field", UNSET),
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(AsbuiltKind, data["kind"]),
             lines=data.get("lines", UNSET),
             package=data.get("package", UNSET),
             package_design=data.get("packageDesign", UNSET),
@@ -16941,6 +16969,8 @@ class AsbuiltChecked(_Model):
         unmatched: Unit: count.
         ambiguous: Unit: count.
         low_quality: Unit: count.
+        control: A monitoring job's control points (docs/adr/3620).
+        kind: The job's kind, as asked (docs/adr/3620).
         max_horizontal: Unit: length.
         max_vertical: Unit: length.
         package: The field package given (docs/adr/2420).
@@ -16957,7 +16987,9 @@ class AsbuiltChecked(_Model):
     unmatched: int
     ambiguous: int
     low_quality: int
+    control: AsbuiltControl | None | Unset = UNSET
     design_changed: bool | Unset = UNSET
+    kind: AsbuiltKind | AsbuiltKindName | None | Unset = UNSET
     max_horizontal: float | None | Unset = UNSET
     max_vertical: float | None | Unset = UNSET
     package: AsbuiltPackage | None | Unset = UNSET
@@ -16975,8 +17007,12 @@ class AsbuiltChecked(_Model):
         out["unmatched"] = self.unmatched
         out["ambiguous"] = self.ambiguous
         out["lowQuality"] = self.low_quality
+        if self.control is not UNSET:
+            out["control"] = None if self.control is None else self.control.to_json()
         if self.design_changed is not UNSET:
             out["designChanged"] = self.design_changed
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
         if self.max_horizontal is not UNSET:
             out["maxHorizontal"] = None if self.max_horizontal is None else float(self.max_horizontal)
         if self.max_vertical is not UNSET:
@@ -17002,13 +17038,40 @@ class AsbuiltChecked(_Model):
             unmatched=data["unmatched"],
             ambiguous=data["ambiguous"],
             low_quality=data["lowQuality"],
+            control=UNSET if "control" not in data else None if data["control"] is None else AsbuiltControl.from_json(data["control"]),
             design_changed=data.get("designChanged", UNSET),
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(AsbuiltKind, data["kind"]),
             max_horizontal=UNSET if "maxHorizontal" not in data else None if data["maxHorizontal"] is None else float(data["maxHorizontal"]),
             max_vertical=UNSET if "maxVertical" not in data else None if data["maxVertical"] is None else float(data["maxVertical"]),
             package=UNSET if "package" not in data else None if data["package"] is None else AsbuiltPackage.from_json(data["package"]),
             rms_horizontal=UNSET if "rmsHorizontal" not in data else None if data["rmsHorizontal"] is None else float(data["rmsHorizontal"]),
             rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
             surface_changed=data.get("surfaceChanged", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltControl(_Model):
+    """A monitoring job's control points as found (docs/adr/3620): those matched at both epochs, those of them beyond a
+    limit, and those not measured at both.
+    """
+    checked: list[str]
+    moved: list[str]
+    missing: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["checked"] = list(self.checked)
+        out["moved"] = list(self.moved)
+        out["missing"] = list(self.missing)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltControl:
+        return cls(
+            checked=list(data["checked"]),
+            moved=list(data["moved"]),
+            missing=list(data["missing"]),
         )
 
 
@@ -130410,6 +130473,9 @@ __all__ = [
     "ArraysFound",
     "AsbuiltCheck",
     "AsbuiltChecked",
+    "AsbuiltControl",
+    "AsbuiltKind",
+    "AsbuiltKindName",
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",

@@ -14,8 +14,8 @@
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltMissing, AsbuiltPackage, AsbuiltPoint,
-    CommandResult, Entity, Vec2,
+    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltControl, AsbuiltKind, AsbuiltMissing,
+    AsbuiltPackage, AsbuiltPoint, CommandResult, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
 use kentos_road::surface::Surface;
@@ -160,6 +160,29 @@ pub(crate) fn digest(design: &[Point], lines: &[Line]) -> String {
 
 fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     let bad = |m: &str, path: &str| Err(refuse(codes::INVALID_ASBUILT_CHECK, m.to_owned(), path));
+    // A monitoring job (docs/adr/3620): the same marks at two epochs, by name; the design's other parts are not its.
+    if input.kind == Some(AsbuiltKind::Monitoring) {
+        if input.design.is_none() {
+            return bad("İzleme işinde önceki dönemin noktalarının katmanını (design) verin; noktalar adla karşılaştırılır.", "design");
+        }
+        let foreign = [
+            (input.surface.is_some(), "surface"),
+            (input.lines.is_some(), "lines"),
+            (input.search.is_some(), "search"),
+            (input.package.is_some() || input.package_design, "package"),
+        ];
+        if let Some((_, path)) = foreign.into_iter().find(|(given, _)| *given) {
+            return bad(
+                "İzleme işi önceki dönemin noktalarıyla adla karşılaştırılır; yüzey, çizgi, yerle eşleme ve saha paketi tasarım denetimlerinindir.",
+                path,
+            );
+        }
+    } else if !input.control.is_empty() {
+        return bad("Kontrol noktaları izleme işinindir (kind: monitoring).", "control");
+    }
+    if input.control.iter().any(|c| c.trim().is_empty()) {
+        return bad("Kontrol noktasının adı boş; adını yazın.", "control");
+    }
     if input.design.is_none() && input.surface.is_none() && input.lines.is_none() && !input.package_design {
         return bad("Karşılaştırılacak tasarım yok: tasarım noktalarının katmanını, yüzeyi ya da tasarım çizgilerinin katmanını verin.", "design");
     }
@@ -491,7 +514,26 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         .collect();
     let rms = |sum: f64, n: usize| (n > 0).then(|| (sum / n as f64).sqrt());
     let surface_taken = ground.is_some();
+    // A monitoring job's control points (docs/adr/3620): matched by name at both epochs, moved when a limit is broken.
+    let control = (input.kind == Some(AsbuiltKind::Monitoring) && !input.control.is_empty()).then(|| {
+        let mut c = AsbuiltControl { checked: Vec::new(), moved: Vec::new(), missing: Vec::new() };
+        for name in &input.control {
+            let name = name.trim();
+            match out.iter().find(|p| p.name == name && p.by.as_deref() == Some("name")) {
+                Some(p) => {
+                    c.checked.push(name.to_owned());
+                    if p.flags.iter().any(|f| f == "outsideHorizontal" || f == "outsideVertical") {
+                        c.moved.push(name.to_owned());
+                    }
+                }
+                None => c.missing.push(name.to_owned()),
+            }
+        }
+        c
+    });
     Ok(AsbuiltChecked {
+        kind: input.kind,
+        control,
         design_changed,
         surface_changed,
         design_digest,
