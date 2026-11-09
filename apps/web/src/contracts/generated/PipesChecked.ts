@@ -6,8 +6,8 @@ import type { PipeFinding } from "./PipeFinding";
 import type { PipeNear } from "./PipeNear";
 
 /**
- * Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else
- * `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
+ * Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`outside` with a wall thickness
+ * asked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
  * [`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.
  */
 export type PipesChecked = { network: string, coverTo: string, pipes: Array<PipeCheck>, findings: Array<PipeFinding>, counts: Array<PipeCount>, parts: number, length: number, 

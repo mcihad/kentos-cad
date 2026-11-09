@@ -3,7 +3,8 @@
 //! each pipe's inverts at its ends (two attributes, or its vertices' heights), its slope the way it flows, its diameter
 //! (an attribute in a unit, against a catalogue of sizes), its cover over the crown from a terrain surface (measured at
 //! every place the pipe crosses a triangle's edge, so the least cover is exact) or from the structures' cover levels,
-//! and how it meets the others: detached parts, an end without a structure, an outlet higher than the lowest inlet.
+//! over the pipe's top outside when its wall thickness is asked (docs/adr/3960, Civil 3D's), and how it meets the
+//! others: detached parts, an end without a structure, an outlet higher than the lowest inlet.
 //! A value that would fit read in another unit is reported as a likely unit mistake, never corrected.
 //!
 //! No limit is the program's: the least and the greatest cover and slope are the user's (the regulation's annexes,
@@ -27,7 +28,7 @@ pub const PIPE_FINDING_LIMIT: usize = 5000;
 pub const PIPE_CATALOG_LIMIT: usize = 200;
 
 /// The findings' kinds, in the order a pipe's are listed.
-pub const PIPE_FINDINGS: [&str; 23] = [
+pub const PIPE_FINDINGS: [&str; 24] = [
     "detached",
     "noStructure",
     "noInvert",
@@ -41,6 +42,7 @@ pub const PIPE_FINDINGS: [&str; 23] = [
     "noDiameter",
     "diameterUnit",
     "notInCatalog",
+    "noWall",
     "noGround",
     "offSurface",
     "aboveGround",
@@ -100,7 +102,10 @@ impl PipeUnit {
     pub const ALL: [PipeUnit; 3] = [Self::Mm, Self::Cm, Self::M];
 }
 
-/// The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).
+/// The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
+/// optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
+/// then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
+/// outside to outside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -113,6 +118,9 @@ pub struct PipeDiameter {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub catalog: Vec<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wall: Option<String>,
 }
 
 /// Where the ground over a pipe is read.
@@ -131,7 +139,7 @@ pub enum PipeGround {
 
 /// Input of `cad.pipes.check` v1.
 ///
-/// Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a
+/// Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
 /// greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
 /// name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
 /// surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
@@ -218,9 +226,10 @@ pub enum PipeAbove {
 }
 
 /// A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each
-/// one's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;
-/// below zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an
-/// invert or an asked diameter is not known.
+/// one's invert there, the vertical clearance (the upper one's invert less the lower one's crown; with walls asked
+/// (docs/adr/3960) the upper one's bottom outside less the lower one's top outside; below zero they clash) and which is
+/// above (by the middle of their bores; level: the checked one); none where an invert or an asked diameter is not
+/// known.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -250,8 +259,8 @@ pub struct PipeCrossing {
 
 /// A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross
 /// (docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance
-/// (the distance less the two radii; none where an asked diameter is not known: then listed only when the axes
-/// themselves are closer than the least).
+/// (the distance less the two radii, and the walls when asked (docs/adr/3960); none where an asked diameter is not
+/// known: then listed only when the axes themselves are closer than the least).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -295,7 +304,8 @@ pub struct PipeFinding {
 
 /// A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
 /// direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
-/// diameter (metres), the least cover and where, the greatest cover, and its findings' kinds.
+/// diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
+/// and its findings' kinds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -328,6 +338,10 @@ pub struct PipeCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub wall: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub min_cover: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -352,8 +366,8 @@ pub struct PipeCount {
     pub count: u32,
 }
 
-/// Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else
-/// `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
+/// Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`outside` with a wall thickness
+/// asked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
 /// [`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

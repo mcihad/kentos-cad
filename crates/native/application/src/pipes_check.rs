@@ -7,10 +7,12 @@
 //! - its slope, (upstream − downstream) / length: rising, flat, below the least or above the greatest the user gave;
 //! - its diameter, an attribute in a unit, and the catalogue's sizes; a size the catalogue has in another unit is a
 //!   likely unit mistake;
-//! - its cover over the crown (invert + diameter; the wall is not known and not added): from a terrain surface at every
-//!   place the pipe crosses a triangle's edge and at its vertices (the ground and the crown are linear between them, so
-//!   the least is exact), or from the structures' cover level at the ends; an invert that would fit the cover limits
-//!   read in centimetres or millimetres, or as a depth, is a likely unit mistake;
+//! - its cover over the crown (invert + diameter), or over its top outside (invert + diameter + wall, Civil 3D's: “from
+//!   the top outside of the pipe to the reference surface”) when a wall thickness attribute is asked (docs/adr/3960; a
+//!   pipe without one is said, `noWall`, and measured over its crown): from a terrain surface at every place the pipe
+//!   crosses a triangle's edge and at its vertices (the ground and the crown are linear between them, so the least is
+//!   exact), or from the structures' cover level at the ends; an invert that would fit the cover limits read in
+//!   centimetres or millimetres, or as a depth, is a likely unit mistake;
 //! - how it meets the others: a part not connected to the longest, an end at no structure (when the network has
 //!   structures), an outlet higher than the lowest inlet at a node (Civil 3D's Pipe Drop Across Structure rule's
 //!   question, with no drop asked);
@@ -94,6 +96,9 @@ pub(crate) fn asked_values(
         }
         if let Some(i) = d.catalog.iter().position(|c| !(c.is_finite() && *c > 0.0)) {
             return bad("Katalogdaki çaplar 0'dan büyük olmalı.".into(), &format!("diameter.catalog[{i}]"));
+        }
+        if d.wall.as_deref().is_some_and(|w| !named(w)) {
+            return bad("Et kalınlığının özniteliği boş; özniteliğin adını yazın.".into(), "diameter.wall");
         }
     }
     match ground {
@@ -209,6 +214,13 @@ struct Sample {
 
 pub(crate) fn diameter_of(e: Option<&Entity>, d: &PipeDiameter) -> Result<f64, ()> {
     e.and_then(|e| attr(e, &d.field)).filter(|v| *v > 0.0).ok_or(())
+}
+
+/// A pipe's wall thickness in metres (docs/adr/3960), its attribute read in the diameter's unit, 0 or more: none when
+/// no wall is asked, an error when one is asked and the pipe has none.
+pub(crate) fn wall_of(e: Option<&Entity>, d: &PipeDiameter) -> Option<Result<f64, ()>> {
+    let field = d.wall.as_deref()?;
+    Some(e.and_then(|e| attr(e, field)).filter(|v| *v >= 0.0).map(|v| v * d.unit.metres()).ok_or(()))
 }
 
 fn in_catalog(v: f64, catalog: &[f64]) -> bool {
@@ -412,10 +424,17 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             Some((d, Ok(v))) => Some(v * d.unit.metres()),
             _ => None,
         };
-        // The crown's offset over the invert: the diameter, none when one is asked and the pipe has none.
+        // Its wall (docs/adr/3960): asked and missing is said, and the crown is the inner one.
+        let wall = input.diameter.as_ref().and_then(|d| wall_of(e, d));
+        if let Some(Err(())) = wall {
+            mark("noWall", start, None, None);
+        }
+        let wall_m = wall.and_then(Result::ok);
+        // The crown's offset over the invert: the diameter and the wall (the top outside), none when a diameter is
+        // asked and the pipe has none.
         let crown: Option<f64> = match diameter {
             None => Some(0.0),
-            Some(_) => d_m,
+            Some(_) => d_m.map(|d| d + wall_m.unwrap_or(0.0)),
         };
         // The ground at the ends (for the unit checks) and the samples for the cover.
         let mut samples: Vec<Sample> = Vec::new();
@@ -544,6 +563,7 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             downstream: down,
             slope,
             diameter: d_m,
+            wall: wall_m,
             min_cover: min_cover.map(|m| m.0),
             min_cover_at: min_cover.map(|m| m.1),
             max_cover: max_cover.map(|m| m.0),
@@ -590,7 +610,12 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
     }
     PipesChecked {
         network: ask.def.id.clone(),
-        cover_to: if input.diameter.is_some() { "crown" } else { "invert" }.into(),
+        cover_to: match &input.diameter {
+            Some(d) if d.wall.is_some() => "outside",
+            Some(_) => "crown",
+            None => "invert",
+        }
+        .into(),
         pipes,
         findings: list.into_iter().map(|(_, f)| f).take(PIPE_FINDING_LIMIT).collect(),
         counts,

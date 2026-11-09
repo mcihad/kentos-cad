@@ -3,8 +3,9 @@ import type { PipeAbove } from "./PipeAbove";
 
 /**
  * A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each
- * one's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;
- * below zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an
- * invert or an asked diameter is not known.
+ * one's invert there, the vertical clearance (the upper one's invert less the lower one's crown; with walls asked
+ * (docs/adr/3960) the upper one's bottom outside less the lower one's top outside; below zero they clash) and which is
+ * above (by the middle of their bores; level: the checked one); none where an invert or an asked diameter is not
+ * known.
  */
 export type PipeCrossing = { pipe: string, other: string, at: [number, number], invert?: number, otherInvert?: number, clearance?: number, above?: PipeAbove, };

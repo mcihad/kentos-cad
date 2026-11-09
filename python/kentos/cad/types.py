@@ -67003,7 +67003,8 @@ class PinnedObject(_Model):
 class PipeCheck(_Model):
     """A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
     direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
-    diameter (metres), the least cover and where, the greatest cover, and its findings' kinds.
+    diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
+    and its findings' kinds.
     Attributes:
         length: Unit: length.
         diameter: Unit: length.
@@ -67013,6 +67014,7 @@ class PipeCheck(_Model):
         min_cover_at: Unit: system.
         slope: Unit: grade.
         upstream: Unit: elevation.
+        wall: Unit: length.
     """
     uid: str
     layer: str
@@ -67026,6 +67028,7 @@ class PipeCheck(_Model):
     reversed: bool | Unset = UNSET
     slope: float | None | Unset = UNSET
     upstream: float | None | Unset = UNSET
+    wall: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -67049,6 +67052,8 @@ class PipeCheck(_Model):
             out["slope"] = None if self.slope is None else float(self.slope)
         if self.upstream is not UNSET:
             out["upstream"] = None if self.upstream is None else float(self.upstream)
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else float(self.wall)
         return out
 
     @classmethod
@@ -67066,6 +67071,7 @@ class PipeCheck(_Model):
             reversed=data.get("reversed", UNSET),
             slope=UNSET if "slope" not in data else None if data["slope"] is None else float(data["slope"]),
             upstream=UNSET if "upstream" not in data else None if data["upstream"] is None else float(data["upstream"]),
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else float(data["wall"]),
         )
 
 
@@ -67138,9 +67144,10 @@ class PipeCount(_Model):
 @dataclass(kw_only=True, slots=True)
 class PipeCrossing(_Model):
     """A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each
-    one's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;
-    below zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an
-    invert or an asked diameter is not known.
+    one's invert there, the vertical clearance (the upper one's invert less the lower one's crown; with walls asked
+    (docs/adr/3960) the upper one's bottom outside less the lower one's top outside; below zero they clash) and which is
+    above (by the middle of their bores; level: the checked one); none where an invert or an asked diameter is not
+    known.
     Attributes:
         at: Unit: system.
         clearance: Unit: length.
@@ -67185,13 +67192,17 @@ class PipeCrossing(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PipeDiameter(_Model):
-    """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).
+    """The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
+    optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
+    then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
+    outside to outside.
     Attributes:
         catalog: Unit: value.
     """
     field: str
     unit: PipeUnit | PipeUnitName
     catalog: list[float] | Unset = UNSET
+    wall: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -67199,6 +67210,8 @@ class PipeDiameter(_Model):
         out["unit"] = _enum_out(self.unit)
         if self.catalog is not UNSET:
             out["catalog"] = [float(e0) for e0 in self.catalog]
+        if self.wall is not UNSET:
+            out["wall"] = self.wall
         return out
 
     @classmethod
@@ -67207,6 +67220,7 @@ class PipeDiameter(_Model):
             field=data["field"],
             unit=_enum_in(PipeUnit, data["unit"]),
             catalog=[float(e0) for e0 in data["catalog"]] if "catalog" in data else UNSET,
+            wall=data.get("wall", UNSET),
         )
 
 
@@ -67250,8 +67264,8 @@ class PipeFinding(_Model):
 class PipeNear(_Model):
     """A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross
     (docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance
-    (the distance less the two radii; none where an asked diameter is not known: then listed only when the axes
-    themselves are closer than the least).
+    (the distance less the two radii, and the walls when asked (docs/adr/3960); none where an asked diameter is not
+    known: then listed only when the axes themselves are closer than the least).
     Attributes:
         at: Unit: system.
         other_at: Unit: system.
@@ -67503,7 +67517,7 @@ class PipeProfileStructure(_Model):
 class PipesCheck(_Model):
     """Input of `cad.pipes.check` v1.
 
-    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a
+    Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
     greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
     name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
     surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
@@ -67566,8 +67580,8 @@ class PipesCheck(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PipesChecked(_Model):
-    """Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else
-    `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
+    """Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`outside` with a wall thickness
+    asked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in
     [`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.
     Attributes:
         parts: Unit: count.

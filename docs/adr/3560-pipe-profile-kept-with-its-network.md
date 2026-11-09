@@ -78,5 +78,6 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-16, altıncı tur. Durum: taslak. ADR 186
 ## Sonra
 
 - Boru hattı denetimi'nin kendi sonucunun ağ değişince kendiliğinden yeniden okunması (pencere açıkken).
-- Yüzey kaplaması; kesişen borunun dış duvarı (MAP-16'nın öbür maddeleri).
+- Yüzey kaplaması; kesişen borunun dış duvarı (MAP-16'nın öbür maddeleri; et kalınlığının ölçüsü
+  [ADR 3960](3960-pipe-wall-thickness.md)'ta).
 - Web (TODOS §0.2).

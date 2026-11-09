@@ -7,7 +7,7 @@ import type { PipeInverts } from "./PipeInverts";
 /**
  * Input of `cad.pipes.check` v1.
  *
- * Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a
+ * Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
  * greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
  * name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
  * surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),

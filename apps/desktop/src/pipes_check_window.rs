@@ -1,9 +1,10 @@
 //! Boru hattı denetimi (docs/adr/1640; `pipes.check`): the pipes of a utility network checked as a gravity line by
 //! `cad.pipes.check`, read only. The form names the network, where the inverts are (two attributes or the vertices'
-//! heights), the diameter's attribute, unit and catalogue, the ground (a terrain surface, the structures' cover level,
-//! or none) and the limits, every one of them the user's (empty: not checked; KentOS gives none). The result follows
-//! the form. The summary counts the findings by kind, the table lists every pipe with its slope, diameter, cover and
-//! findings (Bulgulu: only those with one); Bulgulu boruları seç selects them, CSV kaydet writes the table. Hat profili
+//! heights), the diameter's attribute, unit, wall thickness (docs/adr/3960) and catalogue, the ground (a terrain
+//! surface, the structures' cover level, or none) and the limits, every one of them the user's (empty: not checked;
+//! KentOS gives none). The result follows the form. The summary counts the findings by kind, the table lists every
+//! pipe with its slope, diameter, cover and findings (Bulgulu: only those with one); Bulgulu boruları seç selects
+//! them, CSV kaydet writes the table. Hat profili
 //! draws the run from a pipe along the flow as a longitudinal profile under the drawing (`cad.pipes.profile`, docs/adr/1860).
 //! Diğer ağ (docs/adr/2360) measures the clearances to another utility network's pipes: where they cross, the vertical
 //! clearance and which is above; where they pass, the horizontal one. The least clearances and the side that must be
@@ -128,6 +129,8 @@ pub struct State {
     pub end: String,
     pub diameter: String,
     pub unit: String,
+    /// The wall thickness's attribute (docs/adr/3960; empty: not asked), in the diameter's unit.
+    pub wall: String,
     pub catalog: String,
     pub ground: Ground,
     /// The project's surfaces: id and name.
@@ -155,6 +158,7 @@ pub struct State {
     pub other_start: String,
     pub other_end: String,
     pub other_diameter: String,
+    pub other_wall: String,
     pub other_unit: String,
     pub vertical: String,
     pub horizontal: String,
@@ -169,6 +173,7 @@ pub enum Event {
     End(String),
     Diameter(String),
     Unit(String),
+    Wall(String),
     Catalog(String),
     Ground(Ground),
     Surface(String),
@@ -188,6 +193,7 @@ pub enum Event {
     OtherStart(String),
     OtherEnd(String),
     OtherDiameter(String),
+    OtherWall(String),
     OtherUnit(String),
     Vertical(String),
     Horizontal(String),
@@ -220,6 +226,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "noDiameter" => "Çap yok",
         "diameterUnit" => "Çap birimi yanlış olabilir",
         "notInCatalog" => "Çap katalogda yok",
+        "noWall" => "Et kalınlığı yok",
         "noGround" => "Zemin kotu yok",
         "offSurface" => "Yüzeyin dışında",
         "aboveGround" => "Zeminin üstünde",
@@ -325,6 +332,7 @@ impl App {
                     field: s.other_diameter.clone(),
                     unit: unit_of(&s.other_unit),
                     catalog: Vec::new(),
+                    wall: (!s.other_wall.trim().is_empty()).then(|| s.other_wall.clone()),
                 }),
                 vertical: limit(&s.vertical, "En az düşey açıklık")?,
                 horizontal: limit(&s.horizontal, "En az yatay açıklık")?,
@@ -342,7 +350,14 @@ impl App {
                 From::Heights => PipeInverts::Heights,
             },
             diameter: (!s.diameter.trim().is_empty())
-                .then(|| catalog(&s.catalog).map(|c| PipeDiameter { field: s.diameter.clone(), unit, catalog: c }))
+                .then(|| {
+                    catalog(&s.catalog).map(|c| PipeDiameter {
+                        field: s.diameter.clone(),
+                        unit,
+                        catalog: c,
+                        wall: (!s.wall.trim().is_empty()).then(|| s.wall.clone()),
+                    })
+                })
                 .transpose()?,
             ground: match s.ground {
                 Ground::Surface => Some(PipeGround::Surface { surface: s.surface.clone() }),
@@ -426,6 +441,7 @@ impl App {
             start: "Akar baş".into(),
             end: "Akar son".into(),
             diameter: if has(&edge_layers, "Çap") { "Çap".into() } else { String::new() },
+            wall: ["Et kalınlığı", "Et"].iter().find(|f| has(&edge_layers, f)).map_or_else(String::new, |f| (*f).to_owned()),
             unit: "mm".into(),
             ground,
             surface: surfaces.first().map(|s| s.0.clone()).unwrap_or_default(),
@@ -513,12 +529,14 @@ impl App {
             let has = |field: &str| {
                 doc.model.entities().any(|e| layers.contains(&e.base().layer_id.as_str()) && e.base().attrs.contains_key(field))
             };
-            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap")))
+            let wall = ["Et kalınlığı", "Et"].iter().find(|f| has(f)).map_or_else(String::new, |f| (*f).to_owned());
+            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall))
         });
         let s = &mut self.pipes_check;
-        if let Some((from, diameter)) = guess {
+        if let Some((from, diameter, wall)) = guess {
             s.other_from = from;
             s.other_diameter = if diameter { "Çap".into() } else { String::new() };
+            s.other_wall = wall;
         }
         if id.is_empty() && matches!(s.show, Show::Crossings | Show::Near) {
             s.show = Show::All;
@@ -551,6 +569,7 @@ impl App {
             Event::Start(v) => s.start = v,
             Event::End(v) => s.end = v,
             Event::Diameter(v) => s.diameter = v,
+            Event::Wall(v) => s.wall = v,
             Event::Unit(v) => s.unit = v,
             Event::Catalog(v) => s.catalog = v,
             Event::Ground(v) => s.ground = v,
@@ -589,6 +608,7 @@ impl App {
             Event::OtherStart(v) => s.other_start = v,
             Event::OtherEnd(v) => s.other_end = v,
             Event::OtherDiameter(v) => s.other_diameter = v,
+            Event::OtherWall(v) => s.other_wall = v,
             Event::OtherUnit(v) => s.other_unit = v,
             Event::Vertical(v) => s.vertical = v,
             Event::Horizontal(v) => s.horizontal = v,
@@ -699,8 +719,10 @@ impl App {
                 row![
                     text(&s.diameter, "Öznitelik", Event::Diameter, 110.0),
                     container(fields::select_owned(units, &s.unit, |v| msg(Event::Unit(v)))).width(70),
+                    label::caption("Et"),
+                    text(&s.wall, "Öznitelik", Event::Wall, 100.0),
                     label::caption("Katalog"),
-                    text(&s.catalog, "200 300 400", Event::Catalog, 170.0)
+                    text(&s.catalog, "200 300 400", Event::Catalog, 130.0)
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -753,7 +775,9 @@ impl App {
                 "Diğer ağın çapı",
                 row![
                     text(&s.other_diameter, "Öznitelik", Event::OtherDiameter, 110.0),
-                    container(fields::select_owned(units, &s.other_unit, |v| msg(Event::OtherUnit(v)))).width(70)
+                    container(fields::select_owned(units, &s.other_unit, |v| msg(Event::OtherUnit(v)))).width(70),
+                    label::caption("Et"),
+                    text(&s.other_wall, "Öznitelik", Event::OtherWall, 100.0)
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -802,11 +826,15 @@ impl App {
                     Kind::Info,
                     format!(
                         "Örtü boru {} üstünden; sınırlar sizin (boş: denetlenmez). Birim hatası önerilir, düzeltilmez; çizime bir şey yazılmaz.",
-                        if r.cover_to == "crown" { "tepesinin (akar + iç çap)" } else { "akarının" }
+                        match r.cover_to.as_str() {
+                            "outside" => "dış tepesinin (akar + iç çap + et)",
+                            "crown" => "tepesinin (akar + iç çap)",
+                            _ => "akarının",
+                        }
                     ),
                 ));
                 if !s.other.is_empty() {
-                    lines.push(words::text_line(Kind::Info, clearance_line(r)));
+                    lines.push(words::text_line(Kind::Info, clearance_line(r, r.cover_to == "outside" || !s.other_wall.trim().is_empty())));
                 }
                 let names = self.pipes_check_names();
                 match s.show {
@@ -932,7 +960,7 @@ impl App {
 }
 
 /// The clearances' line: the crossings, the clashes and those whose clearance is not known, the near passes.
-fn clearance_line(r: &PipesChecked) -> String {
+fn clearance_line(r: &PipesChecked, walled: bool) -> String {
     let clash = r.crossings.iter().filter(|c| c.clearance.is_some_and(|v| v < 0.0)).count();
     let unknown = r.crossings.iter().filter(|c| c.clearance.is_none()).count();
     let mut out = format!("Diğer ağ: {} kesişim, {clash} çakışma", r.crossings.len());
@@ -940,8 +968,9 @@ fn clearance_line(r: &PipesChecked) -> String {
         out.push_str(&format!(", {unknown} kesişimde açıklık bilinmiyor (akar ya da çap yok)"));
     }
     out.push_str(&format!(
-        "; {} yakın geçiş. Açıklık iç çaplarla ölçülür, et kalınlığı katılmaz; sınırlar sizin.",
-        r.near.len()
+        "; {} yakın geçiş. {} Sınırlar sizin.",
+        r.near.len(),
+        if walled { "Açıklık dıştan dışa ölçülür (iç çap ve et)." } else { "Açıklık iç çaplarla ölçülür, et kalınlığı katılmaz." }
     ));
     out
 }

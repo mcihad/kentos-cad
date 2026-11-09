@@ -3,7 +3,7 @@
 /**
  * A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross
  * (docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance
- * (the distance less the two radii; none where an asked diameter is not known: then listed only when the axes
- * themselves are closer than the least).
+ * (the distance less the two radii, and the walls when asked (docs/adr/3960); none where an asked diameter is not
+ * known: then listed only when the axes themselves are closer than the least).
  */
 export type PipeNear = { pipe: string, other: string, at: [number, number], otherAt: [number, number], distance: number, clearance?: number, };

@@ -544,3 +544,93 @@ fn clearance_screens() {
         }
     }
 }
+
+/// The shared cases' walls drawing (docs/adr/3960): the pipes carry `Et`, the window takes it.
+fn walled(program: Option<Module>) -> App {
+    kentos_processing::command::register_as("desktop");
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("et kalınlığı: örtü")))
+        .expect("the walls case")
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let (mut app, _) = App::boot(None);
+    app.program = program;
+    let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app
+}
+
+/// docs/adr/3960: the window guesses `Et` as the walls' attribute (the pipes have it, the water pipes too); its cover is
+/// to the top outside and its clearances outside to outside, the shared cases' answers; P7 without a wall is said.
+#[test]
+fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
+    let mut app = walled(Some(Module::Map));
+    let _ = app.update(Message::Run("pipes.check"));
+    assert_eq!(app.pipes_check.wall, "Et");
+    with_case_limits(&mut app);
+    let r = serde_json::to_value(app.pipes_check.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let want = case_output("et kalınlığı: örtü borunun dış tepesinden; et kalınlığı olmayan boru söylenir");
+    assert_eq!(r["coverTo"], "outside");
+    assert_eq!(r["counts"], want["counts"]);
+    for (g, w) in r["pipes"].as_array().expect("pipes").iter().zip(want["pipes"].as_array().expect("pipes")) {
+        for key in ["wall", "minCover", "maxCover"] {
+            match (g[key].as_f64(), w[key].as_f64()) {
+                (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{key}: {a} {b}"),
+                (a, b) => assert_eq!(a, b, "{key}"),
+            }
+        }
+    }
+    let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+    assert_eq!(app.pipes_check.other_wall, "Et", "the water pipes' wall guessed too");
+    let _ = app.update(Message::PipesCheck(P::Vertical("0,5".into())));
+    let _ = app.update(Message::PipesCheck(P::Horizontal("3".into())));
+    let r = serde_json::to_value(app.pipes_check.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let want = case_output("et kalınlığı: açıklıklar dıştan dışa");
+    same_list(&r["crossings"], &want["crossings"], "crossings");
+    same_list(&r["near"], &want["near"], "near");
+    // Without the attribute: the crown again.
+    let _ = app.update(Message::PipesCheck(P::Wall(String::new())));
+    let r = app.pipes_check.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(r.cover_to, "crown");
+}
+
+/// `.run/gui-evidence/et-kalinligi-3960/`: the window with the walls, light and wide, dark and narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib pipes_check_window_tests::wall_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn wall_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/et-kalinligi-3960");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = walled(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("pipes.check"));
+        with_case_limits(&mut app);
+        let _ = app.update(Message::PipesCheck(P::Other("su".into())));
+        let _ = app.update(Message::PipesCheck(P::Vertical("0,5".into())));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let mut shot = |app: &mut App, stem: &str| {
+            snapshot.settle(app, App::view, &mut update);
+            let file = out.join(format!("{stem}-{name}.png"));
+            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            println!("{}", file.display());
+        };
+        shot(&mut app, "1-boru-hatti");
+        let _ = app.update(Message::PipesCheck(P::Show(Show::Crossings)));
+        shot(&mut app, "2-kesisimler");
+    }
+}

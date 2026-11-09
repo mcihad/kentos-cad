@@ -42,6 +42,11 @@ pipe checked when level; the clearance the upper invert less the lower crown; be
 closeCrossing, the asked pipe below wrongSide. Pipes that do not cross: the least distance at an end of one edge or
 where the common normal meets both (checked against a dense sampling), less the two radii; below the least
 closeAlongside.
+
+Et kalınlığı (docs/adr/3960; Civil 3D's cover “from the top outside of the pipe to the reference surface”): in its
+own drawing the pipes carry `Et` (the wall, in the diameter's unit; P7 none). Asked, the crown is the invert plus the
+diameter plus the wall (a pipe without one noWall, its inner crown); the vertical clearance the upper invert less its
+wall less the lower crown less its wall, the horizontal the axes' distance less both radii and walls.
 """
 
 import copy
@@ -56,7 +61,7 @@ OUT = ROOT / "fixtures" / "commands" / "v1" / "cad.pipes.check.json"
 X0, Y0 = 487000.0, 4420000.0
 W = 1e-6
 KINDS = ["detached", "noStructure", "noInvert", "invertUnit", "invertIsDepth", "reverseSlope", "flat", "lowSlope",
-         "steepSlope", "outletAbove", "noDiameter", "diameterUnit", "notInCatalog", "noGround", "offSurface",
+         "steepSlope", "outletAbove", "noDiameter", "diameterUnit", "notInCatalog", "noWall", "noGround", "offSurface",
          "aboveGround", "shallow", "deep", "curved", "clash", "closeCrossing", "wrongSide", "closeAlongside"]
 UNITS = {"mm": 0.001, "cm": 0.01, "m": 1.0}
 
@@ -119,11 +124,22 @@ WATER = [
 ]
 
 
+# The walls (docs/adr/3960; the `Et` attribute, in the network's diameter unit): P7 has none.
+WALLS = {"P1": "20", "P2": "20", "P3": "25", "P4": "30", "P5": "15", "P6": "18", "P8": "20", "P9": "20",
+         "W1": "5", "W2": "8", "W3": "5", "W4": "5", "W5": "5", "W6": "5", "W7": "5"}
+
+
+def walled(attrs, name, walls):
+    if walls and name in WALLS:
+        attrs["Et"] = WALLS[name]
+    return attrs
+
+
 def P(p):
     return {"x": X0 + p[0], "y": Y0 + p[1]}
 
 
-def setup(work="map", water=False):
+def setup(work="map", water=False, walls=False):
     layers = [layer("0", "0"), layer("zemin", "Zemin"), layer("atiksu", "Atıksu"), layer("baca", "Baca"),
               layer("yagmur", "Yağmursuyu"), layer("izgara", "Izgara"), layer("yol", "Yol"), layer("bos", "Boş")]
     if water:
@@ -149,7 +165,7 @@ def setup(work="map", water=False):
         if i0 is not None:
             attrs["Akar baş"] = i0
             attrs["Akar son"] = i1
-        add({"kind": "line", "layerId": "atiksu", "attrs": attrs, "a": P(a), "b": P(b)})
+        add({"kind": "line", "layerId": "atiksu", "attrs": walled(attrs, name, walls), "a": P(a), "b": P(b)})
     for k, (p, cover) in enumerate(S):
         attrs = {"Ad": f"I{k + 1}"}
         if cover is not None:
@@ -167,7 +183,8 @@ def setup(work="map", water=False):
     add({"kind": "line", "layerId": "yol", "attrs": {}, "a": P((0, 0)), "b": P((50, 0))})
     if water:
         for name, pts, zs, d in WATER:
-            e = {"kind": "polyline", "layerId": "su", "attrs": {"Ad": name, "Çap": d}, "pts": [P(q) for q in pts]}
+            e = {"kind": "polyline", "layerId": "su", "attrs": walled({"Ad": name, "Çap": d}, name, walls),
+                 "pts": [P(q) for q in pts]}
             if zs:
                 e["zs"] = zs
             add(e)
@@ -267,8 +284,8 @@ class Pipe:
         return out
 
 
-def drawing():
-    """The two networks' pipes and structures, in the drawing's order."""
+def drawing(walls=False):
+    """The two networks' pipes and structures, in the drawing's order (with their walls in the walls' drawing)."""
     n = 21 * 11
     baca = {}
     for m in sorted(M):
@@ -280,7 +297,7 @@ def drawing():
         attrs = {"Ad": name, "Çap": d}
         if i0 is not None:
             attrs.update({"Akar baş": i0, "Akar son": i1})
-        sewer.append(Pipe(n, name, [a, b], None, attrs, None, "atiksu"))
+        sewer.append(Pipe(n, name, [a, b], None, walled(attrs, name, walls), None, "atiksu"))
     izgara = {}
     for p, cover in S:
         n += 1
@@ -296,13 +313,22 @@ def drawing():
     water = []
     for name, pts, zs, d in WATER:
         n += 1
-        water.append(Pipe(n, name, pts, None, {"Ad": name, "Çap": d}, zs, "su"))
+        water.append(Pipe(n, name, pts, None, walled({"Ad": name, "Çap": d}, name, walls), zs, "su"))
     return {"atiksu": (sewer, {p: {} for p in baca}), "yagmur": (storm, {p: {"Kapak kotu": c} for p, c in
                                                                           izgara.items()}), "su": (water, {})}
 
 
-def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=None, smax=None, clearance=None):
-    pipes, structures = drawing()[net]
+def wall_of(attrs, diameter):
+    """The wall in metres (docs/adr/3960): none asked: None; asked and missing (or below zero): False."""
+    if not diameter or not diameter.get("wall"):
+        return None
+    v = number(attrs.get(diameter["wall"]))
+    return v * UNITS[diameter["unit"]] if v is not None and v >= 0 else False
+
+
+def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=None, smax=None, clearance=None,
+           walls=False):
+    pipes, structures = drawing(walls)[net]
     found, rows = [], []
     key = lambda p: (round(p[0], 6), round(p[1], 6))
     # Parts: pipes joined at shared ends; all but the longest detached.
@@ -360,7 +386,11 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
             v = number(p.attrs.get(diameter["field"]))
             dread = v if v is not None and v > 0 else None
             dm = dread * UNITS[diameter["unit"]] if dread is not None else None
-        crown = 0.0 if not diameter else dm
+        wall = wall_of(p.attrs, diameter)
+        if wall is False:
+            mark(i, "noWall", start)
+        wm = wall if wall not in (None, False) else None
+        crown = 0.0 if not diameter else (None if dm is None else dm + (wm or 0.0))
 
         def g_at(q):
             if ground_ and ground_["from"] == "surface":
@@ -448,7 +478,7 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
         row = {"uid": uid(p.n), "layer": p.layer, "length": L}
         if rev:
             row["reversed"] = True
-        for k_, v in (("upstream", up), ("downstream", down), ("slope", slope), ("diameter", dm)):
+        for k_, v in (("upstream", up), ("downstream", down), ("slope", slope), ("diameter", dm), ("wall", wm)):
             if v is not None:
                 row[k_] = v
         if mn:
@@ -468,7 +498,7 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
     # The attributes the report reads the checked pipes' inverts from (above), or their heights.
     asked_inverts = {"from": "fields", "start": "Akar baş", "end": "Akar son"} if inverts == "fields" else \
         {"from": "heights"}
-    crossings, near = clearances(pipes, asked_inverts, diameter, clearance, mark) if clearance else ([], [])
+    crossings, near = clearances(pipes, asked_inverts, diameter, clearance, mark, walls) if clearance else ([], [])
     found.sort(key=lambda t: (t[0], t[1], t[2]))
     for row in rows:
         kinds = []
@@ -477,7 +507,8 @@ def report(net, inverts, diameter=None, ground_=None, lo=None, hi=None, smin=Non
                 kinds.append(f["kind"])
         row["findings"] = kinds
     counts = [{"kind": kk, "count": sum(1 for t in found if t[3]["kind"] == kk)} for kk in KINDS]
-    out = {"network": net, "coverTo": "crown" if diameter else "invert", "pipes": rows,
+    cover_to = ("outside" if diameter.get("wall") else "crown") if diameter else "invert"
+    out = {"network": net, "coverTo": cover_to, "pipes": rows,
            "findings": [t[3] for t in found], "counts": [c for c in counts if c["count"]],
            "parts": len(part_len), "length": sum(p.length for p in pipes)}
     if crossings:
@@ -520,6 +551,9 @@ class Plan:
         else:
             v = number(pipe.attrs.get(diameter["field"]))
             self.radius = v * UNITS[diameter["unit"]] / 2.0 if v is not None and v > 0 else None
+        # The wall (docs/adr/3960): 0 where none is asked or given.
+        w = wall_of(pipe.attrs, diameter)
+        self.wall = w if w not in (None, False) else 0.0
         self.length = pipe.length
 
     def invert(self, s):
@@ -672,11 +706,11 @@ def sampled_least(mp, a, b, n=600):
     return min(float(mp.hypot(x[0] - y[0], x[1] - y[1])) for x in pa for y in pb)
 
 
-def clearances(pipes, inverts, diameter, c, mark):
+def clearances(pipes, inverts, diameter, c, mark, walls=False):
     """The checked pipes' crossings with the other network's and their near passes, marking the findings."""
     import mpmath as mp
     mp.mp.dps = 50
-    others, _ = drawing()[c["network"]]
+    others, _ = drawing(walls)[c["network"]]
     mine = [Plan(mp, p, inverts, diameter) for p in pipes]
     theirs = [Plan(mp, p, c["inverts"], c.get("diameter")) for p in others]
     crossings, near = [], []
@@ -700,7 +734,7 @@ def clearances(pipes, inverts, diameter, c, mark):
                     row["otherInvert"] = ib
                 if None not in (ia, ib, a.radius, b.radius):
                     up = ia + a.radius >= ib + b.radius
-                    gap = ia - (ib + 2 * b.radius) if up else ib - (ia + 2 * a.radius)
+                    gap = (ia - a.wall) - (ib + 2 * b.radius + b.wall) if up else (ib - b.wall) - (ia + 2 * a.radius + a.wall)
                     row["clearance"] = gap
                     row["above"] = "pipe" if up else "other"
                     local = (float(q[0]), float(q[1]))
@@ -716,7 +750,7 @@ def clearances(pipes, inverts, diameter, c, mark):
             d, qa, qb = min((least(mp, ea, eb) for ea in a.edges for eb in b.edges), key=lambda x: x[0])
             got = sampled_least(mp, a, b) if float(d) < 50 else float(d)
             assert -1e-9 <= got - float(d) < 1e-3, (a.pipe.name, b.pipe.name, got, float(d))
-            gap = None if None in (a.radius, b.radius) else float(d) - a.radius - b.radius
+            gap = None if None in (a.radius, b.radius) else float(d) - (a.radius + a.wall) - (b.radius + b.wall)
             if (gap if gap is not None else float(d)) < c["horizontal"]:
                 mark(i, "closeAlongside", (float(qa[0]), float(qa[1])), gap)
                 row = {"pipe": uid(a.pipe.n), "other": uid(b.pipe.n), "at": xy(qa), "otherAt": xy(qb),
@@ -769,10 +803,10 @@ def sewer_input(**over):
     return inp
 
 
-def sewer(**over):
+def sewer(walls=False, **over):
     inp = sewer_input(**over)
     return inp, report("atiksu", "fields", inp.get("diameter"), inp.get("ground"), inp.get("minCover"),
-                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"))
+                       inp.get("maxCover"), inp.get("minSlope"), inp.get("maxSlope"), inp.get("clearance"), walls)
 
 
 def storm(**over):
@@ -906,14 +940,49 @@ def clearance_cases():
     ]
 
 
+def wall_cases():
+    """Et kalınlığı (docs/adr/3960): the cover over the top outside and the clearances outside to outside, in the walls'
+    drawing."""
+    walled_d = {**SEWER_D, "wall": "Et"}
+    cover_in, cover = sewer(walls=True, diameter=walled_d)
+    plain_in, plain = sewer(walls=True)
+    assert cover["coverTo"] == "outside" and plain["coverTo"] == "crown"
+    p = {name: uid(240 + k + 1) for k, (name, *_rest) in enumerate(SEWER)}
+    rows = {r["uid"]: r for r in cover["pipes"]}
+    plain_rows = {r["uid"]: r for r in plain["pipes"]}
+    # P1's least cover is less by its wall (20 mm) than over its crown; P7 has no wall: said, measured over its crown.
+    assert abs(plain_rows[p["P1"]]["minCover"] - rows[p["P1"]]["minCover"] - 0.02) < 1e-9
+    assert (p["P7"], "noWall") in {(f["uid"], f["kind"]) for f in cover["findings"]}
+    water_walled = {**WATER_ASK, "diameter": {**WATER_ASK["diameter"], "wall": "Et"}}
+    clear_in, clear = sewer(walls=True, diameter=walled_d, clearance={**water_walled, "vertical": 0.5, "horizontal": 3.0})
+    base_in, base = sewer(walls=True, clearance={**WATER_ASK, "vertical": 0.5, "horizontal": 3.0})
+    by = lambda r: {(c["pipe"], c["other"]): c.get("clearance") for c in r["crossings"]}
+    for k, v in by(clear).items():
+        if v is not None:
+            assert by(base)[k] - v > 0.004, (k, by(base)[k], v)
+    setup_w = setup(water=True, walls=True)
+    bad = "invalid_pipe_check"
+    return [
+        ok("et kalınlığı: örtü borunun dış tepesinden; et kalınlığı olmayan boru söylenir", cover_in, cover, setup_=setup_w),
+        ok("et kalınlığı sorulmadan: örtü iç tepeden", plain_in, plain, setup_=setup_w),
+        ok("et kalınlığı: açıklıklar dıştan dışa", clear_in, clear, setup_=setup_w),
+        refused("et kalınlığı: boş öznitelik", sewer_input(diameter={**SEWER_D, "wall": " "}), bad,
+                "Et kalınlığının özniteliği boş; özniteliğin adını yazın.", "diameter.wall", setup_=setup_w),
+        refused("et kalınlığı: diğer ağın boş özniteliği", sewer_input(clearance={
+            **WATER_ASK, "diameter": {"field": "Çap", "unit": "mm", "wall": ""}}), bad,
+                "Et kalınlığının özniteliği boş; özniteliğin adını yazın.", "clearance.diameter.wall", setup_=setup_w),
+    ]
+
+
 def main():
     doc = {"format": "kentos.command-cases", "version": 1, "command": "cad.pipes.check", "commandVersion": 1,
            "title": "Boru hattı denetimi",
            "note": "ADR 1640. Bağımsız başvuru scripts/fixtures/pipes_check_cases.py: zemin kapalı biçimli kafes "
                    "(her kare tek düzlem), örtü köşelerde ve kafes çizgisi kesişimlerinde, eğim, birim ve bağlantı "
                    "kuralları elle; KentOS kodu yok. Sınırlar durumların kendi değerleridir, yönetmelik değeri değil. "
-                   "ADR 2360: içme suyu ağına açıklıklar, kesişim ve en yakın yer mpmath ile kapalı biçimde.",
-           "setup": setup(water=True), "cases": cases()}
+                   "ADR 2360: içme suyu ağına açıklıklar, kesişim ve en yakın yer mpmath ile kapalı biçimde. ADR 3960: "
+                   "et kalınlığıyla örtü dış tepeden, açıklıklar dıştan dışa (kendi çiziminde).",
+           "setup": setup(water=True), "cases": cases() + wall_cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     if "--check" in sys.argv[1:]:
         ok_ = OUT.exists() and OUT.read_text("utf-8") == text

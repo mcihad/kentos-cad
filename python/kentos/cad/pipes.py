@@ -35,19 +35,22 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
     (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot
     cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat,
     lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter,
-    diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin
-    üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse
-    (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda
-    kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi;
-    crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa
-    uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey
-    açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside
-    (yatay açıklık en azdan küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar
-    (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal)
-    kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez.
-    Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
-    not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-    invalid_network, tools_unavailable.
+    diameterUnit, notInCatalog, noWall (et kalınlığı sorulmuş ama yok), noGround,
+    offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda
+    örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına
+    açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı
+    eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
+    (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma),
+    closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru
+    altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır;
+    diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü
+    borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa
+    ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür;
+    verilmezse et bilinmez. Sınırlar (minCover, maxCover, minSlope, maxSlope,
+    clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır
+    koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler:
+    invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project,
+    unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.
     """
     __slots__ = ()
     id = "cad.pipes.check"
@@ -83,19 +86,22 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış
         olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope,
         steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit,
-        notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow,
-        deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir
-        altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey
-        açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden
-        geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap;
-        near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük),
-        wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan
-        küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar (minCover, maxCover,
-        minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır;
-        program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası
-        önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
-        not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-        invalid_network, tools_unavailable.
+        notInCatalog, noWall (et kalınlığı sorulmuş ama yok), noGround, offSurface,
+        aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız
+        köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR
+        2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi
+        alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
+        (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma),
+        closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru
+        altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır;
+        diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü
+        borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa
+        ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür;
+        verilmezse et bilinmez. Sınırlar (minCover, maxCover, minSlope, maxSlope,
+        clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır
+        koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler:
+        invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project,
+        unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.
 
         Args:
             doc: The drawing it works on.

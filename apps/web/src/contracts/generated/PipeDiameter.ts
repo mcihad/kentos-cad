@@ -2,6 +2,9 @@
 import type { PipeUnit } from "./PipeUnit";
 
 /**
- * The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).
+ * The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
+ * optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
+ * then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
+ * outside to outside.
  */
-export type PipeDiameter = { field: string, unit: PipeUnit, catalog?: Array<number>, };
+export type PipeDiameter = { field: string, unit: PipeUnit, catalog?: Array<number>, wall?: string, };

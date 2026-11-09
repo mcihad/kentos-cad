@@ -5,8 +5,10 @@
 //! - where two pipes pass without crossing, the least horizontal clearance: the distance between their axes less the
 //!   two radii, reported where it is below the least the user gave.
 //!
-//! The walls are not known: the diameters are the inner ones, so both clearances are larger than outside to outside by
-//! the walls (as the cover is, ADR 1640). The crossings are the shared core's edge intersections (lines and circular
+//! The diameters are the inner ones. With a wall thickness asked (docs/adr/3960) both clearances are outside to outside:
+//! the upper pipe's bottom outside (invert − wall) less the lower one's top outside (invert + diameter + wall), the
+//! axes' distance less both radii and walls; without, they are larger than outside to outside by the walls (as the
+//! cover is, ADR 1640). A pipe whose wall is asked and not given counts without one (the checked network's is said). The crossings are the shared core's edge intersections (lines and circular
 //! arcs, exact predicates); two edges that do not cross are closest at an end of one or where their common normal
 //! meets both (a segment's normal through an arc's centre, the line of two arcs' centres), so the least distance is
 //! exact too. No limit is the program's.
@@ -26,7 +28,7 @@ use kentos_geometry_core::vec2::Vec2;
 
 use crate::checks::Stop;
 use crate::codes;
-use crate::pipes_check::{Path, asked_values, attr, diameter_of, network_def, path_of, refuse};
+use crate::pipes_check::{Path, asked_values, attr, diameter_of, network_def, path_of, refuse, wall_of};
 use crate::processing_host::host;
 
 /// A stop of the other network's question or loading, its place under `clearance.`.
@@ -110,6 +112,8 @@ struct Pipe {
     inverts: Inverts,
     /// Half its diameter (metres): 0 where no diameter is asked, none where one is asked and the pipe has none.
     radius: Option<f64>,
+    /// Its wall (metres; docs/adr/3960): 0 where none is asked or given.
+    wall: f64,
     bounds: Bounds,
 }
 
@@ -186,6 +190,7 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 None => Some(0.0),
                 Some(d) => diameter_of(e, d).ok().map(|x| x * d.unit.metres() / 2.0),
             };
+            let wall = diameter.and_then(|d| wall_of(e, d)).and_then(Result::ok).unwrap_or(0.0);
             Pipe {
                 uid: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(),
                 name: e.and_then(|e| e.base().attrs.get("Ad").cloned()),
@@ -193,6 +198,7 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 edges,
                 inverts,
                 radius,
+                wall,
                 bounds,
             }
         })
@@ -204,7 +210,7 @@ pub(crate) struct Other<'a> {
     ask: &'a PipeClearanceAsk,
     pipes: Vec<Pipe>,
     tree: PackedTree,
-    /// The largest half diameter of its pipes (metres), how far beyond its boxes a pipe can reach.
+    /// The largest half diameter and wall of its pipes (metres), how far beyond its boxes a pipe can reach.
     reach: f64,
 }
 
@@ -217,7 +223,7 @@ impl<'a> Other<'a> {
             .filter(|(_, p)| [p.bounds.min_x, p.bounds.min_y, p.bounds.max_x, p.bounds.max_y].iter().all(|x| x.is_finite()))
             .map(|(k, p)| (k as u32, p.bounds))
             .collect();
-        let reach = pipes.iter().filter_map(|p| p.radius).fold(0.0, f64::max);
+        let reach = pipes.iter().filter_map(|p| p.radius.map(|r| r + p.wall)).fold(0.0, f64::max);
         Other { ask, pipes, tree: PackedTree::build(&boxes), reach }
     }
 }
@@ -395,7 +401,7 @@ pub(crate) fn measure(
         if !p.bounds.min_x.is_finite() {
             continue;
         }
-        let grow = ask.horizontal.map_or(0.0, |h| h + p.radius.unwrap_or(0.0) + other.reach);
+        let grow = ask.horizontal.map_or(0.0, |h| h + p.radius.unwrap_or(0.0) + p.wall + other.reach);
         let q = Bounds {
             min_x: p.bounds.min_x - grow,
             min_y: p.bounds.min_y - grow,
@@ -412,8 +418,13 @@ pub(crate) fn measure(
                 let (ip, io) = (p.invert(*sp), o.invert(*so));
                 let level = match (ip, io, p.radius, o.radius) {
                     (Some(ip), Some(io), Some(rp), Some(ro)) => {
+                        // Above by the bores' middles; the clearance outside to outside (the walls 0 when not asked).
                         let pipe_up = ip + rp >= io + ro;
-                        let c = if pipe_up { ip - (io + 2.0 * ro) } else { io - (ip + 2.0 * rp) };
+                        let c = if pipe_up {
+                            (ip - p.wall) - (io + 2.0 * ro + o.wall)
+                        } else {
+                            (io - o.wall) - (ip + 2.0 * rp + p.wall)
+                        };
                         Some((c, if pipe_up { PipeAbove::Pipe } else { PipeAbove::Other }))
                     }
                     _ => None,
@@ -456,7 +467,7 @@ pub(crate) fn measure(
                 }
             }
             let Some((d, at, other_at)) = best else { continue };
-            let clearance = p.radius.zip(o.radius).map(|(rp, ro)| d - rp - ro);
+            let clearance = p.radius.zip(o.radius).map(|(rp, ro)| d - (rp + p.wall) - (ro + o.wall));
             if clearance.map_or(d < h, |c| c < h) {
                 out.marks.push(Mark { kind: "closeAlongside", uid: p.uid.clone(), at: [at.x, at.y], value: clearance });
                 out.near.push(PipeNear {

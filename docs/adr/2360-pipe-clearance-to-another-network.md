@@ -144,7 +144,8 @@ MCP: `{"tool": "cad.pipes.check", "arguments": {..., "clearance": {...}}}`.
 
 - Yüzey kaplaması (planın satırının kalanı).
 - 3B en kısa uzaklık. Eğimli borularda bu, kesişim yerindeki düşey açıklıktan biraz kısadır.
-- Et kalınlığı: malzeme ve dış çap özniteliği.
+- Et kalınlığı: malzeme ve dış çap özniteliği. Et kalınlığı özniteliği yapıldı: [ADR 3960](3960-pipe-wall-thickness.md)
+  (dış çap özniteliği Sonra).
 - Diğer ağın yapılarına (baca, vana odası) açıklık.
 - Kesişimlerin planda gösterilmesi. Yapıldı: [ADR 3160](3160-pipe-crossings-on-the-drawing.md).
 - Hat profilinde kesişen borunun kesiti (Civil 3D'nin crossing pipe'ı). Yapıldı:

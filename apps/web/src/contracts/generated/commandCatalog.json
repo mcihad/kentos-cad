@@ -60583,7 +60583,7 @@
       "id": "cad.pipes.check",
       "version": 1,
       "title": "Boru hattı denetimi",
-      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Et kalınlığı bilinmez; çaplar iç çaptır. Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
+      "summary": "Projenin bir altyapı ağının borularını cazibeli hat olarak denetler (salt okunur): akar kotları (iki öznitelik ya da köşe kotları), akış yönünde eğim (ağın yön alanı), iç çap (öznitelik ve birimi; isteğe bağlı çap kataloğu), tepe üstü örtü (Harita/Yol yüzeyinden her üçgen kenarı kesişiminde, ya da bacaların kapak kotu özniteliğinden uçlarda). Bulgular: detached (en uzun parçaya bağlı değil), noStructure (bacasız uç), noInvert, invertUnit (kot cm/mm yazılmış olabilir), invertIsDepth (kot yerine derinlik), reverseSlope, flat, lowSlope, steepSlope, outletAbove (çıkış en alçak girişten yüksek), noDiameter, diameterUnit, notInCatalog, noWall (et kalınlığı sorulmuş ama yok), noGround, offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma), closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır; diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür; verilmezse et bilinmez. Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical, clearance.horizontal) kullanıcınındır; program varsayılan sınır koymaz, verilmeyen sınır denetlenmez. Birim hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.",
       "aliases": [
         "borudenetimi",
         "kanaldenetimi",
@@ -60606,7 +60606,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's\n(`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),\nits network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is\nthe network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).",
+        "description": "Input of `cad.pipes.check` v1.\n\nRefusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a\ngreatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or\nname), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the\nsurface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),\n`tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's\n(`invalid_pipe_check` under `clearance.`: an empty attribute's name, a catalogue, a least clearance not above zero),\nits network's after the checked network's (`unknown_network`, `not_a_pipe_network`, `invalid_pipe_check` when it is\nthe network checked or has more than 100 000 pipes, `invalid_network`; all at `clearance.network`).",
         "properties": {
           "clearance": {
             "anyOf": [
@@ -60690,7 +60690,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else\n`invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
+        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`outside` with a wall thickness\nasked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
         "properties": {
           "counts": {
             "items": {
@@ -60756,7 +60756,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`crown` with a diameter, else\n`invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
+        "description": "Output of `cad.pipes.check` v1: the network's id, what the cover is measured to (`outside` with a wall thickness\nasked, the pipe's top outside; `crown` with a diameter; else `invert`), the pipes in the network's order, the findings (at most 5000, pipe by pipe, each pipe's in\n[`PIPE_FINDINGS`]' order), the counts of the kinds found, the connected parts and the total length.",
         "properties": {
           "counts": {
             "items": {
@@ -172232,7 +172232,7 @@
       "type": "string"
     },
     "PipeCheck": {
-      "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter (metres), the least cover and where, the greatest cover, and its findings' kinds.",
+      "description": "A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's\ndirection field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its\ndiameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,\nand its findings' kinds.",
       "properties": {
         "diameter": {
           "format": "double",
@@ -172314,6 +172314,14 @@
             "null"
           ],
           "x-unit": "elevation"
+        },
+        "wall": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         }
       },
       "required": [
@@ -172397,7 +172405,7 @@
       "type": "object"
     },
     "PipeCrossing": {
-      "description": "A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each\none's invert there, the vertical clearance (the upper one's invert less the lower one's crown, the walls not known;\nbelow zero they clash) and which is above (by the middle of their bores; level: the checked one); none where an\ninvert or an asked diameter is not known.",
+      "description": "A place where a checked pipe crosses the other network's in plan (docs/adr/2360): the two pipes, the place, each\none's invert there, the vertical clearance (the upper one's invert less the lower one's crown; with walls asked\n(docs/adr/3960) the upper one's bottom outside less the lower one's top outside; below zero they clash) and which is\nabove (by the middle of their bores; level: the checked one); none where an invert or an asked diameter is not\nknown.",
       "properties": {
         "above": {
           "anyOf": [
@@ -172459,7 +172467,7 @@
     },
     "PipeDiameter": {
       "additionalProperties": false,
-      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit).",
+      "description": "The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,\noptionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):\nthen the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances\noutside to outside.",
       "properties": {
         "catalog": {
           "items": {
@@ -172474,6 +172482,12 @@
         },
         "unit": {
           "$ref": "#/$defs/PipeUnit"
+        },
+        "wall": {
+          "type": [
+            "string",
+            "null"
+          ]
         }
       },
       "required": [
@@ -172606,7 +172620,7 @@
       ]
     },
     "PipeNear": {
-      "description": "A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross\n(docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance\n(the distance less the two radii; none where an asked diameter is not known: then listed only when the axes\nthemselves are closer than the least).",
+      "description": "A checked pipe closer in plan than the least horizontal clearance to another network's pipe it does not cross\n(docs/adr/2360): the two pipes, the closest places on each, the distance between their axes and the clearance\n(the distance less the two radii, and the walls when asked (docs/adr/3960); none where an asked diameter is not\nknown: then listed only when the axes themselves are closer than the least).",
       "properties": {
         "at": {
           "items": {

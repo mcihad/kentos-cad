@@ -3,6 +3,7 @@
 /**
  * A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
  * direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
- * diameter (metres), the least cover and where, the greatest cover, and its findings' kinds.
+ * diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
+ * and its findings' kinds.
  */
-export type PipeCheck = { uid: string, layer: string, length: number, reversed?: boolean, upstream?: number, downstream?: number, slope?: number, diameter?: number, minCover?: number, minCoverAt?: [number, number], maxCover?: number, findings: Array<string>, };
+export type PipeCheck = { uid: string, layer: string, length: number, reversed?: boolean, upstream?: number, downstream?: number, slope?: number, diameter?: number, wall?: number, minCover?: number, minCoverAt?: [number, number], maxCover?: number, findings: Array<string>, };

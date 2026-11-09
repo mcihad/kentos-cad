@@ -46,7 +46,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560 | yüzey kaplaması; kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580 | tanımı olmayan ek özniteliklerinin ATTRIB'i; DXF'te TABLE yazımı (doğrulama yolu bekler) | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
@@ -1781,6 +1781,15 @@ görünüşündeki parçalara yansır; Bentley'in profil koşusu yardımı günc
 eskir, `road.project.rebuild` ve kendiliğinden yeniden üretim çizer; proje ağacında ve İş grafiğinde ağ düğümü; `.kcad`
 şema 212; tutulan çizimlerin kaydedilip açılınca “elle değişti” görünmesi düzeltildi (nesnelerin damgası `id`'siz); 73
 proje ağacı durumu, Python, MCP, masaüstü. Açık: yüzey kaplaması, kesişen borunun dış duvarı, denetimin açık pencerede
+yeniden okunması.
+
+**9 Kasım 2026, yedinci tur — et kalınlığı ([ADR 3960](../docs/adr/3960-pipe-wall-thickness.md)).** Kapsam: **Harita +
+Yol + CBS**. Dayanak: Civil 3D'nin boru özellikleri (en az ve en çok örtü borunun bütün boyunca “dış tepesinden başvuru
+yüzeyine”) ve Cover and Gradient kuralı (en çok örtü yalnız denetim); ikisi 9 Kasım 2026'da okundu. Kanıtlanan:
+`cad.pipes.check`'in çapına `wall` (et kalınlığının özniteliği, çapın biriminde; diğer ağınkine de): örtü dış tepeden,
+düşey ve yatay açıklık dıştan dışa; etsiz boru `noWall` ile söylenir; `coverTo` `outside`; 5 bağımsız durum (49; eskiler
+bayt bayt aynı), Python (kendi hesabıyla), MCP; masaüstünde iki ağın Et kutusu, öznitelik borulardan bulunur. Açık:
+profilde kesişen borunun dış duvarı, dış çap özniteliği, yüzey kaplaması (anlamı belirsiz), denetimin açık pencerede
 yeniden okunması.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
