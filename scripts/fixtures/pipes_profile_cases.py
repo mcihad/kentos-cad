@@ -25,7 +25,9 @@ profile and the usual hidden, locked and group layers. The rules, by hand:
 - asked (docs/adr/2760), another network's pipes crossing the run in plan, by the clearances' rules
   (pipes_check_cases.Plan and hits at mpmath's 50 digits; a place two edges share once): the distance along the run,
   the place, the other's invert there and its diameter where known, along the run then by uid; each with an invert
-  drawn (an ellipse, or a point without a diameter) and its words; its invert and crown among the elevations shown.
+  drawn (an ellipse, or a point without a diameter) and its words; its invert and crown among the elevations shown;
+  with its wall asked and read (docs/adr/4360, `Et` in the diameter's unit), the outer wall's ellipse and the filled ring
+  (two more objects when the wall is above zero), its outer bottom and top among the elevations shown.
 
     The objects' places are the command's; the cases hold the profile's values and the objects' count.
 """
@@ -57,8 +59,8 @@ KAPAK = check.KAPAK
 STORM_D = check.STORM_D
 
 
-def setup(work="map", extra=False, water=False):
-    s = check.setup(work, water=water)
+def setup(work="map", extra=False, water=False, walls=False):
+    s = check.setup(work, water=water, walls=walls)
     s["layers"] += [check.layer("profil", "Profil"),
                     {**check.layer("gizli", "Gizli"), "visible": False},
                     {**check.layer("kilitli", "Kilitli"), "locked": True},
@@ -152,13 +154,13 @@ def crossing_pipes(pipe, other):
 
 
 def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None, datum=None, exaggeration=None,
-            extra=False, crossing=None):
+            extra=False, crossing=None, walls=False):
     pipes, structures = network(net, extra)
     if crossing is not None:
         import mpmath as mp
         mp.mp.dps = 50
         theirs = [check.Plan(mp, q, crossing["inverts"], crossing.get("diameter"))
-                  for q in check.drawing()[crossing["network"]][0]]
+                  for q in check.drawing(walls=walls)[crossing["network"]][0]]
     crossed = []
     by_uid = {check.uid(p.n): i for i, p in enumerate(pipes)}
     flows = []
@@ -218,6 +220,10 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
                     row_["invert"] = inv
                 if b.radius:
                     row_["diameter"] = 2.0 * b.radius
+                # docs/adr/4360: the wall as read (asked and given, metres).
+                w = check.wall_of(b.pipe.attrs, crossing.get("diameter"))
+                if w not in (None, False):
+                    row_["wall"] = w
                 crossed.append(row_)
         if inverts == "heights" and p.heights is not None:
             pts = sorted((along(st), z) for st, z in zip(p.st, p.heights))
@@ -287,6 +293,9 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
             zs.append(c["invert"])
             if "diameter" in c:
                 zs.append(c["invert"] + c["diameter"])
+                # docs/adr/4360: the outer wall's bottom and top.
+                if "wall" in c:
+                    zs += [c["invert"] - c["wall"], c["invert"] + c["diameter"] + c["wall"]]
     if not zs:
         return None
     lo, hi = min(zs), max(zs)
@@ -314,6 +323,8 @@ def profile(net, start, end=None, inverts="fields", diameter=None, ground_=None,
     count += sum(1 + sum(1 for k_ in ("slope", "diameter") if k_ in r) for r in rows)
     # docs/adr/2760: each crossing pipe with an invert, an ellipse (a point without a diameter) and its words.
     count += 2 * sum(1 for c in crossed if "invert" in c)
+    # docs/adr/4360: with a wall above zero, the outer wall's ellipse and the filled ring between the two.
+    count += 2 * sum(1 for c in crossed if "invert" in c and "diameter" in c and c.get("wall", 0) > 0)
     return out, count
 
 
@@ -333,10 +344,10 @@ def cases():
     out = []
     base_n = entity_count(setup())
 
-    def ok(name, inp, op="execute", warns=(), note=None, setup_=None, extra=False, net="atiksu"):
+    def ok(name, inp, op="execute", warns=(), note=None, setup_=None, extra=False, net="atiksu", walls=False):
         args = dict(start=inp["start"], end=inp.get("end"), inverts=inp["inverts"]["from"],
                     diameter=inp.get("diameter"), ground_=inp.get("ground"), datum=inp.get("datum"),
-                    exaggeration=inp.get("exaggeration"), extra=extra, crossing=inp.get("crossing"))
+                    exaggeration=inp.get("exaggeration"), extra=extra, crossing=inp.get("crossing"), walls=walls)
         o, count = profile(inp["network"] if inp["network"] in ("atiksu", "yagmur") else net, **args)
         o = dict(o)
         o["revision"] = "$current"
@@ -412,6 +423,18 @@ def cases():
     assert [c["name"] for c in arc["crossings"]] == ["W4"], arc.get("crossings")
     alone = ok("Kesişim yoksa liste yok", sewer(start=P_UID("P7"), crossing=ask), setup_=water)
     assert "crossings" not in alone
+    # docs/adr/4360: the crossing pipes' outer walls, their wall thickness read from `Et` (mm, the diameter's unit).
+    walled, walls_ask = setup(water=True, walls=True), {**ask, "diameter": {**ask["diameter"], "wall": "Et"}}
+    outer = ok("Kesişen borunun dış duvarı: et kalınlığıyla dış elips ve dolu halka", sewer(crossing=walls_ask),
+               setup_=walled, walls=True,
+               note="W1 ve W3 5 mm, W2 8 mm: dış elips aynı merkezde çap + iki et, arası dolu; yazı dış duvarın üstünde")
+    assert [c.get("wall") for c in outer["crossings"]] == [0.005, 0.005, 0.008, 0.005], outer["crossings"]
+    ok("Dış duvar abartısız: iki çember", sewer(crossing=walls_ask, exaggeration=1.0), setup_=walled, walls=True)
+    ok("Dış duvar planda yazılmaz", sewer(crossing=walls_ask), op="plan", setup_=walled, walls=True)
+    ok("Yağmursuyunun yaylı Q3 borusunda W4'ün dış duvarı", storm(crossing=walls_ask), setup_=walled, walls=True,
+       net="yagmur")
+    bare = ok("Et sorulmuş, borularda yok: dış duvar çizilmez", sewer(crossing=walls_ask), setup_=water)
+    assert all("wall" not in c for c in bare["crossings"])
     # Refusals.
     bad = "invalid_pipe_check"
     no("Boş akar kotu özniteliği", sewer(inverts={"from": "fields", "start": " ", "end": "x"}),

@@ -68049,12 +68049,16 @@ class PipeProfileCrossing(_Model):
     """A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
     profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
     (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
-    high, from its invert up (a point at its invert without a diameter), its name and invert above.
+    high, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall
+    (docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring
+    between the two filled; the words above the outer wall.
     Attributes:
         station: Unit: length.
         at: Unit: length.
         diameter: Unit: m.
         invert: Unit: elevation.
+        wall: Its wall thickness (m), when the crossing network's diameter asks it and the pipe has it (docs/adr/4360): its
+            outer wall drawn round the inner one, the ring between them filled. Unit: m.
     """
     uid: str
     station: float
@@ -68062,6 +68066,7 @@ class PipeProfileCrossing(_Model):
     diameter: float | None | Unset = UNSET
     invert: float | None | Unset = UNSET
     name: str | None | Unset = UNSET
+    wall: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -68074,6 +68079,8 @@ class PipeProfileCrossing(_Model):
             out["invert"] = None if self.invert is None else float(self.invert)
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else float(self.wall)
         return out
 
     @classmethod
@@ -68085,6 +68092,7 @@ class PipeProfileCrossing(_Model):
             diameter=UNSET if "diameter" not in data else None if data["diameter"] is None else float(data["diameter"]),
             invert=UNSET if "invert" not in data else None if data["invert"] is None else float(data["invert"]),
             name=data.get("name", UNSET),
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else float(data["wall"]),
         )
 
 

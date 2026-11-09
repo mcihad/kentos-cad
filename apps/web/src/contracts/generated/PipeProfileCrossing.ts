@@ -4,6 +4,13 @@
  * A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
  * profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
  * (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
- * high, from its invert up (a point at its invert without a diameter), its name and invert above.
+ * high, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall
+ * (docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring
+ * between the two filled; the words above the outer wall.
  */
-export type PipeProfileCrossing = { uid: string, name?: string, station: number, at: [number, number], invert?: number, diameter?: number, };
+export type PipeProfileCrossing = { uid: string, name?: string, station: number, at: [number, number], invert?: number, diameter?: number, 
+/**
+ * Its wall thickness (m), when the crossing network's diameter asks it and the pipe has it (docs/adr/4360): its
+ * outer wall drawn round the inner one, the ring between them filled.
+ */
+wall?: number, };

@@ -114,7 +114,9 @@ pub struct PipeProfileOther {
 /// A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a
 /// profile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter
 /// (none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration
-/// high, from its invert up (a point at its invert without a diameter), its name and invert above.
+/// high, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall
+/// (docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring
+/// between the two filled; the words above the outer wall.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -137,6 +139,12 @@ pub struct PipeProfileCrossing {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub diameter: Option<f64>,
+    /// Its wall thickness (m), when the crossing network's diameter asks it and the pipe has it (docs/adr/4360): its
+    /// outer wall drawn round the inner one, the ring between them filled.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub wall: Option<f64>,
 }
 
 /// A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is

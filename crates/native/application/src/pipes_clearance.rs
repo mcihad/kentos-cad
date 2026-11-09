@@ -114,6 +114,8 @@ struct Pipe {
     radius: Option<f64>,
     /// Its wall (metres; docs/adr/3960): 0 where none is asked or given.
     wall: f64,
+    /// Its wall as read (metres; docs/adr/4360): none where none is asked or given.
+    wall_read: Option<f64>,
     bounds: Bounds,
 }
 
@@ -190,7 +192,8 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 None => Some(0.0),
                 Some(d) => diameter_of(e, d).ok().map(|x| x * d.unit.metres() / 2.0),
             };
-            let wall = diameter.and_then(|d| wall_of(e, d)).and_then(Result::ok).unwrap_or(0.0);
+            let wall_read = diameter.and_then(|d| wall_of(e, d)).and_then(Result::ok);
+            let wall = wall_read.unwrap_or(0.0);
             Pipe {
                 uid: doc.uid(slot).map(|u| u.to_string()).unwrap_or_default(),
                 name: e.and_then(|e| e.base().attrs.get("Ad").cloned()),
@@ -199,6 +202,7 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 inverts,
                 radius,
                 wall,
+                wall_read,
                 bounds,
             }
         })
@@ -355,6 +359,8 @@ pub(crate) struct Crossed {
     pub(crate) name: Option<String>,
     pub(crate) invert: Option<f64>,
     pub(crate) radius: Option<f64>,
+    /// Its wall (metres) when asked and read (docs/adr/4360).
+    pub(crate) wall: Option<f64>,
     pub(crate) at: [f64; 2],
 }
 
@@ -378,7 +384,15 @@ pub(crate) fn crossing_pipes(e: Option<&Entity>, path: &Path, other: &Other<'_>)
     for &k in &found {
         let o = &other.pipes[k as usize];
         for (sp, so, at) in crossings_along(&edges, path, o) {
-            out.push(Crossed { station: sp, uid: o.uid.clone(), name: o.name.clone(), invert: o.invert(so), radius: o.radius, at: [at.x, at.y] });
+            out.push(Crossed {
+                station: sp,
+                uid: o.uid.clone(),
+                name: o.name.clone(),
+                invert: o.invert(so),
+                radius: o.radius,
+                wall: o.wall_read,
+                at: [at.x, at.y],
+            });
         }
     }
     out.sort_by(|a, b| a.station.total_cmp(&b.station).then_with(|| a.uid.cmp(&b.uid)));

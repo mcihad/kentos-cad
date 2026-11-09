@@ -10,7 +10,8 @@
 //! 0.25), each structure from its lowest invert to the ground, and under the frame the bands (`PIPE_PROFILE_BANDS`): a
 //! tick through them at every node, each node's values at it and each pipe's at its middle. Asked (docs/adr/2760),
 //! another network's pipes crossing the run in plan (the clearances' crossings) are drawn where they cross: an ellipse
-//! of the diameter, its height times the exaggeration, the name and invert above. One undo step “Hat profili” through
+//! of the diameter, its height times the exaggeration, the name and invert above; with its wall thickness asked and read
+//! (docs/adr/4360), its outer wall about the same centre and the ring between the two filled. One undo step “Hat profili” through
 //! `cad.entities.create`'s write. The shared cases are `fixtures/commands/v1/cad.pipes.profile.json`.
 
 use std::collections::{HashMap, HashSet};
@@ -194,6 +195,7 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
                     at: x.at,
                     invert: x.invert,
                     diameter: x.radius.filter(|r| *r > 0.0).map(|r| 2.0 * r),
+                    wall: x.wall,
                 });
             }
         }
@@ -311,6 +313,10 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
         if let Some(i) = c.invert {
             zs.push(i);
             zs.extend(c.diameter.map(|d| i + d));
+            // Docs/adr/4360: the outer wall's bottom and top.
+            if let (Some(d), Some(w)) = (c.diameter, c.wall) {
+                zs.extend([i - w, i + d + w]);
+            }
         }
     }
     let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
@@ -479,16 +485,19 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
         let xs = x(c.station);
         let top = match c.diameter {
             Some(d) => {
-                let (rx, ry) = (d / 2.0, d / 2.0 * o.exaggeration);
-                let (major, ratio) = if ry >= rx { (Vec2 { x: 0.0, y: ry }, rx / ry) } else { (Vec2 { x: rx, y: 0.0 }, ry / rx) };
-                out.push(drawn(EntityGeometry::Ellipse {
-                    c: Vec2 { x: xs, y: y(inv) + ry },
-                    major,
-                    ratio,
-                    t0: 0.0,
-                    t1: std::f64::consts::TAU,
-                }));
-                y(inv) + 2.0 * ry
+                let centre = Vec2 { x: xs, y: y(inv) + d / 2.0 * o.exaggeration };
+                let (major, ratio) = axes(d / 2.0, o.exaggeration);
+                out.push(drawn(EntityGeometry::Ellipse { c: centre, major, ratio, t0: 0.0, t1: std::f64::consts::TAU }));
+                match c.wall.filter(|w| *w > 0.0) {
+                    // Docs/adr/4360: the outer wall about the same centre and the ring between the two filled.
+                    Some(w) => {
+                        let (outer, outer_ratio) = axes(d / 2.0 + w, o.exaggeration);
+                        out.push(drawn(EntityGeometry::Ellipse { c: centre, major: outer, ratio: outer_ratio, t0: 0.0, t1: std::f64::consts::TAU }));
+                        out.push(drawn(wall_ring(centre, (outer, outer_ratio), (major, ratio))));
+                        centre.y + (d / 2.0 + w) * o.exaggeration
+                    }
+                    None => centre.y + d / 2.0 * o.exaggeration,
+                }
             }
             None => {
                 out.push(drawn(EntityGeometry::Point { p: Vec2 { x: xs, y: y(inv) }, z: None, parts: None }));
@@ -604,4 +613,28 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: PipesProfile) -> CommandRes
             |o| &o.uids,
         )
     })
+}
+
+/// An ellipse `r` across and `r · exaggeration` high as its major semi-axis and ratio (the longer axis the major).
+fn axes(r: f64, exaggeration: f64) -> (Vec2, f64) {
+    let (rx, ry) = (r, r * exaggeration);
+    if ry >= rx { (Vec2 { x: 0.0, y: ry }, rx / ry) } else { (Vec2 { x: rx, y: 0.0 }, ry / rx) }
+}
+
+/// The ring between a crossing pipe's outer and inner walls, filled (docs/adr/4360): its boundary exact, the outer
+/// ellipse then the inner one as a hole, each a loop of one point that is one closed curve.
+fn wall_ring(c: Vec2, outer: (Vec2, f64), inner: (Vec2, f64)) -> EntityGeometry {
+    let whole = |(major, ratio): (Vec2, f64)| kentos_commands::HatchLoop {
+        pts: vec![Vec2 { x: c.x + major.x, y: c.y + major.y }],
+        bulges: None,
+        curves: Some(vec![Some(kentos_commands::HatchCurve::Ellipse { c, major, ratio, t0: 0.0, t1: std::f64::consts::TAU })]),
+    };
+    EntityGeometry::Hatch {
+        ring: Vec::new(),
+        holes: None,
+        pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
+        assoc: None,
+        boundary: Some(vec![whole(outer), whole(inner)]),
+        annotative: None,
+    }
 }

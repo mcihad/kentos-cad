@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Kesişen borunun dış duvarı (10 Kasım 2026; MAP-16, [ADR 4360](../../docs/adr/4360-crossing-pipe-outer-wall-and-live-check.md)).**
+  `cad.pipes.profile` kesişen ağın `diameter.wall`'unu okur: dış elips ve arası dolu halka (kesin sınır), `wall`
+  cevapta. Boru hattı denetimi açıkken çizim değişince yeniden okunur. Harita + Yol + CBS.
 - **Karşılaştırmada kesit yöntemi (10 Kasım 2026; MAP-15, [ADR 4340](../../docs/adr/4340-surface-comparison-by-sections.md)).**
   `road.terrains.compare`'in `method: sections`'ı: eksene dik paralel kesitler, alanlar kesin integral, hacim ortalama
   alan ya da prizmoidal (ortadaki gerçek kesit); kesin TIN yanında. Yüzey analizi › Fark › Kesit. Harita + Yol.

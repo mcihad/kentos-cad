@@ -372,7 +372,7 @@ impl App {
         })
     }
 
-    fn pipes_check_run(&mut self) {
+    pub(crate) fn pipes_check_run(&mut self) {
         let input = self.pipes_check_input();
         let Some(doc) = self.document.as_mut() else { return };
         self.pipes_check.answer = Some(input.and_then(|input| {
@@ -505,6 +505,13 @@ impl App {
                 (n, 0) => format!(", {n} kesişen boru"),
                 (n, k) => format!(", {n} kesişen boru ({k} borunun orada kotu yok, çizilmedi)"),
             };
+            // Docs/adr/4360: the crossing pipes drawn with their outer walls.
+            let walls = out
+                .crossings
+                .iter()
+                .filter(|c| c.invert.is_some() && c.diameter.is_some() && c.wall.is_some_and(|w| w > 0.0))
+                .count();
+            let crossing = if walls > 0 { format!("{crossing}, {walls} kesişen borunun dış duvarı") } else { crossing };
             self.say(
                 Level::Success,
                 format!(

@@ -174305,7 +174305,7 @@
       "type": "object"
     },
     "PipeProfileCrossing": {
-      "description": "A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a\nprofile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter\n(none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration\nhigh, from its invert up (a point at its invert without a diameter), its name and invert above.",
+      "description": "A pipe of the other network crossing the run in plan (docs/adr/2760), as Civil 3D shows a crossing pipe in a\nprofile view: its uid and name (its `Ad`), the distance along the run, the place, its invert there and its diameter\n(none where they are not known); drawn as an ellipse of its diameter across, its diameter times the exaggeration\nhigh, from its invert up (a point at its invert without a diameter), its name and invert above. With its wall\n(docs/adr/4360): the outer wall, an ellipse its diameter plus two walls across about the same centre, and the ring\nbetween the two filled; the words above the outer wall.",
       "properties": {
         "at": {
           "items": {
@@ -174346,6 +174346,15 @@
         },
         "uid": {
           "type": "string"
+        },
+        "wall": {
+          "description": "Its wall thickness (m), when the crossing network's diameter asks it and the pipe has it (docs/adr/4360): its\nouter wall drawn round the inner one, the ring between them filled.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
         }
       },
       "required": [

@@ -46,7 +46,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360 | hattın kendi borularının dış duvarı; dış çap özniteliği | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
@@ -1930,6 +1930,15 @@ düşey ve yatay açıklık dıştan dışa; etsiz boru `noWall` ile söylenir; 
 bayt bayt aynı), Python (kendi hesabıyla), MCP; masaüstünde iki ağın Et kutusu, öznitelik borulardan bulunur. Açık:
 profilde kesişen borunun dış duvarı, dış çap özniteliği, yüzey kaplaması (anlamı belirsiz), denetimin açık pencerede
 yeniden okunması.
+
+**10 Kasım 2026, sekizinci tur — kesişen borunun dış duvarı; denetimin yeniden okunması ([ADR 4360](../docs/adr/4360-crossing-pipe-outer-wall-and-live-check.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Civil 3D 2015 “Profile Tab (Pipe Style Dialog Box)” (Crossing Pipe Hatch
+Options: iç duvara, dış duvara, yalnız duvar alanı; duvar ölçüsü parçanın boyutlarından), 10 Kasım 2026'da okundu.
+Kanıtlanan: `cad.pipes.profile` kesişen ağın `diameter.wall`'unu okur: cevapta her kesişen borunun eti, çizimde aynı
+merkezli dış elips ve iki elips arası kesin sınırlı dolu halka, yazı dış tepenin üstünde, dış alt ve tepe kotları
+çerçevede; 5 yeni bağımsız durum (52; eskiler değişmedi), Python (testin kendi geometrisi), MCP; masaüstünde Diğer ağın
+Et'iyle çizilen profil ve ileti; Boru hattı denetimi açıkken çizim değişince sonucunu yeniden okur. Açık: hattın kendi
+borularının dış duvarı, dış çap özniteliği.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

@@ -2472,6 +2472,10 @@ impl App {
         // Undo/Redo and script writes can arrive while the pointer rests
         // over a panel. The active tool's cached handles must follow too.
         self.with_tool(|s, cx| s.document_changed(cx));
+        // Boru hattı denetimi open: its answer read again from the network as it is now (docs/adr/4360).
+        if self.dialog == Some(crate::app::Dialog::PipesCheck) {
+            self.pipes_check_run();
+        }
     }
 
     /// The drawing area draws in the project's map system (docs/adr/0583 §3): vectors moved in the style engine's
