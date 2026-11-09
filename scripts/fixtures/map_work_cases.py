@@ -79,6 +79,23 @@ LOOK_FIELDS = ("color", "label", "symbol", "lineWeight", "labelPins", "lineType"
                "transparency", "order", "byLayer", "wipeout")
 
 
+def value(e):
+    """docs/adr/3680: an object's value as an approval keeps it: the very text its digest is the SHA-256 of."""
+    v = {k: x for k, x in e.items() if k != "id"}
+    return json.dumps(v, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def attributes_changed(then, now):
+    """docs/adr/3680: the attributes (`attrs`) that differ between an object's value as approved and now, by name,
+    with their values then and now (none: not there); and whether its attachments differ."""
+    a, b = then.get("attrs", {}), now.get("attrs", {})
+    out = []
+    for k in sorted(set(a) | set(b)):
+        if a.get(k) != b.get(k):
+            out.append({"name": k, **({"approved": a[k]} if k in a else {}), **({"now": b[k]} if k in b else {})})
+    return out, then.get("attachments") != now.get("attachments")
+
+
 def parts(e):
     split = [{}, {}, {}, {}]
     for k, v in e.items():
@@ -314,6 +331,10 @@ class Drawing:
         """docs/adr/3280: the parts of the objects of `pairs(item_id)`, in its order."""
         return [parts(self.entities[u]) for u, _ in self.pairs(item_id)]
 
+    def values_of(self, item_id):
+        """docs/adr/3680: the values of the objects of `pairs(item_id)`, in its order."""
+        return [value(self.entities[u]) for u, _ in self.pairs(item_id)]
+
     def content(self, item_id):
         """ADR 2080 §1: the content revision of an item without a file."""
         return sha(json.dumps(self.pairs(item_id), separators=(",", ":")).encode())
@@ -423,15 +444,29 @@ class Drawing:
                         if i.get("approvedParts"):
                             then_parts = {u: ps for (u, _), ps in zip(i["approvedObjects"], i["approvedParts"])}
                             by_part, part_objects = dict.fromkeys(PARTS, 0), []
+                            # docs/adr/3680: with the approval's values, the attributes by name, then and now.
+                            then_values = ({u: json.loads(v) for (u, _), v in zip(i["approvedObjects"],
+                                                                                 i["approvedValues"])}
+                                           if i.get("approvedValues") else None)
                             for u in changed_:
                                 now_parts = parts(self.entities[u])
                                 differ = [PARTS[k] for k in range(4) if then_parts[u][k] != now_parts[k]]
                                 for name in differ:
                                     by_part[name] += 1
-                                part_objects.append({"uid": u, "parts": differ})
+                                o = {"uid": u, "parts": differ}
+                                if then_values is not None:
+                                    now_v = {k: x for k, x in self.entities[u].items() if k != "id"}
+                                    attrs, attached = attributes_changed(then_values[u], now_v)
+                                    if attrs:
+                                        o["attributes"] = attrs
+                                    if attached:
+                                        o["attachments"] = True
+                                part_objects.append(o)
                             ch["parts"] = by_part
                             if part_objects:
                                 ch["objects"] = part_objects[:1000]
+                            if then_values is not None and removed:
+                                ch["removedObjects"] = [{"uid": u, "approved": then_values[u]} for u in removed][:1000]
                         row["changes"] = ch
                     what = "dosyası" if "file" in i else "içeriği"
                     worse("revised", f"Onaydan sonra {what} değişti (onaylanan {i['approved'][:12]}, şimdi {now[:12]}): "
@@ -462,6 +497,11 @@ class Drawing:
 
     def stale_count(self):
         return sum(self.stale(d, False) for d in self.derivations())
+
+    def remove(self, u):
+        """An object taken out of the drawing (`cad.entities.delete`)."""
+        del self.objects[u]
+        del self.entities[u]
 
     def set_work(self, work):
         work = {k: v for k, v in work.items() if v}
@@ -687,10 +727,37 @@ def query_cases():
         ask(at0), step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
                        command="cad.entities.set"),
         ask(at1, expect={"revision": "same"})], d=attributed))
+    # docs/adr/3680: an approval that kept its objects' values: the changed attribute by name with its value as approved
+    # and now; a removed object as it was approved.
+    valued = setup()
+    # The line T2 carries its height when approved; it is changed after.
+    valued["entities"][valued["uids"].index(T2)]["attrs"] = {"Kot": "1060"}
+    vd = Drawing(valued)
+    valued["settings"]["mapWork"]["items"][3].update(status="approved", approved=vd.content("is-4"),
+                                                     approvedObjects=vd.pairs("is-4"), approvedParts=vd.parts_of("is-4"),
+                                                     approvedValues=vd.values_of("is-4"))
+    v0 = Drawing(valued)
+    v1 = Drawing(valued)
+    v1.entities[T2]["attrs"] = {"Kot": "1061"}
+    row4 = next(r for r in v1.tree(False)["items"] if r["id"] == "is-4")
+    assert row4["changes"]["objects"][0]["attributes"] == [{"name": "Kot", "approved": "1060", "now": "1061"}], row4
+    out.append(case("Onaydan sonra değişen özniteliğin adı ve onaylanan değeri (onay değerleri tuttu)", [
+        ask(v0), step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
+                      command="cad.entities.set"),
+        ask(v1, expect={"revision": "same"})], d=valued))
+    v2 = Drawing(valued)
+    gone = v2.pairs("is-4")[0][0]
+    v2.remove(gone)
+    row4 = next(r for r in v2.tree(False)["items"] if r["id"] == "is-4")
+    assert [o["uid"] for o in row4["changes"]["removedObjects"]] == [gone], row4
+    out.append(case("Onaydan sonra silinen nesnenin onaylanan hâli (onay değerleri tuttu)", [
+        ask(v0), step("execute", {"uids": [gone]}, "$any", command="cad.entities.delete"),
+        ask(v2, expect={"revision": "same"})], d=valued))
     same = setup()
     same["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(same).content("is-4"),
                                                    approvedObjects=Drawing(same).pairs("is-4"),
-                                                   approvedParts=Drawing(same).parts_of("is-4"))
+                                                   approvedParts=Drawing(same).parts_of("is-4"),
+                                                   approvedValues=Drawing(same).values_of("is-4"))
     out.append(case("Onaylı ve nesneleri aynı: değişen yok, güncel", [ask(Drawing(same))], d=same))
     ortho = setup()
     ortho["settings"]["mapWork"]["items"][1].update(status="approved", approved=S_OLD)
@@ -776,9 +843,11 @@ def edit_cases():
     stamp4 = dr.content("is-4")
     pairs4 = dr.pairs("is-4")
     parts4 = dr.parts_of("is-4")
-    # docs/adr/2880: an approval of an item without a file keeps its objects' digests; docs/adr/3280: and their parts.
+    values4 = dr.values_of("is-4")
+    # docs/adr/2880: an approval of an item without a file keeps its objects' digests; docs/adr/3280: and their parts;
+    # docs/adr/3680: and their values.
     after = changed(lambda w: w["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4,
-                                                   approvedParts=parts4))
+                                                   approvedParts=parts4, approvedValues=values4))
     out.append(case("Durum: denetlenen tasarım onaylı teslim revizyonu olur (ofisin kaydı); onay içerik revizyonunu "
                     "damgalar", write_step(dr, after, op({"op": "set", "item": "is-4", "status": "approved"}),
                                            {"item": "is-4", "content": stamp4, "approved": stamp4},
@@ -796,6 +865,7 @@ def edit_cases():
     w["items"][3]["approved"] = stamp4
     w["items"][3]["approvedObjects"] = pairs4
     w["items"][3]["approvedParts"] = parts4
+    w["items"][3]["approvedValues"] = values4
     mo_after.set_work(w)
     out.append(case("Yeniden onayla: onaydan sonra değişen tasarım bugünkü içerik revizyonuyla yeniden damgalanır",
                     write_step(mo, mo_after, op({"op": "set", "item": "is-4", "status": "approved"}),
@@ -809,6 +879,7 @@ def edit_cases():
     w = copy.deepcopy(ka_after.work)
     w["items"][3]["approvedObjects"] = pairs4
     w["items"][3]["approvedParts"] = parts4
+    w["items"][3]["approvedValues"] = values4
     ka_after.set_work(w)
     out.append(case("Yeniden onayla: değişmemiş, nesneleri tutulmadan onaylanmış öğe nesne başına özetini kazanır",
                     write_step(ka, ka_after, op({"op": "set", "item": "is-4", "status": "approved"}),
@@ -821,14 +892,28 @@ def edit_cases():
     np_after = Drawing(no_parts)
     w = copy.deepcopy(np_after.work)
     w["items"][3]["approvedParts"] = parts4
+    w["items"][3]["approvedValues"] = values4
     np_after.set_work(w)
     out.append(case("Yeniden onayla: değişmemiş, parçaları tutulmadan (şema 210) onaylanmış öğe parçalarını kazanır",
                     write_step(np, np_after, op({"op": "set", "item": "is-4", "status": "approved"}),
                                {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
                     d=no_parts))
+    # docs/adr/3680: approved with its objects' parts but not their values (schema 211): approving again keeps them.
+    no_values = setup()
+    no_values["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4,
+                                                        approvedParts=parts4)
+    nv = Drawing(no_values)
+    nv_after = Drawing(no_values)
+    w = copy.deepcopy(nv_after.work)
+    w["items"][3]["approvedValues"] = values4
+    nv_after.set_work(w)
+    out.append(case("Yeniden onayla: değişmemiş, değerleri tutulmadan (şema 211) onaylanmış öğe değerlerini kazanır",
+                    write_step(nv, nv_after, op({"op": "set", "item": "is-4", "status": "approved"}),
+                               {"item": "is-4", "content": stamp4, "approved": stamp4}, "Harita işi öğesini değiştir"),
+                    d=no_values))
     whole = setup()
     whole["settings"]["mapWork"]["items"][3].update(status="approved", approved=stamp4, approvedObjects=pairs4,
-                                                    approvedParts=parts4)
+                                                    approvedParts=parts4, approvedValues=values4)
     out.append(case("Yeniden onayla: değişmemiş onaylı öğe", [fail_step(
         op({"op": "set", "item": "is-4", "status": "approved"}), "nothing_to_set", "Değişecek bir şey yok.",
         "operation")], d=whole))
@@ -840,6 +925,7 @@ def edit_cases():
     # docs/adr/2880: its objects' digests go with the stamp; docs/adr/3280: and their parts.
     del w["items"][3]["approvedObjects"]
     del w["items"][3]["approvedParts"]
+    del w["items"][3]["approvedValues"]
     kd_after.set_work(w)
     out.append(case("Onaydan çıkan öğenin damgası ve nesne başına özeti kalkar",
                     write_step(kd, kd_after, op({"op": "set", "item": "is-4", "status": "review"}), {"item": "is-4"},

@@ -90,7 +90,8 @@ neyinin değiştiği (geometri mi, öznitelik mi): bugün yalnız özeti farklı
 
 ## Sonra
 
-- Değişen özniteliğin adı ve onaylanan değeri; silinen nesnenin onaylanan hâli (onaylanan değerlerin saklanması).
+- ~~Değişen özniteliğin adı ve onaylanan değeri; silinen nesnenin onaylanan hâli (onaylanan değerlerin saklanması).~~
+  ADR 3680 (`approvedValues`, şema 213).
 - Dosyası olan öğede nesne başına fark.
 - Tipli katman profili (MAP-01'in kalanı).
 - Web (TODOS §0.2).

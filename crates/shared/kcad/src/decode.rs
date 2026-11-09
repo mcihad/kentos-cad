@@ -1130,6 +1130,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.approved_parts && v.has_approved_parts() {
                     return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedParts (şema 211'den önce yok)"));
                 }
+                // Schema 213 (docs/adr/3680): an approval's objects' values.
+                if !has.approved_values && v.has_approved_values() {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedValues (şema 213'ten önce yok)"));
+                }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

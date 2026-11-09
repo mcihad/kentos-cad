@@ -184,8 +184,12 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
     içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası,
     mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra
     projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath,
-    none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Retler:
-    not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.
+    none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Onaydan
+    sonra değişen öğenin changes'i (ADR 2880, 3280, 3680): eklenen, silinen, değişen
+    nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri
+    de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri ve silinen
+    nesnelerin onaylanan hâli (removedObjects). Retler: not_a_map_project,
+    invalid_file_path, invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.work.query"
@@ -222,8 +226,12 @@ class _MapWorkQuery(LocalCommand[MapWorkQuery, MapWorkTree, MapWorkTree]):
         değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan
         dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır;
         dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve
-        relative'i (kayıtlı göreli yol) ADR 1201. Retler: not_a_map_project,
-        invalid_file_path, invalid_uid, entity_not_found.
+        relative'i (kayıtlı göreli yol) ADR 1201. Onaydan sonra değişen öğenin changes'i
+        (ADR 2880, 3280, 3680): eklenen, silinen, değişen nesneler; onay parçaları tuttuysa
+        her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin
+        adları, onaylanan ve şimdiki değerleri ve silinen nesnelerin onaylanan hâli
+        (removedObjects). Retler: not_a_map_project, invalid_file_path, invalid_uid,
+        entity_not_found.
 
         Args:
             doc: The drawing it works on.

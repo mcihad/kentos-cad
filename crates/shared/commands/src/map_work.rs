@@ -144,7 +144,7 @@ pub struct WorkRow {
 
 /// The objects of an item that changed since its approval (docs/adr/2880): how many were added, removed and changed,
 /// and the persistent ids of those there now (added or changed), by id, at most [`WORK_CHANGES_LISTED`].
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -168,6 +168,40 @@ pub struct WorkChanges {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkChangedObject>>", optional))]
     pub objects: Vec<WorkChangedObject>,
+    /// Each removed object as approved (docs/adr/3680), when the approval kept its objects' values (schema 213), by id,
+    /// at most [`WORK_CHANGES_LISTED`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkRemovedObject>>", optional))]
+    pub removed_objects: Vec<WorkRemovedObject>,
+}
+
+/// A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkRemovedObject {
+    pub uid: String,
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
+    pub approved: serde_json::Value,
+}
+
+/// An attribute of a changed object that changed (docs/adr/3680): its name and its value as approved and now (none: it
+/// was not there then, or is not now).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkChangedAttribute {
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
+    pub approved: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
+    pub now: Option<serde_json::Value>,
 }
 
 /// How many changed objects changed in each part (docs/adr/3280): geometry (its kind's own fields: places, corners, a
@@ -189,8 +223,8 @@ pub struct WorkChangedParts {
 }
 
 /// A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
-/// order).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -198,6 +232,12 @@ pub struct WorkChangedParts {
 pub struct WorkChangedObject {
     pub uid: String,
     pub parts: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkChangedAttribute>>", optional))]
+    pub attributes: Vec<WorkChangedAttribute>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub attachments: bool,
 }
 
 /// The most ids [`WorkChanges`] lists.

@@ -410,6 +410,8 @@ pub(super) struct Features {
     pub(super) approved_objects: bool,
     /// Schema 211: a map work approval's objects' parts' digests (docs/adr/3280).
     pub(super) approved_parts: bool,
+    /// Schema 213: a map work approval's objects' values (docs/adr/3680).
+    pub(super) approved_values: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
@@ -704,6 +706,7 @@ impl Features {
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
+            approved_values: schema >= crate::SCHEMA_WITH_APPROVED_VALUES,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,

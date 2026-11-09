@@ -31,7 +31,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280 | tipli katman profili; silinenin onaylı hâli; değişen özniteliğin adı | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680 | tipli katman profili; silineni onaylı hâline geri getirme; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300 | Koordinat dönüştür'de nokta başına karar; zamana bağlı Helmert; Poligon'da trigonometrik kotla bacağın kendi yüksekliği | resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; bütün ağın haritada görünüşü | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
@@ -266,6 +266,15 @@ ayrı). Kanıtlanan: onay her nesnenin dört parçasının (geometri, öznitelik
 `approvedParts`'ta tutar (`.kcad` şema 211, bağımsız okuyucu ve yazıcı, 1710 dosya); `map.work.query`'nin `changes`'i
 parça sayılarını ve her değişen nesnenin değişen parçalarını söyler; Harita işi'nde ipucu ve durum çubuğu. 90 ortak
 durum, sözleşme testi, MCP, masaüstü. Açık: tipli katman profili, silinenin onaylı hâli, değişen özniteliğin adı.
+
+**9 Kasım 2026, yedinci tur — onayın nesnelerin değerlerini tutması ([ADR 3680](../docs/adr/3680-map-work-approved-values.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: ArcGIS Pro'nun arşiv geçmişi (nesnenin her hâli tarih aralığıyla saklanır; eski
+hâl saklanmadıkça “ne idi” söylenemez) ve sürüm farkları. Kanıtlanan: onay `approvedValues`'i de yazar (her nesnenin
+özetinin alındığı metin; SHA-256'sı özettir; birlikte en çok 4 MiB); `map.work.query`'nin `changes`'inde değişen
+özniteliklerin adı, onaylanan ve şimdiki değeri (`attributes`, `attachments`) ve silinen nesnelerin onaylanan hâli
+(`removedObjects`); `.kcad` şema 213 (Rust ve bağımsız okuyucu, üç bozuk örnek, 1717 dosya aynı); sözleşme testleri;
+edit 57, query 36 bağımsız durum, bağımsız okuyucuyla Python testi, MCP; Harita işi'nde durum çubuğu ve ipucu. Açık:
+silineni onaylı hâline geri getirme, geometri farkının çizimde gösterilmesi, tipli katman profili.
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

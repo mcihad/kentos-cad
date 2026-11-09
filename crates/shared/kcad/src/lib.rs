@@ -870,11 +870,14 @@ pub const SCHEMA_WITH_APPROVED_PARTS: u32 = 211;
 /// Schema 212 (docs/adr/3560): a utility network's pipe run profile kept as a drawing (`cad.pipes.profile`) with the
 /// network as a source (`network`: its definition and the objects of its layers).
 pub const SCHEMA_WITH_PIPE_PROFILE_DRAWINGS: u32 = 212;
+/// Schema 213 (docs/adr/3680): a map work item's approval keeps its objects' values (`approvedValues`: each the text its
+/// object digest is the SHA-256 of, one to one with `approvedObjects`).
+pub const SCHEMA_WITH_APPROVED_VALUES: u32 = 213;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 210] = [
+pub const SCHEMAS: [u32; 211] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1085,6 +1088,7 @@ pub const SCHEMAS: [u32; 210] = [
     SCHEMA_WITH_APPROVED_OBJECTS,
     SCHEMA_WITH_APPROVED_PARTS,
     SCHEMA_WITH_PIPE_PROFILE_DRAWINGS,
+    SCHEMA_WITH_APPROVED_VALUES,
 ];
 
 /// The file a drawing is saved as.

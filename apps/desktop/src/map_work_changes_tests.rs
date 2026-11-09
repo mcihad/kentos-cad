@@ -2,8 +2,9 @@
 //! design approved from the panel keeps each of its objects' digests; a line changed, a line drawn on its layer and a
 //! line deleted afterwards are counted under its row, whose press selects the changed and the added; Yeniden onayla
 //! takes the count back to none in one undo step; the digests are saved in the .kcad file (schema 210; docs/adr/3280
-//! with their parts, schema 211) and the count is the same opened again. docs/adr/3280: the changed line's part is its
-//! attributes, said in the row's tip. And the pictures.
+//! with their parts, schema 211; docs/adr/3680 with their values, schema 213) and the count is the same opened again.
+//! docs/adr/3280: the changed line's part is its attributes, said in the row's tip; docs/adr/3680: the status bar names
+//! the attribute with its values then and now, and the deleted line as it was approved. And the pictures.
 
 use kentos_commands::{WorkChangedObject, WorkChangedParts, WorkChanges, WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;
@@ -66,8 +67,15 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     listed.sort();
     // Docs/adr/3280: the changed line's height attribute: its attributes part, and only it.
     let parts = Some(WorkChangedParts { attributes: 1, ..WorkChangedParts::default() });
-    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()] }];
-    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects };
+    // Docs/adr/3680: the approval kept the values: the height by name, none then and “1060” now; the deleted line as it
+    // was approved.
+    let attributes = vec![kentos_commands::WorkChangedAttribute { name: "Kot".into(), approved: None, now: Some(json!("1060")) }];
+    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false }];
+    let got = t.items[3].changes.clone().expect("changes");
+    assert_eq!(got.removed_objects.len(), 1);
+    assert_eq!(got.removed_objects[0].approved["kind"], "line");
+    let removed_objects = got.removed_objects.clone();
+    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects };
     assert_eq!(t.items[3].changes.as_ref(), Some(&changes));
     assert_eq!(
         crate::map_work_panel::changes_words(&changes),
@@ -81,7 +89,7 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     assert_eq!(selected, [Slot(6), new]);
     assert_eq!(
         said(&app).last().map(String::as_str),
-        Some("Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri; silinen 1 nesne çizimde yok.")
+        Some("Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri (Kot: yok → “1060”); silinen 1 nesne çizimde yok, onaylanan hâli: Çizgi (tasarim).")
     );
     // Yeniden onayla: today's objects kept, nothing changed since; one undo step back to the count.
     send(&mut app, P::Status("is-4".into(), W::Approved));
@@ -93,6 +101,7 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     send(&mut app, P::Status("is-4".into(), W::Draft));
     let item = &app.document.as_ref().expect("a drawing").model.map_work().expect("a map project").items[3];
     assert!(item.approved.is_none() && item.approved_objects.is_empty() && item.approved_parts.is_empty());
+    assert!(item.approved_values.is_empty());
 }
 
 #[test]
@@ -102,7 +111,7 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
     let before = tree(&app);
     let model = &app.document.as_ref().expect("a drawing").model;
     let bytes = kentos_kcad::encode(&model.to_snapshot_v2()).expect("encodes");
-    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd3"), "the file is schema 211 (docs/adr/3280)");
+    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd5"), "the file is schema 213 (docs/adr/3680)");
     let back = kentos_kcad::decode(&bytes).expect("reads");
     assert_eq!(back.settings.map_work, model.map_work().cloned(), "the digests are saved whole");
     let (mut again, _) = App::boot(None);
@@ -114,8 +123,9 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
 
 /// The panel: the approved design whose line changed, a line added and a line deleted, Değişenler under its row;
 /// then the row pressed and the two lines selected (the orthophoto hidden, which lies over them); light wide and dark
-/// narrow (docs/adr/3280: the status bar names the changed part),
-/// `.run/gui-evidence/onaydan-sonra-parcalar-3280/` (before it `onaydan-sonra-2880`):
+/// narrow (docs/adr/3280: the status bar names the changed part; docs/adr/3680: the attribute with its values and the
+/// deleted line as approved),
+/// `.run/gui-evidence/onaylanan-degerler-3680/` (before it `onaydan-sonra-parcalar-3280`, `onaydan-sonra-2880`):
 ///
 /// ```text
 /// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib map_work_changes_tests::screens -- --ignored --nocapture
@@ -125,7 +135,7 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onaydan-sonra-parcalar-3280");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onaylanan-degerler-3680");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
         let mut app = opened();

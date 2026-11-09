@@ -190,6 +190,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   işinde kesitler arasında durdurma.
 - MAP-12 / ADR 3660: `cad.orthophoto.compare`'in web işleyicisinde `seam.resample` ve `resampled` (53 ortak durum; iki
   yeni GeoTIFF) ve web'in Ortofoto karşılaştırması'nda Yeniden örnekleme kutusu.
+- MAP-01 / ADR 3680: web'in `.kcad` okuyucu/yazıcısında şema 213 (`approvedValues`; web codec'i Rust'ın WASM'ıysa yalnız
+  yeniden derleme), `map.work.edit`'in onayda değerleri yazması, `map.work.query`'nin `attributes` ve `removedObjects`'i
+  ve web'in Harita işi panelinde değişen özniteliğin ve silinenin söylenmesi.
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

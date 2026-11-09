@@ -108557,17 +108557,50 @@ class Wipeout(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkChangedAttribute(_Model):
+    """An attribute of a changed object that changed (docs/adr/3680): its name and its value as approved and now (none: it
+    was not there then, or is not now).
+    """
+    name: str
+    approved: Any | Unset = UNSET
+    now: Any | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
+        if self.now is not UNSET:
+            out["now"] = self.now
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkChangedAttribute:
+        return cls(
+            name=data["name"],
+            approved=data.get("approved", UNSET),
+            now=data.get("now", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkChangedObject(_Model):
     """A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
-    order).
+    order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.
     """
     uid: str
     parts: list[str]
+    attachments: bool | Unset = UNSET
+    attributes: list[WorkChangedAttribute] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["uid"] = self.uid
         out["parts"] = list(self.parts)
+        if self.attachments is not UNSET:
+            out["attachments"] = self.attachments
+        if self.attributes is not UNSET:
+            out["attributes"] = [e0.to_json() for e0 in self.attributes]
         return out
 
     @classmethod
@@ -108575,6 +108608,8 @@ class WorkChangedObject(_Model):
         return cls(
             uid=data["uid"],
             parts=list(data["parts"]),
+            attachments=data.get("attachments", UNSET),
+            attributes=[WorkChangedAttribute.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
         )
 
 
@@ -108622,12 +108657,15 @@ class WorkChanges(_Model):
         objects: Each changed object with the parts that changed (docs/adr/3280), by id, at most [`WORK_CHANGES_LISTED`].
         parts: Of the changed objects, how many changed in each part (docs/adr/3280; an object may change in several), when the
             approval kept its objects' parts (schema 211).
+        removed_objects: Each removed object as approved (docs/adr/3680), when the approval kept its objects' values (schema 213), by id,
+            at most [`WORK_CHANGES_LISTED`].
     """
     added: int
     removed: int
     changed: int
     objects: list[WorkChangedObject] | Unset = UNSET
     parts: WorkChangedParts | None | Unset = UNSET
+    removed_objects: list[WorkRemovedObject] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -108639,6 +108677,8 @@ class WorkChanges(_Model):
             out["objects"] = [e0.to_json() for e0 in self.objects]
         if self.parts is not UNSET:
             out["parts"] = None if self.parts is None else self.parts.to_json()
+        if self.removed_objects is not UNSET:
+            out["removedObjects"] = [e0.to_json() for e0 in self.removed_objects]
         if self.uids is not UNSET:
             out["uids"] = list(self.uids)
         return out
@@ -108651,6 +108691,7 @@ class WorkChanges(_Model):
             changed=data["changed"],
             objects=[WorkChangedObject.from_json(e0) for e0 in data["objects"]] if "objects" in data else UNSET,
             parts=UNSET if "parts" not in data else None if data["parts"] is None else WorkChangedParts.from_json(data["parts"]),
+            removed_objects=[WorkRemovedObject.from_json(e0) for e0 in data["removedObjects"]] if "removedObjects" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
@@ -108819,6 +108860,10 @@ class WorkItem(_Model):
         approved_parts: Each approved object's parts' digests (schema 211, docs/adr/3280), in `approved_objects`' order: its geometry,
             attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
             Empty: approved before 211, or no `approved_objects`.
+        approved_values: Each approved object's value as approved (schema 213, docs/adr/3680), in `approved_objects`' order: the very text
+            its object digest is the SHA-256 of (`kentos.object-digest/1`: its snapshot form without the slot id, keys
+            sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
+            213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
         layers: Layer or group ids; a layer is in one item at most.
     """
     id: str
@@ -108827,6 +108872,7 @@ class WorkItem(_Model):
     approved: str | None | Unset = UNSET
     approved_objects: list[list[Any]] | Unset = UNSET
     approved_parts: list[list[str]] | Unset = UNSET
+    approved_values: list[str] | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
@@ -108842,6 +108888,8 @@ class WorkItem(_Model):
             out["approvedObjects"] = [list(e0) for e0 in self.approved_objects]
         if self.approved_parts is not UNSET:
             out["approvedParts"] = [list(e0) for e0 in self.approved_parts]
+        if self.approved_values is not UNSET:
+            out["approvedValues"] = list(self.approved_values)
         if self.file is not UNSET:
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
@@ -108859,6 +108907,7 @@ class WorkItem(_Model):
             approved=data.get("approved", UNSET),
             approved_objects=[list(e0) for e0 in data["approvedObjects"]] if "approvedObjects" in data else UNSET,
             approved_parts=[list(e0) for e0 in data["approvedParts"]] if "approvedParts" in data else UNSET,
+            approved_values=list(data["approvedValues"]) if "approvedValues" in data else UNSET,
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
@@ -108909,6 +108958,26 @@ class WorkObjectSource(_Model):
             operation=data.get("operation", UNSET),
             revision=data.get("revision", UNSET),
             source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkRemovedObject(_Model):
+    """A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id)."""
+    uid: str
+    approved: Any
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["approved"] = self.approved
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkRemovedObject:
+        return cls(
+            uid=data["uid"],
+            approved=data["approved"],
         )
 
 
@@ -134428,6 +134497,7 @@ __all__ = [
     "Wipeout",
     "WithdrawFormsOp",
     "WktCsvGeometryIn",
+    "WorkChangedAttribute",
     "WorkChangedObject",
     "WorkChangedParts",
     "WorkChanges",
@@ -134443,6 +134513,7 @@ __all__ = [
     "WorkObjectRole",
     "WorkObjectRoleName",
     "WorkObjectSource",
+    "WorkRemovedObject",
     "WorkRow",
     "WorkState",
     "WorkStateName",

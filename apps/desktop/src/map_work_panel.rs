@@ -450,10 +450,13 @@ impl App {
         let slots: Vec<Slot> =
             c.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
         let n = slots.len();
-        let gone = match c.removed {
-            0 => String::new(),
-            r => format!("; silinen {r} nesne çizimde yok"),
+        // Docs/adr/3680: a removed object as approved, when the approval kept its objects' values.
+        let gone = match (c.removed, removed_words(&c)) {
+            (0, _) => String::new(),
+            (r, None) => format!("; silinen {r} nesne çizimde yok"),
+            (r, Some(was)) => format!("; silinen {r} nesne çizimde yok, onaylanan hâli: {was}"),
         };
+        let attributes = attribute_words(&c).map_or(String::new(), |w| format!(" ({w})"));
         // Docs/adr/3280: the changed objects' parts, when the approval kept them.
         let which = c.parts.as_ref().map_or(String::new(), |p| {
             let named: Vec<String> =
@@ -462,7 +465,7 @@ impl App {
                     .filter(|(k, _)| *k > 0)
                     .map(|(k, w)| format!("{k} nesnenin {w}"))
                     .collect();
-            if named.is_empty() { String::new() } else { format!("; değişen: {}", named.join(", ")) }
+            if named.is_empty() { String::new() } else { format!("; değişen: {}{attributes}", named.join(", ")) }
         });
         let words = if n == 0 {
             format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
@@ -630,6 +633,59 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     item
 }
 
+/// A value as said: a text in quotes, anything else as written.
+fn value_words(v: &serde_json::Value) -> String {
+    match v {
+        serde_json::Value::String(s) => format!("“{s}”"),
+        other => other.to_string(),
+    }
+}
+
+/// docs/adr/3680: the attributes that changed since the approval, each by name with its value as approved and now
+/// (“yok”: not there), the first three of them; none when the approval kept no values.
+pub(crate) fn attribute_words(c: &WorkChanges) -> Option<String> {
+    let all: Vec<String> = c
+        .objects
+        .iter()
+        .flat_map(|o| &o.attributes)
+        .map(|a| {
+            let side = |v: &Option<serde_json::Value>| v.as_ref().map_or_else(|| "yok".to_owned(), value_words);
+            format!("{}: {} → {}", a.name, side(&a.approved), side(&a.now))
+        })
+        .collect();
+    if all.is_empty() {
+        return None;
+    }
+    let more = all.len().saturating_sub(3);
+    let first = all.into_iter().take(3).collect::<Vec<_>>().join("; ");
+    Some(if more > 0 { format!("{first} ve {more} değişiklik daha") } else { first })
+}
+
+/// docs/adr/3680: the removed objects as approved, the first three: each its kind, layer and attributes.
+pub(crate) fn removed_words(c: &WorkChanges) -> Option<String> {
+    if c.removed_objects.is_empty() {
+        return None;
+    }
+    let said: Vec<String> = c
+        .removed_objects
+        .iter()
+        .take(3)
+        .map(|r| {
+            let kind = crate::selecting::kind_title(r.approved.get("kind").and_then(serde_json::Value::as_str).unwrap_or(""));
+            let layer = r.approved.get("layerId").and_then(serde_json::Value::as_str).unwrap_or("");
+            let attrs: Vec<String> = r
+                .approved
+                .get("attrs")
+                .and_then(serde_json::Value::as_object)
+                .map(|m| m.iter().map(|(k, v)| format!("{k} {}", value_words(v))).collect())
+                .unwrap_or_default();
+            if attrs.is_empty() { format!("{kind} ({layer})") } else { format!("{kind} ({layer}; {})", attrs.join(", ")) }
+        })
+        .collect();
+    let more = c.removed_objects.len().saturating_sub(3);
+    Some(if more > 0 { format!("{} ve {more} nesne daha", said.join("; ")) } else { said.join("; ") })
+}
+
 /// What an approved item's objects did since its approval, in one sentence (docs/adr/2880 §4); with the approval's
 /// parts (docs/adr/3280), which parts of the changed objects changed, each part's count.
 pub(crate) fn changes_words(c: &WorkChanges) -> String {
@@ -659,6 +715,13 @@ pub(crate) fn changes_words(c: &WorkChanges) -> String {
 fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
     let there = (c.changed + c.added) as usize;
     let mut detail = vec![changes_words(c)];
+    // Docs/adr/3680: the attributes by name with their values, the removed objects as approved.
+    if let Some(w) = attribute_words(c) {
+        detail.push(format!("Değişen öznitelikler: {w}."));
+    }
+    if let Some(w) = removed_words(c) {
+        detail.push(format!("Silinenlerin onaylanan hâli: {w}."));
+    }
     detail.push(match (there, c.removed) {
         (0, _) => "Silinenler çizimde yok; seçilecek nesne yok.".to_owned(),
         (_, 0) => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir.".to_owned(),

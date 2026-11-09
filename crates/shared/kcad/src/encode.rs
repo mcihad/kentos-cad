@@ -2270,6 +2270,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 213 (docs/adr/3680): a map work item's approval with its objects' values.
+    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_approved_values) {
+        return crate::SCHEMA_WITH_APPROVED_VALUES;
+    }
     // Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, a network its source.
     if doc.settings.road.as_ref().is_some_and(|r| {
         r.drawings.iter().any(|d| d.command == "cad.pipes.profile" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Network))

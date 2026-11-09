@@ -4,6 +4,7 @@
 
 mod address_rules;
 mod approved_objects;
+mod approved_values;
 mod annotation;
 mod annotation_scale;
 mod annotative;

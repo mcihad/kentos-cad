@@ -62215,7 +62215,7 @@
       "id": "map.work.query",
       "version": 1,
       "title": "Harita işini sorgula",
-      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Onaydan sonra değişen öğenin changes'i (ADR 2880, 3280, 3680): eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri ve silinen nesnelerin onaylanan hâli (removedObjects). Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
       "aliases": [
         "haritaisi"
       ],
@@ -209102,9 +209102,32 @@
       ],
       "type": "object"
     },
-    "WorkChangedObject": {
-      "description": "A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that\norder).",
+    "WorkChangedAttribute": {
+      "description": "An attribute of a changed object that changed (docs/adr/3680): its name and its value as approved and now (none: it\nwas not there then, or is not now).",
       "properties": {
+        "approved": true,
+        "name": {
+          "type": "string"
+        },
+        "now": true
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkChangedObject": {
+      "description": "A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that\norder); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.",
+      "properties": {
+        "attachments": {
+          "type": "boolean"
+        },
+        "attributes": {
+          "items": {
+            "$ref": "#/$defs/WorkChangedAttribute"
+          },
+          "type": "array"
+        },
         "parts": {
           "items": {
             "type": "string"
@@ -209195,6 +209218,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "removedObjects": {
+          "description": "Each removed object as approved (docs/adr/3680), when the approval kept its objects' values (schema 213), by id,\nat most [`WORK_CHANGES_LISTED`].",
+          "items": {
+            "$ref": "#/$defs/WorkRemovedObject"
+          },
+          "type": "array"
         },
         "uids": {
           "items": {
@@ -209410,6 +209440,13 @@
           },
           "type": "array"
         },
+        "approvedValues": {
+          "description": "Each approved object's value as approved (schema 213, docs/adr/3680), in `approved_objects`' order: the very text\nits object digest is the SHA-256 of (`kentos.object-digest/1`: its snapshot form without the slot id, keys\nsorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before\n213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "file": {
           "anyOf": [
             {
@@ -209553,6 +209590,20 @@
       "required": [
         "uid",
         "role"
+      ],
+      "type": "object"
+    },
+    "WorkRemovedObject": {
+      "description": "A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id).",
+      "properties": {
+        "approved": true,
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "approved"
       ],
       "type": "object"
     },

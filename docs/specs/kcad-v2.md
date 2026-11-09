@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `212`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-213.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `213`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-214.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -945,6 +945,15 @@ tanımaz, `bad_value` sayar (`broken/pipe-profile-drawing-in-schema-211.kcad`). 
 Aynı adımda (ADR 3560) çizimin nesnelerinin damgası (`digest`) nesnelerin belgedeki sayısı (`id`) olmadan hesaplanır:
 dosya yeniden okununca sayılar sıklaşır, kimlik kalıcı kimliktir. Daha önce sayıyla yazılmış kayıt, sayılar değişmedikçe
 elle değişmemiş sayılır; yeniden çizilince sayısız damgayı alır. Biçim değişmez (damga yine 16 hane).
+
+**Şema 213** (ADR 3680; MAP-01): onaylanan nesnelerin değerleri. `settings.mapWork.items[i]`'ye `approvedValues`:
+`approvedObjects` ile bire bir (aynı sayı, aynı sıra), her nesne için bir metin: nesnenin özetinin (`kentos.object-digest/1`)
+alındığı metnin kendisi, yani nesnenin anlık görüntü biçiminin `id`'siz, anahtarları sıralı, boşluksuz JSON'u. Her
+metnin SHA-256'sı listedeki özettir; tutmayan `bad_value` (`broken/map-work-approved-values-not-the-digest.kcad`).
+Sayısı listeninkinden farklı (`broken/map-work-approved-values-not-one-to-one.kcad`) ya da metinleri birlikte 4 MiB'tan
+(4 194 304 bayt, UTF-8) uzun liste `bad_value`. Boş liste yazılmaz. Yazıcı 213'ü bir öğe değerleri taşıyınca seçer; 212
+ve öncesinde alan bilinmez (`unknown_field`, `broken/map-work-approved-values-in-schema-212.kcad`). Örnek
+`map-work-approved-values.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

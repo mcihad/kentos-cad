@@ -132,21 +132,72 @@ pub(crate) fn parts_of(doc: &Document, pairs: &[(kentos_commands::EntityId, Stri
     pairs.iter().map(|(uid, _)| parts_now(doc, uid)).collect::<Option<Vec<_>>>().unwrap_or_default()
 }
 
+/// An object's snapshot form now without its slot id (the value its digest is taken of); none when not in the drawing.
+fn value_now(doc: &Document, uid: &kentos_commands::EntityId) -> Option<serde_json::Value> {
+    let slot = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0))?;
+    let mut v = serde_json::to_value(doc.get(slot)?).ok()?;
+    v.as_object_mut()?.remove("id");
+    Some(v)
+}
+
+/// The values of the objects `pairs` names, in its order (docs/adr/3680): each the very text its object digest is the
+/// SHA-256 of; none when one is not in the drawing, or together they pass [`kentos_commands::MAX_APPROVED_VALUES_BYTES`].
+pub(crate) fn values_of(doc: &Document, pairs: &[(kentos_commands::EntityId, String)]) -> Vec<String> {
+    let Some(values) = pairs
+        .iter()
+        .map(|(uid, _)| value_now(doc, uid).and_then(|v| serde_json::to_string(&v).ok()))
+        .collect::<Option<Vec<String>>>()
+    else {
+        return Vec::new();
+    };
+    let bytes: usize = values.iter().map(String::len).sum();
+    if bytes > kentos_commands::MAX_APPROVED_VALUES_BYTES { Vec::new() } else { values }
+}
+
+/// docs/adr/3680: the attributes (`attrs`) that differ between an object's value as approved and now, by name, each with
+/// its value then and now; and whether its attachments differ.
+fn attributes_changed(then: &serde_json::Value, now: &serde_json::Value) -> (Vec<kentos_commands::WorkChangedAttribute>, bool) {
+    let empty = serde_json::Map::new();
+    let attrs = |v: &serde_json::Value| v.get("attrs").and_then(serde_json::Value::as_object).cloned().unwrap_or_else(|| empty.clone());
+    let (a, b) = (attrs(then), attrs(now));
+    let names: std::collections::BTreeSet<&String> = a.keys().chain(b.keys()).collect();
+    let changed = names
+        .into_iter()
+        .filter(|k| a.get(*k) != b.get(*k))
+        .map(|k| kentos_commands::WorkChangedAttribute { name: k.clone(), approved: a.get(k).cloned(), now: b.get(k).cloned() })
+        .collect();
+    (changed, then.get("attachments") != now.get("attachments"))
+}
+
 /// What changed since an approval that kept its objects' digests (docs/adr/2880): the added, the removed and the
 /// changed, by the persistent id; the ids there now listed (added or changed) by id, at most `WORK_CHANGES_LISTED`.
-/// With the approval's parts (`then_parts`, docs/adr/3280), each changed object's parts set against its parts now.
+/// With the approval's parts (`then_parts`, docs/adr/3280), each changed object's parts set against its parts now; with
+/// its values (`then_values`, docs/adr/3680), each changed object's attributes by name and each removed object as it was.
 pub(crate) fn changes_of(
     doc: &Document,
     then: &[(kentos_commands::EntityId, String)],
     then_parts: &[[String; 4]],
+    then_values: &[String],
     now: &[(kentos_commands::EntityId, String)],
 ) -> kentos_commands::WorkChanges {
     let (mut i, mut j) = (0, 0);
     let (mut added, mut removed, mut changed) = (0u32, 0u32, 0u32);
     let mut uids: Vec<String> = Vec::new();
     let with_parts = then_parts.len() == then.len() && !then.is_empty();
+    let with_values = then_values.len() == then.len() && !then.is_empty();
+    let value_then = |k: usize| -> Option<serde_json::Value> {
+        with_values.then(|| serde_json::from_str(&then_values[k]).ok()).flatten()
+    };
     let mut counts = [0u32; 4];
     let mut objects: Vec<kentos_commands::WorkChangedObject> = Vec::new();
+    let mut removed_objects: Vec<kentos_commands::WorkRemovedObject> = Vec::new();
+    let gone = |k: usize, removed_objects: &mut Vec<kentos_commands::WorkRemovedObject>| {
+        if removed_objects.len() < kentos_commands::WORK_CHANGES_LISTED
+            && let Some(approved) = value_then(k)
+        {
+            removed_objects.push(kentos_commands::WorkRemovedObject { uid: kentos_commands::uuid_text(&then[k].0.0), approved });
+        }
+    };
     let note = |u: &kentos_commands::EntityId, uids: &mut Vec<String>| {
         if uids.len() < kentos_commands::WORK_CHANGES_LISTED {
             uids.push(kentos_commands::uuid_text(&u.0));
@@ -164,9 +215,16 @@ pub(crate) fn changes_of(
                             counts[*k] += 1;
                         }
                         if objects.len() < kentos_commands::WORK_CHANGES_LISTED {
+                            // docs/adr/3680: the attributes by name, their values then and now.
+                            let (attributes, attachments) = match (value_then(i), value_now(doc, &b.0)) {
+                                (Some(t), Some(n)) => attributes_changed(&t, &n),
+                                _ => (Vec::new(), false),
+                            };
                             objects.push(kentos_commands::WorkChangedObject {
                                 uid: kentos_commands::uuid_text(&b.0.0),
                                 parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
+                                attributes,
+                                attachments,
                             });
                         }
                     }
@@ -176,10 +234,12 @@ pub(crate) fn changes_of(
             }
             (Some(a), Some(b)) if a.0 < b.0 => {
                 removed += 1;
+                gone(i, &mut removed_objects);
                 i += 1;
             }
             (Some(_), None) => {
                 removed += 1;
+                gone(i, &mut removed_objects);
                 i += 1;
             }
             (_, Some(b)) => {
@@ -196,7 +256,7 @@ pub(crate) fn changes_of(
         layer: counts[2],
         look: counts[3],
     });
-    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects }
+    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects, removed_objects }
 }
 
 /// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
@@ -411,7 +471,13 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             let now = revisions.kept(i);
             if now != *stamp {
                 if i.file.is_none() && !i.approved_objects.is_empty() {
-                    changes = Some(changes_of(doc, &i.approved_objects, &i.approved_parts, &content_objects(doc, work, &i.id)));
+                    changes = Some(changes_of(
+                        doc,
+                        &i.approved_objects,
+                        &i.approved_parts,
+                        &i.approved_values,
+                        &content_objects(doc, work, &i.id),
+                    ));
                 }
                 let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
                 worse(

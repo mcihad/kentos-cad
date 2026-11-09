@@ -2671,6 +2671,9 @@ def document(d):
            for x in d["settings"].get("road", {}).get("drawings", [])):
         # A pipe run profile kept as a drawing, a network its source (docs/adr/3560).
         schema = max(schema, 212)
+    if any("approvedValues" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # A map work item's approval with its objects' values (docs/adr/3680).
+        schema = max(schema, 213)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3527,7 +3530,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-213.kcad"] = container(root(cmap(parts), version=uint(213)))
+    files["schema-version-214.kcad"] = container(root(cmap(parts), version=uint(214)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6076,6 +6079,35 @@ def build():
         broken_parts = copy.deepcopy(kept_parts)
         change(broken_parts)
         out[f"broken/map-work-approved-parts-{name}.kcad"] = container(document(broken_parts))
+    # Schema 213 (docs/adr/3680): the approval's objects' values beside its list, each the text its digest is the
+    # SHA-256 of (the drawing's own object, its JSON with sorted keys and no slot id); schema 212 refuses the field,
+    # values not one to one with the list and a value whose SHA-256 is not the object's digest are refused.
+    kept_values = copy.deepcopy(kept_parts)
+    item = kept_values["settings"]["mapWork"]["items"][2]
+    by_uid = dict(zip(kept_values["uids"], kept_values["entities"]))
+    item["approvedValues"] = [json.dumps({k: v for k, v in by_uid[u].items() if k != "id"}, sort_keys=True,
+                                         separators=(",", ":"), ensure_ascii=False) for u, _ in item["approvedObjects"]]
+    assert all(hashlib.sha256(v.encode("utf-8")).hexdigest() == d for v, (_, d) in zip(item["approvedValues"],
+                                                                                     item["approvedObjects"]))
+    out["map-work-approved-values.json"] = json_text(kept_values).encode("utf-8")
+    kept_values_data = document(kept_values)
+    assert kept_values_data.count(b"\x67version\x18\xd5") == 1, "an approval's values are schema 213"
+    out["map-work-approved-values.kcad"] = container(kept_values_data)
+    out["broken/map-work-approved-values-in-schema-212.kcad"] = container(
+        kept_values_data.replace(b"\x67version\x18\xd5", b"\x67version\x18\xd4"))
+
+    def values_not_one_to_one(d):
+        values = d["settings"]["mapWork"]["items"][2]["approvedValues"]
+        values.append(values[0])
+
+    def not_the_digest(d):
+        values = d["settings"]["mapWork"]["items"][2]["approvedValues"]
+        values[0] = values[0].replace("500010.0", "500011.0")
+
+    for name, change in (("not-one-to-one", values_not_one_to_one), ("not-the-digest", not_the_digest)):
+        broken_values = copy.deepcopy(kept_values)
+        change(broken_values)
+        out[f"broken/map-work-approved-values-{name}.kcad"] = container(document(broken_values))
     # Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, its network a source; 211 knows neither.
     piped = document(load("map-pipe-profile.json"))
     assert piped.count(b"\x67version\x18\xd4") == 1, "a pipe run profile's drawing is schema 212"

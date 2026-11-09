@@ -36,4 +36,11 @@ approvedObjects?: Array<[EntityId, string]>,
  * attributes, layer and look ([`OBJECT_PARTS`], [`object_parts`]), so what changes after can be told part by part.
  * Empty: approved before 211, or no `approved_objects`.
  */
-approvedParts?: Array<[string, string, string, string]>, };
+approvedParts?: Array<[string, string, string, string]>, 
+/**
+ * Each approved object's value as approved (schema 213, docs/adr/3680), in `approved_objects`' order: the very text
+ * its object digest is the SHA-256 of (`kentos.object-digest/1`: its snapshot form without the slot id, keys
+ * sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
+ * 213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
+ */
+approvedValues?: Array<string>, };

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Onayın nesnelerin değerlerini tutması (9 Kasım 2026; MAP-01, [ADR 3680](../../docs/adr/3680-map-work-approved-values.md)).**
+  Onay `approvedValues`'i yazar (özetin alındığı metin, en çok 4 MiB; `.kcad` şema 213); `map.work.query` değişen
+  özniteliğin adını, onaylanan ve şimdiki değerini, silinen nesnenin onaylanan hâlini söyler. Yalnız Harita.
 - **Dikişte ikinci görüntünün yeniden örneklenmesi (9 Kasım 2026; MAP-12, [ADR 3660](../../docs/adr/3660-orthophoto-seam-resampled-onto-the-first-grid.md)).**
   `cad.orthophoto.compare`'in `seam.resample`'ı: pikselleri farklı boyda ya da dönük ikinci görüntü birincinin ızgarasına
   kübik evrişimle örneklenir, ölçüm birincinin pikselleriyle; dönük birinci reddedilir. CAD + CBS.

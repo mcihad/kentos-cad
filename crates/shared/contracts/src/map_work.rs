@@ -148,10 +148,21 @@ pub struct WorkItem {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<[String; 4]>>"))]
     pub approved_parts: Vec<[String; 4]>,
+    /// Each approved object's value as approved (schema 213, docs/adr/3680), in `approved_objects`' order: the very text
+    /// its object digest is the SHA-256 of (`kentos.object-digest/1`: its snapshot form without the slot id, keys
+    /// sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
+    /// 213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub approved_values: Vec<String>,
 }
 
 /// The most objects an approval keeps a digest for (docs/adr/2880): an item of more is stamped whole only.
 pub const MAX_APPROVED_OBJECTS: usize = 100_000;
+
+/// The most bytes of its objects' values an approval keeps together (docs/adr/3680): an item of more keeps their digests
+/// and parts only. KentOS's choice, no rule's: the file and each undo step of the work's settings stay small.
+pub const MAX_APPROVED_VALUES_BYTES: usize = 4 * 1024 * 1024;
 
 /// The parts of an object an approval keeps a digest of (docs/adr/3280), in their order.
 pub const OBJECT_PARTS: [&str; 4] = ["geometry", "attributes", "layer", "look"];
@@ -260,6 +271,11 @@ impl MapWork {
     /// Whether an approval keeps its objects' parts' digests (schema 211, docs/adr/3280).
     pub fn has_approved_parts(&self) -> bool {
         self.items.iter().any(|i| !i.approved_parts.is_empty())
+    }
+
+    /// Whether an approval keeps its objects' values (schema 213, docs/adr/3680).
+    pub fn has_approved_values(&self) -> bool {
+        self.items.iter().any(|i| !i.approved_values.is_empty())
     }
 
     /// Whether it says what schema 206 added (docs/adr/2080): an approval's stamp, or a derivation from an item without
@@ -383,6 +399,21 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(parts, "her parçanın özeti 16 küçük onaltılık hanedir");
             }
         }
+        // Docs/adr/3680: each approved object's value, one to one with the list, its SHA-256 the object's digest.
+        if !item.approved_values.is_empty() {
+            let values = at("approvedValues");
+            if item.approved_values.len() != item.approved_objects.len() {
+                return fail(values, "onaylı değerler onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)");
+            }
+            if item.approved_values.iter().map(String::len).sum::<usize>() > MAX_APPROVED_VALUES_BYTES {
+                return fail(values, &format!("onay nesnelerin değerlerinden en çok {MAX_APPROVED_VALUES_BYTES} bayt tutar"));
+            }
+            for (value, (_, digest)) in item.approved_values.iter().zip(&item.approved_objects) {
+                if crate::encoding::sha256_hex(value.as_bytes()) != *digest {
+                    return fail(values, "her onaylı değerin SHA-256'sı nesnenin onaylanan özetidir");
+                }
+            }
+        }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
         return fail("derivations".into(), &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"));
@@ -447,6 +478,7 @@ mod tests {
                     approved: None,
                     approved_objects: Vec::new(),
                     approved_parts: Vec::new(),
+                    approved_values: Vec::new(),
                 },
                 WorkItem {
                     id: "is-2".into(),
@@ -458,6 +490,7 @@ mod tests {
                     approved: None,
                     approved_objects: Vec::new(),
                     approved_parts: Vec::new(),
+                    approved_values: Vec::new(),
                 },
             ],
             derivations: vec![WorkDerivation {

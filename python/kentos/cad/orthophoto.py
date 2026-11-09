@@ -205,12 +205,14 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
     ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır,
     tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük),
     edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır.
-    Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı; dosya göreliyse seam.folder.
-    Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin
-    sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0,
-    kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search,
-    correlation'ı; farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası
-    yok).
+    Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample
+    ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye
+    bakmalı; cevapta resampled); dosya göreliyse seam.folder. Retler: invalid_uid,
+    entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
+    layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
+    kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı;
+    resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok),
+    file_not_found (görüntünün dosyası yok).
     """
     __slots__ = ()
     id = "cad.orthophoto.compare"
@@ -255,11 +257,14 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına
         inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında),
         flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı
-        boyda ve dönüksüz olmalı; dosya göreliyse seam.folder. Retler: invalid_uid,
-        entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
-        layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
-        kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı;
-        farklı pikseller, örtüşme yok), file_not_found (görüntünün dosyası yok).
+        boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü
+        birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta
+        resampled); dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found,
+        not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found,
+        invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da
+        mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı
+        pikseller, yeniden örneklemede dönük birinci, örtüşme yok), file_not_found
+        (görüntünün dosyası yok).
 
         Args:
             doc: The drawing it works on.

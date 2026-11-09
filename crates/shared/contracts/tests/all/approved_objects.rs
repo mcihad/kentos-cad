@@ -28,6 +28,7 @@ fn approved(pairs: Vec<(EntityId, String)>, stamp: Option<String>) -> MapWork {
             approved: stamp,
             approved_objects: pairs,
             approved_parts: Vec::new(),
+            approved_values: Vec::new(),
         }],
         derivations: Vec::new(),
     }

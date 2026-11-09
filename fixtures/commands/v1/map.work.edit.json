@@ -1140,6 +1140,10 @@
             "e7320d4a79e840cd",
             "44136fa355b3678a"
            ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
           ]
          },
          {
@@ -1583,6 +1587,10 @@
             "e7320d4a79e840cd",
             "44136fa355b3678a"
            ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
           ]
          },
          {
@@ -2211,6 +2219,10 @@
             "e7320d4a79e840cd",
             "44136fa355b3678a"
            ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
           ]
          },
          {
@@ -2839,6 +2851,10 @@
             "e7320d4a79e840cd",
             "44136fa355b3678a"
            ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
           ]
          },
          {
@@ -3390,6 +3406,686 @@
    }
   },
   {
+   "name": "Yeniden onayla: değişmemiş, değerleri tutulmadan (şema 211) onaylanmış öğe değerlerini kazanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "operation": {
+       "op": "set",
+       "item": "is-4",
+       "status": "approved"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "item": "is-4",
+       "content": "da3d4cdf1d66ba2664cfd28f2dfda6cda474956ceeef5363b045495c061ccaa5",
+       "approved": "da3d4cdf1d66ba2664cfd28f2dfda6cda474956ceeef5363b045495c061ccaa5",
+       "stale": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "command": "map.work.edit",
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "mapWork": {
+        "items": [
+         {
+          "id": "is-1",
+          "kind": "campaign",
+          "name": "GNSS ölçümü 2026-10",
+          "layers": [
+           "gnss"
+          ],
+          "file": {
+           "path": "$fixture:map-work/v1/kampanya.nmea",
+           "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77"
+          }
+         },
+         {
+          "id": "is-2",
+          "kind": "reference",
+          "name": "Ortofoto 2025",
+          "layers": [
+           "ortofoto"
+          ],
+          "file": {
+           "path": "$fixture:raster/v1/files/i8.tif",
+           "revision": "1be365b685ba77d1d05f8c076a61e8f65572a688a0e6e8a78b563499da8b289b"
+          }
+         },
+         {
+          "id": "is-3",
+          "kind": "reference",
+          "name": "Kadastro CAD altlığı",
+          "layers": [
+           "altlik"
+          ],
+          "file": {
+           "path": "$fixture:map-work/v1/kadastro.dxf",
+           "revision": "ba542a52bf7f46c467f9bf285837a916f86814d15873f3429fe4ae661b6ace55"
+          }
+         },
+         {
+          "id": "is-4",
+          "kind": "design",
+          "name": "Tasarım yüzeyi",
+          "status": "approved",
+          "layers": [
+           "tasarim"
+          ],
+          "approved": "da3d4cdf1d66ba2664cfd28f2dfda6cda474956ceeef5363b045495c061ccaa5",
+          "approvedObjects": [
+           [
+            "0192f5c0-1200-7000-8000-000000000006",
+            "3429e296a2a8f9d17987b0be5fb712b455cd6e743db87348dbcba55407f450ab"
+           ],
+           [
+            "0192f5c0-1200-7000-8000-000000000007",
+            "528c15247fa6aade93d4db34abc192314e1f090f0d9fadd94ca25b06f94dc699"
+           ]
+          ],
+          "approvedParts": [
+           [
+            "dd61c5a540898823",
+            "031c606d689e53df",
+            "e7320d4a79e840cd",
+            "44136fa355b3678a"
+           ],
+           [
+            "e4b40282a59f842f",
+            "031c606d689e53df",
+            "e7320d4a79e840cd",
+            "44136fa355b3678a"
+           ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
+          ]
+         },
+         {
+          "id": "is-5",
+          "kind": "reference",
+          "name": "Eski ortofoto",
+          "layers": [
+           "kilitli"
+          ],
+          "file": {
+           "path": "$fixture:raster/v1/files/geographic.tif",
+           "revision": "840249e571aec4b3700381947ea14001fb2e4f4ccaaf005e7203145d659ef8fa"
+          }
+         }
+        ],
+        "derivations": [
+         {
+          "id": "tr-1",
+          "source": "is-1",
+          "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+          "operation": "GNSS içe aktarma",
+          "uids": [
+           "0192f5c0-1200-7000-8000-000000000001",
+           "0192f5c0-1200-7000-8000-000000000002"
+          ]
+         },
+         {
+          "id": "tr-2",
+          "source": "is-1",
+          "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+          "operation": "Eş yükselti eğrileri",
+          "uids": [
+           "0192f5c0-1200-7000-8000-000000000006",
+           "0192f5c0-1200-7000-8000-000000000007"
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Harita işi öğesini değiştir",
+     "expect": {
+      "canRedo": true,
+      "settings": {
+       "mapWork": {
+        "items": [
+         {
+          "id": "is-1",
+          "kind": "campaign",
+          "name": "GNSS ölçümü 2026-10",
+          "layers": [
+           "gnss"
+          ],
+          "file": {
+           "path": "$fixture:map-work/v1/kampanya.nmea",
+           "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77"
+          }
+         },
+         {
+          "id": "is-2",
+          "kind": "reference",
+          "name": "Ortofoto 2025",
+          "layers": [
+           "ortofoto"
+          ],
+          "file": {
+           "path": "$fixture:raster/v1/files/i8.tif",
+           "revision": "1be365b685ba77d1d05f8c076a61e8f65572a688a0e6e8a78b563499da8b289b"
+          }
+         },
+         {
+          "id": "is-3",
+          "kind": "reference",
+          "name": "Kadastro CAD altlığı",
+          "layers": [
+           "altlik"
+          ],
+          "file": {
+           "path": "$fixture:map-work/v1/kadastro.dxf",
+           "revision": "ba542a52bf7f46c467f9bf285837a916f86814d15873f3429fe4ae661b6ace55"
+          }
+         },
+         {
+          "id": "is-4",
+          "kind": "design",
+          "name": "Tasarım yüzeyi",
+          "status": "approved",
+          "layers": [
+           "tasarim"
+          ],
+          "approved": "da3d4cdf1d66ba2664cfd28f2dfda6cda474956ceeef5363b045495c061ccaa5",
+          "approvedObjects": [
+           [
+            "0192f5c0-1200-7000-8000-000000000006",
+            "3429e296a2a8f9d17987b0be5fb712b455cd6e743db87348dbcba55407f450ab"
+           ],
+           [
+            "0192f5c0-1200-7000-8000-000000000007",
+            "528c15247fa6aade93d4db34abc192314e1f090f0d9fadd94ca25b06f94dc699"
+           ]
+          ],
+          "approvedParts": [
+           [
+            "dd61c5a540898823",
+            "031c606d689e53df",
+            "e7320d4a79e840cd",
+            "44136fa355b3678a"
+           ],
+           [
+            "e4b40282a59f842f",
+            "031c606d689e53df",
+            "e7320d4a79e840cd",
+            "44136fa355b3678a"
+           ]
+          ]
+         },
+         {
+          "id": "is-5",
+          "kind": "reference",
+          "name": "Eski ortofoto",
+          "layers": [
+           "kilitli"
+          ],
+          "file": {
+           "path": "$fixture:raster/v1/files/geographic.tif",
+           "revision": "840249e571aec4b3700381947ea14001fb2e4f4ccaaf005e7203145d659ef8fa"
+          }
+         }
+        ],
+        "derivations": [
+         {
+          "id": "tr-1",
+          "source": "is-1",
+          "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+          "operation": "GNSS içe aktarma",
+          "uids": [
+           "0192f5c0-1200-7000-8000-000000000001",
+           "0192f5c0-1200-7000-8000-000000000002"
+          ]
+         },
+         {
+          "id": "tr-2",
+          "source": "is-1",
+          "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+          "operation": "Eş yükselti eğrileri",
+          "uids": [
+           "0192f5c0-1200-7000-8000-000000000006",
+           "0192f5c0-1200-7000-8000-000000000007"
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Harita işi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map",
+     "mapWork": {
+      "items": [
+       {
+        "id": "is-1",
+        "kind": "campaign",
+        "name": "GNSS ölçümü 2026-10",
+        "layers": [
+         "gnss"
+        ],
+        "file": {
+         "path": "$fixture:map-work/v1/kampanya.nmea",
+         "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77"
+        }
+       },
+       {
+        "id": "is-2",
+        "kind": "reference",
+        "name": "Ortofoto 2025",
+        "layers": [
+         "ortofoto"
+        ],
+        "file": {
+         "path": "$fixture:raster/v1/files/i8.tif",
+         "revision": "1be365b685ba77d1d05f8c076a61e8f65572a688a0e6e8a78b563499da8b289b"
+        }
+       },
+       {
+        "id": "is-3",
+        "kind": "reference",
+        "name": "Kadastro CAD altlığı",
+        "layers": [
+         "altlik"
+        ],
+        "file": {
+         "path": "$fixture:map-work/v1/kadastro.dxf",
+         "revision": "ba542a52bf7f46c467f9bf285837a916f86814d15873f3429fe4ae661b6ace55"
+        }
+       },
+       {
+        "id": "is-4",
+        "kind": "design",
+        "name": "Tasarım yüzeyi",
+        "status": "approved",
+        "layers": [
+         "tasarim"
+        ],
+        "approved": "da3d4cdf1d66ba2664cfd28f2dfda6cda474956ceeef5363b045495c061ccaa5",
+        "approvedObjects": [
+         [
+          "0192f5c0-1200-7000-8000-000000000006",
+          "3429e296a2a8f9d17987b0be5fb712b455cd6e743db87348dbcba55407f450ab"
+         ],
+         [
+          "0192f5c0-1200-7000-8000-000000000007",
+          "528c15247fa6aade93d4db34abc192314e1f090f0d9fadd94ca25b06f94dc699"
+         ]
+        ],
+        "approvedParts": [
+         [
+          "dd61c5a540898823",
+          "031c606d689e53df",
+          "e7320d4a79e840cd",
+          "44136fa355b3678a"
+         ],
+         [
+          "e4b40282a59f842f",
+          "031c606d689e53df",
+          "e7320d4a79e840cd",
+          "44136fa355b3678a"
+         ]
+        ]
+       },
+       {
+        "id": "is-5",
+        "kind": "reference",
+        "name": "Eski ortofoto",
+        "layers": [
+         "kilitli"
+        ],
+        "file": {
+         "path": "$fixture:raster/v1/files/geographic.tif",
+         "revision": "840249e571aec4b3700381947ea14001fb2e4f4ccaaf005e7203145d659ef8fa"
+        }
+       }
+      ],
+      "derivations": [
+       {
+        "id": "tr-1",
+        "source": "is-1",
+        "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+        "operation": "GNSS içe aktarma",
+        "uids": [
+         "0192f5c0-1200-7000-8000-000000000001",
+         "0192f5c0-1200-7000-8000-000000000002"
+        ]
+       },
+       {
+        "id": "tr-2",
+        "source": "is-1",
+        "revision": "b9fc0eef2a9dcbffeb38af25b0392dbcac7986e323f659668f48a57dd8560f77",
+        "operation": "Eş yükselti eğrileri",
+        "uids": [
+         "0192f5c0-1200-7000-8000-000000000006",
+         "0192f5c0-1200-7000-8000-000000000007"
+        ]
+       }
+      ]
+     }
+    },
+    "origin": {
+     "x": 500000.0,
+     "y": 4400000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "ortofoto",
+      "name": "Ortofoto",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Kadastro altlığı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "altlik-yapi",
+        "name": "Yapılar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "tasarim",
+      "name": "Tasarım yüzeyi",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bos",
+      "name": "Boş",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "G1"
+      },
+      "p": {
+       "x": 500001.0,
+       "y": 4400002.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 2,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "G2"
+      },
+      "p": {
+       "x": 500005.0,
+       "y": 4400002.0
+      }
+     },
+     {
+      "kind": "point",
+      "id": 3,
+      "layerId": "gnss",
+      "attrs": {
+       "Ad": "G3"
+      },
+      "p": {
+       "x": 500009.0,
+       "y": 4400002.0
+      }
+     },
+     {
+      "kind": "raster",
+      "id": 4,
+      "layerId": "ortofoto",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       1.0,
+       0.0,
+       4400010.0,
+       0.0,
+       -1.0
+      ],
+      "width": 10,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5256,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:raster/v1/files/i8.tif"
+     },
+     {
+      "kind": "line",
+      "id": 5,
+      "layerId": "altlik-yapi",
+      "attrs": {},
+      "a": {
+       "x": 500020.0,
+       "y": 4400010.0
+      },
+      "b": {
+       "x": 500030.0,
+       "y": 4400010.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 6,
+      "layerId": "tasarim",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400000.0
+      },
+      "b": {
+       "x": 500010.0,
+       "y": 4400000.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "tasarim",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400005.0
+      },
+      "b": {
+       "x": 500010.0,
+       "y": 4400005.0
+      }
+     },
+     {
+      "kind": "line",
+      "id": 8,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 500000.0,
+       "y": 4400020.0
+      },
+      "b": {
+       "x": 500010.0,
+       "y": 4400025.0
+      }
+     },
+     {
+      "kind": "raster",
+      "id": 9,
+      "layerId": "kilitli",
+      "attrs": {},
+      "affine": [
+       500000.0,
+       1.0,
+       0.0,
+       4400010.0,
+       0.0,
+       -1.0
+      ],
+      "width": 10,
+      "height": 10,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5256,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:raster/v1/files/geographic.tif"
+     }
+    ],
+    "uids": [
+     "0192f5c0-1200-7000-8000-000000000001",
+     "0192f5c0-1200-7000-8000-000000000002",
+     "0192f5c0-1200-7000-8000-000000000003",
+     "0192f5c0-1200-7000-8000-000000000004",
+     "0192f5c0-1200-7000-8000-000000000005",
+     "0192f5c0-1200-7000-8000-000000000006",
+     "0192f5c0-1200-7000-8000-000000000007",
+     "0192f5c0-1200-7000-8000-000000000008",
+     "0192f5c0-1200-7000-8000-000000000009"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
    "name": "Yeniden onayla: değişmemiş onaylı öğe",
    "steps": [
     {
@@ -3499,6 +4195,10 @@
           "e7320d4a79e840cd",
           "44136fa355b3678a"
          ]
+        ],
+        "approvedValues": [
+         "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+         "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
         ]
        },
        {
@@ -4023,6 +4723,10 @@
             "e7320d4a79e840cd",
             "44136fa355b3678a"
            ]
+          ],
+          "approvedValues": [
+           "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+           "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
           ]
          },
          {
@@ -4148,6 +4852,10 @@
           "e7320d4a79e840cd",
           "44136fa355b3678a"
          ]
+        ],
+        "approvedValues": [
+         "{\"a\":{\"x\":500000.0,\"y\":4400000.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400000.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}",
+         "{\"a\":{\"x\":500000.0,\"y\":4400005.0},\"attrs\":{},\"b\":{\"x\":500010.0,\"y\":4400005.0},\"kind\":\"line\",\"layerId\":\"tasarim\"}"
         ]
        },
        {

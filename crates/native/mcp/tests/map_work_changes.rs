@@ -2,8 +2,10 @@
 //! `.kcad` schema 210 sample (fixtures/kcad/v2/map-work-approved-objects.kcad: the approved design keeps its one line's
 //! digest) opened over MCP reads the design up to date with nothing changed; its line given a height and a line drawn
 //! on its layer, `map.work.query` counts one changed and one added and lists both ids. Saved, the file is schema 210 and
-//! keeps the approval's one pair; approved again, the design is up to date and the saved file (schema 211, docs/adr/3280:
-//! with the parts) keeps both lines' pairs. docs/adr/3280: the schema 211 sample says the changed line's part.
+//! keeps the approval's one pair; approved again, the design is up to date and the saved file (schema 213: with the
+//! parts, docs/adr/3280, and the values, docs/adr/3680) keeps both lines' pairs. docs/adr/3280: the schema 211 sample
+//! says the changed line's part. docs/adr/3680: the schema 213 sample names the changed attribute with its values and
+//! says the deleted line as it was approved; the values saved are the texts the digests are of.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -76,7 +78,7 @@ fn the_design_s_changed_and_added_lines_are_listed_and_saved_over_mcp() {
     assert_eq!(r["isError"], false, "{r}");
     let d = design(&mut server);
     assert_eq!((d["state"].as_str(), d.get("changes")), (Some("current"), None), "{d}");
-    let pairs = saved_pairs(&mut server, "yeniden-onaylandi.kcad", 211);
+    let pairs = saved_pairs(&mut server, "yeniden-onaylandi.kcad", 213);
     let ids: Vec<&str> = pairs.as_array().unwrap().iter().filter_map(|p| p[0].as_str()).collect();
     assert_eq!(ids, both, "sorted by id");
     assert_ne!(pairs[0][1], pairs[1][1]);
@@ -102,4 +104,36 @@ fn the_changed_line_s_part_is_said_over_mcp() {
     let c = r["structuredContent"]["output"]["items"][2]["changes"].clone();
     assert_eq!(c["parts"], json!({"geometry": 0, "attributes": 1, "layer": 0, "look": 0}), "{c}");
     assert_eq!(c["objects"], json!([{"uid": LINE, "parts": ["attributes"]}]), "{c}");
+}
+
+/// docs/adr/3680: the schema 213 sample (its approval keeps the line's value) opened over MCP; the line's height set,
+/// `map.work.query` names the attribute with no value then and “1060” now; the line deleted, it says the line as it was
+/// approved, which is the sample's kept text read back as JSON.
+#[test]
+fn the_changed_attribute_and_the_deleted_line_are_said_over_mcp() {
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-work-approved-values.kcad");
+    let kept: Value = serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/map-work-approved-values.json")).unwrap();
+    let text = kept["settings"]["mapWork"]["items"][2]["approvedValues"][0].as_str().unwrap().to_owned();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path": sample}));
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let set = call(
+        &mut server,
+        "cad.entities.set",
+        json!({"drawing": drawing, "uids": [LINE], "attrs": {"Kot": "1060"}, "operation": "attributes"}),
+    );
+    assert_eq!(set["isError"], false, "{set}");
+    let changes = |server: &mut Server| {
+        let r = call(server, "map.work.query", json!({"drawing": drawing}));
+        r["structuredContent"]["output"]["items"][2]["changes"].clone()
+    };
+    let c = changes(&mut server);
+    assert_eq!(c["objects"], json!([{"uid": LINE, "parts": ["attributes"], "attributes": [{"name": "Kot", "now": "1060"}]}]), "{c}");
+    let gone = call(&mut server, "cad.entities.delete", json!({"drawing": drawing, "uids": [LINE]}));
+    assert_eq!(gone["isError"], false, "{gone}");
+    let c = changes(&mut server);
+    let approved: Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(c["removedObjects"], json!([{"uid": LINE, "approved": approved}]), "{c}");
 }
