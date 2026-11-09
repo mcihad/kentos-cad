@@ -151,6 +151,7 @@ fn the_apartment_s_joinery_list_draws_each_type_and_follows_the_drawing() {
                     })
             })
             .collect(),
+        renovation: false,
     };
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let (_, made, notes) = kentos_native_application::permit_set::execute(

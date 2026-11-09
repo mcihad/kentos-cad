@@ -203,6 +203,7 @@ fn a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2() 
                     })
             })
             .collect(),
+        renovation: false,
     };
     let (edited, made, notes) = kentos_native_application::permit_set::execute(
         &mut kentos_native_application::ExecutionContext::new(doc),

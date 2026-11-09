@@ -2021,6 +2021,29 @@ impl Entity {
         }
     }
 
+    /// How `view` draws it (docs/adr/0346 §2): its tadilat durumu's look, except that Tadilat projesi leaves out a room
+    /// pulled down (İptal) and its label (docs/adr/3039 §6): the plan names the rooms as they will be, its walls and
+    /// openings carry the Mimarlar Odası's three techniques; drawn too, the old rooms' names and areas lay over the new
+    /// ones' in the same place.
+    pub fn look_in<'a>(
+        &'a self,
+        view: crate::PhaseView,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> crate::PhaseLook {
+        let phase = self.phase(&by_uid);
+        if view == crate::PhaseView::Renovation && phase == Some(crate::ArchPhase::Demolish) {
+            let room = match self {
+                Entity::Space(_) => true,
+                Entity::Tag(t) => matches!(by_uid(&t.tag.of), Some(Entity::Space(_))),
+                _ => false,
+            };
+            if room {
+                return crate::PhaseLook::Hidden;
+            }
+        }
+        view.look(phase)
+    }
+
     /// How the Tadilat projesi view marks it (docs/adr/3039 §5): a door or window of its own state other than its wall's
     /// is that wall's infill (closed up, iptal) or cut into it (ilave); otherwise by its state, none a plain outline.
     pub fn renovation_mark<'a>(

@@ -3,7 +3,9 @@
 //! (Planlı Alanlar İmar Yönetmeliği 57(10)'s table and the set's live list), the site plan, then the storeys' plans from
 //! the lowest up. Each sheet is numbered on its phase's code (`UP-01` …) and answers the digital project regulation's
 //! file name fields (RG 5.8.2026/33331 EK-2: its type, kind, storey or place and sequence); the title block reads the
-//! rest from the drawing (its variables and what it says of itself), never asked again sheet by sheet.
+//! rest from the drawing (its variables and what it says of itself), never asked again sheet by sheet. A plan's map may
+//! be linked to a named view (docs/adr/3039 §6): a tadilat set's storey drawn as it stands, with the Mimarlar Odası's
+//! three techniques and as it will stand, each by its view's recipe.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -101,6 +103,9 @@ pub struct Page {
     pub captioned: bool,
     /// A list drawn to scale (the joinery list's elevations at 1/50, docs/adr/3038): its title block says its scale.
     pub scaled: bool,
+    /// The named view its map is linked to (docs/adr/3039 §6): the view's recipe gives the map its tadilat view and its
+    /// scale, the map keeps its storey; none: the map draws the drawing as it is shown.
+    pub link: Option<kentos_contracts::NamedView>,
 }
 
 impl Page {
@@ -118,6 +123,7 @@ impl Page {
             paper: None,
             captioned: false,
             scaled: false,
+            link: None,
         }
     }
 
@@ -135,6 +141,7 @@ impl Page {
             paper: None,
             captioned: false,
             scaled: false,
+            link: None,
         }
     }
 
@@ -158,6 +165,16 @@ impl Page {
             paper: None,
             captioned: false,
             scaled: false,
+            link: None,
+        }
+    }
+
+    /// This page with its map linked to `view` (docs/adr/3039 §6): the named view's recipe gives the map its tadilat
+    /// view and its scale; the map keeps its storey.
+    pub fn linked(self, view: kentos_contracts::NamedView) -> Page {
+        Page {
+            link: Some(view),
+            ..self
         }
     }
 
@@ -176,6 +193,7 @@ impl Page {
             paper: None,
             captioned: true,
             scaled: false,
+            link: None,
         }
     }
 
@@ -203,6 +221,7 @@ impl Page {
             paper: Some(paper),
             captioned: false,
             scaled,
+            link: None,
         }
     }
 }
@@ -673,6 +692,11 @@ pub fn permit_sheets(
                     }
                     // A set's scale is its phase's: locked, as a detail's is (docs/adr/1090 §2).
                     m.view_locked = true;
+                    // A tadilat set's plan shows its view's state (docs/adr/3039 §6): the camera and the scale the
+                    // view's, the storey the map's.
+                    if let Some(view) = &page.link {
+                        m.source = crate::viewport::Source::ViewLink { view: view.clone() };
+                    }
                 }
             }
         }

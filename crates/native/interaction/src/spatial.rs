@@ -432,7 +432,7 @@ impl Spatial {
                     .and_then(|s| doc.get(s))
             };
             doc.entities()
-                .filter(|e| phase_view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
+                .filter(|e| e.look_in(phase_view, by_uid) == kentos_commands::PhaseLook::Hidden)
                 .map(|e| {
                     let joins = matches!(
                         e,

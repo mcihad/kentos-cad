@@ -251,6 +251,17 @@
       - Kalan duvarda kapatılan açıklık taralı dolgu, açılan açıklıkta kaldırılan duvar kesikli.
       - `Entity::renovation_mark` → `Store::set_renovation`.
       - Tadilat ▾ › Tadilat lejantı (`tool.renovationLegend`, blok MM-XXXX-TADILATLEJANTI).
+    - Tadilat takımı (ADR 3039 §6): Ruhsat takımı penceresinde Tadilat projesi kutusu (`PermitSet.renovation`; çizim
+      tadilatsa işaretli, `permit_set::renovates`).
+      - Her kat üç pafta: mevcut durum, tadilat projesi, yeni durum (EK-2 sıra 01–03).
+      - Haritalar takımın adlı görünümlerine bağlı (`permit::Page::linked`, `Source::ViewLink`; "Ruhsat takımı · Mevcut
+        durum" …; tarif yalnız tadilat görünümü ve ölçek; kat haritanın). Vaziyet planı tadilat projesi tekniğiyle.
+      - Görünümler ayar olarak yazılır; yeniden kurulumda aynı adla yerinde yenilenir.
+    - Mahal kendi durumundaki duvarlarla sınırlanır (ADR 0798 §3). Tadilatta değişip durumu boş ya da Mevcut kalan oda
+      paftada olmayan duvarı oda sınırı olarak gösterir; pencere ve takım bunları adıyla söyler
+      (`permit_set::rooms_to_restate`). Doğru akış: değişen oda İptal, yenisi Yeni durumda Mahal aracıyla.
+    - Görünüşün tek kuralı `Entity::look_in` (ekran, pafta, PDF, DXF, kapsam): Tadilat projesinde iptal oda ve etiketi
+      gizli, yıkım planında kesikli.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

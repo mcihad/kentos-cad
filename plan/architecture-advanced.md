@@ -872,9 +872,12 @@ Dayanak S19.
 - Etiketler duvar çizgisine binmez (M0'daki çakışmalar yok).
 - Kapı ölçüsünde 90/210 yazar.
 
-#### ADV-17 — Tadilat grafik dili [~]
+#### ADV-17 — Tadilat grafik dili [x]
 
-_Durum (9 Kasım 2026):_ M39 1. bölüm yapıldı ([ADR 3039](../docs/adr/3039-renovation-graphic-language.md)): kavramın adı "Evre" değil Tadilat durumu (Mimarlar Odası: Mevcut, İptal, İlave; Geçici); kapı ve pencerenin kendi tadilat durumu (KCAD 218; Öznitelikler'de Duvarınki, Mevcut, İptal, İlave, Geçici); görünümün gizlediği duvar birleşmez, gizlediği açıklık kesmez (mevcut duvara açılan kapı Mevcut durumda delik bırakmaz, iptal pencerenin yeri Yeni durumda dolu); kendi görünümünü gösteren pafta haritası kendi kopyasından kesilir. Araçlarda tadilat durumu yapıldı (1b): yeni çizilen görünümün durumunu alır (Mevcut durum/Yıkım planı → Mevcut, Yeni durum → İlave); Yeni durumda mevcut duvara konan kapı İlave. DXF'te durum katmanları yapıldı (EK-4 4.14.3/4.14.5 kalıbıyla MM-DUVA-TUGLA-IPTAL kesikli, -ILAVE, -MEVCUT; DXF görünümün gösterdiğini alır). Tadilat projesi görünümü ve lejantı yapıldı (KCAD 219; MO: mevcut düz, ilave taralı, iptal kesikli; kapatılan boşluk taralı dolgu, açılan kapıda kaldırılan duvar kesikli). Kalan: tadilat takımı.
+_Durum (9 Kasım 2026):_ M39 1. bölüm yapıldı ([ADR 3039](../docs/adr/3039-renovation-graphic-language.md)): kavramın adı "Evre" değil Tadilat durumu (Mimarlar Odası: Mevcut, İptal, İlave; Geçici); kapı ve pencerenin kendi tadilat durumu (KCAD 218; Öznitelikler'de Duvarınki, Mevcut, İptal, İlave, Geçici); görünümün gizlediği duvar birleşmez, gizlediği açıklık kesmez (mevcut duvara açılan kapı Mevcut durumda delik bırakmaz, iptal pencerenin yeri Yeni durumda dolu); kendi görünümünü gösteren pafta haritası kendi kopyasından kesilir. Araçlarda tadilat durumu yapıldı (1b): yeni çizilen görünümün durumunu alır (Mevcut durum/Yıkım planı → Mevcut, Yeni durum → İlave); Yeni durumda mevcut duvara konan kapı İlave. DXF'te durum katmanları yapıldı (EK-4 4.14.3/4.14.5 kalıbıyla MM-DUVA-TUGLA-IPTAL kesikli, -ILAVE, -MEVCUT; DXF görünümün gösterdiğini alır). Tadilat projesi görünümü ve lejantı yapıldı (KCAD 219; MO: mevcut düz, ilave taralı, iptal kesikli; kapatılan boşluk taralı dolgu, açılan kapıda kaldırılan duvar kesikli). Tadilat takımı yapıldı (§6): Ruhsat takımı'nda Tadilat projesi kutusu (çizim tadilatsa işaretli); her kat üç pafta
+(mevcut durum, tadilat projesi, yeni durum; EK-2 sıra 01–03), her biri takımın adlı görünümüne bağlı, vaziyet planı
+tadilat projesi tekniğiyle; tadilatta değişen ama İptal yapılmamış odalar adıyla söylenir; tadilat projesinde iptal oda
+ve etiketi gizli. **M39 yapıldı.**
 
 **Kullanıcı sonucu:** Mevcut, yıkılacak ve yeni bir bakışta ayrılır; üç evre paftası aynı modelden çıkar. Dayanak S21.
 
@@ -1161,7 +1164,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler **(M36, ADR 3036: yapıldı; Metraj ▾ › Otopark hesabı ve Sığınak hesabı canlı tabloları; Otopark Yön. 4/1-ç, 5/1-j, 8/3–4, Ek-1; Sığınak Yön. 7/a–c, 8/a, 8/c; eksik yer ve alan Denetim › Mevzuat'ta)** |
 | M37 | Türk anteti, pafta takımları, PDF/A | ADV-24 | Ruhsat takımı tek komutla **(M37, ADR 3037: PDF/A-2b ve kendi denetimi; MO anteti, künye çizimde, 57/10 tablosu çizimden; Proje › Ruhsat takımı: bilgi, vaziyet, kat planları ve hesap paftası, EK-2 adlı PDF/A yayın; yapıldı)** |
 | M38 | Mahal listesi ve grafik doğrama listesi | ADV-24 | 57(29) listesi; tip görünüşleri **(M38, ADR 3038: mahalde denizlik, basamak ve korkuluk kaplaması; Çizelge ▾ › Mahal listesi kat kat, kapı ve pencere kodlarıyla; takımda LS/MHL paftası; tipte kasa-kanat ve U değeri, TS 825:2024 denetimi; Etiket ▾ › Doğrama listesi: Türkiye'nin açılım çizgisiyle görünüşler, canlı blok; takımda 1/50 LS/MMC paftası; yapıldı)** |
-| M39 | Tadilat grafik dili | ADV-17 | Üç tadilat paftası **(M39 1. bölüm, ADR 3039: "Evre" → Tadilat durumu (mevcut, iptal, ilave); açıklığın kendi tadilat durumu, görünüme göre birleşim ve kesim; sürüyor)** |
+| M39 | Tadilat grafik dili | ADV-17 | Üç tadilat paftası **(M39, ADR 3039: "Evre" → Tadilat durumu (mevcut, iptal, ilave); açıklığın kendi tadilat durumu, görünüme göre birleşim ve kesim; araçlar görünümün durumunu yazar; DXF durum katmanları; Tadilat projesi görünümü ve lejantı; Ruhsat takımında Tadilat projesi: her kat mevcut durum, tadilat projesi, yeni durum paftası, kendi adlı görünümüne bağlı; yapıldı)** |
 
 ### Faz 4 — Yapı modeli ve türetilmiş çizimler
 

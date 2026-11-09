@@ -8,12 +8,16 @@
 //! - The site plan draws the ground storey (with the objects on no storey, the parcel among them) at 1/500, 1/1000
 //!   when 1/500 does not fit A0, around the parcel (docs/adr/3032), else the ground storey.
 //! - The storeys' EK-2 codes from their elevations: K00 at ±0.00, K01 … above, B01 … below.
+//! - A tadilat set (docs/adr/3039 §6; PAİY 4(1)(dddd), 58; the Mimarlar Odası's three techniques): each storey's plan
+//!   three times, as it stands (Mevcut durum), with mevcut, iptal and ilave each drawn its own way (Tadilat projesi)
+//!   and as it will stand (Yeni durum), each map linked to the set's named view of that state; the site plan to its own
+//!   view of Tadilat projesi. The views are written into the project as the particulars are (a setting, no undo step).
 
 use std::collections::BTreeSet;
 
 use kentos_commands::{
-    CommandResult, ProjectVariable, SheetPicture, SheetsEdit, SheetsEdited, VariableKind,
-    VariableValue,
+    ArchPhase, CommandResult, Entity, NamedView, PhaseView, ProjectVariable, SheetPicture,
+    SheetsEdit, SheetsEdited, VariableKind, VariableValue, ViewRecipe,
 };
 use kentos_domain::Document;
 use kentos_sheet::permit::{self, Page, Phase};
@@ -34,6 +38,159 @@ pub struct PermitSet {
     /// The lists that are sheets of their own (docs/adr/3038), after the plans: each its title (Mahal listesi), its
     /// EK-2 kind (MHL), its box (metres) and the scale it is drawn at; each on the smallest A paper it fits.
     pub lists: Vec<ListSheet>,
+    /// A tadilat set (docs/adr/3039 §6): each storey's plan as Mevcut durum, Tadilat projesi and Yeni durum show it.
+    pub renovation: bool,
+}
+
+/// A tadilat set's plans of a storey (docs/adr/3039 §6), in their order: the view each is linked to and the words its
+/// title adds.
+pub const RENOVATION_PLANS: [(PhaseView, &str); 3] = [
+    (PhaseView::Existing, "mevcut durum"),
+    (PhaseView::Renovation, "tadilat projesi"),
+    (PhaseView::Proposed, "yeni durum"),
+];
+
+/// Whether the drawing is a tadilat (docs/adr/3039 §6): a wall stands (Mevcut, or no state: the Tadilat projesi view
+/// draws it as mevcut) and a wall, a door or a window is removed or added (İptal, İlave). Ruhsat takımı offers its
+/// tadilat plans then.
+pub fn renovates(doc: &Document) -> bool {
+    let by_uid = |u: &str| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    };
+    let (mut stands, mut changes) = (false, false);
+    for e in doc.entities() {
+        if !matches!(e, Entity::Wall(_) | Entity::Opening(_)) {
+            continue;
+        }
+        match e.phase(by_uid) {
+            None | Some(ArchPhase::Existing) => stands |= matches!(e, Entity::Wall(_)),
+            Some(ArchPhase::Demolish | ArchPhase::New) => changes = true,
+            Some(ArchPhase::Temporary) => {}
+        }
+        if stands && changes {
+            return true;
+        }
+    }
+    false
+}
+
+/// The rooms a tadilat changes but that do not say so (docs/adr/3039 §6): a room without a state, or Mevcut, along
+/// which a wall removed or added (İptal, İlave) runs on its storey, 30 cm or more. A room is bounded by the walls of
+/// its own state (docs/adr/0798 §3): such a room keeps in Yeni durum the side the removed wall gave it, and takes in
+/// Mevcut durum the new partition, so a sheet shows a wall that is not there. Their numbers and names, in the
+/// drawing's order.
+pub fn rooms_to_restate(doc: &Document) -> Vec<String> {
+    let reach = |pts: &[kentos_commands::Vec2], grow: f64| -> Option<[f64; 4]> {
+        let first = pts.first()?;
+        let b = pts
+            .iter()
+            .fold([first.x, first.y, first.x, first.y], |b, p| {
+                [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+            });
+        Some([b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow])
+    };
+    // A wall's band reaches 2 cm past its faces: the rooms on either side touch it.
+    let changed: Vec<(Option<&str>, [f64; 4])> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Wall(w)
+                if matches!(
+                    w.wall.arch.phase,
+                    Some(ArchPhase::Demolish | ArchPhase::New)
+                ) =>
+            {
+                reach(&w.wall.pts, w.wall.width / 2.0 + 0.02)
+                    .map(|b| (w.wall.arch.level.as_deref(), b))
+            }
+            _ => None,
+        })
+        .collect();
+    if changed.is_empty() {
+        return Vec::new();
+    }
+    // Along it, not at a corner: the boxes meet over 30 cm.
+    let along = |a: [f64; 4], b: [f64; 4]| {
+        let (w, h) = (
+            a[2].min(b[2]) - a[0].max(b[0]),
+            a[3].min(b[3]) - a[1].max(b[1]),
+        );
+        w >= 0.0 && h >= 0.0 && w.max(h) >= 0.3
+    };
+    doc.entities()
+        .filter_map(|e| {
+            let Entity::Space(s) = e else { return None };
+            let space = &s.space;
+            if space.void || !matches!(space.arch.phase, None | Some(ArchPhase::Existing)) {
+                return None;
+            }
+            let level = space.arch.level.as_deref();
+            let b = space
+                .parts
+                .iter()
+                .filter_map(|p| reach(&p.outer.pts, 0.0))
+                .reduce(|a, b| union(Some(a), b))?;
+            changed
+                .iter()
+                .any(|(l, w)| (l.is_none() || level.is_none() || *l == level) && along(b, *w))
+                .then(|| {
+                    [space.number.as_deref(), space.name.as_deref()]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                })
+                .map(|n| {
+                    if n.is_empty() {
+                        "adsız mahal".to_owned()
+                    } else {
+                        n
+                    }
+                })
+        })
+        .collect()
+}
+
+/// The named view a tadilat set's maps of `what` are linked to (docs/adr/3039 §6): named by the set (“Ruhsat takımı ·
+/// Mevcut durum”), the box `b` (metres) around, its recipe only the tadilat `view` and the `scale`.
+fn set_view(phase: Phase, what: &str, view: PhaseView, b: [f64; 4], scale: u32) -> NamedView {
+    let name = format!("{} takımı · {what}", phase.name());
+    let c = centre(b);
+    NamedView {
+        id: kentos_commands::view_id_of_name(&name),
+        name,
+        center: kentos_commands::Vec2 { x: c.x, y: c.y },
+        width: (b[2] - b[0]).max(0.01),
+        height: (b[3] - b[1]).max(0.01),
+        twist: 0.0,
+        recipe: Some(ViewRecipe {
+            version: 1,
+            phase: Some(view),
+            scale: Some(scale),
+            ..Default::default()
+        }),
+    }
+}
+
+/// `views` with a set's `made` written in (docs/adr/3039 §6): one of the same name keeps its place, its id and the
+/// rest of its recipe (a pen, black and white), its box, tadilat view and scale renewed; the others added after.
+fn with_views(views: &[NamedView], made: &[NamedView]) -> Vec<NamedView> {
+    let mut out = views.to_vec();
+    for v in made {
+        let Some(w) = out.iter_mut().find(|w| w.name == v.name) else {
+            out.push(v.clone());
+            continue;
+        };
+        let new = v.recipe.clone().unwrap_or_default();
+        let r = w.recipe.get_or_insert_with(Default::default);
+        r.version += 1;
+        r.phase = new.phase;
+        r.scale = new.scale;
+        (w.center, w.width, w.height, w.twist) = (v.center, v.width, v.height, v.twist);
+    }
+    out
 }
 
 /// A list the set gives a sheet of its own (docs/adr/3038).
@@ -134,13 +291,25 @@ fn union(a: Option<[f64; 4]>, b: [f64; 4]) -> [f64; 4] {
     }
 }
 
-/// The set's pages for `phase` and the paper they go on, and what was left out (a list no paper holds).
+/// What a set is made of.
+pub(crate) struct Planned {
+    pub pages: Vec<Page>,
+    /// The paper they go on.
+    pub paper: PaperChoice,
+    /// The project's named views with a tadilat set's (docs/adr/3039 §6); none: as they are.
+    pub views: Option<Vec<NamedView>>,
+    /// What was left out (a list no paper holds).
+    pub notes: Vec<String>,
+}
+
+/// The set's pages for `phase` (a tadilat set's when `renovation`, docs/adr/3039 §6) and the paper they go on.
 pub(crate) fn pages(
     doc: &Document,
     phase: Phase,
     tables: &[(String, [f64; 4])],
     lists: &[ListSheet],
-) -> Result<(Vec<Page>, PaperChoice, Vec<String>), Stop> {
+    renovation: bool,
+) -> Result<Planned, Stop> {
     let levels = doc
         .settings()
         .arch
@@ -232,18 +401,48 @@ pub(crate) fn pages(
                 Some("phase".into()),
             ))
         })?;
+    // A tadilat set's views (docs/adr/3039 §6): the three plans' around every storey at the phase's scale, the site
+    // plan's with the three techniques too (MO: "Projede mevcut, iptal ve ilaveler üç farklı teknikle ifade
+    // edilmelidir") at its own; merged into the project's, a map's link the view it will find.
+    let views = renovation.then(|| {
+        let mut want: Vec<NamedView> = RENOVATION_PLANS
+            .iter()
+            .map(|(view, _)| set_view(phase, view.label(), *view, plans, scale))
+            .collect();
+        want.push(set_view(
+            phase,
+            "Vaziyet planı",
+            PhaseView::Renovation,
+            site,
+            site_scale,
+        ));
+        let all = with_views(&doc.settings().named_views, &want);
+        let found: Vec<NamedView> = want
+            .iter()
+            .filter_map(|w| all.iter().find(|v| v.name == w.name).cloned())
+            .collect();
+        (all, found)
+    });
+    let site_page = Page::site(Some(ground.0.id.clone()), Some(centre(site)), site_scale);
     let mut out = vec![
         Page::info(),
-        Page::site(Some(ground.0.id.clone()), Some(centre(site)), site_scale),
+        match views.as_ref().and_then(|(_, found)| found.get(3)) {
+            Some(v) => site_page.linked(v.clone()),
+            None => site_page,
+        },
     ];
     for (l, _) in &storeys {
-        out.push(Page::plan(
-            &l.id,
-            &l.name,
-            code_of(&l.id),
-            Some(centre(plans)),
-            scale,
-        ));
+        let plan = Page::plan(&l.id, &l.name, code_of(&l.id), Some(centre(plans)), scale);
+        let Some((_, found)) = &views else {
+            out.push(plan);
+            continue;
+        };
+        // Each storey's three, one after the other: its sheets EK-2's sequence 01, 02, 03.
+        for (v, (_, what)) in found.iter().zip(RENOVATION_PLANS) {
+            let mut page = plan.clone().linked(v.clone());
+            page.title = format!("{} planı ({what})", l.name);
+            out.push(page);
+        }
     }
     // The lists after the plans (MO: mahal listesi, then the parking calculation), each on the smallest paper it fits.
     let mut notes = Vec::new();
@@ -267,20 +466,36 @@ pub(crate) fn pages(
             None => notes.push(format!("{} A0 kâğıda sığmadı; paftası kurulmadı.", l.title)),
         }
     }
+    // A tadilat's rooms that keep a wall that is not there on its sheets (docs/adr/3039 §6), said by name.
+    if renovation {
+        let rooms = rooms_to_restate(doc);
+        if !rooms.is_empty() {
+            notes.push(format!(
+                "Tadilatta değişen ama İptal yapılmamış mahaller: {}. Her mahal kendi durumundaki duvarlarla \
+                 sınırlanır; bunlar mevcut ya da yeni durum paftasında orada olmayan bir duvarı oda sınırı olarak \
+                 gösterir. Bu odaları İptal yapıp yenilerini Yeni durumda çizin",
+                rooms.join(", ")
+            ));
+        }
+    }
     // The calculation sheet last (MO: the parking calculation after the drawings), when its tables fit the paper.
     if !tables.is_empty() && fits_tables(paper.paper) {
         out.push(Page::tables(tables.to_vec(), plot));
     }
-    Ok((out, paper, notes))
+    Ok(Planned {
+        pages: out,
+        paper,
+        views: views.map(|(all, _)| all),
+        notes,
+    })
 }
 
 /// The set's sheets' change of the book, through `cad.sheets.edit`'s input.
 pub(crate) fn edit(
     doc: &Document,
     phase: Phase,
-    tables: &[(String, [f64; 4])],
-    lists: &[ListSheet],
-) -> Result<(SheetsEdit, Vec<permit::Made>, Vec<String>), Stop> {
+    planned: &Planned,
+) -> Result<(SheetsEdit, Vec<permit::Made>), Stop> {
     let template = template::system_template(permit::TEMPLATE).ok_or_else(|| {
         Stop::failed(error(
             "unknown_template",
@@ -288,16 +503,21 @@ pub(crate) fn edit(
             Some("source".into()),
         ))
     })?;
-    let (pages, paper, notes) = pages(doc, phase, tables, lists)?;
     let (book, _) = match doc.sheets() {
         Some(s) => kentos_sheet::project::read_project_sheets(s)
             .map_err(|e| Stop::failed(error("book_unreadable", e.message, None)))?,
         None => (Default::default(), Vec::new()),
     };
     let north = doc.settings().has_system();
-    let made = permit::permit_sheets(&book, template, phase, paper, &pages, north, |sheet| {
-        kentos_sheet::create::ids_for(template, sheet)
-    })
+    let made = permit::permit_sheets(
+        &book,
+        template,
+        phase,
+        planned.paper,
+        &planned.pages,
+        north,
+        |sheet| kentos_sheet::create::ids_for(template, sheet),
+    )
     .map_err(|e| Stop::failed(error(&e.code, e.message, e.path)))?;
     let pictures = made
         .pictures
@@ -323,12 +543,11 @@ pub(crate) fn edit(
             expected_revision: None,
         },
         made.made,
-        notes,
     ))
 }
 
-/// The particulars written (a settings edit, never an undo step), then the set's sheets (one undo step). The sheets
-/// made, with the change's answer and what was left out.
+/// The particulars and a tadilat set's views written (settings edits, never an undo step), then the set's sheets (one
+/// undo step). The sheets made, with the change's answer and what was left out.
 pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: &PermitSet,
@@ -336,10 +555,25 @@ pub fn execute(
     let mut settings = cx.doc.settings().clone();
     settings.variables = with_particulars(&settings.variables, cx.doc.name(), &input.values);
     cx.doc.set_settings(settings);
-    let (edit, made, notes) = edit(cx.doc, input.phase, &input.tables, &input.lists)
-        .map_err(|s| s.into_error().message)?;
+    let planned = pages(
+        cx.doc,
+        input.phase,
+        &input.tables,
+        &input.lists,
+        input.renovation,
+    )
+    .map_err(|s| s.into_error().message)?;
+    if let Some(views) = &planned.views {
+        if let Some(why) = kentos_commands::views_problem(views) {
+            return Err(format!("Tadilat takımının görünümleri yazılamadı: {why}"));
+        }
+        let mut settings = cx.doc.settings().clone();
+        settings.named_views = views.clone();
+        cx.doc.set_settings(settings);
+    }
+    let (edit, made) = edit(cx.doc, input.phase, &planned).map_err(|s| s.into_error().message)?;
     match sheets_edit::execute(cx, edit) {
-        CommandResult::Completed { output, .. } => Ok((output, made, notes)),
+        CommandResult::Completed { output, .. } => Ok((output, made, planned.notes)),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Ruhsat takımı kurulamadı.".into()),
     }
@@ -382,5 +616,46 @@ mod tests {
         assert_eq!(get("mimar"), Some(VariableValue::Null), "must be given");
         assert!(matches!(get("notlar"), Some(VariableValue::Text(_))));
         assert_eq!(out.len(), permit::PARTICULARS.len() + 1);
+    }
+
+    /// A tadilat set made again (docs/adr/3039 §6) renews its views in place: their box, tadilat view and scale; the
+    /// rest of a recipe the owner gave (black and white) and a view of another name stay.
+    #[test]
+    fn a_set_s_views_are_renewed_in_place() {
+        let first = set_view(
+            Phase::Permit,
+            "Mevcut durum",
+            PhaseView::Existing,
+            [0.0, 0.0, 10.0, 6.0],
+            100,
+        );
+        assert_eq!(first.name, "Ruhsat takımı · Mevcut durum");
+        assert_eq!(
+            first.recipe.as_ref().map(|r| (r.phase, r.scale)),
+            Some((Some(PhaseView::Existing), Some(100)))
+        );
+        let mut mine = first.clone();
+        mine.recipe.as_mut().unwrap().mono = true;
+        let other = NamedView {
+            name: "Salon".into(),
+            id: String::new(),
+            recipe: None,
+            ..first.clone()
+        };
+        let have = vec![other.clone(), mine];
+        let again = set_view(
+            Phase::Permit,
+            "Mevcut durum",
+            PhaseView::Existing,
+            [0.0, 0.0, 20.0, 6.0],
+            50,
+        );
+        let out = with_views(&have, &[again]);
+        assert_eq!(out.len(), 2, "renewed, not added");
+        assert_eq!(out[0], other);
+        let r = out[1].recipe.as_ref().unwrap();
+        assert_eq!((out[1].center.x, out[1].width), (10.0, 20.0));
+        assert_eq!((r.scale, r.mono, r.version), (Some(50), true, 2));
+        assert!(kentos_commands::views_problem(&out).is_none());
     }
 }

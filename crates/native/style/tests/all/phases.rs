@@ -55,3 +55,34 @@ fn a_level_view_that_only_draws_across_still_changes_the_look() {
         "but the look is another: what holds object 7 is built again"
     );
 }
+
+/// Tadilat projesi (docs/adr/3039 §6) leaves out a room pulled down and its label, not its wall: the plan names the
+/// rooms as they will be, its walls carry the three techniques. Yıkım planı still dashes the room.
+#[test]
+fn tadilat_projesi_leaves_out_a_room_pulled_down_and_its_label() {
+    let room: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "space", "id": 1, "layerId": "0", "attrs": {},
+        "parts": [{"outer": {"pts": [{"x": 0.0, "y": 0.0}, {"x": 4.0, "y": 0.0}, {"x": 4.0, "y": 3.0}, {"x": 0.0, "y": 3.0}]}}],
+        "name": "Yatak odası", "arch": {"phase": "demolish"}
+    }))
+    .unwrap();
+    let label: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "tag", "id": 2, "layerId": "0", "attrs": {}, "of": "0192f5a1-2590-7000-8000-000000000001",
+        "at": {"x": 2.0, "y": 1.5}
+    }))
+    .unwrap();
+    let wall: Entity = serde_json::from_value(serde_json::json!({
+        "kind": "wall", "id": 3, "layerId": "0", "attrs": {},
+        "pts": [{"x": 4.0, "y": 0.0}, {"x": 4.0, "y": 3.0}], "width": 0.15, "justify": "center",
+        "arch": {"phase": "demolish"}
+    }))
+    .unwrap();
+    let by_uid = |u: &str| (u == "0192f5a1-2590-7000-8000-000000000001").then_some(&room);
+    let r = PhaseView::Renovation;
+    assert_eq!(room.look_in(r, by_uid), PhaseLook::Hidden);
+    assert_eq!(label.look_in(r, by_uid), PhaseLook::Hidden);
+    assert_eq!(wall.look_in(r, by_uid), PhaseLook::Dashed);
+    let d = PhaseView::Demolition;
+    assert_eq!(room.look_in(d, by_uid), PhaseLook::Dashed);
+    assert_eq!(label.look_in(d, by_uid), PhaseLook::Dashed);
+}

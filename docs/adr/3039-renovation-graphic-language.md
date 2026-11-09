@@ -1,4 +1,4 @@
-# 3039 — Tadilat grafik dili: tadilat durumu, açıklığın tadilat durumu, görünüme göre kesim
+# 3039 — Tadilat grafik dili: tadilat durumu, açıklığın tadilat durumu, görünüme göre kesim, tadilat takımı
 
 Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - 1. bölüm: açıklığın kendi tadilat durumu; tadilat görünümüne göre duvar birleşimi ve kesimi.
@@ -6,7 +6,8 @@ Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - §3: araçlarda tadilat durumu (yeni çizilen, açık görünümün durumunu alır).
 - §4: DXF'te tadilat durumu katmanları; DXF görünümün gösterdiğini alır.
 - §5: Tadilat projesi görünümü (Mimarlar Odası'nın üç tekniği tek planda) ve tadilat lejantı.
-- Kalan: tadilat takımı (paftalar).
+- §6: tadilat takımı: Ruhsat takımında her kat üç pafta (mevcut durum, tadilat projesi, yeni durum), her biri kendi
+  adlı görünümüne bağlı; tadilatta değişen odalar ve tadilat projesinde iptal oda.
 
 ## Sorun
 
@@ -44,6 +45,14 @@ Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
   - Örnek tadilat lejantı: **mevcut** düz kontur, **ilave** eğik tarama, **iptal** kesikli kontur.
   - "Koçanda kayıtlı olan kısım mevcut tekniğinde, kayıtlı olmayan rölevesi yapılacak olan kısım yeni proje tekniğinde
     çizilmelidir."
+
+- **Tadilat paftaları (§6):** PAİY 4(1)(dddd) tadilat projesini "uygulama projelerinin bütünü" sayar, 58(4) onu 57.
+  maddeye göre takım olarak onaylatır. Uygulamada tadilat projesi mevcut durum (onaylı proje ya da rölöve) ile öneri
+  (yeni durum) planlarını birlikte sunar: Salt Araştırma arşivindeki Bodrum konutu tadilat projesi "hali hazır kat
+  planları" ile "öneri kat planları"nı birlikte verir (<https://archives.saltresearch.org/handle/123456789/191180>);
+  Kültür ve Turizm Bakanlığı koruma kurullarının kamu hizmet standartları "mevcut durum ile öneri proje" ister
+  (<https://korumakurullari.ktb.gov.tr/Eklenti/106359,kamu-hizmet-standartlaripdf.pdf>). Belediyeye özel bir pafta
+  listesi bulunamadı; plan maddesi ADV-17 "üç tadilat paftası aynı modelden çıkar" der.
 
 ### Başka uygulamalar (yalnız görünüş için, kural değil)
 
@@ -175,6 +184,41 @@ vermiyordu, çünkü her biri bir durumu gizliyordu. Beşinci görünüm **Tadil
 - Simgeler `phaseRenovation` ve `renovationLegend`: lejantın üç kutusu küçükte
   (`.run/icons-m39/ikonlar.png`).
 
+### 6. Tadilat takımı
+
+Ruhsat takımı (ADR 3037) penceresinde **Tadilat projesi** kutusu. Çizim tadilatsa işaretli açılır
+(`permit_set::renovates`): bir duvar duruyor (Mevcut ya da durumsuz) ve bir duvar, kapı ya da pencere İptal ya da İlave.
+
+- Her kat üç pafta, katlar alttan üste: "Zemin kat planı (mevcut durum)", "(tadilat projesi)", "(yeni durum)". Düz
+  takımdaki tek planın yerine geçer. EK-2'de türü, tipi ve kat kodu aynı olduğundan sıra no 01, 02, 03 olur
+  (`…_PL_MMC_K00_02_000`).
+- Her planın haritası takımın adlı görünümüne bağlıdır (`Source::ViewLink`, `permit::Page::linked`):
+  "Ruhsat takımı · Mevcut durum", "· Tadilat projesi", "· Yeni durum". Tarifte yalnız tadilat görünümü ve aşamanın
+  ölçeği (1/100, 1/50) vardır, kutusu planların kutusudur; kat haritanın kalır. Paftalar çizim hangi görünümde açık
+  olursa olsun aynıdır. Önce planın haritası çizimin o anki görünümünü çiziyordu.
+- Vaziyet planı "Ruhsat takımı · Vaziyet planı"na bağlıdır: Tadilat projesi tekniği (Mimarlar Odası: "Projede mevcut,
+  iptal ve ilaveler üç farklı teknikle ifade edilmelidir"), kendi ölçeğinde (1/500, 1/1000).
+- Görünümler projeye yazılır: değişkenler gibi bir ayar, geri alma adımı değil. Takım yeniden kurulunca aynı adlı
+  görünüm yerinde yenilenir: kutusu, tadilat görünümü ve ölçeği. Tarifin geri kalanı (kalem, siyah beyaz) ve kimliği
+  kalır; eski paftaların bağı kopmaz. 100 görünüm sınırı aşılacaksa takım kurulmaz, söylenir.
+- **Mahaller.** Her mahal kendi durumundaki duvarlarla sınırlanır (ADR 0798 §3): Mevcut oda mevcut ve iptal duvarlarla,
+  İlave oda mevcut ve ilave duvarlarla, durumsuz oda bütün duvarlarla.
+  - Tadilatta değişip durumu boş ya da Mevcut kalan oda paftada orada olmayan bir duvarı oda sınırı olarak gösterir.
+    Mevcut durumda yeni bölme, yeni durumda kaldırılan duvar görünür. Ölçüldü: rölöve dairede durumsuz Salon'un sınırı
+    yeni bölmenin etrafından dolanıyordu; mevcut durum paftası olmayan bölmeyi çiziyordu.
+  - Değişen oda: İptal ya da İlave bir duvarın 30 cm'den uzun boyunca sınırladığı ya da kestiği oda (köşede değmek
+    sayılmaz) (`permit_set::rooms_to_restate`).
+  - Pencere bu odaları kutunun altında adıyla söyler, takım kurulunca iletide de söylenir. Doğru akış: değişen odalar
+    İptal, yenileri Yeni durumda Mahal aracıyla çizilir (İlave olur).
+- **Tadilat projesinde iptal oda ve etiketi gizlidir** (`Entity::look_in`). Bu, görünüşün tek kuralıdır: ekran, pafta,
+  PDF, DXF ve görünümün kapsamı onu okur.
+  - Mimarlar Odası'nın üç tekniği yapı elemanları içindir; tadilat projesi planı odaları olacakları gibi adlandırır.
+  - Gösterilseydi eski odanın adı ve alanı yenisinin üstüne binerdi: "02 Yatak odası 1 · 16,20 m²" ile "Yatak odası ·
+    28,58 m²" aynı yerde. İptal odanın kesikli sınırı da iptal duvarın kesikli yüzüne kayık adımla binip onu düz
+    gösteriyordu. Ölçüldü: kâğıtta ikisi de 3,0 / 1,5 mm kesikli.
+  - Yıkım planında iptal oda kesikli kalır.
+- İleti "Ruhsat takımı (tadilat projesi): N pafta (UP-01 … UP-N)"; yayın klasörü "Ruhsat-tadilat-<tarih>".
+
 ## Doğrulama
 
 - Etkileşim (`crates/native/interaction/tests/all/phase_cuts.rs`): 6 m mevcut duvar, 1,5 m'de ilave 90'lık kapı, 4 m'de
@@ -246,11 +290,45 @@ vermiyordu, çünkü her biri bir durumu gizliyordu. Beşinci görünüm **Tadil
   "Duvarınki (Mevcut)" oluyor ve Mevcut durumda görünüyordu.
 - Testler: 9 paket 4222 geçti; masaüstü 2033 geçti (tek kırmızı işten önce de kırmızı olan
   `module_surface_tests::each_program_docks_its_own_panels`).
+- Tadilat takımı, §6:
+  - Pafta (`sheet/tests/all/permit.rs` `a_tadilat_plan_draws_its_view_s_state_on_its_own_storey`): üç bağlı plan;
+    adlar, EK-2 sıra no 01–03, haritanın kaynağı bağ ve kilitli; çizilen haritanın tadilat görünümü, katı ve 1/100'ü;
+    görünüm yoksa harita çizilmez.
+  - Uygulama (`permit_set.rs` `a_set_s_views_are_renewed_in_place`): yeniden kurulumda görünüm yerinde yenilenir,
+    siyah beyaz ve başka adlı görünüm kalır, sürüm 2.
+  - Masaüstü (`renovation_set_tests.rs`): iki katlı bina, zemin katta iptal duvar ve ilave bölme.
+    - Değişen odalar "Salon, Merdiven evi, Salon". İptal yapılıp yenileri İlave çizilince söylenecek oda kalmaz.
+    - 8 pafta ve dört görünüm. Her haritanın tadilat görünümü (vaziyet: Tadilat projesi, 1/500), katı ve 1/100'ü.
+    - Antette pafta adı ve EK-2 adı; PDF/A-2 sekiz dosya uygun (K00_01…K01_03).
+    - Yeniden kurulum UP-09'dan sürer, görünümler 4 kalır. Görünümler silinince harita çizilmez.
+    - Pencere: yeni yapıda kutu boş, tadilatta işaretli ve odalar söylenir. İleti "Ruhsat takımı (tadilat projesi): 10
+      pafta (UP-01 … UP-10)" ve oda uyarısı. Yayın klasörü Ruhsat-tadilat-<tarih>, 10 pafta seçili.
+  - Kitap (`book.rs` `a_map_with_its_own_phase_leaves_out_what_its_view_hides`): çizim Tümü'ndeyken mevcut durum
+    haritası İlave duvarı, yeni durum haritası İptal duvarı çizmez. Tadilat projesinde iptal duvarın bütün çizgileri
+    kesikli, ilave duvarınki değil; iptal oda çizilmez.
+  - Stil (`phases.rs` `tadilat_projesi_leaves_out_a_room_pulled_down_and_its_label`): iptal oda ve etiketi tadilat
+    projesinde gizli, yıkım planında kesikli; iptal duvar kesikli.
+  - Gerçek pencere (iz `fixtures/interaction/real/tadilat-takimi.txt`). Rölöve dairede duvarlar ve odalar Mevcut,
+    bilgiler ve parsel girilmiş.
+    - Tadilat yapıldı: iptal duvar, ilave kapı ve bölme, iptal pencere.
+    - Ruhsat takımı'nda kutu işaretli; uyarı "01 Salon, 02 Yatak odası 1, 03 Yatak odası 2". Takım geri alındı.
+    - Üç oda İptal yapıldı. Yeni durumda Mahal aracıyla Yatak odası 28,58, Salon 26,55, Mutfak 8,32 m² çizildi.
+    - Takım yeniden kuruldu ve yayınlandı: 8 PDF/A-2 dosyası (K00_01, _02, _03).
+    - Mevcut durum: eski odalar (Salon 36,00 m²); bölme, yeni kapı yok, pencere var.
+    - Tadilat projesi: iptal duvar kesikli, bölme ve pencerenin dolgusu taralı, yalnız yeni oda adları.
+    - Yeni durum: birleşen yatak odası. Ekrandaki paftalar aynı, yerleşim denetimi temiz.
+    - ÖNCE (§5'in ikilisi): kutu yok. Tek "Zemin kat planı" çizimin o anki görünümünü (Tümü) çiziyor; mevcut, iptal ve
+      ilave aynı çizgiyle karışık.
+  - Testler: 13 paket 7521 geçti; masaüstü 2038 geçti (tek kırmızı yine
+    `module_surface_tests::each_program_docks_its_own_panels`).
 
 ## Sınırlar
 
 - Metraj tadilat durumuna göre ayrılmıyor: mevcut duvarın net yüzü bütün açıklıklarını düşüyor (ilave kapının kırım
   metrajı yok).
-- Mahal görünüme göre yeniden bulunmuyor: Yeni durumda birleşen iki odanın sınırları, mahaller yeniden çizilene ya da
-  tadilat durumu verilene dek eski yerinde.
+- Mahal görünüme göre yeniden bulunmuyor: odanın sınırını kendi tadilat durumu belirler (ADR 0798 §3). Değişen odaları
+  kullanıcı İptal yapar ve yenilerini çizer; takım ve penceresi yalnız söyler (§6).
+- Mahal listesi paftası ve metraj tadilat durumuna göre ayrılmıyor: iptal ve ilave odalar birlikte listelenir.
+- Hesap tabloları çizimin katmanında ve katsız: kat planı ve vaziyet planı haritaları onların kesik bir parçasını
+  gösterebiliyor. Bu M37'den beri var ve tadilattan bağımsız; ayrı iş.
 - Parçasal iptal (duvarın bir kesimini kaldırmak) duvarı bölmekle yapılır (Duvarı böl); ayrı bir araç yok.

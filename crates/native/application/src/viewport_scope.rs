@@ -97,7 +97,7 @@ pub fn phase_out(doc: &Document, view: kentos_commands::PhaseView) -> Vec<f64> {
     };
     doc.entities()
         .filter(|e| matches!(e, Entity::Wall(_) | Entity::Opening(_)))
-        .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
+        .filter(|e| e.look_in(view, by_uid) == kentos_commands::PhaseLook::Hidden)
         .map(|e| f64::from(e.base().id))
         .collect()
 }
@@ -131,7 +131,7 @@ pub fn hidden_entities(doc: &Document) -> Vec<f64> {
     let options = doc.option_out();
     doc.entities()
         .filter(|e| {
-            view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden
+            e.look_in(view, by_uid) == kentos_commands::PhaseLook::Hidden
                 || matches!(e,Entity::Insert(i) if no_plot.contains(&i.block))
                 || options.contains(&kentos_domain::Slot(e.base().id))
         })

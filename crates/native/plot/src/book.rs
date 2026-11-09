@@ -790,4 +790,141 @@ mod phase_tests {
         // The drawing itself is untouched.
         assert_eq!(holes(spatial.store(), wall), vec![(3.4, 4.6), (5.1, 5.7)]);
     }
+
+    /// A map showing a view other than the drawing's leaves out on paper what that view hides (docs/adr/3039 §6): the
+    /// drawing in Tümü, a new wall (layer `yeni`) is not drawn in Mevcut durum, a wall pulled down (layer `iptal`) not in
+    /// Yeni durum; in Tümü both are.
+    #[test]
+    fn a_map_with_its_own_phase_leaves_out_what_its_view_hides() {
+        let mut snapshot: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/opening-phases.json"
+        ))
+        .unwrap();
+        snapshot["settings"]["arch"] = serde_json::json!({});
+        for (id, name) in [("yeni", "Yeni"), ("iptal", "İptal")] {
+            snapshot["layers"].as_array_mut().unwrap().push(serde_json::json!({
+                "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
+                "style": {"color": "#404040", "lineType": "continuous", "lineWeight": 0.5}, "children": []
+            }));
+        }
+        for (id, layer, y, phase) in [(5, "yeni", 1.5, "new"), (6, "iptal", -1.5, "demolish")] {
+            snapshot["entities"].as_array_mut().unwrap().push(serde_json::json!({
+                "kind": "wall", "id": id, "layerId": layer, "attrs": {},
+                "pts": [{"x": 0.0, "y": y}, {"x": 6.0, "y": y}], "width": 0.2, "justify": "center",
+                "arch": {"phase": phase}
+            }));
+            snapshot["uids"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!(format!(
+                    "0192f5a1-2590-7000-8000-00000000007{id}"
+                )));
+        }
+        // A room pulled down with its wall (İptal), drawn round its own outline.
+        snapshot["entities"].as_array_mut().unwrap().push(serde_json::json!({
+            "kind": "space", "id": 7, "layerId": "iptal", "attrs": {},
+            "parts": [{"outer": {"pts": [
+                {"x": 0.5, "y": -2.5}, {"x": 5.5, "y": -2.5}, {"x": 5.5, "y": -1.6}, {"x": 0.5, "y": -1.6}
+            ]}}],
+            "name": "Depo", "arch": {"phase": "demolish"}
+        }));
+        snapshot["uids"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!("0192f5a1-2590-7000-8000-000000000077"));
+        let doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+        let spatial = Spatial::of(&doc);
+        let library = library_of(&doc);
+        let mut maps = MapDrawer::new(&doc, &spatial, &library, None);
+        let book = SheetBook::default();
+        // The layers a map of `phase` draws something on.
+        let mut drawn = |phase: Option<&str>| -> Vec<String> {
+            let mut m = serde_json::json!({
+                "item": "m1",
+                "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+                "rotation": 0,
+                "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+                "layers": {"type": "all"},
+                "extent": [-1.0, -3.0, 7.0, 3.0]
+            });
+            if let Some(p) = phase {
+                m["phase"] = serde_json::json!(p);
+            }
+            let m: kentos_sheet::display::MapPrim = serde_json::from_value(m).unwrap();
+            match maps.draw(&book, &m, "page").map(|p| p.content) {
+                Some(kentos_sheet::pdf::MapContent::Vector(v)) => v
+                    .layers
+                    .into_iter()
+                    .filter(|l| !l.paths.is_empty())
+                    .map(|l| l.id)
+                    .collect(),
+                other => panic!("a vector map: {other:?}"),
+            }
+        };
+        let all = drawn(None);
+        assert!(
+            all.contains(&"yeni".to_owned()) && all.contains(&"iptal".to_owned()),
+            "Tümü: {all:?}"
+        );
+        let existing = drawn(Some("existing"));
+        assert!(
+            !existing.contains(&"yeni".to_owned()),
+            "Mevcut durum: {existing:?}"
+        );
+        assert!(
+            existing.contains(&"iptal".to_owned()),
+            "Mevcut durum: {existing:?}"
+        );
+        let proposed = drawn(Some("proposed"));
+        assert!(
+            !proposed.contains(&"iptal".to_owned()),
+            "Yeni durum: {proposed:?}"
+        );
+        assert!(
+            proposed.contains(&"yeni".to_owned()),
+            "Yeni durum: {proposed:?}"
+        );
+        // Tadilat projesi (docs/adr/3039 §5): the wall pulled down dashed on paper too, the others not.
+        let m: kentos_sheet::display::MapPrim = serde_json::from_value(serde_json::json!({
+            "item": "m1",
+            "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+            "rotation": 0,
+            "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+            "layers": {"type": "all"},
+            "extent": [-1.0, -3.0, 7.0, 3.0],
+            "phase": "renovation"
+        }))
+        .unwrap();
+        let Some(kentos_sheet::pdf::MapContent::Vector(v)) =
+            maps.draw(&book, &m, "page").map(|p| p.content)
+        else {
+            panic!("a vector map");
+        };
+        let dashed = |layer: &str| -> (usize, usize) {
+            let paths = v
+                .layers
+                .iter()
+                .filter(|l| l.id == layer)
+                .flat_map(|l| &l.paths);
+            let stroked: Vec<_> = paths.filter_map(|p| p.stroke.as_ref()).collect();
+            (
+                stroked.iter().filter(|s| !s.dash.is_empty()).count(),
+                stroked.len(),
+            )
+        };
+        // The wall's lines dashed; the room pulled down left out (docs/adr/3039 §6): the plan names the rooms as they
+        // will be, and its outline over the wall's faces drew them as one solid line (two dashes out of step).
+        let (d, n) = dashed("iptal");
+        assert!(n > 0 && d == n, "İptal dashed: {d} of {n}");
+        assert!(
+            !v.layers
+                .iter()
+                .filter(|l| l.id == "iptal")
+                .flat_map(|l| &l.paths)
+                .any(|p| p.closed),
+            "the room pulled down is not drawn"
+        );
+        let (d, n) = dashed("yeni");
+        assert!(n > 0 && d == 0, "İlave not dashed: {d} of {n}");
+    }
 }

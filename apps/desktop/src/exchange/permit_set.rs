@@ -1,11 +1,12 @@
 //! Ruhsat takımı (docs/adr/3037, M37): the drawing's particulars asked once (written into its variables, where every
 //! sheet's title block and PAİY 57(10)'s table read them), then the phase's set made in one undo step and Paftaları
 //! toplu yayınla opened on it, checked, one PDF/A-2 file a sheet named by the digital project regulation's EK-2: the
-//! user presses Yayınla.
+//! user presses Yayınla. A tadilat (docs/adr/3039 §6) gets each storey's plan three times: Mevcut durum, Tadilat
+//! projesi and Yeni durum; the box is ticked when the drawing has İptal or İlave beside what stands.
 use super::{Event as Exchange, Window, message};
 use crate::app::{App, Message};
 use iced::widget::{button, column, row};
-use iced::{Element, Fill, Task};
+use iced::{Center, Element, Fill, Task};
 use kentos_sheet::permit::{self, Phase};
 use kentos_ui::{label, style, widget::Dialog};
 
@@ -23,12 +24,18 @@ pub struct State {
     pub phase: Phase,
     pub fields: Vec<Field>,
     pub status: String,
+    /// A tadilat set (docs/adr/3039 §6).
+    pub renovation: bool,
+    /// The rooms the tadilat changes but that do not say so (docs/adr/3039 §6), said under the box before the set is
+    /// made: on its sheets they would keep a wall that is not there.
+    pub restate: Vec<String>,
 }
 
 impl std::fmt::Debug for State {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PermitSet")
             .field("phase", &self.phase)
+            .field("renovation", &self.renovation)
             .finish_non_exhaustive()
     }
 }
@@ -36,6 +43,7 @@ impl std::fmt::Debug for State {
 #[derive(Clone, Debug)]
 pub enum Event {
     Phase(Phase),
+    Renovation(bool),
     Field(usize, String),
     Make,
     Close,
@@ -120,11 +128,15 @@ impl App {
                 }
             })
             .collect();
+        let renovation = kentos_native_application::permit_set::renovates(&doc.model);
+        let restate = kentos_native_application::permit_set::rooms_to_restate(&doc.model);
         self.close_exchange();
         self.exchange = Some(Window::PermitSet(Box::new(State {
             phase: Phase::Permit,
             fields,
             status: String::new(),
+            renovation,
+            restate,
         })));
         self.dialog = Some(crate::app::Dialog::Exchange);
         Task::none()
@@ -140,6 +152,7 @@ impl App {
         };
         match e {
             Event::Phase(p) => s.phase = p,
+            Event::Renovation(on) => s.renovation = on,
             Event::Field(i, v) => {
                 if let Some(f) = s.fields.get_mut(i) {
                     f.value = v;
@@ -155,6 +168,7 @@ impl App {
                         .collect(),
                     tables: Vec::new(),
                     lists: Vec::new(),
+                    renovation: s.renovation,
                 };
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
@@ -204,8 +218,14 @@ impl App {
                             (Some(a), Some(b)) => format!("{} … {}", a.number, b.number),
                             _ => String::new(),
                         };
+                        // A tadilat set says so (docs/adr/3039 §6).
+                        let kind = if input.renovation {
+                            " (tadilat projesi)"
+                        } else {
+                            ""
+                        };
                         let mut said = format!(
-                            "{} takımı: {} pafta ({numbers}){}",
+                            "{} takımı{kind}: {} pafta ({numbers}){}",
                             phase.name(),
                             made.len(),
                             if missing.is_empty() {
@@ -238,12 +258,13 @@ impl App {
                             p.input.pdfa = true;
                             p.input.naming = permit::FILE_NAMING.into();
                             if let Some(dir) = std::path::Path::new(&p.input.path).parent() {
+                                let set = if input.renovation {
+                                    format!("{}-tadilat", phase.name())
+                                } else {
+                                    phase.name().to_owned()
+                                };
                                 p.input.path = dir
-                                    .join(format!(
-                                        "{}-{}",
-                                        phase.name(),
-                                        kentos_plot::book::today()
-                                    ))
+                                    .join(format!("{set}-{}", kentos_plot::book::today()))
                                     .display()
                                     .to_string();
                             }
@@ -281,6 +302,42 @@ impl App {
             phases,
         ]
         .spacing(8);
+        // A tadilat set (docs/adr/3039 §6; PAİY 4(1)(dddd), 58; Mimarlar Odası: mevcut, iptal and ilave each its way).
+        let check = if s.renovation {
+            kentos_ui::widget::tree_view::Check::Checked
+        } else {
+            kentos_ui::widget::tree_view::Check::Unchecked
+        };
+        body = body.push(
+            row![
+                kentos_ui::widget::tree_view::check_box(
+                    check,
+                    Some(event(Event::Renovation(!s.renovation)))
+                ),
+                column![
+                    label::body("Tadilat projesi"),
+                    label::caption(
+                        "Her kat üç paftada: mevcut durum, tadilat projesi (mevcut düz, ilave taralı, iptal \
+                         kesikli) ve yeni durum. Vaziyet planı tadilat projesi tekniğiyle çizilir."
+                    ),
+                ]
+                .spacing(2)
+                .width(Fill),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        );
+        // The rooms that would keep a wall that is not there, before the set is made (docs/adr/3039 §6).
+        if s.renovation && !s.restate.is_empty() {
+            body = body.push(
+                label::caption(format!(
+                    "Tadilatta değişen ama İptal yapılmamış mahaller: {}. Paftalarda orada olmayan bir duvarı oda \
+                     sınırı olarak gösterirler; bu odaları İptal yapıp yenilerini Yeni durumda çizin.",
+                    s.restate.join(", ")
+                ))
+                .style(style::text::warning),
+            );
+        }
         for (title, names) in GROUPS {
             body = body.push(label::body(title).font(kentos_ui::theme::typography::ui_strong()));
             let mut pair: Vec<Element<'a, Message>> = Vec::new();

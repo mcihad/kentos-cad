@@ -365,3 +365,121 @@ fn a_list_is_a_sheet_of_its_own_paper_without_a_caption_or_a_scale() {
         "no caption"
     );
 }
+
+/// A tadilat set (docs/adr/3039 §6): a storey's plan three times, each map linked to the named view of its state; the
+/// view gives the map its state, camera and scale, the map keeps its storey; EK-2's sequence counts the three on; a view
+/// gone, the map is not drawn.
+#[test]
+fn a_tadilat_plan_draws_its_view_s_state_on_its_own_storey() {
+    use kentos_contracts::{NamedView, PhaseView, Vec2, ViewRecipe};
+    use kentos_sheet::display::{Prim, RenderInputs, display_list};
+    let template = system_template(permit::TEMPLATE).expect("the MO sheet");
+    let paper = PaperChoice {
+        paper: Paper::A3,
+        orientation: Orientation::Landscape,
+    };
+    let view = |name: &str, phase: PhaseView| NamedView {
+        id: kentos_contracts::view_id_of_name(name),
+        name: name.into(),
+        center: Vec2 { x: 5.5, y: 4.0 },
+        width: 15.0,
+        height: 6.0,
+        twist: 0.0,
+        recipe: Some(ViewRecipe {
+            version: 1,
+            phase: Some(phase),
+            scale: Some(100),
+            ..Default::default()
+        }),
+    };
+    let states = [
+        ("mevcut durum", PhaseView::Existing),
+        ("tadilat projesi", PhaseView::Renovation),
+        ("yeni durum", PhaseView::Proposed),
+    ];
+    let views: Vec<NamedView> = states
+        .iter()
+        .map(|(what, phase)| view(&format!("Ruhsat takımı · {what}"), *phase))
+        .collect();
+    let at = Some(kentos_sheet::GroundPoint { x: 5.5, y: 4.0 });
+    let pages: Vec<Page> = views
+        .iter()
+        .zip(states)
+        .map(|(v, (what, _))| {
+            let mut p = Page::plan("zemin", "Zemin kat", "K00", at, 100).linked(v.clone());
+            p.title = format!("Zemin kat planı ({what})");
+            p
+        })
+        .collect();
+    let made = permit::permit_sheets(
+        &SheetBook::default(),
+        template,
+        Phase::Permit,
+        paper,
+        &pages,
+        false,
+        |s| create::ids_for(template, s),
+    )
+    .unwrap();
+    let book = made.ops.iter().fold(SheetBook::default(), |b, op| {
+        ops::apply(&b, op).unwrap().book
+    });
+    let names: Vec<&str> = book.sheets.iter().map(|s| s.name.as_str()).collect();
+    assert_eq!(
+        names,
+        [
+            "UP-01 Zemin kat planı (mevcut durum)",
+            "UP-02 Zemin kat planı (tadilat projesi)",
+            "UP-03 Zemin kat planı (yeni durum)"
+        ]
+    );
+    // EK-2 2.10: the same type, kind and storey, the sequence counts on.
+    let text = |s: &str| VarValue::Text(s.into());
+    let sequence: Vec<Option<&VarValue>> =
+        book.sheets.iter().map(|s| answer(s, "sira_no")).collect();
+    assert_eq!(
+        sequence,
+        [Some(&text("01")), Some(&text("02")), Some(&text("03"))]
+    );
+    let inputs = RenderInputs {
+        named_views: views.clone(),
+        ..Default::default()
+    };
+    for (s, (v, (_, phase))) in book.sheets.iter().zip(views.iter().zip(states)) {
+        let map = s
+            .items
+            .iter()
+            .find_map(|it| match &it.kind {
+                ItemKind::Map(m) => Some(m),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(
+            map.source,
+            kentos_sheet::viewport::Source::ViewLink { view: v.clone() }
+        );
+        assert!(map.view_locked, "the phase's scale is locked");
+        let list = display_list(&book, &s.id, &inputs).unwrap();
+        let drawn = list
+            .prims
+            .iter()
+            .find_map(|p| match p {
+                Prim::Map(m) => Some(m),
+                _ => None,
+            })
+            .expect("the map drawn");
+        assert_eq!(drawn.phase, Some(phase), "{}", s.name);
+        assert_eq!(
+            drawn.level,
+            Some(MapLevel {
+                id: "zemin".into(),
+                below: false
+            }),
+            "the storey the map's"
+        );
+        assert!((drawn.view.scale - 100.0).abs() < 1e-9, "the view's scale");
+    }
+    // The view gone: the map is not drawn (a link fails closed).
+    let none = display_list(&book, &book.sheets[0].id, &RenderInputs::default()).unwrap();
+    assert!(!none.prims.iter().any(|p| matches!(p, Prim::Map(_))));
+}

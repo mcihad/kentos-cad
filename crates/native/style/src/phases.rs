@@ -42,7 +42,7 @@ impl Phasing {
             let look = if infill {
                 PhaseLook::Shown
             } else {
-                view.look(e.phase(&by_uid))
+                e.look_in(view, &by_uid)
             };
             if look != PhaseLook::Shown {
                 looks.insert(e.base().id, look);

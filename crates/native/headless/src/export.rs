@@ -104,7 +104,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
                 .and_then(|s| doc.get(s))
         };
         doc.entities()
-            .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
+            .filter(|e| e.look_in(view, by_uid) == kentos_commands::PhaseLook::Hidden)
             .map(|e| e.base().id)
             .collect()
     };
