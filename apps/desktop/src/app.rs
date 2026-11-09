@@ -1670,7 +1670,11 @@ pub struct App {
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
     pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
     /// The box of the objects on the project's levels, the ground of Kat planı paftaları (docs/adr/0718).
-    pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64;4]>>,
+    pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64; 4]>>,
+    /// The drawing's variables and what it says of itself for a title block (docs/adr/3037), with the drawing's
+    /// session and generation they were read at: read again only when the drawing changes.
+    pub(crate) sheet_drawing_variables:
+        std::cell::RefCell<(Option<(u64, u64)>, Vec<kentos_sheet::model::Variable>)>,
     /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
@@ -1852,6 +1856,7 @@ impl App {
             sheet_attributes: std::cell::Cell::new(false),
             sheet_extent: std::cell::Cell::new(None),
             sheet_level_extent: std::cell::Cell::new(None),
+            sheet_drawing_variables: std::cell::RefCell::new((None, Vec::new())),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
@@ -3581,6 +3586,8 @@ impl App {
             "arch.parkingTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Parking {})
             }
+            // Ruhsat takımı (docs/adr/3037): the particulars, the set and its publication.
+            "arch.permitSet" => return self.permit_set_open(),
             "arch.shelterTable" => {
                 self.place_provision_table(kentos_commands::TableSource::Shelter {})
             }

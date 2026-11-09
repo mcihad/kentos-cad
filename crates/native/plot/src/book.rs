@@ -21,7 +21,7 @@ use kentos_sheet::preflight::Finding;
 use kentos_sheet::profile::Capabilities;
 use kentos_sheet::project::read_project_sheets;
 
-use crate::inputs::{crs_info, pdf_crs, sheet_data, sheet_variable};
+use crate::inputs::{crs_info, pdf_crs, sheet_data};
 use crate::maps::MapSource;
 
 /// A PDF of the book, the sheets it holds in order, and what it writes
@@ -98,8 +98,9 @@ pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
             second_crs: facts.second,
             epsg: facts.epsg,
             epoch: facts.epoch,
-            // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
-            variables: settings.variables.iter().map(sheet_variable).collect(),
+            // The drawing's own variables, read after the book's (docs/adr/0214 §2.3), and what the drawing says of
+            // itself for a title block (docs/adr/3037).
+            variables: crate::inputs::drawing_variables(doc),
         },
         capabilities: Capabilities {
             georeferenced: name.is_some(),

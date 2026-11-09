@@ -1489,12 +1489,15 @@ impl App {
                     .unwrap_or_default(),
                 date: kentos_sheet_ui::text::today(),
                 crs_name: crs.clone().unwrap_or_default(),
-                // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
-                variables: settings.map_or_else(Vec::new, |s| {
-                    s.variables
-                        .iter()
-                        .map(kentos_plot::inputs::sheet_variable)
-                        .collect()
+                // The drawing's own variables, read after the book's (docs/adr/0214 §2.3), and what the drawing says
+                // of itself for a title block (docs/adr/3037), read once a change of the drawing.
+                variables: doc.map_or_else(Vec::new, |d| {
+                    let key = Some((d.session, d.model.generation()));
+                    let mut cached = self.sheet_drawing_variables.borrow_mut();
+                    if cached.0 != key {
+                        *cached = (key, kentos_plot::inputs::drawing_variables(&d.model));
+                    }
+                    cached.1.clone()
                 }),
                 // The coordinate facts (docs/adr/1680), as the printed sheet has them.
                 ..settings.map_or_else(ProjectInfo::default, |s| {

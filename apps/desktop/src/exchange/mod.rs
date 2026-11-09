@@ -22,6 +22,7 @@ mod area_queries;
 mod area_tests;
 pub mod apply;
 mod atlas_export;
+pub(crate) mod permit_set;
 pub(crate) mod sheet_publish;
 #[cfg(test)]
 mod atlas_tests;
@@ -161,6 +162,8 @@ pub enum Window {
     /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
     AtlasExport(Box<atlas_export::State>),
     SheetPublish(Box<sheet_publish::State>),
+    /// Ruhsat takımı (docs/adr/3037): the particulars asked once, then the set and its publication.
+    PermitSet(Box<permit_set::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
     /// FlatGeobuf dışa aktar and içe aktar (docs/adr/0544).
@@ -222,6 +225,7 @@ pub enum Event {
     Area(area_queries::Event),
     Atlas(atlas_export::Event),
     SheetPublish(sheet_publish::Event),
+    PermitSet(permit_set::Event),
     GisExport(gis_export::Event),
     GisCheck(gis_check::Event),
     /// An export written: the file's name, or why not; `None` when the save
@@ -602,6 +606,7 @@ impl App {
             Event::Area(e) => self.area_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
             Event::SheetPublish(e)=>self.sheet_publish_event(e),
+            Event::PermitSet(e) => self.permit_set_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
             Event::Written(outcome) => self.export_written(outcome),
@@ -650,6 +655,7 @@ impl App {
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
             Some(Window::SheetPublish(s))=>self.sheet_publish_view(s),
+            Some(Window::PermitSet(s)) => self.permit_set_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
             Some(Window::ServerWork(s)) => self.server_work_view(s),
             Some(Window::FgbExport(s)) => self.fgb_export_view(s),

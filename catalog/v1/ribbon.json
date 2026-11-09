@@ -2345,6 +2345,10 @@
        {
         "command": "arch.wallStyles",
         "size": "small"
+       },
+       {
+        "command": "arch.permitSet",
+        "size": "small"
        }
       ],
       "overflow": [

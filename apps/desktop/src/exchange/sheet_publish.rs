@@ -644,7 +644,7 @@ impl App {
             });
             if s.input.mode == SheetPublishMode::Separate {
                 body = body.push(label::caption(
-                    "Dosya adı · {index}, {sheet}, {number}, {revision}",
+                    "Dosya adı · {index}, {sheet}, {number}, {revision}, {@değişken}",
                 ));
                 let mut field = kentos_ui::widget::text_field("{index}-{sheet}", &s.input.naming);
                 if !busy {

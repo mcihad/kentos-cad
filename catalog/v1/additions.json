@@ -3238,6 +3238,23 @@
       "status": "implemented"
     },
     {
+      "id": "arch.permitSet",
+      "title": "Ruhsat takımı",
+      "short": "Ruhsat takımı",
+      "icon": "permitSet",
+      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen evrenin pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 3037).",
+      "aliases": [
+        "RUHSAT",
+        "RUHSATTAKIMI",
+        "RUHSATTAKİMİ",
+        "PAFTATAKIMI",
+        "PERMITSET"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.sheetSet",
       "title": "Pafta seti",
       "icon": "sheetSet",
@@ -5216,6 +5233,7 @@
     "viewElevation": "<circle cx=\"9\" cy=\"11\" r=\"4.2\"/><path d=\"M4.8 11h8.4\" stroke-width=\"0.9\"/><path d=\"m13 7.8 4.7-1.6-1.6 4.7z\" fill=\"currentColor\" stroke=\"none\"/>",
     "viewDetail": "<circle cx=\"7\" cy=\"12\" r=\"4.8\" stroke-dasharray=\"2 1.3\"/><circle cx=\"15\" cy=\"5\" r=\"3\"/><path d=\"M12 5h6\" stroke-width=\"0.9\"/><path d=\"m10.4 8.6 2.3-1.6\" stroke-width=\"1.1\"/>",
     "navigator": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"4\" rx=\"0.8\"/><path d=\"M5.5 6.5v9.5M5.5 10.5h3.5M5.5 15.5h3.5\" stroke-width=\"1\"/><rect x=\"9.5\" y=\"8.5\" width=\"8\" height=\"4\" rx=\"0.8\"/><rect x=\"9.5\" y=\"13.5\" width=\"8\" height=\"4\" rx=\"0.8\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.35\"/><rect x=\"9.5\" y=\"13.5\" width=\"8\" height=\"4\" rx=\"0.8\"/>",
+    "permitSet": "<path d=\"M5 2.5h12.5v10\" stroke-width=\"1\"/><rect x=\"2\" y=\"4.5\" width=\"13.5\" height=\"13\" rx=\"0.8\"/><path d=\"M8.5 12.5h7M8.5 12.5v5M12 12.5v5M8.5 15h7\" stroke-width=\"1\"/><path d=\"M4.5 7.5h4M4.5 9.5h6\" stroke-width=\"0.8\"/>",
     "sheetSet": "<rect x=\"6.5\" y=\"2.5\" width=\"11\" height=\"8\" rx=\"0.8\"/><path d=\"M4.5 5v7.5H15\" stroke-width=\"1\"/><path d=\"M2.5 7.5v7.5H13\" stroke-width=\"1\"/><path d=\"M8.5 5h3M8.5 7h5\" stroke-width=\"0.8\"/><circle cx=\"16\" cy=\"16\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.35\"/><path d=\"M16 14.6v1.6l1 .8\" stroke-width=\"1\"/>",
     "viewRefs": "<circle cx=\"5\" cy=\"5.5\" r=\"3\"/><path d=\"M2 5.5h6\" stroke-width=\"0.9\"/><rect x=\"11\" y=\"10.5\" width=\"7\" height=\"7\" rx=\"0.8\"/><path d=\"M8 7.5c3 0 4.5 1 4.5 3\" stroke-width=\"1.1\"/><path d=\"m11 9.6 1.5 1.2 1.3-1.4\" stroke-width=\"1.1\"/><path d=\"M12.5 13h3M12.5 15h3\" stroke-width=\"0.8\"/>",
     "spaceFloor": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 9.8h15M7.5 3.5v6.3M12.5 9.8v6.7\" stroke-width=\"0.9\"/>",

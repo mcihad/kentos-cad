@@ -203,6 +203,15 @@
       üretilir, v2.1 mntr), `GTS_PDFA1`; CMYK JPEG `pdfa_cmyk_picture`.
     - `kentos_formats::pdf::pdfa::pdfa2_report`: projenin PDF okuyucusuyla PDF/A-2 maddeleri (6.1.2–6.9); yayın her
       PDF/A dosyasını teslimden önce okur (`pdfa_rule` yayını durdurur). `file.publish.sheets` `pdfa`.
+    - `expr::Scope::lookup`: cevapsız (null) pafta değişkeni kitabın/çizimin aynı adlı değerine, o da yoksa yerleşik
+      değere yol verir. Yerleşik `@pafta_no`, `@pafta_basligi`, `@revizyon` (pafta seti bilgisi).
+    - `Document::title_facts` (domain): `@arsa_alani`, `@emsale_konu_alan`, `@yapi_insaat_alani`, `@kat_adedi`,
+      `@bb_sayisi`, `@kullanim_amaci` …; `kentos_plot::inputs::drawing_variables` çizim değişkenlerinden sonra ekler
+      (masaüstü `sheet_drawing_variables` önbelleği, çizimin kuşağına göre).
+    - `kentos_sheet::permit` (`PARTICULARS`, `level_codes`, `paper_for`, `permit_sheets`, `FILE_NAMING`) +
+      `kentos_native_application::permit_set` (künye → `set_settings`, takım → `cad.sheets.edit`) + masaüstü
+      `exchange/permit_set.rs` (Mimari › Proje › Ruhsat takımı; sonra Paftaları toplu yayınla hazır ve denetlenmiş).
+      Yayın adında `{@ad}` (`naming_value_missing`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

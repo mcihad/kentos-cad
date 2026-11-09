@@ -2312,6 +2312,14 @@
       "operation": "table",
       "note": "Otopark hesabı (kaynağı parking): bölümlerin Ek-1 ihtiyacı, toplam, Otopark/Garaj mahallerinden yer sayısı ve şarj yeri; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 3036)."
     },
+    "arch.permitSet": {
+      "level": "semantic",
+      "via": [
+        "cad.sheets.edit",
+        "file.publish.sheets"
+      ],
+      "note": "Ruhsat takımı: künye çizimin değişkenlerine (Proje ayarları › Değişkenler), takımın paftaları sys:mimari-ruhsat şablonundan tek cad.sheets.edit değişikliğiyle; yayın file.publish.sheets ile ayrı dosya, pdfa ve EK-2 adı ({@proje_kodu}_{@bina_kodu}_MM_XXXX_…) (ADR 3037)."
+    },
     "arch.shelterTable": {
       "level": "semantic",
       "via": [

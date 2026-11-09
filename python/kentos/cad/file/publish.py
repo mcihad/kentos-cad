@@ -99,7 +99,9 @@ class _FilePublishSheets(LocalCommand[PublishSheets, SheetsPublished, SheetsPubl
             layers:
             mode:
             name: One PDF's leaf name; .pdf is appended when missing.
-            naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
+            naming: Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
+                {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value
+                refuses with naming_value_missing). Collisions get a stable numeric suffix.
             pdfa: PDF/A-2b (ISO 19005-2; docs/adr/3037): every file archival, as the 2026 digital project regulation asks a
                 drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
             pin: A plan's immutable document pin; changed source refuses publication before any file is exposed.

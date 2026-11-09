@@ -1,6 +1,6 @@
 # 3037 — Türk anteti, pafta takımları ve PDF/A
 
-Tarih: 2026-11-09. Durum: kabul, 1. bölüm (M37; ADV-24; plan S22).
+Tarih: 2026-11-09. Durum: kabul, 1. ve 2. bölüm (M37; ADV-24; plan S22).
 
 ## Sorun
 
@@ -111,6 +111,77 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
 - **Masaüstü:** Paftaları toplu yayınla penceresinde "PDF/A-2 arşiv biçimi (e-PYS teslimi)" anahtarı, "Her pafta ayrı
   PDF"nin altında.
 
+### §2 Türk anteti, çizimden okunan bilgiler ve Ruhsat takımı (2. bölüm)
+
+- **MO paftası** (`sys:mimari-ruhsat`, `templates/mimari-ruhsat.json`):
+  - Sağda 180 mm'lik sütun. Yukarıdan aşağı:
+    - kuzey oku (MO: sağ üst);
+    - açıklamalar (`@notlar`);
+    - revizyon tablosu: başlığı (REV., AÇIKLAMA, TARİH, İMZA) altta, satırlar aşağıdan yukarı dolar (MO);
+    - en altta pafta başlığı.
+  - Pafta başlığı MO'nun saydığı alanlar ve dosya adıdır:
+    - iş adı ve büyük "M";
+    - yapı sahibi, il/ilçe, mahalle/pafta/ada/parsel;
+    - pafta adı, ölçek, tarih, pafta no, blok no;
+    - proje no ve EK-2 dosya adı;
+    - müellif, unvan ve imza çizgisi, sicil no / BTB no, büro adresi;
+    - tasarlayan, çizen, kontrol eden.
+  - Kâğıtlar A3–A0 yatay kısıtlarla. A4 yatay ve dikey kâğıtların kendi düzeni var: dikeyde antet altta, açıklamalar
+    gizli.
+- **Cevapsız soru yol verir** (`expr::Scope::lookup`):
+  - Paftanın boş (`null`) değişkeni kitabın ya da çizimin aynı adlı değerine, o da yoksa aynı adlı yerleşik değere
+    yol verir. Hiçbiri yoksa eskisi gibi eksiktir (‹ad?›).
+  - Böylece şablon alanlarını soru olarak tanımlar (galeriden açılan tek pafta sorar), Ruhsat takımı boş bırakır ve
+    değerler çizimin değişkenlerinden okunur.
+  - Önceden boş pafta değişkeni çizimdeki değeri gölgeliyordu: Paftaları toplu yayınla 2+1 dairenin tek paftasını
+    3 boş antet alanıyla durdurdu.
+- **Yeni yerleşik değerler:** `@pafta_no`, `@pafta_basligi`, `@revizyon` pafta setinin bilgisinden. Antet onları
+  okur, sormaz.
+- **Çizimin kendisi hakkında söyledikleri** (`Document::title_facts`, `kentos_domain::title_facts`):
+  - İmar durumundan: `@arsa_alani`, `@emsal_orani`, `@taks_orani`, `@emsale_konu_alan` (katlar alanı), `@taban_alani`.
+  - `@yapi_insaat_alani` ve `@toplam_yapi_insaat_alani`: bütün katların mahalleri; tek binada ikisi aynıdır.
+  - Katlardan `@kat_adedi` (±0,00 ve üstü, mahali olan) ve `@bodrum_kat_adedi`.
+  - Bina programından `@bb_sayisi` ve `@kullanim_amaci` (konut, ticaret, büro …).
+  - Paftaya çizimin değişkenlerinden sonra gider: kullanıcının aynı adlı değişkeni önce gelir
+    (`kentos_plot::inputs::drawing_variables`; ara yüzsüz yayın her seferinde hesaplar, masaüstü çizim değiştikçe bir
+    kez).
+- **Künye** (`permit::PARTICULARS`): 27 değişken. Zorunlular:
+  - il, ilçe, mahalle, ada, parsel;
+  - yapı sahibi, taşıyıcı sistem;
+  - mimar, sicil no, BTB no, büro adresi.
+  Öbürlerinin varsayılanı:
+  - kadastro paftası, tapu kaydı, müteahhit, denetçiler, yapı denetim, tasarlayan, çizen, kontrol eden, proje no ve
+    blok no: "—";
+  - mevcut yapılar "Yok", unvan "Mimar";
+  - proje kodu "000000" (idareden alınır, EK-1), bina kodu "00", revizyon no "000";
+  - iş adı çizimin adı.
+  Künye çizimin değişkenlerine yazılır. Bu bir ayar düzenlemesidir, geri alma adımı değildir (`set_settings`).
+- **Ruhsat takımı** (`kentos_sheet::permit`, `kentos_native_application::permit_set`):
+  - Evre: Ön proje ÖP 1/100; Ruhsat UP 1/100 (MO Yön. 18: mesleki denetim uygulama projesiyle; PAİY 57(27)); Uygulama
+    UP 1/50. Alt küme "Mimari / Ruhsat takımı".
+  - Sıra MO'nun sunuş sırasıdır:
+    - UP-01 Proje bilgileri: PAİY 57(10) bilgi tablosu, 57(3)'ün emsal, taban alanı ve BB sayısı, canlı pafta listesi;
+      haritası ve kuzey oku yoktur, ölçeği "—";
+    - UP-02 Vaziyet planı: zemin kat ve katsız nesneler (parsel), 1/500, sığmazsa 1/1000, parselin ortası;
+    - planlar en alttan en üste, hepsi aynı zemini paylaşır. Nesnesi olmayan katın paftası yoktur.
+  - **EK-2:**
+    - Her pafta kendi tür, tip, kat ve sırasını cevaplar (`dosya_turu`, `dosya_tipi`, `kat_konum`, `sira_no`). Sıra,
+      önceki bütün alanları aynı paftalar arasında sayılır (2.10).
+    - Kat kodu kotundan: ±0,00 K00, üstü K01…, altı B01… (Tablo 2.14).
+    - Antetteki dosya adı ile yayının adı (`permit::FILE_NAMING`) aynı ifadedir.
+  - **Kâğıt:** bütün haritaların %10 payla sığdığı en küçük A3–A0 yatay kâğıt. Haritalar kilitlidir (ADR 1090 §2).
+  - **Kuzey oku:** koordinat sistemi olmayan projede konmaz; CAD profili de gizler. Kuzey oku koordinat sistemi ister
+    ve olmadan yayını durdurur.
+  - Paftalar tek `cad.sheets.edit` değişikliğidir, tek geri alma adımı.
+- **Yayın adlarında `{@ad}`** (`file.publish.sheets` `naming`):
+  - Değer paftanın, kitabın, sonra çizimin değişkeninden okunur; cevapsız olan yol verir.
+  - Değeri olmayan `naming_value_missing` ile reddedilir ("Proje ayarları › Değişkenler'de verin").
+- **Masaüstü:** Mimari › Proje › **Ruhsat takımı** (yeni simge `permitSet`; RUHSAT, PAFTATAKIMI).
+  - Pencere: evre düğmeleri; Arsa, Yapı, Müellif, Dijital teslim (EK-1, EK-2) ve Denetim gruplarında künye; yıldız
+    zorunlu.
+  - "Paftaları oluştur" takımı kurar ve Paftaları toplu yayınla'yı açar: takım seçili, her pafta ayrı dosya, PDF/A,
+    EK-2 adı, klasör "Ruhsat-<tarih>", Denetle yapılmış. Kullanıcı Yayınla'ya basar.
+
 ## Ölçüm
 
 - **Renk profili:** Little CMS (Pillow ImageCms) üretilen profili açtı: "sRGB IEC61966-2.1", mntr, RGB, XYZ, 2.1.
@@ -131,11 +202,43 @@ PDF/A yeter. Kâğıda basılıp taranan PDF kullanılamaz.
   - Sonra: "PDF/A-2 arşiv biçimi (e-PYS teslimi)" anahtarı açılır.
   - Yayını antetin boş üç alanı durdurdu; PDF/A'dan bağımsız eski durum (§2'de çözülür).
   - Resimler: `.run/gui-evidence/mimari-m37/`.
+- **Test, §2:**
+  - `permit::storeys_codes_and_papers_follow_ek_2_and_the_maps`: kat kodları K00/K01/K02/B01/B02; 110×80 mm A3,
+    400 mm genişlik A1, 1000×800 mm sığmaz.
+  - `permit::a_permit_set_is_made_in_mo_s_order_with_its_file_names_fields`:
+    - UP-01…04, adlar ve alt küme, EK-2 cevapları (GN/MMC/NNN, PL/VAZ/NNN, PL/MMC/K00, K01), sıra 01;
+    - bilgi paftasında harita ve kuzey oku yok; haritalar katında, ölçekte (1/500, 1/100) ve kilitli;
+    - ikinci takım UP-05'ten; koordinat sistemsiz projede kuzey oku yok.
+  - `expr::tests`: cevapsız pafta sorusu çizimin değerini, boş değişken yerleşik ölçeği okur.
+  - `templates`: yeni şablon her kâğıtta temiz; galerilerde Mimari paftanın yanında.
+  - `title_facts`, `permit_set` birim testleri.
+  - `permit_set_tests::a_permit_set_is_made_from_the_drawing_and_published_as_pdf_a_named_by_ek_2`: 2 katlı, 4
+    daireli bina, 400 m² parsel.
+    - Takım UP-01…04. 57(10) tablosu "400.00 m²", "2 (bodrum 0)", "1.50 / 0.40", "Konut", müellif ve sicil yazar.
+    - Antette "260457_00_MM_XXXX_PL_MMC_K00_01_000".
+    - Yayın dört dosya: `260457_00_MM_XXXX_GN_MMC_NNN_01_000.pdf`, `…_PL_VAZ_NNN_01_000`, `…_PL_MMC_K00_01_000`,
+      `…_PL_MMC_K01_01_000`; hepsi PDF/A-2 kurallarından geçer.
+- **Gerçek pencere, §2** (1920 × 1080; testin sakladığı bina):
+  - Önce (1. bölümün ikilisi): "“ruhsat takımı” menülerde yok"; Proje panelinde düğme yok.
+  - Sonra: Proje › Ruhsat takımı. Formda 13 alan gerçek fare ve klavyeyle dolduruldu; proje kodu ctrl+a ile değişti.
+  - "Paftaları oluştur": altta dört pafta sekmesi; yayın penceresi kendiliğinden denetlenmiş: "4 pafta hazır; 4 PDF
+    dosyası yazılacak", A3, 1/500 ve 1/100, EK-2 adları.
+  - Yayınla: "4 pafta, 4 PDF yayınlandı". Teslim klasöründe dört PDF ve `yayin.json`.
+  - Teslim edilen dosyalar:
+    - KentOS denetimi dördünde "PDF/A-2b · uygun · 0 bulgu";
+    - pdfinfo (Poppler): A3, PDF 1.7, XMP `pdfaid:part 2`, `conformance B`;
+    - Ghostscript üçünü çizdi; pdftotext "MAHALLE", "Mimari / Ruhsat takımı" ve dosya adını çıkarır.
+  - Resimler: `m37-ruhsat-serit.png`, `m37-ruhsat-pencere.png`, `m37-ruhsat-yayin.png`, `m37-paftalar.png`,
+    `m37-teslim-pdf.png`, `m37-simge.png`.
 - **Bağımsız doğrulama:** veraPDF'i (Maven Central, jbang) bu oturumda çalıştırma izni verilmedi. PDF/A'ya
   uygunluğun resmî doğrulaması veraPDF ile yapılmalıdır.
 
-## Sonraki adımlar (M37'nin 2. ve 3. bölümleri)
+## Sonraki adımlar
 
-- Türk anteti şablonu (MO alanları, revizyon tablosu üstte, "M" harfi), antet ve 57(10) bilgileri projeden.
-- EK-2 dosya adları, "Ruhsat takımı" komutu: vaziyet planı, kat planları, hesap paftası; tek tıkla PDF/A.
-- A4 katlama izleri.
+- **Hesap paftası (EK-2 2.8.1, "MIR"):** takıma metrekare cetveli, emsal ve TAKS, kat irtifakı, otopark ve sığınak
+  tablolarının paftası (M37 3. bölüm).
+- **A4 katlama izleri:** DIN 824'ün ölçüleri (210 mm ilk katlama, 190 mm aralık) yalnız ikincil kaynaklarda okundu;
+  Türk karşılığı bulunamadı. Tahminle çizilmedi.
+- Çatı planı (ADV-20), kesit ve görünüşler (ADV-19) takıma kendi işleriyle girer.
+- Python ve MCP için takım komutu. Revizyon satırları ve EK-2 revizyon no'nun pafta setinden yürümesi.
+- Koordinat sistemsiz projede plan kuzeyi (kuzey açısıyla) kuzey oku.

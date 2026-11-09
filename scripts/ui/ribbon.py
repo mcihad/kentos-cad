@@ -468,13 +468,14 @@ CAD = [
         P("Proje", "archSettings", [M("Kat", [("", ["view.levels.up", "view.levels.down"]),
                 ("Kat görünümü", ["view.levels.all", "view.levels.active", "view.levels.below"])]),
             M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])]),
-            S("arch.audit"), S("arch.settings"), S("arch.wallStyles")],
+            S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.permitSet")],
           # Program, Şablon, Kapı ve pencere tipleri (docs/adr/0772), Oda modülleri (docs/adr/0775), Malzemeler
           # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside
           # the navigator: a view's area edited on the model.
           # Parsel ve bahçe mesafeleri (docs/adr/3032) beside Program: the site plan's parcel, the project's as the
           # program is.
           # Kaçış yolları (docs/adr/3035 §2) beside them: the fire rules' walks drawn on the storey.
+          # Ruhsat takımı (docs/adr/3037) shown beside Denetim: the set the audit's drawing is delivered as.
           overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
                     "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),

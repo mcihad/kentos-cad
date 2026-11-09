@@ -96524,7 +96524,7 @@
           },
           "naming": {
             "default": "{index}-{sheet}",
-            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.",
+            "description": "Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and\n{@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value\nrefuses with naming_value_missing). Collisions get a stable numeric suffix.",
             "type": "string"
           },
           "path": {

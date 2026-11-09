@@ -4,18 +4,6 @@ use std::{
     fs,
     path::{Path, PathBuf},
 };
-use kentos_commands::{
-    PublishSheets, SheetPublishMode, SheetPublishPin, SheetPublishedFile, SheetPublishIssue,
-    SheetsPublished, CallOp, CommandResult, CommandError, FileEffect, encoding::sha256_hex,
-    SheetPublishFrame, SheetPublishScope, SheetPublishedPage,
-};
-use kentos_domain::Document;
-use kentos_native_application::jobs::Progress;
-use kentos_sheet::{
-    SheetBook,
-    project::read_project_sheets,
-};
-use crate::file_commands::Refused;
 const MANIFEST: &str = "yayin.json";
 pub(crate) fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
     Box::new(CommandError {
@@ -70,6 +58,7 @@ fn names(
     book: &SheetBook,
     chosen: &[String],
     input: &PublishSheets,
+    drawing: &[kentos_sheet::model::Variable],
 ) -> Result<Vec<(String, Vec<String>)>, Refused> {
     if input.mode == SheetPublishMode::Single {
         return Ok(vec![(
@@ -87,8 +76,26 @@ fn names(
             "naming",
         ));
     }
-    let rest = input
-        .naming
+    // `{@ad}`: a variable's value (docs/adr/3037), the sheet's, else its book's, else the drawing's (the digital project
+    // regulation's file names: `{@proje_kodu}_{@bina_kodu}_MM_XXXX_{@dosya_turu}_…`).
+    let mut bare = String::new();
+    let mut tail = input.naming.as_str();
+    while let Some((before, after)) = tail.split_once("{@") {
+        bare.push_str(before);
+        match after.split_once('}') {
+            Some((name, rest))
+                if !name.is_empty() && name.chars().all(|c| c.is_alphanumeric() || c == '_') =>
+            {
+                tail = rest;
+            }
+            _ => {
+                bare.push_str("{@");
+                tail = after;
+            }
+        }
+    }
+    bare.push_str(tail);
+    let rest = bare
         .replace("{index}", "")
         .replace("{sheet}", "")
         .replace("{id}", "")
@@ -100,7 +107,7 @@ fn names(
     if rest.contains(['{', '}']) {
         return Err(refuse(
             "invalid_input",
-            "Dosya adında tanınmayan yer tutucu var; {index}, {sheet}, {id} kullanın.",
+            "Dosya adında tanınmayan yer tutucu var; {index}, {sheet}, {id}, {number}, {@ad} kullanın.",
             "naming",
         ));
     }
@@ -133,6 +140,36 @@ fn names(
                 "revision" => info.revision.clone(),
                 "status" => info.status.clone(),
                 "subset" => info.subset.join("-"),
+                name if name.starts_with('@') => {
+                    let fold = |s: &str| kentos_sheet::expr::fold(s);
+                    let want = fold(&name[1..]);
+                    // An unanswered question gives way, as on the sheet (docs/adr/3037).
+                    let found = sheet
+                        .variables
+                        .iter()
+                        .chain(&book.variables)
+                        .chain(drawing)
+                        .filter(|v| fold(&v.name) == want)
+                        .find_map(|v| match &v.value {
+                            VarValue::Text(t) if !t.trim().is_empty() => Some(t.trim().to_owned()),
+                            VarValue::Number(n) => Some(kentos_sheet::expr::value_text(&VarValue::Number(*n))),
+                            _ => None,
+                        });
+                    match found {
+                        Some(v) => v,
+                        None => {
+                            return Err(refuse(
+                                "naming_value_missing",
+                                format!(
+                                    "“{}” paftasının dosya adındaki @{} değeri yok; Proje ayarları › Değişkenler'de verin.",
+                                    sheet.name,
+                                    &name[1..]
+                                ),
+                                "naming",
+                            ));
+                        }
+                    }
+                }
                 _ => String::new(),
             });
             rest = after;
@@ -425,7 +462,12 @@ fn work(
             s.export.dpi = dpi;
         }
     }
-    let planned = names(&book, &chosen, input)?;
+    let planned = names(
+        &book,
+        &chosen,
+        input,
+        &kentos_plot::inputs::drawing_variables(doc),
+    )?;
     let scope = scope_of(&book, &chosen, &doc.settings().drawn_views());
     if matches!(op, CallOp::Validate) {
         return Ok((

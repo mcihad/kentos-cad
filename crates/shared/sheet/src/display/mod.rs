@@ -625,6 +625,14 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
             scope.builtin("sayfa_sayisi", VarValue::Number(f64::from(count)));
         }
     }
+    // The drawing set's identity (docs/adr/3037): a title block reads its number, title and revision, never asks them.
+    let info = sheet.drawing_info.clone().unwrap_or_default();
+    scope.builtin("pafta_no", text(&info.number));
+    scope.builtin(
+        "pafta_basligi",
+        text(if info.title.is_empty() { &sheet.name } else { &info.title }),
+    );
+    scope.builtin("revizyon", text(&info.revision));
 }
 
 /// The items as drawn: their bindings applied (maps first, so `@olcek` is the bound scale).

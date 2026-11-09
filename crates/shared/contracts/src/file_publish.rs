@@ -61,7 +61,9 @@ pub struct PublishSheets {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
-    /// Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
+    /// Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
+    /// {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/3037; one without a value
+    /// refuses with naming_value_missing). Collisions get a stable numeric suffix.
     #[serde(default = "naming")]
     pub naming: String,
     /// None preserves each page's own physical raster setting.

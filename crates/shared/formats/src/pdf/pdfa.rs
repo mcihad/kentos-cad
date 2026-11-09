@@ -610,6 +610,30 @@ mod tests {
         assert_eq!(date_parts("D:20261109"), Some([2026, 11, 9, 0, 0, 0, 0]));
     }
 
+    /// A tool: every PDF in `KENTOS_PDFA_DIR` (a delivery folder) read by these rules (docs/adr/3037).
+    #[test]
+    #[ignore]
+    fn pdfa_files() {
+        let Some(dir) = std::env::var_os("KENTOS_PDFA_DIR") else { return };
+        let mut names: Vec<_> = std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).collect();
+        names.sort();
+        for path in names.iter().filter(|p| p.extension().is_some_and(|e| e == "pdf")) {
+            let bytes = std::fs::read(path).unwrap();
+            let r = pdfa2_report(&bytes).unwrap();
+            println!(
+                "{}: PDF/A-{}{} · {} · {} bulgu",
+                path.file_name().unwrap().to_string_lossy(),
+                r.part.map_or("?".into(), |p| p.to_string()),
+                r.conformance.as_deref().unwrap_or("?").to_lowercase(),
+                if r.conforms() { "uygun" } else { "uygun değil" },
+                r.findings.len()
+            );
+            for f in &r.findings {
+                println!("  {}: {}", f.clause, f.message);
+            }
+        }
+    }
+
     #[test]
     fn a_plain_pdf_is_told_what_it_lacks() {
         let pdf = b"%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n\
