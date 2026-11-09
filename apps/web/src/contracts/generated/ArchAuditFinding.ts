@@ -26,7 +26,9 @@ key: string, check: ArchAuditCheck,
  * `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
  * `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
  * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
- * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).
+ * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
+ * `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
+ * `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033).
  */
 code: string, 
 /**
@@ -64,4 +66,8 @@ note?: string,
 /**
  * A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
  */
-nature?: ArchAuditNature, };
+nature?: ArchAuditNature, 
+/**
+ * A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”.
+ */
+rule?: string, };

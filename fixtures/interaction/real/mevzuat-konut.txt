@@ -1,0 +1,12 @@
+# M33 (docs/adr/3033): Mimari › Denetim on a small dwelling (konut.kcad from regulation_audit_tests): its living room and
+# bedroom smaller than PAİY 29/1 asks, its corridor narrower than 29/3, no kitchen, its storey higher than 28/1-c.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 600 450 middle
+click 600 450 middle
+wait 1500
+click 1162 111  # Denetim
+wait 3000
+move 700 300
+wait 800
+shot m33-12-konut

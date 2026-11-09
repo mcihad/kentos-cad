@@ -169,6 +169,10 @@
       sonrası. `tool.siteParcel` (`parcel_tool.rs`; Harita'nın `tool.parcel`'inden ayrı); rozet/Öznitelikler/tablo.
     - Ölçüler (Ö): `draw_marks` cephe ortası hizalı ölçüler (`SiteEdgeReport::near`, `facing`), ±0,00 `Elevation` ve
       kot yazısı; `MARK_ATTR` = `Vaziyet`, yeniden çalışınca eskileri silinir; hepsi tek grupta.
+  - **Mevzuat denetimi (M33, [ADR 3033](../adr/3033-regulation-rules-rooms-storeys-doors.md)):**
+    - `ArchAuditCheck::Regulation` (yalnız adıyla; panel hepsini adıyla ister), `regulation_audit.rs`: `Article` (madde
+      + RG; `named` bulgunun `rule`'u, `short` iletinin sonu, değişiklik tarihli), `kind_of` (ıslak hacim önce),
+      `RoomKind::limits` (29/1, 29/3); kat 28/1-c (yalnız konut projesinde); kapı 39/1 (giriş türü `sides` ile).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

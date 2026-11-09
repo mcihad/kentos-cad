@@ -236,6 +236,8 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Doors => "door",
         ArchAuditCheck::Program => "archProgram",
         ArchAuditCheck::Fixtures => "blockLibrary",
+        // Mevzuat (docs/adr/3033): a page and a tick.
+        ArchAuditCheck::Regulation => "regulation",
     }
 }
 

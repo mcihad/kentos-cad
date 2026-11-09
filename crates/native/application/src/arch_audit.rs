@@ -36,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 17] = [
+const CODES: [(ArchAuditCheck, &[&str]); 18] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -96,6 +96,7 @@ const CODES: [(ArchAuditCheck, &[&str]); 17] = [
     ),
     (ArchAuditCheck::Program, &crate::program_check::CODES),
     (ArchAuditCheck::Fixtures, &[codes::ARCH_FIXTURE_ZONE_BLOCKED, codes::ARCH_FIXTURE_ZONE_DOOR]),
+    (ArchAuditCheck::Regulation, &crate::regulation_audit::CODES),
 ];
 
 /// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
@@ -231,6 +232,7 @@ fn finding(
         lapsed: false,
         note: None,
         nature: None,
+        rule: None,
     }
 }
 
@@ -1850,11 +1852,12 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
-    // The doors (docs/adr/0772 §5) and the fixtures (docs/adr/3025) only when asked by name: an older call's findings
-    // stay as they were.
+    // The doors (docs/adr/0772 §5), the fixtures (docs/adr/3025) and the regulation (docs/adr/3033) only when asked by
+    // name: an older call's findings stay as they were. Denetim's panel asks for every group by name.
     let asked = |c: ArchAuditCheck| {
         input.checks.contains(&c)
-            || (input.checks.is_empty() && !matches!(c, ArchAuditCheck::Doors | ArchAuditCheck::Fixtures))
+            || (input.checks.is_empty()
+                && !matches!(c, ArchAuditCheck::Doors | ArchAuditCheck::Fixtures | ArchAuditCheck::Regulation))
     };
     let mut findings = Vec::new();
     let mut run: HashSet<&'static str> = HashSet::new();
@@ -1914,6 +1917,13 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                 },
             ),
             ArchAuditCheck::Program => crate::program_check::findings(doc),
+            // Mevzuat (docs/adr/3033): each finding naming its article.
+            ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, article| {
+                let uids = slots.iter().map(|s| audit.uid(*s)).collect();
+                let mut f = finding(ArchAuditCheck::Regulation, code, message, repair, uids, at, None);
+                f.rule = Some(article.named());
+                f
+            }),
             ArchAuditCheck::Fixtures => crate::fixture_audit::findings(doc, |code, message, repair, slots, at, turn| {
                 // A door's fix: the door turned (docs/adr/0787 §1), not on a locked layer.
                 let fix = turn.zip(slots.get(1)).and_then(|((label, what), door)| {

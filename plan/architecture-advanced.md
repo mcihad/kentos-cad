@@ -999,7 +999,9 @@ yönetmelikleri.
 - Tek parselde iki bağımsız bölümlü bina: metrekare cetveli, emsal/TAKS ve kat irtifakı tabloları bağımsız başvuruyla aynı.
 - Resmî onay iddiası yapılmaz.
 
-#### ADV-23 — Sürümlü mevzuat kural motoru ve denetimler [ ]
+#### ADV-23 — Sürümlü mevzuat kural motoru ve denetimler [~]
+
+_Durum (9 Kasım 2026):_ Denetim › Mevzuat grubu yapıldı (M33, [ADR 3033](../docs/adr/3033-regulation-rules-rooms-storeys-doors.md)): PAİY 29/1–3 piyesleri, eksik piyes ve koridor, 28/1-c kat yüksekliği, 39/1 kapı yüksekliği ve net genişlikleri; her bulgu maddesini ve Resmî Gazete'sini (`rule`) taşır. Kalanlar: başvuru tarihi ve bölge türü, iç yükseklik, belediye ve plan notu katmanları ile çelişki, merdiven/rampa/asansör (M34), yangın kaçışı (M35).
 
 **Kullanıcı sonucu:** Mimari denetim, çizimin hangi yönetmelik maddesini karşılamadığını ölçülen yer ve değerle söyler.
 Kuralın kaynağı ve yürürlük tarihi görünür. Dayanak S22; W4 §4/4–7, 10.
@@ -1148,7 +1150,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M30 | Emsal/TAKS ve emsal harici | ADV-22 | Canlı rozet ve tablo **(M30, ADR 3030: yapıldı; imar durumu Proje ayarlarında, durum çubuğu rozeti ve Öznitelikler, Emsal ve TAKS tablosu)** |
 | M31 | Bağımsız bölüm, eklenti, ortak yer, kat irtifakı | ADV-22 | Paylaşım tablosu **(M31, ADR 3031: yapıldı; eklenti, nitelik, değer katsayısı, arsa payı; Kat irtifakı tablosu)** |
 | M32 | Vaziyet planı | ADV-22 | Parsel, bahçe mesafeleri, oturum, ±0,00 **(M32, ADR 3032: yapıldı; parsel, kenar türleri, canlı yaklaşma sınırı, oturum mesafeleri ve ölçüleri, ağaç, ±0,00)** |
-| M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu |
+| M33 | Kural motoru; piyes, kat ve kapı denetimi | ADV-23 | Madde ve ölçüyle bulgu **(M33, ADR 3033: yapıldı; Denetim › Mevzuat: PAİY 29/1–3 piyes ve koridor, 28/1-c kat yüksekliği, 39/1 kapı; bulgu maddesini ve RG'yi taşır)** |
 | M34 | Merdiven, rampa, korkuluk, ışıklık, asansör denetimi | ADV-23 | Sivas ile PAİY çelişkisi görünür |
 | M35 | Yangın kaçışı | ADV-23 | Kaçış rotası ve çıkış genişliği |
 | M36 | Otopark ve sığınak hesapları | ADV-22 | Çizelgeler |

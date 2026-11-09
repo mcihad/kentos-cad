@@ -365,6 +365,7 @@ class ArchAuditCheck(_StrEnum):
     - ``doors``: Doors (docs/adr/0772 §5): a leaf's sweep clashing (physical), a use zone taken (passage), a net clear width
     - ``program``: The building program's findings (docs/adr/0773 §5): spaces against their design brief, doors, passages,
     - ``fixtures``: Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older
+    - ``regulation``: Mevzuat (docs/adr/3033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,
     """
     WALLS = "walls"
     OPENINGS = "openings"
@@ -383,9 +384,10 @@ class ArchAuditCheck(_StrEnum):
     DOORS = "doors"
     PROGRAM = "program"
     FIXTURES = "fixtures"
+    REGULATION = "regulation"
 
 
-ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs", "ramps", "casework", "doors", "program", "fixtures"]
+ArchAuditCheckName = Literal["walls", "openings", "spaces", "numbers", "tags", "dimensions", "grids", "columns", "viewmarks", "levels", "accessibility", "stairs", "ramps", "casework", "doors", "program", "fixtures", "regulation"]
 """The names of :class:`ArchAuditCheck`, for a plain string."""
 
 
@@ -15667,7 +15669,9 @@ class ArchAuditFinding(_Model):
             `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
             `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
             `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
-            `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).
+            `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's
+            `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
+            `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033).
         message: What is wrong.
         repair: What resolves it.
         uids: The objects, by their persistent ids.
@@ -15677,6 +15681,7 @@ class ArchAuditFinding(_Model):
         lapsed: Marked as left on purpose, but the finding changed since: open again.
         nature: A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
         note: The exception's note.
+        rule: A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”.
     """
     key: str
     check: ArchAuditCheck | ArchAuditCheckName
@@ -15690,6 +15695,7 @@ class ArchAuditFinding(_Model):
     lapsed: bool | Unset = UNSET
     nature: ArchAuditNature | ArchAuditNatureName | None | Unset = UNSET
     note: str | None | Unset = UNSET
+    rule: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -15710,6 +15716,8 @@ class ArchAuditFinding(_Model):
             out["nature"] = None if self.nature is None else _enum_out(self.nature)
         if self.note is not UNSET:
             out["note"] = self.note
+        if self.rule is not UNSET:
+            out["rule"] = self.rule
         return out
 
     @classmethod
@@ -15727,6 +15735,7 @@ class ArchAuditFinding(_Model):
             lapsed=data.get("lapsed", UNSET),
             nature=UNSET if "nature" not in data else None if data["nature"] is None else _enum_in(ArchAuditNature, data["nature"]),
             note=data.get("note", UNSET),
+            rule=data.get("rule", UNSET),
         )
 
 

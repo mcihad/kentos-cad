@@ -25229,7 +25229,7 @@
       "id": "cad.arch.audit",
       "version": 1,
       "title": "Mimari denetim",
-      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
+      "summary": "Çizimin mimari sorunlarını tek listede verir (docs/adr/0703); çizimi değiştirmez. Gruplar (checks; yok: hepsi): walls (birleşmeyen duvarlar wall_join_*, öbür duvara maxGap kala biten uç arch_wall_end_gap, birbirine yakın ama buluşmayan uçlar arch_wall_ends_apart; her kat ayrı), openings (arch_opening_broken, tag_missing_type), spaces (arch_space_broken; alanı minArea'dan küçük arch_space_small; ortalama eni 2·alan/çevre minWidth'ten küçük arch_space_narrow), numbers (tag_duplicate_number), tags (tag_target_gone), dimensions (arch_dimension_set_broken, arch_dimension_broken), grids (docs/adr/0725 §6: aynı katta aynı etiketli ikinci ve sonraki akslar arch_grid_label_duplicate; düzeltmesi üst üste binen ve kolon bağlı olmayan aksı siler cad.entities.delete, öbürünü sıradaki boş etikete adlandırır cad.arch.edit), columns (arch_column_grid_gone), viewmarks (arch_viewmark_target_gone), levels (arch_level_missing: duvar, mahal, kolon, merdiven, rampa ya da mahal ayırıcı katsız ya da projede olmayan bir katta; düzeltmesi cad.levels.assign ile level girdisinin katı, yok: zemin kat — kotu 0 olan, yoksa ilk kat; projede olmayan level level_not_found), accessibility (docs/adr/0723 §4: yalnız profile verilince; erisilebilirlik-rampa/1 — TS 9111 özeti — ile rampanın eğimi kot farkının bandını aşarsa ramp_slope_over_profile, 10 m'den uzun eğimli kolu %6'dan dikse ramp_long_run_slope, sahanlığı 1.50 m'den kısaysa ramp_landing_short, dönen rampa 1.50 m'den darsa ramp_turn_narrow; son ikisinin düzeltmesi cad.arch.edit; katalogda olmayan profile invalid_arch_audit). docs/adr/0732: walls'ta minLength'ten (0.05 m) kısa açık duvar arch_wall_short (açıklığı yoksa düzeltmesi siler), aynı kattaki iki düz duvar boyları boyunca üst üste arch_wall_overlap (biri öbürünün aynısıysa sonrakini siler), aynı kattaki iki mahal ayırıcı aynı doğruda üst üste arch_separator_overlap; tags'te yazısı boş etiket tag_empty; stairs'te profil olmadan da merdivenin kendi uyarıları stair_short, stair_long, stair_rise_level (düzeltmesi heightFromLevel); ramps grubu ramp_no_run, ramp_slope_mismatch (düzeltmesi eğimi hesaplanana eşitler); casework grubu arch_casework_broken (düzeltmesi diziyi bırakır cad.casework.edit release). Eşikler metre ve m²: maxGap 0.10, minArea 0.10, minWidth 0.15, minLength 0.05. Her bulgu kalıcı anahtarı (key: kod:kimlikler, uç boşluğunda :start/:end, ikinci benzer #2), iletisi, onarımı (repair), nesneleri (uids), yeri (at) ve açık bir düzeltmesi varsa fix'iyle gelir: label ve step (cad.changeset.apply'ın adımı: command, input); step olduğu gibi çalıştırılır, tek geri alma adımıdır. within: levels (kat kimlikleri, null katsız) ve uids (nesneler) bulguyu nesnelerinden biri o katta ve o nesnelerdense tutar (level_not_found, entity_not_found); kapsam dışı sayısı outside. Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions: hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı, bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033): Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m², yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below, bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği 3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), kapı yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde 1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır. Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. regulation, doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da standart uygunluğu değildir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -104615,6 +104615,48 @@
       "meaning": "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş)."
     },
     {
+      "code": "paiy_room_area_below",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Konuttaki piyesin net alanı Planlı Alanlar İmar Yönetmeliği 29/1'in en azından küçük."
+    },
+    {
+      "code": "paiy_room_width_below",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Konuttaki piyesin dar kenarı (net eni) Planlı Alanlar İmar Yönetmeliği 29/1'in en azından dar."
+    },
+    {
+      "code": "paiy_room_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Konutta Planlı Alanlar İmar Yönetmeliği 29/1'in istediği piyeslerden biri yok."
+    },
+    {
+      "code": "paiy_corridor_narrow",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Hol ya da koridorun net eni Planlı Alanlar İmar Yönetmeliği 29/3'ün 1,20 metresinden dar."
+    },
+    {
+      "code": "paiy_storey_height_over",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor."
+    },
+    {
+      "code": "paiy_door_height_below",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az."
+    },
+    {
+      "code": "paiy_door_width_below",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar."
+    },
+    {
       "code": "arch_fixture_zone_door",
       "kind": "warning",
       "retryable": false,
@@ -109057,6 +109099,11 @@
           "const": "fixtures",
           "description": "Fixtures (docs/adr/3025): a use zone in front of one (its block's “Boşluk zarfı”, or KentOS's for its older\nsanitary blocks) taken by a wall, a column, another fixture or a door's leaf (passage); checked only when asked\nby name.",
           "type": "string"
+        },
+        {
+          "const": "regulation",
+          "description": "Mevzuat (docs/adr/3033): Planlı Alanlar İmar Yönetmeliği's rooms (29/1: each dwelling's living room, bedroom,\nkitchen, bathroom and toilet, their narrow side and net area), corridors (29/3), storey heights (28/1-c) and\ndoors (39/1: their height and net width by what they enter); each finding names its article (`rule`); checked\nonly when asked by name.",
+          "type": "string"
         }
       ]
     },
@@ -109126,7 +109173,7 @@
           "$ref": "#/$defs/ArchAuditCheck"
         },
         "code": {
-          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's\n`arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025).",
+          "description": "`wall_join_overlap`, `wall_join_crowded`, `wall_join_acute`, `wall_join_unresolved`, `arch_wall_end_gap`,\n`arch_wall_ends_apart`, `arch_opening_broken`, `tag_missing_type`, `arch_space_broken`, `arch_space_small`,\n`arch_space_narrow`, `tag_duplicate_number`, `tag_target_gone`, `arch_dimension_set_broken`,\n`arch_dimension_broken`, `arch_grid_label_duplicate`, `arch_column_grid_gone`, `arch_viewmark_target_gone`,\n`arch_level_missing`,\n`ramp_slope_over_profile`, `ramp_long_run_slope`, `ramp_landing_short`, `ramp_turn_narrow`,\n`stair_riser_over_profile`, `stair_tread_short`, `stair_step_over_profile`, `stair_width_narrow`,\n`stair_landing_short`, `stair_winder_narrow`, `stair_railing_missing`; `arch_wall_short`,\n`arch_wall_overlap`, `arch_separator_overlap`, `tag_empty`, `stair_short`, `stair_long`, `stair_rise_level`,\n`ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's\n`program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,\n`program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,\n`program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's\n`arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/3025); the regulation group's\n`paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,\n`paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/3033).",
           "type": "string"
         },
         "exception": {
@@ -109177,6 +109224,13 @@
         "repair": {
           "description": "What resolves it.",
           "type": "string"
+        },
+        "rule": {
+          "description": "A regulation finding's article and gazette (docs/adr/3033): “PAİY 29/1 · RG 3.7.2017/30113”.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "uids": {
           "description": "The objects, by their persistent ids.",

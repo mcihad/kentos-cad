@@ -5152,6 +5152,7 @@
     "scheduleAreas": "<path d=\"M2 4h6.5v12H2z\"/><path d=\"M2 8h6.5M2 12h6.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8h6.5M11.5 11.5h6.5\" stroke-width=\"1\"/><path d=\"M11.5 15.8h6.5\" stroke-width=\"2\"/>",
     "zoningTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 5.5h6v7H5z\"/><path d=\"M13 6.5h2.5M13 9.5h2.5M13 12.5h2.5\" stroke-width=\"1\"/>",
     "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
+    "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",
     "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
     "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "scheduleSpaces": "<rect x=\"2\" y=\"4.5\" width=\"7.5\" height=\"11\" rx=\"0.8\"/><path d=\"M4 10h3.5\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",

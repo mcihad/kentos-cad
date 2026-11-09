@@ -71,8 +71,19 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
     Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
     hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
     istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-    bulgusu artık olmayanların anahtarları stale. Bulgu yokluğu ruhsat ya da standart
-    uygunluğu değildir.
+    bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033):
+    Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
+    yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
+    büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
+    bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti
+    karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği
+    3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), kapı
+    yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde
+    1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below
+    (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır.
+    Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. regulation,
+    doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da
+    standart uygunluğu değildir.
     """
     __slots__ = ()
     id = "cad.arch.audit"
@@ -139,8 +150,19 @@ class _ArchAudit(LocalCommand[ArchAudit, ArchAudited, ArchAudited]):
         Projenin istisnaları (cad.arch.exceptions): özeti tutan bulgu exception (exceptions:
         hide varsayılan saklar ve excepted'te sayar, show listeler, only yalnız
         istisnalıları listeler), bulgusu değişen istisna lapsed ve exception_lapsed uyarısı,
-        bulgusu artık olmayanların anahtarları stale. Bulgu yokluğu ruhsat ya da standart
-        uygunluğu değildir.
+        bulgusu artık olmayanların anahtarları stale. regulation (Mevzuat, docs/adr/3033):
+        Planlı Alanlar İmar Yönetmeliği; konut piyesleri 29/1 (oturma odası 3,00 m/12 m²,
+        yatak odası 2,50/9, mutfak 1,50/3,30, banyo 1,50/3, tuvalet 1,00/1,20; dar kenar en
+        büyük iç dairenin çapı, alan iç yüzler) paiy_room_area_below, paiy_room_width_below,
+        bölümde eksik piyes paiy_room_missing (29/2: üç ve daha az odada banyo tuvaleti
+        karşılar), hol ve koridor 1,20 m paiy_corridor_narrow (29/3), konutta kat yüksekliği
+        3,60 m (bodrum hariç üç kata kadar 4,00) paiy_storey_height_over (28/1-c), kapı
+        yüksekliği 2,10 m paiy_door_height_below (39/1-a), net temiz genişlik bina girişinde
+        1,50, bağımsız bölüm girişinde 1,00, öbür kapılarda 0,90 m paiy_door_width_below
+        (39/1-b, c; 13.8.2025); bulgu rule alanında maddeyi ve Resmî Gazete'yi taşır.
+        Niteliği daire, mesken ya da konut olmayan bölümün piyesleri okunmaz. regulation,
+        doors ve fixtures gibi yalnız adıyla istenince çalışır. Bulgu yokluğu ruhsat ya da
+        standart uygunluğu değildir.
 
         Args:
             doc: The drawing it works on.

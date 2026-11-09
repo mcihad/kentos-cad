@@ -713,6 +713,8 @@ mod opening_codes_tests;
 mod paiy_area_tests;
 #[cfg(test)]
 mod site_plan_tests;
+#[cfg(test)]
+mod regulation_audit_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

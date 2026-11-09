@@ -2699,6 +2699,13 @@ codes! {
     /// A fixture's use zone (its block's “Boşluk zarfı”, or KentOS's for its older sanitary blocks) taken by a wall, a
     /// column or another fixture (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_BLOCKED = "arch_fixture_zone_blocked", Warning, false, "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş).";
+    PAIY_ROOM_AREA_BELOW = "paiy_room_area_below", Warning, false, "Konuttaki piyesin net alanı Planlı Alanlar İmar Yönetmeliği 29/1'in en azından küçük.";
+    PAIY_ROOM_WIDTH_BELOW = "paiy_room_width_below", Warning, false, "Konuttaki piyesin dar kenarı (net eni) Planlı Alanlar İmar Yönetmeliği 29/1'in en azından dar.";
+    PAIY_ROOM_MISSING = "paiy_room_missing", Warning, false, "Konutta Planlı Alanlar İmar Yönetmeliği 29/1'in istediği piyeslerden biri yok.";
+    PAIY_CORRIDOR_NARROW = "paiy_corridor_narrow", Warning, false, "Hol ya da koridorun net eni Planlı Alanlar İmar Yönetmeliği 29/3'ün 1,20 metresinden dar.";
+    PAIY_STOREY_HEIGHT_OVER = "paiy_storey_height_over", Warning, false, "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor.";
+    PAIY_DOOR_HEIGHT_BELOW = "paiy_door_height_below", Warning, false, "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az.";
+    PAIY_DOOR_WIDTH_BELOW = "paiy_door_width_below", Warning, false, "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar.";
     /// A door's leaf opening into a fixture's use zone (docs/adr/3025): passage.
     ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
