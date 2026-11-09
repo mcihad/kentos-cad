@@ -2677,6 +2677,9 @@ def document(d):
     if any(e.get("op") == "paste" for s in d["settings"].get("road", {}).get("surfaces", []) for e in s.get("edits", [])):
         # A terrain surface's edit that pastes another surface (docs/adr/3920).
         schema = max(schema, 214)
+    if any("decision" in n for n in d["settings"].get("reviewNotes", [])):
+        # A review note recording a decision (docs/adr/4140).
+        schema = max(schema, 215)
 
     def built(e):
         if e["kind"] == "wall":
@@ -3533,7 +3536,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-215.kcad"] = container(root(cmap(parts), version=uint(215)))
+    files["schema-version-216.kcad"] = container(root(cmap(parts), version=uint(216)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -5830,6 +5833,31 @@ def build():
     blank = copy.deepcopy(review)
     blank["settings"]["reviewNotes"][0]["text"] = " Boşluklu"
     out["broken/review-notes-text.kcad"] = container(document(blank))
+    # Schema 215 (docs/adr/4140): a note recording Detay eşleştirme's acceptance of a candidate, bound to it and to the
+    # asset written; schema 214 refuses the field, a decision not bound to its asset and a rejection naming an asset
+    # are refused.
+    decided = copy.deepcopy(review)
+    candidate, asset = review["uids"][0], "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+    decided["settings"]["reviewNotes"].append({
+        "id": "0192f5b0-1000-7000-8000-000000000003", "number": 4,
+        "text": "Detay eşleştirme, Ortofoto adayı: kabul edildi.", "status": "resolved",
+        "author": "Ayşe Yılmaz", "createdAt": "2026-11-09T16:00:00+03:00",
+        "anchors": [{"uid": candidate, "stamp": "0123456789abcdef"}, {"uid": asset, "stamp": "fedcba9876543210"}],
+        "decision": {"command": "map.features.reconcile", "candidate": candidate, "source": "Ortofoto", "accept": True,
+                     "asset": asset}})
+    out["review-decisions.json"] = json_text(decided).encode("utf-8")
+    decided_data = document(decided)
+    assert decided_data.count(b"\x67version\x18\xd7") == 1, "a review note's decision is schema 215"
+    out["review-decisions.kcad"] = container(decided_data)
+    out["broken/review-decisions-in-schema-214.kcad"] = container(
+        decided_data.replace(b"\x67version\x18\xd7", b"\x67version\x18\xd6"))
+    unbound = copy.deepcopy(decided)
+    unbound["settings"]["reviewNotes"][2]["anchors"].pop()
+    out["broken/review-decisions-unbound.kcad"] = container(document(unbound))
+    rejected = copy.deepcopy(decided)
+    del rejected["settings"]["reviewNotes"][2]["decision"]["accept"]
+    rejected["settings"]["reviewNotes"][2]["decision"]["reject"] = "Gölge"
+    out["broken/review-decisions-reject-with-asset.kcad"] = container(document(rejected))
     # Schema 189 (docs/adr/1260): a quality profile, an error mark with its reason and the rule's version, an exception
     # covering its objects wherever; the schema before refuses them, a tolerance below twice the precision, a blank
     # reason and an unknown decision are refused.

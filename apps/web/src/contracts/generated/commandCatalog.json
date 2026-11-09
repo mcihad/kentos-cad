@@ -63664,7 +63664,7 @@
       "id": "map.features.reconcile",
       "version": 1,
       "title": "Detay eşleştirme",
-      "summary": "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını (detayları) bir veri profilinin sınıflarıyla eşleştirir. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing, layer_locked.",
+      "summary": "Birkaç kaynaktan (nokta bulutu ve ortofoto çıkarımı, saha ölçümü) gelen harita varlığı adaylarını (detayları) bir veri profilinin sınıflarıyla eşleştirir. Aday, bir kaynağın katmanında sınıf alanı (field, yoksa Kod) profilin bir sınıfını kimliğiyle ya da koduyla adlandıran nokta ya da açık çoklu çizgidir; confidence sayısal güven alanıdır (büyük iyidir). radius (m) içindeki adaylar bir gruptur (zincirle): noktada düzlem uzaklığı, çoklu çizgide iki yönlü ayrık Hausdorff uzaklığının büyüğü. Grubun kaynak temsilcisi güveni en yüksek adayıdır (güvensiz en alt; eşitlikte ilki), kaynağın öteki adayları duplicate. Grup existing (sınıfının kabul edilmiş varlığı yarıçap içinde: yeni varlık yazılmaz), conflict (sınıflar farklı), agreed (iki ya da daha çok kaynak bir sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar ve Yayılım öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tutan her karar nesneden ayrı, çözülmüş bir inceleme notudur (cad.review.notes.list okur): yazarı reviewer, zamanı reviewedAt, adaya ve varlığa damgalarıyla bağlı, decision'ı verilen karar; notes numaralarını söyler. Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision, revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing, layer_locked, too_many_review_notes.",
       "aliases": [
         "eslestir",
         "detayeslestir",
@@ -63685,7 +63685,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when\nnot given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).\nCandidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two\nareas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`\n(0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with\nthem). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write\nto that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,\na decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written\nuntil a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not\nbetween 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),\n`layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
+        "description": "Input of `map.features.reconcile` v1 (plan/map-cad.md MAP-04, docs/adr/1760): candidates of map assets from several\nsources (a point cloud's and an orthophoto's extraction, a field survey) reconciled through a data profile's\nclasses. A candidate is a point, a polyline or an area (docs/adr/2140) on a source's layer whose `field` (`Kod` when\nnot given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).\nCandidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two\nareas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`\n(0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's: each that takes (its\ncandidate marked) is recorded as a review note apart from the objects (docs/adr/4140: resolved, `reviewer` its\nauthor, `reviewedAt` its time as given, bound to the candidate and the asset with their stamps, its `decision` the\ndecision as given with the source and the asset), not as the asset's attributes. The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write\nto that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,\na decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written\nuntil a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,\n`invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not\nbetween 0 and 1, a reviewer or a time that is no short label, a decision on no candidate or naming no class of the\nprofile, accept with reject, a reason or a field that a review note cannot hold),\n`layer_not_found` (a source's layer),\n`invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),\n`layer_locked` (a class's layer to write on, or a source's whose candidates are marked).",
         "properties": {
           "confidence": {
             "type": [
@@ -63735,6 +63735,13 @@
             "type": "number",
             "x-unit": "m"
           },
+          "reviewedAt": {
+            "description": "When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "reviewer": {
             "type": [
               "string",
@@ -63758,7 +63765,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the\ndrawing's revision.",
+        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, the\nnumbers of the review notes the decisions were recorded as (docs/adr/4140), and the drawing's revision.",
         "properties": {
           "candidates": {
             "items": {
@@ -63777,6 +63784,15 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
           },
           "revision": {
             "type": "string"
@@ -63799,7 +63815,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the\ndrawing's revision.",
+        "description": "Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every\ncandidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, the\nnumbers of the review notes the decisions were recorded as (docs/adr/4140), and the drawing's revision.",
         "properties": {
           "candidates": {
             "items": {
@@ -63818,6 +63834,15 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "notes": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
           },
           "revision": {
             "type": "string"
@@ -183073,6 +183098,54 @@
         }
       ]
     },
+    "ReviewDecision": {
+      "additionalProperties": false,
+      "description": "A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the\ncommand whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the\ncommand was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields\ngiven, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a\nrejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the\nreviewer.",
+      "properties": {
+        "accept": {
+          "type": "boolean"
+        },
+        "asset": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidate": {
+          "type": "string"
+        },
+        "class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "command": {
+          "type": "string"
+        },
+        "fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "reject": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "command",
+        "candidate",
+        "source"
+      ],
+      "type": "object"
+    },
     "ReviewNote": {
       "additionalProperties": false,
       "description": "A review note.",
@@ -183106,6 +183179,17 @@
             "string",
             "null"
           ]
+        },
+        "decision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewDecision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Schema 215 (docs/adr/4140): the decision the note records."
         },
         "id": {
           "description": "Lowercase, hyphenated UUID; unique in the drawing.",

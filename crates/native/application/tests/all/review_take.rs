@@ -167,6 +167,7 @@ fn replies_and_notes_stop_at_their_limits() {
             view: None,
             anchors: vec![],
             replies: vec![],
+            decision: None,
         })
         .collect();
     doc.set_review_notes(notes, "Notlar");

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Detay eşleştirmenin kararları inceleme notu (9 Kasım 2026; MAP-04, [ADR 4140](../../docs/adr/4140-reconcile-decisions-as-review-notes.md)).**
+  Tutan her karar çözülmüş bir inceleme notudur (`decision`, yazar, `reviewedAt`, adaya ve varlığa damgalı);
+  varlık `İnceleme`/`Gözden geçiren` taşımaz; `.kcad` şema 215. Harita + CBS.
 - **Bilinen noktanın projedeki kendi yeri (9 Kasım 2026; MAP-03, [ADR 4120](../../docs/adr/4120-known-point-own-place-in-the-project.md)).**
   `map.survey.query`'nin `places`'i: `knownPlaces` (epok önce kendi hızıyla ya da hız ızgarasıyla, sonra zincir; kabul
   noktasına fark ya da neden). GNSS arşivi'nde kabul noktası olmayan baz ucu bilinen noktanın yerinden üçgenle. Harita.

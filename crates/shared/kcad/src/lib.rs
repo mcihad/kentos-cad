@@ -876,11 +876,14 @@ pub const SCHEMA_WITH_APPROVED_VALUES: u32 = 213;
 /// Schema 214 (docs/adr/3920): a terrain surface's edit that pastes another surface of the project (`{"op": "paste",
 /// "terrain": <id>}`).
 pub const SCHEMA_WITH_SURFACE_PASTES: u32 = 214;
+/// Schema 215 (docs/adr/4140): a review note records a decision a command took on a reviewer's word (`decision`:
+/// Detay eşleştirme's accept, class, fields or reject, its candidate and asset).
+pub const SCHEMA_WITH_REVIEW_DECISIONS: u32 = 215;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 212] = [
+pub const SCHEMAS: [u32; 213] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1093,6 +1096,7 @@ pub const SCHEMAS: [u32; 212] = [
     SCHEMA_WITH_PIPE_PROFILE_DRAWINGS,
     SCHEMA_WITH_APPROVED_VALUES,
     SCHEMA_WITH_SURFACE_PASTES,
+    SCHEMA_WITH_REVIEW_DECISIONS,
 ];
 
 /// The file a drawing is saved as.

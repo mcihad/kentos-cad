@@ -128,6 +128,6 @@ MCP: `{"tool": "map.features.reconcile", ...}` yazar; planı salt okunurdur.
   [ADR 2140](2140-area-candidates-by-overlap.md); yaylı adayların yay uzaklığı.
 - **Ölçek:** büyük aday kümesinde ızgara dizini (bugün tüm çiftler karşılaştırılır). Yapıldı:
   [ADR 2940](2940-reconcile-grid-index.md).
-- **İnceleme kaydı:** kararların ayrı bir inceleme kaydı olarak (öznitelik değil) tutulması ve katalog değişikliğinin
-  geçiş raporu.
+- **İnceleme kaydı:** ~~kararların ayrı bir inceleme kaydı olarak (öznitelik değil) tutulması~~: inceleme notu,
+  [ADR 4140](4140-reconcile-decisions-as-review-notes.md). Katalog değişikliğinin geçiş raporu açık.
 - **Çıkarım:** AI/çıkarım modelinin indirilip çalıştırılması (MAP-04'ün kalanı).

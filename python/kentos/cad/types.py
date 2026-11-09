@@ -37237,15 +37237,18 @@ class FeaturesReconcile(_Model):
     not given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).
     Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
     areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
-    (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
-    them). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
+    (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's: each that takes (its
+    candidate marked) is recorded as a review note apart from the objects (docs/adr/4140: resolved, `reviewer` its
+    author, `reviewedAt` its time as given, bound to the candidate and the asset with their stamps, its `decision` the
+    decision as given with the source and the asset), not as the asset's attributes. The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
     to that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,
     a decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written
     until a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
     `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
-    between 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),
+    between 0 and 1, a reviewer or a time that is no short label, a decision on no candidate or naming no class of the
+    profile, accept with reject, a reason or a field that a review note cannot hold),
     `layer_not_found` (a source's layer),
     `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
     `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
@@ -37253,6 +37256,7 @@ class FeaturesReconcile(_Model):
         radius: Unit: m.
         overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
             0.5 when not given (docs/adr/2140). Unit: 1.
+        reviewed_at: When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
     """
     name: str
     sources: list[CandidateSource]
@@ -37263,6 +37267,7 @@ class FeaturesReconcile(_Model):
     expected_revision: str | None | Unset = UNSET
     field: str | None | Unset = UNSET
     overlap: float | None | Unset = UNSET
+    reviewed_at: str | None | Unset = UNSET
     reviewer: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37282,6 +37287,8 @@ class FeaturesReconcile(_Model):
             out["field"] = self.field
         if self.overlap is not UNSET:
             out["overlap"] = None if self.overlap is None else float(self.overlap)
+        if self.reviewed_at is not UNSET:
+            out["reviewedAt"] = self.reviewed_at
         if self.reviewer is not UNSET:
             out["reviewer"] = self.reviewer
         return out
@@ -37298,6 +37305,7 @@ class FeaturesReconcile(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             field=data.get("field", UNSET),
             overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
+            reviewed_at=data.get("reviewedAt", UNSET),
             reviewer=data.get("reviewer", UNSET),
         )
 
@@ -37305,15 +37313,17 @@ class FeaturesReconcile(_Model):
 @dataclass(kw_only=True, slots=True)
 class FeaturesReconciled(_Model):
     """Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every
-    candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the
-    drawing's revision.
+    candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, the
+    numbers of the review notes the decisions were recorded as (docs/adr/4140), and the drawing's revision.
     Attributes:
         marked: Unit: count.
+        notes: Unit: id.
     """
     groups: list[ReconciledGroup]
     candidates: list[ReconciledCandidate]
     marked: int
     revision: str
+    notes: list[int] | Unset = UNSET
     written: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37322,6 +37332,8 @@ class FeaturesReconciled(_Model):
         out["candidates"] = [e0.to_json() for e0 in self.candidates]
         out["marked"] = self.marked
         out["revision"] = self.revision
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
         if self.written is not UNSET:
             out["written"] = list(self.written)
         return out
@@ -37333,6 +37345,7 @@ class FeaturesReconciled(_Model):
             candidates=[ReconciledCandidate.from_json(e0) for e0 in data["candidates"]],
             marked=data["marked"],
             revision=data["revision"],
+            notes=list(data["notes"]) if "notes" in data else UNSET,
             written=list(data["written"]) if "written" in data else UNSET,
         )
 
@@ -80902,12 +80915,62 @@ class ReviewAnchorCheck(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReviewDecision(_Model):
+    """A decision a note records (docs/adr/4140), as ArcGIS's Reviewer table keeps a result apart from the feature: the
+    command whose decision it is, the candidate (its persistent id) and its source's name, what was decided as the
+    command was given it (a single source's candidate accepted, its class corrected to a class's id, its missing fields
+    given, or it rejected with a reason), and the asset the candidate's group was written as or tied to (none for a
+    rejection). The note's anchors stamp the candidate and the asset as the decision left them; its author is the
+    reviewer.
+    """
+    command: str
+    candidate: str
+    source: str
+    accept: bool | Unset = UNSET
+    asset: str | None | Unset = UNSET
+    class_: str | None | Unset = UNSET
+    fields: dict[str, str] | Unset = UNSET
+    reject: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["command"] = self.command
+        out["candidate"] = self.candidate
+        out["source"] = self.source
+        if self.accept is not UNSET:
+            out["accept"] = self.accept
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.fields is not UNSET:
+            out["fields"] = dict(self.fields)
+        if self.reject is not UNSET:
+            out["reject"] = self.reject
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReviewDecision:
+        return cls(
+            command=data["command"],
+            candidate=data["candidate"],
+            source=data["source"],
+            accept=data.get("accept", UNSET),
+            asset=data.get("asset", UNSET),
+            class_=data.get("class", UNSET),
+            fields=dict(data["fields"]) if "fields" in data else UNSET,
+            reject=data.get("reject", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReviewNote(_Model):
     """A review note.
     Attributes:
         id: Lowercase, hyphenated UUID; unique in the drawing.
         number: 1, 2, 3 …: one more than the largest a note in the drawing has. Unit: id.
         at: A point in the model, world coordinates. Unit: length.
+        decision: Schema 215 (docs/adr/4140): the decision the note records.
         revision: The source revision the note was written against (“B”, “2026-11-05”).
         sheet: A sheet's id.
         view: A named view's id.
@@ -80919,6 +80982,7 @@ class ReviewNote(_Model):
     at: Vec2 | None | Unset = UNSET
     author: str | None | Unset = UNSET
     created_at: str | None | Unset = UNSET
+    decision: ReviewDecision | None | Unset = UNSET
     origin: ReviewOrigin | ReviewOriginName | Unset = UNSET
     replies: list[ReviewReply] | Unset = UNSET
     revision: str | None | Unset = UNSET
@@ -80939,6 +81003,8 @@ class ReviewNote(_Model):
             out["author"] = self.author
         if self.created_at is not UNSET:
             out["createdAt"] = self.created_at
+        if self.decision is not UNSET:
+            out["decision"] = None if self.decision is None else self.decision.to_json()
         if self.origin is not UNSET:
             out["origin"] = _enum_out(self.origin)
         if self.replies is not UNSET:
@@ -80962,6 +81028,7 @@ class ReviewNote(_Model):
             at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
             author=data.get("author", UNSET),
             created_at=data.get("createdAt", UNSET),
+            decision=UNSET if "decision" not in data else None if data["decision"] is None else ReviewDecision.from_json(data["decision"]),
             origin=_enum_in(ReviewOrigin, data["origin"]) if "origin" in data else UNSET,
             replies=[ReviewReply.from_json(e0) for e0 in data["replies"]] if "replies" in data else UNSET,
             revision=data.get("revision", UNSET),
@@ -134065,6 +134132,7 @@ __all__ = [
     "ReviewAnchorCheck",
     "ReviewAnchorState",
     "ReviewAnchorStateName",
+    "ReviewDecision",
     "ReviewNote",
     "ReviewNoteOp",
     "ReviewNoteState",

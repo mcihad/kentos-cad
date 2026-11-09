@@ -197,14 +197,17 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
     sınıfta) ya da single (tek kaynak). Execute agreed grupları ve kabul kararı verilmiş
     tekleri, zorunlu alanları tamamsa, sınıfın katmanına yazar: nokta temsilcilerin
     ortalamasında, çizgi güveni en yüksek temsilcinin geometrisiyle; alanlar
-    temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar,
-    Yayılım, İnceleme ve Gözden geçiren öznitelikleri. Adaylar Eşleştirme özniteliğiyle
-    (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski
-    çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki çıkarımla
-    ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle), fields (eksik
-    alanlar). Tek geri alma adımı; plan yazmadan söyler. Retler: invalid_revision,
-    revision_conflict, unknown_profile, invalid_profile, invalid_input, layer_not_found,
-    invalid_uid, entity_not_found, class_layer_missing, layer_locked.
+    temsilcilerden güven sırasıyla, kararların alanları üstte; Kaynaklar, Adaylar ve
+    Yayılım öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da
+    Reddedildi: neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma
+    özniteliği de okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class
+    (sınıf düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tutan her karar
+    nesneden ayrı, çözülmüş bir inceleme notudur (cad.review.notes.list okur): yazarı
+    reviewer, zamanı reviewedAt, adaya ve varlığa damgalarıyla bağlı, decision'ı verilen
+    karar; notes numaralarını söyler. Tek geri alma adımı; plan yazmadan söyler. Retler:
+    invalid_revision, revision_conflict, unknown_profile, invalid_profile,
+    invalid_input, layer_not_found, invalid_uid, entity_not_found, class_layer_missing,
+    layer_locked, too_many_review_notes.
     """
     __slots__ = ()
     id = "map.features.reconcile"
@@ -229,6 +232,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -246,14 +250,16 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         Execute agreed grupları ve kabul kararı verilmiş tekleri, zorunlu alanları tamamsa,
         sınıfın katmanına yazar: nokta temsilcilerin ortalamasında, çizgi güveni en yüksek
         temsilcinin geometrisiyle; alanlar temsilcilerden güven sırasıyla, kararların
-        alanları üstte; Kaynaklar, Adaylar, Yayılım, İnceleme ve Gözden geçiren
-        öznitelikleri. Adaylar Eşleştirme özniteliğiyle (varlığın kimliği ya da Reddedildi:
-        neden) işaretlenir ve bir daha okunmaz (eski çizimlerin Uzlaştırma özniteliği de
-        okunur): insan kararları sonraki çıkarımla ezilmez. decisions: class (sınıf
-        düzeltme), accept, reject (nedenle), fields (eksik alanlar). Tek geri alma adımı;
-        plan yazmadan söyler. Retler: invalid_revision, revision_conflict, unknown_profile,
-        invalid_profile, invalid_input, layer_not_found, invalid_uid, entity_not_found,
-        class_layer_missing, layer_locked.
+        alanları üstte; Kaynaklar, Adaylar ve Yayılım öznitelikleri. Adaylar Eşleştirme
+        özniteliğiyle (varlığın kimliği ya da Reddedildi: neden) işaretlenir ve bir daha
+        okunmaz (eski çizimlerin Uzlaştırma özniteliği de okunur): insan kararları sonraki
+        çıkarımla ezilmez. decisions: class (sınıf düzeltme), accept, reject (nedenle),
+        fields (eksik alanlar). Tutan her karar nesneden ayrı, çözülmüş bir inceleme notudur
+        (cad.review.notes.list okur): yazarı reviewer, zamanı reviewedAt, adaya ve varlığa
+        damgalarıyla bağlı, decision'ı verilen karar; notes numaralarını söyler. Tek geri
+        alma adımı; plan yazmadan söyler. Retler: invalid_revision, revision_conflict,
+        unknown_profile, invalid_profile, invalid_input, layer_not_found, invalid_uid,
+        entity_not_found, class_layer_missing, layer_locked, too_many_review_notes.
 
         Args:
             doc: The drawing it works on.
@@ -267,6 +273,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             field:
             overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
                 0.5 when not given (docs/adr/2140). Unit: 1.
+            reviewed_at: When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
             reviewer:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -290,6 +297,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reviewed_at=reviewed_at,
             reviewer=reviewer,
         ), request_id=request_id, expected=expected)
 
@@ -307,6 +315,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> FeaturesReconciled:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -322,6 +331,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reviewed_at=reviewed_at,
             reviewer=reviewer,
         ))
 
@@ -339,6 +349,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -354,6 +365,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reviewed_at=reviewed_at,
             reviewer=reviewer,
         ))
 
@@ -371,6 +383,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -391,6 +404,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reviewed_at=reviewed_at,
             reviewer=reviewer,
         ), op=op, request_id=request_id, expected=expected)
 

@@ -93,6 +93,13 @@ fn msg(event: Event) -> Message {
 }
 
 /// Now as UTC ISO 8601 (`2026-11-05T18:30:00Z`), from the system clock: the host gives the note its time.
+/// A recorded decision (docs/adr/4140) in a line: whose, the candidate's source, what it binds.
+pub(crate) fn decision_words(d: &kentos_commands::ReviewDecision) -> String {
+    let whose = if d.command == kentos_commands::MAP_FEATURES_RECONCILE { "Detay eşleştirme" } else { d.command.as_str() };
+    let bound = if d.asset.is_some() { "aday ve yazılan varlık bağlı" } else { "aday bağlı" };
+    format!("Kayıt: {whose} kararı · kaynak {} · {bound}", d.source)
+}
+
 pub(crate) fn iso_utc_now() -> String {
     let secs = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -163,7 +170,7 @@ impl App {
         self.dialog = Some(Dialog::ReviewNotes);
     }
 
-    fn review_listed(&self) -> kentos_commands::ReviewNotesListed {
+    pub(crate) fn review_listed(&self) -> kentos_commands::ReviewNotesListed {
         self.document
             .as_ref()
             .map(|d| review_notes::list(&d.model, &ReviewNotesList::default()))
@@ -389,6 +396,10 @@ impl App {
             }
             if n.stale {
                 detail = detail.push(label::caption(stale_words(n)).style(style::text::warning));
+            }
+            // Docs/adr/4140: the decision a command recorded with the note.
+            if let Some(d) = &n.note.decision {
+                detail = detail.push(label::caption(decision_words(d)));
             }
             for r in &n.note.replies {
                 let who = r.author.clone().unwrap_or_else(|| "—".into());

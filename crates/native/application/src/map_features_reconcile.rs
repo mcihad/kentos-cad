@@ -24,6 +24,11 @@
 //! class layer's objects whose boxes meet its representatives'; the answer is the all-pairs one, the work no longer
 //! grows with the square of the candidates.
 //!
+//! Review notes (docs/adr/4140): each decision that takes (its candidate marked) is recorded as a resolved review note
+//! apart from the objects, its author the reviewer, its time the call's `reviewedAt`, bound to the candidate and the
+//! asset with their stamps as the step leaves them, its `decision` the decision as given with the source and the
+//! asset; in the same undo step. The asset no longer carries `İnceleme` and `Gözden geçiren`.
+//!
 //! Arcs (docs/adr/3340): a polyline's arcs (its bulges) are curves, not chords. A polyline's points for the discrete
 //! Hausdorff are its vertices and, on each arc, the points at its sweep's seven inner eighths; a point's distance to a
 //! polyline is the least to its segments and arcs, to an arc exactly (to its circle where the point's direction from the
@@ -38,8 +43,9 @@ use kentos_geometry_core::ops::areas::areas_of_entity;
 
 use kentos_commands::{
     CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
-    FieldTrouble, MAX_CANDIDATE_SOURCES, ProfileGeometry, RECONCILED_FIELD, RECONCILED_FIELD_BEFORE, ReconciledCandidate,
-    ReconciledGroup, Vec2,
+    FieldTrouble, MAX_CANDIDATE_SOURCES, MAX_REVIEW_AUTHOR, MAX_REVIEW_LABEL, MAX_REVIEW_NOTES, ProfileGeometry,
+    RECONCILED_FIELD, RECONCILED_FIELD_BEFORE, ReconciledCandidate, ReconciledGroup, ReviewDecision, ReviewNote,
+    ReviewOrigin, ReviewStatus, Vec2, review_label_ok, review_text_ok,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -99,7 +105,6 @@ struct Group {
     row: ReconciledGroup,
     class: Option<usize>,
     attrs: BTreeMap<String, String>,
-    review: Vec<String>,
 }
 
 struct Plan {
@@ -342,6 +347,14 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         if s.name.trim().is_empty() {
             return Err(fail(codes::INVALID_INPUT, "Kaynağın adı boş olamaz (LiDAR, Ortofoto …).".into(), &format!("{at}.name")));
         }
+        // Docs/adr/4140: a review note keeps the name.
+        if !review_label_ok(s.name.trim(), MAX_REVIEW_AUTHOR) {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("Kaynağın adı en çok {MAX_REVIEW_AUTHOR} karakter olabilir ve denetim karakteri taşıyamaz."),
+                &format!("{at}.name"),
+            ));
+        }
         if input.sources[..i].iter().any(|o| o.layer == s.layer) {
             return Err(fail(codes::INVALID_INPUT, format!("“{}” katmanı iki kaynakta verilmiş.", s.layer), &format!("{at}.layer")));
         }
@@ -365,6 +378,25 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             codes::INVALID_INPUT,
             "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; verilmezse 0,5).".into(),
             "overlap",
+        ));
+    }
+    // Docs/adr/4140: the review notes' author and time, short labels.
+    if let Some(r) = trimmed(input.reviewer.as_deref())
+        && !review_label_ok(r, MAX_REVIEW_AUTHOR)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Gözden geçirenin adı en çok {MAX_REVIEW_AUTHOR} karakter olabilir ve denetim karakteri taşıyamaz."),
+            "reviewer",
+        ));
+    }
+    if let Some(t) = trimmed(input.reviewed_at.as_deref())
+        && !review_label_ok(t, MAX_REVIEW_LABEL)
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Gözden geçirme zamanı en çok {MAX_REVIEW_LABEL} karakter olabilir (“2026-11-09T16:00:00+03:00”)."),
+            "reviewedAt",
         ));
     }
     let source_of = |layer: &str| input.sources.iter().position(|s| s.layer == layer);
@@ -395,6 +427,24 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         }
         if d.reject.as_deref().is_some_and(|r| r.trim().is_empty()) {
             return Err(fail(codes::INVALID_INPUT, "Ret nedeni boş olamaz.".into(), &format!("{at}.reject")));
+        }
+        // Docs/adr/4140: what a review note holds.
+        if d.reject.as_deref().is_some_and(|r| !review_text_ok(r.trim())) {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Ret nedeni en çok 4000 karakter olabilir ve satır sonu ile sekme dışında denetim karakteri taşıyamaz.".into(),
+                &format!("{at}.reject"),
+            ));
+        }
+        // A blank value is left out, as from the asset.
+        for (k, v) in &d.fields {
+            if !review_label_ok(k, MAX_REVIEW_LABEL) || (!v.trim().is_empty() && !review_text_ok(v.trim())) {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("“{k}” alanının adı ya da değeri uzun ya da denetim karakterli: inceleme notuna yazılamaz."),
+                    &format!("{at}.fields"),
+                ));
+            }
         }
         decided.insert(d.candidate.clone(), d);
     }
@@ -653,7 +703,6 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             }
         }
         let mut accepted = false;
-        let mut review: Vec<String> = Vec::new();
         for &m in &members {
             if let Some(d) = decided.get(&candidates[m].uid) {
                 for (k, v) in &d.fields {
@@ -663,13 +712,6 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
                 }
                 if d.accept {
                     accepted = true;
-                    review.push("kabul".into());
-                }
-                if let Some(c) = &d.class {
-                    review.push(format!("sınıf {c}"));
-                }
-                if !d.fields.is_empty() {
-                    review.push(format!("alan {}", d.fields.keys().cloned().collect::<Vec<_>>().join(", ")));
                 }
             }
         }
@@ -738,7 +780,7 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
             invalid,
             writes,
         };
-        groups.push(Group { members, reps, row, class, attrs, review });
+        groups.push(Group { members, reps, row, class, attrs });
     }
     for (g, group) in groups.iter().enumerate() {
         for &m in &group.members {
@@ -748,10 +790,52 @@ fn check(doc: &Document, input: &FeaturesReconcile) -> Result<Plan, Stop> {
         }
         let _ = g;
     }
-    Ok(Plan { candidates, groups, field, layers, names, reviewer: input.reviewer.clone(), profile })
+    Ok(Plan { candidates, groups, field, layers, names, reviewer: trimmed(input.reviewer.as_deref()).map(str::to_owned), profile })
 }
 
-fn answer(plan: &Plan, written: Vec<String>, marked: u32, revision: String) -> FeaturesReconciled {
+/// A text trimmed, none when blank.
+fn trimmed(text: Option<&str>) -> Option<&str> {
+    text.map(str::trim).filter(|t| !t.is_empty())
+}
+
+/// A decision's fields that say something (a blank value is left out, as from the asset), trimmed.
+fn given_fields(d: &CandidateDecision) -> BTreeMap<String, String> {
+    d.fields.iter().filter(|(_, v)| !v.trim().is_empty()).map(|(k, v)| (k.clone(), v.trim().to_owned())).collect()
+}
+
+/// What a decision did, in a review note's words (docs/adr/4140): long fields and reasons are left to its decision.
+fn decision_words(plan: &Plan, d: &CandidateDecision, source: &str) -> String {
+    let mut parts = Vec::new();
+    if d.accept {
+        parts.push("kabul edildi".to_owned());
+    }
+    if let Some(c) = &d.class {
+        let title = plan.profile.classes.iter().find(|k| k.id == *c).map_or(c.as_str(), |k| k.title.as_str());
+        parts.push(format!("sınıfı “{title}” olarak düzeltildi"));
+    }
+    let fields = given_fields(d);
+    if !fields.is_empty() {
+        let given: Vec<String> = fields.iter().map(|(k, v)| format!("{k} = {v}")).collect();
+        let given = given.join(", ");
+        parts.push(if given.chars().count() <= 200 {
+            format!("alanları verildi ({given})")
+        } else {
+            format!("{} alanı verildi", fields.len())
+        });
+    }
+    if let Some(r) = &d.reject {
+        let r = r.trim();
+        parts.push(if r.chars().count() <= 200 { format!("reddedildi ({r})") } else { "reddedildi (nedeni kararda)".to_owned() });
+    }
+    format!("Detay eşleştirme, {source} adayı: {}.", parts.join("; "))
+}
+
+/// Whether a decision says anything a note records.
+fn says(d: &CandidateDecision) -> bool {
+    d.accept || d.class.is_some() || !given_fields(d).is_empty() || d.reject.is_some()
+}
+
+fn answer(plan: &Plan, written: Vec<String>, marked: u32, notes: Vec<u32>, revision: String) -> FeaturesReconciled {
     let mut group_of: BTreeMap<usize, u32> = BTreeMap::new();
     for (g, group) in plan.groups.iter().enumerate() {
         for &m in &group.members {
@@ -776,6 +860,7 @@ fn answer(plan: &Plan, written: Vec<String>, marked: u32, revision: String) -> F
             .collect(),
         written,
         marked,
+        notes,
         revision,
     }
 }
@@ -812,9 +897,33 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
     let label = "Detay eşleştirme";
     let mut written: Vec<String> = Vec::new();
     let mut marked = 0u32;
+    let mut notes: Vec<u32> = Vec::new();
     if !marks_any {
-        let output = answer(&plan, written, marked, cx.doc.revision().to_string());
+        let output = answer(&plan, written, marked, Vec::new(), cx.doc.revision().to_string());
         return CommandResult::Completed { output, warnings: Vec::new() };
+    }
+    // Docs/adr/4140: the decisions that take (their candidates marked), each a review note; room for them first.
+    let marked_now: std::collections::BTreeSet<usize> = plan
+        .groups
+        .iter()
+        .filter(|g| g.row.writes || (g.row.status == "existing" && g.row.asset.is_some()))
+        .flat_map(|g| g.members.iter().copied())
+        .chain(plan.candidates.iter().enumerate().filter(|(_, c)| c.status == "rejected").map(|(i, _)| i))
+        .collect();
+    let taking: Vec<(usize, &CandidateDecision)> = input
+        .decisions
+        .iter()
+        .filter(|d| says(d))
+        .filter_map(|d| plan.candidates.iter().position(|c| c.uid == d.candidate).map(|i| (i, d)))
+        .filter(|(i, d)| marked_now.contains(i) && (d.reject.is_none() || plan.candidates[*i].status == "rejected"))
+        .collect();
+    if cx.doc.settings().review_notes.len() + taking.len() > MAX_REVIEW_NOTES {
+        return fail(
+            codes::TOO_MANY_REVIEW_NOTES,
+            format!("Çizim {MAX_REVIEW_NOTES} inceleme notunu dolduracak; kararlar kaydedilemez. Çözülmüş notları silin."),
+            "decisions",
+        )
+        .into();
     }
     let field = plan.field.clone();
     let reviewer = plan.reviewer.clone();
@@ -834,12 +943,6 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
                 attrs.insert("Yayılım".into(), format!("{:.3}", g.row.spread));
                 if let Some(o) = g.row.overlap {
                     attrs.insert("Örtüşme".into(), format!("{o:.3}"));
-                }
-                if !g.review.is_empty() {
-                    attrs.insert("İnceleme".into(), g.review.join("; "));
-                    if let Some(r) = &reviewer {
-                        attrs.insert("Gözden geçiren".into(), r.clone());
-                    }
                 }
                 let Some(mut asset) = doc.get(plan.candidates[first].slot).cloned() else { continue };
                 if let Entity::Point(pt) = &mut asset {
@@ -885,9 +988,51 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
         if !updates.is_empty() {
             doc.update_many(updates, label);
         }
+        // Docs/adr/4140: each decision that took, a resolved review note bound to its candidate and its asset as the
+        // step leaves them.
+        let mut book = doc.settings().review_notes.clone();
+        for (i, d) in &taking {
+            let c = &plan.candidates[*i];
+            let Some((_, mark)) = marks.iter().find(|(slot, _)| *slot == c.slot) else { continue };
+            let asset = d.reject.is_none().then(|| mark.clone());
+            let mut uids = vec![c.uid.clone()];
+            uids.extend(asset.clone());
+            let anchors: Vec<_> = uids.iter().filter_map(|u| crate::review_notes::anchor_now(doc, u)).collect();
+            let source = plan.names[c.source].trim().to_owned();
+            let number = book.iter().map(|n| n.number).max().unwrap_or(0) + 1;
+            book.push(ReviewNote {
+                id: Uuid::now_v7().to_string(),
+                number,
+                text: decision_words(&plan, d, &source),
+                status: ReviewStatus::Resolved,
+                origin: ReviewOrigin::User,
+                author: reviewer.clone(),
+                created_at: trimmed(input.reviewed_at.as_deref()).map(str::to_owned),
+                revision: None,
+                at: None,
+                sheet: None,
+                view: None,
+                anchors,
+                replies: Vec::new(),
+                decision: Some(ReviewDecision {
+                    command: kentos_commands::MAP_FEATURES_RECONCILE.into(),
+                    candidate: c.uid.clone(),
+                    source,
+                    accept: d.accept,
+                    class: d.class.clone(),
+                    fields: given_fields(d),
+                    reject: d.reject.as_deref().map(|r| r.trim().to_owned()),
+                    asset,
+                }),
+            });
+            notes.push(number);
+        }
+        if !notes.is_empty() {
+            doc.set_review_notes(book, label);
+        }
         Ok(())
     });
-    let output = answer(&plan, written, marked, cx.doc.revision().to_string());
+    let output = answer(&plan, written, marked, notes, cx.doc.revision().to_string());
     CommandResult::Completed { output, warnings: Vec::new() }
 }
 
@@ -902,7 +1047,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> Command
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: answer(&p, Vec::new(), 0, cx.doc.revision().to_string()), warnings: Vec::new() },
+        Ok(p) => CommandResult::Completed { output: answer(&p, Vec::new(), 0, Vec::new(), cx.doc.revision().to_string()), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
 }

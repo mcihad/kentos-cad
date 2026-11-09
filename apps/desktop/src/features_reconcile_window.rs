@@ -106,6 +106,7 @@ impl App {
             overlap: (s.overlap != map_features_reconcile::DEFAULT_OVERLAP).then_some(s.overlap),
             decisions: s.decisions.clone(),
             reviewer: some(&s.reviewer),
+            reviewed_at: None,
             expected_revision: None,
         }
     }
@@ -233,13 +234,21 @@ impl App {
                 self.features_reconcile.typed.clear();
             }
             Event::Run => {
-                let input = self.reconcile_input();
+                // Docs/adr/4140: the decisions are recorded as review notes at this time.
+                let input = FeaturesReconcile { reviewed_at: Some(crate::review_window::iso_utc_now()), ..self.reconcile_input() };
                 if let Some(doc) = self.document.as_mut() {
                     let result = map_features_reconcile::execute(&mut ExecutionContext::new(&mut doc.model), input);
                     if let Some(out) = self.answered(result) {
+                        let notes = match out.notes.as_slice() {
+                            [] => String::new(),
+                            [n] => format!("; karar {n} numaralı inceleme notu olarak kaydedildi"),
+                            [first, .., last] => {
+                                format!("; {} karar {first}–{last} numaralı inceleme notları olarak kaydedildi", out.notes.len())
+                            }
+                        };
                         self.say(
                             Level::Success,
-                            format!("{} varlık yazıldı, {} aday işaretlendi.", out.written.len(), out.marked),
+                            format!("{} varlık yazıldı, {} aday işaretlendi{notes}.", out.written.len(), out.marked),
                         );
                     }
                 }

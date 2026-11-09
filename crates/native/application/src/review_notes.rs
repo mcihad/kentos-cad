@@ -51,7 +51,7 @@ pub fn block_chain_stamp(doc: &Document, id: BlockId) -> Option<String> {
 }
 
 /// The anchor of object `uid` as the drawing has it now; none when it has no such object.
-fn anchor_now(doc: &Document, uid: &str) -> Option<ReviewAnchor> {
+pub(crate) fn anchor_now(doc: &Document, uid: &str) -> Option<ReviewAnchor> {
     let id = Uuid::parse_str(uid).ok()?;
     let slot = doc.slot_of(id)?;
     let stamp = doc.stamp(slot)?;
@@ -239,6 +239,7 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
                 view: view.clone(),
                 anchors: bound,
                 replies: Vec::new(),
+                decision: None,
             });
             (id, number)
         }

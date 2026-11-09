@@ -49,5 +49,6 @@ Plan süresi:
 ## Sonra
 
 - Gerçek bir çıkarımın adaylarıyla ölçüm: gerçek LiDAR ve ortofoto çıkarımı bekleniyor (yaylı ve alan adaylarıyla).
-- Ayrı inceleme kaydı (kararların öznitelik değil kayıt olarak tutulması); AI çıkarımı (MAP-04'ün kalanı).
+- ~~Ayrı inceleme kaydı (kararların öznitelik değil kayıt olarak tutulması)~~: [ADR 4140](4140-reconcile-decisions-as-review-notes.md).
+  AI çıkarımı (MAP-04'ün kalanı).
 - Web (TODOS §0.2): web'de eşleştirme WASM ise aynı ölçüm üretim paketinde.

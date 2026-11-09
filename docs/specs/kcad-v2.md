@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `214`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-215.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `215`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-216.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -961,6 +961,14 @@ kimliği `bad_value` (`broken/surface-pastes-no-id.kcad`, `broken/surface-pastes
 döngüye giren yüzey dosyada geçerlidir; yüzey kurulurken söylenir. Yazıcı 214'ü bir yüzey yapıştırma taşıyınca seçer;
 213 ve öncesi düzenlemeyi tanımaz (`unknown_field`, `broken/surface-pastes-in-schema-213.kcad`). Örnek
 `surface-pastes.json/.kcad`.
+
+**Şema 215** (ADR 4140; MAP-04): inceleme notunun kaydettiği karar. `reviewNotes[]`'e (şema 180) isteğe bağlı
+`decision`: `command`, `candidate` (küçük harfli UUID), `source` (kısa etiket, en çok 120), `accept`, `class` (kısa
+etiket, 64), `fields` (ad: kısa etiket; değer: not metni), `reject` (not metni), `asset` (UUID). Not, adayına ve varlığa
+bağlı olmalıdır (`anchors`); karar bir şey söylemeli, kabul ile ret birlikte, varlıklı ret olmaz: değilse `bad_value`
+(`broken/review-decisions-unbound.kcad`, `broken/review-decisions-reject-with-asset.kcad`). Yazıcı 215'i bir not karar
+taşıyınca seçer; 214 ve öncesi alanı tanımaz (`unknown_field`, `broken/review-decisions-in-schema-214.kcad`). Örnek
+`review-decisions.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

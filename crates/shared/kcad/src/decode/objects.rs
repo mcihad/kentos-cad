@@ -414,6 +414,8 @@ pub(super) struct Features {
     pub(super) approved_values: bool,
     /// Schema 214: a terrain surface's edit that pastes another surface (docs/adr/3920).
     pub(super) surface_pastes: bool,
+    /// Schema 215: a review note's decision (docs/adr/4140).
+    pub(super) review_decisions: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
@@ -710,6 +712,7 @@ impl Features {
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
             approved_values: schema >= crate::SCHEMA_WITH_APPROVED_VALUES,
             surface_pastes: schema >= crate::SCHEMA_WITH_SURFACE_PASTES,
+            review_decisions: schema >= crate::SCHEMA_WITH_REVIEW_DECISIONS,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,

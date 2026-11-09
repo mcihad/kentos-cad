@@ -9,15 +9,18 @@ import type { CandidateSource } from "./CandidateSource";
  * not given) names a class by its id or one of its codes; `confidence` names a number field (higher is better).
  * Candidates within `radius` (m; a polyline's distance is the larger of the two Hausdorff ways) are one group; two
  * areas are when their overlap ratio, the area of their intersection over that of their union, exceeds `overlap`
- * (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's (`reviewer` is written with
- * them). The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
+ * (0.5 when not given: the PASCAL VOC detection criterion). The decisions are a reviewer's: each that takes (its
+ * candidate marked) is recorded as a review note apart from the objects (docs/adr/4140: resolved, `reviewer` its
+ * author, `reviewedAt` its time as given, bound to the candidate and the asset with their stamps, its `decision` the
+ * decision as given with the source and the asset), not as the asset's attributes. The asset's values, its candidates' and the decisions' alike, pass its class layer's field rules as any write
  * to that layer does (docs/adr/2540): a value that fits is written in its canonical form (a list's label as its code,
  * a decimal comma as a point), one that does not is said in the group's `invalid` and keeps it from being written
  * until a decision gives one that fits. Plan says what would be written; execute writes, in one undo step.
  *
  * Refusals, in this order: `invalid_revision`, `revision_conflict`, `unknown_profile`, `invalid_profile`,
  * `invalid_input` (no source, too many, one layer twice, an empty name or field, a radius not above 0, an overlap not
- * between 0 and 1, a decision on no candidate or naming no class of the profile, accept with reject),
+ * between 0 and 1, a reviewer or a time that is no short label, a decision on no candidate or naming no class of the
+ * profile, accept with reject, a reason or a field that a review note cannot hold),
  * `layer_not_found` (a source's layer),
  * `invalid_uid`, `entity_not_found`, `class_layer_missing` (a class to write has no layer: apply the profile first),
  * `layer_locked` (a class's layer to write on, or a source's whose candidates are marked).
@@ -27,4 +30,8 @@ export type FeaturesReconcile = { name: string, drawing?: string, sources: Array
  * The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
  * 0.5 when not given (docs/adr/2140).
  */
-overlap?: number, decisions?: Array<CandidateDecision>, reviewer?: string, expectedRevision?: string, };
+overlap?: number, decisions?: Array<CandidateDecision>, reviewer?: string, 
+/**
+ * When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
+ */
+reviewedAt?: string, expectedRevision?: string, };

@@ -4,7 +4,7 @@ import type { ReconciledGroup } from "./ReconciledGroup";
 
 /**
  * Output of `map.features.reconcile` v1 (and its plan): the groups in the order of their first candidate, every
- * candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, and the
- * drawing's revision.
+ * candidate in the drawing's order, the assets written (the plan's: none), how many candidates were marked, the
+ * numbers of the review notes the decisions were recorded as (docs/adr/4140), and the drawing's revision.
  */
-export type FeaturesReconciled = { groups: Array<ReconciledGroup>, candidates: Array<ReconciledCandidate>, written?: Array<string>, marked: number, revision: string, };
+export type FeaturesReconciled = { groups: Array<ReconciledGroup>, candidates: Array<ReconciledCandidate>, written?: Array<string>, marked: number, notes?: Array<number>, revision: string, };

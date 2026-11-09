@@ -2275,6 +2275,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 215 (docs/adr/4140): a review note recording a decision.
+    if kentos_contracts::review_notes_have_decisions(&doc.settings.review_notes) {
+        return crate::SCHEMA_WITH_REVIEW_DECISIONS;
+    }
     // Schema 214 (docs/adr/3920): a terrain surface's edit that pastes another surface.
     if doc.settings.road.as_ref().is_some_and(road_has_pastes) {
         return crate::SCHEMA_WITH_SURFACE_PASTES;

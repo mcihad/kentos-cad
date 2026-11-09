@@ -34,7 +34,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080 | tipli katman profili; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740 | ayrı inceleme kaydı | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; etiketin elipslerle çakışınca kaydırılması | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeyden kot alma | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
@@ -653,6 +653,14 @@ inceleme kaydı, sürüm derlemesinde ölçüm, AI çıkarımı.
 Kapsam: **Harita**. Aynı commit ve veriyle debug ve sürüm: 40 000 küme (88 000 aday) 1,042 s ve 0,215 s; 100 000 küme
 (220 000 aday) 2,676 s ve 0,567 s; iki derlemede grup sayıları aynı, süre doğrusala yakın. Kod değişmedi. Açık: gerçek
 çıkarımın adaylarıyla ölçüm, ayrı inceleme kaydı, AI çıkarımı.
+
+**9 Kasım 2026, sekizinci tur — kararlar ayrı inceleme kaydı olarak ([ADR 4140](../docs/adr/4140-reconcile-decisions-as-review-notes.md)).**
+Kapsam: **Harita + CBS**. Dayanak: ArcGIS Data Reviewer'ın sonuç tablosu (nesneden ayrı kayıt: nesnenin kimliği, oturum,
+gözden geçiren, tarih) ve hata sonuçlarının yaşam döngüsü. Kanıtlanan: Detay eşleştirmenin tutan her kararı nesneden
+ayrı, çözülmüş bir inceleme notudur (yazarı gözden geçiren, zamanı `reviewedAt`, adaya ve varlığa damgalarıyla bağlı,
+yapılandırılmış `decision`); varlık `İnceleme` ve `Gözden geçiren` taşımaz; `.kcad` şema 215 (bağımsız yazıcı ve
+okuyucu 1727 dosyada uyuşur); 44 bağımsız durum, Python, MCP, masaüstünde İnceleme notları kaydı gösterir. Açık:
+kayıtlı kararların yeniden uygulanması ve katalog geçiş raporu, AI çıkarımı ve gerçek çıkarımla ölçüm (dış kaynak).
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

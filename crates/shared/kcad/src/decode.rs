@@ -1297,6 +1297,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if list.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş inceleme notu listesi yazılmaz"));
                 }
+                // Schema 215 (docs/adr/4140): a note's decision.
+                if !has.review_decisions && kentos_contracts::review_notes_have_decisions(&list) {
+                    return Err(r.fail_at(Code::UnknownField, at, "inceleme notunda decision (şema 215'ten önce yok)"));
+                }
                 if let Some(problem) = kentos_contracts::review_notes_problem(&list) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }

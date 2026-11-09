@@ -27,9 +27,19 @@ pole). The rules (ADR 1760), written here by hand:
 - the fields: the representatives' (confidence, then source order), but the class field, the confidence field,
   `Eşleştirme`, `Uzlaştırma` and the provenance's; the decisions' fields over them; missing: a required field not given;
 - written: agreed, or single with an accept, and nothing missing; the asset on the class's layer with the fields, the
-  class field = the class's first code, Kaynaklar, Adaylar, Yayılım (3 decimals), İnceleme and Gözden geçiren (with
-  decisions); every member of a written or existing group marked `Eşleştirme` = the asset, a rejected one
-  `Reddedildi: reason`. One undo step “Detay eşleştirme”; nothing to write or mark writes nothing.
+  class field = the class's first code, Kaynaklar, Adaylar, Yayılım (3 decimals); every member of a written or existing
+  group marked `Eşleştirme` = the asset, a rejected one `Reddedildi: reason`. One undo step “Detay eşleştirme”;
+  nothing to write or mark writes nothing.
+- ADR 4140: the decisions are review notes, not the asset's attributes: each decision that says something (accept, a
+  class, fields, a reason) and whose candidate is marked becomes, in the input's order, a resolved note numbered after
+  the drawing's, its author the reviewer (trimmed, none when blank), its time `reviewedAt` (trimmed), bound to the
+  candidate and the asset (none for a rejection) with their stamps (`$any`), its text “Detay eşleştirme, <source>
+  adayı: <what>.” (kabul edildi; sınıfı “<title>” olarak düzeltildi; alanları verildi (k = v, …), or “n alanı verildi”
+  past 200 characters; reddedildi (reason), or “reddedildi (nedeni kararda)” past 200), its decision the one
+  given (fields and reason trimmed) with the source's name and the asset; the output's `notes` their numbers. A source's
+  name, the reviewer and the time must be short labels (120, 120, 64 characters, no edge space, no control character);
+  a reason and a field's value a note's text (trimmed, at most 4000, no control character but a line break or a tab;
+  a blank value is left out of the note as of the asset), a field's name a short label (64).
 
 ADR 2140 adds areas, by shapely (GEOS): a closed polygon (three vertices or more, area above 0) is a candidate of an area
 class; two are one group when their overlap ratio, intersection area over union area, exceeds `overlap` (0.5 when not
@@ -58,6 +68,7 @@ import json
 import math
 import re
 import sys
+import unicodedata
 from pathlib import Path
 
 from shapely.geometry import Polygon
@@ -423,6 +434,9 @@ def analyse(d, inp):
     for i, s in enumerate(sources):
         if not s["name"].strip():
             raise Refused("invalid_input", "Kaynağın adı boş olamaz (LiDAR, Ortofoto …).", f"sources[{i}].name")
+        if not label_ok(s["name"].strip(), 120):
+            raise Refused("invalid_input", "Kaynağın adı en çok 120 karakter olabilir ve denetim karakteri taşıyamaz.",
+                          f"sources[{i}].name")
         if any(o["layer"] == s["layer"] for o in sources[:i]):
             raise Refused("invalid_input", f"“{s['layer']}” katmanı iki kaynakta verilmiş.", f"sources[{i}].layer")
         if s["layer"] not in lays:
@@ -437,6 +451,13 @@ def analyse(d, inp):
     if not (math.isfinite(least) and 0.0 < least < 1.0):
         raise Refused("invalid_input", "Örtüşme oranı 0 ile 1 arasında olmalı (kesişimin alanı bölü birleşiminki; "
                                        "verilmezse 0,5).", "overlap")
+    # ADR 4140: the review notes' author and time.
+    if (inp.get("reviewer") or "").strip() and not label_ok(inp["reviewer"].strip(), 120):
+        raise Refused("invalid_input", "Gözden geçirenin adı en çok 120 karakter olabilir ve denetim karakteri "
+                                       "taşıyamaz.", "reviewer")
+    if (inp.get("reviewedAt") or "").strip() and not label_ok(inp["reviewedAt"].strip(), 64):
+        raise Refused("invalid_input", "Gözden geçirme zamanı en çok 64 karakter olabilir "
+                                       "(“2026-11-09T16:00:00+03:00”).", "reviewedAt")
     src = {s["layer"]: i for i, s in enumerate(sources)}
     by_uid = {u: e for u, e in zip(d["uids"], d["entities"])}
     decided = {}
@@ -454,6 +475,16 @@ def analyse(d, inp):
                           f"{at}.class")
         if dc.get("accept") and "reject" in dc:
             raise Refused("invalid_input", "Bir aday hem kabul hem ret edilemez.", f"{at}.reject")
+        if "reject" in dc and not dc["reject"].strip():
+            raise Refused("invalid_input", "Ret nedeni boş olamaz.", f"{at}.reject")
+        if "reject" in dc and not text_ok(dc["reject"].strip()):
+            raise Refused("invalid_input", "Ret nedeni en çok 4000 karakter olabilir ve satır sonu ile sekme dışında "
+                                           "denetim karakteri taşıyamaz.", f"{at}.reject")
+        for k, v in sorted(dc.get("fields", {}).items()):
+            # A blank value is left out, as from the asset.
+            if not label_ok(k, 64) or (v.strip() and not text_ok(v.strip())):
+                raise Refused("invalid_input", f"“{k}” alanının adı ya da değeri uzun ya da denetim karakterli: "
+                                               "inceleme notuna yazılamaz.", f"{at}.fields")
         decided[u] = dc
     conf = inp.get("confidence")
     cands = []
@@ -670,7 +701,43 @@ def analyse(d, inp):
     return cands, groups
 
 
-def answer(cands, groups, sources, written=(), marked=0):
+def label_ok(t, most):
+    """A review note's short label (ADR 4140, ADR 1000 §2): not empty, no space at its edges, at most `most` characters,
+    no control character."""
+    return t != "" and t.strip() == t and len(t) <= most and not any(unicodedata.category(c) == "Cc" for c in t)
+
+
+def text_ok(t):
+    """A review note's text: not empty, no edge space, at most 4000 characters, no control character but a line break
+    or a tab."""
+    return (t != "" and t.strip() == t and len(t) <= 4000
+            and not any(unicodedata.category(c) == "Cc" and c not in "\n\t" for c in t))
+
+
+def given_fields(dc):
+    """A decision's fields that say something, trimmed (a blank value is left out, as from the asset)."""
+    return {k: v.strip() for k, v in sorted(dc.get("fields", {}).items()) if v.strip()}
+
+
+def decision_words(dc, source):
+    """ADR 4140: what a decision did, in its note's words."""
+    parts = []
+    if dc.get("accept"):
+        parts.append("kabul edildi")
+    if "class" in dc:
+        title = next((c["title"] for c in CLASSES if c["id"] == dc["class"]), dc["class"])
+        parts.append(f"sınıfı “{title}” olarak düzeltildi")
+    fields = given_fields(dc)
+    if fields:
+        given = ", ".join(f"{k} = {v}" for k, v in fields.items())
+        parts.append(f"alanları verildi ({given})" if len(given) <= 200 else f"{len(fields)} alanı verildi")
+    if "reject" in dc:
+        r = dc["reject"].strip()
+        parts.append(f"reddedildi ({r})" if len(r) <= 200 else "reddedildi (nedeni kararda)")
+    return f"Detay eşleştirme, {source} adayı: {'; '.join(parts)}."
+
+
+def answer(cands, groups, sources, written=(), marked=0, notes=()):
     group_of = {m: gi for gi, g in enumerate(groups) for m in g["members"]}
     rows = []
     for i, c in enumerate(cands):
@@ -689,6 +756,8 @@ def answer(cands, groups, sources, written=(), marked=0):
     if written:
         out["written"] = list(written)
     out["marked"] = marked
+    if notes:
+        out["notes"] = list(notes)
     out["revision"] = "$current"
     return out
 
@@ -715,7 +784,7 @@ def executed(d, inp):
                 raise Refused("layer_locked", f"“{path_of(d, s['layer'])}” katmanı kilitli: adaylar işaretlenemez. "
                                               "Kilidi açın.", "sources")
     if not marks_any:
-        return answer(cands, groups, sources), {}, len(d["entities"])
+        return answer(cands, groups, sources), {}, len(d["entities"]), None
     slot = len(d["entities"]) + 1
     fields, written, marks = {}, [], []
     reviewer = inp.get("reviewer")
@@ -729,10 +798,6 @@ def executed(d, inp):
             attrs["Yayılım"] = f"{g['row']['spread']:.3f}"
             if "overlap" in g["row"]:
                 attrs["Örtüşme"] = f"{g['row']['overlap']:.3f}"
-            if g["review"]:
-                attrs["İnceleme"] = "; ".join(g["review"])
-                if reviewer:
-                    attrs["Gözden geçiren"] = reviewer
             first = cands[g["reps"][0]]
             f = {"layerId": class_layer(d, g["class"]), "attrs": attrs}
             if first["kind"] != "point":
@@ -762,7 +827,42 @@ def executed(d, inp):
         attrs = dict(c["attrs"])
         attrs["Eşleştirme"] = text
         fields[str(k)] = {"attrs": attrs}
-    return answer(cands, groups, sources, written, len(marks)), fields, slot - 1
+    # ADR 4140: each decision that says something and whose candidate is marked, a resolved review note.
+    marked_by = dict(marks)
+    book = list(d["settings"].get("reviewNotes", []))
+    numbers = []
+    for dc in inp.get("decisions", []):
+        says = dc.get("accept") or "class" in dc or given_fields(dc) or "reject" in dc
+        c = next((i for i, c in enumerate(cands) if c["uid"] == dc["candidate"]), None)
+        if not says or c is None or c not in marked_by:
+            continue
+        if "reject" in dc and cands[c]["status"] != "rejected":
+            continue
+        source = sources[cands[c]["source"]]["name"].strip()
+        asset = None if "reject" in dc else marked_by[c]
+        number = max((n["number"] for n in book), default=0) + 1
+        note = {"id": "$any", "number": number, "text": decision_words(dc, source), "status": "resolved"}
+        if (reviewer or "").strip():
+            note["author"] = reviewer.strip()
+        if (inp.get("reviewedAt") or "").strip():
+            note["createdAt"] = inp["reviewedAt"].strip()
+        note["anchors"] = [{"uid": cands[c]["uid"], "stamp": "$any"}] + (
+            [{"uid": asset, "stamp": "$any"}] if asset else [])
+        decision = {"command": "map.features.reconcile", "candidate": cands[c]["uid"], "source": source}
+        if dc.get("accept"):
+            decision["accept"] = True
+        if "class" in dc:
+            decision["class"] = dc["class"]
+        if given_fields(dc):
+            decision["fields"] = given_fields(dc)
+        if "reject" in dc:
+            decision["reject"] = dc["reject"].strip()
+        if asset:
+            decision["asset"] = asset
+        note["decision"] = decision
+        book.append(note)
+        numbers.append(number)
+    return answer(cands, groups, sources, written, len(marks), numbers), fields, slot - 1, (book if numbers else None)
 
 
 # ── Cases ────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -777,16 +877,18 @@ def failed(e):
 def step(d, inp, op="execute", undo=True):
     try:
         if op == "execute":
-            out, fields, last = executed(d, inp)
+            out, fields, last, notes = executed(d, inp)
         else:
             cands, groups = analyse(d, inp)
-            out, fields, last = answer(cands, groups, inp["sources"]), {}, len(d["entities"])
+            out, fields, last, notes = answer(cands, groups, inp["sources"]), {}, len(d["entities"]), None
     except Refused as e:
         return [{"op": op, "input": inp, "result": failed(e), "expect": SAME}]
     result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
     if op != "execute" or not fields:
         return [{"op": op, "input": inp, "result": result, "expect": SAME, "within": WITHIN}]
     expect = {"revision": "changed", "canUndo": True, "ids": list(range(1, last + 1)), "fields": fields}
+    if notes is not None:
+        expect["settings"] = {"reviewNotes": notes}
     steps = [{"op": op, "input": inp, "result": result, "expect": expect, "within": WITHIN}]
     if undo:
         steps.append({"op": "undo", "returns": "Detay eşleştirme",
@@ -822,13 +924,24 @@ def cases():
         {"candidate": uid(11), "reject": "Gölge; nesne yok"}])
     out.append(case("Kararlarla: tek rögar kabul, ağaç adayı direğe düzeltildi, kapının numarası verildi, bilinmeyen "
                     "aday reddedildi", d, step(d, decided)))
+    # ADR 4140: the decisions as review notes, with the time; after the drawing's own notes.
+    noted = setup()
+    noted["settings"]["reviewNotes"] = [{"id": "0192f5b0-4140-7000-8000-000000000001", "number": 3,
+                                         "text": "Paftadaki ölçeği kontrol edin.", "status": "open"}]
+    timed = dict(decided, reviewer=" Ayşe Demir ", reviewedAt="2026-11-09T16:00:00+03:00")
+    out.append(case("Kararlar inceleme notu olarak: dördü 4–7 numaralı çözülmüş notlar, adaya ve varlığa damgalarıyla "
+                    "bağlı; ret notunun varlığı yok", noted, step(noted, timed),
+                    "Notlar çizimin 3 numaralı notundan sonra sayılır; gözden geçirenin adı kırpılır. Varlık artık "
+                    "İnceleme ve Gözden geçiren özniteliklerini taşımaz."))
+    blank = dict(BASE, decisions=[{"candidate": uid(12), "fields": {"KapiNo": "  "}}])
+    out.append(case("Boş alan değeri karar sayılmaz: not yazılmaz, kapı yine yazılmaz", d, step(d, blank)))
     out.append(case("Güven alanı yokken temsilci ilk adaydır", d,
                     step(d, {k: v for k, v in BASE.items() if k != "confidence"}, op="plan")))
     out.append(case("Dar yarıçap (0,1 m): uyuşan direkler ayrı tekler olur", d, step(d, dict(BASE, radius=0.1), op="plan")))
     out.append(case("Tek kaynak: yalnız LiDAR", d, step(d, dict(BASE, sources=SOURCES[:1]), op="plan")))
     # After a run: the candidates are reviewed, nothing is written again.
     after = setup()
-    out_, fields, _ = executed(d, BASE)
+    out_, fields, _, _ = executed(d, BASE)
     for k, f in fields.items():
         i = int(k) - 1
         if i < len(after["entities"]):
@@ -875,6 +988,15 @@ def cases():
     out.append(case("Karar: profilde olmayan sınıf", d, step(d, dict(BASE, decisions=[{"candidate": uid(8), "class": "kopru"}]))))
     out.append(case("Karar: hem kabul hem ret", d, step(d, dict(BASE, decisions=[{"candidate": uid(9), "accept": True,
                                                                                    "reject": "?"}]))))
+    # ADR 4140: what a review note cannot hold.
+    out.append(case("Kaynağın adı 120 karakterden uzun", d,
+                    step(d, dict(BASE, sources=[SOURCES[0], dict(SOURCES[1], name="O" * 121)]))))
+    out.append(case("Gözden geçirenin adında denetim karakteri", d, step(d, dict(BASE, reviewer="Ayşe\u0007"))))
+    out.append(case("Gözden geçirme zamanı 64 karakterden uzun", d, step(d, dict(BASE, reviewedAt="2" * 65))))
+    out.append(case("Ret nedeni 4000 karakterden uzun", d,
+                    step(d, dict(BASE, decisions=[{"candidate": uid(11), "reject": "g" * 4001}]))))
+    out.append(case("Alanın değerinde denetim karakteri", d,
+                    step(d, dict(BASE, decisions=[{"candidate": uid(12), "fields": {"KapiNo": "1\u00074"}}]))))
     # ADR 2140: areas by their overlap ratio.
     da = setup(objects=AREAS)
     out.append(case("Alanlar (plan): bina izi iki kaynakta örtüşür (yineleneniyle), 0,25 örtüşen iki iz ayrı tekler, var "
