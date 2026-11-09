@@ -120,7 +120,8 @@ pub struct AtlasPin {
     pub digest: String,
 }
 
-/// Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
+/// Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
+/// not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
 /// `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
 /// not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
 /// degrees), `unknown_theme`, `invalid_time`,
@@ -175,6 +176,104 @@ pub struct ExportAtlas {
     #[serde(default, skip_serializing_if = "is_drawing")]
     #[cfg_attr(feature = "ts", ts(as = "Option<AtlasCoverage>", optional))]
     pub coverage: AtlasCoverage,
+    /// A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:
+    /// the answer then says which pages changed since, and why (ADR 1320's rule).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub previous: Option<String>,
+}
+
+/// The format of an atlas's record (docs/adr/4000).
+pub const ATLAS_RECORD_FORMAT: &str = "kentos.atlas-sources/1";
+
+/// An atlas's record, written beside its PDF as `<name>.kaynaklar.json` (docs/adr/4000): the PDF's file name and
+/// SHA-256, the sheet, the day, the state the pages were made from, each page with its sources and each listed
+/// object's digest: what a later run is told its changes from.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AtlasRecord {
+    pub format: String,
+    pub pdf: String,
+    pub sha256: String,
+    pub sheet: String,
+    pub date: String,
+    pub pin: AtlasPin,
+    pub pages: Vec<AtlasPageInfo>,
+    #[cfg_attr(feature = "ts", ts(as = "std::collections::BTreeMap<String, String>"))]
+    pub objects: std::collections::BTreeMap<String, String>,
+}
+
+/// How a page stands against the previous atlas (docs/adr/4000).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AtlasPageState {
+    /// Its object was a page then too, and nothing it lists, nor the project's parts, changed.
+    Same,
+    Changed,
+    /// Its object was no page then.
+    New,
+}
+
+/// A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now
+/// whose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by
+/// persistent id in the order listed; `changed` too when the project's parts the pages read changed.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AtlasPageChange {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub index: u32,
+    pub feature: String,
+    pub state: AtlasPageState,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub changed: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub added: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub removed: Vec<String>,
+}
+
+/// The changes since a previous atlas (docs/adr/4000): its PDF's name, SHA-256 and day; the project's parts the pages
+/// read that changed (`settings`, `layers`, `styles`, `sheets`: every page then changed); each page now; the previous
+/// pages whose object is no page now (`gone`: name and object).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AtlasChanges {
+    pub pdf: String,
+    pub sha256: String,
+    pub date: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub parts: Vec<String>,
+    pub pages: Vec<AtlasPageChange>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AtlasGonePage>>", optional))]
+    pub gone: Vec<AtlasGonePage>,
+}
+
+/// A previous page whose object is no page now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AtlasGonePage {
+    pub name: String,
+    pub feature: String,
 }
 
 fn is_drawing(c: &AtlasCoverage) -> bool {
@@ -279,4 +378,22 @@ pub struct AtlasExported {
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<std::collections::BTreeMap<String, String>>", optional))]
     pub objects: std::collections::BTreeMap<String, String>,
+    /// The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub record: Option<String>,
+    /// Asked with a previous record (docs/adr/4000): the changes since it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub changes: Option<AtlasChanges>,
+}
+
+/// The record's path beside an atlas's PDF (docs/adr/4000): `atlas.pdf` → `atlas.kaynaklar.json`; a name without the
+/// `.pdf` ending takes `.kaynaklar.json` after it.
+pub fn atlas_record_path(pdf: &str) -> String {
+    let lower = pdf.to_lowercase();
+    match lower.strip_suffix(".pdf") {
+        Some(_) => format!("{}.kaynaklar.json", &pdf[..pdf.len() - 4]),
+        None => format!("{pdf}.kaynaklar.json"),
+    }
 }

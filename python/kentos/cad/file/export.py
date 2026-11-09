@@ -108,8 +108,16 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
     çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek,
     duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler,
     tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources);
-    listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). plan dosyayı
-    yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.
+    listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı
+    (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1:
+    PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin
+    özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince
+    changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti
+    değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin
+    settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa
+    changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da
+    başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi
+    değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.atlas"
@@ -133,6 +141,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         theme: str | None | Unset = UNSET,
         time: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -158,8 +167,16 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde)
         zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı
         kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik
-        özeti (objects, kentos.object-digest/1). plan dosyayı yazmaz, sayfaları ve pin'i
-        söyler; çizimi değiştirmez ve geri alma adımı değildir.
+        özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in
+        yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı,
+        pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous
+        önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre
+        söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni
+        listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya
+        da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa
+        olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan
+        dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı
+        değildir.
 
         Args:
             doc: The drawing it works on.
@@ -174,6 +191,8 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
                 undeclared layer's). A field a form marks `redact` is never carried, named or not.
             overwrite: Write over a file that is there.
             pin: The state a plan pinned; the run refuses when the drawing or a bound file is not it.
+            previous: A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:
+                the answer then says which pages changed since, and why (ADR 1320's rule).
             theme: A layer state of the project (a theme) that the atlas maps draw instead of the layers they would show.
             time: The moment the temporal layers are shown at (`2024-06-30` or `2024-06-30T12:00`): the coverage layer's objects and the
                 maps' drawing are cut by it.
@@ -198,6 +217,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
+            previous=previous,
             theme=theme,
             time=time,
         ), request_id=request_id, expected=expected)
@@ -215,6 +235,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         theme: str | None | Unset = UNSET,
         time: str | None | Unset = UNSET,
     ) -> AtlasExported:
@@ -230,6 +251,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
+            previous=previous,
             theme=theme,
             time=time,
         ))
@@ -247,6 +269,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         theme: str | None | Unset = UNSET,
         time: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -262,6 +285,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
+            previous=previous,
             theme=theme,
             time=time,
         ))
@@ -279,6 +303,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         fields: Sequence[str] | None | Unset = UNSET,
         overwrite: bool = False,
         pin: AtlasPin | None | Unset = UNSET,
+        previous: str | None | Unset = UNSET,
         theme: str | None | Unset = UNSET,
         time: str | None | Unset = UNSET,
         op: str = "execute",
@@ -299,6 +324,7 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
             fields=_opt(fields, lambda x: list(x)),
             overwrite=overwrite,
             pin=pin,
+            previous=previous,
             theme=theme,
             time=time,
         ), op=op, request_id=request_id, expected=expected)

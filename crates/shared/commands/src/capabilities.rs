@@ -7167,6 +7167,8 @@ const ENTRIES: &[Entry] = &[
             &[
                 "invalid_file_path",
                 "file_exists",
+                // Docs/adr/4000: the previous atlas's record, read before the pages.
+                "no_previous",
                 "no_sheets",
                 "unknown_sheet",
                 "no_atlas",

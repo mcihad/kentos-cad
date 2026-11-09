@@ -155,7 +155,8 @@ fn the_shared_cases_pass() {
             }
             let command = step["command"].as_str().unwrap_or("file.export.atlas");
             let op = step["op"].as_str().unwrap_or("execute");
-            let input = filled(&step["input"], &tmp, &pins);
+            // An input names the drawing's objects as the expectations do (`$uidOf:N`; docs/adr/4000's edits).
+            let input = uids_of(&filled(&step["input"], &tmp, &pins), &s);
             let answer = s
                 .call(json!({ "command": command, "op": op, "input": input }))
                 .expect("answers");

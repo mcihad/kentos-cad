@@ -368,3 +368,86 @@ fn sources_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/4000: the atlas written beside its record, parcel 2's owner changed, the window's preview against that record:
+/// the pages that list parcel 2 changed, the others the same, as the shared case says.
+fn previewed_against_the_record(app: &mut App, dir: &std::path::Path) {
+    run(app, "file.export.atlas");
+    send(app, Event::Atlas(A::SavePicked(Some(dir.join("atlas.pdf")))));
+    assert!(app.exchange.is_none(), "written and closed");
+    let record = dir.join("atlas.kaynaklar.json");
+    assert!(record.exists(), "the record beside the PDF");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let uid = doc.uid(kentos_domain::Slot(2)).expect("parcel 2").to_string();
+    let answer = kentos_native_application::registry::run(
+        &mut ExecutionContext::new(doc),
+        "cad.entities.set",
+        kentos_commands::CallOp::Execute,
+        json!({"uids": [uid], "operation": "attributes", "attrs": {"Malik": "Yeni Malik"}}),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    run(app, "file.export.atlas");
+    send(app, Event::Atlas(A::PreviousPicked(Some(record))));
+}
+
+#[test]
+fn the_preview_says_each_page_against_the_previous_atlas() {
+    let mut app = app_with_atlas_of("plain");
+    let dir = scratch("atlas-guncelleme");
+    previewed_against_the_record(&mut app, &dir);
+    let changes = window(&app).changes.clone().expect("against the record");
+    let file: Value = serde_json::from_str(CASES).expect("the cases");
+    let case = file["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Güncelleme: kayıt PDF'in yanına")))
+        .expect("the update case");
+    let want: Vec<(u64, String)> = case["steps"][2]["result"]["output"]["changes"]["pages"]
+        .as_array()
+        .expect("pages")
+        .iter()
+        .map(|p| (p["index"].as_u64().expect("an index"), p["state"].as_str().expect("a state").to_owned()))
+        .collect();
+    let got: Vec<(u64, String)> = changes
+        .pages
+        .iter()
+        .map(|p| (u64::from(p.index), serde_json::to_value(p.state).expect("json").as_str().expect("a word").to_owned()))
+        .collect();
+    assert_eq!(got, want);
+    assert_eq!(changes.pdf, "atlas.pdf");
+    // Taken back: no column, no line.
+    send(&mut app, Event::Atlas(A::PreviousClear));
+    assert!(window(&app).changes.is_none());
+}
+
+/// docs/adr/4000: the preview against the previous atlas (Değişim column, the line), `.run/gui-evidence/atlas-guncelleme-4000/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib exchange::atlas_tests::update_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn update_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlas-guncelleme-4000");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+        let mut app = app_with_atlas_of("plain");
+        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let dir = scratch(&format!("atlas-guncelleme-resim-{name}"));
+        previewed_against_the_record(&mut app, &dir);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("onizleme-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

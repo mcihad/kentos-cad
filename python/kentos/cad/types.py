@@ -685,6 +685,22 @@ AtlasLayerRoleName = Literal["coverage", "map"]
 """The names of :class:`AtlasLayerRole`, for a plain string."""
 
 
+class AtlasPageState(_StrEnum):
+    """How a page stands against the previous atlas (docs/adr/4000).
+
+    - ``changed``
+    - ``same``: Its object was a page then too, and nothing it lists, nor the project's parts, changed.
+    - ``new``: Its object was no page then.
+    """
+    CHANGED = "changed"
+    SAME = "same"
+    NEW = "new"
+
+
+AtlasPageStateName = Literal["changed", "same", "new"]
+"""The names of :class:`AtlasPageState`, for a plain string."""
+
+
 class AttachmentAccept(_StrEnum):
     """What an attachments item counts and adds.
 
@@ -17537,6 +17553,43 @@ class AtlasBindings(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AtlasChanges(_Model):
+    """The changes since a previous atlas (docs/adr/4000): its PDF's name, SHA-256 and day; the project's parts the pages
+    read that changed (`settings`, `layers`, `styles`, `sheets`: every page then changed); each page now; the previous
+    pages whose object is no page now (`gone`: name and object).
+    """
+    pdf: str
+    sha256: str
+    date: str
+    pages: list[AtlasPageChange]
+    gone: list[AtlasGonePage] | Unset = UNSET
+    parts: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pdf"] = self.pdf
+        out["sha256"] = self.sha256
+        out["date"] = self.date
+        out["pages"] = [e0.to_json() for e0 in self.pages]
+        if self.gone is not UNSET:
+            out["gone"] = [e0.to_json() for e0 in self.gone]
+        if self.parts is not UNSET:
+            out["parts"] = list(self.parts)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasChanges:
+        return cls(
+            pdf=data["pdf"],
+            sha256=data["sha256"],
+            date=data["date"],
+            pages=[AtlasPageChange.from_json(e0) for e0 in data["pages"]],
+            gone=[AtlasGonePage.from_json(e0) for e0 in data["gone"]] if "gone" in data else UNSET,
+            parts=list(data["parts"]) if "parts" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AtlasExported(_Model):
     """What `file.export.atlas` wrote, or with `plan` would write.
     Attributes:
@@ -17547,10 +17600,12 @@ class AtlasExported(_Model):
         filtered_out: The coverage layer's objects the layer's filter or the time left out, counted. Unit: count.
         findings: The sheet core's findings (an SVG picture drawn as a box …).
         notes: What a host without a window cannot draw, said in words.
+        changes: Asked with a previous record (docs/adr/4000): the changes since it.
         objects: The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its
             snapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.
         read: What was read from bound sources (`coverage: source`): the coverage table at the plan, the map layers' rows
             as the pages were made.
+        record: The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.
     """
     path: str
     bytes: int
@@ -17565,8 +17620,10 @@ class AtlasExported(_Model):
     filtered_out: int
     findings: Any
     notes: list[str]
+    changes: AtlasChanges | None | Unset = UNSET
     objects: dict[str, str] | Unset = UNSET
     read: list[AtlasRead] | Unset = UNSET
+    record: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -17583,10 +17640,14 @@ class AtlasExported(_Model):
         out["filteredOut"] = self.filtered_out
         out["findings"] = self.findings
         out["notes"] = list(self.notes)
+        if self.changes is not UNSET:
+            out["changes"] = None if self.changes is None else self.changes.to_json()
         if self.objects is not UNSET:
             out["objects"] = dict(self.objects)
         if self.read is not UNSET:
             out["read"] = [e0.to_json() for e0 in self.read]
+        if self.record is not UNSET:
+            out["record"] = self.record
         return out
 
     @classmethod
@@ -17605,8 +17666,70 @@ class AtlasExported(_Model):
             filtered_out=data["filteredOut"],
             findings=data["findings"],
             notes=list(data["notes"]),
+            changes=UNSET if "changes" not in data else None if data["changes"] is None else AtlasChanges.from_json(data["changes"]),
             objects=dict(data["objects"]) if "objects" in data else UNSET,
             read=[AtlasRead.from_json(e0) for e0 in data["read"]] if "read" in data else UNSET,
+            record=data.get("record", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasGonePage(_Model):
+    """A previous page whose object is no page now."""
+    name: str
+    feature: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["feature"] = self.feature
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasGonePage:
+        return cls(
+            name=data["name"],
+            feature=data["feature"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasPageChange(_Model):
+    """A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now
+    whose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by
+    persistent id in the order listed; `changed` too when the project's parts the pages read changed.
+    Attributes:
+        index: Unit: index.
+    """
+    index: int
+    feature: str
+    state: AtlasPageState | AtlasPageStateName
+    added: list[str] | Unset = UNSET
+    changed: list[str] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["feature"] = self.feature
+        out["state"] = _enum_out(self.state)
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.changed is not UNSET:
+            out["changed"] = list(self.changed)
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasPageChange:
+        return cls(
+            index=data["index"],
+            feature=data["feature"],
+            state=_enum_in(AtlasPageState, data["state"]),
+            added=list(data["added"]) if "added" in data else UNSET,
+            changed=list(data["changed"]) if "changed" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
 
@@ -35483,7 +35606,8 @@ class ExchangeRow(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class ExportAtlas(_Model):
-    """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
+    """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:
+    not a record of this sheet's atlas, docs/adr/4000), `no_sheets`,
     `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is
     not bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in
     degrees), `unknown_theme`, `invalid_time`,
@@ -35504,6 +35628,8 @@ class ExportAtlas(_Model):
             undeclared layer's). A field a form marks `redact` is never carried, named or not.
         overwrite: Write over a file that is there.
         pin: The state a plan pinned; the run refuses when the drawing or a bound file is not it.
+        previous: A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:
+            the answer then says which pages changed since, and why (ADR 1320's rule).
         theme: A layer state of the project (a theme) that the atlas maps draw instead of the layers they would show.
         time: The moment the temporal layers are shown at (`2024-06-30` or `2024-06-30T12:00`): the coverage layer's objects and the
             maps' drawing are cut by it.
@@ -35516,6 +35642,7 @@ class ExportAtlas(_Model):
     fields: list[str] | None | Unset = UNSET
     overwrite: bool = False
     pin: AtlasPin | None | Unset = UNSET
+    previous: str | None | Unset = UNSET
     theme: str | None | Unset = UNSET
     time: str | None | Unset = UNSET
 
@@ -35534,6 +35661,8 @@ class ExportAtlas(_Model):
         out["overwrite"] = self.overwrite
         if self.pin is not UNSET:
             out["pin"] = None if self.pin is None else self.pin.to_json()
+        if self.previous is not UNSET:
+            out["previous"] = self.previous
         if self.theme is not UNSET:
             out["theme"] = self.theme
         if self.time is not UNSET:
@@ -35551,6 +35680,7 @@ class ExportAtlas(_Model):
             fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
             overwrite=data["overwrite"] if "overwrite" in data else False,
             pin=UNSET if "pin" not in data else None if data["pin"] is None else AtlasPin.from_json(data["pin"]),
+            previous=data.get("previous", UNSET),
             theme=data.get("theme", UNSET),
             time=data.get("time", UNSET),
         )
@@ -130901,12 +131031,17 @@ __all__ = [
     "AtKnownPoint",
     "AtMeasuredPoint",
     "AtlasBindings",
+    "AtlasChanges",
     "AtlasCoverage",
     "AtlasCoverageName",
     "AtlasExported",
+    "AtlasGonePage",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
+    "AtlasPageChange",
     "AtlasPageInfo",
+    "AtlasPageState",
+    "AtlasPageStateName",
     "AtlasPaperMapView",
     "AtlasPin",
     "AtlasPinLayer",

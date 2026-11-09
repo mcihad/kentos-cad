@@ -48,7 +48,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600 | total station ve nivelman kalitesi; atlasın güncelleme yayını | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640 | bütçe (gerçek veriyle ölçüm); öbür çizimlerin kendi hesabının içinde durması; tarif katmanının grubu ve tam stili | — |
 
@@ -1980,6 +1980,14 @@ kaynakları kendi nesnesi önce, haritaların zeminine değen ve basılan nesnel
 cevabında `pages[].sources` ve `objects` (nesne özetleri); başvuruya iki durum (genel bakışla 109, yalnız atlas
 haritasıyla komşular), `$uidOf:N` koşucuda; Python, MCP; Atlası PDF yap önizlemesinde Kaynak sütunu. Açık: atlasın
 güncelleme yayını, total station ve nivelman kalitesi.
+
+**9 Kasım 2026, yedinci tur — atlasın kaynak kaydı ve değişen sayfalar ([ADR 4000](../docs/adr/4000-atlas-update-from-its-record.md)).**
+Kapsam: **CAD + CBS** (pafta). Dayanak: ADR 1320'nin kuralı (changed, added, removed, parts); QGIS ve ArcGIS değişen
+sayfayı söylemez. Kanıtlanan: `file.export.atlas` PDF'in yanına `<ad>.kaynaklar.json` (`kentos.atlas-sources/1`) yazar;
+`previous` ile her sayfa önceki atlasa göre same, changed (nedenleriyle) ya da new, nesnesi sayfa olmayanlar gone;
+projenin parçaları değişince her sayfa changed; yanlış kayıt `no_previous`; başvuruya üç durum (40; eskiler bayt bayt
+aynı), Python (kendi okumasıyla), MCP; Atlası PDF yap'ta Önceki kayıt… ve Değişim sütunu. Açık: yalnız değişen sayfaların
+ayrı PDF'i, total station ve nivelman kalitesi (projede karasal dengelemelerin doğrulukları saklanmalı).
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

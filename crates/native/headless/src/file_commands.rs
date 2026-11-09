@@ -978,8 +978,123 @@ pub fn export_atlas(
     input: &kentos_commands::ExportAtlas,
 ) -> Result<(kentos_commands::AtlasExported, Vec<CommandWarning>), Refused> {
     let (path, bytes, output, warnings) = atlas(doc, input, true)?;
+    write_atlas_record(&output)?;
     write(&path, &bytes)?;
     Ok((output, warnings))
+}
+
+/// The atlas's record beside its PDF (docs/adr/4000), as `output` says it: its pages, their sources, the objects'
+/// digests and the state, for a later run's changes.
+fn write_atlas_record(output: &kentos_commands::AtlasExported) -> Result<(), Refused> {
+    let Some(at) = &output.record else { return Ok(()) };
+    let record = kentos_commands::AtlasRecord {
+        format: kentos_commands::ATLAS_RECORD_FORMAT.to_owned(),
+        pdf: Path::new(&output.path).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+        sha256: output.sha256.clone(),
+        sheet: output.sheet.clone(),
+        date: kentos_plot::book::today(),
+        pin: output.pin.clone(),
+        pages: output.pages.clone(),
+        objects: output.objects.clone(),
+    };
+    let mut bytes = serde_json::to_vec_pretty(&record).unwrap_or_default();
+    bytes.push(b'\n');
+    write(Path::new(at), &bytes)
+}
+
+/// The previous atlas's record (docs/adr/4000), an absolute path to a record of this sheet's atlas; refused
+/// (`no_previous`) otherwise.
+pub fn previous_record(path: &str, sheet: &str) -> Result<kentos_commands::AtlasRecord, Refused> {
+    let no = |why: String| refuse("no_previous", why, "previous");
+    if !Path::new(path).is_absolute() {
+        return Err(no(format!(
+            "“{path}” mutlak bir dosya yolu değil; önceki atlasın PDF'inin yanındaki .kaynaklar.json dosyasının tam yolunu verin."
+        )));
+    }
+    let record = std::fs::read(path)
+        .ok()
+        .and_then(|b| serde_json::from_slice::<kentos_commands::AtlasRecord>(&b).ok())
+        .filter(|r| r.format == kentos_commands::ATLAS_RECORD_FORMAT)
+        .ok_or_else(|| {
+            no(format!(
+                "{path} bir atlas kaynak kaydı değil ya da okunamıyor; Atlası PDF yap'ın PDF'in yanına yazdığı .kaynaklar.json dosyasını verin."
+            ))
+        })?;
+    if record.sheet != sheet {
+        return Err(no(format!(
+            "{path} başka bir paftanın (“{}”) atlasının kaydı; “{sheet}” paftasının önceki atlasının kaydını verin.",
+            record.sheet
+        )));
+    }
+    Ok(record)
+}
+
+/// The changes of the pages now since the previous record (docs/adr/4000), ADR 1320's rule: a page by its object;
+/// the objects it lists then and now whose digest changed, added, removed; every page changed when the project's
+/// parts the pages read (settings, layers, styles, sheets) changed.
+pub fn atlas_changes(
+    previous: &kentos_commands::AtlasRecord,
+    pages: &[kentos_commands::AtlasPageInfo],
+    objects: &std::collections::BTreeMap<String, String>,
+    pin: &kentos_commands::AtlasPin,
+) -> kentos_commands::AtlasChanges {
+    use kentos_commands::{AtlasGonePage, AtlasPageChange, AtlasPageState};
+    let then = &previous.pin;
+    let parts: Vec<String> = [
+        ("settings", &then.settings, &pin.settings),
+        ("layers", &then.layers, &pin.layers),
+        ("styles", &then.styles, &pin.styles),
+        ("sheets", &then.sheets, &pin.sheets),
+    ]
+    .into_iter()
+    .filter(|(_, a, b)| a != b)
+    .map(|(k, _, _)| k.to_owned())
+    .collect();
+    let mut out = Vec::with_capacity(pages.len());
+    for p in pages {
+        let Some(before) = previous.pages.iter().find(|q| q.feature == p.feature) else {
+            out.push(AtlasPageChange {
+                index: p.index,
+                feature: p.feature.clone(),
+                state: AtlasPageState::New,
+                changed: Vec::new(),
+                added: Vec::new(),
+                removed: Vec::new(),
+            });
+            continue;
+        };
+        let changed: Vec<String> = p
+            .sources
+            .iter()
+            .filter(|u| before.sources.contains(u) && previous.objects.get(*u) != objects.get(*u))
+            .cloned()
+            .collect();
+        let added: Vec<String> = p.sources.iter().filter(|u| !before.sources.contains(u)).cloned().collect();
+        let removed: Vec<String> = before.sources.iter().filter(|u| !p.sources.contains(u)).cloned().collect();
+        let same = changed.is_empty() && added.is_empty() && removed.is_empty() && parts.is_empty();
+        out.push(AtlasPageChange {
+            index: p.index,
+            feature: p.feature.clone(),
+            state: if same { AtlasPageState::Same } else { AtlasPageState::Changed },
+            changed,
+            added,
+            removed,
+        });
+    }
+    let gone = previous
+        .pages
+        .iter()
+        .filter(|q| !pages.iter().any(|p| p.feature == q.feature))
+        .map(|q| AtlasGonePage { name: q.name.clone(), feature: q.feature.clone() })
+        .collect();
+    kentos_commands::AtlasChanges {
+        pdf: previous.pdf.clone(),
+        sha256: previous.sha256.clone(),
+        date: previous.date.clone(),
+        parts,
+        pages: out,
+        gone,
+    }
 }
 
 /// The layer's look written as an SLD, as `file.export.sld` writes it (docs/adr/0516).
@@ -1059,6 +1174,8 @@ fn atlas(
     bytes: bool,
 ) -> Result<AtlasMade, Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
+    // Docs/adr/4000: the previous atlas's record, read before any page is made.
+    let previous = input.previous.as_deref().map(|p| previous_record(p, &input.sheet)).transpose()?;
     let user = std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default();
@@ -1095,6 +1212,7 @@ fn atlas(
         }
     }
     let objects = kentos_native_application::sheets_sources::object_digests(doc, pages.iter().flat_map(|p| p.sources.iter()));
+    let changes = previous.as_ref().filter(|_| made_pages).map(|r| atlas_changes(r, &pages, &objects, &planned.pin));
     let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
@@ -1110,6 +1228,8 @@ fn atlas(
         findings: serde_json::to_value(&findings).unwrap_or(Value::Null),
         notes,
         read,
+        changes,
+        record: made_pages.then(|| kentos_commands::atlas_record_path(&path.display().to_string())),
         objects,
     };
     let warnings = planned
@@ -1302,6 +1422,10 @@ fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,prog
             ),
             CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
             CallOp::Execute => {
+                // Docs/adr/4000: the record first (nothing written when it cannot be), then the PDF.
+                if let Err(refused) = write_atlas_record(&output) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }

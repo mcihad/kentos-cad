@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Atlasın kaynak kaydı ve değişen sayfalar (9 Kasım 2026; MAP-18, [ADR 4000](../../docs/adr/4000-atlas-update-from-its-record.md)).**
+  Atlası PDF yap PDF'in yanına `<ad>.kaynaklar.json` yazar; `previous` ile her sayfa önceki atlasa göre same, changed
+  (nedenleriyle), new; gone. CAD + CBS.
 - **DXF'te tanımı olmayan öznitelikler (9 Kasım 2026; MAP-17, [ADR 3980](../../docs/adr/3980-dxf-attributes-without-definition.md)).**
   Blok ekinin tanımı olmayan öznitelikleri görünmez ATTRIB (`70 = 1`) olarak yazılır; adı etiket olamayan ya da çok
   satırlı olan KentOS verisinde kalır, söylenir. CAD + CBS.

@@ -97435,7 +97435,7 @@
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",
-      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "atlaspdf"
       ],
@@ -97452,7 +97452,7 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is\nnot bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in\ndegrees), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
+        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_previous` (`previous`:\nnot a record of this sheet's atlas, docs/adr/4000), `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `coverage_not_bound` (`coverage`: `source` for a layer that is\nnot bound), `crs_unsupported` (`crs`: a project without a system, a code the registry does not have, a system in\ndegrees), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
         "properties": {
           "coverage": {
             "$ref": "#/$defs/AtlasCoverage",
@@ -97505,6 +97505,13 @@
             ],
             "description": "The state a plan pinned; the run refuses when the drawing or a bound file is not it."
           },
+          "previous": {
+            "description": "A previous atlas's record (docs/adr/4000; the `.kaynaklar.json` a run wrote beside its PDF), an absolute path:\nthe answer then says which pages changed since, and why (ADR 1320's rule).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "sheet": {
             "description": "The sheet that has the atlas, by id.",
             "type": "string"
@@ -97543,6 +97550,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AtlasChanges"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Asked with a previous record (docs/adr/4000): the changes since it."
           },
           "fields": {
             "description": "The attributes the pages carry (what the sheet's expressions, tables and legends can read).",
@@ -97594,6 +97612,13 @@
               "$ref": "#/$defs/AtlasRead"
             },
             "type": "array"
+          },
+          "record": {
+            "description": "The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.",
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "replaced": {
             "type": "boolean"
@@ -97643,6 +97668,17 @@
             "type": "integer",
             "x-unit": "bytes"
           },
+          "changes": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AtlasChanges"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Asked with a previous record (docs/adr/4000): the changes since it."
+          },
           "fields": {
             "description": "The attributes the pages carry (what the sheet's expressions, tables and legends can read).",
             "items": {
@@ -97694,6 +97730,13 @@
             },
             "type": "array"
           },
+          "record": {
+            "description": "The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "replaced": {
             "type": "boolean"
           },
@@ -97733,6 +97776,7 @@
         "refusals": [
           "invalid_file_path",
           "file_exists",
+          "no_previous",
           "no_sheets",
           "unknown_sheet",
           "no_atlas",
@@ -116336,6 +116380,45 @@
       ],
       "type": "object"
     },
+    "AtlasChanges": {
+      "description": "The changes since a previous atlas (docs/adr/4000): its PDF's name, SHA-256 and day; the project's parts the pages\nread that changed (`settings`, `layers`, `styles`, `sheets`: every page then changed); each page now; the previous\npages whose object is no page now (`gone`: name and object).",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "gone": {
+          "items": {
+            "$ref": "#/$defs/AtlasGonePage"
+          },
+          "type": "array"
+        },
+        "pages": {
+          "items": {
+            "$ref": "#/$defs/AtlasPageChange"
+          },
+          "type": "array"
+        },
+        "parts": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "pdf": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "pdf",
+        "sha256",
+        "date",
+        "pages"
+      ],
+      "type": "object"
+    },
     "AtlasCoverage": {
       "description": "Where an atlas reads its coverage layer's objects from (docs/adr/0638 §3).",
       "oneOf": [
@@ -116351,6 +116434,22 @@
         }
       ]
     },
+    "AtlasGonePage": {
+      "description": "A previous page whose object is no page now.",
+      "properties": {
+        "feature": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "feature"
+      ],
+      "type": "object"
+    },
     "AtlasLayerRole": {
       "description": "What a layer is to an atlas run.",
       "oneOf": [
@@ -116365,6 +116464,47 @@
           "type": "string"
         }
       ]
+    },
+    "AtlasPageChange": {
+      "description": "A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now\nwhose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by\npersistent id in the order listed; `changed` too when the project's parts the pages read changed.",
+      "properties": {
+        "added": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "changed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "feature": {
+          "type": "string"
+        },
+        "index": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "index"
+        },
+        "removed": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "state": {
+          "$ref": "#/$defs/AtlasPageState"
+        }
+      },
+      "required": [
+        "index",
+        "feature",
+        "state"
+      ],
+      "type": "object"
     },
     "AtlasPageInfo": {
       "description": "One page of the atlas as it was made.",
@@ -116424,6 +116564,27 @@
         "bbox"
       ],
       "type": "object"
+    },
+    "AtlasPageState": {
+      "description": "How a page stands against the previous atlas (docs/adr/4000).",
+      "oneOf": [
+        {
+          "enum": [
+            "changed"
+          ],
+          "type": "string"
+        },
+        {
+          "const": "same",
+          "description": "Its object was a page then too, and nothing it lists, nor the project's parts, changed.",
+          "type": "string"
+        },
+        {
+          "const": "new",
+          "description": "Its object was no page then.",
+          "type": "string"
+        }
+      ]
     },
     "AtlasPin": {
       "description": "The state of the drawing an atlas is made from (docs/adr/0534 §2): the project's parts' stamps, each layer's\ndigest and each bound file's SHA-256. A run given a pin refuses (`pin_mismatch`) when what it reads is not it.",

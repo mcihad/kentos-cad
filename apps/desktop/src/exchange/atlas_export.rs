@@ -9,12 +9,15 @@
 //!   out, which attributes the pages carry and which they hold back, and the state they are pinned to. Dışa aktar…
 //!   hands that pin to the command: a drawing or a bound file that has moved on since is refused and the preview is
 //!   asked again; a drawing that moves on while the pages are made is said when the file is written.
+//! - **The update** (docs/adr/4000): the file writes its record beside it (`<name>.kaynaklar.json`); a previous atlas's
+//!   record chosen (Önceki kayıt…), the preview says each page against it: the same, changed (and why: its objects or
+//!   the project's parts), new, and the pages whose object is no page now.
 
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, scrollable};
 use iced::{Element, Fill, Task};
-use kentos_commands::{AtlasExported, CommandResult, CommandWarning, ExportAtlas};
+use kentos_commands::{AtlasChanges, AtlasExported, AtlasPageState, AtlasRecord, CommandResult, CommandWarning, ExportAtlas};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_plot::atlas::{AtlasInput, AtlasPlanned};
@@ -70,6 +73,10 @@ pub struct State {
     /// A text was edited since the preview: the preview is of the last choices.
     pub dirty: bool,
     pub status: Option<(bool, String)>,
+    /// Önceki kayıt (docs/adr/4000): the previous atlas's record and its path, or why it could not be read; the
+    /// preview's pages against it.
+    pub previous: Option<Result<(PathBuf, AtlasRecord), String>>,
+    pub changes: Option<AtlasChanges>,
 }
 
 #[derive(Debug, Clone)]
@@ -93,6 +100,10 @@ pub enum Event {
     Save,
     SavePicked(Option<PathBuf>),
     Written(Box<Result<(AtlasExported, Vec<CommandWarning>), String>>),
+    /// Önceki kayıt… (docs/adr/4000): asked for, chosen (none: given up), taken back.
+    Previous,
+    PreviousPicked(Option<PathBuf>),
+    PreviousClear,
 }
 
 fn event(e: Event) -> Message {
@@ -278,6 +289,8 @@ impl App {
             plan: Err(String::new()),
             dirty: false,
             status: None,
+            previous: None,
+            changes: None,
         })
     }
 
@@ -340,8 +353,23 @@ impl App {
                 .map_err(|e| e.message)
             }
         };
+        // Docs/adr/4000: the pages against the previous record, by the command's rule.
+        let changes = match (&self.exchange, &plan) {
+            (Some(Window::AtlasExport(s)), Ok(planned)) => match &s.previous {
+                Some(Ok((_, record))) => {
+                    let objects = kentos_native_application::sheets_sources::object_digests(
+                        &doc.model,
+                        planned.pages.iter().flat_map(|p| p.sources.iter()),
+                    );
+                    Some(kentos_headless::file_commands::atlas_changes(record, &planned.pages, &objects, &planned.pin))
+                }
+                _ => None,
+            },
+            _ => None,
+        };
         if let Some(Window::AtlasExport(s)) = &mut self.exchange {
             s.plan = plan;
+            s.changes = changes;
             s.dirty = false;
         }
     }
@@ -461,6 +489,10 @@ impl App {
                     // The state the preview showed: a drawing that moved on since is refused.
                     pin: Some(planned.pin.clone()),
                     coverage: s.coverage(),
+                    previous: match &s.previous {
+                        Some(Ok((path, _))) => Some(path.display().to_string()),
+                        _ => None,
+                    },
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
                 // The pages are made on a copy of the drawing as it is now, on a thread of their own.
@@ -485,6 +517,12 @@ impl App {
                         _ => false,
                     };
                     self.close_exchange();
+                    let record = out
+                        .record
+                        .as_deref()
+                        .and_then(|r| std::path::Path::new(r).file_name())
+                        .map(|n| format!("; kaynak kaydı {}", n.to_string_lossy()))
+                        .unwrap_or_default();
                     self.announce(
                         if warnings.is_empty() && !moved {
                             Level::Success
@@ -492,7 +530,7 @@ impl App {
                             Level::Warn
                         },
                         format!(
-                            "{} yazıldı: {} sayfa; çizim durumu {}.",
+                            "{} yazıldı: {} sayfa; çizim durumu {}{record}.",
                             out.path,
                             out.pages.len(),
                             out.pin.digest.get(..12).unwrap_or(&out.pin.digest)
@@ -514,6 +552,37 @@ impl App {
                     }
                 }
             },
+            Event::Previous => {
+                return Task::perform(
+                    async {
+                        rfd::AsyncFileDialog::new()
+                            .set_title("Önceki atlasın kaynak kaydı")
+                            .add_filter("Atlas kaynak kaydı (.kaynaklar.json)", &["json"])
+                            .pick_file()
+                            .await
+                            .map(|f| f.path().to_path_buf())
+                    },
+                    |p| event(Event::PreviousPicked(p)),
+                );
+            }
+            Event::PreviousPicked(None) => {}
+            Event::PreviousPicked(Some(path)) => {
+                if let Some(Window::AtlasExport(s)) = &mut self.exchange {
+                    let sheet = s.sheets.get(s.sheet).map(|r| r.id.clone()).unwrap_or_default();
+                    s.previous = Some(
+                        kentos_headless::file_commands::previous_record(&path.display().to_string(), &sheet)
+                            .map(|r| (path.clone(), r))
+                            .map_err(|e| e.message),
+                    );
+                }
+                self.atlas_replan();
+            }
+            Event::PreviousClear => {
+                if let Some(Window::AtlasExport(s)) = &mut self.exchange {
+                    s.previous = None;
+                    s.changes = None;
+                }
+            }
         }
         Task::none()
     }
@@ -813,7 +882,50 @@ impl App {
                 false
             }
         };
-        preview = preview.push(words::summary(lines));
+        // Docs/adr/4000: against the previous atlas.
+        let mut previous = iced::widget::Row::new()
+            .spacing(8)
+            .align_y(iced::Alignment::Center)
+            .push(words::secondary("Önceki kayıt…", Some(event(Event::Previous))));
+        match &s.previous {
+            Some(Ok((path, _))) => {
+                previous = previous
+                    .push(label::caption(path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()))
+                    .push(words::ghost("Kaldır", Some(event(Event::PreviousClear))));
+            }
+            Some(Err(why)) => lines.push(words::text_line(Line::Warn, why.clone())),
+            None => {}
+        }
+        if let Some(c) = &s.changes {
+            let count = |st: AtlasPageState| c.pages.iter().filter(|p| p.state == st).count();
+            let mut said = format!(
+                "Önceki atlasa ({}, {}) göre: {} sayfa değişti, {} yeni, {} aynı",
+                c.pdf,
+                c.date,
+                count(AtlasPageState::Changed),
+                count(AtlasPageState::New),
+                count(AtlasPageState::Same)
+            );
+            if !c.gone.is_empty() {
+                said.push_str(&format!("; {} sayfa artık yok ({})", c.gone.len(), c.gone.iter().map(|g| g.name.as_str()).collect::<Vec<_>>().join(", ")));
+            }
+            if !c.parts.is_empty() {
+                let words: Vec<&str> = c
+                    .parts
+                    .iter()
+                    .map(|k| match k.as_str() {
+                        "settings" => "proje ayarları",
+                        "layers" => "katmanlar",
+                        "styles" => "stiller",
+                        _ => "paftalar",
+                    })
+                    .collect();
+                said.push_str(&format!("; değişen parçalar: {} (her sayfa değişmiş sayılır)", words.join(", ")));
+            }
+            said.push('.');
+            lines.push(words::text_line(if count(AtlasPageState::Same) == c.pages.len() { Line::Ok } else { Line::Info }, said));
+        }
+        preview = preview.push(words::summary(lines)).push(previous);
         if let Ok(p) = &s.plan {
             let mut pages = Column::new().spacing(2).push(
                 row![
@@ -823,6 +935,8 @@ impl App {
                     container(label::caption(format.axes_text("Merkez (Y, X)"))).width(200),
                     // Docs/adr/3600: the objects the page draws or reads, its own first.
                     container(label::caption("Kaynak")).width(60),
+                    // Docs/adr/4000: against the previous atlas.
+                    container(label::caption("Değişim")).width(80),
                 ]
                 .spacing(8),
             );
@@ -839,6 +953,7 @@ impl App {
                         )))
                         .width(200),
                         container(label::body(page.sources.len().to_string())).width(60),
+                        container(label::body(change_word(s.changes.as_ref(), page.index))).width(80),
                     ]
                     .spacing(8),
                 );
@@ -886,5 +1001,18 @@ impl App {
                 .max_height(760.0)
                 .on_close(Some(message(Exchange::Close))),
         )
+    }
+}
+
+/// A page's change in words (docs/adr/4000): empty without a previous record.
+fn change_word(changes: Option<&AtlasChanges>, index: u32) -> String {
+    let Some(c) = changes.and_then(|c| c.pages.iter().find(|p| p.index == index)) else { return String::new() };
+    match c.state {
+        AtlasPageState::Same => "aynı".into(),
+        AtlasPageState::New => "yeni".into(),
+        AtlasPageState::Changed => {
+            let n = c.changed.len() + c.added.len() + c.removed.len();
+            if n == 0 { "değişti".into() } else { format!("değişti ({n})") }
+        }
     }
 }

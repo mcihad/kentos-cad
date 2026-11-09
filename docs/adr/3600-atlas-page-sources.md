@@ -62,7 +62,8 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-18, altıncı tur. Durum: taslak. ADR 132
 
 ## Sonra
 
-- Atlasın güncelleme yayını: önceki çıktının kaynak dökümüyle değişen sayfaların bulunması (ADR 1320'nin `previous`'u
-  gibi). Kayıt bugün yalnız cevaptadır; çıktının yanında bir kayıt dosyası gerekir (ADR 0534'ün “Sonra”sı).
+- ~~Atlasın güncelleme yayını: önceki çıktının kaynak dökümüyle değişen sayfaların bulunması (ADR 1320'nin `previous`'u
+  gibi). Kayıt bugün yalnız cevaptadır; çıktının yanında bir kayıt dosyası gerekir (ADR 0534'ün “Sonra”sı).~~
+  [ADR 4000](4000-atlas-update-from-its-record.md) (yalnız değişen sayfaların PDF'i Sonra).
 - Total station ve nivelman kalitesi (MAP-18'in öbür maddesi).
 - Web (TODOS §0.2).

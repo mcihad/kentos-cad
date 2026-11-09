@@ -258,6 +258,7 @@ def cases():
         out.append({"name": name, "setup": setup_, "steps": steps})
 
     source_cases(case, P)
+    update_cases(case, P)
 
     case("Plan: yüz sayfa; katman süzgecinden geçmeyen beş parsel sayfa olmaz, sıra numaraya göre, ad ada/numara, "
          "merkez parselin ortası, büyük parsel 1/1000'de", [
@@ -482,6 +483,59 @@ def source_cases(case, P):
     case("Bağlı olmayan kapsam katmanı kaynaktan okunamaz", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "coverage": "source"},
          "result": refused("coverage_not_bound", "coverage")}])
+
+
+def update_cases(case, P):
+    """Docs/adr/4000: the record beside the PDF and the pages against it, ADR 1320's rule by hand: a page by its parcel;
+    the objects it lists then and now whose digest changed (the one edited), added, removed; a page whose parcel left
+    the pages is gone. In the atlas-map-only setup, whose pages list their neighbours alone."""
+    record = "$tmp/atlas.kaynaklar.json"
+    then = pages()
+
+    def listed(page):
+        return page_sources(page, overview=False)
+
+    def against(now, edited):
+        out = []
+        for p in now:
+            before = next((q for q in then if q["name"] == p["name"]), None)
+            if before is None:
+                out.append({"index": p["index"], "feature": f"$uidOf:{int(p['name'].split('/')[1])}", "state": "new"})
+                continue
+            changed = [u for u in listed(p) if u in listed(before) and u == f"$uidOf:{edited}"]
+            row = {"index": p["index"], "feature": f"$uidOf:{int(p['name'].split('/')[1])}",
+                   "state": "changed" if changed else "same"}
+            if changed:
+                row["changed"] = changed
+            out.append(row)
+        return out
+
+    # The owner of parcel 2 changes: every page that lists it (its own and its neighbours') changed, by that object.
+    changed = against(then, 2)
+    assert sum(1 for c in changed if c["state"] == "changed") > 1, "its neighbours list it too"
+    case("Güncelleme: kayıt PDF'in yanına yazılır; bir parselin özniteliği değişince onu listeleyen sayfalar değişti, "
+         "öbürleri aynı", [
+             {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done({"record": record})},
+             {"command": "cad.entities.set", "input": {"uids": ["$uidOf:2"], "operation": "attributes",
+                                                         "attrs": {"Malik": "Yeni Malik"}}, "result": done()},
+             {"op": "plan", "input": {"path": "$tmp/atlas-2.pdf", "sheet": "atlas-paftasi", "previous": record},
+              "result": done({"record": "$tmp/atlas-2.kaynaklar.json",
+                              "changes": {"pdf": "atlas.pdf", "sha256": "$any", "date": "$any", "pages": changed}})}],
+         "plain")
+    # Parcel 3 is cancelled: its page is gone, the pages after it move up, its neighbours list it changed.
+    now = pages(keep=lambda p: p["n"] != 3)
+    gone = against(now, 3)
+    case("Güncelleme: iptal edilen parselin sayfası artık yok; komşu sayfalar onu değişmiş listeler", [
+        {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done({"record": record})},
+        {"command": "cad.entities.set", "input": {"uids": ["$uidOf:3"], "operation": "attributes",
+                                                    "attrs": {"Durum": "iptal"}}, "result": done()},
+        {"op": "plan", "input": {"path": "$tmp/atlas-2.pdf", "sheet": "atlas-paftasi", "previous": record},
+         "result": done({"changes": {"pdf": "atlas.pdf", "pages": gone,
+                                     "gone": [{"name": "A1/3", "feature": "$uidOf:3"}]}})}],
+        "plain")
+    case("Güncelleme: kayıt olmayan önceki dosya reddedilir", [
+        {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "previous": "$tmp/yok.kaynaklar.json"},
+         "result": refused("no_previous", "previous")}], "plain")
 
 
 def document():
