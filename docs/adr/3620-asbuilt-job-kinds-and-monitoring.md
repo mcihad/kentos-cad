@@ -98,5 +98,5 @@ maddesi.
 - Her dönemin kendi CRS ve epoğunun karşılaştırılması. Bugün iki katman aynı çizimde, aynı CRS'te varsayılır; farkı
   kontrol noktaları söyler.
 - Hareketin anlamlılık sınaması (dönem kovaryanslarıyla kongrüens testi). Bugün sınırı kullanıcı verir.
-- Yetkili inceleme kaydı ve yüzeye en yakın uzaklık (MAP-19'un öbür maddeleri).
+- Yetkili inceleme kaydı (MAP-19'un öbür maddesi; yüzeye en yakın uzaklık [ADR 4020](4020-asbuilt-nearest-distance-to-surface.md)'de).
 - Web (TODOS §0.2).

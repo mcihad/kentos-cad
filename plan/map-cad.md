@@ -49,7 +49,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640 | bütçe (gerçek veriyle ölçüm); öbür çizimlerin kendi hesabının içinde durması; tarif katmanının grubu ve tam stili | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -2078,6 +2078,14 @@ dönemle yalnız adla karşılaştırılır (fark = hareket), yüzey, çizgi, ye
 `checked`/`moved`/`missing`; başvuruya iki dönem katmanı ve 14 durum (62), Python'un aritmetiğiyle hareketler ve ters
 koşu, MCP; Uygulama kontrolü'nde İş türü, izleme formu ve hareket sözleriyle tablo. Açık: zaman serisi (ikiden çok
 dönem), uyarı ve alarm eşikleri, dönemlerin CRS ve epoğu, anlamlılık sınaması, yetkili inceleme kaydı.
+
+**9 Kasım 2026, yedinci tur — yüzeye en yakın uzaklık ([ADR 4020](../docs/adr/4020-asbuilt-nearest-distance-to-surface.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Trimble Access'in Measure to surface'i (ölçülen noktadan yüzey modeline en yakın
+uzaklık ve en yakın noktanın koordinatları saklanır; işaret alete göre), 9 Kasım 2026'da okundu. Kanıtlanan: yüzeyle
+karşılaştırılan her noktaya `nearest` (işareti düşey farkınki) ve `nearestAt`; çekirdekte üçgene en yakın yer (köşe,
+kenar, yüz bölgeleri) ve zeminin ızgarasıyla aday üçgenler; `surfaceBy: nearest` yüzey sınırını ona uygular; başvuruda
+düzlemin dikdörtgenine kapalı biçim (65 durum), Python (normal boyunca ayak), MCP; Uygulama kontrolü'nde Yüzey farkı
+seçimi ve En yakın sütunu. Açık: zaman serisi, yetkili inceleme kaydı, alete göre işaret.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

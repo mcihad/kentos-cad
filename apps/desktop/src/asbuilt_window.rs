@@ -46,7 +46,7 @@ const DROP_PACKAGE: &str = "Paketi kaldır";
 /// The record checked with its package's own design (docs/adr/2820).
 const PACKAGE_DESIGN: &str = "paketin tasarımıyla";
 /// The choice that leaves a layer or the surface out.
-const NONE: &str = "";
+pub(crate) const NONE: &str = "";
 
 /// Which points the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -93,6 +93,8 @@ pub struct State {
     pub kind: usize,
     /// A monitoring job's control points, by name, comma separated.
     pub control: String,
+    /// The surface's limit held to the nearest distance (docs/adr/4020), not the height difference.
+    pub nearest: bool,
 }
 
 /// The jobs' words, in the kind's order (docs/adr/3620).
@@ -126,6 +128,8 @@ pub enum Event {
     /// The job's kind and a monitoring job's control points (docs/adr/3620).
     Kind(usize),
     Control(String),
+    /// Yüzey farkı (docs/adr/4020): the height difference (false) or the nearest distance.
+    Nearest(bool),
     Close,
 }
 
@@ -213,13 +217,13 @@ pub fn csv(r: &AsbuiltChecked) -> String {
     let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) =
         if watch { (watch_status_word, watch_flag_word) } else { (status_word, flag_word) };
     let mut out = format!(
-        "Nokta;Nesne;{};Eşleme;ΔDoğu (m);ΔKuzey (m);ΔKot (m);Yatay (m);Yüzeye göre (m);Çizgiye göre (m);σ (m);Durum;İşaretler\n",
+        "Nokta;Nesne;{};Eşleme;ΔDoğu (m);ΔKuzey (m);ΔKot (m);Yatay (m);Yüzeye göre (m);Yüzeye en yakın (m);Çizgiye göre (m);σ (m);Durum;İşaretler\n",
         if watch { "Önceki dönemin noktası" } else { "Tasarım noktası" }
     );
     let o = |v: Option<f64>| v.map(|v| v.to_string()).unwrap_or_default();
     for p in &r.points {
         out.push_str(&format!(
-            "{};{};{};{};{};{};{};{};{};{};{};{};{}\n",
+            "{};{};{};{};{};{};{};{};{};{};{};{};{};{}\n",
             p.name,
             p.uid,
             p.design_name.as_deref().unwrap_or(""),
@@ -229,6 +233,7 @@ pub fn csv(r: &AsbuiltChecked) -> String {
             o(p.dh),
             o(p.horizontal),
             o(p.surface),
+            o(p.nearest),
             o(p.normal),
             o(p.sigma),
             status(&p.status),
@@ -343,6 +348,7 @@ impl App {
             } else {
                 Vec::new()
             },
+            surface_by: (!watch && s.nearest).then_some(kentos_commands::AsbuiltSurfaceBy::Nearest),
         })
     }
 
@@ -482,6 +488,7 @@ impl App {
             Event::Design(v) => s.design = v,
             Event::Kind(k) => s.kind = k.min(2),
             Event::Control(v) => s.control = v,
+            Event::Nearest(on) => s.nearest = on,
             Event::Lines(v) => s.lines = v,
             Event::Surface(v) => s.surface = v,
             Event::Field(v) => s.field = v,
@@ -643,6 +650,12 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
+            // Docs/adr/4020: the surface's limit on the height difference or on the nearest distance.
+            .field(
+                "Yüzey farkı",
+                Segmented::new([SurfaceBy(false), SurfaceBy(true)], SurfaceBy(s.nearest), |v| msg(Event::Nearest(v.0))),
+            )
+            .help("Düşey fark noktanın kotu eksi yüzeyinki; en yakın uzaklık noktadan yüzeye en kısa uzaklık (işareti düşey farkınki). Düşey tolerans seçilene uygulanır.")
             .field(
                 "Kaydın saha paketi",
                 row![
@@ -812,9 +825,11 @@ impl App {
                 num("ΔKuzey", 70.0),
                 num("ΔKot", 70.0),
                 num("Yüzey", 70.0),
+                // Docs/adr/4020: the nearest distance to the surface.
+                num("En yakın", 70.0),
                 num("Çizgi", 70.0),
                 col("Durum", 80.0),
-                col("İşaretler", 230.0),
+                col("İşaretler", 160.0),
             ]
         };
         let table = sheet(columns, rows, "Bu süzgeçte nokta yok.", 260.0);
@@ -873,8 +888,19 @@ fn point_row(p: &AsbuiltPoint) -> Vec<String> {
         o(p.dn),
         o(p.dh),
         o(p.surface),
+        o(p.nearest),
         o(p.normal),
         status_word(&p.status).to_owned(),
         p.flags.iter().map(|f| flag_word(f)).collect::<Vec<_>>().join(", "),
     ]
+}
+
+/// Yüzey farkı's two choices (docs/adr/4020): the height difference or the nearest distance.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct SurfaceBy(bool);
+
+impl std::fmt::Display for SurfaceBy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(if self.0 { "En yakın uzaklık" } else { "Düşey fark" })
+    }
 }

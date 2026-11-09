@@ -288,6 +288,8 @@ __all__ = [
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltSurfaceBy",
+    "AsbuiltSurfaceByName",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",

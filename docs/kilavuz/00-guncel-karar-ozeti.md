@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Uygulama kontrolünde yüzeye en yakın uzaklık (9 Kasım 2026; MAP-19, [ADR 4020](../../docs/adr/4020-asbuilt-nearest-distance-to-surface.md)).**
+  `cad.asbuilt.check` her noktanın yüzeye en kısa 3B uzaklığını (`nearest`, işareti düşey farkınki) ve yerini verir;
+  `surfaceBy: nearest` sınırı ona uygular. Harita + Yol + CBS.
 - **Atlasın kaynak kaydı ve değişen sayfalar (9 Kasım 2026; MAP-18, [ADR 4000](../../docs/adr/4000-atlas-update-from-its-record.md)).**
   Atlası PDF yap PDF'in yanına `<ad>.kaynaklar.json` yazar; `previous` ile her sayfa önceki atlasa göre same, changed
   (nedenleriyle), new; gone. CAD + CBS.

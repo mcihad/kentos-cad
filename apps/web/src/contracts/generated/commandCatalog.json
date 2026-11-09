@@ -60272,6 +60272,17 @@
               "null"
             ]
           },
+          "surfaceBy": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltSurfaceBy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the\nnearest distance to the surface (`nearest`, Trimble Access's Measure to surface)."
+          },
           "vertical": {
             "format": "double",
             "type": [
@@ -115928,7 +115939,7 @@
       "type": "object"
     },
     "AsbuiltPoint": {
-      "description": "A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or\nnone) with the differences measured − design (east, north, height) and the horizontal distance; the difference to\nthe surface (measured − surface); the signed normal offset to the nearest design line (left of its direction\npositive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:\n`ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked\nagainst it); else `outside` when a limit is broken, `within`.",
+      "description": "A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or\nnone) with the differences measured − design (east, north, height) and the horizontal distance; the difference to\nthe surface (measured − surface) and its nearest distance to the surface (docs/adr/4020: in space, signed as the\ndifference, with the nearest place); the signed normal offset to the nearest design line (left of its direction\npositive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:\n`ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked\nagainst it); else `outside` when a limit is broken, `within`.",
       "properties": {
         "by": {
           "type": [
@@ -115995,6 +116006,27 @@
         "name": {
           "type": "string"
         },
+        "nearest": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "nearestAt": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": [
+            "array",
+            "null"
+          ],
+          "x-unit": "length"
+        },
         "normal": {
           "format": "double",
           "type": [
@@ -116033,6 +116065,21 @@
         "flags"
       ],
       "type": "object"
+    },
+    "AsbuiltSurfaceBy": {
+      "description": "What a point's surface difference is measured as (docs/adr/4020).",
+      "oneOf": [
+        {
+          "const": "vertical",
+          "description": "Its height less the surface's under it.",
+          "type": "string"
+        },
+        {
+          "const": "nearest",
+          "description": "Its distance to the surface's nearest place.",
+          "type": "string"
+        }
+      ]
     },
     "AssetCounts": {
       "description": "How many of each state.",

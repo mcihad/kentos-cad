@@ -15,6 +15,8 @@ from .types import (  # noqa: F401
     AsbuiltChecked,
     AsbuiltKind,
     AsbuiltKindName,
+    AsbuiltSurfaceBy,
+    AsbuiltSurfaceByName,
 )
 
 if TYPE_CHECKING:
@@ -77,6 +79,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
+        surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -132,6 +135,8 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             quality_field:
             search: Unit: length.
             surface:
+            surface_by: What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
+                nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
             vertical: Unit: length.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -160,6 +165,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             quality_field=quality_field,
             search=search,
             surface=surface,
+            surface_by=surface_by,
             vertical=vertical,
         ), request_id=request_id, expected=expected)
 
@@ -182,6 +188,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
+        surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
     ) -> AsbuiltChecked:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -202,6 +209,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             quality_field=quality_field,
             search=search,
             surface=surface,
+            surface_by=surface_by,
             vertical=vertical,
         ))
 
@@ -224,6 +232,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
+        surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -244,6 +253,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             quality_field=quality_field,
             search=search,
             surface=surface,
+            surface_by=surface_by,
             vertical=vertical,
         ))
 
@@ -266,6 +276,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         quality_field: str | None | Unset = UNSET,
         search: float | None | Unset = UNSET,
         surface: str | None | Unset = UNSET,
+        surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET,
         vertical: float | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -291,6 +302,7 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
             quality_field=quality_field,
             search=search,
             surface=surface,
+            surface_by=surface_by,
             vertical=vertical,
         ), op=op, request_id=request_id, expected=expected)
 

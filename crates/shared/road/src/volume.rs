@@ -313,6 +313,48 @@ impl Ground {
     }
 }
 
+/// The place of the triangle `t` nearest to `p` in space (Ericson, Real-Time Collision Detection §5.1.5: the Voronoi
+/// regions of the corners, the edges and the face, tested in turn), computed from `p` so map coordinates keep their
+/// digits.
+pub fn closest_on_triangle(p: [f64; 3], t: &Triangle) -> [f64; 3] {
+    let sub = |u: [f64; 3], v: [f64; 3]| [u[0] - v[0], u[1] - v[1], u[2] - v[2]];
+    let dot = |u: [f64; 3], v: [f64; 3]| u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
+    let (a, b, c) = (sub(t[0], p), sub(t[1], p), sub(t[2], p));
+    let at = |u: [f64; 3]| [u[0] + p[0], u[1] + p[1], u[2] + p[2]];
+    let along = |u: [f64; 3], d: [f64; 3], k: f64| at([u[0] + k * d[0], u[1] + k * d[1], u[2] + k * d[2]]);
+    let o = [0.0; 3];
+    let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(o, a));
+    let (d1, d2) = (dot(ab, ap), dot(ac, ap));
+    if d1 <= 0.0 && d2 <= 0.0 {
+        return at(a);
+    }
+    let bp = sub(o, b);
+    let (d3, d4) = (dot(ab, bp), dot(ac, bp));
+    if d3 >= 0.0 && d4 <= d3 {
+        return at(b);
+    }
+    let vc = d1 * d4 - d3 * d2;
+    if vc <= 0.0 && d1 >= 0.0 && d3 <= 0.0 {
+        return along(a, ab, d1 / (d1 - d3));
+    }
+    let cp = sub(o, c);
+    let (d5, d6) = (dot(ab, cp), dot(ac, cp));
+    if d6 >= 0.0 && d5 <= d6 {
+        return at(c);
+    }
+    let vb = d5 * d2 - d1 * d6;
+    if vb <= 0.0 && d2 >= 0.0 && d6 <= 0.0 {
+        return along(a, ac, d2 / (d2 - d6));
+    }
+    let va = d3 * d6 - d5 * d4;
+    if va <= 0.0 && (d4 - d3) >= 0.0 && (d5 - d6) >= 0.0 {
+        return along(b, sub(c, b), (d4 - d3) / ((d4 - d3) + (d5 - d6)));
+    }
+    let denom = va + vb + vc;
+    let (v, w) = (vb / denom, vc / denom);
+    at([a[0] + v * ab[0] + w * ac[0], a[1] + v * ab[1] + w * ac[1], a[2] + v * ab[2] + w * ac[2]])
+}
+
 /// Whether `p` is in the counterclockwise triangle `t`, its edges and corners included within 10⁻⁹ m.
 fn holds(t: &Triangle, p: [f64; 2]) -> bool {
     (0..3).all(|k| {
@@ -323,6 +365,28 @@ fn holds(t: &Triangle, p: [f64; 2]) -> bool {
 }
 
 impl Ground {
+    /// The ground's place nearest to `p` in space (docs/adr/4020; Trimble Access's Measure to surface: “the closest
+    /// distance from the measured point to the selected surface model”) among its triangles whose plan boxes come
+    /// within `reach` metres of `p` (the vertical distance to the ground below or above bounds it), and the distance;
+    /// none when no triangle comes within reach.
+    pub fn nearest(&self, p: [f64; 3], reach: f64) -> Option<([f64; 3], f64)> {
+        let grid = self.grid.as_ref()?;
+        let (lo, hi) = (grid.cell(p[0] - reach, p[1] - reach), grid.cell(p[0] + reach, p[1] + reach));
+        let mut best: Option<([f64; 3], f64)> = None;
+        for cy in lo[1]..=hi[1] {
+            for cx in lo[0]..=hi[0] {
+                for &i in &grid.cells[cy * grid.nx + cx] {
+                    let q = closest_on_triangle(p, &self.tris[i as usize]);
+                    let d = ((q[0] - p[0]).powi(2) + (q[1] - p[1]).powi(2) + (q[2] - p[2]).powi(2)).sqrt();
+                    if best.is_none_or(|b| d < b.1) {
+                        best = Some((q, d));
+                    }
+                }
+            }
+        }
+        best
+    }
+
     /// The ground's height at a plan point: the plane of the first of its triangles holding it; none off them.
     pub fn height(&self, p: [f64; 2]) -> Option<f64> {
         let grid = self.grid.as_ref()?;
@@ -903,4 +967,41 @@ pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) ->
         out.uncovered += (whole - covered).max(0.0);
     }
     out
+}
+
+#[cfg(test)]
+mod nearest_tests {
+    use super::*;
+
+    /// The triangle (0,0,0) (10,0,0) (0,10,0): above its face the nearest place is the foot; beside an edge, on the
+    /// edge; past a corner, the corner; the distance is the place's.
+    #[test]
+    fn the_nearest_place_of_a_triangle_is_its_face_edge_or_corner() {
+        let t: Triangle = [[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [0.0, 10.0, 0.0]];
+        assert_eq!(closest_on_triangle([2.0, 3.0, 5.0], &t), [2.0, 3.0, 0.0]);
+        assert_eq!(closest_on_triangle([4.0, -3.0, 1.0], &t), [4.0, 0.0, 0.0]);
+        assert_eq!(closest_on_triangle([-2.0, -1.0, 7.0], &t), [0.0, 0.0, 0.0]);
+        assert_eq!(closest_on_triangle([8.0, 8.0, 0.0], &t), [5.0, 5.0, 0.0]);
+        // At map coordinates the same, to the micrometre.
+        let (x0, y0) = (500_000.0, 4_400_000.0);
+        let far: Triangle = t.map(|c| [c[0] + x0, c[1] + y0, c[2] + 100.0]);
+        let q = closest_on_triangle([x0 + 8.0, y0 + 8.0, 100.0], &far);
+        assert!((q[0] - (x0 + 5.0)).abs() < 1e-6 && (q[1] - (y0 + 5.0)).abs() < 1e-6, "{q:?}");
+    }
+
+    /// A ground tilted 1 in 2 eastwards: a point 1 m above it is 1/√1.25 from it, the foot up the slope's normal.
+    #[test]
+    fn the_nearest_ground_is_along_its_normal() {
+        let z = |x: f64| 100.0 + 0.5 * x;
+        let ground = Ground::new(&[
+            [[0.0, 0.0, z(0.0)], [20.0, 0.0, z(20.0)], [20.0, 20.0, z(20.0)]],
+            [[0.0, 0.0, z(0.0)], [20.0, 20.0, z(20.0)], [0.0, 20.0, z(0.0)]],
+        ]);
+        let p = [10.0, 10.0, z(10.0) + 1.0];
+        let (q, d) = ground.nearest(p, 1.0).expect("within reach");
+        assert!((d - 1.0 / 1.25f64.sqrt()).abs() < 1e-12, "{d}");
+        // The foot moves down the slope's normal: −0.5 east for every 1 up, scaled.
+        assert!((q[0] - (10.0 + 0.5 / 1.25)).abs() < 1e-12 && (q[1] - 10.0).abs() < 1e-12, "{q:?}");
+        assert!(ground.nearest([100.0, 100.0, 0.0], 1.0).is_none_or(|(_, d)| d > 1.0));
+    }
 }

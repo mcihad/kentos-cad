@@ -467,3 +467,71 @@ fn monitoring_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/4020: with the surface alone, every point's nearest distance is the shared case's; the case's limit between
+/// P3's height difference and its nearest distance flags P3 by Düşey fark and not by En yakın uzaklık.
+#[test]
+fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
+    let case = |prefix: &str| {
+        cases()["cases"]
+            .as_array()
+            .expect("cases")
+            .iter()
+            .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(prefix)))
+            .expect(prefix)["steps"][0]
+            .clone()
+    };
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("asbuilt.check"));
+    for e in [A::Design(crate::asbuilt_window::NONE.into()), A::Lines(crate::asbuilt_window::NONE.into()), A::QualityField(String::new())] {
+        let _ = app.update(Message::Asbuilt(e));
+    }
+    let want = case("yüzeye en yakın uzaklık: her noktanın");
+    let r = serde_json::to_value(app.asbuilt.answer.clone().expect("an answer").expect("checked")).expect("json");
+    for (g, w) in r["points"].as_array().expect("points").iter().zip(want["result"]["output"]["points"].as_array().expect("points")) {
+        match (g["nearest"].as_f64(), w["nearest"].as_f64()) {
+            (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{}: {a} {b}", g["name"]),
+            (a, b) => assert_eq!(a, b, "{}", g["name"]),
+        }
+    }
+    let limit = case("yüzeye en yakın uzaklık: düşey sınır")["input"]["vertical"].as_f64().expect("a limit");
+    let _ = app.update(Message::Asbuilt(A::Vertical(limit.to_string().replace('.', ","))));
+    let p3 = |app: &App| {
+        let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+        r.points.iter().find(|p| p.name == "P3").expect("P3").flags.clone()
+    };
+    assert!(p3(&app).contains(&"outsideSurface".to_owned()));
+    let _ = app.update(Message::Asbuilt(A::Nearest(true)));
+    assert!(!p3(&app).contains(&"outsideSurface".to_owned()));
+}
+
+/// docs/adr/4020: the window with Yüzey farkı and the En yakın column, `.run/gui-evidence/yuzeye-en-yakin-4020/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib asbuilt_window_tests::nearest_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn nearest_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yuzeye-en-yakin-4020");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("asbuilt.check"));
+        limits(&mut app);
+        let _ = app.update(Message::Asbuilt(A::Nearest(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("uygulama-kontrolu-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

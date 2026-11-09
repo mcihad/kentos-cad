@@ -30,6 +30,11 @@ The rules, by hand (Trimble Business Center's Point and String Conformance repor
   on). The package's surface PG is the plane 5 cm under G over the south half, [0, 100] × [0, 50], written here as
   four corners and two faces; a point north of it is off the surface. A file not its SHA-256's, or not in the
   package, is refused.
+- the nearest distance to the surface (docs/adr/4020; Trimble Access's Measure to surface): both surfaces are one plane
+  z = c + 0.02 x + 0.01 y over a rectangle, so the nearest place is the foot along the plane's normal, at |d| / k
+  (d the height difference, k = √(1 + 0.02² + 0.01²)), unless the foot leaves the rectangle; then the nearest of its
+  edges in space. Exact fractions, the square root last; signed as d. `surfaceBy: nearest` holds the surface's limit
+  to it.
 """
 
 import copy
@@ -68,6 +73,37 @@ def G(x, y):
     if not (0.0 <= x <= 100.0 and 0.0 <= y <= 100.0):
         return None
     return 100.0 + 0.02 * x + 0.01 * y
+
+
+def nearest(region, c, x, y, z):
+    """Docs/adr/4020: the nearest place to (x, y, z) of the plane z = c + 0.02 x + 0.01 y over the rectangle `region`
+    (x0, y0, x1, y1), and the distance signed as the height difference: the foot along the normal when it is in the
+    rectangle, else the nearest of the rectangle's edges in space; exact fractions, the square root last."""
+    from fractions import Fraction as F
+    a, b, c_ = F(0.02), F(0.01), F(c)
+    X, Y, Z = F(x), F(y), F(z)
+    plane = lambda u, v: c_ + a * u + b * v
+    d = Z - plane(X, Y)
+    k2 = 1 + a * a + b * b
+    qx, qy = X + a * d / k2, Y + b * d / k2
+    x0, y0, x1, y1 = (F(t) for t in region)
+    if x0 <= qx <= x1 and y0 <= qy <= y1:
+        q, dist2 = (qx, qy, Z - d / k2), d * d / k2
+    else:
+        corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+        best = None
+        for (u0, v0), (u1, v1) in zip(corners, corners[1:] + corners[:1]):
+            A, B = (u0, v0, plane(u0, v0)), (u1, v1, plane(u1, v1))
+            e = [B[i] - A[i] for i in range(3)]
+            t = sum((P_ - A_) * e_ for P_, A_, e_ in zip((X, Y, Z), A, e)) / sum(e_ * e_ for e_ in e)
+            t = min(max(t, F(0)), F(1))
+            r = tuple(A[i] + t * e[i] for i in range(3))
+            dd = sum((r[i] - (X, Y, Z)[i]) ** 2 for i in range(3))
+            if best is None or dd < best[1]:
+                best = (r, dd)
+        q, dist2 = best
+    dist = math.sqrt(dist2) * (1 if d >= 0 else -1)
+    return dist, [X0 + float(q[0]), Y0 + float(q[1]), float(q[2])]
 
 
 def PG(x, y):
@@ -356,7 +392,7 @@ def package_block(manifest, i, path):
 
 
 def report(design=True, surface=True, lines=True, search=None, horizontal=None, vertical=None, quality=None,
-           expected=None, quality_field=True, plan=None, ground=G, measured=None):
+           expected=None, quality_field=True, plan=None, ground=G, measured=None, surface_by=None):
     """`plan`: the design compared, (points, lines, their ids), the package's (docs/adr/2820); none: the drawing's.
     `ground`: the surface compared, the drawing's G or the package's PG (docs/adr/3220)."""
     d_ids, l_ids, m_ids = ids()
@@ -418,7 +454,11 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
                 flags.append("offSurface")
             elif z is not None:
                 row["surface"] = z - g
-                if vertical is not None and abs(z - g) > vertical:
+                region, c = ((0.0, 0.0, 100.0, 100.0), 100.0) if ground is G else ((0.0, 0.0, 100.0, 50.0), 99.95)
+                near, at = nearest(region, c, x, y, z)
+                row["nearest"], row["nearestAt"] = near, at
+                held = near if surface_by == "nearest" else z - g
+                if vertical is not None and abs(held) > vertical:
                     flags.append("outsideSurface")
                     outside = True
         on_line = False
@@ -525,7 +565,8 @@ def answer(i):
     if pkg is None:
         return report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
                       horizontal=i.get("horizontal"), vertical=i.get("vertical"), quality=i.get("quality"),
-                      expected=i.get("expectedDesign"), quality_field="qualityField" in i)
+                      expected=i.get("expectedDesign"), quality_field="qualityField" in i,
+                      surface_by=i.get("surfaceBy"))
     carries = pkg.endswith("yuzeyli-paket.zip")
     manifest = (surface_manifest() if carries else dict(CURRENT, designDigest=digest()) if pkg.endswith("saha-paketi.zip")
                 else OLDER)
@@ -600,6 +641,26 @@ def refused(name, i, code, message, path_=None, setup_=None):
     return case
 
 
+def nearest_cases():
+    """Docs/adr/4020: the nearest distance to the surface on every point the surface takes; a limit between P3's height
+    difference and its nearest distance breaks the one and holds the other."""
+    plain_in = inp(design=None, lines=None, search=None, horizontal=None, vertical=None, quality=None, qualityField=None)
+    plain = answer(plain_in)
+    p3 = next(p for p in plain["points"] if p["name"] == "P3")
+    assert abs(p3["nearest"]) < abs(p3["surface"])
+    limit = (abs(p3["surface"]) + abs(p3["nearest"])) / 2
+    by_vertical = inp(design=None, lines=None, search=None, horizontal=None, vertical=limit, quality=None,
+                      qualityField=None)
+    by_nearest = dict(by_vertical, surfaceBy="nearest")
+    flags = lambda a: next(p["flags"] for p in a["points"] if p["name"] == "P3")
+    assert "outsideSurface" in flags(answer(by_vertical)) and "outsideSurface" not in flags(answer(by_nearest))
+    return [
+        ok("yüzeye en yakın uzaklık: her noktanın yüzeye uzaklığı ve en yakın yeri, düşey farkın işaretiyle", plain_in),
+        ok("yüzeye en yakın uzaklık: düşey sınır P3'ün düşey farkını aşar", by_vertical),
+        ok("yüzeye en yakın uzaklık: aynı sınır en yakın uzaklığa uygulanınca P3 içeride", by_nearest),
+    ]
+
+
 def cases():
     full = answer(FULL)
     st = {p["name"]: (p["status"], p["flags"]) for p in full["points"]}
@@ -651,7 +712,7 @@ def cases():
                 "surface"),
         refused("kurulamayan yüzey", inp(surface="Boş"), "terrain_unbuildable", "$any", None),
         refused("CBS projesinde yüzey", FULL, NOT_MAP[0], NOT_MAP[1], None, setup_=setup("gis")),
-    ] + package_cases() + monitoring_cases()
+    ] + package_cases() + monitoring_cases() + nearest_cases()
 
 
 WATCH = {"kind": "monitoring", "measured": "donem2", "design": "donem1", "horizontal": 0.008, "vertical": 0.01,

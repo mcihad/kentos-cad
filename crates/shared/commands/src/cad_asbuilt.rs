@@ -118,6 +118,25 @@ pub struct AsbuiltCheck {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub control: Vec<String>,
+    /// What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
+    /// nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub surface_by: Option<AsbuiltSurfaceBy>,
+}
+
+/// What a point's surface difference is measured as (docs/adr/4020).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum AsbuiltSurfaceBy {
+    /// Its height less the surface's under it.
+    #[default]
+    Vertical,
+    /// Its distance to the surface's nearest place.
+    Nearest,
 }
 
 /// What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation
@@ -202,7 +221,8 @@ pub struct AsbuiltPackage {
 
 /// A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or
 /// none) with the differences measured − design (east, north, height) and the horizontal distance; the difference to
-/// the surface (measured − surface); the signed normal offset to the nearest design line (left of its direction
+/// the surface (measured − surface) and its nearest distance to the surface (docs/adr/4020: in space, signed as the
+/// difference, with the nearest place); the signed normal offset to the nearest design line (left of its direction
 /// positive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:
 /// `ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked
 /// against it); else `outside` when a limit is broken, `within`.
@@ -243,6 +263,14 @@ pub struct AsbuiltPoint {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub surface: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub nearest: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub nearest_at: Option<[f64; 3]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]

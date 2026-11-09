@@ -3,9 +3,10 @@
 /**
  * A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or
  * none) with the differences measured − design (east, north, height) and the horizontal distance; the difference to
- * the surface (measured − surface); the signed normal offset to the nearest design line (left of its direction
+ * the surface (measured − surface) and its nearest distance to the surface (docs/adr/4020: in space, signed as the
+ * difference, with the nearest place); the signed normal offset to the nearest design line (left of its direction
  * positive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:
  * `ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked
  * against it); else `outside` when a limit is broken, `within`.
  */
-export type AsbuiltPoint = { uid: string, name: string, designUid?: string, designName?: string, by?: string, de?: number, dn?: number, dh?: number, horizontal?: number, surface?: number, normal?: number, lineUid?: string, sigma?: number, status: string, flags: Array<string>, };
+export type AsbuiltPoint = { uid: string, name: string, designUid?: string, designName?: string, by?: string, de?: number, dn?: number, dh?: number, horizontal?: number, surface?: number, nearest?: number, nearestAt?: [number, number, number], normal?: number, lineUid?: string, sigma?: number, status: string, flags: Array<string>, };

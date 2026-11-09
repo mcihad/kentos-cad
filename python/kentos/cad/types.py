@@ -587,6 +587,20 @@ AsbuiltKindName = Literal["asBuilt", "stakeout", "monitoring"]
 """The names of :class:`AsbuiltKind`, for a plain string."""
 
 
+class AsbuiltSurfaceBy(_StrEnum):
+    """What a point's surface difference is measured as (docs/adr/4020).
+
+    - ``vertical``: Its height less the surface's under it.
+    - ``nearest``: Its distance to the surface's nearest place.
+    """
+    VERTICAL = "vertical"
+    NEAREST = "nearest"
+
+
+AsbuiltSurfaceByName = Literal["vertical", "nearest"]
+"""The names of :class:`AsbuiltSurfaceBy`, for a plain string."""
+
+
 class AssetKind(_StrEnum):
     """What a linked file is.
 
@@ -16917,6 +16931,8 @@ class AsbuiltCheck(_Model):
             (another surface, or its sources' digest not the package's). Needs `package`.
         quality: Unit: length.
         search: Unit: length.
+        surface_by: What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
+            nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
         vertical: Unit: length.
     """
     measured: str
@@ -16933,6 +16949,7 @@ class AsbuiltCheck(_Model):
     quality_field: str | None | Unset = UNSET
     search: float | None | Unset = UNSET
     surface: str | None | Unset = UNSET
+    surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET
     vertical: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -16964,6 +16981,8 @@ class AsbuiltCheck(_Model):
             out["search"] = None if self.search is None else float(self.search)
         if self.surface is not UNSET:
             out["surface"] = self.surface
+        if self.surface_by is not UNSET:
+            out["surfaceBy"] = None if self.surface_by is None else _enum_out(self.surface_by)
         if self.vertical is not UNSET:
             out["vertical"] = None if self.vertical is None else float(self.vertical)
         return out
@@ -16985,6 +17004,7 @@ class AsbuiltCheck(_Model):
             quality_field=data.get("qualityField", UNSET),
             search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
             surface=data.get("surface", UNSET),
+            surface_by=UNSET if "surfaceBy" not in data else None if data["surfaceBy"] is None else _enum_in(AsbuiltSurfaceBy, data["surfaceBy"]),
             vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
@@ -17212,7 +17232,8 @@ class AsbuiltPackage(_Model):
 class AsbuiltPoint(_Model):
     """A measured point as checked: its object and name; the design point it is matched to (`by`: `name`, `place` or
     none) with the differences measured − design (east, north, height) and the horizontal distance; the difference to
-    the surface (measured − surface); the signed normal offset to the nearest design line (left of its direction
+    the surface (measured − surface) and its nearest distance to the surface (docs/adr/4020: in space, signed as the
+    difference, with the nearest place); the signed normal offset to the nearest design line (left of its direction
     positive) and that line (a line point only); its σ; its status and flags (of [`ASBUILT_FLAGS`]). The status:
     `ambiguous`; `unmatched` when neither a design point nor a line takes it (a surface alone: every point is checked
     against it); else `outside` when a limit is broken, `within`.
@@ -17221,6 +17242,8 @@ class AsbuiltPoint(_Model):
         dh: Unit: length.
         dn: Unit: length.
         horizontal: Unit: length.
+        nearest: Unit: length.
+        nearest_at: Unit: length.
         normal: Unit: length.
         sigma: Unit: length.
         surface: Unit: length.
@@ -17237,6 +17260,8 @@ class AsbuiltPoint(_Model):
     dn: float | None | Unset = UNSET
     horizontal: float | None | Unset = UNSET
     line_uid: str | None | Unset = UNSET
+    nearest: float | None | Unset = UNSET
+    nearest_at: list[float] | None | Unset = UNSET
     normal: float | None | Unset = UNSET
     sigma: float | None | Unset = UNSET
     surface: float | None | Unset = UNSET
@@ -17263,6 +17288,10 @@ class AsbuiltPoint(_Model):
             out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
         if self.line_uid is not UNSET:
             out["lineUid"] = self.line_uid
+        if self.nearest is not UNSET:
+            out["nearest"] = None if self.nearest is None else float(self.nearest)
+        if self.nearest_at is not UNSET:
+            out["nearestAt"] = None if self.nearest_at is None else [float(e0) for e0 in self.nearest_at]
         if self.normal is not UNSET:
             out["normal"] = None if self.normal is None else float(self.normal)
         if self.sigma is not UNSET:
@@ -17286,6 +17315,8 @@ class AsbuiltPoint(_Model):
             dn=UNSET if "dn" not in data else None if data["dn"] is None else float(data["dn"]),
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
             line_uid=data.get("lineUid", UNSET),
+            nearest=UNSET if "nearest" not in data else None if data["nearest"] is None else float(data["nearest"]),
+            nearest_at=UNSET if "nearestAt" not in data else None if data["nearestAt"] is None else [float(e0) for e0 in data["nearestAt"]],
             normal=UNSET if "normal" not in data else None if data["normal"] is None else float(data["normal"]),
             sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
             surface=UNSET if "surface" not in data else None if data["surface"] is None else float(data["surface"]),
@@ -131016,6 +131047,8 @@ __all__ = [
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltSurfaceBy",
+    "AsbuiltSurfaceByName",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",

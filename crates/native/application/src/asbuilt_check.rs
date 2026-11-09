@@ -13,7 +13,7 @@
 //! and then its lines (`l<TAB>x,y;x,y…`), each on its own line, in the drawing's order.
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{
+use kentos_commands::{AsbuiltSurfaceBy, 
     ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltControl, AsbuiltKind, AsbuiltMissing,
     AsbuiltPackage, AsbuiltPoint, CommandResult, Entity, Vec2,
 };
@@ -33,9 +33,10 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
 }
 
-/// The surface the record is set against: the drawing's, or the one the package carries (docs/adr/3220).
+/// The surface the record is set against: the drawing's, or the one the package carries (docs/adr/3220); with its
+/// triangles laid out for the nearest place (docs/adr/4020).
 enum Heights<'a> {
-    Drawing(&'a Surface),
+    Drawing(&'a Surface, Ground),
     Package(&'a Ground),
 }
 
@@ -43,10 +44,24 @@ impl Heights<'_> {
     /// The surface's height at a place; none off it (or in a void).
     fn at(&self, p: Vec2) -> Option<f64> {
         match self {
-            Heights::Drawing(s) => s.height(p.x, p.y).z,
+            Heights::Drawing(s, _) => s.height(p.x, p.y).z,
             Heights::Package(g) => g.height([p.x, p.y]),
         }
     }
+
+    /// The surface's nearest place to `p` and the distance, within `reach` (docs/adr/4020).
+    fn nearest(&self, p: [f64; 3], reach: f64) -> Option<([f64; 3], f64)> {
+        match self {
+            Heights::Drawing(_, g) => g.nearest(p, reach),
+            Heights::Package(g) => g.nearest(p, reach),
+        }
+    }
+}
+
+/// A surface's kept triangles as the core's ground takes them.
+fn ground_of(s: &Surface) -> Ground {
+    let tris: Vec<[[f64; 3]; 3]> = s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect();
+    Ground::new(&tris)
 }
 
 fn plain(text: &str) -> Option<f64> {
@@ -339,7 +354,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     };
     let heights = match (&ground, surface) {
         (Some(g), _) => Some(Heights::Package(g)),
-        (None, Some(s)) => Some(Heights::Drawing(s)),
+        (None, Some(s)) => Some(Heights::Drawing(s, ground_of(s))),
         (None, None) => None,
     };
     // By name: a name one design point has.
@@ -400,6 +415,8 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             dh: None,
             horizontal: None,
             surface: None,
+            nearest: None,
+            nearest_at: None,
             normal: None,
             line_uid: None,
             sigma: m.sigma,
@@ -442,7 +459,16 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
                     if let Some(mz) = m.z {
                         let d = mz - g;
                         point.surface = Some(d);
-                        if input.vertical.is_some_and(|t| d.abs() > t) {
+                        // Docs/adr/4020: the nearest place in space, within the vertical distance (the foot under or
+                        // over the point is on the surface), signed as the difference.
+                        let near = h.nearest([m.p.x, m.p.y, mz], d.abs()).map(|(q, n)| (q, n.min(d.abs()).copysign(d)));
+                        point.nearest = near.map(|(_, n)| n).or(Some(d));
+                        point.nearest_at = near.map(|(q, _)| q).or(Some([m.p.x, m.p.y, g]));
+                        let held = match input.surface_by.unwrap_or_default() {
+                            AsbuiltSurfaceBy::Vertical => d,
+                            AsbuiltSurfaceBy::Nearest => point.nearest.unwrap_or(d),
+                        };
+                        if input.vertical.is_some_and(|t| held.abs() > t) {
                             flags.push("outsideSurface");
                             outside = true;
                         }
