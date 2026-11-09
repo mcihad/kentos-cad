@@ -35,9 +35,12 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
     şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının
     ortasını içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
     katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
-    noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
-    parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
-    uygunluk iddiası değildir. Ret: invalid_input (tolerance).
+    noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme
+    parçalarını regions'ta taşır (ADR 3440: her bölgenin dış halkası saat yönünün
+    tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre).
+    tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın
+    MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input
+    (tolerance).
     """
     __slots__ = ()
     id = "cad.zoning.check"
@@ -72,9 +75,12 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
         planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını
         içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
         katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
-        noteUnused. Alan ölçen bulgu area taşır. tolerance (m, ilk değer 0,01) bundan dar
-        parçayı saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata
-        uygunluk iddiası değildir. Ret: invalid_input (tolerance).
+        noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme
+        parçalarını regions'ta taşır (ADR 3440: her bölgenin dış halkası saat yönünün
+        tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre).
+        tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın
+        MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input
+        (tolerance).
 
         Args:
             doc: The drawing it works on.

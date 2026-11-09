@@ -165,6 +165,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   (çekirdeğin `topology_edit::changed_edges`/`carried`'ı WASM'a; `neighbours.ts` aynı kuralı çağırmalı).
 - MAP-08 / ADR 3420: web'in Sınır grafiği penceresinde kirişli yay uzaklığı kutusu (`arcTolerance`), “Yay kirişlerle
   çizilmiş” sorunu ve Fark sütunu (komut ortak).
+- MAP-09 / ADR 3440: web'in İmar planı denetimi penceresi bölgeleri komutun cevabından (`regions`) tarayabilir; Alan
+  hücresinde parça sayısı (komut ortak).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

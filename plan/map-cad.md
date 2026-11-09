@@ -39,7 +39,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420 | kalıcı parsel kaydı ve sınır kimliği; aynı yerdeki sorun sözleri; zincirin çizimde vurgusu | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin hata katmanına yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
@@ -1029,6 +1029,14 @@ parsel bulgularının çekirdekteki örtüşme bölgelerini verir (komutun cevab
 renginde tarar, İşareti kaldır'a dek, her bölge ayrı (üst üste binenler birbirini silmez); özet yola giren parselleri
 toplam alanlarıyla, birden çok yoldan girenleri sayıyla söyler; masaüstü testi (üçüncü yolla 101/2: 275 m², 2 yoldan)
 ve resimler. Açık: bölgelerin komutun cevabına girmesi, plan değişikliği taslağı, sembolün karardan seçilmesi.
+
+**9 Kasım 2026, altıncı tur — yola giren bölgeler cevapta ([ADR 3440](../docs/adr/3440-zoning-regions-in-the-answer.md)).**
+Kapsam: **Harita + CBS**. Araştırma: ArcGIS Pro'nun Export Topology Errors'ı (hatanın geometrisi ayrı sınıfta) ve Error
+Inspector'ı. Kanıtlanan: `cad.zoning.check`'in yol genişliği ve yola giren parsel bulguları sayılan örtüşme parçalarını
+`regions`'ta taşır (dış halka saat yönünün tersine, en alttaki köşeden, düz köşeler atılmış; bölgeler ilk köşelerine göre);
+başvuru parçaların sınırını hücrelerden izler; U biçimli yolun iki yerden girdiği yeni durum (47 durum), Python, MCP,
+masaüstü (Alan hücresinde parça sayısı) ve resimler. Açık: plan değişikliği taslağı, sembolün karardan seçilmesi,
+bölgelerin hata katmanına yazılması, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

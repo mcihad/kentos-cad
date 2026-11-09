@@ -140,6 +140,77 @@ fn a_parcel_in_two_roads_is_summed_and_the_parts_hatched() {
     assert!(app.zoning_marks().is_none());
 }
 
+const U_ROAD: &str = "U biçimli yol karara iki yerden girer: tek bulgu, iki bölge, alttaki önce";
+
+/// docs/adr/3440: the U-shaped road enters K1 in two places: one finding whose answer carries the two regions (the
+/// lower first), the Alan cell says “(2 parça)”, and Bulguları göster hatches the same two pieces.
+#[test]
+fn a_road_entering_a_decision_twice_carries_two_regions() {
+    let mut app = opened(Some(Module::Map), U_ROAD);
+    let _ = app.update(Message::Run("zoning.check"));
+    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    assert_eq!(r.findings.len(), 1);
+    let f = &r.findings[0];
+    assert_eq!((f.kind.as_str(), f.regions.len()), ("roadWidth", 2));
+    let lows: Vec<f64> = f.regions.iter().map(|g| g.outer.pts[0].y - 4_420_000.0).collect();
+    assert_eq!(lows, [24.0, 64.0], "the lower first");
+    let fmt = app.format();
+    assert!(app.zoning_shown().iter().any(|x| x.regions.len() == 2));
+    let cell = format!("{} (2 parça)", fmt.area(1200.0));
+    let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+    let shown: Vec<String> = app
+        .zoning_shown()
+        .into_iter()
+        .map(|x| match x.regions.len() {
+            0 | 1 => x.area.map(|a| fmt.area(a)).unwrap_or_default(),
+            k => format!("{} ({k} parça)", fmt.area(x.area.unwrap_or_default())),
+        })
+        .collect();
+    assert!(shown.contains(&cell), "{shown:?}");
+    let _ = app.update(Message::Zoning(Z::Show));
+    let m = app.zoning_marks().expect("hatched");
+    assert_eq!(m.regions.len(), 2);
+}
+
+/// docs/adr/3440: the U road's finding with “(2 parça)” and its two pieces hatched; light wide and dark narrow,
+/// `.run/gui-evidence/bolgeler-3440/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib zoning_window_tests::region_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn region_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bolgeler-3440");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map), U_ROAD);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let _ = app.update(Message::Run("zoning.check"));
+        let _ = app.update(Message::Zoning(Z::Group(Group::Areas)));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+        let _ = app.update(Message::Zoning(Z::Show));
+        app.selection.set(Vec::new());
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("cizimde-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        println!("{}", file.display());
+    }
+}
+
 #[test]
 fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);

@@ -109164,11 +109164,13 @@ class ZoningFinding(_Model):
     measures one, and what it says.
     Attributes:
         area: Unit: area.
+        regions: `roadWidth`, `roadParcel` (docs/adr/3440): the counted pieces of the overlap; none for the other kinds.
     """
     kind: str
     uids: list[str]
     message: str
     area: float | None | Unset = UNSET
+    regions: list[ZoningRegion] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -109177,6 +109179,8 @@ class ZoningFinding(_Model):
         out["message"] = self.message
         if self.area is not UNSET:
             out["area"] = None if self.area is None else float(self.area)
+        if self.regions is not UNSET:
+            out["regions"] = [e0.to_json() for e0 in self.regions]
         return out
 
     @classmethod
@@ -109186,6 +109190,31 @@ class ZoningFinding(_Model):
             uids=list(data["uids"]),
             message=data["message"],
             area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            regions=[ZoningRegion.from_json(e0) for e0 in data["regions"]] if "regions" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ZoningRegion(_Model):
+    """A finding's region (docs/adr/3440): its outer ring counter-clockwise and its holes clockwise, each from its lowest
+    vertex (the westmost of the lowest), the vertices on a straight run between two others left out; the regions in
+    order of their outer rings' first vertices (north, then east).
+    """
+    outer: RingGeometry
+    holes: list[RingGeometry] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["outer"] = self.outer.to_json()
+        if self.holes is not UNSET:
+            out["holes"] = [e0.to_json() for e0 in self.holes]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ZoningRegion:
+        return cls(
+            outer=RingGeometry.from_json(data["outer"]),
+            holes=[RingGeometry.from_json(e0) for e0 in data["holes"]] if "holes" in data else UNSET,
         )
 
 
@@ -133956,4 +133985,5 @@ __all__ = [
     "ZoningCheck",
     "ZoningChecked",
     "ZoningFinding",
+    "ZoningRegion",
 ]

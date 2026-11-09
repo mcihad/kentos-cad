@@ -325,6 +325,323 @@
  },
  "cases": [
   {
+   "name": "U biçimli yol karara iki yerden girer: tek bulgu, iki bölge, alttaki önce",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "İmar planı denetimi",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "imar",
+      "name": "İmar planı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "plan",
+        "name": "Plan sınırı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "karar",
+        "name": "Karar alanları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "notlar",
+        "name": "Plan notları",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yollar",
+        "name": "Yollar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    ],
+    "activeLayer": "karar",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "plan",
+      "attrs": {
+       "PlanKimlik": "UIP-U",
+       "Seviye": "uip",
+       "Durum": "yururlukte"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420100.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K1",
+       "Kullanim": "konut",
+       "TAKS": "0.40",
+       "KAKS": "1.20",
+       "KatAdedi": "3"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420100.0
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "karar",
+      "attrs": {
+       "KararKimlik": "K2",
+       "Kullanim": "yol"
+      },
+      "pts": [
+       {
+        "x": 487050.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4420100.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420100.0
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 4,
+      "layerId": "yollar",
+      "attrs": {
+       "YolKimlik": "Y-U",
+       "Tur": "tasit",
+       "Genislik": "12"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420070.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420070.0
+       }
+      ]
+     }
+    ],
+    "uids": [
+     "0192f5c0-1420-7000-8000-000000000001",
+     "0192f5c0-1420-7000-8000-000000000002",
+     "0192f5c0-1420-7000-8000-000000000003",
+     "0192f5c0-1420-7000-8000-000000000004"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "profile": "imar-plani",
+       "tolerance": 0.01,
+       "plans": 1,
+       "decisions": 2,
+       "notes": 0,
+       "findings": [
+        {
+         "kind": "roadWidth",
+         "uids": [
+          "0192f5c0-1420-7000-8000-000000000002",
+          "0192f5c0-1420-7000-8000-000000000004"
+         ],
+         "area": 1200.0,
+         "message": "“Y-U” yolunun 12 m genişliği içine Konut alanı kararı “K1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487050.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487050.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          },
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420064.0
+             },
+             {
+              "x": 487050.0,
+              "y": 4420064.0
+             },
+             {
+              "x": 487050.0,
+              "y": 4420076.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420076.0
+             }
+            ]
+           }
+          }
+         ]
+        }
+       ],
+       "counts": {
+        "roadWidth": 1
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
    "name": "temiz plan: bulgu yok",
    "setup": {
     "format": "kentos.document",
@@ -13624,7 +13941,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -13633,7 +13974,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -13642,7 +14007,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -13651,7 +14040,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -14619,7 +15032,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y3” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y3” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -14628,7 +15065,39 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 69.0,
-         "message": "“Y3” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y3” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487044.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487044.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -14637,7 +15106,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 25.0,
-         "message": "“Y3” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y3” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420060.0
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -15136,7 +15629,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -15145,7 +15662,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -15154,7 +15695,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.03125
+             },
+             {
+              "x": 487000.0,
+              "y": 4420035.03125
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -15163,7 +15728,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.03125
+             },
+             {
+              "x": 487055.0,
+              "y": 4420035.03125
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -16834,7 +17423,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -16843,7 +17456,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -16852,7 +17489,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -16861,7 +17522,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -16870,7 +17555,31 @@
           "0192f5c0-1420-7000-8000-00000000000d"
          ],
          "area": 20.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -16879,7 +17588,31 @@
           "0192f5c0-1420-7000-8000-00000000000e"
          ],
          "area": 25.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487020.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -16888,7 +17621,31 @@
           "0192f5c0-1420-7000-8000-00000000000f"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -17486,7 +18243,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17495,7 +18276,31 @@
           "0192f5c0-1420-7000-8000-00000000000c"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487044.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487044.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17504,7 +18309,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17513,7 +18342,31 @@
           "0192f5c0-1420-7000-8000-00000000000c"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17522,7 +18375,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17531,7 +18408,31 @@
           "0192f5c0-1420-7000-8000-00000000000c"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487044.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487044.0,
+              "y": 4420060.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17540,7 +18441,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -17549,7 +18474,31 @@
           "0192f5c0-1420-7000-8000-00000000000c"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420060.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -17558,7 +18507,31 @@
           "0192f5c0-1420-7000-8000-00000000000d"
          ],
          "area": 20.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “101/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -17567,7 +18540,31 @@
           "0192f5c0-1420-7000-8000-00000000000e"
          ],
          "area": 25.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “101/2” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487020.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -17576,7 +18573,31 @@
           "0192f5c0-1420-7000-8000-00000000000f"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “102/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -17585,7 +18606,31 @@
           "0192f5c0-1420-7000-8000-00000000000e"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine “101/2” parseli giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine “101/2” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487044.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420000.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487044.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -17594,7 +18639,31 @@
           "0192f5c0-1420-7000-8000-00000000000f"
          ],
          "area": 25.0,
-         "message": "“Y2” yolunun 12 m genişliği içine “102/1” parseli giriyor."
+         "message": "“Y2” yolunun 12 m genişliği içine “102/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487056.0,
+              "y": 4420060.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420060.0
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -18192,7 +19261,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -18201,7 +19294,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -18210,7 +19327,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.03125
+             },
+             {
+              "x": 487000.0,
+              "y": 4420035.03125
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -18219,7 +19360,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.03125
+             },
+             {
+              "x": 487055.0,
+              "y": 4420035.03125
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -18228,7 +19393,31 @@
           "0192f5c0-1420-7000-8000-00000000000d"
          ],
          "area": 0.625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine “101/1” parseli giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine “101/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487020.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -18237,7 +19426,31 @@
           "0192f5c0-1420-7000-8000-00000000000e"
          ],
          "area": 0.78125,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine “101/2” parseli giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine “101/2” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487020.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.96875
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -18246,7 +19459,31 @@
           "0192f5c0-1420-7000-8000-00000000000f"
          ],
          "area": 1.40625,
-         "message": "“Y1” yolunun 10.0625 m genişliği içine “102/1” parseli giriyor."
+         "message": "“Y1” yolunun 10.0625 m genişliği içine “102/1” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.03125
+             },
+             {
+              "x": 487055.0,
+              "y": 4420035.03125
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {
@@ -19372,7 +20609,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A1” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -19381,7 +20642,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Konut alanı kararı “A2” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -19390,7 +20675,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Ticaret alanı kararı “A3” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487045.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadWidth",
@@ -19399,7 +20708,31 @@
           "0192f5c0-1420-7000-8000-00000000000b"
          ],
          "area": 45.0,
-         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine Park kararı “A4” giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487055.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420035.0
+             },
+             {
+              "x": 487100.0,
+              "y": 4420036.0
+             },
+             {
+              "x": 487055.0,
+              "y": 4420036.0
+             }
+            ]
+           }
+          }
+         ]
         },
         {
          "kind": "roadParcel",
@@ -19408,7 +20741,31 @@
           "0192f5c0-1420-7000-8000-00000000000d"
          ],
          "area": 20.0,
-         "message": "“Y1” yolunun 12 m genişliği içine “kimliksiz” parseli giriyor."
+         "message": "“Y1” yolunun 12 m genişliği içine “kimliksiz” parseli giriyor.",
+         "regions": [
+          {
+           "outer": {
+            "pts": [
+             {
+              "x": 487000.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420024.0
+             },
+             {
+              "x": 487020.0,
+              "y": 4420025.0
+             },
+             {
+              "x": 487000.0,
+              "y": 4420025.0
+             }
+            ]
+           }
+          }
+         ]
         }
        ],
        "counts": {

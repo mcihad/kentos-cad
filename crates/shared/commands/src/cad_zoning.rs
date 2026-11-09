@@ -6,6 +6,10 @@
 //! plan note named but missing or a note for areas no area names, a decision whose plan is missing, an upper plan
 //! missing or not of a higher level. Each finding names its objects. The check claims neither the ministry's schema
 //! nor legal conformity. The shared cases are `fixtures/commands/v1/cad.zoning.check.json`.
+//!
+//! docs/adr/3440: a road width's and a road parcel's finding carries its regions (the pieces of the overlap with the
+//! road's corridor that are counted), so that a program draws what the window hatches. Extra field: the command's
+//! version stays.
 
 use std::collections::BTreeMap;
 
@@ -50,6 +54,25 @@ pub struct ZoningFinding {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub area: Option<f64>,
     pub message: String,
+    /// `roadWidth`, `roadParcel` (docs/adr/3440): the counted pieces of the overlap; none for the other kinds.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<ZoningRegion>>"))]
+    pub regions: Vec<ZoningRegion>,
+}
+
+/// A finding's region (docs/adr/3440): its outer ring counter-clockwise and its holes clockwise, each from its lowest
+/// vertex (the westmost of the lowest), the vertices on a straight run between two others left out; the regions in
+/// order of their outer rings' first vertices (north, then east).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ZoningRegion {
+    pub outer: crate::RingGeometry,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::RingGeometry>>"))]
+    pub holes: Vec<crate::RingGeometry>,
 }
 
 /// Output of `cad.zoning.check` v1: the profile, the tolerance, how many plan boundaries, decision areas and plan

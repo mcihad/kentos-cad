@@ -135,7 +135,7 @@ impl App {
         Task::none()
     }
 
-    fn zoning_shown(&self) -> Vec<&ZoningFinding> {
+    pub(crate) fn zoning_shown(&self) -> Vec<&ZoningFinding> {
         match &self.zoning.answer {
             Some(Ok(r)) => r.findings.iter().filter(|f| self.zoning.group.holds(&f.kind)).collect(),
             _ => Vec::new(),
@@ -327,14 +327,20 @@ impl App {
                 vec![
                     kind_word(&x.kind).to_owned(),
                     self.zoning_names(x),
-                    x.area.map(|a| f.area(a)).unwrap_or_default(),
+                    // A road overlap in several pieces says how many (docs/adr/3440).
+                    x.area
+                        .map(|a| match x.regions.len() {
+                            0 | 1 => f.area(a),
+                            k => format!("{} ({k} parça)", f.area(a)),
+                        })
+                        .unwrap_or_default(),
                     x.message.clone(),
                 ]
             })
             .collect();
         let groups = [Group::All, Group::Plans, Group::Decisions, Group::Areas, Group::Notes];
         let table = sheet(
-            vec![col("Bulgu", 140.0), col("Nesne", 100.0), num("Alan", 90.0), Col::rest("Açıklama")],
+            vec![col("Bulgu", 140.0), col("Nesne", 100.0), num("Alan", 160.0), Col::rest("Açıklama")],
             rows,
             "Bu grupta bulgu yok.",
             300.0,

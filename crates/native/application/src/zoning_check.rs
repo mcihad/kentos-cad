@@ -130,9 +130,71 @@ fn run(doc: &Document, input: &ZoningCheck) -> Result<ZoningChecked, Stop> {
     run_with_regions(doc, input).map(|(checked, _)| checked)
 }
 
+/// A finding's regions as the answer gives them (docs/adr/3440): each ring from its lowest vertex (the westmost of the
+/// lowest), the outer counter-clockwise and the holes clockwise, a vertex on a straight run (both its edges straight,
+/// no turn at it) left out; the holes, and the regions, in order of their first vertices.
+fn answered(areas: &[kentos_geometry_core::geom::arrangement::Area]) -> Vec<kentos_commands::ZoningRegion> {
+    let first = |r: &kentos_commands::RingGeometry| r.pts.first().map_or((f64::MAX, f64::MAX), |p| (p.y, p.x));
+    let by_first = |a: &kentos_commands::RingGeometry, b: &kentos_commands::RingGeometry| {
+        let (fa, fb) = (first(a), first(b));
+        fa.0.total_cmp(&fb.0).then(fa.1.total_cmp(&fb.1))
+    };
+    let mut out: Vec<kentos_commands::ZoningRegion> = areas
+        .iter()
+        .map(|a| {
+            let mut holes: Vec<_> = a.holes.iter().map(|h| answered_ring(h, false)).collect();
+            holes.sort_by(by_first);
+            kentos_commands::ZoningRegion { outer: answered_ring(&a.outer, true), holes }
+        })
+        .collect();
+    out.sort_by(|a, b| by_first(&a.outer, &b.outer));
+    out
+}
+
+fn answered_ring(r: &kentos_geometry_core::geom::arrangement::Ring, ccw: bool) -> kentos_commands::RingGeometry {
+    let mut pts: Vec<Vec2> = r.pts.clone();
+    let mut bulges: Vec<f64> = (0..pts.len()).map(|i| r.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
+    // A vertex where the ring stays or runs straight on goes; its edges join.
+    let mut k = 0;
+    while pts.len() > 3 && k < pts.len() {
+        let n = pts.len();
+        let (prev, here, next) = (pts[(k + n - 1) % n], pts[k], pts[(k + 1) % n]);
+        let (ax, ay, bx, by) = (here.x - prev.x, here.y - prev.y, next.x - here.x, next.y - here.y);
+        let same = here == prev;
+        let straight = bulges[(k + n - 1) % n] == 0.0 && bulges[k] == 0.0 && ax * by - ay * bx == 0.0 && ax * bx + ay * by > 0.0;
+        if same || straight {
+            let joined = if same { bulges[k] } else { 0.0 };
+            pts.remove(k);
+            bulges.remove(k);
+            let n = pts.len();
+            bulges[(k + n - 1) % n] = if same { joined } else { bulges[(k + n - 1) % n] };
+            k = k.saturating_sub(1);
+        } else {
+            k += 1;
+        }
+    }
+    let n = pts.len();
+    if (kentos_geometry_core::geom::bulge::bulge_ring_area(&pts, Some(&bulges)) > 0.0) != ccw && n > 0 {
+        // The other way round: the vertices reversed, each edge's bulge the reversed edge's, negated.
+        let old_b = bulges.clone();
+        pts.reverse();
+        bulges = (0..n).map(|k| -old_b[(2 * n - 2 - k) % n]).collect();
+    }
+    let start = (0..n)
+        .min_by(|&i, &j| pts[i].y.total_cmp(&pts[j].y).then(pts[i].x.total_cmp(&pts[j].x)))
+        .unwrap_or(0);
+    pts.rotate_left(start);
+    bulges.rotate_left(start);
+    kentos_commands::RingGeometry {
+        pts: pts.iter().map(|p| kentos_commands::Vec2 { x: p.x, y: p.y }).collect(),
+        bulges: bulges.iter().any(|b| *b != 0.0).then_some(bulges),
+        zs: None,
+    }
+}
+
 /// The answer and each finding's regions (docs/adr/3040): a road width's or a road parcel's overlap with the road's
-/// corridor, as the core's rule finds it; none for the other kinds. The command's answer does not carry them; Bulguları
-/// göster draws them.
+/// corridor, as the core's rule finds it; none for the other kinds. Bulguları göster draws these; the answer carries
+/// the same regions in its own order (docs/adr/3440, [`answered`]).
 pub fn with_regions(
     doc: &Document,
     input: &ZoningCheck,
@@ -164,12 +226,15 @@ fn run_with_regions(
         let mut items = items.to_vec();
         items.sort_by_key(|i| i.at);
         let first = items.first().map_or(-1, |i| i.at as i64);
-        findings.push((
-            order,
-            first,
-            ZoningFinding { kind: kind.to_owned(), uids: items.iter().map(|i| i.uid.clone()).collect(), area, message },
-            pending.take(),
-        ));
+        let regions = pending.take();
+        let finding = ZoningFinding {
+            kind: kind.to_owned(),
+            uids: items.iter().map(|i| i.uid.clone()).collect(),
+            area,
+            message,
+            regions: answered(&regions),
+        };
+        findings.push((order, first, finding, regions));
     };
     // Each class's layer and objects, in the drawing's order.
     let order: Vec<&Entity> = doc.entities().collect();

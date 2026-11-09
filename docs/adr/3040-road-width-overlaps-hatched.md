@@ -51,6 +51,7 @@ kısmının sahnede taranması; parsel bazında toplam (birden çok yoldan)”.
 
 ## Sonra
 
-- Bölgelerin komutun cevabına girmesi (Python ve MCP'de çizilebilir halkalar; ortak durumların üreteciyle).
+- Bölgelerin komutun cevabına girmesi (Python ve MCP'de çizilebilir halkalar; ortak durumların üreteciyle). Yapıldı:
+  [ADR 3440](3440-zoning-regions-in-the-answer.md).
 - Plan değişikliği taslağı; sembolün karardan seçilmesi; resmî şema ve eşleme (MAP-09'un öbür maddeleri).
 - Web (TODOS §0.2).

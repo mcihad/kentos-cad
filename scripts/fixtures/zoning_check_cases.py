@@ -170,6 +170,82 @@ def pieces(region_in, region_out):
     return out
 
 
+def P(x, y):
+    return {"x": X0 + x, "y": Y0 + y}
+
+
+def outlines(region_in, t):
+    """docs/adr/3440: the counted pieces of the union of `region_in` (as `pieces` and `counted` find them) as regions:
+    each piece's boundary traced over its cells (each cell side between a piece's cell and another, its interior on the
+    left), vertices only where the way turns; the outer ring counter-clockwise, the holes clockwise, each from its
+    lowest vertex (the westmost of the lowest); the regions by their first vertices (north, then east)."""
+    xs = sorted({v for r in region_in for v in (r[0], r[2])})
+    ys = sorted({v for r in region_in for v in (r[1], r[3])})
+    inside = lambda x, y: any(r[0] <= x <= r[2] and r[1] <= y <= r[3] for r in region_in)  # noqa: E731
+    on = {(i, j) for i in range(len(xs) - 1) for j in range(len(ys) - 1)
+          if inside((xs[i] + xs[i + 1]) / 2, (ys[j] + ys[j + 1]) / 2)}
+    seen, out = set(), []
+    for start in sorted(on):
+        if start in seen:
+            continue
+        stack, comp = [start], set()
+        seen.add(start)
+        while stack:
+            c = stack.pop()
+            comp.add(c)
+            for d in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                n = (c[0] + d[0], c[1] + d[1])
+                if n in on and n not in seen:
+                    seen.add(n)
+                    stack.append(n)
+        a = sum((xs[i + 1] - xs[i]) * (ys[j + 1] - ys[j]) for i, j in comp)
+        per = 0.0
+        sides = {}
+        for i, j in comp:
+            w, h = xs[i + 1] - xs[i], ys[j + 1] - ys[j]
+            if (i, j - 1) not in comp:
+                per += w
+                sides[(i, j)] = (i + 1, j)
+            if (i + 1, j) not in comp:
+                per += h
+                sides[(i + 1, j)] = (i + 1, j + 1)
+            if (i, j + 1) not in comp:
+                per += w
+                sides[(i + 1, j + 1)] = (i, j + 1)
+            if (i - 1, j) not in comp:
+                per += h
+                sides[(i, j + 1)] = (i, j)
+        if not (per > 0 and 2 * a / per > t):
+            continue
+        rings = []
+        while sides:
+            first = min(sides)
+            loop, at = [first], sides.pop(first)
+            while at != first:
+                loop.append(at)
+                at = sides.pop(at)
+            # Only the turns: a vertex between two sides of one direction goes.
+            n = len(loop)
+            turns = [loop[k] for k in range(n)
+                     if (loop[k][0] - loop[k - 1][0], loop[k][1] - loop[k - 1][1]) != (0, 0) and
+                     ((loop[k][0] - loop[k - 1][0]) * (loop[(k + 1) % n][1] - loop[k][1]) -
+                      (loop[k][1] - loop[k - 1][1]) * (loop[(k + 1) % n][0] - loop[k][0])) != 0]
+            pts = [(xs[i], ys[j]) for i, j in turns]
+            m = len(pts)
+            area2 = sum(pts[k][0] * pts[(k + 1) % m][1] - pts[(k + 1) % m][0] * pts[k][1] for k in range(m))
+            low = min(range(m), key=lambda k: (pts[k][1], pts[k][0]))
+            rings.append((area2 > 0, pts[low:] + pts[:low]))
+        outer = [r for ccw, r in rings if ccw]
+        holes = sorted((r for ccw, r in rings if not ccw), key=lambda r: (r[0][1], r[0][0]))
+        assert len(outer) == 1, "one outer ring a piece"
+        region = {"outer": {"pts": [P(x, y) for x, y in outer[0]]}}
+        if holes:
+            region["holes"] = [{"pts": [P(x, y) for x, y in h]} for h in holes]
+        out.append(((outer[0][0][1], outer[0][0][0]), region))
+    out.sort(key=lambda r: r[0])
+    return [r for _, r in out]
+
+
 def counted(ps, t):
     kept = [a for a, p in ps if p > 0 and 2 * a / p > t]
     return sum(kept) if kept else None
@@ -186,10 +262,11 @@ def intersect(a, b):
 def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), tolerance=0.01):
     found = []
 
-    def say(kind, ats, area, message):
+    def say(kind, ats, area, message, regions=()):
         found.append((KINDS.index(kind), min(ats) if ats else -1,
                       {"kind": kind, "uids": [uid(a + 1) for a in sorted(ats)], **({"area": area} if area is not None
-                                                                                   else {}), "message": message}))
+                                                                                   else {}), "message": message,
+                       **({"regions": list(regions)} if regions else {})}))
 
     for c in ("plan-siniri", "karar-alani", "plan-notu"):
         if c not in classes:
@@ -351,21 +428,24 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
                 x0, y0, x1, y1 = q[1]
                 near = ((max(x0 - tx, 0, tx - x1)) ** 2 + (max(y0 - ty, 0, ty - y1)) ** 2) ** 0.5
                 assert near >= h, "no decision within the turn's round corner"
-            area = counted(pieces([c for cr in corridor for c in intersect(q[1], cr)], []), tolerance)
+            inside = [c for cr in corridor for c in intersect(q[1], cr)]
+            area = counted(pieces(inside, []), tolerance)
             if area is not None:
                 say("roadWidth", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine "
-                                               f"{label('plan-kullanim', g(q, 'Kullanim'))} kararı “{g(q, 'KararKimlik')}” giriyor.")
+                                               f"{label('plan-kullanim', g(q, 'Kullanim'))} kararı “{g(q, 'KararKimlik')}” giriyor.",
+                    outlines(inside, tolerance))
         # docs/adr/2640: the parcels inside the road's width, whatever their plan.
         for j, q in parcels:
             for tx, ty in turns:
                 x0, y0, x1, y1 = q[1]
                 near = ((max(x0 - tx, 0, tx - x1)) ** 2 + (max(y0 - ty, 0, ty - y1)) ** 2) ** 0.5
                 assert near >= h, "no parcel within the turn's round corner"
-            area = counted(pieces([c for cr in corridor for c in intersect(q[1], cr)], []), tolerance)
+            inside = [c for cr in corridor for c in intersect(q[1], cr)]
+            area = counted(pieces(inside, []), tolerance)
             if area is not None:
                 name = "/".join(v for v in (g(q, "Ada"), g(q, "Parsel")) if v) or "kimliksiz"
                 say("roadParcel", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine “{name}” "
-                                                "parseli giriyor.")
+                                                "parseli giriyor.", outlines(inside, tolerance))
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -430,6 +510,16 @@ def roady(w1="10", w2="10"):
     return ROADY + [road("Y1", [(0, 30), (100, 30)], w1), road("Y2", [(50, 0), (50, 60)], w2)]
 
 
+# docs/adr/3440: a U-shaped road 12 m wide whose two arms enter the housing decision K1 in two places; its right part
+# is the road decision K2, so no decision comes near the turns.
+U_ROAD = [
+    plan("UIP-U", (0, 0, 120, 100)),
+    karar("K1", (0, 0, 50, 100), "konut", TAKS="0.40", KAKS="1.20", KatAdedi="3"),
+    karar("K2", (50, 0, 120, 100), "yol"),
+    road("Y-U", [(0, 30), (100, 30), (100, 70), (0, 70)], "12"),
+]
+
+
 # docs/adr/2640: three parcels on the parcel layer, two in block A1 and one in A4, up to the planned roads' edges.
 PARCELS = [parsel("101", "1", (0, 0, 20, 25)), parsel("101", "2", (20, 0, 45, 25)), parsel("102", "1", (55, 35, 100, 60))]
 
@@ -471,6 +561,8 @@ def refused(name, tolerance, text):
 
 def cases():
     return [
+        case("U biçimli yol karara iki yerden girer: tek bulgu, iki bölge, alttaki önce", U_ROAD, classes=ROADS,
+             expect=["roadWidth"]),
         case("temiz plan: bulgu yok", GOOD, expect=[]),
         case("karışık plan: her bulgu türü, türün sırasıyla", MESSY,
              expect=["noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noPlan", "noUse", "unknownUse",

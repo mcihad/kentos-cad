@@ -4240,6 +4240,7 @@ __all__ = [
     "ZoningCheck",
     "ZoningChecked",
     "ZoningFinding",
+    "ZoningRegion",
     "addresses",
     "annotations",
     "arc",
