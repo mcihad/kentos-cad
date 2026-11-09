@@ -9,6 +9,10 @@
 //! KENTOS_SHOTS_ONLY=tutamac-ic-kose-onizleme,tutamac-ic-kose-yazildi,kose-tablosu-ic-kose cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
+//! docs/adr/4200: with the road R ending on A's south edge (10, 0), Köşe tablosu's Sil on A's south-east corner
+//! (40, 0) joins the south and east edges into one; R's end goes to the same share of the joined edge (10 of the 70 m),
+//! (40/7, 30/7), and the message says so (`kose-sil-ic-kose`).
+//!
 //! Test code only.
 
 use kentos_domain::Slot;
@@ -31,7 +35,12 @@ fn ground() -> Objects {
 
 /// The drawing at 1:500, Topolojik düzenleme on, A selected, the parcels in the left of the drawing area.
 fn opened(app: &mut App) {
-    open(app, ground());
+    opened_with(app, ground());
+}
+
+/// [`opened`] with these objects.
+fn opened_with(app: &mut App, objects: Objects) {
+    open(app, objects);
     make_cad(app);
     {
         let doc = app.document.as_mut().expect("a drawing");
@@ -68,6 +77,22 @@ fn dropped(app: &mut App) {
     dragging(app);
     let to = at(app, [44.0, 32.0]);
     let _ = app.update(Message::Viewport(Event::Released(to)));
+}
+
+/// docs/adr/4200: the ground with the road R (5) ending on A's south edge at (10, 0).
+fn with_road() -> Objects {
+    let mut o = ground();
+    o.path("yol", &[[10.0, -20.0], [10.0, 0.0]], false);
+    o
+}
+
+/// Köşe tablosu's Sil on A's second vertex (40, 0), A and the road opened.
+fn removed_in_the_table(app: &mut App) {
+    use crate::vertices::Event as V;
+    opened_with(app, with_road());
+    let _ = app.update(Message::Run("view.coords"));
+    let _ = app.update(Message::Vertices(V::Press(1)));
+    let _ = app.update(Message::Vertices(V::Remove));
 }
 
 /// Köşe tablosu: A's third vertex's north typed 2 m up (X 4420032).
@@ -159,10 +184,41 @@ fn the_vertex_table_carries_them_too() {
     assert!(words.contains("kenarın ortasındaki 2 ortak köşe de kenarla gitti"), "{words}");
 }
 
+/// docs/adr/4200: Sil on A's south-east corner joins its south and east edges (40 m and 30 m) into the edge (0, 0)–(40,
+/// 30); the road's end, 10 m along them, goes to 10/70 of it, (40/7, 30/7); one undo step puts both back.
+#[test]
+fn removing_a_corner_carries_the_road_s_end_to_the_joined_edge() {
+    let mut app = App::boot(None).0;
+    removed_in_the_table(&mut app);
+    assert_eq!(corners(&app, 1).len(), 3, "{:?}", corners(&app, 1));
+    let end = corners(&app, 5)[1];
+    assert!((end[0] - 40.0 / 7.0).abs() < 1e-6 && (end[1] - 30.0 / 7.0).abs() < 1e-6, "{end:?}");
+    let words = said(&app);
+    assert!(words.contains("kenarın ortasındaki 1 ortak köşe de kenarla gitti"), "{words}");
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(corners(&app, 1).len(), 4);
+    assert!(has(&corners(&app, 5), [10.0, 0.0]), "{:?}", corners(&app, 5));
+}
+
+/// Without Topolojik düzenleme the road's end stays where it was.
+#[test]
+fn without_topology_the_road_s_end_stays() {
+    let mut app = App::boot(None).0;
+    opened_with(&mut app, with_road());
+    run(&mut app, "draft.topology");
+    use crate::vertices::Event as V;
+    let _ = app.update(Message::Run("view.coords"));
+    let _ = app.update(Message::Vertices(V::Press(1)));
+    let _ = app.update(Message::Vertices(V::Remove));
+    assert_eq!(corners(&app, 1).len(), 3);
+    assert!(has(&corners(&app, 5), [10.0, 0.0]), "{:?}", corners(&app, 5));
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("tutamac-ic-kose-onizleme", dragging),
         ("tutamac-ic-kose-yazildi", dropped),
         ("kose-tablosu-ic-kose", typed_in_the_table),
+        ("kose-sil-ic-kose", removed_in_the_table),
     ]
 }

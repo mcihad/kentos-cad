@@ -59,7 +59,8 @@ korunmalı)” ve ADR 3000'in aynı satırı.
    taşınmaz: sınır yine ayrılmaz, eskisi gibi yerinde kalır.
 4. **Kilitli komşu:** köşesi gitmez. ADR 2600'deki gibi sınırın ayrıldığı söylenir (`neighbour_locked`); Kilitli komşuda
    durdur açıkken hiçbir şey yazılmaz (`shared_boundary_locked`). Gizli komşu katılmaz.
-5. **Köşe sayısı değişen düzenleme** (Köşe ekle, Köşe sil): kural uygulanmaz.
+5. **Köşe sayısı değişen düzenleme** (Köşe ekle, Köşe sil): kural uygulanmaz. Köşe sil'in birleştirdiği iki düz kenar
+   sonradan kurala girdi: [ADR 4200](4200-vertex-delete-carries-inner-vertices.md).
 6. **İleti** (tutamaç, Köşe tablosu): “Topolojik düzenleme: 3 komşu nesne de değişti; kenarın ortasındaki 2 ortak köşe
    de kenarla gitti.” (`Neighbours.carried`). Esnet'in cevabında izleyenler `followed`'dadır.
 7. **Paralel kaydır** kendi kuralıyla kalır (ADR 2600: kenara dik aynı uzaklık, `neighbours_with`). Komut sözleşmeleri
@@ -107,7 +108,7 @@ korunmalı)” ve ADR 3000'in aynı satırı.
 
 ## Sonra
 
-- Köşe sil'de birleşen iki kenarın içindeki komşu köşeler (bugün kalır).
+- ~~Köşe sil'de birleşen iki kenarın içindeki komşu köşeler (bugün kalır).~~ ADR 4200 (düz kenarlarda).
 - Tutamaçla birden çok nesne birlikte taşınınca öbür taşınanın kenar içindeki köşesi (bugün yerinde kalır).
 - Paralel kaydır'da yaylı ortak kenarda içteki köşe (ADR 2600 Sonra; bugün ret).
 - ~~Topoloji denetiminin veri formu yolu (MAP-07'nin öbür maddesi).~~ ADR 3800.

@@ -605,7 +605,9 @@ pub type Span = (Vec2, Vec2, f64);
 
 /// The edges an edit changed (docs/adr/3400), as they were and as they are, path by path in the elevations' order:
 /// on a path with as many vertices after as before, every edge whose ends moved or whose bulge changed. A path that
-/// gained or lost a vertex gives none.
+/// lost one vertex between two straight edges now joined by a straight one (Köşe sil, docs/adr/4200) gives the two old
+/// edges as the parts of the joined edge their lengths' shares give ([`merged`]). A path that gained a vertex gives
+/// none: its edges stay where they were.
 pub fn changed_edges(before: &Shape, after: &Shape) -> Vec<(Span, Span)> {
     let (Some((pb, _)), Some((pa, _))) = (paths_of(before), paths_of(after)) else {
         return Vec::new();
@@ -616,6 +618,10 @@ pub fn changed_edges(before: &Shape, after: &Shape) -> Vec<(Span, Span)> {
     let mut out = Vec::new();
     for (b, a) in pb.iter().zip(&pa) {
         let n = b.pts.len();
+        if a.pts.len() + 1 == n {
+            out.extend(merged(b, a));
+            continue;
+        }
         if a.pts.len() != n {
             continue;
         }
@@ -629,6 +635,42 @@ pub fn changed_edges(before: &Shape, after: &Shape) -> Vec<(Span, Span)> {
         }
     }
     out
+}
+
+/// Köşe sil's joined edge (docs/adr/4200; ArcGIS Pro's “stretch topology proportionately”, the relative lengths kept):
+/// the path `b` lost the one vertex V between P and Q, `a` joins P and Q by a straight edge, and both old edges were
+/// straight. The old edges P–V and V–Q as the parts P–X and X–Q of the joined edge, X at the share of P–V's length in
+/// the two: what lay inside them goes to the same share of the joined edge. None for anything else (an end vertex of an
+/// open path, an arc on either side, other vertices changed too).
+fn merged(b: &Path, a: &Path) -> Vec<(Span, Span)> {
+    let n = b.pts.len();
+    if n < 3 {
+        return Vec::new();
+    }
+    let j = (0..n - 1).find(|&k| b.pts[k] != a.pts[k]).unwrap_or(n - 1);
+    if (0..n).filter(|&k| k != j).zip(&a.pts).any(|(k, p)| b.pts[k] != *p) {
+        return Vec::new();
+    }
+    let m = n - 1;
+    let (prev, next, joined) = if b.closed {
+        ((j + n - 1) % n, (j + 1) % n, (j + m - 1) % m)
+    } else if j > 0 && j + 1 < n {
+        (j - 1, j + 1, j - 1)
+    } else {
+        return Vec::new();
+    };
+    let straight = |list: &[f64], k: usize| list.get(k).is_none_or(|x| x.abs() <= STRAIGHT);
+    if !straight(&b.bulges, prev) || !straight(&b.bulges, j) || !straight(&a.bulges, joined) {
+        return Vec::new();
+    }
+    let (p, v, q) = (b.pts[prev], b.pts[j], b.pts[next]);
+    let (l1, l2) = ((v.x - p.x).hypot(v.y - p.y), (q.x - v.x).hypot(q.y - v.y));
+    if !(l1 + l2 > 0.0) {
+        return Vec::new();
+    }
+    let t = l1 / (l1 + l2);
+    let x = Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
+    vec![((p, v, 0.0), (p, x, 0.0)), ((v, q, 0.0), (x, q, 0.0))]
 }
 
 /// A place on an edge as the fraction of the edge's length from its start: by the length along a straight edge, by
@@ -794,6 +836,43 @@ mod tests {
         let far = line((-10.0, 15.0), (0.0, 15.0));
         let got = carried(&[arm, far], &edges, false);
         assert_eq!(got, vec![Change::Move { at: Vec2::new(10.0, 0.0), to: Vec2::new(10.0, 1.0) }]);
+    }
+
+    /// docs/adr/4200: Köşe sil joins the two edges about the lost corner: a T junction's end on the first goes to the
+    /// same share of the joined edge (the relative lengths kept), one on the second too; the end of an open path and an
+    /// arc beside the corner give nothing.
+    #[test]
+    fn a_lost_corner_s_edges_carry_their_vertices_to_the_joined_edge() {
+        let square = |pts: Vec<Vec2>| Shape::Polygon { pts, bulges: None, holes: None, parts: None };
+        let before = square(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]);
+        let after = square(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]);
+        let edges = changed_edges(&before, &after);
+        assert_eq!(edges.len(), 2, "{edges:?}");
+        // On the south edge 10 of 70 along; on the east edge 40 + 15 = 55 of 70.
+        let arm = line((10.0, -20.0), (10.0, 0.0));
+        let stub = line((50.0, 15.0), (40.0, 15.0));
+        let got = carried(&[arm, stub], &edges, false);
+        let want = [(Vec2::new(10.0, 0.0), 10.0 / 70.0), (Vec2::new(40.0, 15.0), 55.0 / 70.0)];
+        assert_eq!(got.len(), 2, "{got:?}");
+        for (c, (at0, f)) in got.iter().zip(want) {
+            let Change::Move { at, to } = c else { panic!("{c:?}") };
+            assert!(same(*at, at0) && same(*to, Vec2::new(40.0 * f, 30.0 * f)), "{c:?}");
+        }
+        // An open path's end: its edge goes, nothing is joined.
+        let road = |pts: Vec<Vec2>| Shape::Polyline { pts, bulges: None, holes: None, parts: None, closed: false, widths: None };
+        let r = road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)]);
+        assert!(changed_edges(&r, &road(vec![Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)])).is_empty());
+        assert_eq!(changed_edges(&r, &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])).len(), 2);
+        // An arc beside the corner: not joined.
+        let arced = Shape::Polyline {
+            pts: vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)],
+            bulges: Some(vec![0.5, 0.0, 0.0]),
+            holes: None,
+            parts: None,
+            closed: false,
+            widths: None,
+        };
+        assert!(changed_edges(&arced, &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])).is_empty());
     }
 
     /// The same round an arc whose end moved, its bulge kept: the vertex at the arc's middle goes to the new arc's

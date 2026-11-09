@@ -16,6 +16,10 @@ reshape_command_cases.py's and vertex_command_cases.py's files. The rule, comput
   bulge of the same part of the new edge: tan(θ·(t₂ − t₁)/4), θ the new edge's angle (0 for a straight one).
 - A locked neighbour stays and is counted (`neighbour_locked`); a hidden one stays. Topolojik düzenleme off: only the
   edited object changes.
+- ADR 4200, Köşe sil: a path that loses its vertex V between P and Q, both edges straight, is joined by the straight
+  edge P–Q; the old edges P–V and V–Q are the parts P–X and X–Q of it, X at P–V's share of the two lengths, so a
+  vertex inside them goes to the same share of the joined edge (the relative lengths kept). An open path's end vertex
+  joins nothing: its edge goes and what lay on it stays.
 
 The arcs are computed here from the bulge: the chord's middle pushed off by bulge·chord/2 is the arc's middle; the
 centre is on the chord's normal; a place at fraction t is the start turned about the centre by t·θ. The coordinates
@@ -240,12 +244,15 @@ def neighbours_of(edited_ids, points):
             and (e["kind"] != "point" or points)]
 
 
-def carry(targets, points, edited_too):
+def carry(targets, points, edited_too, pairs=None):
     """The rule over `targets` [(entity, paths before, paths after)]: (the moves, own first then carried, in order;
-    the bulge changes; the carried moves alone)."""
+    the bulge changes; the carried moves alone). `pairs` (Köşe sil, ADR 4200): the edges as they were and as they are,
+    path by path, given instead of side by side (a path lost a vertex: no vertex of it moved)."""
     ids = {e["id"] for e, _, _ in targets}
     own, bends, carried = [], [], []
     for e, before, after in targets:
+        if pairs is not None:
+            continue
         for (bp, bb, _), (ap, ab, _) in zip(before, after):
             own.extend((u, v) for u, v in zip(bp, ap) if u != v)
     for e, before, after in targets:
@@ -254,8 +261,9 @@ def carry(targets, points, edited_too):
         cands_all = cands + (others if edited_too else [])
         held = set()
         seen = []
-        for path_b, path_a in zip(before, after):
-            for old, new in zip(edges(path_b), edges(path_a)):
+        for k_pair, (path_b, path_a) in enumerate(zip(before, after)):
+            side = pairs[k_pair] if pairs is not None else list(zip(edges(path_b), edges(path_a)))
+            for old, new in side:
                 if old == new:
                     continue
                 places = []
@@ -332,10 +340,10 @@ def apply_to(e, result):
     return rebuilt(e, new_p=value) if kind == "p" else rebuilt(e, new_paths=value)
 
 
-def follow(targets, points, edited_too):
+def follow(targets, points, edited_too, pairs=None):
     """Topolojik düzenleme over `targets` [(entity, paths before, paths after)]: (the targets as written, the
     neighbours put right in the drawing's order, how many locked)."""
-    moves, bends, carried = carry(targets, points, edited_too)
+    moves, bends, carried = carry(targets, points, edited_too, pairs)
     written = []
     for e, before, after in targets:
         # A stretched object's vertex at a carried place goes there too (Esnet puts its own stretched objects right).
@@ -346,6 +354,8 @@ def follow(targets, points, edited_too):
     ids = {e["id"] for e, _, _ in targets}
     own = []
     for e, before, after in written:
+        if pairs is not None:
+            break
         for (bp, _, _), (ap, _, _) in zip(before, after):
             own.extend((u, v) for u, v in zip(bp, ap) if u != v)
     moves = own + carried
@@ -531,6 +541,68 @@ def vertex_case(name, target_id, action, edge, bulge_after=None, through=None, r
     ]}
 
 
+def joined(path, j):
+    """Köşe sil (ADR 4200): the path without its vertex j, and its edges as they were against as they are: the two
+    straight edges about V as the parts of the straight edge joining their other ends, V's image at the first's share
+    of the two lengths; the other edges side by side. An open path's end: its edge goes, the rest side by side."""
+    pts, bulges, closed = path
+    n = len(pts)
+    new_pts = pts[:j] + pts[j + 1:]
+    if closed:
+        new_b = bulges[:j] + bulges[j + 1:]
+        new_b[(j - 1) % (n - 1)] = 0
+    else:
+        new_b = (bulges[:j] + bulges[j + 1:]) if 0 < j < n - 1 else (bulges[1:] if j == 0 else bulges[:-1])
+    after = (new_pts, new_b, closed)
+    old_edges = edges(path)
+    if not closed and (j == 0 or j == n - 1):
+        kept = old_edges[1:] if j == 0 else old_edges[:-1]
+        return after, list(zip(kept, edges(after)))
+    prev, nxt = (j - 1) % n, (j + 1) % n
+    p, v, q = pts[prev], pts[j], pts[nxt]
+    l1, l2 = math.hypot(v[0] - p[0], v[1] - p[1]), math.hypot(q[0] - v[0], q[1] - v[1])
+    t = l1 / (l1 + l2)
+    x = (p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t)
+    out = []
+    for k, e in enumerate(old_edges):
+        if k == prev:
+            out.append((e, (p, x, 0)))
+        elif k == j:
+            out.append((e, (x, q, 0)))
+    return after, out
+
+
+def delete_case(name, target_id, ring, index, topology=True, points=False, stop=False):
+    """Köşe sil on `target_id`'s ring (0: its outline, 1: its hole) at `index`, as vertex_case does the others."""
+    target = BY_ID[target_id]
+    before = paths(target)
+    new_path, pair = joined(before[ring], index)
+    after = [new_path if k == ring else p for k, p in enumerate(before)]
+    pairs = [pair if k == ring else list(zip(edges(p), edges(p))) for k, p in enumerate(before)]
+    inp = {"uid": UID(target_id), "action": "remove", "place": {"kind": "vertex", "part": 0, "ring": ring, "index": index}}
+    written = [(target, rebuilt(target, new_paths=after))]
+    follow_, locked = [], 0
+    if topology:
+        inp["topology"] = topology_input(points, stop)
+        written, follow_, locked = follow([(target, before, after)], points, False, pairs)
+        if locked and stop:
+            return {"name": name, "steps": [{"op": "execute", "input": inp, "result": {"status": "failed", "error": {
+                "code": "shared_boundary_locked", "message": SHARED_LOCKED.format(locked), "path": "topology"}},
+                "expect": UNCHANGED}]}
+    warnings = [{"code": "neighbour_locked", "message": NEIGHBOUR_LOCKED.format(locked)}] if locked else []
+    ents = {str(n["id"]): n for _, n in written}
+    ents.update({str(n["id"]): n for n in follow_})
+    changed = [target_id] + [n["id"] for n in follow_]
+    return {"name": name, "steps": [
+        {"op": "execute", "input": inp,
+         "result": completed({"changed": [UID(i) for i in changed], "ids": changed, "revision": "$current"}, warnings),
+         "within": WITHIN,
+         "expect": {"ids": IDS, "entities": ents, "revision": "changed", "canUndo": True, "canRedo": False,
+                    "dirty": True}},
+        {"op": "undo", "returns": "Köşe sil", "expect": {"ids": IDS, "entities": {k: BY_ID[int(k)] for k in ents}}},
+    ]}
+
+
 def vertex_cases():
     # A runs counter-clockwise: Yaya dönüştür bows its edges outwards, a positive bulge of 0.5 (as D's straightened arc
     # comes back to 0). Its edges: 0 south, 1 east, 2 north, 3 west.
@@ -567,6 +639,14 @@ def vertex_cases():
                     through=(20, 25)),
         vertex_case("Yaya dönüştür, batı kenarı noktadan (−3, 15): komşunun ara köşesi ve kenar parçaları", 1, "arc", 3,
                     through=(-3, 15)),
+        # ADR 4200: Köşe sil joins the two edges; what lay inside them goes to the same share of the joined edge.
+        delete_case("Köşe sil, yolun ortası: kolun T ucu birleşen kenarın aynı payına (40 + 20 m'nin 20'si)", 15, 0, 1),
+        delete_case("Köşe sil, A'nın güneydoğusu: yol ucu birleşen kenara; kilitli çizgi uyarıyla, gizli, 1 mm uzaktaki "
+                    "ve uzantıdaki yerinde", 1, 0, 1),
+        delete_case("Köşe sil, Noktalar da: doğu kenarındaki sınır taşı da birleşen kenara", 1, 0, 1, points=True),
+        delete_case("Köşe sil, kilitli komşuda durdur: hiçbir şey yazılmaz", 1, 0, 1, stop=True),
+        delete_case("Köşe sil, Topolojik düzenleme kapalı: yalnız köşe gider, kol yerinde", 15, 0, 1, topology=False),
+        delete_case("Köşe sil, yolun ilk köşesi: kenarı gider, kolun ucu yerinde kalır", 15, 0, 0),
     ]
 
 

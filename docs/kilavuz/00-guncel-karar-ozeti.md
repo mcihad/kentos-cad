@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Köşe sil'de birleşen kenarın içindeki köşeler (9 Kasım 2026; MAP-07, [ADR 4200](../../docs/adr/4200-vertex-delete-carries-inner-vertices.md)).**
+  Topolojik düzenleme açıkken Köşe sil iki düz kenarı birleştirince içlerindeki komşu köşeler birleşen kenarın aynı boy
+  payına gider (`topology_edit::merged`); açık yolun ucu ve yay eskisi gibi. CAD (Harita + Yol) + CBS.
 - **Yüzeyden kot ver (9 Kasım 2026; MAP-06, [ADR 4180](../../docs/adr/4180-elevations-from-surface.md)).**
   Yeni `cad.entities.drape`: her köşe projenin arazi yüzeyinin kotunu alır, dışındaki korur; `breaks` ile TIN
   kenarlarında ara kırık noktaları; yeni `off_surface`. Eğimle kot ver › Hedef Yüzeyden. CAD (Harita + Yol).

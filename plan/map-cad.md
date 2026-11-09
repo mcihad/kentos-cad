@@ -37,7 +37,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800 | Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok; Öznitelikler'den işaretleme | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
@@ -984,6 +984,15 @@ nesneye) ve QGIS Topology Checker (kurala göre süzgeç; nesnenin formunda hata
 nesnenin Topoloji bölümü son denetimden okunur (denetlenmedi, bulgu yok, çizim değişti; düğme sekmeyi bulguda açar);
 Formla düzenle'nin başında kaydın bulguları. 12 yeni bağımsız durum (35), Python, MCP, masaüstü ve resimler. Açık:
 Öznitelikler'den işaretleme, Köşe sil'de birleşen kenarın içindeki köşe, tutamaçla birden çok nesne, büyük veri ölçümü.
+
+**9 Kasım 2026, sekizinci tur — Köşe sil'de birleşen kenarın içindeki komşu köşeler ([ADR 4200](../docs/adr/4200-vertex-delete-carries-inner-vertices.md)).**
+Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Araştırma: ArcGIS Pro'nun “Stretch topology
+proportionately”si ve Edit topological vertices (silmenin komşulara yansımasını yazmıyor). Kanıtlanan: Topolojik
+düzenleme açıkken Köşe sil iki düz kenarı birleştirince eski kenarların içindeki komşu köşeler (T ile bağlanan uç,
+üçlü birleşim, ara köşe, Noktalar da ile nokta) birleşen kenarın, eski kenarların boy payındaki yerine gider; açık
+yolun ucu ve yaylı kenar eskisi gibi; kilitli komşu ADR 3400'deki gibi. 6 yeni bağımsız durum (26), Python, MCP,
+masaüstü (Köşe tablosunda Kaldır, ileti) ve resimler. Açık: yaylı kenarların birleşmesi, tutamaçla birden çok nesne,
+köşenin gidişine ok, Öznitelikler'den işaretleme, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

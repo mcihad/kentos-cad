@@ -92,5 +92,6 @@ satırı.
 
 - Bulgunun Öznitelikler'den Hata işaretle ya da İstisna yap'ı (bugün sekmede).
 - Çoklu seçimde nesnelerin bulgu sayıları.
-- Köşe sil'de birleşen kenarın içindeki köşe; tutamaçla birden çok nesne; büyük veri ölçümü (MAP-07'nin kalanı).
+- ~~Köşe sil'de birleşen kenarın içindeki köşe~~ (ADR 4200); tutamaçla birden çok nesne; büyük veri ölçümü (MAP-07'nin
+  kalanı).
 - Web (TODOS §0.2).

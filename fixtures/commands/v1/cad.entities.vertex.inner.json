@@ -4531,6 +4531,858 @@
           }
         }
       ]
+    },
+    {
+      "name": "Köşe sil, yolun ortası: kolun T ucu birleşen kenarın aynı payına (40 + 20 m'nin 20'si)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:15",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15",
+                "$uidOf:16"
+              ],
+              "ids": [
+                15,
+                16
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              },
+              "16": {
+                "kind": "line",
+                "id": 16,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4419940
+                },
+                "b": {
+                  "x": 487013.3333333333,
+                  "y": 4419953.333333333
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Köşe sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              },
+              "16": {
+                "kind": "line",
+                "id": 16,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4419940
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4419960
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sil, A'nın güneydoğusu: yol ucu birleşen kenara; kilitli çizgi uyarıyla, gizli, 1 mm uzaktaki ve uzantıdaki yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:4"
+              ],
+              "ids": [
+                1,
+                4
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487005.71428571426,
+                  "y": 4420004.285714285
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Köşe sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sil, Noktalar da: doğu kenarındaki sınır taşı da birleşen kenara",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "topology": {
+              "points": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:1",
+                "$uidOf:4",
+                "$uidOf:12"
+              ],
+              "ids": [
+                1,
+                4,
+                12
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487005.71428571426,
+                  "y": 4420004.285714285
+                }
+              },
+              "12": {
+                "kind": "point",
+                "id": 12,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487031.4285714286,
+                  "y": 4420023.571428572
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Köşe sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "12": {
+                "kind": "point",
+                "id": 12,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487040,
+                  "y": 4420015
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sil, kilitli komşuda durdur: hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:1",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            },
+            "topology": {
+              "stopOnLocked": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "shared_boundary_locked",
+              "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+              "path": "topology"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sil, Topolojik düzenleme kapalı: yalnız köşe gider, kol yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:15",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 1
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15"
+              ],
+              "ids": [
+                15
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Köşe sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe sil, yolun ilk köşesi: kenarı gider, kolun ucu yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uid": "$uidOf:15",
+            "action": "remove",
+            "place": {
+              "kind": "vertex",
+              "part": 0,
+              "ring": 0,
+              "index": 0
+            },
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "$uidOf:15"
+              ],
+              "ids": [
+                15
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487040,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Köşe sil",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   ]
 }
