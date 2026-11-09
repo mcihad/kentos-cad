@@ -43,7 +43,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920 | bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940 | kesit yöntemi; bölgelerin çizime yazılması | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960 | profilde kesişen borunun dış duvarı; denetimin açık pencerede yeniden okunması | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
@@ -1588,6 +1588,14 @@ Kapsam: **Harita + CBS**. Dayanak: CloudCompare'in geçmiş matrisinin tersiyle 
 uygula'nın Son dönüşümü geri al'ı bulutun geçmişindeki son matrisin tersini uygular, matris yazılmaz; o adım geçmişten
 düşer (kalmazsa Dönüşümler yazılmaz); geçmişsiz bulutta ret. 3 yeni bağımsız durum (47; noktalar bayt bayt), Python,
 MCP, masaüstü ve resimler. Açık: çoklu tarama demeti, eksen-açı/Euler girişi, gerçek veri ölçümü.
+
+**10 Kasım 2026, sekizinci tur — dönüşümün eksen ve açıyla verilmesi ([ADR 4300](../docs/adr/4300-point-cloud-axis-angle.md)).**
+Kapsam: **Harita + CBS**. Araştırma: CloudCompare'in Apply Transformation'ı (eksen ve açı derece; Euler açılarının
+sırası belgede yazmıyor, bu yüzden eklenmedi). Kanıtlanan: Dönüşüm uygula'da Dönüşüm = Eksen ve açı: eksen, açı (sağ
+el kuralı), merkez (boş: bulutun kutusunun ortası), öteleme; çekirdek Rodrigues satırlarını sabit sırayla ve Tarama
+kaydı'nın tarifiyle tek matrise çevirir, geçmişe matris yazılır; üç ret. 6 yeni bağımsız durum (53; noktalar bayt
+bayt), Python (kuaterniyonla), MCP, masaüstü ve resimler. Açık: çoklu tarama demeti, dönüşümün dosyasız nesnede
+tutulması, gerçek veri ölçümü, Euler açıları (kaynak).
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

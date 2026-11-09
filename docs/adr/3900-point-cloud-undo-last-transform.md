@@ -50,6 +50,6 @@ geri alma (son matrisin tersini kendiliğinden uygulama)”.
 ## Sonra
 
 - Çoklu tarama demeti (MAP-13'ün öbür maddesi).
-- Eksen-açı ya da Euler açılarıyla matris girişi (sözleşmesi ve kaynağı araştırılmalı).
+- ~~Eksen-açı~~ (ADR 4300) ya da Euler açılarıyla matris girişi (Euler'in sırası kaynakta bekleniyor).
 - Gerçek veride süre ve bellek ölçümü.
 - Web (TODOS §0.2).

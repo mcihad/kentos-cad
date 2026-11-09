@@ -2273,6 +2273,309 @@
    }
   },
   {
+   "id": "transform-axis-z",
+   "title": "Eksen ve açı: Z ekseni çevresinde 0,5°, merkez boş (bulutun kutusunun ortası), öteleme 1 −2 0,5 m; geçmişte yapılan matris",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "0 0 1",
+    "angle": 0.5,
+    "translation": "1 -2 0.5",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 2,291 m kaydı, dönüklük 0,5000°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 2.29128784747792,
+     "angle": 0.5
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "eb3d09ed5de9705f"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999619230641713 -0.008726535498373935 0 38593.86614863842 0.008726535498373935 0.9999619230641713 0 -4089.2684014011174 0 0 1 0.5 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.laz",
+        "format": "laz",
+        "count": 71212,
+        "bounds": [
+         487600.646,
+         4420297.505,
+         839.491,
+         487721.213,
+         4420388.467,
+         863.118
+        ]
+       }
+      ],
+      "bounds": [
+       487600.646,
+       4420297.505,
+       839.491,
+       487721.213,
+       4420388.467,
+       863.118
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-axis-tilted",
+   "title": "Eksen ve açı: eğik eksen (1, 1, 0,5; uzunluğu önemsiz) çevresinde −0,25°, verilen merkez, öteleme yok; çizime eklenmez",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "2, 2, 1",
+    "angle": -0.25,
+    "center": "487030 4420040 850",
+    "add": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 1,387 m kaydı, dönüklük 0,2500°; “koy-donusmus.laz” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 1.3867685661140248,
+     "angle": 0.25
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.laz": {
+      "count": 71212,
+      "points": "a036359ff11dd181"
+     }
+    },
+    "undo": null
+   }
+  },
+  {
+   "id": "transform-axis-inverse",
+   "title": "Eksen ve açı, Tersini uygula: Z çevresindeki dönmenin ve ötelemenin tersi",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "0 0 1",
+    "angle": 0.5,
+    "translation": "1 -2 0.5",
+    "invert": true,
+    "format": "las",
+    "layer": {
+     "newName": "Dönüştürülmüş bulut"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "71.212 nokta taşındı; bulutun ortası 2,291 m kaydı, dönüklük 0,5000°; “koy-donusmus.las” yazıldı.",
+    "outputs": {
+     "count": 71212,
+     "shift": 2.2912878478324656,
+     "angle": 0.5
+    },
+    "log": [
+     {
+      "level": "info",
+      "text": "Taşınan noktalar kaynağın ızgarasına yuvarlandı: bir koordinat en çok 0,0005 m değişir."
+     }
+    ],
+    "cloudOf": {
+     "koy-donusmus.las": {
+      "count": 71212,
+      "points": "e546ae567ddc6563"
+     }
+    },
+    "undo": "Dönüşüm uygula",
+    "layers": [
+     {
+      "id": "islem-donusturulmus-bulut",
+      "name": "Dönüştürülmüş bulut",
+      "style": {
+       "color": "#7A5BA6",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "pointcloud",
+      "layerId": "islem-donusturulmus-bulut",
+      "attrs": {
+       "Kaynak": "koy.laz",
+       "Dönüşümler": "0.9999619230641713 0.008726535498373935 0 -38556.711466606495 -0.008726535498373935 0.9999619230641713 0 4425.903437556197 0 0 1 -0.5 0 0 0 1"
+      },
+      "sources": [
+       {
+        "file": "koy-donusmus.las",
+        "format": "las",
+        "count": 71212,
+        "bounds": [
+         487598.647,
+         4420301.491,
+         838.491,
+         487719.23,
+         4420392.496,
+         862.118
+        ]
+       }
+      ],
+      "bounds": [
+       487598.647,
+       4420301.491,
+       838.491,
+       487719.23,
+       4420392.496,
+       862.118
+      ],
+      "count": 71212,
+      "srid": 5256,
+      "style": {
+       "render": "rgb",
+       "min": 842.0,
+       "max": 858.0,
+       "size": 3
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "transform-axis-zero",
+   "title": "Eksen ve açı, uzunluğu sıfır eksen: ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "0 0 0",
+    "angle": 10
+   },
+   "expect": {
+    "status": "error",
+    "message": "Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1)."
+   }
+  },
+  {
+   "id": "transform-axis-two",
+   "title": "Eksen ve açı, iki sayılı eksen: ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "0 1",
+    "angle": 10
+   },
+   "expect": {
+    "status": "error",
+    "message": "Eksen 3 sayıdır (X Y Z, boşlukla ayrılmış); 2 sayı verildi."
+   }
+  },
+  {
+   "id": "transform-axis-centre-word",
+   "title": "Eksen ve açı, sayı olmayan merkez: ret",
+   "document": "pointcloud.kcad",
+   "selection": [],
+   "run": {
+    "tool": "pointcloud.transform"
+   },
+   "values": {
+    "input": {
+     "scope": "layer",
+     "layerId": "koy"
+    },
+    "form": "axisAngle",
+    "axis": "0 0 1",
+    "angle": 10,
+    "center": "a 0 0"
+   },
+   "expect": {
+    "status": "error",
+    "message": "Merkez: “a” bir sayı değil; ondalık için nokta kullanın."
+   }
+  },
+  {
    "id": "transform-undo-last",
    "title": "Son dönüşümü geri al: tek adımlı geçmişin dönen matrisinin tersi; geçmiş boşalır, kaynak kalır",
    "document": "pointcloud.kcad",

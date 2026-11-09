@@ -603,3 +603,102 @@ fn inverse_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/4300: Dönüşüm uygula from the İşlem pane with Eksen ve açı (Z, 0.5°, the cloud's middle, a move of 1, −2,
+/// 0.5 m): the written cloud's history holds a matrix whose rotation is the test's own quaternion's and which takes the
+/// cloud's middle to itself plus the move. And the pane's picture, `.run/gui-evidence/eksen-aci-4300/`.
+#[test]
+fn an_axis_and_an_angle_from_the_pane_move_the_scan() {
+    use crate::processing::Event as P;
+    let mut app = opened(Some(Module::Map));
+    let (slot, bounds) = {
+        let doc = &app.document.as_ref().expect("open").model;
+        doc.entities()
+            .find_map(|e| match e {
+                kentos_commands::Entity::PointCloud(c) => Some((Slot(e.base().id), c.cloud.bounds)),
+                _ => None,
+            })
+            .expect("a scan")
+    };
+    app.selection.set([slot]);
+    let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+    for (k, v) in [
+        ("form", serde_json::json!("axisAngle")),
+        ("axis", serde_json::json!("0 0 1")),
+        ("angle", serde_json::json!(0.5)),
+        ("translation", serde_json::json!("1 -2 0.5")),
+        ("layer", serde_json::json!({"newName": "Dönen bulut"})),
+    ] {
+        let _ = app.update(Message::Processing(P::Value(k.into(), v)));
+    }
+    let dir = crate::files_testing::scratch("eksen-aci");
+    let out = dir.join("donen.laz");
+    let _ = app.update(Message::Processing(P::Value("output".into(), Value::from(out.to_string_lossy().into_owned()))));
+    let task = app.update(Message::Processing(P::Run));
+    crate::files_testing::drive(&mut app, task);
+    let doc = &app.document.as_ref().expect("open").model;
+    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Dönen bulut").expect("the layer").id.clone();
+    let history = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .find_map(|e| e.base().attrs.get("Dönüşümler").cloned())
+        .expect("a history");
+    let m: Vec<f64> = history.split_whitespace().map(|w| w.parse().expect("a number")).collect();
+    // The quaternion (cos θ/2, sin θ/2 · ẑ): a rotation of 0.5° about Z.
+    let h = 0.5_f64.to_radians() / 2.0;
+    let (w, z) = (h.cos(), h.sin());
+    let want = [[1.0 - 2.0 * z * z, -2.0 * z * w, 0.0], [2.0 * z * w, 1.0 - 2.0 * z * z, 0.0], [0.0, 0.0, 1.0]];
+    let middle = [0, 1, 2].map(|k| (bounds[k] + bounds[k + 3]) / 2.0);
+    let moved = [1.0, -2.0, 0.5];
+    for i in 0..3 {
+        for j in 0..3 {
+            assert!((m[4 * i + j] - want[i][j]).abs() < 1e-12, "R[{i}][{j}] {} vs {}", m[4 * i + j], want[i][j]);
+        }
+        let image = m[4 * i] * middle[0] + m[4 * i + 1] * middle[1] + m[4 * i + 2] * middle[2] + m[4 * i + 3];
+        assert!((image - (middle[i] + moved[i])).abs() < 1e-6, "{i}: {image}");
+    }
+}
+
+/// `.run/gui-evidence/eksen-aci-4300/`: Dönüşüm uygula with Eksen ve açı chosen, its fields filled:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib register_window_tests::axis_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn axis_screens() {
+    use crate::processing::Event as P;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/eksen-aci-4300");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let slot = {
+            let doc = &app.document.as_ref().expect("open").model;
+            doc.entities().find(|e| matches!(e, kentos_commands::Entity::PointCloud(_))).map(|e| Slot(e.base().id)).expect("a scan")
+        };
+        app.selection.set([slot]);
+        let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
+        for (k, v) in [
+            ("form", serde_json::json!("axisAngle")),
+            ("axis", serde_json::json!("0 0 1")),
+            ("angle", serde_json::json!(0.5)),
+            ("translation", serde_json::json!("1 -2 0.5")),
+        ] {
+            let _ = app.update(Message::Processing(P::Value(k.into(), v)));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("donusum-uygula-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

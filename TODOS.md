@@ -212,6 +212,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-13 / ADR 4300: web'in İşlem araç kutusunda Dönüşüm uygula'nın Eksen ve açı'sı (çekirdeğin `Affine::axis_angle`'ı
+  WASM'a; pointcloud.json'un 6 yeni durumu).
 - MAP-11 / ADR 4280: web'in `cad.readjustment.sheets` işleyicisinde `numberHeight` ve numaranın parçaya sığan yazısı
   (5 yeni ortak durum) ve web Düzenleme penceresinde Numara yazısı (mm).
 - MAP-10 / ADR 4260: web'in `cad.scenarios.impact` işleyicisinde `slope` (8 yeni ortak durum) ve web Senaryo ölçüleri

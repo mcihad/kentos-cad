@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Nokta bulutunda eksen ve açı (10 Kasım 2026; MAP-13, [ADR 4300](../../docs/adr/4300-point-cloud-axis-angle.md)).**
+  Dönüşüm uygula'da Eksen ve açı: Rodrigues satırları sabit sırayla, merkez çevresinde, öteleme; tek matris olarak
+  geçmişe. Euler açıları yok (sırası kaynakta yazılı değil). Harita + CBS.
 - **Dış parçanın numarası parçaya sığar (9 Kasım 2026; MAP-11, [ADR 4280](../../docs/adr/4280-separation-number-fitted-in-its-part.md)).**
   `cad.readjustment.sheets`'in `numberHeight`'ı (kâğıtta mm): numara parçanın içinde yazı; yatay ya da en uzun kenarı
   boyunca, onda bir adımlarla küçülür; `labels`'ta boy, dönüş, pay, sığma. Harita ve CBS.

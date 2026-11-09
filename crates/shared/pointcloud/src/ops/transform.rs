@@ -70,6 +70,56 @@ impl Affine {
         Affine::new(m)
     }
 
+    /// docs/adr/4300: a rotation of `degrees` about `axis` (right-handed: counter-clockwise seen from the axis's tip;
+    /// Rodrigues' formula) about the point `center`, then the move `translation`: p ↦ R(p − c) + c + t, Tarama kaydı's
+    /// recipe, as one map. Each number in a fixed order so that an independent reference gets the same bits: the axis
+    /// over its length √(x·x + y·y + z·z); the angle in radians (degrees × π/180); with s and c its sine and cosine and
+    /// k = 1 − c the rows [k·x·x + c, k·x·y − s·z, k·x·z + s·y], [k·x·y + s·z, k·y·y + c, k·y·z − s·x],
+    /// [k·x·z − s·y, k·y·z + s·x, k·z·z + c]; the translation's row c_i + t_i − (R_i0·c0 + R_i1·c1 + R_i2·c2). Refused
+    /// for a number not finite or an axis of no length.
+    pub fn axis_angle(axis: [f64; 3], degrees: f64, center: [f64; 3], translation: [f64; 3]) -> Result<Affine> {
+        if axis.iter().chain(&center).chain(&translation).chain(std::iter::once(&degrees)).any(|v| !v.is_finite()) {
+            return Err(PcError::new("Eksenin, açının, merkezin ve ötelemenin bütün sayıları sonlu olmalı."));
+        }
+        let n = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
+        if !(n > 0.0) {
+            return Err(PcError::new("Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1)."));
+        }
+        let (x, y, z) = (axis[0] / n, axis[1] / n, axis[2] / n);
+        let r = degrees.to_radians();
+        let (s, c) = (r.sin(), r.cos());
+        let k = 1.0 - c;
+        let rot = [
+            [k * x * x + c, k * x * y - s * z, k * x * z + s * y],
+            [k * x * y + s * z, k * y * y + c, k * y * z - s * x],
+            [k * x * z - s * y, k * y * z + s * x, k * z * z + c],
+        ];
+        let mut m = [0.0; 16];
+        for (i, row) in rot.iter().enumerate() {
+            let rc = row[0] * center[0] + row[1] * center[1] + row[2] * center[2];
+            m[4 * i..4 * i + 4].copy_from_slice(&[row[0], row[1], row[2], center[i] + translation[i] - rc]);
+        }
+        m[15] = 1.0;
+        Affine::new(m)
+    }
+
+    /// Three numbers from text (an axis, a centre, a move), apart by spaces or commas, a point for the decimal; `what`
+    /// names them in the refusal.
+    pub fn triple(text: &str, what: &str) -> Result<[f64; 3]> {
+        let words: Vec<&str> =
+            text.split(|c: char| c.is_whitespace() || matches!(c, ',' | ';')).filter(|w| !w.is_empty()).collect();
+        if words.len() != 3 {
+            return Err(PcError::new(format!("{what} 3 sayıdır (X Y Z, boşlukla ayrılmış); {} sayı verildi.", words.len())));
+        }
+        let mut out = [0.0; 3];
+        for (slot, word) in out.iter_mut().zip(&words) {
+            *slot = word.parse().map_err(|_| {
+                PcError::new(format!("{what}: “{word}” bir sayı değil; ondalık için nokta kullanın."))
+            })?;
+        }
+        Ok(out)
+    }
+
     /// The 16 numbers, row-major.
     pub fn matrix(&self) -> [f64; 16] {
         self.m
@@ -222,6 +272,18 @@ fn whole(v: f64, scale: f64, offset: f64) -> Option<i32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// docs/adr/4300: a quarter turn about Z about the centre (10, 0, 0) takes (11, 0, 0) to (10, 1, 0); the axis is
+    /// read for its direction only; a zero axis and two numbers are refused.
+    #[test]
+    fn an_axis_and_an_angle_make_the_map() {
+        let a = Affine::axis_angle([0.0, 0.0, 2.0], 90.0, [10.0, 0.0, 0.0], [0.0, 0.0, 5.0]).unwrap();
+        let p = a.apply([11.0, 0.0, 0.0]);
+        assert!((p[0] - 10.0).abs() < 1e-12 && (p[1] - 1.0).abs() < 1e-12 && (p[2] - 5.0).abs() < 1e-12, "{p:?}");
+        assert!(Affine::axis_angle([0.0; 3], 10.0, [0.0; 3], [0.0; 3]).is_err());
+        assert!(Affine::triple("1 2", "Eksen").is_err());
+        assert_eq!(Affine::triple("0, 0, 1", "Eksen").unwrap(), [0.0, 0.0, 1.0]);
+    }
 
     /// docs/adr/3500: a map and its inverse give the point back (within rounding); a translation's inverse is exactly
     /// its negation; the inverse of the inverse is the map within rounding.

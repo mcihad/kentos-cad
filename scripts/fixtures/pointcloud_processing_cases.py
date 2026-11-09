@@ -522,6 +522,25 @@ def about(r, c, t):
     return m + [0.0, 0.0, 0.0, 1.0]
 
 
+def axis_angle(axis, degrees, center, translation):
+    """docs/adr/4300: Eksen ve açı's map in the core's fixed order: the axis over its length √(x·x + y·y + z·z); the
+    angle in radians (degrees × π/180); with s, c its sine and cosine and k = 1 − c, Rodrigues' rows; the translation's
+    row c_i + t_i − (R_i0·c0 + R_i1·c1 + R_i2·c2) (Tarama kaydı's recipe p ↦ R(p − c) + c + t)."""
+    n = math.sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2])
+    x, y, z = axis[0] / n, axis[1] / n, axis[2] / n
+    r = math.radians(degrees)
+    s, c = math.sin(r), math.cos(r)
+    k = 1.0 - c
+    rot = [[k * x * x + c, k * x * y - s * z, k * x * z + s * y],
+           [k * x * y + s * z, k * y * y + c, k * y * z - s * x],
+           [k * x * z - s * y, k * y * z + s * x, k * z * z + c]]
+    m = []
+    for i in range(3):
+        rc = rot[i][0] * center[0] + rot[i][1] * center[1] + rot[i][2] * center[2]
+        m += [rot[i][0], rot[i][1], rot[i][2], center[i] + translation[i] - rc]
+    return m + [0.0, 0.0, 0.0, 1.0]
+
+
 def matrix_text(m):
     """Row by row, the numbers as Python writes them (they read back the same)."""
     return "\n".join(" ".join(repr(float(v)) for v in m[i * 4:i * 4 + 4]) for i in range(4))
@@ -618,7 +637,7 @@ IKINCI_TURNED = about(mul(rz(-0.0015), rx(0.0002)), middle(IKINCI), [0.05, 0.02,
 
 
 def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=True, style=KOY_STYLE, srid=SRID,
-                     text=None, invert=False, undo=None):
+                     text=None, invert=False, undo=None, axis=None):
     """`undo` (docs/adr/3900): Son dönüşümü geri al on a cloud whose history ends with `m`; the history left."""
     kind, ext = FORMAT[fmt]
     path = (output + ext) if output else f"{file}-donusmus{ext}"
@@ -633,6 +652,9 @@ def transformed_case(id_, title, c, lid, file, m, *, fmt="laz", output="", add=T
     if fmt == "copc":
         check["copc"] = True
     values = {"input": on(lid), "matrix": text if text is not None else matrix_text(given)}
+    if axis is not None:
+        # docs/adr/4300: the map as an axis and an angle; `m` is what it makes.
+        values = {"input": on(lid), "form": "axisAngle", **axis}
     if invert:
         values["invert"] = True
     if undo is not None:
@@ -705,6 +727,28 @@ def transform_cases():
                          "bulut eski yerine", KOY, "koy", "koy", REGISTERED, invert=True, fmt="las"),
         transformed_case("transform-inverse-translation", "Tersini uygula: yalnız ötelemenin tersi, tam sayılar tam "
                          "geri kayar", KOY, "koy", "koy", MOVED_ONLY, invert=True, fmt="las", output="geri"),
+        # docs/adr/4300: Eksen ve açı: the core's matrix from an axis, an angle, a centre and a move.
+        transformed_case("transform-axis-z", "Eksen ve açı: Z ekseni çevresinde 0,5°, merkez boş (bulutun kutusunun "
+                         "ortası), öteleme 1 −2 0,5 m; geçmişte yapılan matris", KOY, "koy", "koy",
+                         axis_angle([0.0, 0.0, 1.0], 0.5, middle(KOY), [1.0, -2.0, 0.5]),
+                         axis={"axis": "0 0 1", "angle": 0.5, "translation": "1 -2 0.5"}),
+        transformed_case("transform-axis-tilted", "Eksen ve açı: eğik eksen (1, 1, 0,5; uzunluğu önemsiz) çevresinde "
+                         "−0,25°, verilen merkez, öteleme yok; çizime eklenmez", KOY, "koy", "koy",
+                         axis_angle([2.0, 2.0, 1.0], -0.25, [487030.0, 4420040.0, 850.0], [0.0, 0.0, 0.0]),
+                         axis={"axis": "2, 2, 1", "angle": -0.25, "center": "487030 4420040 850"}, add=False),
+        transformed_case("transform-axis-inverse", "Eksen ve açı, Tersini uygula: Z çevresindeki dönmenin ve "
+                         "ötelemenin tersi", KOY, "koy", "koy",
+                         axis_angle([0.0, 0.0, 1.0], 0.5, middle(KOY), [1.0, -2.0, 0.5]),
+                         axis={"axis": "0 0 1", "angle": 0.5, "translation": "1 -2 0.5"}, invert=True, fmt="las"),
+        case("transform-axis-zero", "Eksen ve açı, uzunluğu sıfır eksen: ret", "pointcloud.transform",
+             {"input": on("koy"), "form": "axisAngle", "axis": "0 0 0", "angle": 10},
+             {"status": "error", "message": "Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1)."}),
+        case("transform-axis-two", "Eksen ve açı, iki sayılı eksen: ret", "pointcloud.transform",
+             {"input": on("koy"), "form": "axisAngle", "axis": "0 1", "angle": 10},
+             {"status": "error", "message": "Eksen 3 sayıdır (X Y Z, boşlukla ayrılmış); 2 sayı verildi."}),
+        case("transform-axis-centre-word", "Eksen ve açı, sayı olmayan merkez: ret", "pointcloud.transform",
+             {"input": on("koy"), "form": "axisAngle", "axis": "0 0 1", "angle": 10, "center": "a 0 0"},
+             {"status": "error", "message": "Merkez: “a” bir sayı değil; ondalık için nokta kullanın."}),
         # docs/adr/3900: Son dönüşümü geri al: the last matrix's inverse, the step gone from the history.
         transformed_case("transform-undo-last", "Son dönüşümü geri al: tek adımlı geçmişin dönen matrisinin tersi; "
                          "geçmiş boşalır, kaynak kalır", KOY, "gecmis1", "koy", ROTATED, undo=""),
