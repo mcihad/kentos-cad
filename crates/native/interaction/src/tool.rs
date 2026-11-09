@@ -1454,12 +1454,51 @@ impl Context<'_> {
         Format::of(self.doc.settings())
     }
 
-    /// Etkin kat as a new architectural object's input takes it (docs/adr/0713, CMD-07); none without one.
+    /// Etkin kat as a new architectural object's input takes it (docs/adr/0713, CMD-07); none without one. An axis's:
+    /// an axis has no tadilat durumu (a building element's is [`Self::new_arch`]).
     pub fn level_arch(&self) -> Option<kentos_commands::ArchInfo> {
         self.level.map(|id| kentos_commands::ArchInfo {
             level: Some(id.to_owned()),
             ..Default::default()
         })
+    }
+
+    /// The tadilat durumu a new building element takes (docs/adr/3039 §3): the state of the view it is drawn in.
+    /// Mevcut durum and Yıkım planı draw the building as it stands (Mevcut), Yeni durum the works (İlave); Tümü none.
+    pub fn drawn_phase(&self) -> Option<kentos_commands::ArchPhase> {
+        use kentos_commands::{ArchPhase, PhaseView};
+        match self
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default()
+        {
+            PhaseView::All => None,
+            PhaseView::Existing | PhaseView::Demolition => Some(ArchPhase::Existing),
+            PhaseView::Proposed => Some(ArchPhase::New),
+        }
+    }
+
+    /// `arch` with [`Self::drawn_phase`] (docs/adr/3039 §3): what a tool that chooses its own level writes.
+    pub fn phased(
+        &self,
+        arch: Option<kentos_commands::ArchInfo>,
+    ) -> Option<kentos_commands::ArchInfo> {
+        let Some(phase) = self.drawn_phase() else {
+            return arch;
+        };
+        Some(kentos_commands::ArchInfo {
+            phase: Some(phase),
+            ..arch.unwrap_or_default()
+        })
+    }
+
+    /// Etkin kat and the view's tadilat durumu as a new building element's input takes them (docs/adr/0713, 3039
+    /// §3): a wall, column, stair, ramp, room, block drawn in Yeni durum is İlave; none without either.
+    pub fn new_arch(&self) -> Option<kentos_commands::ArchInfo> {
+        self.phased(self.level_arch())
     }
 
     /// A new annotation's height of `kind` on paper, mm: what its tool was

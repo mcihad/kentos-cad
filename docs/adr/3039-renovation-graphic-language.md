@@ -3,8 +3,8 @@
 Tarih: 2026-11-09. Durum: kabul (M39; ADV-17).
 - 1. bölüm: açıklığın kendi tadilat durumu; tadilat görünümüne göre duvar birleşimi ve kesimi.
 - §0: kavramın adı "Evre"den "Tadilat durumu"na geçti.
-- 2. bölüm ayrı eklerle gelecek: araçlarda tadilat durumu, tadilat projesi görünümü ve lejantı, tadilat takımı, DXF
-  katmanları.
+- §3: araçlarda tadilat durumu (yeni çizilen, açık görünümün durumunu alır).
+- 2. bölüm ayrı eklerle gelecek: tadilat projesi görünümü ve lejantı, tadilat takımı, DXF katmanları.
 
 ## Sorun
 
@@ -99,6 +99,28 @@ kuralının aynısı (ADR 0788 §4) ve aynı yoldan: `Store::set_option_out`.
   görünümsüz harita çizimin kendisinden çizilir.
 - `viewport_scope::phase_out`: kapsamlı pafta deposu da aynı kuralla.
 
+### 3. Araçlarda tadilat durumu
+
+Yeni çizilen yapı öğesi, çizildiği görünümün durumunu alır; ayrı bir seçim yoktur:
+
+| Görünüm | Yeni çizilenler |
+|---|---|
+| Tümü | durumsuz (eskisi gibi) |
+| Mevcut durum, Yıkım planı | Mevcut (rölöve çizilir) |
+| Yeni durum | İlave (işler çizilir) |
+
+- Revit'in kuralının aynısı: öğe, görünümün evresinde yaratılır. Ayrı bir "etkin durum" ayarı yok: bir ayar daha
+  unutulurdu, görünüm zaten açık.
+- Tadilat ▾ bunu söyler: "Tadilat görünümü: Yeni durum. Bundan sonra çizilenler İlave olur."
+- Duvar (Duvar, Dikdörtgen duvar, Bölme, Çizgiden duvar, Oda), kolon, merdiven, rampa, döşeme, mahal, mahal ayırıcı ve
+  blok yerleştirme bunu `Context::new_arch` / `Context::phased` ile yazar. Aks (`level_arch`) yazmaz: aks bir dayanak
+  çizgisidir, tadilatı yoktur.
+- Kapı ve pencere: görünümün durumu duvarınkinden farklıysa kendi tadilat durumu olarak yazılır. Yeni durumda mevcut
+  duvara konan kapı İlave olur; ilave duvara konan kapı duvarınkini alır, kendine ayrı durum yazılmaz.
+  `cad.openings.create` buna `phase`'i aldı.
+- Mahal: Yeni durumda bulunan oda İlave olur ve sınırını işlerden sonraki duvarlardan bulur (ADR 0798 §3: iptal duvar
+  sınır değildir). İki odayı birleştiren tadilatın yeni odası böylece doğru çıkar.
+
 ## Doğrulama
 
 - Etkileşim (`crates/native/interaction/tests/all/phase_cuts.rs`): 6 m mevcut duvar, 1,5 m'de ilave 90'lık kapı, 4 m'de
@@ -113,6 +135,13 @@ kuralının aynısı (ADR 0788 §4) ve aynı yoldan: `Store::set_option_out`.
   durumdayken Yeni durum haritası kapıyı keser, pencereyi kapatır. Aynı görünümdeki ya da görünümsüz harita kopya
   açmaz; çizim değişmez.
 - Öznitelikler (`an_openings_renovation_row_writes_its_own_phase`): satır, sözcükler, tek adım, Duvarınki ile geri alma.
+- Araçlar (`phase_cuts.rs` `what_a_tool_draws_takes_the_view_s_state`):
+  - Mevcut durumda çizilen duvar Mevcut.
+  - Yeni durumda çizilen duvar İlave.
+  - Yeni durumda mevcut duvara konan kapının kendi durumu İlave; ilave duvara konanınki yok, duvarınkini (İlave) alır.
+  - Tümü'nde çizilen duvar durumsuz.
+  - Durum satırı dört görünümde (`arch_project.rs` testi).
+  - `cad.openings.create`'e `phase`'li durum.
 - Ortak komut durumları: `cad.openings.edit`'e iki yeni durum (kendi tadilat durumu ilave; iptal, sonra kaldırılır);
   bağımsız başvuru `scripts/fixtures/opening_command_cases.py`. §0'ın sözcükleri 19 başvurunun durum adlarında ve
   iletilerinde; 27 durum dosyası yalnız bu sözcüklerle değişti. Beş dosyanın üreticisi bugünkü dosyayı yeniden
@@ -126,6 +155,9 @@ kuralının aynısı (ADR 0788 §4) ve aynı yoldan: `Store::set_option_out`.
   - Yıkım planında duvar kesikli, kapı yok.
   - Yeni durumda kapı var, pencere kapalı, iptal duvarın birleşim yerlerinde komşu yüzler kesintisiz.
   - ÖNCE (M38 ikilisi) açıklığın bu satırı yoktu ve yeni kapı Mevcut durumda da görünüyordu.
+- Gerçek pencere, §3 (iz `fixtures/interaction/real/tadilat-araclar.txt`): rölöve dairede Yeni durumda salon ile yatak
+  odası 1 arasına kapı konur. Kapı İlave olur; Mevcut durumda yoktur ve duvar bütündür. ÖNCE (§0'ın ikilisi) kapı
+  "Duvarınki (Mevcut)" oluyor ve Mevcut durumda görünüyordu.
 - Testler: 9 paket 4222 geçti; masaüstü 2033 geçti (tek kırmızı işten önce de kırmızı olan
   `module_surface_tests::each_program_docks_its_own_panels`).
 

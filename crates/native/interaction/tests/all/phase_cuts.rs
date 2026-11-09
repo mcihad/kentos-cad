@@ -193,3 +193,80 @@ fn a_wall_pulled_down_takes_its_corner_with_it() {
         end(&b)
     );
 }
+
+/// What a tool draws takes the state of the view it is drawn in (docs/adr/3039 §3): in Mevcut durum a wall is Mevcut;
+/// in Yeni durum a wall is İlave, a door drawn into the existing wall is İlave of its own and a door drawn into the new
+/// wall takes its wall's (none of its own); in Tümü nothing is given.
+#[test]
+fn what_a_tool_draws_takes_the_view_s_state() {
+    use kentos_commands::ArchPhase;
+    let mut b = Bench::new("wall");
+    let mut s = b.doc.settings().clone();
+    s.workspace = Some(Workspace::Cad);
+    s.srid = 0;
+    s.drawing_unit = Some(DrawingUnit::M);
+    b.doc.set_settings(s);
+    let walls = |b: &Bench| -> Vec<Slot> {
+        b.doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Wall(_)))
+            .map(|e| Slot(e.base().id))
+            .collect()
+    };
+    let wall_at = |b: &mut Bench, y: f64| {
+        b.start("wall");
+        b.click(0., y);
+        b.click(10., y);
+        b.confirm();
+        b.confirm();
+    };
+    let own = |b: &Bench, slot: Slot| b.doc.get(slot).and_then(Entity::own_phase);
+    // Mevcut durum: the survey.
+    viewed(&mut b, PhaseView::Existing);
+    wall_at(&mut b, 0.0);
+    let old = walls(&b)[0];
+    assert_eq!(own(&b, old), Some(ArchPhase::Existing));
+    // Yeni durum: the works.
+    viewed(&mut b, PhaseView::Proposed);
+    wall_at(&mut b, 5.0);
+    let new = *walls(&b).iter().find(|w| **w != old).expect("the new wall");
+    assert_eq!(own(&b, new), Some(ArchPhase::New));
+    let host = |b: &Bench, slot: Slot| b.doc.uid(slot).unwrap().to_string();
+    let door_in = |b: &mut Bench, wall: Slot, y: f64| -> Slot {
+        b.start("door");
+        b.click(3., y);
+        b.confirm();
+        let uid = host(b, wall);
+        b.doc
+            .entities()
+            .find(|e| matches!(e, Entity::Opening(o) if o.opening.host == uid))
+            .map(|e| Slot(e.base().id))
+            .expect("its door")
+    };
+    let into_old = door_in(&mut b, old, 0.2);
+    assert_eq!(
+        own(&b, into_old),
+        Some(ArchPhase::New),
+        "a new door in an existing wall"
+    );
+    let into_new = door_in(&mut b, new, 5.2);
+    assert_eq!(own(&b, into_new), None, "its wall's");
+    let by_uid = |u: &str| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| b.doc.slot_of(u))
+            .and_then(|s| b.doc.get(s))
+    };
+    assert_eq!(
+        b.doc.get(into_new).unwrap().phase(by_uid),
+        Some(ArchPhase::New)
+    );
+    // Tümü: nothing given.
+    viewed(&mut b, PhaseView::All);
+    wall_at(&mut b, 10.0);
+    let third = *walls(&b)
+        .iter()
+        .find(|w| **w != old && **w != new)
+        .expect("the third wall");
+    assert_eq!(own(&b, third), None);
+}

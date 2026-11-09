@@ -123,7 +123,7 @@ impl WallRectangle {
             scope: Some(kentos_commands::SpaceScope::Project),
             columns: Some(kentos_commands::SpaceColumns::Net),
             name: self.room_name.clone(),
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             ..kentos_commands::NewSpace::default()
         };
         let mut made = None;
@@ -200,7 +200,7 @@ impl WallRectangle {
             style: style.map(|s| s.id),
             height: None,
             // Etkin kat (docs/adr/0713).
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
             color: cx.draft.color_text(),

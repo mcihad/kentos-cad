@@ -540,7 +540,7 @@ def create(d, inp, conflict=False):
             t = first_type(n.get("form", "door"))
         f = {"host": n["host"], "at": 0.0, "anchor": "center", "hand": "start", "side": "left", "showSwing": True}
         apply_type(f, t)
-        for key in ("form", "width", "leaves", "operation", "hand", "swing", "sill", "head", "depth", "inset"):
+        for key in ("form", "width", "leaves", "operation", "hand", "swing", "sill", "head", "depth", "inset", "phase"):
             if key in n:
                 f[key] = n[key]
         recess_follows_form(f, "depth" in n, "inset" in n)
@@ -720,6 +720,8 @@ def create_cases():
         "layerId": "kapi", "openings": [{"host": uid_of(1), "at": 2.0}, {"host": uid_of(1), "at": 6.0, "type": "Pencere 120"}]})])
     c.add("plan yazmadan açıklığı pervazlarıyla gösterir", [create_step(Drawing(), "plan", one(at=2.0))])
     c.add("doğrulama yazmaz", [create_step(Drawing(), "validate", one(at=2.0))])
+    # Its own tadilat durumu (docs/adr/3039 §3): a door drawn in Yeni durum into an existing wall.
+    c.add("kendi tadilat durumuyla: ilave kapı", [create_step(Drawing(), "execute", one(at=2.0, phase="new"))])
     for name, inp, kw in [
         ("açıklık verilmezse ret", {"layerId": "kapi", "openings": []}, {}),
         ("sonsuz konum reddedilir, yeriyle", one(at=2.0), {"non_finite": {"openings[0].at": "NaN"}}),

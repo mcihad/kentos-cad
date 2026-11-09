@@ -53,10 +53,12 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
     seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
     olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
     (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
-    açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
-    girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
-    yazmadan açıklıkları pervazlarıyla gösterir.
+    açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. phase
+    açıklığın kendi tadilat durumudur (existing Mevcut, demolish İptal, new İlave,
+    temporary Geçici; verilmezse duvarınki): Yeni durumda mevcut duvara açılan kapı new.
+    Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla
+    yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz.
+    Plan yazmadan açıklıkları pervazlarıyla gösterir.
     """
     __slots__ = ()
     id = "cad.openings.create"
@@ -100,10 +102,12 @@ class _OpeningsCreate(LocalCommand[OpeningsCreate, OpeningsCreated, OpeningsPlan
         seçebilir. Açıklık duvarın tek bir kenarında (düz ya da yay), uçlarının arasında
         olmalıdır (opening_off_wall) ve aynı duvardaki başka açıklığa binmez
         (openings_overlap). Pervazları duvardan çizilir, duvarın çizgileri onların arasında
-        açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. Katman
-        girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan
-        yazmadan açıklıkları pervazlarıyla gösterir.
+        açılır; duvar taşınınca, uzayınca ya da kalınlaşınca açıklık onunla gider. phase
+        açıklığın kendi tadilat durumudur (existing Mevcut, demolish İptal, new İlave,
+        temporary Geçici; verilmezse duvarınki): Yeni durumda mevcut duvara açılan kapı new.
+        Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla
+        yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz.
+        Plan yazmadan açıklıkları pervazlarıyla gösterir.
 
         Args:
             doc: The drawing it works on.

@@ -220,6 +220,11 @@ impl SlabTool {
     }
 
     fn create_input(&self, slab: NewSlab, cx: &Context<'_>) -> SlabsCreate {
+        // The view's tadilat durumu (docs/adr/3039 §3).
+        let slab = NewSlab {
+            arch: cx.phased(slab.arch.clone()),
+            ..slab
+        };
         SlabsCreate {
             // The slab's layer (docs/adr/3008).
             layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),

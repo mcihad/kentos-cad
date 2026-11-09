@@ -626,7 +626,7 @@ impl ColumnTool {
             // concrete is TS 5319's SN46 instead (docs/adr/3014).
             fill: Some(true),
             // Etkin kat (docs/adr/0713).
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             ..NewColumn::default()
         }
     }
@@ -832,7 +832,7 @@ impl Tool for ColumnTool {
                     rotation: (self.turn != 0.0).then_some(self.turn),
                     kind: None,
                     fill: None,
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                 };
                 let input = self.made(Vec::new(), Some(crossings), cx);
                 self.write(input, cx);
@@ -1383,7 +1383,7 @@ impl FlightTool {
                     fit: self.fit.then_some(true),
                     railings: self.railings,
                     // Etkin kat (docs/adr/0713).
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                     ..NewRamp::default()
                 }],
                 color,
@@ -1425,7 +1425,7 @@ impl FlightTool {
                     railings: self.railings,
                     post: self.post.filter(|_| self.spiralling()),
                     // Etkin kat (docs/adr/0713).
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                     ..NewStair::default()
                 }],
                 color,

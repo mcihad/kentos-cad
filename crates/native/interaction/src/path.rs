@@ -266,7 +266,7 @@ fn write_loop_room(pts: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> Option
         seed: Some(points::wire(seed)),
         scope: Some(kentos_commands::SpaceScope::Project),
         columns: Some(kentos_commands::SpaceColumns::Net),
-        arch: cx.level_arch(),
+        arch: cx.new_arch(),
         ..kentos_commands::NewSpace::default()
     };
     let mut made = None;
@@ -1658,7 +1658,7 @@ impl Path {
         kentos_commands::SpacesSeparators {expected_revision:None,operation:kentos_commands::SpaceSeparatorOperation::Create {
             layer_id:cx.doc.layers().active().to_owned(),paths:vec![kentos_commands::NewSpaceSeparator {
                 pts:wire_all(pts),bulges:has_bulges(Some(bulges)).then(||bulges.to_vec()),closed,
-                arch:self.separator_level.as_ref().and_then(|level|level.arch()),
+                arch:cx.phased(self.separator_level.as_ref().and_then(|level|level.arch())),
             }],color:cx.draft.color_text(),line_weight:cx.draft.line_weight,line_type:None,attrs:cx.template_attrs(None),
         }}
     }

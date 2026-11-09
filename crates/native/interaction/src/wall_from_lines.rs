@@ -81,7 +81,7 @@ impl WallFromLines {
             .is_some();
         WallsFromLines {
             uids: self.uids.clone(),
-            arch: self.level.arch(),
+            arch: cx.phased(self.level.arch()),
             mode: if m.wall_contours {
                 WallsFromMode::Contours
             } else if m.wall_pairs {

@@ -35,7 +35,48 @@ impl App {
             },
         );
         if self.answered(result).is_some() {
-            self.say(Level::Info, format!("Tadilat görünümü: {}.", view.label()));
+            // What is drawn from now on takes the view's state (docs/adr/3039 §3): said, so it is never a surprise.
+            let drawn = match view {
+                PhaseView::All => String::new(),
+                PhaseView::Existing | PhaseView::Demolition => {
+                    " Bundan sonra çizilenler Mevcut olur.".to_owned()
+                }
+                PhaseView::Proposed => " Bundan sonra çizilenler İlave olur.".to_owned(),
+            };
+            self.say(
+                Level::Info,
+                format!("Tadilat görünümü: {}.{drawn}", view.label()),
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app::Message;
+
+    /// Tadilat ▾ says what is drawn from now on takes (docs/adr/3039 §3): the view's state, never a surprise.
+    #[test]
+    fn the_view_says_what_new_objects_take() {
+        let mut app = crate::files_testing::app_with_drawing();
+        crate::files_testing::make_cad(&mut app);
+        for (id, said) in [
+            (
+                "arch.phase.proposed",
+                "Tadilat görünümü: Yeni durum. Bundan sonra çizilenler İlave olur.",
+            ),
+            (
+                "arch.phase.demolition",
+                "Tadilat görünümü: Yıkım planı. Bundan sonra çizilenler Mevcut olur.",
+            ),
+            (
+                "arch.phase.existing",
+                "Tadilat görünümü: Mevcut durum. Bundan sonra çizilenler Mevcut olur.",
+            ),
+            ("arch.phase.all", "Tadilat görünümü: Tümü."),
+        ] {
+            let _ = app.update(Message::Run(id));
+            assert_eq!(crate::files_testing::last_said(&app), said, "{id}");
         }
     }
 }

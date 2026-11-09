@@ -321,6 +321,14 @@ impl OpeningTool {
                 operation,
                 leaves,
                 build,
+                // Its own tadilat durumu when the view's is not its wall's (docs/adr/3039 §3): a door drawn in Yeni
+                // durum into an existing wall is İlave.
+                phase: cx.drawn_phase().filter(|p| {
+                    cx.doc
+                        .get(slot)
+                        .and_then(kentos_commands::Entity::own_phase)
+                        != Some(*p)
+                }),
                 ..NewOpening::default()
             }],
             color: cx.draft.color_text(),

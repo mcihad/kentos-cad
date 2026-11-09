@@ -874,7 +874,7 @@ Dayanak S19.
 
 #### ADV-17 — Tadilat grafik dili [~]
 
-_Durum (9 Kasım 2026):_ M39 1. bölüm yapıldı ([ADR 3039](../docs/adr/3039-renovation-graphic-language.md)): kavramın adı "Evre" değil Tadilat durumu (Mimarlar Odası: Mevcut, İptal, İlave; Geçici); kapı ve pencerenin kendi tadilat durumu (KCAD 218; Öznitelikler'de Duvarınki, Mevcut, İptal, İlave, Geçici); görünümün gizlediği duvar birleşmez, gizlediği açıklık kesmez (mevcut duvara açılan kapı Mevcut durumda delik bırakmaz, iptal pencerenin yeri Yeni durumda dolu); kendi görünümünü gösteren pafta haritası kendi kopyasından kesilir. Kalanlar: araçlarda tadilat durumu, tadilat projesi görünümü ve lejantı (MO: mevcut düz, ilave taramalı, iptal kesikli), tadilat takımı, DXF katmanları.
+_Durum (9 Kasım 2026):_ M39 1. bölüm yapıldı ([ADR 3039](../docs/adr/3039-renovation-graphic-language.md)): kavramın adı "Evre" değil Tadilat durumu (Mimarlar Odası: Mevcut, İptal, İlave; Geçici); kapı ve pencerenin kendi tadilat durumu (KCAD 218; Öznitelikler'de Duvarınki, Mevcut, İptal, İlave, Geçici); görünümün gizlediği duvar birleşmez, gizlediği açıklık kesmez (mevcut duvara açılan kapı Mevcut durumda delik bırakmaz, iptal pencerenin yeri Yeni durumda dolu); kendi görünümünü gösteren pafta haritası kendi kopyasından kesilir. Araçlarda tadilat durumu yapıldı (1b): yeni çizilen görünümün durumunu alır (Mevcut durum/Yıkım planı → Mevcut, Yeni durum → İlave); Yeni durumda mevcut duvara konan kapı İlave. Kalanlar: tadilat projesi görünümü ve lejantı (MO: mevcut düz, ilave taramalı, iptal kesikli), tadilat takımı, DXF katmanları.
 
 **Kullanıcı sonucu:** Mevcut, yıkılacak ve yeni bir bakışta ayrılır; üç evre paftası aynı modelden çıkar. Dayanak S21.
 

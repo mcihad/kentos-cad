@@ -240,6 +240,9 @@
     - Kapı ve pencerenin kendi tadilat durumu (`phase`, KCAD 218; yoksa duvarınki); Öznitelikler'de satırı.
     - Tadilat görünümünün gizlediği duvar birleşmez, gizlediği açıklık duvarı kesmez (ekran, PDF ve ekrandaki pafta;
       kendi görünümlü harita kendi kopyasından). Dayanak PAİY 4(1)(y), 4(1)(dddd), 58; Mimarlar Odası tadilat tekniği.
+    - Araçlar yeni çizileni görünümün durumuyla yazar (`Context::new_arch`, `phased`): Mevcut durum ve Yıkım planında
+      Mevcut, Yeni durumda İlave, Tümü'nde durumsuz; aks yazmaz; kapı duvarınkinden farklıysa kendi durumu
+      (`NewOpening.phase`). Tadilat ▾ "Bundan sonra çizilenler İlave olur" der.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -351,6 +351,8 @@ pub(crate) fn fields_of(n: &NewOpening, kind: &OpeningTypeDef) -> OpeningFields 
         f.swing = Some(v);
     }
     f.number.clone_from(&n.number);
+    // Its own tadilat durumu (docs/adr/3039 §3); absent: its wall's.
+    f.phase = n.phase;
     set_build(&mut f, n.build.as_ref());
     f
 }

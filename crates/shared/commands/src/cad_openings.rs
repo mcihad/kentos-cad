@@ -163,6 +163,11 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<crate::OpeningBuild>,
+    /// Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+    /// Absent: its wall's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase: Option<crate::ArchPhase>,
 }
 
 /// Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one

@@ -56855,6 +56855,8 @@ class NewOpening(_Model):
         inset: A flue's distance from its face to its cavity, metres; absent: centred in its wall. Unit: length.
         leaves: Unit: count.
         middle: With `point`: centred on the edge of the base line the point is by (duvar ortası).
+        phase: Its own tadilat durumu (docs/adr/3039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+            Absent: its wall's.
         point: A point by the wall (the click): its centre goes where the base line passes nearest it. Unit: length.
         side: The side it opens to (a niche's or flue's face). Absent: the side `point` is on, else the left.
         sill: Over the type's: its sill above the floor, metres. Unit: elevation.
@@ -56883,6 +56885,7 @@ class NewOpening(_Model):
     middle: bool | Unset = UNSET
     number: str | None | Unset = UNSET
     operation: OpeningOperation | OpeningOperationName | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
     point: Vec2 | None | Unset = UNSET
     side: OpeningSide | OpeningSideName | None | Unset = UNSET
     sill: float | None | Unset = UNSET
@@ -56924,6 +56927,8 @@ class NewOpening(_Model):
             out["number"] = self.number
         if self.operation is not UNSET:
             out["operation"] = None if self.operation is None else _enum_out(self.operation)
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
         if self.point is not UNSET:
             out["point"] = None if self.point is None else _vec2_out(self.point)
         if self.side is not UNSET:
@@ -56959,6 +56964,7 @@ class NewOpening(_Model):
             middle=data.get("middle", UNSET),
             number=data.get("number", UNSET),
             operation=UNSET if "operation" not in data else None if data["operation"] is None else _enum_in(OpeningOperation, data["operation"]),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
             point=UNSET if "point" not in data else None if data["point"] is None else Vec2.from_json(data["point"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(OpeningSide, data["side"]),
             sill=UNSET if "sill" not in data else None if data["sill"] is None else float(data["sill"]),

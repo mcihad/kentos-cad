@@ -170,6 +170,12 @@ impl SpaceTool {
     }
 
     fn input_for(&self, space: NewSpace, cx: &Context<'_>) -> SpacesCreate {
+        // The view's tadilat durumu (docs/adr/3039 §3): a room found in Yeni durum is İlave, bounded by the walls that
+        // stand after the works (docs/adr/0798 §3).
+        let space = NewSpace {
+            arch: cx.phased(space.arch.clone()),
+            ..space
+        };
         SpacesCreate {
             // The spaces' layer (docs/adr/3008).
             layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Space, cx),
