@@ -1986,7 +1986,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -2277,7 +2281,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -2396,7 +2404,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -2523,7 +2535,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -2651,7 +2667,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -4785,7 +4805,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -6788,7 +6812,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -8801,7 +8829,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -8925,7 +8957,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",
@@ -9053,7 +9089,11 @@
        "surface": {
         "id": "t-1",
         "name": "Tasarım",
-        "digest": "$any"
+        "digest": "$any",
+        "file": "yuzey.xml",
+        "vertices": 121,
+        "triangles": 200,
+        "sha256": "$any"
        },
        "epsg": "EPSG:5256",
        "system": "TUREF / TM36",

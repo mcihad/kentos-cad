@@ -11,7 +11,8 @@
  * attribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;
  * at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
  * field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
- * `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820),
+ * `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
+ * surface file not there, not read or not its SHA-256's, docs/adr/3220),
  * `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
  * (more than 100 000 measured points).
  */
@@ -25,6 +26,8 @@ package?: string,
 /**
  * The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),
  * read back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it
- * changed since. Needs `package`.
+ * changed since. Its surface too when it carries one (`yuzey.xml`, docs/adr/3220), read back to its SHA-256, given
+ * `surface` or not: `surface`, given, is then the drawing's surface now, read only to say whether it changed since
+ * (another surface, or its sources' digest not the package's). Needs `package`.
  */
 packageDesign?: boolean, };

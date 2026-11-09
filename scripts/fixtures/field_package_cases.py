@@ -14,7 +14,11 @@ The drawing is asbuilt_cases.py's (TUREF / TM36, the design points on `tasarim` 
 - the system is EPSG's 5256, “TUREF / TM36”; the project says no heights' system and no epoch, so none is written;
   a project that says them (TUREF at 2005.0, TUDKA-99's orthometric heights by TG-20) has them written, the heights
   in the project's words with EPSG:5775's name as EPSG's registry has it (“Antalya height”);
-- the limits and the notes are written as given; a limit not given is not written.
+- the limits and the notes are written as given; a limit not given is not written;
+- a surface given is carried as `yuzey.xml` (docs/adr/3220): its corners are the drawing's 11 × 11 points; a
+  triangulation of n points, b of them on the hull's boundary, has 2n − b − 2 triangles: 2·121 − 40 − 2 = 200, two to
+  each of the grid's 100 squares. The file's SHA-256 is the command's (`$any`; python/tests/test_field_package.py reads
+  the file back).
 
 The file's bytes and SHA-256 are the command's (`$any`); a plan writes nothing (no size, no digest).
 """
@@ -67,7 +71,9 @@ def answer(inp, written=True):
            "points": points() if design else [], "lines": len(asb.LINES) if lines else 0,
            "vertices": sum(len(pts) for _, pts in asb.LINES) if lines else 0}
     if "surface" in inp:
-        out["surface"] = {"id": "t-1", "name": "Tasarım", "digest": ANY}
+        n, b = 11 * 11, 4 * 10
+        out["surface"] = {"id": "t-1", "name": "Tasarım", "digest": ANY, "file": "yuzey.xml", "vertices": n,
+                          "triangles": 2 * n - b - 2, "sha256": ANY}
     out.update({"epsg": "EPSG:5256", "system": "TUREF / TM36"})
     for k in ("horizontal", "vertical", "quality"):
         if k in inp:

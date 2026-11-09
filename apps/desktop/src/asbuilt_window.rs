@@ -9,7 +9,8 @@
 //! Saha paketi (docs/adr/1920; `cad.field.package`): the same design (points, lines, surface, the names' attribute) and
 //! the same limits, with the quality notes typed below them (a line each), written as one `.zip` for the field; the
 //! file's name is asked, the drawing is not changed. Kaydın saha paketi (docs/adr/2420) checks the record with the
-//! package it was made with; paketin tasarımıyla (docs/adr/2820) compares it with that package's own design.
+//! package it was made with; paketin tasarımıyla (docs/adr/2820) compares it with that package's own design, and its
+//! own surface when it carries one (docs/adr/3220: `yuzey.xml`, the drawing's later surface change said as a warning).
 
 use std::path::PathBuf;
 
@@ -195,6 +196,35 @@ fn package_name(path: &str) -> &str {
     std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or("")
 }
 
+/// What of the package's design was compared: its points and lines (docs/adr/2820) and its surface when it carries one
+/// (docs/adr/3220), or only its digest expected.
+pub(crate) fn package_design_words(p: &kentos_commands::AsbuiltPackage) -> &'static str {
+    match (p.design, p.surface) {
+        (true, true) => "tasarım paketin noktaları, çizgileri ve yüzeyi",
+        (true, false) => "tasarım paketin noktaları ve çizgileri",
+        _ => "tasarım özeti paketten",
+    }
+}
+
+/// What changed since the record's package: the drawing's design (docs/adr/2820) and surface (docs/adr/3220). Checked
+/// against the package's own, the drawing's change is said as a warning, not the record's error.
+pub(crate) fn changes(r: &kentos_commands::AsbuiltChecked) -> Vec<(Kind, &'static str)> {
+    let mut out = Vec::new();
+    let own = r.package.as_ref().is_some_and(|p| p.design);
+    if r.design_changed && own {
+        out.push((Kind::Warn, "Çizimdeki tasarım paketten sonra değişmiş; kayıt sahaya verilen tasarımla, paketin tasarımıyla denetlendi."));
+    } else if r.design_changed {
+        out.push((Kind::Error, "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş."));
+    }
+    let own_surface = r.package.as_ref().is_some_and(|p| p.surface);
+    if r.surface_changed && own_surface {
+        out.push((Kind::Warn, "Çizimdeki yüzey paketten sonra değişmiş; yüzey farkları sahaya verilen yüzeyle, paketin yüzeyiyle (yuzey.xml)."));
+    } else if r.surface_changed {
+        out.push((Kind::Error, "Yüzey, saha paketinin yazıldığı yüzeyden değişmiş."));
+    }
+    out
+}
+
 /// What the check took from the record's package (docs/adr/2420): its stamp and revision, the limits it gave, and the
 /// system, epoch or heights it was written for when they are not the project's.
 fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Format) -> Vec<Element<'static, Message>> {
@@ -212,8 +242,7 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
             p.stamp.replace('T', " "),
             p.revision,
             if taken.is_empty() { "sınırlar girdinin".to_owned() } else { format!("paketten {}", taken.join(", ")) },
-            // docs/adr/2820: the package's own points and lines compared, or only its digest expected.
-            if p.design { "tasarım paketin noktaları ve çizgileri" } else { "tasarım özeti paketten" }
+            package_design_words(p)
         ),
     ));
     if !p.same_system {
@@ -288,7 +317,11 @@ impl App {
         let Some(doc) = self.document.as_mut() else { return };
         let result = field_package::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            let surface = out.surface.as_ref().map_or_else(String::new, |s| format!(", yüzey {}", s.name));
+            // docs/adr/3220: the surface goes in itself, its file and its triangles said.
+            let surface = out.surface.as_ref().map_or_else(String::new, |s| match (&s.file, s.triangles) {
+                (Some(file), Some(n)) => format!(", yüzey {} ({file}, {n} üçgen)", s.name),
+                _ => format!(", yüzey {}", s.name),
+            });
             self.say(
                 Level::Success,
                 format!(
@@ -609,16 +642,10 @@ impl App {
                         format!("{} noktanın σ'sı kalite sınırının üstünde: ölçüm çözümü zayıf, yapım hatası sayılmadı.", r.low_quality),
                     ));
                 }
-                // With the package's own design (docs/adr/2820) the record is checked against what the field had; the
-                // drawing's change is said, not an error of the record.
-                let own = r.package.as_ref().is_some_and(|p| p.design);
-                if r.design_changed && own {
-                    lines.push(words::text_line(
-                        Kind::Warn,
-                        "Çizimdeki tasarım paketten sonra değişmiş; kayıt sahaya verilen tasarımla, paketin tasarımıyla denetlendi.",
-                    ));
-                } else if r.design_changed {
-                    lines.push(words::text_line(Kind::Error, "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş."));
+                // With the package's own design (docs/adr/2820) and surface (docs/adr/3220) the record is checked against
+                // what the field had; the drawing's change is said, not an error of the record.
+                for (kind, said) in changes(r) {
+                    lines.push(words::text_line(kind, said));
                 }
                 if let Some(p) = &r.package {
                     lines.extend(package_lines(p, &f));

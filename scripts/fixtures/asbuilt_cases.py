@@ -23,7 +23,13 @@ The rules, by hand (Trimble Business Center's Point and String Conformance repor
 - the digest: SHA-256 of `p<TAB>name<TAB>x<TAB>y<TAB>z` (six decimals, `-` for none) for each design point, then
   `l<TAB>x,y;x,y` for each design line, each line ended by a newline;
 - the package's own design (docs/adr/2820): its `noktalar.csv` and `cizgiler.csv` are the design compared, read back
-  to its digest (else refused); the drawing's layers, given, only say whether the design changed since.
+  to its digest (else refused); the drawing's layers, given, only say whether the design changed since;
+- the package's own surface (docs/adr/3220): a package that carries `yuzey.xml` (a LandXML TIN, its SHA-256 in the
+  manifest) has it compared with its design, the surface given or not; the surface given then only says whether the
+  drawing's changed since (the manifest's sources' digest not the drawing's: here “0…0”, the drawing's surface moved
+  on). The package's surface PG is the plane 5 cm under G over the south half, [0, 100] × [0, 50], written here as
+  four corners and two faces; a point north of it is off the surface. A file not its SHA-256's, or not in the
+  package, is refused.
 """
 
 import copy
@@ -52,6 +58,32 @@ def G(x, y):
     if not (0.0 <= x <= 100.0 and 0.0 <= y <= 100.0):
         return None
     return 100.0 + 0.02 * x + 0.01 * y
+
+
+def PG(x, y):
+    """The package's surface (docs/adr/3220): the design surface as the crew had it, 5 cm under G, its south half."""
+    if not (0.0 <= x <= 100.0 and 0.0 <= y <= 50.0):
+        return None
+    return 100.0 + 0.02 * x + 0.01 * y - 0.05
+
+
+PG_CORNERS = [(0.0, 0.0), (100.0, 0.0), (100.0, 50.0), (0.0, 50.0)]
+PG_FACES = [(1, 2, 3), (1, 3, 4)]
+
+
+def tin_xml(corners, faces, z):
+    """A LandXML 1.2 TIN of `corners` (x, y from X0, Y0; heights by `z`), its faces 1-based, written here (no KentOS
+    code): each point “northing easting height”, each number Python's shortest text that reads back the same."""
+    pts = "".join(f'          <P id="{k}">{Y0 + y!r} {X0 + x!r} {z(x, y)!r}</P>\n' for k, (x, y) in enumerate(corners, 1))
+    fs = "".join(f"          <F>{a} {b} {c}</F>\n" for a, b, c in faces)
+    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
+            '<LandXML xmlns="http://www.landxml.org/schema/LandXML-1.2" version="1.2" date="2026-11-08" '
+            'time="09:00:00">\n'
+            '  <Units>\n    <Metric areaUnit="squareMeter" linearUnit="meter" volumeUnit="cubicMeter" '
+            'angularUnit="decimal degrees" directionUnit="decimal degrees"/>\n  </Units>\n'
+            '  <Surfaces>\n    <Surface name="Tasarım">\n      <Definition surfType="TIN">\n        <Pnts>\n'
+            f'{pts}        </Pnts>\n        <Faces>\n{fs}        </Faces>\n      </Definition>\n    </Surface>\n'
+            '  </Surfaces>\n</LandXML>\n')
 
 
 DESIGN = [("P1", 10.0, 10.0, 100.3), ("P2", 20.0, 10.0, 100.5), ("P3", 30.0, 10.0, 100.7), ("P4", 40.0, 10.0, 100.9),
@@ -231,23 +263,44 @@ OLD_DESIGN_PACKAGE = dict(package_manifest(digest_of(OLD_DESIGN, OLD_LINES), "EP
                                            "2026-10-20T10:00:00", "9"), points=len(OLD_DESIGN), lines=len(OLD_LINES))
 
 
+# The package that carries its surface (docs/adr/3220): the current design, PG as `yuzey.xml`; the sources' digest of
+# the surface it was made of is not the drawing's now (“0…0”).
+SURFACE_XML = tin_xml(PG_CORNERS, PG_FACES, PG)
+
+
+def surface_manifest():
+    return dict(CURRENT, designDigest=digest(),
+                surface={"id": "t-1", "name": "Tasarım", "digest": "0" * 64, "file": "yuzey.xml",
+                         "vertices": len(PG_CORNERS), "triangles": len(PG_FACES),
+                         "sha256": hashlib.sha256(SURFACE_XML.encode("utf-8")).hexdigest()},
+                files=["saha-paketi.json", "noktalar.csv", "cizgiler.csv", "yuzey.xml"])
+
+
 def package_files():
     """The fixture files: the current package, the older one, and a zip that is not a package; the design's files as
     `cad.field.package` writes them (docs/adr/1920). docs/adr/2820: the older design's package, and the current one
-    with P1 moved 1 cm in its noktalar.csv (its files no longer its digest's)."""
+    with P1 moved 1 cm in its noktalar.csv (its files no longer its digest's). docs/adr/3220: the package with its
+    surface, the same with its first corner 1 cm higher in yuzey.xml (no longer its SHA-256's), and one whose manifest
+    names a yuzey.xml it does not hold."""
     d_ids, l_ids, _ = ids()
     points, strings = csv_points(DESIGN, d_ids), csv_lines(LINES, l_ids)
     current = dict(CURRENT, designDigest=digest())
     moved = [("P1", 10.01, 10.0, 100.3)] + DESIGN[1:]
     o_ids, o_lines = old_ids()
-    pack = lambda m, pts, lns: zipped([("saha-paketi.json", json.dumps(m, ensure_ascii=False, indent=2)),  # noqa: E731
-                                       ("noktalar.csv", pts), ("cizgiler.csv", lns)])
+    def entries(m, pts, lns):
+        return [("saha-paketi.json", json.dumps(m, ensure_ascii=False, indent=2)), ("noktalar.csv", pts),
+                ("cizgiler.csv", lns)]
+    pack = lambda m, pts, lns: zipped(entries(m, pts, lns))  # noqa: E731
+    raised = tin_xml(PG_CORNERS, PG_FACES, lambda x, y: PG(x, y) + (0.01 if (x, y) == PG_CORNERS[0] else 0.0))
     return {
         "saha-paketi.zip": pack(current, points, strings),
         "eski-paket.zip": pack(OLDER, points, strings),
         "paket-degil.zip": zipped([("notlar.txt", "Saha notları\n")]),
         "eski-tasarim-paketi.zip": pack(OLD_DESIGN_PACKAGE, csv_points(OLD_DESIGN, o_ids), csv_lines(OLD_LINES, o_lines)),
         "bozuk-tasarim-paketi.zip": pack(current, csv_points(moved, d_ids), strings),
+        "yuzeyli-paket.zip": zipped(entries(surface_manifest(), points, strings) + [("yuzey.xml", SURFACE_XML)]),
+        "bozuk-yuzey-paketi.zip": zipped(entries(surface_manifest(), points, strings) + [("yuzey.xml", raised)]),
+        "yuzeyi-eksik-paket.zip": zipped(entries(surface_manifest(), points, strings)),
     }
 
 
@@ -278,8 +331,9 @@ def package_block(manifest, i, path):
 
 
 def report(design=True, surface=True, lines=True, search=None, horizontal=None, vertical=None, quality=None,
-           expected=None, quality_field=True, plan=None):
-    """`plan`: the design compared, (points, lines, their ids), the package's (docs/adr/2820); none: the drawing's."""
+           expected=None, quality_field=True, plan=None, ground=G):
+    """`plan`: the design compared, (points, lines, their ids), the package's (docs/adr/2820); none: the drawing's.
+    `ground`: the surface compared, the drawing's G or the package's PG (docs/adr/3220)."""
     d_ids, l_ids, m_ids = ids()
     DESIGN_, LINES_ = DESIGN, LINES
     if plan is not None:
@@ -330,7 +384,7 @@ def report(design=True, surface=True, lines=True, search=None, horizontal=None, 
                     flags.append("outsideVertical")
                     outside = True
         if surface:
-            g = G(x, y)
+            g = ground(x, y)
             if g is None:
                 flags.append("offSurface")
             elif z is not None:
@@ -413,37 +467,57 @@ def answer(i):
         return report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
                       horizontal=i.get("horizontal"), vertical=i.get("vertical"), quality=i.get("quality"),
                       expected=i.get("expectedDesign"), quality_field="qualityField" in i)
-    manifest = dict(CURRENT, designDigest=digest()) if pkg.endswith("saha-paketi.zip") else OLDER
+    carries = pkg.endswith("yuzeyli-paket.zip")
+    manifest = (surface_manifest() if carries else dict(CURRENT, designDigest=digest()) if pkg.endswith("saha-paketi.zip")
+                else OLDER)
     acc = manifest["acceptance"]
     pick = lambda k: i.get(k, acc.get(k)) if k != "quality" or "qualityField" in i else i.get(k)
     out = report(design="design" in i, surface="surface" in i, lines="lines" in i, search=i.get("search"),
                  horizontal=pick("horizontal"), vertical=pick("vertical"), quality=pick("quality"),
                  expected=manifest["designDigest"], quality_field="qualityField" in i)
+    # docs/adr/3220: without the package's design the drawing's surface is compared; the package names the surface it
+    # was made of, whose sources' digest is not the drawing's now.
+    if carries and "surface" in i:
+        out["surfaceChanged"] = True
     out["package"] = package_block(manifest, i, pkg)
     return out
+
+
+# The answer's keys in the contract's order: the digest and the changes first.
+ORDER = ["designDigest", "designChanged", "surfaceChanged", "points", "missing", "within", "outside", "unmatched",
+         "ambiguous", "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package"]
+
+
+def order(out):
+    return {k: out[k] for k in ORDER if k in out}
 
 
 def package_design_answer(i):
     """docs/adr/2820: the package's own design compared; the drawing's layers given only say whether it changed."""
     pkg = i["package"]
     old = pkg.endswith("eski-tasarim-paketi.zip")
-    manifest = OLD_DESIGN_PACKAGE if old else dict(CURRENT, designDigest=digest())
+    # docs/adr/3220: the package that carries its surface has it compared, the surface given or not.
+    carries = pkg.endswith("yuzeyli-paket.zip")
+    manifest = (OLD_DESIGN_PACKAGE if old else surface_manifest() if carries
+                else dict(CURRENT, designDigest=digest(), **i.get("$written", {})))
     plan = (OLD_DESIGN, OLD_LINES, old_ids()) if old else (DESIGN, LINES, ids()[:2])
     acc = manifest["acceptance"]
     pick = lambda k: i.get(k, acc.get(k)) if k != "quality" or "qualityField" in i else i.get(k)  # noqa: E731
-    out = report(design=True, surface="surface" in i, lines=True, search=i.get("search"), horizontal=pick("horizontal"),
-                 vertical=pick("vertical"), quality=pick("quality"), quality_field="qualityField" in i, plan=plan)
+    out = report(design=True, surface="surface" in i or carries, lines=True, search=i.get("search"),
+                 horizontal=pick("horizontal"), vertical=pick("vertical"), quality=pick("quality"),
+                 quality_field="qualityField" in i, plan=plan, ground=PG if carries else G)
     assert out["designDigest"] == manifest["designDigest"]
     out.pop("designChanged", None)
     if ("design" in i or "lines" in i) and digest("design" in i, "lines" in i) != manifest["designDigest"]:
         out["designChanged"] = True
+    if carries and "surface" in i:
+        out["surfaceChanged"] = True
     block = package_block(manifest, i, pkg)
     block["design"] = True
+    if carries or "$written" in i:
+        block["surface"] = True
     out["package"] = block
-    # The answer's keys in the contract's order: the digest and the change first.
-    order = ["designDigest", "designChanged", "points", "missing", "within", "outside", "unmatched", "ambiguous",
-             "lowQuality", "rmsHorizontal", "rmsVertical", "maxHorizontal", "maxVertical", "package"]
-    return {k: out[k] for k in order if k in out}
+    return order(out)
 
 
 def ok(name, i, op="plan", setup_=None):
@@ -587,6 +661,56 @@ def package_design_cases():
         refused("paketin tasarımı: başka özetli eski paket", inp(package=OLD_PKG, packageDesign=True), bad,
                 "“eski-paket.zip” paketinin tasarım dosyaları (noktalar.csv, cizgiler.csv) özetiyle tutmuyor; paket "
                 "bozulmuş ya da elle değiştirilmiş. Paketi Saha paketi yaz… ile yeniden yazın.", "package"),
+    ] + package_surface_cases()
+
+
+SURFACE_PKG = "$fixture:asbuilt/v1/files/yuzeyli-paket.zip"
+# The package `cad.field.package` writes in the case's first step (docs/adr/3220): the drawing's surface carried.
+WRITTEN = "$tmp:asbuilt-yuzeyli-saha.zip"
+WRITTEN_STAMP = "2026-11-08T09:00:00"
+
+
+def package_surface_cases():
+    """docs/adr/3220: the record checked with its package's own surface."""
+    bare = dict(horizontal=None, vertical=None, quality=None)
+    carried = answer(inp(**bare, surface=None, package=SURFACE_PKG, packageDesign=True))
+    by_name = {p["name"]: p for p in carried["points"]}
+    # P1 measured 100.31 at (10.01, 10): the drawing's plane gives 100.3002, the package's 5 cm lower.
+    assert abs(by_name["P1"]["surface"] - (100.31 - (100.0 + 0.02 * 10.01 + 0.01 * 10.0 - 0.05))) < 1e-12
+    assert "outsideSurface" in by_name["P1"]["flags"] and "offSurface" in by_name["X9"]["flags"]
+    assert "surfaceChanged" not in carried and carried["package"]["surface"]
+    changed = answer(inp(**bare, package=SURFACE_PKG, packageDesign=True))
+    assert changed["surfaceChanged"] and changed["points"] == carried["points"]
+    plain = answer(inp(**bare, package=SURFACE_PKG))
+    assert plain["surfaceChanged"] and "surface" not in plain["package"]
+    assert plain["points"] == answer(inp(**bare, package=PKG))["points"], "the drawing's surface without the package's design"
+    # The package written in the step before carries the drawing's own surface: the same as with the layers.
+    write = {"op": "execute", "command": "cad.field.package",
+             "input": {"design": "tasarim", "lines": "bordur", "surface": "Tasarım", "horizontal": 0.02, "vertical": 0.03,
+                       "quality": 0.05, "notes": ["Kontrol noktası K1'den başlayın."], "path": WRITTEN,
+                       "stamp": WRITTEN_STAMP},
+             "result": {"status": "completed", "output": "$any", "warnings": []}, "expect": SAME}
+    i = inp(**bare, package=WRITTEN, packageDesign=True)
+    same = package_design_answer(dict(i, **{"$written": {"stamp": WRITTEN_STAMP, "revision": "$current"}}))
+    assert {k: v for k, v in same.items() if k != "package"} == answer(FULL), "the package's surface is the drawing's"
+    check = {"op": "plan", "input": i, "result": {"status": "completed", "output": same, "warnings": []}, "expect": SAME,
+             "within": W}
+    bad = "invalid_asbuilt_check"
+    return [
+        ok("paketin yüzeyi: kayıt paketin taşıdığı yüzeyle", inp(**bare, surface=None, package=SURFACE_PKG,
+                                                                  packageDesign=True)),
+        ok("paketin yüzeyi: çizimdeki yüzey paketinkinden sonra değişmiş", inp(**bare, package=SURFACE_PKG,
+                                                                               packageDesign=True)),
+        ok("paket: yüzeyin değiştiği söylenir, paketin tasarımı istenmeden çizimin yüzeyiyle", inp(**bare,
+                                                                                                   package=SURFACE_PKG)),
+        {"name": "paketin yüzeyi: Saha paketi yaz… ile yazılan paketin yüzeyi çizimin yüzeyi", "steps": [write, check]},
+        refused("paketin yüzeyi: yuzey.xml özetiyle tutmuyor", inp(package="$fixture:asbuilt/v1/files/bozuk-yuzey-paketi.zip",
+                                                                   packageDesign=True), bad,
+                "“bozuk-yuzey-paketi.zip” paketinin yüzeyi (yuzey.xml) özetiyle tutmuyor; paket bozulmuş ya da elle "
+                "değiştirilmiş. Paketi Saha paketi yaz… ile yeniden yazın.", "package"),
+        refused("paketin yüzeyi: pakette yuzey.xml yok", inp(package="$fixture:asbuilt/v1/files/yuzeyi-eksik-paket.zip",
+                                                             packageDesign=True), bad,
+                "“yuzeyi-eksik-paket.zip” paketinin yüzeyi (yuzey.xml) okunamadı: pakette yuzey.xml yok.", "package"),
     ]
 
 

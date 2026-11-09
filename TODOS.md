@@ -146,6 +146,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `PackagedKind` `grid`.
 - MAP-18 / ADR 3200: web'in pafta önizlemesinde ve PDF'inde haritanın kalite notunun kırpma şekliyle (dikdörtgen,
   çokgen, atlas nesnesi) sınırlanması (`survey-scope.json`'un beş haritası).
+- MAP-19 / ADR 3220: web'in Uygulama kontrolü penceresinde paketin yüzeyiyle denetlemenin satırı ve “Çizimdeki yüzey
+  paketten sonra değişmiş” uyarısı; Saha paketi iletisinde `yuzey.xml` (komutlar ortak, yalnız pencere).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,

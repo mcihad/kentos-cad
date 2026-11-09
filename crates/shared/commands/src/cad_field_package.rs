@@ -19,6 +19,8 @@ pub const CAD_FIELD_PACKAGE_VERSION: u32 = 1;
 pub const FIELD_PACKAGE_FORMAT: &str = "kentos.field-package";
 /// The files in a package, in order.
 pub const FIELD_PACKAGE_FILES: [&str; 3] = ["saha-paketi.json", "noktalar.csv", "cizgiler.csv"];
+/// The surface's own file in a package that names one (docs/adr/3220): the built surface as a LandXML 1.2 TIN.
+pub const FIELD_PACKAGE_SURFACE_FILE: &str = "yuzey.xml";
 /// The most quality notes a package carries, and the most characters of one.
 pub const FIELD_NOTES_LIMIT: usize = 20;
 pub const FIELD_NOTE_LENGTH: usize = 500;
@@ -92,7 +94,9 @@ pub struct PackagePoint {
     pub uid: String,
 }
 
-/// The surface a package names: its id, name and the digest of what it is made of.
+/// The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface
+/// itself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and
+/// triangles' counts and the file's SHA-256. A package written before carries only the first three.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -102,6 +106,20 @@ pub struct PackageSurface {
     pub id: String,
     pub name: String,
     pub digest: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub vertices: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub triangles: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sha256: Option<String>,
 }
 
 /// Output of `cad.field.package` v1: the file written and its size and SHA-256; the design's digest

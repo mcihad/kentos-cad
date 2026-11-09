@@ -2,13 +2,16 @@
 //! docs/adr/2420): `saha-paketi.json` out of the `.zip` `cad.field.package` wrote (docs/adr/1920): the design digest,
 //! the stamp and the drawing's revision, the system, epoch and heights, and the acceptance limits given. Asked
 //! (docs/adr/2820), its design too: `noktalar.csv`'s points and `cizgiler.csv`'s lines, each number as the package wrote
-//! it (the shortest text that reads back the same f64), so the digest of what is read is the package's. Nothing is
-//! written.
+//! it (the shortest text that reads back the same f64), so the digest of what is read is the package's. Its surface
+//! (docs/adr/3220): the manifest's surface (id and the digest of what it was made of) and, a package that carries it,
+//! `yuzey.xml` read back to its SHA-256 as a TIN of triangles. Nothing is written.
 
 use std::path::Path;
 
+use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{FIELD_PACKAGE_FILES, FIELD_PACKAGE_FORMAT, Vec2};
 use kentos_formats::zip;
+use kentos_road::volume::{Ground, Triangle};
 use serde_json::Value;
 
 use crate::checks::{Stop, error};
@@ -30,6 +33,16 @@ pub(crate) struct Package {
     pub(crate) horizontal: Option<f64>,
     pub(crate) vertical: Option<f64>,
     pub(crate) quality: Option<f64>,
+    /// The surface it names (docs/adr/1920), and (docs/adr/3220) the file that carries it.
+    pub(crate) surface: Option<SurfaceRef>,
+}
+
+/// The surface a package names: its id and the digest of what it was made of; a package that carries it (docs/adr/3220)
+/// its file in the `.zip` and the file's SHA-256.
+pub(crate) struct SurfaceRef {
+    pub(crate) id: String,
+    pub(crate) digest: String,
+    pub(crate) file: Option<(String, String)>,
 }
 
 /// The package at `text`, refused at `package` as the contract says.
@@ -67,6 +80,12 @@ pub(crate) fn read(text: &str) -> Result<Package, Stop> {
         return Err(not_a_package(format!("{manifest} tasarım özetini (designDigest) taşımıyor")));
     };
     let limit = |key: &str| v["acceptance"][key].as_f64().filter(|x| x.is_finite() && *x > 0.0);
+    let s = &v["surface"];
+    let surface = text_of(&s["id"]).zip(text_of(&s["digest"])).map(|(id, digest)| SurfaceRef {
+        id,
+        digest,
+        file: text_of(&s["file"]).zip(text_of(&s["sha256"])).filter(|(f, h)| !f.is_empty() && !h.is_empty()),
+    });
     Ok(Package {
         path: text.to_owned(),
         stamp: text_of(&v["stamp"]).unwrap_or_default(),
@@ -78,7 +97,46 @@ pub(crate) fn read(text: &str) -> Result<Package, Stop> {
         horizontal: limit("horizontal"),
         vertical: limit("vertical"),
         quality: limit("quality"),
+        surface,
     })
+}
+
+/// The surface a package carries (docs/adr/3220): its file (`yuzey.xml`, a LandXML TIN) out of the `.zip` at `text`,
+/// read back to the SHA-256 the manifest gives (else refused: the package is broken or was changed by hand), its
+/// first surface's faces as triangles. Refused at `package` when the file is not there or does not read.
+pub(crate) fn ground(text: &str, file: &str, sha256: &str) -> Result<Ground, Stop> {
+    let name = Path::new(text).file_name().map_or_else(|| text.to_owned(), |n| n.to_string_lossy().into_owned());
+    let unread = |why: String| refuse(codes::INVALID_ASBUILT_CHECK, format!("“{name}” paketinin yüzeyi ({file}) okunamadı: {why}."));
+    let bytes = std::fs::read(text).map_err(|e| unread(e.to_string()))?;
+    let limits = zip::Limits::default();
+    let listed = zip::list(&bytes, &limits).map_err(unread)?;
+    let entries = zip::unpack(&bytes, &listed, &limits, |l| l.file_name() == file).map_err(unread)?;
+    let Some(entry) = entries.iter().find(|e| e.name == file) else {
+        return Err(unread(format!("pakette {file} yok")));
+    };
+    if sha256_hex(&entry.data) != sha256 {
+        return Err(refuse(
+            codes::INVALID_ASBUILT_CHECK,
+            format!(
+                "“{name}” paketinin yüzeyi ({file}) özetiyle tutmuyor; paket bozulmuş ya da elle değiştirilmiş. Paketi \
+                 Saha paketi yaz… ile yeniden yazın."
+            ),
+        ));
+    }
+    let read = kentos_formats::landxml::read(&entry.data).map_err(|e| unread(e.words().to_owned()))?;
+    let Some(surface) = read.surfaces.first() else {
+        return Err(unread("içinde yüzey yok".into()));
+    };
+    let at = |i: usize| {
+        let p = &surface.points[i];
+        [p.x, p.y, p.z]
+    };
+    let triangles: Vec<Triangle> =
+        surface.faces.iter().filter(|f| !f.ignored).map(|f| [at(f.points[0]), at(f.points[1]), at(f.points[2])]).collect();
+    if triangles.is_empty() {
+        return Err(unread("yüzeyin üçgeni yok".into()));
+    }
+    Ok(Ground::new(&triangles))
 }
 
 /// The package's design (docs/adr/2820): `noktalar.csv` (`Ad;Y;X;Z;Kimlik`, Y east, X north; a name may hold `;`, the

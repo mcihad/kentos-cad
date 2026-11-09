@@ -59612,7 +59612,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
           "design": {
             "type": [
@@ -59657,7 +59657,7 @@
             ]
           },
           "packageDesign": {
-            "description": "The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),\nread back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it\nchanged since. Needs `package`.",
+            "description": "The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),\nread back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it\nchanged since. Its surface too when it carries one (`yuzey.xml`, docs/adr/3220), read back to its SHA-256, given\n`surface` or not: `surface`, given, is then the drawing's surface now, read only to say whether it changed since\n(another surface, or its sources' digest not the package's). Needs `package`.",
             "type": "boolean"
           },
           "quality": {
@@ -59786,6 +59786,10 @@
             ],
             "x-unit": "length"
           },
+          "surfaceChanged": {
+            "description": "docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its\nsources changed since the package was written.",
+            "type": "boolean"
+          },
           "unmatched": {
             "format": "uint32",
             "minimum": 0,
@@ -59894,6 +59898,10 @@
               "null"
             ],
             "x-unit": "length"
+          },
+          "surfaceChanged": {
+            "description": "docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its\nsources changed since the package was written.",
+            "type": "boolean"
           },
           "unmatched": {
             "format": "uint32",
@@ -115066,6 +115074,10 @@
         "stamp": {
           "type": "string"
         },
+        "surface": {
+          "description": "The surface compared was the package's own (`yuzey.xml`, docs/adr/3220).",
+          "type": "boolean"
+        },
         "taken": {
           "items": {
             "type": "string"
@@ -161932,16 +161944,46 @@
       ]
     },
     "PackageSurface": {
-      "description": "The surface a package names: its id, name and the digest of what it is made of.",
+      "description": "The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface\nitself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and\ntriangles' counts and the file's SHA-256. A package written before carries only the first three.",
       "properties": {
         "digest": {
           "type": "string"
+        },
+        "file": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
         },
         "name": {
           "type": "string"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "triangles": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "vertices": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         }
       },
       "required": [

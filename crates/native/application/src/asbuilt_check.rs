@@ -5,6 +5,10 @@
 //! differences. The design's digest says whether the design changed since the field record was made. Nothing is
 //! written. The shared cases are `fixtures/commands/v1/cad.asbuilt.check.json`.
 //!
+//! With the package's design (docs/adr/2820) the package's surface too, when it carries one (docs/adr/3220): its
+//! `yuzey.xml` read back to its SHA-256 is the surface the record is set against; the drawing's surface, given, then
+//! only says whether it changed since (another surface, or its sources' digest not the package's).
+//!
 //! The digest is SHA-256 of the design's points (`p<TAB>name<TAB>x<TAB>y<TAB>z` with six decimals, `-` for no height)
 //! and then its lines (`l<TAB>x,y;x,y…`), each on its own line, in the drawing's order.
 
@@ -14,6 +18,8 @@ use kentos_commands::{
     CommandResult, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
+use kentos_road::surface::Surface;
+use kentos_road::volume::Ground;
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -25,6 +31,22 @@ pub const NAME_FIELD: &str = "Ad";
 
 fn refuse(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
+}
+
+/// The surface the record is set against: the drawing's, or the one the package carries (docs/adr/3220).
+enum Heights<'a> {
+    Drawing(&'a Surface),
+    Package(&'a Ground),
+}
+
+impl Heights<'_> {
+    /// The surface's height at a place; none off it (or in a void).
+    fn at(&self, p: Vec2) -> Option<f64> {
+        match self {
+            Heights::Drawing(s) => s.height(p.x, p.y).z,
+            Heights::Package(g) => g.height([p.x, p.y]),
+        }
+    }
 }
 
 fn plain(text: &str) -> Option<f64> {
@@ -221,14 +243,33 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
     if let Some(l) = &input.lines {
         layer(l, "lines")?;
     }
+    // docs/adr/3220: with the package's design, the surface the package carries is the one compared; the drawing's
+    // surface, given, is then not made, only its sources' digest read. Either way a surface the package names says
+    // whether the drawing's (given) changed since: another surface, or its sources' digest not the package's.
+    let carried = package
+        .as_ref()
+        .and_then(|p| p.surface.as_ref())
+        .and_then(|s| s.file.as_ref())
+        .filter(|_| input.package_design);
     let made;
+    let mut surface_changed = false;
     let surface = match &input.surface {
         Some(name) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, name, "surface")?;
             let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
-            made = terrains::make(doc, &def);
-            Some(made.built()?)
+            let named = package.as_ref().and_then(|p| p.surface.as_ref());
+            match carried {
+                Some(_) => {
+                    surface_changed = named.is_some_and(|s| s.id != def.id || s.digest != terrains::sources_digest(doc, &def));
+                    None
+                }
+                None => {
+                    made = terrains::make(doc, &def);
+                    surface_changed = named.is_some_and(|s| s.id != def.id || s.digest != made.gathered.digest);
+                    Some(made.built()?)
+                }
+            }
         }
         None => None,
     };
@@ -269,6 +310,15 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         }
     };
     let design_digest = digest(&design, &design_lines);
+    let ground = match (carried, &package) {
+        (Some((file, sha256)), Some(p)) => Some(crate::asbuilt_package::ground(&p.path, file, sha256)?),
+        _ => None,
+    };
+    let heights = match (&ground, surface) {
+        (Some(g), _) => Some(Heights::Package(g)),
+        (None, Some(s)) => Some(Heights::Drawing(s)),
+        (None, None) => None,
+    };
     // By name: a name one design point has.
     let by_name = |name: &str| -> Vec<usize> {
         if name.is_empty() {
@@ -363,8 +413,8 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
                 }
             }
         }
-        if let Some(s) = surface {
-            match s.height(m.p.x, m.p.y).z {
+        if let Some(h) = &heights {
+            match h.at(m.p) {
                 Some(g) => {
                     if let Some(mz) = m.z {
                         let d = mz - g;
@@ -407,7 +457,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
             flags.push("lowQuality");
             counts[4] += 1;
         }
-        if m.z.is_none() && (surface.is_some() || matched.is_some_and(|i| design[i].z.is_some())) {
+        if m.z.is_none() && (heights.is_some() || matched.is_some_and(|i| design[i].z.is_some())) {
             flags.push("noHeight");
         }
         // Matched to a design point or a line point: by its limits; neither, with points or lines to match: unmatched;
@@ -440,8 +490,10 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
         .map(|(d, _)| AsbuiltMissing { uid: d.uid.clone(), name: d.name.clone() })
         .collect();
     let rms = |sum: f64, n: usize| (n > 0).then(|| (sum / n as f64).sqrt());
+    let surface_taken = ground.is_some();
     Ok(AsbuiltChecked {
         design_changed,
+        surface_changed,
         design_digest,
         points: out,
         missing,
@@ -472,6 +524,7 @@ fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked, Stop> {
                 quality: p.quality,
                 taken,
                 design: input.package_design,
+                surface: surface_taken,
             }
         }),
     })

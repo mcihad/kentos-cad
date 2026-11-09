@@ -84,6 +84,6 @@ MCP: `{"tool": "cad.asbuilt.check", "arguments": {..., "package": "…zip", "pac
 
 ## Sonra
 
-- Paketin yüzeyinin kendisi (bugün yalnız kaynak özeti): yüzey farkının da paketin yüzeyiyle olması.
+- ~~Paketin yüzeyinin kendisi (bugün yalnız kaynak özeti): yüzey farkının da paketin yüzeyiyle olması.~~ ADR 3220.
 - İş türleri (as-built, aplikasyon, deformasyon) ve zaman serisi; yetkili inceleme kaydı.
 - Web (TODOS §0.2).

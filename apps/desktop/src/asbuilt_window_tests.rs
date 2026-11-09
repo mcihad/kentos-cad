@@ -109,7 +109,9 @@ fn the_field_package_is_written_from_the_form() {
     let bytes = std::fs::read(dir.join("saha.zip")).expect("written, .zip added");
     let limits = zip::Limits::default();
     let listed = zip::list(&bytes, &limits).expect("a zip");
-    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), kentos_commands::FIELD_PACKAGE_FILES);
+    let mut names = kentos_commands::FIELD_PACKAGE_FILES.to_vec();
+    names.push(kentos_commands::FIELD_PACKAGE_SURFACE_FILE);
+    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), names, "docs/adr/3220: the surface fourth");
     let files = zip::unpack(&bytes, &listed, &limits, |_| true).expect("unpacks");
     let manifest: Value = serde_json::from_slice(&files[0].data).expect("the manifest");
     assert_eq!(manifest["notes"], serde_json::json!(["KN1 ve KN2'den başlanır.", "Kotlar TUDKA-99'a göredir."]));
@@ -120,7 +122,7 @@ fn the_field_package_is_written_from_the_form() {
     assert_eq!(points.lines().count(), 9, "a head and eight design points");
     assert!(points.starts_with("Ad;Y;X;Z;Kimlik\nP1;487010;4420010;100.3;"), "{points}");
     let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
-    assert!(said.contains("Saha paketi yazıldı: 8 nokta, 2 çizgi, yüzey Tasarım, 2 not"), "{said}");
+    assert!(said.contains("Saha paketi yazıldı: 8 nokta, 2 çizgi, yüzey Tasarım (yuzey.xml, 200 üçgen), 2 not"), "{said}");
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written to the drawing");
     let _ = std::fs::remove_dir_all(dir);
 }
@@ -270,6 +272,76 @@ fn the_record_is_checked_with_its_package_s_own_design() {
     assert!(!app.asbuilt.record_design, "the box goes with the package");
     let r = app.asbuilt.answer.clone().expect("an answer").expect("checked");
     assert!(r.package.is_none());
+}
+
+/// docs/adr/3220: with the package that carries its surface, paketin tasarımıyla gives the shared case's answer (the
+/// surface differences against the package's plane, 5 cm under the drawing's, its north half off it) and says the
+/// drawing's surface changed since as a warning; the package line names the surface.
+#[test]
+fn the_record_is_checked_with_its_package_s_own_surface() {
+    let mut app = opened(Some(Module::Map));
+    let _ = app.update(Message::Run("asbuilt.check"));
+    for e in [A::Search("0,5".into()), A::QualityField("Hassasiyet".into())] {
+        let _ = app.update(Message::Asbuilt(e));
+    }
+    let _ = app.update(Message::Asbuilt(A::PickedPackage(Some(fixture("asbuilt/v1/files/yuzeyli-paket.zip")))));
+    let _ = app.update(Message::Asbuilt(A::PackageDesign(true)));
+    let r = serde_json::to_value(app.asbuilt.answer.clone().expect("an answer").expect("checked")).expect("json");
+    let case = cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "paketin yüzeyi: çizimdeki yüzey paketinkinden sonra değişmiş")
+        .cloned()
+        .expect("the case");
+    let want = &case["steps"][0]["result"]["output"];
+    for key in ["surfaceChanged", "within", "outside", "unmatched", "ambiguous", "lowQuality"] {
+        assert_eq!(r[key], want[key], "{key}");
+    }
+    for (g, w) in r["points"].as_array().expect("points").iter().zip(want["points"].as_array().expect("points")) {
+        assert_eq!(g["flags"], w["flags"], "{}", w["name"]);
+    }
+    assert_eq!(r["package"]["surface"], true);
+    let checked = app.asbuilt.answer.clone().expect("an answer").expect("checked");
+    let said: Vec<&str> = crate::asbuilt_window::changes(&checked).into_iter().map(|(_, w)| w).collect();
+    assert_eq!(said, ["Çizimdeki yüzey paketten sonra değişmiş; yüzey farkları sahaya verilen yüzeyle, paketin yüzeyiyle (yuzey.xml)."]);
+    let package = checked.package.as_ref().expect("the package");
+    assert_eq!(crate::asbuilt_window::package_design_words(package), "tasarım paketin noktaları, çizgileri ve yüzeyi");
+}
+
+/// `.run/gui-evidence/paketin-yuzeyi-3220/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib asbuilt_window_tests::package_surface_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn package_surface_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paketin-yuzeyi-3220");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("asbuilt.check"));
+        for e in [A::Search("0,5".into()), A::QualityField("Hassasiyet".into())] {
+            let _ = app.update(Message::Asbuilt(e));
+        }
+        let _ = app.update(Message::Asbuilt(A::PickedPackage(Some(fixture("asbuilt/v1/files/yuzeyli-paket.zip")))));
+        let _ = app.update(Message::Asbuilt(A::PackageDesign(true)));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-paketin-yuzeyi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
 }
 
 /// `.run/gui-evidence/paketin-tasarimi-2820/`:

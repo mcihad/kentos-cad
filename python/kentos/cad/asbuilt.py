@@ -117,7 +117,9 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
                 only with `qualityField`), its system, epoch and heights are set against the project's.
             package_design: The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),
                 read back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it
-                changed since. Needs `package`.
+                changed since. Its surface too when it carries one (`yuzey.xml`, docs/adr/3220), read back to its SHA-256, given
+                `surface` or not: `surface`, given, is then the drawing's surface now, read only to say whether it changed since
+                (another surface, or its sources' digest not the package's). Needs `package`.
             quality: Unit: length.
             quality_field:
             search: Unit: length.

@@ -8,7 +8,12 @@ import type { AsbuiltPoint } from "./AsbuiltPoint";
  * point in the drawing's order; the design points not measured; the counts by status and of the low-quality points;
  * the root mean square and the greatest of the matched points' horizontal distances and height differences.
  */
-export type AsbuiltChecked = { designDigest: string, designChanged?: boolean, points: Array<AsbuiltPoint>, missing: Array<AsbuiltMissing>, within: number, outside: number, unmatched: number, ambiguous: number, lowQuality: number, rmsHorizontal?: number, rmsVertical?: number, maxHorizontal?: number, maxVertical?: number, 
+export type AsbuiltChecked = { designDigest: string, designChanged?: boolean, 
+/**
+ * docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its
+ * sources changed since the package was written.
+ */
+surfaceChanged?: boolean, points: Array<AsbuiltPoint>, missing: Array<AsbuiltMissing>, within: number, outside: number, unmatched: number, ambiguous: number, lowQuality: number, rmsHorizontal?: number, rmsVertical?: number, maxHorizontal?: number, maxVertical?: number, 
 /**
  * The field package given (docs/adr/2420).
  */

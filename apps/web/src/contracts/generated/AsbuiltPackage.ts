@@ -10,4 +10,8 @@ export type AsbuiltPackage = { path: string, stamp: string, revision: string, di
 /**
  * The design compared was the package's own (docs/adr/2820).
  */
-design?: boolean, };
+design?: boolean, 
+/**
+ * The surface compared was the package's own (`yuzey.xml`, docs/adr/3220).
+ */
+surface?: boolean, };

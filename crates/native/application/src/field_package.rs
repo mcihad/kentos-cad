@@ -3,22 +3,27 @@
 //!
 //! - `saha-paketi.json`: `kentos.field-package` v1, the project's name, the stamp, the drawing's revision, the design's
 //!   digest, the system (`EPSG:5256` and its name; a local project none), the epoch, the heights' system in words, the
-//!   acceptance limits (only those given), the notes, the surface (id, name, its sources' digest) and the files;
+//!   acceptance limits (only those given), the notes, the surface (id, name, its sources' digest; docs/adr/3220 its
+//!   file, corners, triangles and the file's SHA-256) and the files;
 //! - `noktalar.csv`: `Ad;Y;X;Z;Kimlik` (Y east, X north as a surveyor reads them; each number as Rust writes an f64, the
 //!   shortest that reads back the same: nothing rounded);
 //! - `cizgiler.csv`: `Kimlik;Sıra;Y;X;Bulge`, each line's vertices in order (a closed polyline's first again at its end,
-//!   as the check reads it).
+//!   as the check reads it);
+//! - `yuzey.xml` (a surface given, docs/adr/3220): the surface as built now, a LandXML 1.2 TIN (`road_landxml`'s
+//!   writer: each number the shortest that reads back the same, the corners and the kept triangles as the drawing has
+//!   them), so the check can set the record against the surface the crew had, not the one the drawing has later.
 //!
 //! The file is written whole or not at all; the drawing is not changed.
 
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{
-    CommandResult, FIELD_NOTE_LENGTH, FIELD_NOTES_LIMIT, FIELD_PACKAGE_FILES, FIELD_PACKAGE_FORMAT, FieldPackage,
-    FieldPackaged, PackagePoint, PackageSurface,
+    CommandResult, FIELD_NOTE_LENGTH, FIELD_NOTES_LIMIT, FIELD_PACKAGE_FILES, FIELD_PACKAGE_FORMAT,
+    FIELD_PACKAGE_SURFACE_FILE, FieldPackage, FieldPackaged, PackagePoint, PackageSurface,
 };
 use kentos_commands::encoding::sha256_hex;
 use kentos_domain::Document;
+use kentos_formats::landxml_write::{WLandXml, WSurface};
 use kentos_formats::zip;
 use serde_json::json;
 
@@ -85,13 +90,15 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
             return Err(refuse(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), path));
         }
     }
-    let surface = match &input.surface {
+    let made;
+    let built = match &input.surface {
         Some(name) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, name, "surface")?;
             let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
-            terrains::make(doc, &def).built()?;
-            Some(PackageSurface { id: def.id.clone(), name: def.name.clone(), digest: terrains::sources_digest(doc, &def) })
+            made = terrains::make(doc, &def);
+            let surface = made.built()?;
+            Some((def, made.gathered.digest.clone(), surface))
         }
         None => None,
     };
@@ -126,6 +133,34 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
     let system = (!facts.epsg.is_empty()).then(|| kentos_project::crs::system(settings.srid).map(|s| s.name.clone())).flatten();
     let (date, time) = input.stamp.as_deref().and_then(crate::road_landxml::stamp_of).unwrap_or_else(crate::road_landxml::now);
     let stamp = format!("{date}T{time}");
+    // The surface itself (docs/adr/3220): a LandXML 1.2 TIN of the corners and the kept triangles, dated as the package.
+    let surface_file = built.as_ref().map(|(def, _, s)| {
+        kentos_formats::landxml_write::write(&WLandXml {
+            date: date.clone(),
+            time: time.clone(),
+            application: "KentOS Saha paketi".into(),
+            version: env!("CARGO_PKG_VERSION").into(),
+            project: doc.name().to_owned(),
+            surfaces: vec![WSurface { name: def.name.clone(), vertices: s.vertices.clone(), triangles: s.triangles.clone() }],
+            coordinate_system: crate::road_field::coordinate_system(doc),
+            ..WLandXml::default()
+        })
+        .into_bytes()
+    });
+    let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
+    let surface = built.as_ref().zip(surface_file.as_ref()).map(|((def, digest, s), file)| PackageSurface {
+        id: def.id.clone(),
+        name: def.name.clone(),
+        digest: digest.clone(),
+        file: Some(FIELD_PACKAGE_SURFACE_FILE.to_owned()),
+        vertices: Some(count(s.vertices.len())),
+        triangles: Some(count(s.triangles.len())),
+        sha256: Some(sha256_hex(file)),
+    });
+    let mut names: Vec<&str> = FIELD_PACKAGE_FILES.to_vec();
+    if surface_file.is_some() {
+        names.push(FIELD_PACKAGE_SURFACE_FILE);
+    }
     // The files.
     let mut csv = String::from("Ad;Y;X;Z;Kimlik\n");
     for p in &points {
@@ -160,13 +195,16 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
         "surface": surface,
         "points": points.len(),
         "lines": lines.len(),
-        "files": FIELD_PACKAGE_FILES,
+        "files": names,
     });
-    let files = vec![
+    let mut files = vec![
         (FIELD_PACKAGE_FILES[0].to_owned(), serde_json::to_vec_pretty(&manifest).unwrap_or_default()),
         (FIELD_PACKAGE_FILES[1].to_owned(), csv.into_bytes()),
         (FIELD_PACKAGE_FILES[2].to_owned(), strings.into_bytes()),
     ];
+    if let Some(xml) = surface_file {
+        files.push((FIELD_PACKAGE_SURFACE_FILE.to_owned(), xml));
+    }
     Ok(Checked {
         out: FieldPackaged {
             path: text.to_owned(),

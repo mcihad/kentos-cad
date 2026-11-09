@@ -49,7 +49,7 @@ sırayla alır.
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160 | profilin canlı güncellenmesi; yüzey kaplaması; kesişen borunun dış duvarı | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180 | DXF'te TABLE yazımı; tanımı olmayan ek özniteliklerinin ATTRIB'i; paketten açılan projede ızgaraların bulunması | kurum profilleri |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200 | atlas sayfalarının kaynak dökümü; total station ve nivelman kalitesi | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820 | iş türleri ve zaman serisi; yetkili inceleme kaydı; paketin yüzeyi | canlı cihaz; cihaz biçimleri |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220 | iş türleri ve zaman serisi; yetkili inceleme kaydı; yüzeye en yakın uzaklık | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840 | tariften başka projede üretim; bütçe; çizimin kendi hesabının içinde durdurma | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -1778,6 +1778,15 @@ değişimini söyler, bu kipte uyarı olur; 42 ortak durum (eski tasarımın ve 
 Uygulama kontrolü'nde paketin tasarımıyla kutusu. Bulunan: önceki durumların paketlerinin CSV'leri sadık değildi
 (“None”, boş çizgiler), düzeltildi. Açık: iş türleri ve zaman serisi, yetkili inceleme kaydı, paketin yüzeyi, cihaz
 biçimleri, canlı cihaz.
+
+**9 Kasım 2026, beşinci tur — paketin yüzeyi ([ADR 3220](../docs/adr/3220-field-package-surface.md)).** Kapsam:
+**Harita + Yol + CBS**. Dayanak: Trimble Access yüzeyi projenin klasöründeki dosyadan okur (LandXML üçgenli DTM, TTM,
+DXF); Leica Captivate yüzeyi ayrı DTM işi olarak alır. Kanıtlanan: Saha paketi yüzeyin kendisini `yuzey.xml` (LandXML 1.2
+TIN, sayılar yuvarlanmadan) olarak taşır; bildirge dosyayı, köşe ve üçgen sayısını ve SHA-256'yı yazar. Paketin
+tasarımıyla kontrolde yüzey farkı paketin yüzeyiyledir (SHA-256'ya geri okunur, tutmazsa ret); `surfaceChanged` çizimin
+yüzeyinin paketinkinden başka olduğunu söyler. Başvuruda 6 yeni durum (5 cm alçak, yarım yüzeyli paket; zincirli
+yaz-denetle), Python'da `yuzey.xml`'i değiştiren bağımsız test, MCP, masaüstü uyarısı. Açık: yüzeye en yakın uzaklık,
+cihaz biçimleri (TTM), iş türleri ve zaman serisi, yetkili inceleme kaydı, canlı cihaz.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 

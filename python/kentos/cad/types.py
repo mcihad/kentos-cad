@@ -16763,7 +16763,8 @@ class AsbuiltCheck(_Model):
     attribute's name, `quality` without `qualityField`, `packageDesign` without `package`); the package's (docs/adr/2420;
     at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
     field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
-    `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820),
+    `lines`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
+    surface file not there, not read or not its SHA-256's, docs/adr/3220),
     `not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`
     (more than 100 000 measured points).
     Attributes:
@@ -16773,7 +16774,9 @@ class AsbuiltCheck(_Model):
             only with `qualityField`), its system, epoch and heights are set against the project's.
         package_design: The design compared is the package's (docs/adr/2820): its points (`noktalar.csv`) and lines (`cizgiler.csv`),
             read back to its digest; `design` and `lines`, given, are the drawing's design now, read only to say whether it
-            changed since. Needs `package`.
+            changed since. Its surface too when it carries one (`yuzey.xml`, docs/adr/3220), read back to its SHA-256, given
+            `surface` or not: `surface`, given, is then the drawing's surface now, read only to say whether it changed since
+            (another surface, or its sources' digest not the package's). Needs `package`.
         quality: Unit: length.
         search: Unit: length.
         vertical: Unit: length.
@@ -16856,6 +16859,8 @@ class AsbuiltChecked(_Model):
         package: The field package given (docs/adr/2420).
         rms_horizontal: Unit: length.
         rms_vertical: Unit: length.
+        surface_changed: docs/adr/3220: the drawing's surface (`surface`, given) is not the one the package names: another surface, or its
+            sources changed since the package was written.
     """
     design_digest: str
     points: list[AsbuiltPoint]
@@ -16871,6 +16876,7 @@ class AsbuiltChecked(_Model):
     package: AsbuiltPackage | None | Unset = UNSET
     rms_horizontal: float | None | Unset = UNSET
     rms_vertical: float | None | Unset = UNSET
+    surface_changed: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -16894,6 +16900,8 @@ class AsbuiltChecked(_Model):
             out["rmsHorizontal"] = None if self.rms_horizontal is None else float(self.rms_horizontal)
         if self.rms_vertical is not UNSET:
             out["rmsVertical"] = None if self.rms_vertical is None else float(self.rms_vertical)
+        if self.surface_changed is not UNSET:
+            out["surfaceChanged"] = self.surface_changed
         return out
 
     @classmethod
@@ -16913,6 +16921,7 @@ class AsbuiltChecked(_Model):
             package=UNSET if "package" not in data else None if data["package"] is None else AsbuiltPackage.from_json(data["package"]),
             rms_horizontal=UNSET if "rmsHorizontal" not in data else None if data["rmsHorizontal"] is None else float(data["rmsHorizontal"]),
             rms_vertical=UNSET if "rmsVertical" not in data else None if data["rmsVertical"] is None else float(data["rmsVertical"]),
+            surface_changed=data.get("surfaceChanged", UNSET),
         )
 
 
@@ -16947,6 +16956,7 @@ class AsbuiltPackage(_Model):
         epoch: Unit: year.
         horizontal: Unit: length.
         quality: Unit: length.
+        surface: The surface compared was the package's own (`yuzey.xml`, docs/adr/3220).
         vertical: Unit: length.
     """
     path: str
@@ -16962,6 +16972,7 @@ class AsbuiltPackage(_Model):
     heights: str | None | Unset = UNSET
     horizontal: float | None | Unset = UNSET
     quality: float | None | Unset = UNSET
+    surface: bool | Unset = UNSET
     taken: list[str] | Unset = UNSET
     vertical: float | None | Unset = UNSET
 
@@ -16986,6 +16997,8 @@ class AsbuiltPackage(_Model):
             out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
         if self.quality is not UNSET:
             out["quality"] = None if self.quality is None else float(self.quality)
+        if self.surface is not UNSET:
+            out["surface"] = self.surface
         if self.taken is not UNSET:
             out["taken"] = list(self.taken)
         if self.vertical is not UNSET:
@@ -17008,6 +17021,7 @@ class AsbuiltPackage(_Model):
             heights=data.get("heights", UNSET),
             horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
             quality=UNSET if "quality" not in data else None if data["quality"] is None else float(data["quality"]),
+            surface=data.get("surface", UNSET),
             taken=list(data["taken"]) if "taken" in data else UNSET,
             vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
@@ -62148,16 +62162,34 @@ class PackageResource(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class PackageSurface(_Model):
-    """The surface a package names: its id, name and the digest of what it is made of."""
+    """The surface a package names: its id, name and the digest of what it is made of; and (docs/adr/3220) the surface
+    itself as the package carries it: the file (`yuzey.xml`, a LandXML 1.2 TIN of the built surface), its corners' and
+    triangles' counts and the file's SHA-256. A package written before carries only the first three.
+    Attributes:
+        triangles: Unit: count.
+        vertices: Unit: count.
+    """
     id: str
     name: str
     digest: str
+    file: str | None | Unset = UNSET
+    sha256: str | None | Unset = UNSET
+    triangles: int | None | Unset = UNSET
+    vertices: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["name"] = self.name
         out["digest"] = self.digest
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        if self.triangles is not UNSET:
+            out["triangles"] = self.triangles
+        if self.vertices is not UNSET:
+            out["vertices"] = self.vertices
         return out
 
     @classmethod
@@ -62166,6 +62198,10 @@ class PackageSurface(_Model):
             id=data["id"],
             name=data["name"],
             digest=data["digest"],
+            file=data.get("file", UNSET),
+            sha256=data.get("sha256", UNSET),
+            triangles=data.get("triangles", UNSET),
+            vertices=data.get("vertices", UNSET),
         )
 
 
