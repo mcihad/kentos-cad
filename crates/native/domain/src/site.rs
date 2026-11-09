@@ -36,6 +36,8 @@ pub struct SiteEdgeReport {
     pub required: f64,
     /// The nearest the footprint comes, m; none without a footprint.
     pub drawn: Option<f64>,
+    /// Where: the footprint's point and the edge's (the site plan's distance dimension, docs/adr/3032 §2).
+    pub near: Option<(Vec2, Vec2)>,
 }
 
 impl SiteEdgeReport {
@@ -78,17 +80,6 @@ fn signed2(pts: &[Vec2]) -> f64 {
         .sum()
 }
 
-fn point_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
-    let (dx, dy) = (b.x - a.x, b.y - a.y);
-    let len2 = dx * dx + dy * dy;
-    let t = if len2 > 0.0 {
-        (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
-    } else {
-        0.0
-    };
-    (p.x - (a.x + t * dx)).hypot(p.y - (a.y + t * dy))
-}
-
 fn crosses(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
     let side = |p: Vec2, q: Vec2, r: Vec2| (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x);
     let (d1, d2) = (side(c, d, a), side(c, d, b));
@@ -96,15 +87,50 @@ fn crosses(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> bool {
     (d1 * d2 < 0.0) && (d3 * d4 < 0.0)
 }
 
-/// The nearest two segments come, 0 when they cross.
-fn segment_segment(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> f64 {
-    if crosses(a, b, c, d) {
-        return 0.0;
+/// The nearest point of segment `ab` to `p`.
+fn foot(p: Vec2, a: Vec2, b: Vec2) -> Vec2 {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let len2 = dx * dx + dy * dy;
+    let t = if len2 > 0.0 {
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
+    Vec2 {
+        x: a.x + t * dx,
+        y: a.y + t * dy,
     }
-    point_segment(a, c, d)
-        .min(point_segment(b, c, d))
-        .min(point_segment(c, a, b))
-        .min(point_segment(d, a, b))
+}
+
+/// The nearest two segments come and where: the point on `ab` and the one on `cd`; 0 when they cross.
+fn segment_segment(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> (f64, Vec2, Vec2) {
+    if crosses(a, b, c, d) {
+        return (0.0, a, a);
+    }
+    let pairs = [
+        (a, foot(a, c, d)),
+        (b, foot(b, c, d)),
+        (foot(c, a, b), c),
+        (foot(d, a, b), d),
+    ];
+    pairs
+        .into_iter()
+        .map(|(p, q)| ((p.x - q.x).hypot(p.y - q.y), p, q))
+        .min_by(|x, y| x.0.total_cmp(&y.0))
+        .expect("four pairs")
+}
+
+/// The stretch of `ab` (its parameters 0…1) segment `cd` faces when parallel to it; none otherwise.
+fn facing(a: Vec2, b: Vec2, c: Vec2, d: Vec2) -> Option<(f64, f64)> {
+    let (ux, uy) = (b.x - a.x, b.y - a.y);
+    let len2 = ux * ux + uy * uy;
+    let (vx, vy) = (d.x - c.x, d.y - c.y);
+    if len2 <= 1e-18 || (ux * vy - uy * vx).abs() > 1e-9 * len2.sqrt() * vx.hypot(vy).max(1e-9) {
+        return None;
+    }
+    let t = |p: Vec2| ((p.x - a.x) * ux + (p.y - a.y) * uy) / len2;
+    let (t0, t1) = (t(c).min(t(d)).max(0.0), t(c).max(t(d)).min(1.0));
+    (t1 > t0).then_some((t0, t1))
 }
 
 /// The points within `d` of segment `ab`: a band with round ends, anticlockwise, its arcs in `n` steps.
@@ -193,22 +219,56 @@ impl Document {
             let (a, b) = (corners[i], corners[(i + 1) % n]);
             let e = site.edge(i);
             let required = e.setback.unwrap_or_else(|| e.kind.setback(floors));
-            let drawn = (!shape.is_empty()).then(|| {
-                shape
+            // The footprint's nearest segment pair: the distance, the edge's point and the footprint's; where facing
+            // pieces of the footprint stand at that distance (a facade in several pieces), the middle of all of them,
+            // where a site plan dimensions it.
+            let segments: Vec<(Vec2, Vec2)> = shape
+                .iter()
+                .flat_map(|area| std::iter::once(&area.outer).chain(&area.holes))
+                .flat_map(|r| {
+                    (0..r.pts.len()).map(move |k| (r.pts[k], r.pts[(k + 1) % r.pts.len()]))
+                })
+                .collect();
+            let mut nearest = segments
+                .iter()
+                .map(|&(c, d)| segment_segment(a, b, c, d))
+                .min_by(|x, y| x.0.total_cmp(&y.0));
+            if let Some((dmin, ..)) = nearest {
+                let stretch = segments
                     .iter()
-                    .flat_map(|area| std::iter::once(&area.outer).chain(&area.holes))
-                    .flat_map(|r| {
-                        (0..r.pts.len()).map(move |k| (r.pts[k], r.pts[(k + 1) % r.pts.len()]))
-                    })
-                    .map(|(c, d)| segment_segment(a, b, c, d))
-                    .fold(f64::INFINITY, f64::min)
-            });
+                    .filter(|&&(c, d)| (segment_segment(a, b, c, d).0 - dmin).abs() <= 1e-6)
+                    .filter_map(|&(c, d)| facing(a, b, c, d).map(|t| (t, c, d)))
+                    .fold(
+                        None::<(f64, f64, Vec2, Vec2)>,
+                        |acc, ((t0, t1), c, d)| match acc {
+                            None => Some((t0, t1, c, d)),
+                            Some((s0, s1, c0, d0)) => Some((s0.min(t0), s1.max(t1), c0, d0)),
+                        },
+                    );
+                if let Some((t0, t1, c, d)) = stretch {
+                    let m = (t0 + t1) / 2.0;
+                    let on_edge = Vec2 {
+                        x: a.x + m * (b.x - a.x),
+                        y: a.y + m * (b.y - a.y),
+                    };
+                    // The footprint's line through the facing pieces, at the same distance.
+                    let (vx, vy) = (d.x - c.x, d.y - c.y);
+                    let len2 = vx * vx + vy * vy;
+                    let t = ((on_edge.x - c.x) * vx + (on_edge.y - c.y) * vy) / len2;
+                    let on_footprint = Vec2 {
+                        x: c.x + t * vx,
+                        y: c.y + t * vy,
+                    };
+                    nearest = Some((dmin, on_edge, on_footprint));
+                }
+            }
             edges.push(SiteEdgeReport {
                 kind: e.kind,
                 a,
                 b,
                 required,
-                drawn: drawn.filter(|d| d.is_finite()),
+                drawn: nearest.map(|n| n.0).filter(|d| d.is_finite()),
+                near: nearest.map(|(_, on_edge, on_footprint)| (on_footprint, on_edge)),
             });
         }
         let mut ring = corners.clone();

@@ -6,6 +6,11 @@
 //! each edge saying its garden distance (PAİY 23: 5 m on a road or a public area, 3 m at the side and the back with
 //! half a metre for each storey past four) and the footprint's distance to it, the setback line shown as it will be;
 //! Enter writes them. Started on a project with a parcel, it takes it up with its kinds.
+//!
+//! Ölçüler (Ö, on by default; docs/adr/3032 §2) draws the site plan's marks with them, in the same undo step: an aligned
+//! dimension from the footprint's nearest point to each edge, a level mark ±0.00 in the footprint's middle and, with
+//! ±0.00's elevation, “±0.00 = +1285.40” under it. Each carries the attribute `Vaziyet`; run again, the tool takes the
+//! old marks away before it draws the new ones.
 
 use kentos_commands::{EntityGeometry, LineType, SiteEdge, SiteEdgeKind, SitePlan};
 use kentos_native_application::{ExecutionContext, create};
@@ -20,6 +25,8 @@ pub const ID: &str = "siteParcel";
 pub const LABEL: &str = "Parsel";
 /// The setback line's colour: the plan's own red for an approach line.
 pub const ENVELOPE_COLOR: &str = "#d32f2f";
+/// The attribute the site plan's marks carry (docs/adr/3032 §2): what the tool takes away before drawing them again.
+pub const MARK_ATTR: &str = "Vaziyet";
 
 /// The next kind a click gives an edge.
 fn next(kind: SiteEdgeKind) -> SiteEdgeKind {
@@ -47,8 +54,9 @@ fn m2(v: f64) -> String {
     format!("{v:.2}").replace('.', ",")
 }
 
-#[derive(Default)]
 pub struct ParcelTool {
+    /// Ölçüler: the distance dimensions and ±0.00 drawn too.
+    marks: bool,
     /// The parcel: its persistent id and its corners as the boundary runs.
     parcel: Option<(String, Vec<Vec2>)>,
     /// Each edge's kind and the plan's own setback.
@@ -62,9 +70,162 @@ pub struct ParcelTool {
     report: Option<kentos_domain::site::SiteReport>,
 }
 
+impl Default for ParcelTool {
+    fn default() -> Self {
+        Self {
+            marks: true,
+            parcel: None,
+            edges: Vec::new(),
+            hovered: None,
+            hot: None,
+            at: None,
+            report: None,
+        }
+    }
+}
+
 impl ParcelTool {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// The site plan's marks (docs/adr/3032 §2): the old ones taken away, a distance dimension for each edge the
+    /// footprint stands apart from, ±0.00 in the footprint's middle and its elevation under it; how many drawn.
+    fn draw_marks(report: &kentos_domain::site::SiteReport, cx: &mut Context<'_>) -> Option<usize> {
+        let old: Vec<kentos_domain::Slot> = cx
+            .doc
+            .entities()
+            .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
+        if !old.is_empty() {
+            cx.doc.remove(&old);
+        }
+        let layer = cx.doc.layers().active().to_owned();
+        let look = |what: &str| kentos_commands::NewLook {
+            color: None,
+            line_weight: None,
+            attrs: Some(std::iter::once((MARK_ATTR.to_owned(), what.to_owned())).collect()),
+            label: None,
+            symbol: None,
+        };
+        let mut drawn = 0;
+        for e in &report.edges {
+            let Some((p, q)) = e.near.filter(|_| e.drawn.is_some_and(|d| d > 1e-6)) else {
+                continue;
+            };
+            let input = kentos_commands::DimensionsCreate {
+                measure: kentos_commands::DimensionMeasure::Aligned {
+                    a: kentos_commands::MeasuredPoint::At {
+                        at: kentos_commands::Vec2 { x: p.x, y: p.y },
+                    },
+                    b: kentos_commands::MeasuredPoint::At {
+                        at: kentos_commands::Vec2 { x: q.x, y: q.y },
+                    },
+                },
+                at: kentos_commands::Vec2 {
+                    x: (p.x + q.x) / 2.0,
+                    y: (p.y + q.y) / 2.0,
+                },
+                offset: None,
+                layer_id: layer.clone(),
+                dimension_style: None,
+                height: None,
+                mask: Some(true),
+                look: look("Bahçe mesafesi"),
+                expected_revision: None,
+            };
+            let result = kentos_native_application::dimension_create::dimensions_create::execute(
+                &mut ExecutionContext::new(cx.doc),
+                input,
+            );
+            crate::points::written(result, cx)?;
+            drawn += 1;
+        }
+        // ±0.00 in the footprint's middle, its elevation under it.
+        let (_, shape) = cx.doc.footprint();
+        let mut b = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
+        for p in shape.iter().flat_map(|a| a.outer.pts.iter()) {
+            b = [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)];
+        }
+        if b[0].is_finite() {
+            // In the footprint's upper part: its middle is where a room's own tag stands.
+            let mid = kentos_commands::Vec2 {
+                x: (b[0] + b[2]) / 2.0,
+                y: b[1] + 0.8 * (b[3] - b[1]),
+            };
+            let input = kentos_commands::DimensionsCreate {
+                measure: kentos_commands::DimensionMeasure::Elevation {
+                    a: kentos_commands::MeasuredPoint::At { at: mid },
+                    z: Some(0.0),
+                    level: None,
+                },
+                at: mid,
+                offset: None,
+                layer_id: layer.clone(),
+                dimension_style: None,
+                height: None,
+                mask: Some(true),
+                look: look("±0,00"),
+                expected_revision: None,
+            };
+            let result = kentos_native_application::dimension_create::dimensions_create::execute(
+                &mut ExecutionContext::new(cx.doc),
+                input,
+            );
+            crate::points::written(result, cx)?;
+            drawn += 1;
+            if let Some(z) = report.datum {
+                let height = cx.annotation_height(kentos_commands::AnnotationKind::Text);
+                let input = kentos_commands::EntitiesCreate {
+                    layer_id: layer,
+                    objects: vec![kentos_commands::NewObject {
+                        geometry: EntityGeometry::Text {
+                            layout: None,
+                            annotative: None,
+                            p: kentos_commands::Vec2 {
+                                x: mid.x,
+                                y: mid.y - 3.0 * height,
+                            },
+                            text: format!("±0.00 = {}{:.2}", if z >= 0.0 { "+" } else { "" }, z),
+                            height,
+                            rotation: 0.0,
+                            align: Some(kentos_commands::TextAlign::MiddleCenter),
+                            width_factor: None,
+                            mask: true,
+                            box_width: None,
+                            line_spacing: None,
+                            runs: Vec::new(),
+                            face: crate::styles::text_face(cx),
+                            path: None,
+                        },
+                        color: None,
+                        line_weight: None,
+                        line_type: None,
+                        attrs: Some(
+                            std::iter::once((MARK_ATTR.to_owned(), "±0,00".to_owned())).collect(),
+                        ),
+                        label: None,
+                        label_of: None,
+                        label_scale: None,
+                        symbol: None,
+                        order: None,
+                        transparency: None,
+                    }],
+                    operation: None,
+                    expected_revision: None,
+                };
+                let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+                crate::points::written(result, cx)?;
+                drawn += 1;
+            }
+        }
+        Some(drawn)
     }
 
     /// The closed line or polygon under `at`: its persistent id and corners.
@@ -170,9 +331,26 @@ impl ParcelTool {
             cx.say(Level::Warn, "Parsel kapalı bir çizgi ya da alan değil.");
             return false;
         };
+        let group = cx.doc.begin_group(LABEL);
+        if !self.write_in(&mut site, &report, cx) {
+            cx.doc.cancel_group(group);
+            return false;
+        }
+        cx.doc.end_group(group);
+        true
+    }
+
+    /// `write`'s body inside its group: the setback line, the marks, the settings and the words.
+    fn write_in(
+        &mut self,
+        site: &mut SitePlan,
+        report: &kentos_domain::site::SiteReport,
+        cx: &mut Context<'_>,
+    ) -> bool {
         // The setback line: the one the site plan keeps where it still stands, else a new dashed closed line.
         let standing = site
             .envelope
+            .clone()
             .as_deref()
             .and_then(|u| kentos_domain::Uuid::parse_str(u).ok())
             .and_then(|u| cx.doc.slot_of(u))
@@ -214,6 +392,14 @@ impl ParcelTool {
                 None => return false,
             }
         }
+        let marks = if self.marks {
+            Self::draw_marks(report, cx)
+        } else {
+            Some(0)
+        };
+        if marks.is_none() {
+            return false;
+        }
         let mut settings = cx.doc.settings().clone();
         let arch = settings.arch.get_or_insert_with(Default::default);
         // A project without a zoning takes the parcel's drawn area as its own (docs/adr/3030).
@@ -224,7 +410,7 @@ impl ParcelTool {
                 coverage: None,
             });
         }
-        arch.site = Some(site);
+        arch.site = Some(site.clone());
         cx.doc.set_settings(settings);
         let short: Vec<String> = report
             .edges
@@ -248,10 +434,15 @@ impl ParcelTool {
                 Level::Warn
             },
             format!(
-                "Parsel {} m², kat adedi {}, ağaç {}; yapı yaklaşma sınırı çizildi.{}",
+                "Parsel {} m², kat adedi {}, ağaç {}; yapı yaklaşma sınırı çizildi{}.{}",
                 m2(report.area),
                 report.floors,
                 report.trees,
+                if self.marks {
+                    ", bahçe mesafeleri ve ±0,00 ölçülendi"
+                } else {
+                    ""
+                },
                 if short.is_empty() {
                     String::new()
                 } else {
@@ -273,11 +464,12 @@ impl Tool for ParcelTool {
     }
 
     fn prompt(&self) -> Prompt {
-        if self.parcel.is_none() {
+        let p = if self.parcel.is_none() {
             Prompt::new(LABEL, "parselin kenarına tıklayın")
         } else {
             Prompt::new(LABEL, "kenara tıklayın: türü değişir; Enter ile kaydedin")
-        }
+        };
+        p.option_with("Ölçüler", "Ö", if self.marks { "Açık" } else { "Kapalı" })
     }
 
     fn point_count(&self) -> usize {
@@ -344,8 +536,31 @@ impl Tool for ParcelTool {
         }
     }
 
-    fn input(&mut self, _text: &str, _cx: &mut Context<'_>) -> bool {
+    fn input(&mut self, text: &str, _cx: &mut Context<'_>) -> bool {
+        if matches!(crate::prompt::upper_tr(text.trim()).as_str(), "Ö" | "O") {
+            self.marks = !self.marks;
+            return true;
+        }
         false
+    }
+
+    fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
+        vec![crate::tool_settings::Setting::toggle(
+            "Ö",
+            "Ölçüler (bahçe mesafeleri ve ±0,00)",
+            self.marks,
+        )]
+    }
+
+    fn configure(&mut self, key: &str, value: &str, _cx: &mut Context<'_>) -> bool {
+        if key != "Ö" {
+            return false;
+        }
+        self.marks = matches!(
+            crate::prompt::fold_tr(value.trim()).as_str(),
+            "YES" | "AÇIK" | "ACIK" | "EVET" | "1" | "TRUE"
+        );
+        true
     }
 
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {

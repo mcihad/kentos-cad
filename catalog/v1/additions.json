@@ -2991,7 +2991,7 @@
       "title": "Parsel ve bahçe mesafeleri",
       "short": "Parsel",
       "icon": "siteParcel",
-      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
+      "description": "Vaziyet planı (docs/adr/3032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
       "aliases": [
         "VAZIYET",
         "VAZİYET",

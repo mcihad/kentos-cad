@@ -127,6 +127,12 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
         },
         24.0,
     );
+    // ±0.00's elevation typed first (Proje ayarları › Mimari › İmar durumu): the site plan holds it alone.
+    command(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": storeys(4), "site": { "datum": 1285.4 } } }),
+    );
     let _ = app.update(Message::Run("tool.siteParcel"));
     assert_eq!(app.session.tool_id(), "siteParcel");
     click(&mut app, 10.0, -4.0); // the parcel, by its south edge
@@ -136,8 +142,52 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
     let _ = app.submit_line("");
     let said = crate::files_testing::last_said(&app);
     assert!(
-        said.starts_with("Parsel 540,00 m², kat adedi 4, ağaç 15; yapı yaklaşma sınırı çizildi."),
+        said.starts_with(
+            "Parsel 540,00 m², kat adedi 4, ağaç 15; yapı yaklaşma sınırı çizildi, bahçe mesafeleri ve ±0,00 ölçülendi."
+        ),
         "{said}"
+    );
+    // The site plan's marks (docs/adr/3032 §2): a distance dimension for each edge, ±0.00, its elevation.
+    let marks = |app: &App| {
+        let doc = &app.document.as_ref().expect("a drawing").model;
+        let mut out: Vec<(String, String)> = doc
+            .entities()
+            .filter(|e| {
+                e.base()
+                    .attrs
+                    .contains_key(kentos_interaction::parcel_tool::MARK_ATTR)
+            })
+            .map(|e| {
+                let what = match e {
+                    kentos_commands::Entity::Text(t) => t.text.clone(),
+                    _ => e.kind().to_owned(),
+                };
+                (
+                    e.base().attrs[kentos_interaction::parcel_tool::MARK_ATTR].clone(),
+                    what,
+                )
+            })
+            .collect();
+        out.sort();
+        out
+    };
+    let first = marks(&app);
+    let kinds: Vec<&str> = first.iter().map(|(k, _)| k.as_str()).collect();
+    assert_eq!(
+        kinds,
+        [
+            "Bahçe mesafesi",
+            "Bahçe mesafesi",
+            "Bahçe mesafesi",
+            "Bahçe mesafesi",
+            "±0,00",
+            "±0,00"
+        ],
+        "{first:?}"
+    );
+    assert!(
+        first.iter().any(|(_, w)| w == "±0.00 = +1285.40"),
+        "{first:?}"
     );
     assert!(
         said.contains("Bahçe mesafesi dar: 1. kenar (Ön bahçe) 4,00 m < 5,00 m"),
@@ -227,6 +277,24 @@ fn a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys() {
     assert!(
         crate::zoning_badge::words(doc, true).is_some_and(|(_, over)| over),
         "the badge red"
+    );
+    // Run again: the parcel taken up with its kinds, the marks drawn anew, not twice; ±0.00's elevation kept.
+    let _ = app.update(Message::Run("tool.siteParcel"));
+    let _ = app.submit_line("");
+    assert_eq!(marks(&app).len(), first.len(), "{:?}", marks(&app));
+    let arch = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .arch
+        .clone()
+        .expect("Mimari's settings");
+    assert_eq!(
+        arch.site.as_ref().and_then(|s| s.datum),
+        Some(1285.4),
+        "±0.00 kept"
     );
     // A fifth storey: 15 m, five storeys: the side and back gardens 3.5 m; the line follows at once.
     let mut a = serde_json::to_value(&arch).expect("the settings");

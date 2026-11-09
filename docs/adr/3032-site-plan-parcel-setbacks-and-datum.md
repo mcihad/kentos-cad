@@ -1,6 +1,6 @@
 # 3032 — Vaziyet planı: parsel, bahçe mesafeleri, oturum ve ±0,00
 
-Tarih: 2026-11-09. Durum: kabul (M32 1. bölüm, ADV-22; plan S22).
+Tarih: 2026-11-09. Durum: kabul (M32, iki bölüm; ADV-22; plan S22).
 
 ## Sorun
 
@@ -72,6 +72,20 @@ Tarih: 2026-11-09. Durum: kabul (M32 1. bölüm, ADV-22; plan S22).
   - Proje ayarları › Mimari › İmar durumu'na "±0,00 kotu (m)" eklendi.
 - **Yeni ikon `siteParcel`:** parsel, kesikli çekme çizgisi ve içinde bina.
 
+### §2 Çizime basılan vaziyet planı ögeleri (M32 2. bölüm)
+
+- **Ölçüler (Ö, varsayılan açık):** Parsel aracının Enter'ı aynı geri alma adımında şunları da çizer:
+  - Oturumun bir kenarı gördüğü her parsel kenarı için bir hizalı ölçü, binadan kenara (`SiteEdgeReport::near`). Cephe
+    birkaç parçaysa ölçü bütün parçaların karşıladığı aralığın ortasına konur; paralel olmayan kenarda en yakın noktalar
+    arasındadır.
+  - Oturumun üst kısmında (yüksekliğinin %80'i) ±0,00 kot işareti (`Elevation`, z 0). Ortası mahallerin kendi
+    etiketinin yeridir; işaret oraya konmaz.
+  - ±0,00 kotu verilmişse altında "±0.00 = +1285.40" yazısı.
+- Hepsi `Vaziyet` özniteliğini taşır ("Bahçe mesafesi", "±0,00"). Araç yeniden çalışınca eskileri silip yenilerini
+  çizer: ölçüler çoğalmaz.
+- Ölçüler bağlı değildir. Bina ya da parsel değişince araç yeniden çalıştırılır; yaklaşma sınırı ve tablo ise
+  kendiliğinden izler.
+
 ## Ölçüm
 
 - **Test** (`site_plan_tests::a_parcel_s_garden_distances_draw_the_setback_line_and_follow_the_storeys`): 15 × 6 m,
@@ -82,17 +96,21 @@ Tarih: 2026-11-09. Durum: kabul (M32 1. bölüm, ADV-22; plan S22).
   - Sınır: x −2…22, y 1…11, kesikli. Binadaki mesafeler 4, 10, 8, 5.
   - Tablo: Ön 5.00 / 4.00 / −1.00 (kırmızı), Yan 3.00 / 5.00 / 2.00, Arka 3.00 / 8.00 / 5.00, ağaç 15. Rozet kırmızı.
   - Beşinci kat eklenince kat adedi 5, yan ve arka 3,50 m. Sınır kendiliğinden x −1,5…21,5, y 1…10,5 oldu.
+- **Test, §2:** ±0,00 kotu 1285,4 önceden verildi. Enter sonrası dört "Bahçe mesafesi" ölçüsü, bir ±0,00 işareti ve
+  "±0.00 = +1285.40" yazısı. Araç ikinci kez çalışınca aynı altı öge kaldı ve kot korundu.
 - **Gerçek pencere** (`fixtures/interaction/real/vaziyet-plani.txt`, 1440 × 900; testin sakladığı `parsel.kcad`):
   - Arama "parsel ve bahçe", parsele ve kenarlara tıklama: etiketler, kırmızı ön bahçe, kesikli sınır, kart.
   - Enter: kesikli kırmızı "Yapı yaklaşma sınırı", durum çubuğunda kırmızı "!".
   - Proje ayarlarında emsal 1,5, TAKS 0,4, ±0,00 1285,40. Emsal ve TAKS tablosu bahçe satırlarıyla.
+  - Araç kot verildikten sonra yeniden çalıştı: cephe ortalarında 5, 10, 8 ve 4 m ölçüler, ±0,00 işareti ve kot yazısı
+    (`.run/gui-evidence/mimari-m32/m32-olculer.png`).
 - **KCAD:** `site-plan.kcad`; kırık `site-plan-in-schema-211` ve `site-plan-negative-setback`. 243 geçerli dosya;
   1707 dosya Python okuyucusuyla tutarlı.
 
 ## Sonraki adımlar
 
-- Çizime basılan vaziyet planı ögeleri: binadan parsel kenarlarına ölçüler, ±0,00 ve röper işareti, kuzey oku, ağaç
-  simgeleri (M32 2. bölüm).
+- Ağaç simgelerini bahçeye dağıtmak; röper noktasının kendisi (parsel dışındaki sabit nokta) ve kuzey okunun araçla
+  konması; ölçülerin binaya ve parsele bağlanması.
 - Kenar kenar kat adedi (23/1-d "o cephede", eğimli arazi), 60,50 m üstü binalar (23/1-g, ğ), birden çok bina (24).
 - Parseli Harita işinden ya da tapu koordinat tablosundan almak.
 - Açık çıkmaların bahçe mesafesine taşma kuralları (çıkma izdüşümü, 57/3).

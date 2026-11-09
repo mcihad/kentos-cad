@@ -167,6 +167,8 @@
       `SiteEdgeKind::setback(floors)`; `Document::site_floors` (23/1-d), `site_report[_for]`, `footprint()`.
     - Yaklaşma sınırı = parsel − kenar şeritleri (`band`); `follow_site` adımda, `refresh_site` ayar/geri alma
       sonrası. `tool.siteParcel` (`parcel_tool.rs`; Harita'nın `tool.parcel`'inden ayrı); rozet/Öznitelikler/tablo.
+    - Ölçüler (Ö): `draw_marks` cephe ortası hizalı ölçüler (`SiteEdgeReport::near`, `facing`), ±0,00 `Elevation` ve
+      kot yazısı; `MARK_ATTR` = `Vaziyet`, yeniden çalışınca eskileri silinir; hepsi tek grupta.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
