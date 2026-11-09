@@ -21,13 +21,16 @@ use kentos_geometry_core::vec2::Vec2;
 use crate::geometry::{edit_geometry, shape};
 
 /// The neighbours an edit puts right: their writes, their shapes for the
-/// preview, how many are locked or would be left invalid.
+/// preview, how many are locked or would be left invalid, and at how many
+/// places inside the edges the edit changed an unlocked neighbour's vertex
+/// went with its edge (docs/adr/3400).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Neighbours {
     pub changes: Vec<EntityEdit>,
     pub shapes: Vec<Shape>,
     pub locked: usize,
     pub invalid: usize,
+    pub carried: usize,
 }
 
 /// A neighbour found: its slot, its shape and whether its layer is locked.
@@ -161,14 +164,108 @@ pub(crate) fn straight(shape: Shape) -> Shape {
 
 /// The neighbours the edited objects (each its slot, its shape before and
 /// after) put right together in `doc`, found in `store` (in step with it);
-/// `points`: Noktalar da. `None` when nothing is shared.
+/// `points`: Noktalar da. `None` when nothing is shared. The neighbours'
+/// vertices inside an edge the edit changed go with it (docs/adr/3400,
+/// [`inside_edges`]): Esnet, the grips, Köşe tablosu and the vertex command
+/// alike.
 pub fn neighbours(
     doc: &Document,
     store: &Store,
     points: bool,
     edits: &[(Slot, Shape, Shape)],
 ) -> Option<Neighbours> {
-    neighbours_with(doc, store, points, edits, &[])
+    let (extra, carried) = inside_edges(doc, store, points, edits, false);
+    neighbours_with(doc, store, points, edits, &extra).map(|mut n| {
+        n.carried = carried;
+        n
+    })
+}
+
+/// What the edges the edits changed carry (docs/adr/3400; the core's `topology_edit::carried`): the shown neighbours'
+/// vertices strictly inside each edge as it was go to the same fraction of it as it is (moves), the neighbours' parts
+/// along an edge whose bulge changed bend with it; and at how many places an unlocked neighbour has such a vertex (a
+/// locked one's stays, as its corners do). With `edited_too` the other edited objects' vertices (as they were) count
+/// as well, for a caller that puts them right in its own write ([`carry_edited`], Esnet); without it a place where an
+/// edited object has a vertex is left, so that a T junction it shares is not split.
+pub fn inside_edges(
+    doc: &Document,
+    store: &Store,
+    points: bool,
+    edits: &[(Slot, Shape, Shape)],
+    edited_too: bool,
+) -> (Vec<Change>, usize) {
+    let edited: Vec<Slot> = edits.iter().map(|(slot, ..)| *slot).collect();
+    let (mut extra, mut carried) = (Vec::new(), 0);
+    for (own, before, after) in edits {
+        if matches!(before, Shape::Point { .. }) {
+            continue;
+        }
+        let edges = topology_edit::changed_edges(before, after);
+        if edges.is_empty() {
+            continue;
+        }
+        let mut found = Found::new();
+        for &((a, b, bulge), _) in &edges {
+            let near = match kentos_geometry_core::geom::bulge::bulge_arc(a, b, bulge) {
+                Some(arc) if bulge != 0.0 => Bounds {
+                    min_x: arc.c.x - arc.r,
+                    min_y: arc.c.y - arc.r,
+                    max_x: arc.c.x + arc.r,
+                    max_y: arc.c.y + arc.r,
+                },
+                _ => Bounds { min_x: a.x.min(b.x), min_y: a.y.min(b.y), max_x: a.x.max(b.x), max_y: a.y.max(b.y) },
+            };
+            for (s, n) in within(doc, store, points, &near, &edited) {
+                if !found.iter().any(|(f, _)| *f == s) {
+                    found.push((s, n));
+                }
+            }
+        }
+        found.sort_by_key(|(s, _)| *s);
+        let mut list: Vec<Neighbour> = found.into_iter().map(|(_, n)| n).collect();
+        // The other edited objects as they were: their vertices inside the edge go too, or the place is left.
+        let others: Vec<Neighbour> = edits
+            .iter()
+            .filter(|(s, ..)| s != own)
+            .map(|(_, b, _)| Neighbour { shape: b.clone(), locked: false })
+            .collect();
+        let held: Vec<Vec2> = topology_edit::carried(&others, &edges, points)
+            .iter()
+            .filter_map(|c| match c {
+                Change::Move { at, .. } => Some(*at),
+                _ => None,
+            })
+            .collect();
+        let kept = |c: &Change| edited_too || !matches!(c, Change::Move { at, .. } if held.iter().any(|h| h.x == at.x && h.y == at.y));
+        if edited_too {
+            list.extend(others);
+        }
+        extra.extend(topology_edit::carried(&list, &edges, points).into_iter().filter(|c| kept(c)));
+        let unlocked: Vec<Neighbour> = list.into_iter().filter(|n| !n.locked).collect();
+        carried += topology_edit::carried(&unlocked, &edges, points)
+            .iter()
+            .filter(|c| matches!(c, Change::Move { .. }) && kept(c))
+            .count();
+    }
+    (extra, carried)
+}
+
+/// The edited objects the carried moves (`extra`, [`inside_edges`] with `edited_too`) put right: each one with a vertex
+/// at a carried place, its shape as edited with that vertex moved (Esnet's other stretched objects sharing a T junction
+/// with the edge). Points only with `points`.
+pub fn carry_edited(edits: &[(Slot, Shape, Shape)], extra: &[Change], points: bool) -> Vec<(Slot, Shape)> {
+    let moves: Vec<Change> = extra.iter().filter(|c| matches!(c, Change::Move { .. })).cloned().collect();
+    if moves.is_empty() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for (slot, _, after) in edits {
+        let list = [Neighbour { shape: after.clone(), locked: false }];
+        if let Some((_, shape)) = topology_edit::apply(&list, &moves, points).edited.into_iter().next() {
+            out.push((*slot, straight(shape)));
+        }
+    }
+    out
 }
 
 /// [`neighbours`] with `extra` moves besides the edits' own: Paralel kaydır's vertices inside a shared edge

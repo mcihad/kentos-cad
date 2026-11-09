@@ -110,10 +110,16 @@ pub(crate) fn say(n: Option<&Neighbours>, cx: &mut Context<'_>) {
 pub fn lines(n: &Neighbours) -> Vec<(Level, String)> {
     let mut out = Vec::new();
     if !n.changes.is_empty() {
+        // The places inside the changed edges that went with them (docs/adr/3400).
+        let carried = if n.carried > 0 {
+            format!("; kenarın ortasındaki {} ortak köşe de kenarla gitti", n.carried)
+        } else {
+            String::new()
+        };
         out.push((
             Level::Info,
             format!(
-                "Topolojik düzenleme: {} komşu nesne de değişti.",
+                "Topolojik düzenleme: {} komşu nesne de değişti{carried}.",
                 n.changes.len()
             ),
         ));

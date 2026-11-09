@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Değişen kenarın içindeki komşu köşeler (9 Kasım 2026; MAP-07, [ADR 3400](../../docs/adr/3400-inner-vertices-follow-a-changed-edge.md)).**
+  Topolojik düzenlemede tutamaç, Köşe tablosu, Esnet ve köşe komutu kenarın içindeki komşu köşeleri kenarın aynı kesrine
+  taşır (`topology_follow::neighbours`); yayı değişen kenarda komşu parçalar yayın parçası olur. CAD + CBS.
 - **Eğimle kot ver'de yüksek/alçak nokta (9 Kasım 2026; MAP-06, [ADR 3380](../../docs/adr/3380-grade-high-low-point.md)).**
   `cad.entities.grade`'in `ahead`/`back`'i: başlangıçtan ve bitişten iki eğimin kesiştiği yere köşe (yay çemberinde
   kalır), iki kola göre kotlar; paralel ya da aralık dışı `no_intersection`. Pencerede Hedef › Yüksek/alçak nokta. CAD.

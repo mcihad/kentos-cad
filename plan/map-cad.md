@@ -37,7 +37,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340 | ayrı inceleme kaydı; sürüm derlemesinde ölçüm | AI çıkarımı; büyük veri |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik; elipsin etiketi | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380 | çok parçalı nesne; dönen ve yaylı referansın bağı; eğimle yükselt/alçalt | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000 | veri formu yolu; tutamaç ve Esnet'te kenar içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400 | veri formu yolu; Köşe sil'de birleşen kenarın içindeki köşe; köşenin gidişine ok | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020 | kalıcı parsel kaydı ve sınır kimliği; yayı kirişlerle yaklaşık çizen komşu; aynı yerdeki sorun sözleri | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
@@ -867,6 +867,16 @@ Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Kanıtlanan
 yazacağı komşu şekillerinden, yer değiştirecek her komşu köşeyi gideceği yerde bir halkayla işaretler, etiket sayısını
 söyler (üçlü birleşimli sahnede dört köşe); test pencereyi bir kez çizip tıklar (eskiden önizleme 0 m'de kalıyordu).
 Komut değişmedi. Açık: tutamaç ve Esnet'te kenar içindeki köşe, veri formu yolu, büyük veri ölçümü.
+
+**9 Kasım 2026, altıncı tur — değişen kenarın içindeki komşu köşeler ([ADR 3400](../docs/adr/3400-inner-vertices-follow-a-changed-edge.md)).**
+Kapsam: **CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi**. Araştırma: ArcGIS Pro'nun “Stretch topology
+proportionately” (bağlı kenarların göreli boyları korunur) ve Edit topological vertices, ArcMap'in orantılı esnetmesi.
+Kanıtlanan: tutamaç, Köşe tablosu, Esnet ve köşe komutunda Topolojik düzenleme açıkken ucu taşınan ya da yayı değişen
+kenarın içindeki komşu köşeler (üçlü birleşim, T ile bağlanan uç, komşunun ara köşesi, deliğin kenarı, Noktalar da ile
+nokta) kenarın aynı kesrine gider; yayı değişen kenarda komşunun kenar parçaları yeni yayın parçası olur; seçimsiz
+Esnet'te esnetilen öbür nesnenin T köşesi de taşınır, sınır ayrılmaz; kilitli komşu ADR 2600'deki gibi. 40 ortak durum
+(bağımsız başvuru), Python, MCP, masaüstü (tutamaç ve Köşe tablosu, ileti) ve resimler. Açık: Köşe sil'de birleşen
+kenarın içindeki köşe, tutamaçla birden çok nesne, veri formu yolu, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

@@ -236,6 +236,8 @@ mod edge_shift_bond_scenes;
 #[cfg(test)]
 mod edge_shift_junction_scenes;
 #[cfg(test)]
+mod topology_inner_scenes;
+#[cfg(test)]
 mod elevation_scenes;
 #[cfg(test)]
 mod elevation_tests;

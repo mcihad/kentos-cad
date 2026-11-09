@@ -47,7 +47,7 @@ işaretlenmesi”.
 
 ## Sonra
 
-- Tutamaç, Köşe tablosu ve Esnet'te kenar içindeki komşu köşe (ADR 2600 Sonra).
+- Tutamaç, Köşe tablosu ve Esnet'te kenar içindeki komşu köşe (ADR 2600 Sonra; yapıldı, [ADR 3400](3400-inner-vertices-follow-a-changed-edge.md)).
 - Köşenin şimdiki yerinden gideceği yere ince bir ok.
 - Topoloji denetiminin veri formu yolu (MAP-07'nin öbür maddesi).
 - Web (TODOS §0.2).

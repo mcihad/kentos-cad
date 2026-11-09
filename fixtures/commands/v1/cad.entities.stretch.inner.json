@@ -1,0 +1,5222 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.entities.stretch",
+  "commandVersion": 1,
+  "title": "Nesneleri esnet: kenarın ortasındaki komşu köşeler",
+  "note": "Written by scripts/fixtures/topology_inner_cases.py from docs/adr/3400's rule; do not edit by hand.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Kenarın ortasındaki köşeler",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 500
+    },
+    "origin": {
+      "x": 487000,
+      "y": 4420000
+    },
+    "layers": [
+      {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+      {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420000
+          },
+          {
+            "x": 487040,
+            "y": 4420030
+          },
+          {
+            "x": 487000,
+            "y": 4420030
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 2,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4420030
+          },
+          {
+            "x": 487020,
+            "y": 4420030
+          },
+          {
+            "x": 487020,
+            "y": 4420050
+          },
+          {
+            "x": 487000,
+            "y": 4420050
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 3,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487020,
+            "y": 4420030
+          },
+          {
+            "x": 487040,
+            "y": 4420030
+          },
+          {
+            "x": 487040,
+            "y": 4420050
+          },
+          {
+            "x": 487020,
+            "y": 4420050
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 4,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4419980
+        },
+        "b": {
+          "x": 487010,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 5,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 486980,
+            "y": 4420000
+          },
+          {
+            "x": 487000,
+            "y": 4420000
+          },
+          {
+            "x": 487000,
+            "y": 4420012
+          },
+          {
+            "x": 487000,
+            "y": 4420030
+          },
+          {
+            "x": 486980,
+            "y": 4420030
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 6,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4419985
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "line",
+        "id": 7,
+        "layerId": "gizli",
+        "attrs": {},
+        "a": {
+          "x": 487025,
+          "y": 4419990
+        },
+        "b": {
+          "x": 487025,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 8,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487100,
+            "y": 4420000
+          },
+          {
+            "x": 487100,
+            "y": 4420030
+          },
+          {
+            "x": 487060,
+            "y": 4420030
+          }
+        ],
+        "bulges": [
+          0.25,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 9,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487080,
+          "y": 4419975
+        },
+        "b": {
+          "x": 487080,
+          "y": 4419995
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 10,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487060,
+            "y": 4420000
+          },
+          {
+            "x": 487080,
+            "y": 4419995
+          },
+          {
+            "x": 487080,
+            "y": 4419980
+          },
+          {
+            "x": 487060,
+            "y": 4419980
+          }
+        ],
+        "bulges": [
+          0.12310562561766054,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487030,
+          "y": 4420040
+        },
+        "b": {
+          "x": 487030,
+          "y": 4420030
+        }
+      },
+      {
+        "kind": "point",
+        "id": 12,
+        "layerId": "parsel",
+        "attrs": {},
+        "p": {
+          "x": 487040,
+          "y": 4420015
+        }
+      },
+      {
+        "kind": "line",
+        "id": 13,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487015,
+          "y": 4419990
+        },
+        "b": {
+          "x": 487015,
+          "y": 4419999.999
+        }
+      },
+      {
+        "kind": "line",
+        "id": 14,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487050,
+          "y": 4419990
+        },
+        "b": {
+          "x": 487050,
+          "y": 4420000
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 15,
+        "layerId": "yol",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487000,
+            "y": 4419960
+          },
+          {
+            "x": 487040,
+            "y": 4419960
+          },
+          {
+            "x": 487040,
+            "y": 4419940
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 16,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487020,
+          "y": 4419940
+        },
+        "b": {
+          "x": 487020,
+          "y": 4419960
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487000,
+          "y": 4419920
+        },
+        "b": {
+          "x": 487040,
+          "y": 4419920
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "yol",
+        "attrs": {},
+        "a": {
+          "x": 487010,
+          "y": 4419910
+        },
+        "b": {
+          "x": 487010,
+          "y": 4419920
+        }
+      },
+      {
+        "kind": "polygon",
+        "id": 19,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487120,
+            "y": 4420000
+          },
+          {
+            "x": 487160,
+            "y": 4420000
+          },
+          {
+            "x": 487160,
+            "y": 4420040
+          },
+          {
+            "x": 487120,
+            "y": 4420040
+          }
+        ],
+        "holes": [
+          {
+            "pts": [
+              {
+                "x": 487130,
+                "y": 4420010
+              },
+              {
+                "x": 487150,
+                "y": 4420010
+              },
+              {
+                "x": 487150,
+                "y": 4420030
+              },
+              {
+                "x": 487130,
+                "y": 4420030
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 20,
+        "layerId": "parsel",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 487140,
+            "y": 4420010
+          },
+          {
+            "x": 487145,
+            "y": 4420020
+          },
+          {
+            "x": 487135,
+            "y": 4420020
+          }
+        ]
+      },
+      {
+        "kind": "point",
+        "id": 21,
+        "layerId": "parsel",
+        "attrs": {},
+        "p": {
+          "x": 487069.69223593595,
+          "y": 4419996.268943744
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "Kenarın ucu döner: kenarın ortasındaki üçlü birleşim ve çizgi ucu kenarın aynı kesrine gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": 4,
+            "dy": 2,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487033,
+                  "y": 4420031.5
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Güney kenarı döner: T ile bağlanan yolun ucu kenarla gider; kilitli çizgi uyarıyla, gizli, 1 mm uzaktaki ve uzantıdaki çizgiler yerinde kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420001
+              }
+            },
+            "dx": 0,
+            "dy": -4,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419996
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4419999
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarın iki ucu birden: kenar ötelenir, ortasındaki köşeler de; batı kenarı uzar, komşunun kendi ara köşesi oranla kayar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 486999,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": 0,
+            "dy": 2,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:5",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420032
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420012.8
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420032
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Köşe batıya: iki kenar birden döner; yol ucu ve komşunun ara köşesi kenarlarıyla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 486999,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487001,
+                "y": 4420001
+              }
+            },
+            "dx": -2,
+            "dy": 0,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:4",
+                "$uidOf:5"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486998,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487008.5,
+                  "y": 4420000
+                }
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 486998,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 486998.8,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yaylı kenarın ucu: yay korunur; yayın ortasındaki çizgi ucu ve komşunun köşesi yeni yayın ortasına, komşunun yarım yayı aynı bulge ile yeni yayın üstünde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487099,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487101,
+                "y": 4420001
+              }
+            },
+            "dx": 8,
+            "dy": 0,
+            "uids": [
+              "$uidOf:8"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:8"
+              ],
+              "followed": [
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487108,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487084,
+                  "y": 4419994
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4419994
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487080,
+                  "y": 4419995
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Topolojik düzenleme kapalı: yalnız nesne esner, kenarın ortasındaki köşeler yerinde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": 4,
+            "dy": 2,
+            "uids": [
+              "$uidOf:1"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar kısalır: köşe içeri; üçlü birleşim ve çizgi ucu oranla kenarda kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": -3,
+            "dy": -2,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487037,
+                    "y": 4420028
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487018.5,
+                    "y": 4420029
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487018.5,
+                    "y": 4420029
+                  },
+                  {
+                    "x": 487037,
+                    "y": 4420028
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487027.75,
+                  "y": 4420028.5
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kuzeybatı köşesi yukarı: kuzey kenarı öbür ucu çevresinde döner, batı kenarı uzar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 486999,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487001,
+                "y": 4420031
+              }
+            },
+            "dx": 0,
+            "dy": 5,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:5",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420035
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420035
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420032.5
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420032.5
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420014
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420035
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420031.25
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenar kendi doğrusunda uzar: yol ucu kenarın aynı kesrine kayar (oran korunur)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420001
+              }
+            },
+            "dx": 8,
+            "dy": 0,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:4"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487048,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487012,
+                  "y": 4420000
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kilitli komşuda durdur: kenarın ortasındaki köşesi kilitli çizginin; hiçbir şey yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420001
+              }
+            },
+            "dx": 0,
+            "dy": -4,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {
+              "stopOnLocked": true
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "shared_boundary_locked",
+              "message": "Ortak sınır kilitli katmandaki 1 komşu nesneyle paylaşılıyor; hiçbir şey yazılmadı. Kilidi açın ya da Topolojik düzenleme › Kilitli komşuda durdur seçeneğini kapatın.",
+              "path": "topology"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktalar da: doğu kenarındaki sınır taşı da kenarla gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": 4,
+            "dy": 2,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {
+              "points": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:11",
+                "$uidOf:12"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487033,
+                  "y": 4420031.5
+                }
+              },
+              "12": {
+                "kind": "point",
+                "id": 12,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487042,
+                  "y": 4420016
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              },
+              "12": {
+                "kind": "point",
+                "id": 12,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487040,
+                  "y": 4420015
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yolun köşesi: ilk kenarına bağlanan kolun ucu kenarla gider; ikinci kenarda köşe yok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4419959
+              },
+              "max": {
+                "x": 487041,
+                "y": 4419961
+              }
+            },
+            "dx": 0,
+            "dy": 4,
+            "uids": [
+              "$uidOf:15"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:15"
+              ],
+              "followed": [
+                "$uidOf:16"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419964
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              },
+              "16": {
+                "kind": "line",
+                "id": 16,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4419940
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4419962
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "15": {
+                "kind": "polyline",
+                "id": 15,
+                "layerId": "yol",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419960
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4419940
+                  }
+                ]
+              },
+              "16": {
+                "kind": "line",
+                "id": 16,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487020,
+                  "y": 4419940
+                },
+                "b": {
+                  "x": 487020,
+                  "y": 4419960
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizginin ucu: ortasına bağlanan çizginin ucu onunla döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4419919
+              },
+              "max": {
+                "x": 487041,
+                "y": 4419921
+              }
+            },
+            "dx": 0,
+            "dy": 8,
+            "uids": [
+              "$uidOf:17"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:17"
+              ],
+              "followed": [
+                "$uidOf:18"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "17": {
+                "kind": "line",
+                "id": 17,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4419920
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4419928
+                }
+              },
+              "18": {
+                "kind": "line",
+                "id": 18,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419910
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4419922
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "17": {
+                "kind": "line",
+                "id": 17,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487000,
+                  "y": 4419920
+                },
+                "b": {
+                  "x": 487040,
+                  "y": 4419920
+                }
+              },
+              "18": {
+                "kind": "line",
+                "id": 18,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419910
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4419920
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deliğin köşesi: delik kenarına değen adanın köşesi kenarla gider",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487149,
+                "y": 4420009
+              },
+              "max": {
+                "x": 487151,
+                "y": 4420011
+              }
+            },
+            "dx": 0,
+            "dy": -2,
+            "uids": [
+              "$uidOf:19"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:19"
+              ],
+              "followed": [
+                "$uidOf:20"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "19": {
+                "kind": "polygon",
+                "id": 19,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487120,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487160,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487160,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487120,
+                    "y": 4420040
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487130,
+                        "y": 4420010
+                      },
+                      {
+                        "x": 487150,
+                        "y": 4420008
+                      },
+                      {
+                        "x": 487150,
+                        "y": 4420030
+                      },
+                      {
+                        "x": 487130,
+                        "y": 4420030
+                      }
+                    ]
+                  }
+                ]
+              },
+              "20": {
+                "kind": "polygon",
+                "id": 20,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487140,
+                    "y": 4420009
+                  },
+                  {
+                    "x": 487145,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487135,
+                    "y": 4420020
+                  }
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "19": {
+                "kind": "polygon",
+                "id": 19,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487120,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487160,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487160,
+                    "y": 4420040
+                  },
+                  {
+                    "x": 487120,
+                    "y": 4420040
+                  }
+                ],
+                "holes": [
+                  {
+                    "pts": [
+                      {
+                        "x": 487130,
+                        "y": 4420010
+                      },
+                      {
+                        "x": 487150,
+                        "y": 4420010
+                      },
+                      {
+                        "x": 487150,
+                        "y": 4420030
+                      },
+                      {
+                        "x": 487130,
+                        "y": 4420030
+                      }
+                    ]
+                  }
+                ]
+              },
+              "20": {
+                "kind": "polygon",
+                "id": 20,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487140,
+                    "y": 4420010
+                  },
+                  {
+                    "x": 487145,
+                    "y": 4420020
+                  },
+                  {
+                    "x": 487135,
+                    "y": 4420020
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yayın başı batıya: yaydaki köşeler yeni yayın ortasına; komşunun ortak köşesi de",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487059,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487061,
+                "y": 4420001
+              }
+            },
+            "dx": -4,
+            "dy": 0,
+            "uids": [
+              "$uidOf:8"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:8"
+              ],
+              "followed": [
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487056,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487078,
+                  "y": 4419994.5
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487056,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487078,
+                    "y": 4419994.5
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487080,
+                  "y": 4419995
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yayın iki ucu birden: yay ötelenir, ortasındaki köşeler de",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487059,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487101,
+                "y": 4420001
+              }
+            },
+            "dx": 0,
+            "dy": -3,
+            "uids": [
+              "$uidOf:8"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:8"
+              ],
+              "followed": [
+                "$uidOf:9",
+                "$uidOf:10"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487080,
+                  "y": 4419992
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4419997
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419992
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487080,
+                  "y": 4419995
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kenarında köşe olmayan iki kenar: yalnız nesne esner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487099,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487101,
+                "y": 4420031
+              }
+            },
+            "dx": 2,
+            "dy": 2,
+            "uids": [
+              "$uidOf:8"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:8"
+              ],
+              "followed": [],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487102,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Noktalar da: yaydaki sınır taşı yayın aynı kesrine",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487099,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487101,
+                "y": 4420001
+              }
+            },
+            "dx": 8,
+            "dy": 0,
+            "uids": [
+              "$uidOf:8"
+            ],
+            "topology": {
+              "points": true
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:8"
+              ],
+              "followed": [
+                "$uidOf:9",
+                "$uidOf:10",
+                "$uidOf:21"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487108,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487084,
+                  "y": 4419994
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487084,
+                    "y": 4419994
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "21": {
+                "kind": "point",
+                "id": 21,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487071.63068312313,
+                  "y": 4419995.522732493
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "8": {
+                "kind": "polygon",
+                "id": 8,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487100,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4420030
+                  }
+                ],
+                "bulges": [
+                  0.25,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "9": {
+                "kind": "line",
+                "id": 9,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487080,
+                  "y": 4419975
+                },
+                "b": {
+                  "x": 487080,
+                  "y": 4419995
+                }
+              },
+              "10": {
+                "kind": "polygon",
+                "id": 10,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487060,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419995
+                  },
+                  {
+                    "x": 487080,
+                    "y": 4419980
+                  },
+                  {
+                    "x": 487060,
+                    "y": 4419980
+                  }
+                ],
+                "bulges": [
+                  0.12310562561766054,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "21": {
+                "kind": "point",
+                "id": 21,
+                "layerId": "parsel",
+                "attrs": {},
+                "p": {
+                  "x": 487069.69223593595,
+                  "y": 4419996.268943744
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Seçimsiz pencere B2'nin köşesini de alır: ikisi de esner, ortak T köşesi ikisinde birlikte kayar (sınır ayrılmaz)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 487039,
+                "y": 4420029
+              },
+              "max": {
+                "x": 487041,
+                "y": 4420031
+              }
+            },
+            "dx": 4,
+            "dy": 2,
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1",
+                "$uidOf:3"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487044,
+                    "y": 4420032
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487022,
+                    "y": 4420031
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487033,
+                  "y": 4420031.5
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Batı kenarının iki ucu: kenar ötelenir, komşunun ara köşesi de; B1 ve C'nin köşeleri onunla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "window": {
+              "min": {
+                "x": 486999,
+                "y": 4419999
+              },
+              "max": {
+                "x": 487001,
+                "y": 4420031
+              }
+            },
+            "dx": -3,
+            "dy": 0,
+            "uids": [
+              "$uidOf:1"
+            ],
+            "topology": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "stretched": [
+                "$uidOf:1"
+              ],
+              "followed": [
+                "$uidOf:2",
+                "$uidOf:3",
+                "$uidOf:4",
+                "$uidOf:5",
+                "$uidOf:11"
+              ],
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "neighbour_locked",
+                "message": "Kilitli katmandaki 1 komşu nesne değişmedi; ortak sınır ayrıldı."
+              }
+            ]
+          },
+          "within": 1e-06,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486997,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486997,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486997,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487018.5,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487018.5,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487007.75,
+                  "y": 4420000
+                }
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 486997,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 486997,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 486997,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487029.25,
+                  "y": 4420030
+                }
+              }
+            },
+            "revision": "changed",
+            "canUndo": true,
+            "canRedo": false,
+            "dirty": true
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Esnet",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21
+            ],
+            "entities": {
+              "1": {
+                "kind": "polygon",
+                "id": 1,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "2": {
+                "kind": "polygon",
+                "id": 2,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "3": {
+                "kind": "polygon",
+                "id": 3,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 487020,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 487040,
+                    "y": 4420050
+                  },
+                  {
+                    "x": 487020,
+                    "y": 4420050
+                  }
+                ]
+              },
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487010,
+                  "y": 4419980
+                },
+                "b": {
+                  "x": 487010,
+                  "y": 4420000
+                }
+              },
+              "5": {
+                "kind": "polygon",
+                "id": 5,
+                "layerId": "parsel",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 486980,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420000
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420012
+                  },
+                  {
+                    "x": 487000,
+                    "y": 4420030
+                  },
+                  {
+                    "x": 486980,
+                    "y": 4420030
+                  }
+                ]
+              },
+              "11": {
+                "kind": "line",
+                "id": 11,
+                "layerId": "yol",
+                "attrs": {},
+                "a": {
+                  "x": 487030,
+                  "y": 4420040
+                },
+                "b": {
+                  "x": 487030,
+                  "y": 4420030
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

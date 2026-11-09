@@ -600,6 +600,161 @@ pub fn changes(before: &Shape, after: &Shape) -> Vec<Change> {
     moves
 }
 
+/// An edge of a path: its two ends and its bulge.
+pub type Span = (Vec2, Vec2, f64);
+
+/// The edges an edit changed (docs/adr/3400), as they were and as they are, path by path in the elevations' order:
+/// on a path with as many vertices after as before, every edge whose ends moved or whose bulge changed. A path that
+/// gained or lost a vertex gives none.
+pub fn changed_edges(before: &Shape, after: &Shape) -> Vec<(Span, Span)> {
+    let (Some((pb, _)), Some((pa, _))) = (paths_of(before), paths_of(after)) else {
+        return Vec::new();
+    };
+    if pb.len() != pa.len() {
+        return Vec::new();
+    }
+    let mut out = Vec::new();
+    for (b, a) in pb.iter().zip(&pa) {
+        let n = b.pts.len();
+        if a.pts.len() != n {
+            continue;
+        }
+        let count = if b.closed { n } else { n.saturating_sub(1) };
+        for e in 0..count {
+            let old = (b.pts[e], b.pts[(e + 1) % n], b.bulges[e]);
+            let new = (a.pts[e], a.pts[(e + 1) % n], a.bulges[e]);
+            if old != new {
+                out.push((old, new));
+            }
+        }
+    }
+    out
+}
+
+/// A place on an edge as the fraction of the edge's length from its start: by the length along a straight edge, by
+/// the angle round an arc. The caller knows the place lies on the edge.
+fn fraction(edge: Span, v: Vec2) -> f64 {
+    let (a, b, bulge) = edge;
+    if bulge.abs() > STRAIGHT
+        && let Some(arc) = crate::geom::bulge::bulge_arc(a, b, bulge)
+    {
+        use crate::geom::arc::norm_angle;
+        let theta = crate::jsmath::atan2(v.y - arc.c.y, v.x - arc.c.x);
+        let d = if arc.sweep > 0.0 { norm_angle(theta - arc.a0) } else { norm_angle(arc.a0 - theta) };
+        return d / arc.sweep.abs();
+    }
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    ((v.x - a.x) * dx + (v.y - a.y) * dy) / (dx * dx + dy * dy)
+}
+
+/// The place at fraction `t` of an edge's length (its own ends at 0 and 1).
+fn at_fraction(edge: Span, t: f64) -> Vec2 {
+    let (a, b, bulge) = edge;
+    if t == 0.0 {
+        return a;
+    }
+    if t == 1.0 {
+        return b;
+    }
+    if bulge.abs() > STRAIGHT
+        && let Some(arc) = crate::geom::bulge::bulge_arc(a, b, bulge)
+    {
+        let angle = arc.a0 + arc.sweep * t;
+        return Vec2::new(arc.c.x + arc.r * crate::jsmath::cos(angle), arc.c.y + arc.r * crate::jsmath::sin(angle));
+    }
+    Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+}
+
+/// The bulge of the part of an edge from fraction `t1` to fraction `t2` (the other way round: the opposite sign).
+fn part_bulge(edge: Span, t1: f64, t2: f64) -> f64 {
+    let (a, b, bulge) = edge;
+    match crate::geom::bulge::bulge_arc(a, b, bulge) {
+        Some(arc) if bulge.abs() > STRAIGHT => crate::geom::bulge::bulge_of_sweep(arc.sweep * (t2 - t1)),
+        _ => 0.0,
+    }
+}
+
+/// What the edges an edit changed carry (docs/adr/3400; ArcGIS Pro's “stretch topology proportionately”: the relative
+/// lengths of the connected edges kept). The neighbours' vertices strictly inside an edge as it was (a third object's
+/// corner on it, a T junction; a neighbour's own vertex along it; a point only with `points`) go to the same fraction
+/// of the edge as it is: moves. Where the edge's bulge changed, a neighbour's edge along it between two such places (or
+/// such a place and an end of the edge) takes the bulge of the same part of the edge as it is: bulge changes named by
+/// their ends after the edit. Each place once; the edges in `edges`' order.
+pub fn carried(neighbours: &[Neighbour], edges: &[(Span, Span)], points: bool) -> Vec<Change> {
+    let mut moves: Vec<Change> = Vec::new();
+    let mut bends: Vec<Change> = Vec::new();
+    let mut seen: Vec<Vec2> = Vec::new();
+    for &(old, new) in edges {
+        let (a, b, bulge) = old;
+        let inside = if bulge.abs() <= STRAIGHT {
+            inside_segment(neighbours, a, b, points)
+        } else {
+            match crate::geom::bulge::bulge_arc(a, b, bulge) {
+                Some(arc) => inside_arc(neighbours, arc.c, arc.r, arc.a0, arc.sweep, points),
+                None => Vec::new(),
+            }
+        };
+        if inside.is_empty() {
+            continue;
+        }
+        let places: Vec<(Vec2, f64)> = inside.iter().map(|&v| (v, fraction(old, v))).collect();
+        for &(v, t) in &places {
+            if seen.iter().any(|q| same(*q, v)) {
+                continue;
+            }
+            seen.push(v);
+            let to = at_fraction(new, t);
+            if to != v {
+                moves.push(Change::Move { at: v, to });
+            }
+        }
+        let bent = (new.2 - bulge).abs() > BULGE || ((new.2.abs() > STRAIGHT) != (bulge.abs() > STRAIGHT));
+        if !bent {
+            continue;
+        }
+        // Where a neighbour's vertex lies on the edge: its fraction, the ends at 0 and 1.
+        let on = |v: Vec2| -> Option<(f64, bool)> {
+            if same(v, a) {
+                return Some((0.0, false));
+            }
+            if same(v, b) {
+                return Some((1.0, false));
+            }
+            places.iter().find(|(q, _)| same(*q, v)).map(|&(_, t)| (t, true))
+        };
+        for n in neighbours {
+            let Some((paths, _)) = paths_of(&n.shape) else {
+                continue;
+            };
+            for path in &paths {
+                let len = path.pts.len();
+                let count = if path.closed { len } else { len.saturating_sub(1) };
+                for e in 0..count {
+                    let (u, w, be) = (path.pts[e], path.pts[(e + 1) % len], path.bulges[e]);
+                    let (Some((tu, iu)), Some((tw, iw))) = (on(u), on(w)) else {
+                        continue;
+                    };
+                    // The whole edge shared is the edit's own bulge change; a part needs an inside end.
+                    if !(iu || iw) || tu == tw || (be - part_bulge(old, tu, tw)).abs() > BULGE {
+                        continue;
+                    }
+                    let (ua, wa) = (at_fraction(new, tu), at_fraction(new, tw));
+                    let to = part_bulge(new, tu, tw);
+                    let known = bends.iter().any(|c| match *c {
+                        Change::Bulge { a: x, b: y, .. } => (same(x, ua) && same(y, wa)) || (same(x, wa) && same(y, ua)),
+                        _ => false,
+                    });
+                    if !known {
+                        bends.push(Change::Bulge { a: ua, b: wa, from: be, to });
+                    }
+                }
+            }
+        }
+    }
+    moves.extend(bends);
+    moves
+}
+
 pub(crate) static OPS: &[Op] = &[
     op!("topologyEdit", |neighbours: Vec<Neighbour>,
                          changes: Vec<Change>,
@@ -614,6 +769,73 @@ pub(crate) static OPS: &[Op] = &[
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn line(a: (f64, f64), b: (f64, f64)) -> Neighbour {
+        Neighbour { shape: Shape::Line { a: Vec2::new(a.0, a.1), b: Vec2::new(b.0, b.1) }, locked: false }
+    }
+
+    /// docs/adr/3400: an edge turned about its start carries a T junction's corner at the same fraction of it; an edge
+    /// of the edit that did not change carries nothing; a polygon's moved corner changes its two edges.
+    #[test]
+    fn a_turned_edge_carries_the_corner_inside_it_at_its_fraction() {
+        let before = Shape::Polygon {
+            pts: vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)],
+            bulges: None,
+            holes: None,
+            parts: None,
+        };
+        let mut after = before.clone();
+        if let Shape::Polygon { pts, .. } = &mut after {
+            pts[1] = Vec2::new(40.0, 4.0);
+        }
+        let edges = changed_edges(&before, &after);
+        assert_eq!(edges.len(), 2, "{edges:?}");
+        let arm = line((10.0, -20.0), (10.0, 0.0));
+        let far = line((-10.0, 15.0), (0.0, 15.0));
+        let got = carried(&[arm, far], &edges, false);
+        assert_eq!(got, vec![Change::Move { at: Vec2::new(10.0, 0.0), to: Vec2::new(10.0, 1.0) }]);
+    }
+
+    /// The same round an arc whose end moved, its bulge kept: the vertex at the arc's middle goes to the new arc's
+    /// middle, on its circle; no bulge changes (the parts of an arc of the same sweep keep theirs).
+    #[test]
+    fn an_arc_keeps_the_vertex_at_its_fraction() {
+        let old = (Vec2::new(0.0, 0.0), Vec2::new(20.0, 0.0), 1.0);
+        let new = (Vec2::new(0.0, 0.0), Vec2::new(30.0, 0.0), 1.0);
+        let n = Neighbour {
+            shape: Shape::Polyline {
+                pts: vec![Vec2::new(10.0, -10.0), Vec2::new(20.0, 0.0)],
+                bulges: Some(vec![crate::jsmath::tan(crate::jsmath::PI / 8.0)]),
+                holes: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            },
+            locked: false,
+        };
+        let got = carried(&[n], &[(old, new)], false);
+        let [Change::Move { at, to }] = got.as_slice() else { panic!("{got:?}") };
+        assert!(same(*at, Vec2::new(10.0, -10.0)));
+        assert!((to.x - 15.0).abs() < 1e-9 && (to.y + 15.0).abs() < 1e-9, "{to:?}");
+    }
+
+    /// A straight edge made an arc (bulge 0.5: its middle 10 m off the chord of 40 m): the T junction at its middle goes to
+    /// the arc's middle, and the neighbour's edge from the edge's start to it takes the bulge of that half of the arc (its
+    /// other edges stay).
+    #[test]
+    fn an_edge_made_an_arc_bends_the_neighbour_s_part_of_it() {
+        let old = (Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), 0.0);
+        let new = (Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), 0.5);
+        let b1 = area(&[(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)]);
+        let got = carried(&[b1], &[(old, new)], false);
+        let sweep = 4.0 * crate::jsmath::atan(0.5);
+        assert_eq!(got.len(), 2, "{got:?}");
+        let Change::Move { at, to } = got[0] else { panic!() };
+        assert!(same(at, Vec2::new(20.0, 0.0)) && (to.x - 20.0).abs() < 1e-9 && (to.y + 10.0).abs() < 1e-9, "{to:?}");
+        let Change::Bulge { a, b, from, to: bulge } = got[1] else { panic!() };
+        assert!(same(a, Vec2::new(0.0, 0.0)) && same(b, to) && from == 0.0);
+        assert!((bulge - crate::jsmath::tan(sweep / 8.0)).abs() < 1e-12, "{bulge}");
+    }
 
     fn area(pts: &[(f64, f64)]) -> Neighbour {
         Neighbour {

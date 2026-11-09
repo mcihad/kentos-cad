@@ -409,9 +409,22 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesStretch) -> Resu
         edits.push((*s, shape(e), after));
     }
     let stretched = changes.len();
-    if let Some(topology) = input.topology
-        && let Some(n) = topology_follow::neighbours(doc, store, topology.points, &edits)
-    {
+    // The vertices inside a stretched edge go with it (docs/adr/3400), the other stretched objects' among them: their
+    // writes take the carried places, so a T junction two of them share is not split.
+    let follow = match input.topology {
+        Some(topology) => {
+            let (extra, _) = topology_follow::inside_edges(doc, store, topology.points, &edits, true);
+            for (slot, shape) in topology_follow::carry_edited(&edits, &extra, topology.points) {
+                let Some(k) = edits.iter().position(|(s, ..)| *s == slot) else { continue };
+                let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry(shape.clone())) else { continue };
+                edits[k].2 = shape;
+                changes[k] = EntityEdit::Update { uid: uid.to_string(), geometry };
+            }
+            topology_follow::neighbours_with(doc, store, topology.points, &edits, &extra).map(|n| (topology, n))
+        }
+        None => None,
+    };
+    if let Some((topology, n)) = follow {
         // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; nothing is written.
         if topology.stop_on_locked && n.locked > 0 {
             return Err(Stop::failed(error(
