@@ -151870,6 +151870,17 @@
             "null"
           ]
         },
+        "layers": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SlabLayers"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none."
+        },
         "material": {
           "type": [
             "string",
@@ -181305,6 +181316,10 @@
         "layerId": {
           "type": "string"
         },
+        "layers": {
+          "$ref": "#/$defs/SlabLayers",
+          "description": "Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the\nstructure alone, its top the finished floor."
+        },
         "linePattern": {
           "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
           "type": [
@@ -181442,6 +181457,120 @@
         }
       ]
     },
+    "SlabLayer": {
+      "additionalProperties": false,
+      "description": "A layer of a slab besides its structure (docs/adr/3040 §2).",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/SlabLayerKind"
+        },
+        "material": {
+          "description": "What it is made of (Seramik, Laminat parke …); absent: not said.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thickness": {
+          "description": "Metres, above 0 and at most 1.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "kind",
+        "thickness"
+      ],
+      "type": "object"
+    },
+    "SlabLayerKind": {
+      "description": "What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its\nfinish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY\n4(1)(ıı)'s \"taban döşeme kaplaması\", the plaster its \"tavan kaplaması\".",
+      "oneOf": [
+        {
+          "const": "finish",
+          "description": "Kaplama.",
+          "type": "string"
+        },
+        {
+          "const": "screed",
+          "description": "Şap.",
+          "type": "string"
+        },
+        {
+          "const": "insulation",
+          "description": "Isı yalıtımı.",
+          "type": "string"
+        },
+        {
+          "const": "waterproofing",
+          "description": "Su yalıtımı.",
+          "type": "string"
+        },
+        {
+          "const": "plaster",
+          "description": "Sıva.",
+          "type": "string"
+        }
+      ]
+    },
+    "SlabLayerRow": {
+      "description": "A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.",
+      "properties": {
+        "area": {
+          "description": "The slab's net area, m².",
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "kind": {
+          "$ref": "#/$defs/SlabLayerKind"
+        },
+        "material": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thickness": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "volume": {
+          "description": "`area` × thickness, m³.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "volume"
+        }
+      },
+      "required": [
+        "kind",
+        "thickness",
+        "area",
+        "volume"
+      ],
+      "type": "object"
+    },
+    "SlabLayers": {
+      "additionalProperties": false,
+      "description": "A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the\nstructure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of\nthe first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).",
+      "properties": {
+        "over": {
+          "items": {
+            "$ref": "#/$defs/SlabLayer"
+          },
+          "type": "array"
+        },
+        "under": {
+          "items": {
+            "$ref": "#/$defs/SlabLayer"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "SlabRole": {
       "description": "What a slab is.",
       "oneOf": [
@@ -181490,6 +181619,13 @@
         "excluded": {
           "description": "Listed, not summed.",
           "type": "boolean"
+        },
+        "layers": {
+          "description": "Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;\n`volume` is the structure's.",
+          "items": {
+            "$ref": "#/$defs/SlabLayerRow"
+          },
+          "type": "array"
         },
         "level": {
           "type": [
@@ -181638,6 +181774,17 @@
             "kind": {
               "const": "set",
               "type": "string"
+            },
+            "layers": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/SlabLayers"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away."
             },
             "level": {
               "type": [

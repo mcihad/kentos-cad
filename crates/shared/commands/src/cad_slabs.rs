@@ -135,6 +135,10 @@ pub struct NewSlab {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = UID_TEXT)))]
     pub space: Option<String>,
+    /// Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<crate::SlabLayers>,
 }
 
 /// Input of `cad.slabs.create` v1: slabs on a named layer, written as one undo step “Döşeme”.
@@ -229,6 +233,10 @@ pub struct SlabChange {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub excluded: Option<bool>,
+    /// Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<crate::SlabLayers>,
 }
 
 /// What `cad.slabs.edit` does to the slabs (docs/adr/0722 §4).

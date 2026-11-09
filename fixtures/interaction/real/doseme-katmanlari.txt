@@ -1,0 +1,50 @@
+# M40 2. bölüm (docs/adr/3040 §2): the two-storey building; on 1. kat a slab by the walls' outer faces. Picked from a
+# window round the storey (Öznitelikler › Döşeme (1)): Katmanlar Yalnız taşıyıcı → Ara kat döşemesi (kaplama 2, şap 5
+# over the concrete, sıva 2 under). The ground storey's partition stops under the concrete; Metraj › Döşemeler measures
+# each layer.
+fit KentOS Mimari — Bina
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 1148 57    # Kat ▾
+wait 800
+click 1180 174   # Kat görünümü: Yalnız etkin kat
+wait 1200
+key ctrl+Up      # 1. kat
+wait 1200
+click 532 57     # Döşeme
+wait 1200
+click 760 560    # inside the building: its walls' outer faces
+wait 2000
+key Escape
+wait 600
+drag 20 200 1510 900   # a window round the storey
+wait 1500
+click 1700 328   # Öznitelikler's kinds
+wait 1000
+click 1608 392   # Döşeme (1)
+wait 1200
+shot 01-doseme
+click 1804 595   # Katmanlar
+wait 1000
+shot 02-katmanlar-listesi
+click 1770 658   # Ara kat döşemesi
+wait 1500
+shot 03-ara-kat
+key Escape
+wait 500
+key ctrl+Down    # Zemin kat
+wait 1200
+click 526 560    # the ground storey's partition
+wait 1200
+shot 04-duvar
+key Escape
+wait 500
+click 975 110    # Metraj
+wait 1500
+click 739 457    # Döşemeler
+wait 1200
+shot 05-metraj-dosemeler

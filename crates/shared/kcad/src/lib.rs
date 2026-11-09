@@ -888,11 +888,14 @@ pub const SCHEMA_WITH_OPENING_PHASES: u32 = 218;
 /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view (`renovation`), the project's `phaseView` or a named view's
 /// recipe's `phase`.
 pub const SCHEMA_WITH_RENOVATION_VIEW: u32 = 219;
+/// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure (`layers` of a slab: kaplama, şap, yalıtım
+/// over it, sıva under it).
+pub const SCHEMA_WITH_SLAB_LAYERS: u32 = 220;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 217] = [
+pub const SCHEMAS: [u32; 218] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1110,6 +1113,7 @@ pub const SCHEMAS: [u32; 217] = [
     SCHEMA_WITH_OPENING_SPECS,
     SCHEMA_WITH_OPENING_PHASES,
     SCHEMA_WITH_RENOVATION_VIEW,
+    SCHEMA_WITH_SLAB_LAYERS,
 ];
 
 /// The file a drawing is saved as.

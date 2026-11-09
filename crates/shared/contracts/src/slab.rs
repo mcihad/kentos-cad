@@ -25,6 +25,180 @@ pub const PARAPET_WIDTH: f64 = 0.15;
 pub const MAX_SLAB_EDGE: f64 = 2.0;
 /// The most characters a slab's material has.
 pub const MAX_SLAB_MATERIAL: usize = 120;
+/// The thickest layer besides a slab's structure, metres (docs/adr/3040 §2).
+pub const MAX_SLAB_LAYER: f64 = 1.0;
+/// The most layers over or under a slab's structure.
+pub const MAX_SLAB_LAYERS: usize = 8;
+
+/// What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its
+/// finish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY
+/// 4(1)(ıı)'s "taban döşeme kaplaması", the plaster its "tavan kaplaması".
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SlabLayerKind {
+    /// Kaplama.
+    Finish,
+    /// Şap.
+    Screed,
+    /// Isı yalıtımı.
+    Insulation,
+    /// Su yalıtımı.
+    Waterproofing,
+    /// Sıva.
+    Plaster,
+}
+
+impl SlabLayerKind {
+    pub const ALL: [SlabLayerKind; 5] = [
+        SlabLayerKind::Finish,
+        SlabLayerKind::Screed,
+        SlabLayerKind::Insulation,
+        SlabLayerKind::Waterproofing,
+        SlabLayerKind::Plaster,
+    ];
+
+    pub fn label(self) -> &'static str {
+        match self {
+            SlabLayerKind::Finish => "Kaplama",
+            SlabLayerKind::Screed => "Şap",
+            SlabLayerKind::Insulation => "Isı yalıtımı",
+            SlabLayerKind::Waterproofing => "Su yalıtımı",
+            SlabLayerKind::Plaster => "Sıva",
+        }
+    }
+}
+
+/// A layer of a slab besides its structure (docs/adr/3040 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabLayer {
+    pub kind: SlabLayerKind,
+    /// Metres, above 0 and at most 1.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: f64,
+    /// What it is made of (Seramik, Laminat parke …); absent: not said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+}
+
+/// A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the
+/// structure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of
+/// the first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabLayers {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayer>>", optional))]
+    pub over: Vec<SlabLayer>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayer>>", optional))]
+    pub under: Vec<SlabLayer>,
+}
+
+/// The build-ups a slab is given whole (docs/adr/3040 §2), each its name and its layers; typical thicknesses, each to
+/// be changed: a storey's floor (kaplama 2, şap 5 over the concrete, sıva 2 under), one on the ground (kaplama 2, şap 5,
+/// ısı yalıtımı 5, su yalıtımı 1; no ceiling under it), a terrace (TS 825's terrace build-up from the top: its finish 3,
+/// su yalıtımı 1, şap as the slope's concrete 5, ısı yalıtımı 8; sıva 2 under) and the concrete alone.
+pub fn slab_build_ups() -> Vec<(&'static str, SlabLayers)> {
+    let layer = |kind, thickness| SlabLayer {
+        kind,
+        thickness,
+        material: None,
+    };
+    use SlabLayerKind::*;
+    vec![
+        ("Yalnız taşıyıcı", SlabLayers::default()),
+        (
+            "Ara kat döşemesi",
+            SlabLayers {
+                over: vec![layer(Finish, 0.02), layer(Screed, 0.05)],
+                under: vec![layer(Plaster, 0.02)],
+            },
+        ),
+        (
+            "Zemine oturan döşeme",
+            SlabLayers {
+                over: vec![
+                    layer(Finish, 0.02),
+                    layer(Screed, 0.05),
+                    layer(Insulation, 0.05),
+                    layer(Waterproofing, 0.01),
+                ],
+                under: Vec::new(),
+            },
+        ),
+        (
+            "Teras döşemesi",
+            SlabLayers {
+                over: vec![
+                    layer(Finish, 0.03),
+                    layer(Waterproofing, 0.01),
+                    layer(Screed, 0.05),
+                    layer(Insulation, 0.08),
+                ],
+                under: vec![layer(Plaster, 0.02)],
+            },
+        ),
+    ]
+}
+
+impl SlabLayers {
+    pub fn is_empty(&self) -> bool {
+        self.over.is_empty() && self.under.is_empty()
+    }
+
+    /// The layers over the structure, metres.
+    pub fn over_thickness(&self) -> f64 {
+        self.over.iter().map(|l| l.thickness).sum()
+    }
+
+    /// The layers under the structure, metres.
+    pub fn under_thickness(&self) -> f64 {
+        self.under.iter().map(|l| l.thickness).sum()
+    }
+
+    /// What is wrong with them, said so a reader can fix it: the field and the words.
+    pub fn problem(&self) -> Option<(String, String)> {
+        for (side, list) in [("over", &self.over), ("under", &self.under)] {
+            if list.len() > MAX_SLAB_LAYERS {
+                return Some((
+                    format!("layers.{side}"),
+                    format!(
+                        "Döşemenin bir yanında en çok {MAX_SLAB_LAYERS} katman olur; {} verildi.",
+                        list.len()
+                    ),
+                ));
+            }
+            for (i, l) in list.iter().enumerate() {
+                if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= MAX_SLAB_LAYER)
+                {
+                    return Some((
+                        format!("layers.{side}[{i}].thickness"),
+                        format!(
+                            "{} katmanının kalınlığı sıfırdan büyük, en çok {MAX_SLAB_LAYER} m olmalı; {} verildi.",
+                            l.kind.label(),
+                            l.thickness
+                        ),
+                    ));
+                }
+                if let Some(words) = l.material.as_deref().and_then(material_problem) {
+                    return Some((format!("layers.{side}[{i}].material"), words));
+                }
+            }
+        }
+        None
+    }
+}
 
 /// What a slab is.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -330,6 +504,11 @@ pub struct SlabFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub bound: Option<SlabBound>,
+    /// Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+    /// structure alone, its top the finished floor.
+    #[serde(default, skip_serializing_if = "SlabLayers::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<SlabLayers>", optional))]
+    pub layers: SlabLayers,
 }
 
 /// A slab (docs/adr/0722).
@@ -358,6 +537,27 @@ pub fn material_problem(m: &str) -> Option<String> {
 }
 
 impl SlabFields {
+    /// Its whole thickness, its layers with its structure, metres (docs/adr/3040 §2).
+    pub fn whole_thickness(&self) -> f64 {
+        self.layers.over_thickness() + self.thickness + self.layers.under_thickness()
+    }
+
+    /// Its structure's top over `floor` (its level's elevation), metres: its top less the layers over it.
+    pub fn structure_top(&self, floor: f64) -> f64 {
+        floor + self.offset - self.layers.over_thickness()
+    }
+
+    /// Its structure's underside over `floor`, metres: where a wall under it stops (docs/adr/3040 §1, §2).
+    pub fn structure_underside(&self, floor: f64) -> f64 {
+        self.structure_top(floor) - self.thickness
+    }
+
+    /// The ceiling it gives the storey under it, over `floor`, metres: its structure's underside less the layers under
+    /// it (PAİY 4(1)(ıı)'s "tavan kaplaması").
+    pub fn ceiling(&self, floor: f64) -> f64 {
+        self.structure_underside(floor) - self.layers.under_thickness()
+    }
+
     /// What is wrong with the slab, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
         if self.parts.is_empty() {
@@ -404,6 +604,9 @@ impl SlabFields {
             return Some(("materialId".into(), words));
         }
         if let Some(problem) = self.bound.as_ref().and_then(SlabBound::problem) {
+            return Some(problem);
+        }
+        if let Some(problem) = self.layers.problem() {
             return Some(problem);
         }
         if let Some(e) = &self.edge {

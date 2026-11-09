@@ -1928,6 +1928,57 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if let Some(l) = level {
                 geo.push(Row::figure("Üst kot", f.length_bare(l.elevation + x.offset)).unit(f.length_unit_label()));
             }
+            // Its layers (docs/adr/3040 §2): a build-up picked whole, then each layer's thickness from the top, and
+            // the whole thickness.
+            let build_ups = kentos_commands::slab_build_ups();
+            let named = build_ups
+                .iter()
+                .find(|(_, l)| *l == x.layers)
+                .map(|(n, _)| *n);
+            let layer = |l: &kentos_commands::SlabLayer| {
+                format!("{} {}", l.kind.label(), f.length_bare(l.thickness))
+            };
+            let summary = named.map_or_else(
+                || {
+                    let structure = format!("Taşıyıcı {}", f.length_bare(x.thickness));
+                    x.layers
+                        .over
+                        .iter()
+                        .map(layer)
+                        .chain(std::iter::once(structure))
+                        .chain(x.layers.under.iter().map(layer))
+                        .collect::<Vec<_>>()
+                        .join(" · ")
+                },
+                str::to_owned,
+            );
+            let builds = build_ups
+                .iter()
+                .map(|(name, layers)| {
+                    pick(
+                        (*name).to_owned(),
+                        *layers == x.layers,
+                        set(SlabChange {
+                            layers: Some(layers.clone()),
+                            ..Default::default()
+                        }),
+                        Some("slab"),
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Katmanlar", summary.clone()).editor(select(summary, builds)));
+            for (over, list) in [(true, &x.layers.over), (false, &x.layers.under)] {
+                for (k, l) in list.iter().enumerate() {
+                    geo.push(
+                        Row::figure(l.kind.label(), f.length_bare(l.thickness))
+                            .unit(f.length_unit_label())
+                            .editor(number(Field::SlabLayer(slot, over, k))),
+                    );
+                }
+            }
+            if !x.layers.is_empty() {
+                geo.push(metres("Toplam kalınlık", x.whole_thickness()));
+            }
             let edge_name = x.edge.as_ref().map_or("Yok", |e| e.kind.label());
             let edges = std::iter::once(None)
                 .chain(SlabEdgeKind::ALL.iter().map(|k| Some(*k)))

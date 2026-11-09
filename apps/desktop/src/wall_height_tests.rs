@@ -117,4 +117,52 @@ fn the_walls_stop_under_the_slab_over_them_and_follow_their_storey_s_height() {
     let after = walls(&mut app);
     assert_eq!(heights(&after, "zemin"), [3.09], "the walls follow");
     assert_eq!(heights(&after, "k1"), [3.0]);
+    // Döşeme katmanları (docs/adr/3040 §2): the slab over them a storey's floor (kaplama 2 + şap 5 over its concrete,
+    // sıva 2 under): the walls stop under its concrete, 3.24 − 0.07 − 0.15 = 3.02; the ground storey's floor slab
+    // drawn too, the same build-up: they stand on its concrete, 7 cm lower: 3.09 again, concrete to concrete.
+    let layers = kentos_commands::slab_build_ups()
+        .into_iter()
+        .find(|(n, _)| *n == "Ara kat döşemesi")
+        .expect("Ara kat döşemesi")
+        .1;
+    let slab = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .entities()
+        .find(|e| matches!(e, kentos_commands::Entity::Slab(_)))
+        .map(|e| e.base().id)
+        .expect("the slab");
+    let uid = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .uid(kentos_domain::Slot(slab))
+        .expect("its uid")
+        .to_string();
+    run(
+        &mut app,
+        "cad.slabs.edit",
+        json!({"uids": [uid], "operation": {"kind": "set", "layers": layers}}),
+    );
+    assert_eq!(
+        heights(&walls(&mut app), "zemin"),
+        [3.02],
+        "under its concrete"
+    );
+    run(
+        &mut app,
+        "cad.slabs.create",
+        json!({"layerId": layer, "slabs": [{
+            "parts": [{"outer": {"pts": [p(0.0, 0.0), p(15.0, 0.0), p(15.0, 6.0), p(0.0, 6.0)]}}],
+            "thickness": 0.15, "arch": {"level": "zemin"}, "layers": layers
+        }]}),
+    );
+    assert_eq!(
+        heights(&walls(&mut app), "zemin"),
+        [3.09],
+        "concrete to concrete"
+    );
 }

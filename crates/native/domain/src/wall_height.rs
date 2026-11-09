@@ -8,7 +8,9 @@
 //!   wall's foot (its own floor's slab is under it); the lowest of them. A slab of the storey above (offset 0) is the
 //!   usual one; a roof or terrace slab of its own storey (offset above its foot) too.
 //! - Never past its storey's height: a wall under a gallery whose slab is two storeys up stops at its storey.
-//! - Its foot is its level's floor (the level's elevation; none without a level: 0).
+//! - Its foot is its level's floor (the level's elevation; none without a level: 0); with a floor slab under it, that
+//!   slab's structure's top: the masonry is laid on the concrete before the screed and the finish (§2). Its top is the
+//!   slab over it's structure's underside: the ceiling's plaster covers both.
 
 use kentos_contracts::{Entity, SlabFields, Vec2, WallFields};
 
@@ -24,12 +26,19 @@ impl Document {
         if let Some(h) = w.height {
             return Some(h);
         }
-        let (foot, storey) = self.wall_storey(w);
-        let under = middle(w).and_then(|at| self.slab_underside_over(at, foot));
-        match (under.map(|u| u - foot), storey) {
-            (Some(u), Some(h)) => Some(u.min(h)),
-            (Some(u), None) => Some(u),
-            (None, h) => h,
+        let (floor, storey) = self.wall_storey(w);
+        let Some(at) = middle(w) else {
+            return storey;
+        };
+        let foot = self.slab_structure_top_under(at, floor).unwrap_or(floor);
+        let under = self.slab_underside_over(at, foot);
+        // Never past its storey's top: the next floor.
+        let top = storey.map(|h| floor + h);
+        match (under, top) {
+            (Some(u), Some(t)) => Some(u.min(t) - foot),
+            (Some(u), None) => Some(u - foot),
+            (None, Some(t)) => Some(t - foot),
+            (None, None) => None,
         }
     }
 
@@ -39,11 +48,53 @@ impl Document {
         if w.height.is_some() {
             return false;
         }
-        let (foot, storey) = self.wall_storey(w);
-        let Some(under) = middle(w).and_then(|at| self.slab_underside_over(at, foot)) else {
+        let (floor, storey) = self.wall_storey(w);
+        let Some(at) = middle(w) else {
             return false;
         };
-        storey.is_none_or(|h| under - foot < h - 1e-9)
+        let foot = self.slab_structure_top_under(at, floor).unwrap_or(floor);
+        let Some(under) = self.slab_underside_over(at, foot) else {
+            return false;
+        };
+        storey.is_none_or(|h| under < floor + h - 1e-9)
+    }
+
+    /// The structure's top of the floor slab under `at` on the storey whose floor is `floor`: of the slabs whose
+    /// outline holds it and whose top is the storey's floor (half a metre under it, a lowered wet room's, to [`OVER`]
+    /// over it), the highest.
+    fn slab_structure_top_under(&self, at: Vec2, floor: f64) -> Option<f64> {
+        self.slabs_holding(at)
+            .filter(|(s, f)| {
+                let top = f + s.offset;
+                top >= floor - 0.5 && top <= floor + OVER
+            })
+            .max_by(|a, b| (a.1 + a.0.offset).total_cmp(&(b.1 + b.0.offset)))
+            .map(|(s, f)| s.structure_top(f))
+    }
+
+    /// The slabs whose outline holds `at`, each with its level's floor (0 without a level).
+    fn slabs_holding(&self, at: Vec2) -> impl Iterator<Item = (&SlabFields, f64)> {
+        let levels = self
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.as_slice())
+            .unwrap_or_default();
+        self.entities()
+            .filter_map(|e| match e {
+                Entity::Slab(s) => Some(&s.slab),
+                _ => None,
+            })
+            .filter(move |s| holds(s, at))
+            .map(move |s| {
+                let floor = s
+                    .arch
+                    .level
+                    .as_deref()
+                    .and_then(|id| levels.iter().find(|l| l.id == id))
+                    .map_or(0.0, |l| l.elevation);
+                (s, floor)
+            })
     }
 
     /// Its level's floor and height (floor to floor), metres.
@@ -60,29 +111,10 @@ impl Document {
         )
     }
 
-    /// The lowest underside, of the slabs whose outline holds `at`, more than [`OVER`] above `foot`.
+    /// The lowest structure's underside, of the slabs whose outline holds `at`, more than [`OVER`] above `foot`.
     fn slab_underside_over(&self, at: Vec2, foot: f64) -> Option<f64> {
-        let levels = self
-            .settings()
-            .arch
-            .as_ref()
-            .map(|a| a.levels.as_slice())
-            .unwrap_or_default();
-        self.entities()
-            .filter_map(|e| match e {
-                Entity::Slab(s) => Some(&s.slab),
-                _ => None,
-            })
-            .filter(|s| holds(s, at))
-            .map(|s| {
-                let floor = s
-                    .arch
-                    .level
-                    .as_deref()
-                    .and_then(|id| levels.iter().find(|l| l.id == id))
-                    .map_or(0.0, |l| l.elevation);
-                floor + s.offset - s.thickness
-            })
+        self.slabs_holding(at)
+            .map(|(s, f)| s.structure_underside(f))
             .filter(|u| *u > foot + OVER)
             .min_by(f64::total_cmp)
     }
@@ -212,6 +244,26 @@ mod tests {
         assert_eq!(doc.wall_height(&wall("k1", 0.0, 4.0, None)), Some(3.0));
         // A wall whose middle is out of the slab: its storey's.
         assert_eq!(doc.wall_height(&wall("zemin", 12.0, 16.0, None)), Some(3.0));
+    }
+
+    /// With layers (docs/adr/3040 §2): the wall is laid on its floor slab's concrete (under kaplama 2 + şap 5) and stops
+    /// under the concrete of the slab over it (over its sıva): 2.78 − (−0.07) = 2.85.
+    #[test]
+    fn a_wall_runs_from_concrete_to_concrete() {
+        let layered = |level: &str| {
+            let mut s = slab(level, -1.0, 10.0, 0.15, 0.0);
+            s["layers"] = serde_json::json!({
+                "over": [{"kind": "finish", "thickness": 0.02}, {"kind": "screed", "thickness": 0.05}],
+                "under": [{"kind": "plaster", "thickness": 0.02}]
+            });
+            s
+        };
+        let doc = document(serde_json::json!([layered("zemin"), layered("k1")]));
+        let h = doc.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
+        assert!((h - 2.85).abs() < 1e-9, "{h}");
+        // No slab over the storey above: from its concrete to the next floor (3.00 + 0.07).
+        let top = doc.wall_height(&wall("k1", 0.0, 4.0, None)).unwrap();
+        assert!((top - 3.07).abs() < 1e-9, "{top}");
     }
 
     #[test]

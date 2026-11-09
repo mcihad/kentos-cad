@@ -2,6 +2,7 @@
 import type { ArchInfo } from "./ArchInfo";
 import type { NewSlabEdge } from "./NewSlabEdge";
 import type { SlabBoundary } from "./SlabBoundary";
+import type { SlabLayers } from "./SlabLayers";
 import type { SlabRole } from "./SlabRole";
 import type { SpacePart } from "./SpacePart";
 import type { Vec2 } from "./Vec2";
@@ -52,4 +53,8 @@ bound?: boolean,
  * A space by its persistent id: the slab's outline is the space's rings (moved by `edgeOffset`), bound to it; not
  * with `parts` or `seed`.
  */
-space?: string, };
+space?: string, 
+/**
+ * Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
+ */
+layers?: SlabLayers, };

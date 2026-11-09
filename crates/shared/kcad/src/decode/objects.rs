@@ -441,6 +441,8 @@ pub(super) struct Features {
     pub(super) opening_specs: bool,
     /// Schema 218 (docs/adr/3039): a door's or window's own phase.
     pub(super) opening_phases: bool,
+    /// Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
+    pub(super) slab_layers: bool,
     /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -735,6 +737,7 @@ impl Features {
             room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
             opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
             opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
+            slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -2546,6 +2549,13 @@ pub(super) fn object(
         return Err(r.fail(
             Code::UnknownField,
             "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
+        ));
+    }
+    // Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
+    if matches!(&entity, Entity::Slab(s) if !s.slab.layers.is_empty()) && !has.slab_layers {
+        return Err(r.fail(
+            Code::UnknownField,
+            "döşemenin katmanları (layers) şema 220 ister",
         ));
     }
     // Schema 216 (docs/adr/3038): the room list's finishes and a spaces schedule's room list columns.

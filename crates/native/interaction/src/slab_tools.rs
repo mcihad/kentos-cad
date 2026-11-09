@@ -211,6 +211,8 @@ impl SlabTool {
             attrs: None,
             bound: (self.bind && seed.is_some()).then_some(true),
             space: None,
+            // Its layers are picked in Öznitelikler (docs/adr/3040 §2).
+            layers: None,
         }
     }
 

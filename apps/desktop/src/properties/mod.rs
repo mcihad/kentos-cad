@@ -333,6 +333,9 @@ pub enum Field {
     SlabOffset(Slot),
     SlabEdgeWidth(Slot),
     SlabMaterial(Slot),
+    /// A slab's layer's thickness (docs/adr/3040 §2): over its structure (true) or under it, by its place from the top;
+    /// 0 takes the layer away.
+    SlabLayer(Slot, bool, usize),
     /// A grid's, column's, stair's or ramp's typed field (docs/adr/0343 §5).
     Arch(Slot, ArchField),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
@@ -2172,6 +2175,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         Field::SlabThickness(slot)
         | Field::SlabOffset(slot)
         | Field::SlabEdgeWidth(slot)
+        | Field::SlabLayer(slot, ..)
         | Field::SlabMaterial(slot) => {
             use kentos_commands::{SlabChange, SlabsOperation};
             let change = if let Field::SlabMaterial(_) = field {
@@ -2196,6 +2200,30 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         offset: Some(n),
                         ..Default::default()
                     },
+                    // A layer's thickness (docs/adr/3040 §2); 0 takes it away.
+                    Field::SlabLayer(_, over, k) => {
+                        let Some(Entity::Slab(s)) = model.get(*slot) else {
+                            return Vec::new();
+                        };
+                        let mut layers = s.slab.layers.clone();
+                        let list = if *over {
+                            &mut layers.over
+                        } else {
+                            &mut layers.under
+                        };
+                        if *k >= list.len() {
+                            return Vec::new();
+                        }
+                        if n.abs() < 1e-9 {
+                            list.remove(*k);
+                        } else {
+                            list[*k].thickness = n;
+                        }
+                        SlabChange {
+                            layers: Some(layers),
+                            ..Default::default()
+                        }
+                    }
                     _ => {
                         let Some(Entity::Slab(s)) = model.get(*slot) else {
                             return Vec::new();
@@ -2379,6 +2407,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SlabThickness(_)
         | Field::SlabOffset(_)
         | Field::SlabEdgeWidth(_)
+        | Field::SlabLayer(..)
         | Field::SlabMaterial(_)
         | Field::Arch(..)
         | Field::Elevation(..)

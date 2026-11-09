@@ -524,6 +524,12 @@ impl App {
                 })
                 .collect(),
         };
+        // A slab's layers of a kind (docs/adr/3040 §2): their area (the slab's net area once) and their volume summed.
+        use kentos_commands::SlabLayerKind;
+        let layer = |r: &kentos_commands::SlabRow, kind: SlabLayerKind| -> Option<(f64, f64)> {
+            let of: Vec<_> = r.layers.iter().filter(|l| l.kind == kind).collect();
+            (!of.is_empty()).then(|| (of[0].area, of.iter().map(|l| l.volume).sum()))
+        };
         let slabs = Table {
             name: "Döşemeler",
             heading: vec![
@@ -537,15 +543,23 @@ impl App {
                 "Net alan",
                 "Çevre",
                 "Hacim",
+                // Its layers (docs/adr/3040 §2): the screed by volume as the concrete, the rest by area.
+                "Kaplama",
+                "Şap",
+                "Isı yalıtımı",
+                "Su yalıtımı",
+                "Sıva",
                 "Kenar",
                 "Kenar uzunluğu",
                 "Metraj",
             ],
             numbers: vec![
-                false, false, false, true, true, true, true, true, true, true, false, true, false,
+                false, false, false, true, true, true, true, true, true, true, true, true, true,
+                true, true, false, true, false,
             ],
             widths: vec![
-                72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 80.0, 96.0, 72.0,
+                72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 72.0, 64.0, 80.0,
+                80.0, 64.0, 80.0, 96.0, 72.0,
             ],
             shown: q
                 .slabs
@@ -566,6 +580,14 @@ impl App {
                         area(r.net_area),
                         len(r.perimeter),
                         fixed(r.volume, 3),
+                        layer(r, SlabLayerKind::Finish).map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Screed)
+                            .map_or_else(String::new, |(_, v)| fixed(v, 3)),
+                        layer(r, SlabLayerKind::Insulation)
+                            .map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Waterproofing)
+                            .map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Plaster).map_or_else(String::new, |(a, _)| area(a)),
                         r.edge.map_or_else(String::new, |e| e.label().to_owned()),
                         if r.edge_length > 0.0 {
                             len(r.edge_length)
@@ -592,6 +614,12 @@ impl App {
                         n(r.net_area),
                         n(r.perimeter),
                         n(r.volume),
+                        layer(r, SlabLayerKind::Finish).map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Screed).map_or_else(String::new, |(_, v)| n(v)),
+                        layer(r, SlabLayerKind::Insulation).map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Waterproofing)
+                            .map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Plaster).map_or_else(String::new, |(a, _)| n(a)),
                         r.edge.map_or_else(String::new, |e| e.label().to_owned()),
                         n(r.edge_length),
                         if r.excluded { "Dışında" } else { "Toplamda" }.to_owned(),

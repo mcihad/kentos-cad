@@ -805,6 +805,32 @@ pub struct SlabRow {
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub excluded: bool,
     pub rule: String,
+    /// Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;
+    /// `volume` is the structure's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayerRow>>", optional))]
+    pub layers: Vec<SlabLayerRow>,
+}
+
+/// A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabLayerRow {
+    pub kind: crate::SlabLayerKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: f64,
+    /// The slab's net area, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// `area` × thickness, m³.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
 }
 
 /// A ramp measured (docs/adr/0723 §3).

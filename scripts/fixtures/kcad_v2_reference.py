@@ -2697,6 +2697,10 @@ def document(d):
             or any((v.get("recipe") or {}).get("phase") == "renovation" for v in d["settings"].get("namedViews", []))):
         # The Tadilat projesi view (docs/adr/3039 §5).
         schema = max(schema, 219)
+    if any(e["kind"] == "slab" and e.get("layers")
+           for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]]):
+        # A slab's layers besides its structure (docs/adr/3040 §2).
+        schema = max(schema, 220)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3572,7 +3576,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-220.kcad"] = container(root(cmap(parts), version=uint(220)))
+    files["schema-version-221.kcad"] = container(root(cmap(parts), version=uint(221)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6397,6 +6401,11 @@ def build():
     assert renovation.count(b"\x67version\x18\xdb") == 1, "the Tadilat projesi view is schema 219"
     out["renovation-view.kcad"] = container(renovation)
     out["broken/renovation-view-in-schema-218.kcad"] = container(renovation.replace(b"\x67version\x18\xdb", b"\x67version\x18\xda"))
+    # Schema 220 (docs/adr/3040 §2): a slab's layers; schema 219 refuses them.
+    layered = document(load("slab-layers.json"))
+    assert layered.count(b"\x67version\x18\xdc") == 1, "a slab's layers are schema 220"
+    out["slab-layers.kcad"] = container(layered)
+    out["broken/slab-layers-in-schema-219.kcad"] = container(layered.replace(b"\x67version\x18\xdc", b"\x67version\x18\xdb"))
     # Schema 191 (docs/adr/0977): a road project's grades as rise over run. A file of an older schema held them in
     # percent and its reader divides each by 100: each sample above, as the writer of its own schema wrote it, reads
     # as the drawing of today (`rewrite: false`); these are the samples of schemas 162 and 166–179.

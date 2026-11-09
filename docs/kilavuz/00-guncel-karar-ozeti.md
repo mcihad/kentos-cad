@@ -263,10 +263,14 @@
     - Görünüşün tek kuralı `Entity::look_in` (ekran, pafta, PDF, DXF, kapsam): Tadilat projesinde iptal oda ve etiketi
       gizli, yıkım planında kesikli.
   - **Düşey model (M40, [ADR 3040](../adr/3040-vertical-model.md)):**
-    - Duvarın yüksekliği tek kuraldan (`Document::wall_height`): kendi yüksekliği; yoksa üstündeki en alçak döşemenin
-      altına kadar, katın yüksekliğini geçmeden; döşeme yoksa katın yüksekliği. Metraj, değer sütunları ve iç
-      görünüşler okur. Öznitelikler: "Üst döşemenin altı · 2.850" / "Katın · 3.000".
+    - Duvarın yüksekliği tek kuraldan (`Document::wall_height`): kendi yüksekliği; yoksa betonarmeden betonarmeye,
+      altındaki döşemenin taşıyıcı üstünden üstündeki en alçak döşemenin taşıyıcı altına, katın yüksekliğini
+      geçmeden; döşeme yoksa katın yüksekliği. Metraj, değer sütunları ve iç görünüşler okur. Öznitelikler:
+      "Üst döşemenin altı · 2.850" / "Katın · 3.000".
     - Proje ayarları › Mimari: bir katın yüksekliği değişince üstündeki katların kotu aynı farkla kayar (`stack`).
+    - Döşeme katmanları (`SlabFields.layers`, `.kcad` şema 220): `thickness` taşıyıcının kalınlığı kalır; `over`
+      (kaplama, şap, ısı/su yalıtımı) ve `under` (sıva). Döşemenin üstü bitmiş döşemedir. Öznitelikler'de dört hazır
+      diziliş (`slab_build_ups`); Metraj katman katman (alanla, şap hacimle).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

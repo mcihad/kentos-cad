@@ -556,6 +556,12 @@ def slab_row(d, i, s):
            "perimeter": float(perimeter_of(parts) if parts is not None else s["measure"][1]), "volume": float(net * thickness),
            "edge": edge["kind"] if edge else None, "edgeLength": float(edge_len) or None,
            "excluded": True if s.get("excluded") else None, "rule": rule}
+    # Its layers on its net area (docs/adr/3040 §2), over the structure then under it.
+    layers = s.get("layers") or {}
+    rows = [{"kind": lay["kind"], **({"material": lay["material"]} if lay.get("material") is not None else {}),
+             "thickness": lay["thickness"], "area": float(net), "volume": float(net * F(lay["thickness"]))}
+            for lay in layers.get("over", []) + layers.get("under", [])]
+    row["layers"] = rows or None
     return {k: v for k, v in row.items() if v is not None}
 
 

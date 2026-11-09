@@ -6,6 +6,7 @@ import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { SlabBound } from "./SlabBound";
 import type { SlabEdge } from "./SlabEdge";
+import type { SlabLayers } from "./SlabLayers";
 import type { SlabRole } from "./SlabRole";
 import type { SpacePart } from "./SpacePart";
 import type { Wipeout } from "./Wipeout";
@@ -105,4 +106,9 @@ excluded?: boolean,
  * Kaynağa bağlı sınır (docs/adr/0771 §4): its outline found again from its source whenever that changes; absent:
  * an outline of its own.
  */
-bound?: SlabBound, };
+bound?: SlabBound, 
+/**
+ * Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+ * structure alone, its top the finished floor.
+ */
+layers?: SlabLayers, };

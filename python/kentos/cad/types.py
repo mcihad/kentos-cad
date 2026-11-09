@@ -6811,6 +6811,28 @@ SlabFaceName = Literal["outline", "room"]
 """The names of :class:`SlabFace`, for a plain string."""
 
 
+class SlabLayerKind(_StrEnum):
+    """What a layer of a slab besides its structure is (docs/adr/3040 §2): TS 825's floor build-up (a storey's floor: its
+    finish, screed, insulation; a terrace's waterproofing too) and the ceiling's plaster under it. The finish is PAİY
+    4(1)(ıı)'s "taban döşeme kaplaması", the plaster its "tavan kaplaması".
+
+    - ``finish``: Kaplama.
+    - ``screed``: Şap.
+    - ``insulation``: Isı yalıtımı.
+    - ``waterproofing``: Su yalıtımı.
+    - ``plaster``: Sıva.
+    """
+    FINISH = "finish"
+    SCREED = "screed"
+    INSULATION = "insulation"
+    WATERPROOFING = "waterproofing"
+    PLASTER = "plaster"
+
+
+SlabLayerKindName = Literal["finish", "screed", "insulation", "waterproofing", "plaster"]
+"""The names of :class:`SlabLayerKind`, for a plain string."""
+
+
 class SlabRole(_StrEnum):
     """What a slab is.
 
@@ -57069,6 +57091,7 @@ class NewSlab(_Model):
         edge_offset: Every edge of its outline moved by this much, out of it when positive (a slab under the walls, a cantilever),
             in when negative; at most 10 m either way. Unit: length.
         excluded: Left out of the quantities' totals.
+        layers: Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: none.
         offset: Its top above its level's elevation (negative: below); absent: 0. Unit: elevation.
         parts: Its outline drawn: one part or more, each an outer ring and its holes.
         seed: A point: its outline found from the walls round it, those of its level (every wall when it has none). Unit: length.
@@ -57083,6 +57106,7 @@ class NewSlab(_Model):
     edge: NewSlabEdge | None | Unset = UNSET
     edge_offset: float | None | Unset = UNSET
     excluded: bool | None | Unset = UNSET
+    layers: SlabLayers | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
     parts: list[SpacePart] | None | Unset = UNSET
@@ -57107,6 +57131,8 @@ class NewSlab(_Model):
             out["edgeOffset"] = None if self.edge_offset is None else float(self.edge_offset)
         if self.excluded is not UNSET:
             out["excluded"] = self.excluded
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else self.layers.to_json()
         if self.material is not UNSET:
             out["material"] = self.material
         if self.offset is not UNSET:
@@ -57133,6 +57159,7 @@ class NewSlab(_Model):
             edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
             edge_offset=UNSET if "edgeOffset" not in data else None if data["edgeOffset"] is None else float(data["edgeOffset"]),
             excluded=data.get("excluded", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else SlabLayers.from_json(data["layers"]),
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
             parts=UNSET if "parts" not in data else None if data["parts"] is None else [SpacePart.from_json(e0) for e0 in data["parts"]],
@@ -83735,6 +83762,8 @@ class SlabEntity(Entity):
         excluded: Left out of the quantities' totals: listed, not summed.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
+        layers: Its layers besides its structure (docs/adr/3040 §2): kaplama, şap, yalıtım over it, sıva under it; absent: the
+            structure alone, its top the finished floor.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
             `line_type`.
         line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
@@ -83769,6 +83798,7 @@ class SlabEntity(Entity):
     excluded: bool | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
+    layers: SlabLayers | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
@@ -83807,6 +83837,8 @@ class SlabEntity(Entity):
             out["label"] = self.label
         if self.label_pins is not UNSET:
             out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.layers is not UNSET:
+            out["layers"] = self.layers.to_json()
         if self.line_pattern is not UNSET:
             out["linePattern"] = self.line_pattern
         if self.line_type is not UNSET:
@@ -83850,6 +83882,7 @@ class SlabEntity(Entity):
             excluded=data.get("excluded", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            layers=SlabLayers.from_json(data["layers"]) if "layers" in data else UNSET,
             line_pattern=data.get("linePattern", UNSET),
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
@@ -83866,6 +83899,94 @@ class SlabEntity(Entity):
 
 
 @dataclass(kw_only=True, slots=True)
+class SlabLayer(_Model):
+    """A layer of a slab besides its structure (docs/adr/3040 §2).
+    Attributes:
+        thickness: Metres, above 0 and at most 1. Unit: length.
+        material: What it is made of (Seramik, Laminat parke …); absent: not said.
+    """
+    kind: SlabLayerKind | SlabLayerKindName
+    thickness: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["thickness"] = float(self.thickness)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabLayer:
+        return cls(
+            kind=_enum_in(SlabLayerKind, data["kind"]),
+            thickness=float(data["thickness"]),
+            material=data.get("material", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabLayerRow(_Model):
+    """A slab's layer measured (docs/adr/3040 §2): its kind, its thickness, its net area (the slab's) and its volume.
+    Attributes:
+        thickness: Unit: length.
+        area: The slab's net area, m². Unit: area.
+        volume: `area` × thickness, m³. Unit: volume.
+    """
+    kind: SlabLayerKind | SlabLayerKindName
+    thickness: float
+    area: float
+    volume: float
+    material: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["thickness"] = float(self.thickness)
+        out["area"] = float(self.area)
+        out["volume"] = float(self.volume)
+        if self.material is not UNSET:
+            out["material"] = self.material
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabLayerRow:
+        return cls(
+            kind=_enum_in(SlabLayerKind, data["kind"]),
+            thickness=float(data["thickness"]),
+            area=float(data["area"]),
+            volume=float(data["volume"]),
+            material=data.get("material", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SlabLayers(_Model):
+    """A slab's layers besides its structure (its `thickness`, docs/adr/3040 §2), each list from the top: those over the
+    structure (kaplama, şap, yalıtım) and those under it (sıva). Its top (its level's elevation and offset) is the top of
+    the first over the structure: the finished floor the storey's height is measured from (PAİY 4(1)(rr)).
+    """
+    over: list[SlabLayer] | Unset = UNSET
+    under: list[SlabLayer] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.over is not UNSET:
+            out["over"] = [e0.to_json() for e0 in self.over]
+        if self.under is not UNSET:
+            out["under"] = [e0.to_json() for e0 in self.under]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SlabLayers:
+        return cls(
+            over=[SlabLayer.from_json(e0) for e0 in data["over"]] if "over" in data else UNSET,
+            under=[SlabLayer.from_json(e0) for e0 in data["under"]] if "under" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SlabRow(_Model):
     """A slab measured (docs/adr/0722 §5).
     Attributes:
@@ -83876,6 +83997,8 @@ class SlabRow(_Model):
         volume: `netArea` × thickness, m³. Unit: volume.
         edge_length: Its edge's runs' length, metres. Unit: length.
         excluded: Listed, not summed.
+        layers: Its layers besides its structure (docs/adr/3040 §2), over it then under it, each measured on its net area;
+            `volume` is the structure's.
         offset: Its top above its level's elevation. Unit: elevation.
         top: Its top's elevation: its level's elevation and its offset; none when its level has none. Unit: elevation.
         void_area: The area the voids of its level (shafts, docs/adr/0708) take out of it, m². Unit: area.
@@ -83891,6 +84014,7 @@ class SlabRow(_Model):
     edge: SlabEdgeKind | SlabEdgeKindName | None | Unset = UNSET
     edge_length: float | Unset = UNSET
     excluded: bool | Unset = UNSET
+    layers: list[SlabLayerRow] | Unset = UNSET
     level: str | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | Unset = UNSET
@@ -83913,6 +84037,8 @@ class SlabRow(_Model):
             out["edgeLength"] = float(self.edge_length)
         if self.excluded is not UNSET:
             out["excluded"] = self.excluded
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.level is not UNSET:
             out["level"] = self.level
         if self.material is not UNSET:
@@ -83939,6 +84065,7 @@ class SlabRow(_Model):
             edge=UNSET if "edge" not in data else None if data["edge"] is None else _enum_in(SlabEdgeKind, data["edge"]),
             edge_length=float(data["edgeLength"]) if "edgeLength" in data else UNSET,
             excluded=data.get("excluded", UNSET),
+            layers=[SlabLayerRow.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             level=data.get("level", UNSET),
             material=data.get("material", UNSET),
             offset=float(data["offset"]) if "offset" in data else UNSET,
@@ -121666,12 +121793,14 @@ class SetSlabsOperation(SlabsOperation):
     """Değiştir: the fields given, on every slab named.
     Attributes:
         edge: Its edge's kind and width; null: no edge.
+        layers: Its layers besides its structure, all of them (docs/adr/3040 §2); empty lists take them away.
         offset: Unit: elevation.
         thickness: Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "set"
     edge: NewSlabEdge | None | Unset = UNSET
     excluded: bool | None | Unset = UNSET
+    layers: SlabLayers | None | Unset = UNSET
     level: str | None | Unset = UNSET
     material: str | None | Unset = UNSET
     offset: float | None | Unset = UNSET
@@ -121685,6 +121814,8 @@ class SetSlabsOperation(SlabsOperation):
             out["edge"] = None if self.edge is None else self.edge.to_json()
         if self.excluded is not UNSET:
             out["excluded"] = self.excluded
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else self.layers.to_json()
         if self.level is not UNSET:
             out["level"] = self.level
         if self.material is not UNSET:
@@ -121704,6 +121835,7 @@ class SetSlabsOperation(SlabsOperation):
         return cls(
             edge=UNSET if "edge" not in data else None if data["edge"] is None else NewSlabEdge.from_json(data["edge"]),
             excluded=data.get("excluded", UNSET),
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else SlabLayers.from_json(data["layers"]),
             level=data.get("level", UNSET),
             material=data.get("material", UNSET),
             offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
@@ -129035,6 +129167,11 @@ __all__ = [
     "SlabEntity",
     "SlabFace",
     "SlabFaceName",
+    "SlabLayer",
+    "SlabLayerKind",
+    "SlabLayerKindName",
+    "SlabLayerRow",
+    "SlabLayers",
     "SlabMaterialTarget",
     "SlabRole",
     "SlabRoleName",

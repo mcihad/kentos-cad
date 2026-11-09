@@ -4096,3 +4096,90 @@ fn a_wall_s_height_row_says_it_stops_under_the_slab_over_it() {
     );
     assert_eq!(height(&app), "Üst döşemenin altı · 2.850");
 }
+
+/// A slab's layers (docs/adr/3040 §2): Katmanlar picks a build-up whole (Ara kat döşemesi: kaplama 2, şap 5 over the
+/// concrete, sıva 2 under), each layer's thickness is typed in its row, 0 takes it away; Toplam kalınlık adds them.
+#[test]
+fn a_slab_s_layers_are_picked_whole_and_typed_one_by_one() {
+    use kentos_commands::{SlabLayerKind, Workspace};
+    use serde_json::json;
+    let mut app = objects();
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let mut settings = doc.settings().clone();
+    settings.workspace = Some(Workspace::Cad);
+    settings.srid = 0;
+    doc.set_settings(settings);
+    let slab = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"slab", "id":0, "layerId":"parsel", "attrs":{},
+            "parts":[{"outer":{"pts":[{"x":0.,"y":0.},{"x":8.,"y":0.},{"x":8.,"y":5.},{"x":0.,"y":5.}]}}],
+            "thickness":0.15
+        }))
+        .unwrap(),
+    );
+    select(&mut app, &[slab]);
+    let value = |app: &App, label: &str| -> Option<String> {
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, rows)| rows)
+            .find(|r| r.label == label)
+            .map(|r| r.value.to_string())
+    };
+    let layers = |app: &App| match entity(app, slab) {
+        Entity::Slab(s) => s.slab.layers,
+        other => panic!("{other:?}"),
+    };
+    assert_eq!(value(&app, "Katmanlar").as_deref(), Some("Yalnız taşıyıcı"));
+    assert_eq!(value(&app, "Toplam kalınlık"), None);
+    // Ara kat döşemesi picked: its message, one step.
+    let pick = rows(&app)
+        .into_iter()
+        .flat_map(|(_, rows)| rows)
+        .find(|r| r.label == "Katmanlar")
+        .and_then(|r| match r.editor {
+            Some(Editor::Select { items, .. }) => items.into_iter().find_map(|c| match c {
+                Choice::Pick { label, message, .. } if label == "Ara kat döşemesi" => {
+                    Some(message)
+                }
+                _ => None,
+            }),
+            _ => None,
+        })
+        .expect("Ara kat döşemesi");
+    let _ = app.update(pick);
+    let l = layers(&app);
+    assert_eq!(
+        l.over
+            .iter()
+            .map(|x| (x.kind, x.thickness))
+            .collect::<Vec<_>>(),
+        [(SlabLayerKind::Finish, 0.02), (SlabLayerKind::Screed, 0.05)]
+    );
+    assert_eq!(l.under.len(), 1);
+    assert_eq!(
+        value(&app, "Katmanlar").as_deref(),
+        Some("Ara kat döşemesi")
+    );
+    assert_eq!(value(&app, "Şap").as_deref(), Some("0.050"));
+    assert_eq!(value(&app, "Toplam kalınlık").as_deref(), Some("0.240"));
+    // The screed typed 4 cm: no build-up's name, each layer said.
+    event(
+        &mut app,
+        Event::Commit(Field::SlabLayer(Slot(slab), true, 1), "4 cm".into()),
+    );
+    assert_eq!(layers(&app).over[1].thickness, 0.04);
+    assert_eq!(
+        value(&app, "Katmanlar").as_deref(),
+        Some("Kaplama 0.020 · Şap 0.040 · Taşıyıcı 0.150 · Sıva 0.020")
+    );
+    // The finish typed 0: taken away.
+    event(
+        &mut app,
+        Event::Commit(Field::SlabLayer(Slot(slab), true, 0), "0".into()),
+    );
+    assert_eq!(
+        layers(&app).over.iter().map(|x| x.kind).collect::<Vec<_>>(),
+        [SlabLayerKind::Screed]
+    );
+}

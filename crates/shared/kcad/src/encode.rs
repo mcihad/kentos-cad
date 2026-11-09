@@ -2270,6 +2270,16 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 220 (docs/adr/3040 §2): a slab's layers besides its structure.
+    let slab_layers = |e: &Entity| matches!(e, Entity::Slab(s) if !s.slab.layers.is_empty());
+    if objs.iter().any(slab_layers)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(slab_layers))
+    {
+        return crate::SCHEMA_WITH_SLAB_LAYERS;
+    }
     // Schema 219 (docs/adr/3039 §5): the Tadilat projesi view, the project's or a named view's recipe's.
     let renovation = Some(kentos_contracts::PhaseView::Renovation);
     if doc

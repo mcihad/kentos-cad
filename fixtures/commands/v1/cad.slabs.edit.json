@@ -3126,6 +3126,747 @@
       ]
     },
     {
+      "name": "katmanlar verilir: teras dizilişi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "layers": {
+                "over": [
+                  {
+                    "kind": "finish",
+                    "thickness": 0.03
+                  },
+                  {
+                    "kind": "waterproofing",
+                    "thickness": 0.01
+                  },
+                  {
+                    "kind": "screed",
+                    "thickness": 0.05
+                  },
+                  {
+                    "kind": "insulation",
+                    "thickness": 0.08
+                  }
+                ],
+                "under": [
+                  {
+                    "kind": "plaster",
+                    "thickness": 0.02
+                  }
+                ]
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 20.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 3.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 3.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "thickness": 0.15,
+                  "layers": {
+                    "over": [
+                      {
+                        "kind": "finish",
+                        "thickness": 0.03
+                      },
+                      {
+                        "kind": "waterproofing",
+                        "thickness": 0.01
+                      },
+                      {
+                        "kind": "screed",
+                        "thickness": 0.05
+                      },
+                      {
+                        "kind": "insulation",
+                        "thickness": 0.08
+                      }
+                    ],
+                    "under": [
+                      {
+                        "kind": "plaster",
+                        "thickness": 0.02
+                      }
+                    ]
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.03
+                    },
+                    {
+                      "kind": "waterproofing",
+                      "thickness": 0.01
+                    },
+                    {
+                      "kind": "screed",
+                      "thickness": 0.05
+                    },
+                    {
+                      "kind": "insulation",
+                      "thickness": 0.08
+                    }
+                  ],
+                  "under": [
+                    {
+                      "kind": "plaster",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 12.0,
+                "slabVolume": 1.7999999999999998
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 12.0,
+                  "netArea": 12.0,
+                  "perimeter": 14.0,
+                  "volume": 1.7999999999999998,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık",
+                  "layers": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.03,
+                      "area": 12.0,
+                      "volume": 0.36
+                    },
+                    {
+                      "kind": "waterproofing",
+                      "thickness": 0.01,
+                      "area": 12.0,
+                      "volume": 0.12
+                    },
+                    {
+                      "kind": "screed",
+                      "thickness": 0.05,
+                      "area": 12.0,
+                      "volume": 0.6000000000000001
+                    },
+                    {
+                      "kind": "insulation",
+                      "thickness": 0.08,
+                      "area": 12.0,
+                      "volume": 0.96
+                    },
+                    {
+                      "kind": "plaster",
+                      "thickness": 0.02,
+                      "area": 12.0,
+                      "volume": 0.24
+                    }
+                  ]
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "katmanlar boş verilince kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.slabs.create",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:8"
+            ],
+            "operation": {
+              "kind": "set",
+              "layers": {}
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "slabs": [
+                {
+                  "kind": "slab",
+                  "id": 8,
+                  "layerId": "doseme",
+                  "attrs": {},
+                  "parts": [
+                    {
+                      "outer": {
+                        "pts": [
+                          {
+                            "x": 20.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 0.0
+                          },
+                          {
+                            "x": 24.0,
+                            "y": 3.0
+                          },
+                          {
+                            "x": 20.0,
+                            "y": 3.0
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "thickness": 0.15
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 12.0,
+                "slabVolume": 1.7999999999999998
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 12.0,
+                  "netArea": 12.0,
+                  "perimeter": 14.0,
+                  "volume": 1.7999999999999998,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık"
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "kenar 25 cm dışa ötelenir",
       "steps": [
         {
@@ -5383,7 +6124,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.",
+              "message": "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar ya da metraj dışı seçimlerinden birini verin.",
               "path": "operation"
             }
           },
