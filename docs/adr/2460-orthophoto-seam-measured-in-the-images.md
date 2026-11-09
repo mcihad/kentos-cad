@@ -87,7 +87,7 @@ mozaik ve iki zamanlı karşılaştırmada kayma ölçülebilsin.”
 
 ## Sonra
 
-- Görüntü ara değeriyle (çift kübik) piksel altı: Debella-Gilo ve Kääb'e göre parabolden doğru.
+- ~~Görüntü ara değeriyle (çift kübik) piksel altı: Debella-Gilo ve Kääb'e göre parabolden doğru.~~ ADR 3260.
 - Farklı piksel boyunda ya da dönük görüntüler: birinin öbürünün ızgarasına yeniden örneklenmesi.
 - Çizilmiş bir dikiş hattı boyunca ölçüm (bugün örtüşmenin bütünü). Yapıldı:
   [ADR 2860](2860-orthophoto-seam-along-a-drawn-line.md).

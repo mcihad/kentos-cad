@@ -4573,6 +4573,20 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class OrthoSubpixel(_StrEnum):
+    """How a place's peak is refined to a fraction of a pixel (docs/adr/3260): `parabola` (none given, docs/adr/2460) through
+    the peak and its two neighbours each way; `bicubic` by the second image itself resampled with cubic convolution
+    (Keys, a = −1/2), the correlation's highest sought on a grid of 1/8 pixel within half a pixel of the peak, then of
+    1/64 pixel within 1/8 of it (Debella-Gilo and Kääb 2011: interpolating the image is the more accurate way).
+    """
+    PARABOLA = "parabola"
+    BICUBIC = "bicubic"
+
+
+OrthoSubpixelName = Literal["parabola", "bicubic"]
+"""The names of :class:`OrthoSubpixel`, for a plain string."""
+
+
 class PackageResourceHow(_StrEnum):
     """How the package has a resource (docs/adr/1111 §1).
 
@@ -61475,8 +61489,8 @@ class OrthoSeamAsk(_Model):
     normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
     whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
     a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
-    id (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,
-    those inside the overlap measured.
+    id (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along
+    it from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.
     Attributes:
         step: Unit: length.
         window: Unit: count.
@@ -61489,6 +61503,7 @@ class OrthoSeamAsk(_Model):
     correlation: float | None | Unset = UNSET
     folder: str | None | Unset = UNSET
     line: str | None | Unset = UNSET
+    subpixel: OrthoSubpixel | OrthoSubpixelName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -61501,6 +61516,8 @@ class OrthoSeamAsk(_Model):
             out["folder"] = self.folder
         if self.line is not UNSET:
             out["line"] = self.line
+        if self.subpixel is not UNSET:
+            out["subpixel"] = None if self.subpixel is None else _enum_out(self.subpixel)
         return out
 
     @classmethod
@@ -61512,6 +61529,7 @@ class OrthoSeamAsk(_Model):
             correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
             folder=data.get("folder", UNSET),
             line=data.get("line", UNSET),
+            subpixel=UNSET if "subpixel" not in data else None if data["subpixel"] is None else _enum_in(OrthoSubpixel, data["subpixel"]),
         )
 
 
@@ -131773,6 +131791,8 @@ __all__ = [
     "OrthoSeamAsk",
     "OrthoSeamLine",
     "OrthoStats",
+    "OrthoSubpixel",
+    "OrthoSubpixelName",
     "OrthophotoCheck",
     "OrthophotoChecked",
     "OrthophotoCompare",

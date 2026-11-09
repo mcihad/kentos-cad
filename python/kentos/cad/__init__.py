@@ -2230,6 +2230,8 @@ __all__ = [
     "OrthoSeamAsk",
     "OrthoSeamLine",
     "OrthoStats",
+    "OrthoSubpixel",
+    "OrthoSubpixelName",
     "OrthophotoCheck",
     "OrthophotoChecked",
     "OrthophotoCompare",

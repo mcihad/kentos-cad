@@ -161523,7 +161523,7 @@
     },
     "OrthoSeamAsk": {
       "additionalProperties": false,
-      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,\nthose inside the overlap measured.",
+      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along\nit from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.",
       "properties": {
         "correlation": {
           "format": "double",
@@ -161555,6 +161555,16 @@
           "format": "double",
           "type": "number",
           "x-unit": "length"
+        },
+        "subpixel": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OrthoSubpixel"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "window": {
           "format": "uint32",
@@ -161673,6 +161683,14 @@
         "nZ"
       ],
       "type": "object"
+    },
+    "OrthoSubpixel": {
+      "description": "How a place's peak is refined to a fraction of a pixel (docs/adr/3260): `parabola` (none given, docs/adr/2460) through\nthe peak and its two neighbours each way; `bicubic` by the second image itself resampled with cubic convolution\n(Keys, a = −1/2), the correlation's highest sought on a grid of 1/8 pixel within half a pixel of the peak, then of\n1/64 pixel within 1/8 of it (Debella-Gilo and Kääb 2011: interpolating the image is the more accurate way).",
+      "enum": [
+        "parabola",
+        "bicubic"
+      ],
+      "type": "string"
     },
     "OrthophotoChecked": {
       "description": "Output of `cad.orthophoto.check` v1: the package (id, source), the scale, the image's ground sampling distance\n(the square root of a pixel's area), the package's limit for it at that scale and whether it holds (none when the\npackage names no such scale), the matched points, the names on one side only, the check points' and the fit\npoints' statistics, the KOH limits (metres) and whether the check points hold to them (none without check points\nor heights), whether KOH_X,Y is under half a pixel (finer than reading the image: the result may flatter it), and notes.",

@@ -1,7 +1,8 @@
 //! The seam measured in the images through a real AI host (plan/map-cad.md MAP-12, docs/adr/2460): the shared seam
 //! case's drawing (two synthetic GeoTIFFs of the fixtures, their paths made absolute) opened as a .kcad file over MCP.
 //! `cad.orthophoto.compare` with `seam` gives the case's places, counts and shift; a narrow search leaves every peak
-//! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it.
+//! on its edge; along a drawn seam line (docs/adr/2860) the places are the line's, each with its distance along it;
+//! docs/adr/3260: along a line with an arc, and with the peak refined by the second image resampled (bicubic).
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -48,6 +49,8 @@ fn the_seam_over_mcp_is_the_cases() {
         "dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı",
         "dikiş: arama dar, tepe sınırda kalır",
         "dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır",
+        "dikiş hattı yaylı: yerler yay boyunca",
+        "dikiş: görüntünün çift kübik ara değeriyle piksel altı",
     ] {
         let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
         let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();

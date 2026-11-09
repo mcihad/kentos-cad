@@ -239,8 +239,8 @@ pub struct OrthophotoCompare {
 /// normalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place
 /// whose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where
 /// a raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent
-/// id (a line or a polyline of straight edges): the places are every `step` metres along it from its start instead,
-/// those inside the overlap measured.
+/// id (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along
+/// it from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -263,6 +263,23 @@ pub struct OrthoSeamAsk {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subpixel: Option<OrthoSubpixel>,
+}
+
+/// How a place's peak is refined to a fraction of a pixel (docs/adr/3260): `parabola` (none given, docs/adr/2460) through
+/// the peak and its two neighbours each way; `bicubic` by the second image itself resampled with cubic convolution
+/// (Keys, a = −1/2), the correlation's highest sought on a grid of 1/8 pixel within half a pixel of the peak, then of
+/// 1/64 pixel within 1/8 of it (Debella-Gilo and Kääb 2011: interpolating the image is the more accurate way).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum OrthoSubpixel {
+    Parabola,
+    Bicubic,
 }
 
 /// A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the

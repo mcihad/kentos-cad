@@ -14,7 +14,8 @@ use std::path::PathBuf;
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{
-    CommandResult, Entity, OrthoSeamAsk, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared, RasterFields,
+    CommandResult, Entity, OrthoSeamAsk, OrthoSubpixel, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared,
+    RasterFields,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, orthophoto_compare};
@@ -55,6 +56,24 @@ impl std::fmt::Display for Show {
     }
 }
 
+/// How a place's peak is refined to a fraction of a pixel (docs/adr/3260): a parabola on its neighbours, or the second
+/// image resampled by cubic convolution.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Refine {
+    #[default]
+    Parabola,
+    Bicubic,
+}
+
+impl std::fmt::Display for Refine {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Refine::Parabola => "Parabol",
+            Refine::Bicubic => "Çift kübik",
+        })
+    }
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct State {
     /// The drawing's rasters: persistent id and name.
@@ -81,6 +100,8 @@ pub struct State {
     /// The seam line measured along (docs/adr/2860): its persistent id and its words; empty: the overlap's grid.
     pub seam_line: String,
     pub seam_line_name: String,
+    /// How the peak is refined (docs/adr/3260).
+    pub refine: Refine,
 }
 
 #[derive(Clone, Debug)]
@@ -100,6 +121,7 @@ pub enum Event {
     /// The seam line: the one line or polyline chosen in the drawing taken, or let go (docs/adr/2860).
     TakeLine,
     DropLine,
+    Refine(Refine),
     Show(Show),
     Swap,
     Save,
@@ -179,6 +201,7 @@ impl App {
             correlation,
             folder,
             line: (!s.seam_line.is_empty()).then(|| s.seam_line.clone()),
+            subpixel: (s.refine == Refine::Bicubic).then_some(OrthoSubpixel::Bicubic),
         });
         let input = OrthophotoCompare {
             first: s.first.clone(),
@@ -285,6 +308,7 @@ impl App {
             show: Show::Points,
             seam_line: String::new(),
             seam_line_name: String::new(),
+            refine: Refine::Parabola,
         };
         self.ortho_compare_run();
         self.dialog = Some(Dialog::OrthoCompare);
@@ -318,6 +342,7 @@ impl App {
             Event::Window(v) => s.window = v,
             Event::Search(v) => s.search = v,
             Event::Correlation(v) => s.correlation = v,
+            Event::Refine(v) => s.refine = v,
             Event::TakeLine => {
                 // The one line or polyline chosen (docs/adr/2860): its persistent id and words.
                 let chosen = self.selection.ids().to_vec();
@@ -610,7 +635,9 @@ impl App {
                 ]
                 .spacing(8)
                 .align_y(Center),
-            );
+            )
+            // Docs/adr/3260: the peak refined by a parabola, or by the second image resampled (cubic convolution).
+            .field("Piksel altı", Segmented::new([Refine::Parabola, Refine::Bicubic], s.refine, |v| msg(Event::Refine(v))));
         let (lines, rows) = self.ortho_compare_lines();
         let f = self.format();
         let table = if s.show == Show::Seam {

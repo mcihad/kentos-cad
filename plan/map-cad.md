@@ -42,7 +42,7 @@ sırayla alır.
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040 | plan değişikliği taslağı; sembolün karardan seçilmesi; bölgelerin komutun cevabına girmesi | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060 | eğim; ağ üzerinden erişim; damganın çizimde saklanması; en yakın hatta bağ çizgisi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080 | dış parçanın numarasının çizimde yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860 | çift kübik piksel altı; yeniden örnekleme; yaylı dikiş hattı; türeyen nesnenin kaynağa izi (MAP-01 kararı) | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260 | yeniden örnekleme; türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100 | çoklu tarama demeti; ters matris ve nesnenin dönüşüm geçmişi | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120 | ölçmecinin seçtiği öbür noktaların kotları; yüzey birleştirme; bölgesel yeniden kurma | gerçek veri ölçümü |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140 | malzeme bölgesi; kesit yöntemi; stokta üçgenlenmiş taban | — |
@@ -1190,6 +1190,14 @@ hesaplanan ya da elle düzenlenen hat). Kanıtlanan: `cad.orthophoto.compare`'in
 başından adım aralıklı, örtüşmedekiler ölçülür, dışındakiler sayılır, her yerin hat boyunca uzaklığı; dört ret;
 45 ortak durum, MCP; Ortofoto karşılaştırması'nda Dikiş hattı satırı ve Hat (m) sütunu. Açık: yaylı hat, çift kübik
 piksel altı, yeniden örnekleme, mozaiğin çokgenlerinden hat.
+
+**9 Kasım 2026, beşinci tur — çift kübik piksel altı ve yaylı dikiş hattı ([ADR 3260](../docs/adr/3260-orthophoto-seam-bicubic-and-arcs.md)).**
+Kapsam: **CAD + CBS** (raster). Dayanak: Debella-Gilo ve Kääb 2011 (görüntünün ara değeri korelasyon yüzeyine eğri
+uydurmaktan doğru), Keys 1981 (kübik evrişim, a = −1/2), DXF'in bulge'ı. Kanıtlanan: `seam.subpixel: bicubic`: ikinci
+görüntü kübik evrişimle yeniden örneklenir, tepe 1/8 sonra 1/64 piksellik ızgarada aranır; aynı 20 yerde bilinen
+kaymadan en büyük sapma parabolle 0,108, çift kübikle 0,019 piksel. Yaylı dikiş hattı: yerler yay boyunca, yay boyu
+uzaklık; ret kalktı. 48 ortak durum, MCP, Piksel altı seçimi. Açık: yeniden örnekleme, türeyen nesnenin izi, mozaiğin
+dikiş çokgenleri.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

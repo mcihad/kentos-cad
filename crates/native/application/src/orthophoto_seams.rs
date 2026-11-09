@@ -6,7 +6,10 @@
 //! - **Match:** the first image's `window` × `window` patch (its grey: the mean of the first three bands) sought in the
 //!   second within `search` pixels each way by zero-mean normalized cross-correlation, from the second's pixel whose
 //!   centre is nearest the place; the peak (the first of equals, rows then columns) refined to a fraction of a pixel by
-//!   a parabola through it and its two neighbours, each way apart.
+//!   a parabola through it and its two neighbours, each way apart; or (docs/adr/3260, `subpixel: bicubic`) by the
+//!   second image itself resampled with cubic convolution (Keys, a = −1/2) at fractions of a pixel round the peak, the
+//!   correlation's highest on a grid of 1/8 pixel within half a pixel, then of 1/64 pixel within 1/8 of it (the first of
+//!   equals, rows then columns). The correlation said is the whole pixel's peak's either way.
 //! - **Shift:** the second's matched place − the place (metres).
 //! - **State:** `flat` when either patch has no texture (no correlation); `edge` when the peak is on the search's edge
 //!   (the true one may lie beyond; no shift); `low` below the correlation asked (its shift said, not counted); else `ok`.
@@ -15,15 +18,19 @@
 //! Nothing is written.
 //!
 //! Along a drawn seam line (`line`, docs/adr/2860): the places are every `step` metres along it from its start (the
-//! k-th at k × step, the line's length included when it falls on a step), each the point at that distance on its straight
-//! edges; those inside the overlap (as the grid's) are measured, in the line's order, each with its distance; the rest are
-//! counted as outside.
+//! k-th at k × step, the line's length included when it falls on a step), each the point at that distance on its edges,
+//! straight or (docs/adr/3260) arcs, an arc's distance along the arc; those inside the overlap (as the grid's) are
+//! measured, in the line's order, each with its distance; the rest are counted as outside.
 
 use std::path::Path;
 
-use kentos_commands::{Entity, OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, OrthoSeamLine, RasterEntity};
+use kentos_commands::{
+    Entity, OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, OrthoSeamLine, OrthoSubpixel, RasterEntity,
+};
 use kentos_domain::{Document, Uuid};
 use kentos_formats::raster::source::Region;
+use kentos_geometry_core::Vec2;
+use kentos_geometry_core::geom::bulge::{BulgeArc, bulge_arc, bulge_at};
 
 use crate::checks::{Stop, error};
 use crate::codes;
@@ -100,50 +107,130 @@ fn ncc(a: &[f64], b: &[f64]) -> Option<f64> {
     (saa > 0.0 && sbb > 0.0).then(|| sab / (saa * sbb).sqrt())
 }
 
+/// Keys' cubic convolution kernel with a = −1/2 (docs/adr/3260).
+fn keys(t: f64) -> f64 {
+    let t = t.abs();
+    if t <= 1.0 {
+        (1.5 * t - 2.5) * t * t + 1.0
+    } else if t < 2.0 {
+        ((-0.5 * t + 2.5) * t - 4.0) * t + 2.0
+    } else {
+        0.0
+    }
+}
+
+/// The grey of region `r` at (`x`, `y`) in its pixels (whole numbers: the pixels' centres) by cubic convolution: the 4
+/// × 4 pixels round it, each row's sum weighted by its column weights, then the rows' by theirs.
+fn bicubic(r: &Region, x: f64, y: f64) -> f64 {
+    let (x0, y0) = (x.floor(), y.floor());
+    let (tx, ty) = (x - x0, y - y0);
+    let (i0, j0) = (x0 as i64, y0 as i64);
+    let mut sum = 0.0;
+    for n in -1..=2_i64 {
+        let mut row = 0.0;
+        for m in -1..=2_i64 {
+            row += grey(r, (i0 + m) as u32, (j0 + n) as u32) * keys(tx - m as f64);
+        }
+        sum += row * keys(ty - n as f64);
+    }
+    sum
+}
+
+/// docs/adr/3260: the whole pixel's peak, the second patch's top left at (`x`, `y`) in region `pb`'s pixels, refined by
+/// the second image resampled at fractions of a pixel: the correlation's highest on a grid of 1/8 pixel within half a
+/// pixel, then of 1/64 pixel within 1/8 of it, rows then columns, the first of equals kept. The fraction found.
+fn refine_bicubic(first: &[f64], pb: &Region, w: u32, x: f64, y: f64) -> (f64, f64) {
+    let score = |fu: f64, fv: f64| -> Option<f64> {
+        let second: Vec<f64> = (0..w)
+            .flat_map(|j| (0..w).map(move |i| (i, j)))
+            .map(|(i, j)| bicubic(pb, x + f64::from(i) + fu, y + f64::from(j) + fv))
+            .collect();
+        ncc(first, &second)
+    };
+    // A grid of `step` within `reach` steps of (cu, cv), rows then columns, the first of equals kept.
+    let grid = |cu: f64, cv: f64, step: f64, reach: i32| -> Option<(f64, f64)> {
+        let mut found: Option<(f64, f64, f64)> = None;
+        for kv in -reach..=reach {
+            for ku in -reach..=reach {
+                let (fu, fv) = (cu + f64::from(ku) * step, cv + f64::from(kv) * step);
+                if let Some(c) = score(fu, fv)
+                    && found.is_none_or(|f| c > f.2)
+                {
+                    found = Some((fu, fv, c));
+                }
+            }
+        }
+        found.map(|f| (f.0, f.1))
+    };
+    let Some((cu, cv)) = grid(0.0, 0.0, 0.125, 4) else { return (0.0, 0.0) };
+    grid(cu, cv, 0.015625, 8).unwrap_or((cu, cv))
+}
+
 /// The parabola's vertex through (−1, l), (0, c), (1, r): the peak's fraction of a pixel.
 fn vertex(l: f64, c: f64, r: f64) -> f64 {
     let den = l - 2.0 * c + r;
     if den < 0.0 { (l - r) / (2.0 * den) } else { 0.0 }
 }
 
-/// The seam line's vertices (east, north): a line, or a polyline of straight edges (a closed one back to its start);
-/// refused at `seam.line` as the contract says.
-fn seam_line(doc: &Document, uid: &str) -> Result<Vec<[f64; 2]>, Stop> {
+/// The seam line's vertices (east, north) and each edge's bulge (docs/adr/3260: an arc's too): a line, or a polyline
+/// (a closed one back to its start); refused at `seam.line` as the contract says.
+fn seam_line(doc: &Document, uid: &str) -> Result<(Vec<[f64; 2]>, Vec<f64>), Stop> {
     let bad = |m: String| fail(codes::INVALID_INPUT, m, "seam.line");
     let e = Uuid::parse_str(uid.trim())
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
         .ok_or_else(|| bad(format!("“{uid}” kimlikli dikiş hattı çizimde yok.")))?;
-    let pts = match e {
-        Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
+    Ok(match e {
+        Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], vec![0.0]),
         Entity::Polyline(p) => {
-            if p.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0)) {
-                return Err(bad("Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.".into()));
-            }
             let mut pts: Vec<[f64; 2]> = p.pts.iter().map(|v| [v.x, v.y]).collect();
+            let edges = if p.closed { pts.len() } else { pts.len().saturating_sub(1) };
+            let bulges = (0..edges).map(|i| bulge_at(p.bulges.as_deref(), i)).collect();
             if p.closed && let Some(first) = pts.first().copied() {
                 pts.push(first);
             }
-            pts
+            (pts, bulges)
         }
         _ => return Err(bad("Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.".into())),
-    };
-    Ok(pts)
+    })
 }
 
-/// The point at distance `s` along `pts` (edges of no length skipped; past the end, the end).
-fn along(pts: &[[f64; 2]], s: f64) -> [f64; 2] {
+/// An edge from `a` to `b` of `bulge`: its length and, an arc's, the arc (docs/adr/3260).
+fn edge(a: [f64; 2], b: [f64; 2], bulge: f64) -> (f64, Option<BulgeArc>) {
+    match bulge_arc(Vec2::new(a[0], a[1]), Vec2::new(b[0], b[1]), bulge) {
+        Some(arc) => (arc.r * arc.sweep.abs(), Some(arc)),
+        None => ((b[0] - a[0]).hypot(b[1] - a[1]), None),
+    }
+}
+
+/// The line's length: its edges', an arc's along the arc.
+fn line_length(pts: &[[f64; 2]], bulges: &[f64]) -> f64 {
+    pts.windows(2).enumerate().map(|(k, w)| edge(w[0], w[1], bulges.get(k).copied().unwrap_or(0.0)).0).sum()
+}
+
+/// The point at distance `s` along the line (edges of no length skipped; past the end, the end); on an arc, the point
+/// at that distance along the arc from its start.
+fn along(pts: &[[f64; 2]], bulges: &[f64], s: f64) -> [f64; 2] {
     let mut walked = 0.0;
-    for w in pts.windows(2) {
+    for (k, w) in pts.windows(2).enumerate() {
         let (a, b) = (w[0], w[1]);
-        let length = (b[0] - a[0]).hypot(b[1] - a[1]);
+        let (length, arc) = edge(a, b, bulges.get(k).copied().unwrap_or(0.0));
         if length == 0.0 {
             continue;
         }
         if s <= walked + length {
-            let t = (s - walked) / length;
-            return [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])];
+            let t = s - walked;
+            return match arc {
+                Some(arc) => {
+                    let angle = arc.a0 + arc.sweep.signum() * t / arc.r;
+                    [arc.c.x + arc.r * angle.cos(), arc.c.y + arc.r * angle.sin()]
+                }
+                None => {
+                    let f = t / length;
+                    [a[0] + f * (b[0] - a[0]), a[1] + f * (b[1] - a[1])]
+                }
+            };
         }
         walked += length;
     }
@@ -189,8 +276,8 @@ pub(crate) fn measure(
     let mut line = None;
     match &a.line {
         Some(uid) => {
-            let pts = seam_line(doc, uid)?;
-            let length: f64 = pts.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+            let (pts, bulges) = seam_line(doc, uid)?;
+            let length = line_length(&pts, &bulges);
             if !(length > 0.0) {
                 return Err(fail(codes::INVALID_INPUT, "Dikiş hattının uzunluğu yok.".into(), "seam.line"));
             }
@@ -201,7 +288,7 @@ pub(crate) fn measure(
                 if s > length {
                     break;
                 }
-                let p = along(&pts, s);
+                let p = along(&pts, &bulges, s);
                 total += 1;
                 if inside(p) {
                     places.push((p, Some(s)));
@@ -240,7 +327,10 @@ pub(crate) fn measure(
     };
     let w = a.window;
     let r = i64::from(a.search);
-    let big = w + 2 * a.search;
+    // docs/adr/3260: resampling reads one pixel more round the search (the cubic's reach).
+    let bicubic_asked = a.subpixel == Some(OrthoSubpixel::Bicubic);
+    let margin = i64::from(bicubic_asked);
+    let big = w + 2 * a.search + 2 * margin as u32;
     let mut patches = Vec::new();
     for &([x, y], station) in &places {
         {
@@ -250,13 +340,13 @@ pub(crate) fn measure(
             // The second image's pixel whose centre is nearest it.
             let (bi, bj) = (((at[0] - sa[0]) / sa[1] - 0.5).round() as i64, ((at[1] - sa[3]) / sa[5] - 0.5).round() as i64);
             let pa = read(&mut ia, ci - half, cj - half, w, w, "first")?;
-            let pb = read(&mut ib, bi - half - r, bj - half - r, big, big, "second")?;
+            let pb = read(&mut ib, bi - half - r - margin, bj - half - r - margin, big, big, "second")?;
             let first_patch: Vec<f64> = (0..w).flat_map(|j| (0..w).map(move |i| (i, j))).map(|(i, j)| grey(&pa, i, j)).collect();
             let side = (2 * r + 1) as usize;
             let mut scores: Vec<Option<f64>> = vec![None; side * side];
             for v in -r..=r {
                 for u in -r..=r {
-                    let (oi, oj) = ((u + r) as u32, (v + r) as u32);
+                    let (oi, oj) = ((u + r + margin) as u32, (v + r + margin) as u32);
                     let second_patch: Vec<f64> =
                         (0..w).flat_map(|j| (0..w).map(move |i| (i, j))).map(|(i, j)| grey(&pb, oi + i, oj + j)).collect();
                     scores[(v + r) as usize * side + (u + r) as usize] = ncc(&first_patch, &second_patch);
@@ -275,7 +365,12 @@ pub(crate) fn measure(
                         OrthoPatch { at, dx: None, dy: None, d: None, correlation: Some(c), state: "edge".into(), over: false, station }
                     } else {
                         let s = |du: i64, dv: i64| scores[(v + dv + r) as usize * side + (u + du + r) as usize].unwrap_or(c);
-                        let (fu, fv) = (vertex(s(-1, 0), c, s(1, 0)), vertex(s(0, -1), c, s(0, 1)));
+                        let (fu, fv) = if bicubic_asked {
+                            let (x, y) = ((u + r + margin) as f64, (v + r + margin) as f64);
+                            refine_bicubic(&first_patch, &pb, w, x, y)
+                        } else {
+                            (vertex(s(-1, 0), c, s(1, 0)), vertex(s(0, -1), c, s(0, 1)))
+                        };
                         let xb = sa[0] + ((bi + u) as f64 + fu + 0.5) * sa[1];
                         let yb = sa[3] + ((bj + v) as f64 + fv + 0.5) * sa[5];
                         let (dx, dy) = (xb - at[0], yb - at[1]);

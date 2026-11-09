@@ -165,8 +165,13 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             ),
             None => format!("örtüşmede {} yer", s.patches.len()),
         };
+        // docs/adr/3260: how the peak was refined.
+        let refined = match input.seam.as_ref().and_then(|a| a.subpixel) {
+            Some(kentos_commands::OrthoSubpixel::Bicubic) => "görüntünün çift kübik ara değeriyle",
+            _ => "parabolle",
+        };
         notes.push(format!(
-            "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).",
+            "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, {refined}).",
             s.ok,
             s.low,
             s.edge,

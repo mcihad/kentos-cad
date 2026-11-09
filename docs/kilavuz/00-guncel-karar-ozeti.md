@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dikişte çift kübik piksel altı ve yaylı hat (9 Kasım 2026; MAP-12, [ADR 3260](../../docs/adr/3260-orthophoto-seam-bicubic-and-arcs.md)).**
+  `seam.subpixel: bicubic` ikinci görüntüyü kübik evrişimle (Keys, a = −1/2) yeniden örnekler; dikiş hattının yayları
+  yay boyunca ölçülür. CAD + CBS.
 - **Tariften üret (9 Kasım 2026; MAP-20, [ADR 3240](../../docs/adr/3240-produce-a-recipe-in-another-project.md)).**
   `road.project.produce` İş grafiği'nin tarifini başka projede çizer: kaynaklar adlarıyla, katman kimliğiyle; var olan
   çizim bırakılır; adıyla istenenler hepsi ya da hiçbiri. İş grafiği'nde Tariften üret…. Harita + Yol.

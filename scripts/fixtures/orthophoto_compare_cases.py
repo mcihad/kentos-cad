@@ -22,6 +22,13 @@ patch in the first and a changed patch in the second. The measurement is the ADR
 step metres inside the overlap by half the window and the search, the first image's patch sought in the second by
 zero-mean normalized cross-correlation (sums in row order, as written), the peak refined by a parabola. Each ok
 place's shift is asserted within 0.05 pixel of s: the known shift is the independent truth.
+
+docs/adr/3260: a seam line's arcs walked along (an edge of bulge b: included angle 4·atan b, radius c(1 + b²)/(4|b|),
+centre on the chord's left normal at c(1 − b²)/(4b) from its middle; a place k·step along it is turned that arc length
+from the edge's start); and `subpixel: bicubic`: the second image resampled by Keys' cubic convolution (a = −1/2, the
+4 × 4 pixels round a place, each row's sum by its column weights, then the rows' by theirs), the correlation's highest
+on a grid of 1/8 pixel within half a pixel of the whole pixel's peak, then of 1/64 pixel within 1/8 of it (rows then
+columns, the first of equals kept). Its places are held to the known shift too, and closer than the parabola's.
 """
 
 import copy
@@ -388,16 +395,42 @@ def polyline(pts, bulges=None):
     return e
 
 
-def along(pts, s):
-    """The point at distance s along pts (edges of no length skipped; past the end, the end)."""
+def arc_of(a, b, bulge):
+    """An edge's arc (docs/adr/3260): centre, radius, start angle and signed included angle; none when straight."""
+    if abs(bulge) <= 1e-12:
+        return None
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    chord = math.hypot(dx, dy)
+    if chord < 1e-12:
+        return None
+    k = (1.0 - bulge * bulge) / (4.0 * bulge)
+    c = ((a[0] + b[0]) / 2.0 - dy * k, (a[1] + b[1]) / 2.0 + dx * k)
+    r = chord * (1.0 + bulge * bulge) / (4.0 * abs(bulge))
+    return c, r, math.atan2(a[1] - c[1], a[0] - c[0]), 4.0 * math.atan(bulge)
+
+
+def edge_length(a, b, bulge):
+    arc = arc_of(a, b, bulge)
+    return math.hypot(b[0] - a[0], b[1] - a[1]) if arc is None else arc[1] * abs(arc[3])
+
+
+def along(pts, s, bulges=None):
+    """The point at distance s along pts (edges of no length skipped; past the end, the end); an arc's (docs/adr/3260)
+    the point that far along the arc."""
     walked = 0.0
-    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
-        length = math.hypot(bx - ax, by - ay)
+    for k, ((ax, ay), (bx, by)) in enumerate(zip(pts, pts[1:])):
+        bulge = (bulges or [])[k] if k < len(bulges or []) else 0.0
+        length = edge_length((ax, ay), (bx, by), bulge)
         if length == 0.0:
             continue
         if s <= walked + length:
-            t = (s - walked) / length
-            return (ax + t * (bx - ax), ay + t * (by - ay))
+            arc = arc_of((ax, ay), (bx, by), bulge)
+            if arc is None:
+                t = (s - walked) / length
+                return (ax + t * (bx - ax), ay + t * (by - ay))
+            c, r, a0, sweep = arc
+            angle = a0 + math.copysign(1.0, sweep) * (s - walked) / r
+            return (c[0] + r * math.cos(angle), c[1] + r * math.sin(angle))
         walked += length
     return pts[-1]
 
@@ -419,9 +452,57 @@ def vertex(l, c, r):
     return (l - r) / (2 * den) if den < 0 else 0.0
 
 
+def keys(t):
+    """Keys' cubic convolution kernel, a = −1/2 (docs/adr/3260)."""
+    t = abs(t)
+    if t <= 1.0:
+        return (1.5 * t - 2.5) * t * t + 1.0
+    if t < 2.0:
+        return ((-0.5 * t + 2.5) * t - 4.0) * t + 2.0
+    return 0.0
+
+
+def refine_bicubic(first, rows, x, y, w):
+    """The whole pixel's peak, the second patch's top left at pixel (x, y), refined by the second image resampled:
+    the correlation's highest on a grid of 1/8 pixel within half a pixel, then of 1/64 pixel within 1/8 of it."""
+    def score(fu, fv):
+        # Every sample of one fraction shares its weights: the fraction of x + i + fu is the same for every i.
+        sx, sy = x + fu, y + fv
+        x0, y0 = math.floor(sx), math.floor(sy)
+        wx = [keys((sx - x0) - m) for m in (-1, 0, 1, 2)]
+        wy = [keys((sy - y0) - n) for n in (-1, 0, 1, 2)]
+        second = []
+        for j in range(w):
+            for i in range(w):
+                total = 0.0
+                for n in range(4):
+                    line = rows[y0 + j + n - 1]
+                    row = 0.0
+                    for m in range(4):
+                        row += float(line[x0 + i + m - 1]) * wx[m]
+                    total += row * wy[n]
+                second.append(total)
+        return ncc(first, second)
+
+    def grid(cu, cv, step, reach):
+        found = None
+        for kv in range(-reach, reach + 1):
+            for ku in range(-reach, reach + 1):
+                fu, fv = cu + ku * step, cv + kv * step
+                c = score(fu, fv)
+                if c is not None and (found is None or c > found[2]):
+                    found = (fu, fv, c)
+        return None if found is None else (found[0], found[1])
+
+    coarse = grid(0.0, 0.0, 0.125, 4)
+    if coarse is None:
+        return 0.0, 0.0
+    return grid(coarse[0], coarse[1], 0.015625, 8) or coarse
+
+
 def seam(pixels, ask, limit, truth, line=None):
     """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift;
-    `line` (docs/adr/2860): (uid, world vertices) of a seam line measured along instead of the grid."""
+    `line` (docs/adr/2860): (uid, world vertices[, bulges]) of a seam line measured along instead of the grid."""
     (ra, oa), (rb, ob) = pixels
     w, r, step = ask["window"], ask["search"], ask["step"]
     half = w // 2
@@ -433,15 +514,16 @@ def seam(pixels, ask, limit, truth, line=None):
     patches = []
     places, line_out = [], None
     if line is not None:
-        uid_, pts = line
-        length = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts, pts[1:]))
+        uid_, pts = line[0], line[1]
+        bulges = line[2] if len(line) > 2 else None
+        length = sum(edge_length(a, b, (bulges or [0.0] * len(pts))[k]) for k, (a, b) in enumerate(zip(pts, pts[1:])))
         total = outside = 0
         k = 0
         while True:
             st = k * step
             if st > length:
                 break
-            px_, py_ = along(pts, st)
+            px_, py_ = along(pts, st, bulges)
             total += 1
             if ox0 <= px_ <= ox1 and oy0 <= py_ <= oy1:
                 places.append(((px_, py_), st))
@@ -484,7 +566,10 @@ def seam(pixels, ask, limit, truth, line=None):
                     patches.append({"at": at, "correlation": c, "state": "edge", "over": False, **here})
                 else:
                     sc = lambda du, dv: scores[(u + du, v + dv)] if scores[(u + du, v + dv)] is not None else c
-                    fu, fv = vertex(sc(-1, 0), c, sc(1, 0)), vertex(sc(0, -1), c, sc(0, 1))
+                    if ask.get("subpixel") == "bicubic":
+                        fu, fv = refine_bicubic(first, rb, bi + u - half, bj + v - half, w)
+                    else:
+                        fu, fv = vertex(sc(-1, 0), c, sc(1, 0)), vertex(sc(0, -1), c, sc(0, 1))
                     xb = ob[0] + (bi + u + fu + 0.5) * PIX
                     yb = ob[1] + (bj + v + fv + 0.5) * -PIX
                     dx, dy = xb - at[0], yb - at[1]
@@ -503,9 +588,10 @@ def seam(pixels, ask, limit, truth, line=None):
     return out, good
 
 
-def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line=None):
-    """`line` (docs/adr/2860): the seam line's local vertices, drawn as the drawing's third object and measured along."""
-    s = seam_setup(second, extra=() if line is None else (polyline(line),))
+def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line=None, bulges=None):
+    """`line` (docs/adr/2860): the seam line's local vertices, drawn as the drawing's third object and measured along;
+    `bulges` (docs/adr/3260) its edges' bulges, a vertex each as a polyline keeps them."""
+    s = seam_setup(second, extra=() if line is None else (polyline(line, bulges),))
     if line is not None:
         ask = dict(ask, line=uid(3))
     inp = dict(DEFAULT, seam=ask)
@@ -513,17 +599,19 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
     limit = out["limit"]
     pa = (ROWS["dikis-a.tif"], A0)
     pb = (ROWS[second], B0)
-    world = None if line is None else (uid(3), [(X0 + x, Y0 + y) for x, y in line])
+    world = None if line is None else (uid(3), [(X0 + x, Y0 + y) for x, y in line], (bulges or [0.0] * len(line))[:len(line) - 1])
     measured, good = seam((pa, pb), ask, limit, truth, world)
-    if expect_true:
-        # Places whose window and search stay in the clean texture (off the flat and the changed patches).
-        reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
-        def clean(at):
-            x, y = at[0] - X0, at[1] - Y0
-            return all(not (r[0] - reach <= x <= r[1] + reach and r[2] - reach <= y <= r[3] + reach) for r in (FLAT, CHANGED))
-        errs = [max(abs(p["dx"] - truth[0]), abs(p["dy"] - truth[1])) / PIX for p in good if clean(p["at"])]
-        assert errs and max(errs) < 0.05, (name, len(errs), max(errs))
+    # Places whose window and search stay in the clean texture (off the flat and the changed patches): their error
+    # against the known shift, in pixels; held under 0.05 pixel when the case expects the truth.
+    reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
+    def clean(at):
+        x, y = at[0] - X0, at[1] - Y0
+        return all(not (r[0] - reach <= x <= r[1] + reach and r[2] - reach <= y <= r[3] + reach) for r in (FLAT, CHANGED))
+    errs = [max(abs(p["dx"] - truth[0]), abs(p["dy"] - truth[1])) / PIX for p in good if clean(p["at"])]
+    if errs:
         ERRORS[name] = (len(errs), max(errs))
+    if expect_true:
+        assert errs and max(errs) < 0.05, (name, len(errs), max(errs))
     out["seam"] = measured
     where_ = (f"örtüşmede {len(measured['patches'])} yer" if line is None else
               f"dikiş hattı boyunca ({measured['line']['length']:.2f} m) örtüşmede {len(measured['patches'])} yer, "
@@ -531,7 +619,8 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
     out["notes"].append(
         f"Dikiş ölçümü: {where_}; {measured['ok']} sayıldı, {measured['low']} "
         f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
-        f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle).")
+        f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, "
+        f"{'görüntünün çift kübik ara değeriyle' if ask.get('subpixel') == 'bicubic' else 'parabolle'}).")
     case = {"name": name, "setup": s, "steps": [{"op": "plan", "input": inp, "result": {
         "status": "completed", "output": out, "warnings": []}, "expect": SAME, "within": 1e-9}]}
     return case, measured
@@ -559,11 +648,23 @@ def seam_cases():
     c5, m5 = seam_case("dikiş hattı boyunca: örtüşmedeki yerleri ölçülür, dışındakiler sayılır", ask, line=SEAM_LINE)
     assert m5["line"]["outside"] > 0 and m5["ok"] > 3 and len(m5["patches"]) + m5["line"]["outside"] == m5["line"]["places"]
     assert all(p["station"] <= m5["line"]["length"] for p in m5["patches"])
+    # docs/adr/3260: a seam line with an arc, its places along the arc; the bicubic sub-pixel against the parabola.
+    c6, m6 = seam_case("dikiş hattı yaylı: yerler yay boyunca", ask, line=SEAM_LINE, bulges=[0.2, 0.0, 0.0])
+    assert m6["line"]["length"] > m5["line"]["length"] and m6["ok"] > 3
+    small = {"step": 2.0, "window": 11, "search": 3, "correlation": 0.8}
+    # The parabola on an 11-pixel window misses the known shift by more than 0.05 pixel; the cubic resampling does not.
+    c7, m7 = seam_case("dikiş: parabolle piksel altı, 11 piksel pencere", small, expect_true=False)
+    c8, m8 = seam_case("dikiş: görüntünün çift kübik ara değeriyle piksel altı", dict(small, subpixel="bicubic"))
+    parabola, bicubic = ERRORS[c7["name"]], ERRORS[c8["name"]]
+    assert m8["ok"] == m7["ok"] and bicubic[1] < parabola[1], (parabola, bicubic)
+    c9, m9 = seam_case("dikiş: çift kübik, 2,7 piksellik kayma", dict(small, search=5, subpixel="bicubic"), "dikis-c.tif",
+                       S_C)
+    assert m9["ok"] > 0
     seam_in = lambda **kw: {"seam": dict(ask, **kw)}
     bad = "invalid_input"
     ss = seam_setup()
     lined = lambda e: seam_setup(extra=(e,))  # noqa: E731
-    return [c1, c2, c3, c4, c5,
+    return [c1, c2, c3, c4, c5, c6, c7, c8, c9,
             refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
                     "seam.step", ss),
             refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
@@ -585,9 +686,6 @@ def seam_cases():
                     f"“{uid(9)}” kimlikli dikiş hattı çizimde yok.", "seam.line", ss),
             refused("dikiş hattı: nokta", seam_in(line=uid(3)), bad, "Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.",
                     "seam.line", lined(point(3, "0", 515.0, 114.0, None, "N"))),
-            refused("dikiş hattı: yaylı", seam_in(line=uid(3)), bad,
-                    "Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.", "seam.line",
-                    lined(polyline(SEAM_LINE, [0.2, 0.0, 0.0]))),
             refused("dikiş hattı: örtüşmeden geçmiyor", seam_in(line=uid(3)), bad,
                     "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı "
                     "örtüşmeden geçirin ya da adımı küçültün.", "seam.line",

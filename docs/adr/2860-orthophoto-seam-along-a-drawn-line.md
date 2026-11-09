@@ -65,8 +65,8 @@ hattı boyunca ölçüm (bugün örtüşmenin bütünü)”.
 
 ## Sonra
 
-- Yaylı dikiş hattı (yay boyunca uzaklık).
-- Görüntü ara değeriyle (çift kübik) piksel altı; farklı piksel boyunda ya da dönük görüntülerde yeniden örnekleme
+- ~~Yaylı dikiş hattı (yay boyunca uzaklık).~~ ADR 3260.
+- ~~Görüntü ara değeriyle (çift kübik) piksel altı~~ (ADR 3260); farklı piksel boyunda ya da dönük görüntülerde yeniden örnekleme
   (ADR 2460 Sonra).
 - Mozaiğin dikiş çokgenlerinden hatların kendiliğinden okunması.
 - Web (TODOS §0.2).

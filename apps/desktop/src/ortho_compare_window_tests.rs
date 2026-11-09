@@ -297,3 +297,85 @@ fn line_screens() {
         println!("{}", file.display());
     }
 }
+
+/// docs/adr/3260: Piksel altı › Çift kübik on an 11-pixel window gives the shared case's places (the second image
+/// resampled by cubic convolution); Parabol the parabola's case on the same places.
+#[test]
+fn piksel_alti_cift_kubik_gives_the_shared_case_s_places() {
+    use crate::ortho_compare_window::Refine;
+    let c = case("dikiş: görüntünün çift kübik ara değeriyle");
+    let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+    let _ = app.update(Message::Run("raster.compare"));
+    for e in [C::Seam(true), C::Step(2.0), C::Window(11.0), C::Search(3.0), C::Correlation("0,8".into()), C::Refine(Refine::Bicubic)] {
+        let _ = app.update(Message::OrthoCompare(e));
+    }
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+    let note = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).find(|n| n.starts_with("Dikiş ölçümü")).unwrap_or("");
+    assert!(note.contains("görüntünün çift kübik ara değeriyle"), "{note}");
+    let _ = app.update(Message::OrthoCompare(C::Refine(Refine::Parabola)));
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    close(&got["seam"], &case("dikiş: parabolle piksel altı")["steps"][0]["result"]["output"]["seam"], "seam");
+}
+
+/// docs/adr/3260: a seam line with an arc, chosen in the drawing, gives the shared case's places along the arc.
+#[test]
+fn the_seam_is_measured_along_an_arc() {
+    let c = case("dikiş hattı yaylı");
+    let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+    let _ = app.update(Message::Run("raster.compare"));
+    for e in [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into())] {
+        let _ = app.update(Message::OrthoCompare(e));
+    }
+    app.selection.set(vec![Slot(3)]);
+    let _ = app.update(Message::OrthoCompare(C::TakeLine));
+    let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
+    close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
+}
+
+/// `.run/gui-evidence/dikis-cift-kubik-3260/`: Çift kübik on the grid, and the seam line with an arc.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib ortho_compare_window_tests::subpixel_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn subpixel_screens() {
+    use crate::ortho_compare_window::Refine;
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-cift-kubik-3260");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name, arc) in [
+        ("light", Size::new(1440.0, 900.0), "cift-kubik-acik-genis", false),
+        ("dark", Size::new(1100.0, 760.0), "yayli-hat-koyu-dar", true),
+    ] {
+        let c = case(if arc { "dikiş hattı yaylı" } else { "dikiş: görüntünün çift kübik ara değeriyle" });
+        let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("raster.compare"));
+        let asked = if arc {
+            [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into()), C::Refine(Refine::Parabola)]
+        } else {
+            [C::Seam(true), C::Step(2.0), C::Window(11.0), C::Search(3.0), C::Correlation("0,8".into()), C::Refine(Refine::Bicubic)]
+        };
+        for e in asked {
+            let _ = app.update(Message::OrthoCompare(e));
+        }
+        if arc {
+            app.selection.set(vec![Slot(3)]);
+            let _ = app.update(Message::OrthoCompare(C::TakeLine));
+        }
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

@@ -13511,6 +13511,2030 @@
    ]
   },
   {
+   "name": "dikiş hattı yaylı: yerler yay boyunca",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     },
+     {
+      "kind": "polyline",
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487515.0,
+        "y": 4420121.5
+       },
+       {
+        "x": 487516.2,
+        "y": 4420114.0
+       },
+       {
+        "x": 487514.4,
+        "y": 4420106.5
+       }
+      ],
+      "bulges": [
+       0.2,
+       0.0,
+       0.0
+      ],
+      "id": 3
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002",
+     "0192f5c0-1780-7000-8000-000000000003"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 1.0,
+       "window": 21,
+       "search": 5,
+       "correlation": 0.8,
+       "line": "0192f5c0-1780-7000-8000-000000000003"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "bohhbuy-2018-m91",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "gsd": [
+        0.1,
+        0.1
+       ],
+       "limit": 0.2,
+       "pairs": [],
+       "unmatched": [],
+       "shift": {
+        "n": 0,
+        "rmseX": 0.0,
+        "rmseY": 0.0,
+        "kohXy": 0.0,
+        "rmseR": 0.0,
+        "meanX": 0.0,
+        "meanY": 0.0,
+        "maxD": 0.0,
+        "nZ": 0
+       },
+       "notes": [
+        "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
+        "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
+        "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+        "Dikiş ölçümü: dikiş hattı boyunca (15.51 m) örtüşmede 9 yer, 7 yer örtüşmenin dışında; 5 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 0 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+       ],
+       "seam": {
+        "patches": [
+         {
+          "at": [
+           487514.85,
+           4420117.55
+          ],
+          "dx": 0.03606949688401073,
+          "dy": -0.02747381292283535,
+          "d": 0.04534114028103632,
+          "correlation": 0.9679286089068051,
+          "state": "ok",
+          "over": false,
+          "station": 4.0
+         },
+         {
+          "at": [
+           487515.05,
+           4420116.55
+          ],
+          "dx": 0.034686307481024414,
+          "dy": -0.02522497996687889,
+          "d": 0.04288868779757212,
+          "correlation": 0.9806007999973104,
+          "state": "ok",
+          "over": false,
+          "station": 5.0
+         },
+         {
+          "at": [
+           487515.35,
+           4420115.65
+          ],
+          "dx": 0.03351354616461322,
+          "dy": -0.022907442413270473,
+          "d": 0.04059444166933405,
+          "correlation": 0.9806587231955134,
+          "state": "ok",
+          "over": false,
+          "station": 6.0
+         },
+         {
+          "at": [
+           487515.85,
+           4420114.65
+          ],
+          "dx": 0.03312773781362921,
+          "dy": -0.020484196953475475,
+          "d": 0.03894931754828745,
+          "correlation": 0.9819144514770847,
+          "state": "ok",
+          "over": false,
+          "station": 7.0
+         },
+         {
+          "at": [
+           487516.15,
+           4420113.85
+          ],
+          "dx": 0.03243217431008816,
+          "dy": 0.02239785622805357,
+          "d": 0.03941458986330443,
+          "correlation": 0.8657848104893444,
+          "state": "ok",
+          "over": false,
+          "station": 8.0
+         },
+         {
+          "at": [
+           487515.95,
+           4420112.85
+          ],
+          "dx": 0.006535047315992415,
+          "dy": 0.030003993771970272,
+          "d": 0.03070743372036632,
+          "correlation": 0.3802766975113386,
+          "state": "low",
+          "over": false,
+          "station": 9.0
+         },
+         {
+          "at": [
+           487515.65,
+           4420111.85
+          ],
+          "dx": -0.07099298178218305,
+          "dy": -0.09023043233901262,
+          "d": 0.11481086352088164,
+          "correlation": 0.1832285581911843,
+          "state": "low",
+          "over": false,
+          "station": 10.0
+         },
+         {
+          "at": [
+           487515.45,
+           4420110.85
+          ],
+          "dx": -0.019576628343202174,
+          "dy": -0.08218094892799854,
+          "d": 0.0844804873565143,
+          "correlation": 0.2828379253069133,
+          "state": "low",
+          "over": false,
+          "station": 11.0
+         },
+         {
+          "at": [
+           487515.25,
+           4420109.95
+          ],
+          "dx": 0.022549301269464195,
+          "dy": -0.04956426750868559,
+          "d": 0.05445261794820893,
+          "correlation": 0.6219456575181304,
+          "state": "low",
+          "over": false,
+          "station": 12.0
+         }
+        ],
+        "ok": 5,
+        "low": 4,
+        "edge": 0,
+        "flat": 0,
+        "shift": {
+         "n": 5,
+         "rmseX": 0.033989996327713816,
+         "rmseY": 0.023820693596984244,
+         "kohXy": 0.029349150701505868,
+         "rmseR": 0.04150596696620144,
+         "meanX": 0.03396585253067315,
+         "meanY": -0.014738515205681323,
+         "maxD": 0.04534114028103632,
+         "nZ": 0
+        },
+        "passed": true,
+        "line": {
+         "uid": "0192f5c0-1780-7000-8000-000000000003",
+         "length": 15.509320067303191,
+         "places": 16,
+         "outside": 7
+        }
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dikiş: parabolle piksel altı, 11 piksel pencere",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 2.0,
+       "window": 11,
+       "search": 3,
+       "correlation": 0.8
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "bohhbuy-2018-m91",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "gsd": [
+        0.1,
+        0.1
+       ],
+       "limit": 0.2,
+       "pairs": [],
+       "unmatched": [],
+       "shift": {
+        "n": 0,
+        "rmseX": 0.0,
+        "rmseY": 0.0,
+        "kohXy": 0.0,
+        "rmseR": 0.0,
+        "meanX": 0.0,
+        "meanY": 0.0,
+        "maxD": 0.0,
+        "nZ": 0
+       },
+       "notes": [
+        "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
+        "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
+        "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+        "Dikiş ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, parabolle)."
+       ],
+       "seam": {
+        "patches": [
+         {
+          "at": [
+           487510.95,
+           4420119.05
+          ],
+          "dx": 0.035035661538131535,
+          "dy": -0.020791522227227688,
+          "d": 0.0407404587104737,
+          "correlation": 0.98385016297599,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420119.05
+          ],
+          "dx": 0.03351752151502296,
+          "dy": -0.027627605013549328,
+          "d": 0.04343626143321641,
+          "correlation": 0.9776506448873544,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420119.05
+          ],
+          "dx": 0.03378038597293198,
+          "dy": -0.026842416264116764,
+          "d": 0.043146608063396825,
+          "correlation": 0.9826306015879119,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420119.05
+          ],
+          "dx": 0.026885406055953354,
+          "dy": -0.01838518586009741,
+          "d": 0.032570540644942005,
+          "correlation": 0.9825931102081316,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420119.05
+          ],
+          "dx": 0.033441378094721586,
+          "dy": -0.019893929362297058,
+          "d": 0.03891136330618846,
+          "correlation": 0.9741626801839217,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420117.05
+          ],
+          "dx": 0.021872405312024057,
+          "dy": -0.06320230010896921,
+          "d": 0.06687998843598635,
+          "correlation": 0.7754647550469218,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420117.05
+          ],
+          "dx": 0.039295412541832775,
+          "dy": -0.01060501392930746,
+          "d": 0.04070129933151562,
+          "correlation": 0.8033616838615437,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420117.05
+          ],
+          "dx": 0.02774438913911581,
+          "dy": -0.024120868183672428,
+          "d": 0.03676366971123514,
+          "correlation": 0.9847098662673566,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420117.05
+          ],
+          "dx": 0.033322267059702426,
+          "dy": -0.015587817877531052,
+          "d": 0.03678795384607856,
+          "correlation": 0.9738830415025207,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420117.05
+          ],
+          "dx": 0.027866322256159037,
+          "dy": -0.01806369423866272,
+          "d": 0.03320886877977028,
+          "correlation": 0.9854031076600039,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420115.05
+          ],
+          "dx": 0.05635786079801619,
+          "dy": -0.015138384886085987,
+          "d": 0.05835562672688767,
+          "correlation": 0.7825878233721402,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420115.05
+          ],
+          "state": "flat",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420115.05
+          ],
+          "dx": 0.03319303155876696,
+          "dy": -0.025826742872595787,
+          "d": 0.04205708015861868,
+          "correlation": 0.9784803773940048,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420115.05
+          ],
+          "dx": 0.03168314276263118,
+          "dy": -0.010183584876358509,
+          "d": 0.0332795272840716,
+          "correlation": 0.9855216382617361,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420115.05
+          ],
+          "dx": 0.027973143733106554,
+          "dy": -0.014654151163995266,
+          "d": 0.03157912153069275,
+          "correlation": 0.9839921372273589,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420113.05
+          ],
+          "dx": 0.033969065349083394,
+          "dy": 0.0037841377779841423,
+          "d": 0.034179191029236854,
+          "correlation": 0.9339145233890357,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420113.05
+          ],
+          "dx": 0.01548719237325713,
+          "dy": 0.017944560386240482,
+          "d": 0.02370359413805647,
+          "correlation": 0.6848983727382586,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420113.05
+          ],
+          "dx": 0.010978022823110223,
+          "dy": -0.003000643104314804,
+          "d": 0.01138072247900813,
+          "correlation": 0.8273215778027242,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420113.05
+          ],
+          "dx": 0.016375185223296285,
+          "dy": 0.09408903401345015,
+          "d": 0.09550336649920484,
+          "correlation": 0.4128034508937657,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420113.05
+          ],
+          "dx": 0.0365329576889053,
+          "dy": -0.019201161339879036,
+          "d": 0.04127155914548674,
+          "correlation": 0.9804548908931608,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420111.05
+          ],
+          "dx": 0.030106507416348904,
+          "dy": -0.02304342482239008,
+          "d": 0.03791307447775523,
+          "correlation": 0.9845077196338986,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420111.05
+          ],
+          "dx": 0.03871347807580605,
+          "dy": -0.02330611366778612,
+          "d": 0.04518747967105139,
+          "correlation": 0.9775301453573209,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420111.05
+          ],
+          "dx": -0.06737084314227104,
+          "dy": -0.14584181737154722,
+          "d": 0.16065075847918123,
+          "correlation": 0.5247370923245458,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420111.05
+          ],
+          "dx": 0.08371942292433232,
+          "dy": 0.09395577386021614,
+          "d": 0.12584366975122466,
+          "correlation": 0.05200085795642065,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420111.05
+          ],
+          "dx": 0.03596384450793266,
+          "dy": -0.020234283059835434,
+          "d": 0.041265291986563014,
+          "correlation": 0.9842499665303224,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420109.05
+          ],
+          "dx": 0.035842582408804446,
+          "dy": -0.027816605754196644,
+          "d": 0.04537019141921647,
+          "correlation": 0.9749135431883033,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420109.05
+          ],
+          "dx": 0.03346234286436811,
+          "dy": -0.01891121082007885,
+          "d": 0.03843647076220701,
+          "correlation": 0.9846679813867306,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420109.05
+          ],
+          "dx": 0.0315504337195307,
+          "dy": -0.02168820984661579,
+          "d": 0.038285876171786144,
+          "correlation": 0.9816185452119205,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420109.05
+          ],
+          "dx": 0.03958033100934699,
+          "dy": -0.02392109762877226,
+          "d": 0.046247394678778704,
+          "correlation": 0.9776210383415183,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420109.05
+          ],
+          "dx": 0.0261616327916272,
+          "dy": -0.015725946985185146,
+          "d": 0.030524358124370075,
+          "correlation": 0.9753028804522755,
+          "state": "ok",
+          "over": false
+         }
+        ],
+        "ok": 23,
+        "low": 6,
+        "edge": 0,
+        "flat": 1,
+        "shift": {
+         "n": 23,
+         "rmseX": 0.03255801245718564,
+         "rmseY": 0.019995444707302676,
+         "kohXy": 0.027017050025910063,
+         "rmseR": 0.03820787856195439,
+         "meanX": 0.0320260548209974,
+         "meanY": -0.01850639526610789,
+         "maxD": 0.046247394678778704,
+         "nZ": 0
+        },
+        "passed": true
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dikiş: görüntünün çift kübik ara değeriyle piksel altı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 2.0,
+       "window": 11,
+       "search": 3,
+       "correlation": 0.8,
+       "subpixel": "bicubic"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "bohhbuy-2018-m91",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "gsd": [
+        0.1,
+        0.1
+       ],
+       "limit": 0.2,
+       "pairs": [],
+       "unmatched": [],
+       "shift": {
+        "n": 0,
+        "rmseX": 0.0,
+        "rmseY": 0.0,
+        "kohXy": 0.0,
+        "rmseR": 0.0,
+        "meanX": 0.0,
+        "meanY": 0.0,
+        "maxD": 0.0,
+        "nZ": 0
+       },
+       "notes": [
+        "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
+        "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
+        "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+        "Dikiş ölçümü: örtüşmede 30 yer; 23 sayıldı, 6 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
+       ],
+       "seam": {
+        "patches": [
+         {
+          "at": [
+           487510.95,
+           4420119.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.98385016297599,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420119.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9776506448873544,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420119.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9826306015879119,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420119.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9825931102081316,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420119.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9741626801839217,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420117.05
+          ],
+          "dx": 0.04218749998835847,
+          "dy": -0.049999999813735485,
+          "d": 0.06542006677343959,
+          "correlation": 0.7754647550469218,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420117.05
+          ],
+          "dx": 0.0406249999650754,
+          "dy": -0.010937499813735485,
+          "d": 0.04207159997359074,
+          "correlation": 0.8033616838615437,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420117.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9847098662673566,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420117.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9738830415025207,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420117.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9854031076600039,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420115.05
+          ],
+          "dx": 0.053124999976716936,
+          "dy": -0.024999999441206455,
+          "d": 0.05871341920367521,
+          "correlation": 0.7825878233721402,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420115.05
+          ],
+          "state": "flat",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420115.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9784803773940048,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420115.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9855216382617361,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420115.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9839921372273589,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420113.05
+          ],
+          "dx": 0.03593750001164153,
+          "dy": 0.003124999813735485,
+          "d": 0.03607311368488423,
+          "correlation": 0.9339145233890357,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420113.05
+          ],
+          "dx": 0.0234375,
+          "dy": 0.010937499813735485,
+          "d": 0.025863977041929647,
+          "correlation": 0.6848983727382586,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420113.05
+          ],
+          "dx": 0.03593750001164153,
+          "dy": -0.0390625,
+          "d": 0.05307902423120394,
+          "correlation": 0.8273215778027242,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420113.05
+          ],
+          "dx": 0.0390625,
+          "dy": 0.059375000186264515,
+          "d": 0.07107228400275956,
+          "correlation": 0.4128034508937657,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420113.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9804548908931608,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420111.05
+          ],
+          "dx": 0.03593750001164153,
+          "dy": -0.02187499962747097,
+          "d": 0.042071599871987164,
+          "correlation": 0.9845077196338986,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420111.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9775301453573209,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420111.05
+          ],
+          "dx": -0.0531250000349246,
+          "dy": -0.14999999944120646,
+          "d": 0.15912971269085066,
+          "correlation": 0.5247370923245458,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420111.05
+          ],
+          "dx": 0.05156250001164153,
+          "dy": 0.07968750037252903,
+          "d": 0.09491464124713503,
+          "correlation": 0.05200085795642065,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420111.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9842499665303224,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487510.95,
+           4420109.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9749135431883033,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487512.95,
+           4420109.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9846679813867306,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487514.95,
+           4420109.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9816185452119205,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487516.95,
+           4420109.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9776210383415183,
+          "state": "ok",
+          "over": false
+         },
+         {
+          "at": [
+           487518.95,
+           4420109.05
+          ],
+          "dx": 0.03437499998835847,
+          "dy": -0.02187499962747097,
+          "d": 0.04074501482269334,
+          "correlation": 0.9753028804522755,
+          "state": "ok",
+          "over": false
+         }
+        ],
+        "ok": 23,
+        "low": 6,
+        "edge": 0,
+        "flat": 1,
+        "shift": {
+         "n": 23,
+         "rmseX": 0.03487622474284927,
+         "rmseY": 0.022092282349369854,
+         "kohXy": 0.029192635986820467,
+         "rmseR": 0.04128462173398238,
+         "meanX": 0.034850543468643955,
+         "meanY": -0.021059782284757366,
+         "maxD": 0.05307902423120394,
+         "nZ": 0
+        },
+        "passed": true
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dikiş: çift kübik, 2,7 piksellik kayma",
+   "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Ortofoto karşılaştırması",
+    "settings": {
+     "srid": 5254,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000.0,
+     "workspace": "cad",
+     "cadWork": "map"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gnss",
+      "name": "GNSS denetim noktaları",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2024",
+      "name": "2024 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "okuma-2026",
+      "name": "2026 ortofotosunda okunan",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "okuma-2026",
+    "entities": [
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487500.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
+      "id": 1
+     },
+     {
+      "kind": "raster",
+      "layerId": "altlik",
+      "attrs": {},
+      "affine": [
+       487510.0,
+       0.1,
+       0.0,
+       4420120.0,
+       0.0,
+       -0.1
+      ],
+      "width": 200,
+      "height": 120,
+      "bands": 1,
+      "sample": "u8",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      },
+      "file": "$fixture:orthophoto/v1/files/dikis-c.tif",
+      "id": 2
+     }
+    ],
+    "uids": [
+     "0192f5c0-1780-7000-8000-000000000001",
+     "0192f5c0-1780-7000-8000-000000000002"
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "first": "0192f5c0-1780-7000-8000-000000000001",
+      "second": "0192f5c0-1780-7000-8000-000000000002",
+      "firstPoints": "okuma-2024",
+      "secondPoints": "okuma-2026",
+      "seam": {
+       "step": 2.0,
+       "window": 11,
+       "search": 5,
+       "correlation": 0.8,
+       "subpixel": "bicubic"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "rules": "bohhbuy-2018-m91",
+       "source": "BÖHHBÜY, RG 26.06.2018/30460 Mükerrer (Bakanlar Kurulu Kararı 2018/11962), Madde 54, 67(5), 67(6), 91(2); metin harita.gov.tr'den 6 Kasım 2026'da okundu",
+       "gsd": [
+        0.1,
+        0.1
+       ],
+       "limit": 0.2,
+       "pairs": [],
+       "unmatched": [],
+       "shift": {
+        "n": 0,
+        "rmseX": 0.0,
+        "rmseY": 0.0,
+        "kohXy": 0.0,
+        "rmseR": 0.0,
+        "meanX": 0.0,
+        "meanY": 0.0,
+        "maxD": 0.0,
+        "nZ": 0
+       },
+       "notes": [
+        "Kayma = ikinci − birinci görüntüde okunan yer; nokta başına sınır 2·YÖA = 0.200 m (bohhbuy-2018-m91), iki görüntüden YÖA'sı iri olanınki (KentOS'un okuması).",
+        "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.",
+        "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+        "Dikiş ölçümü: örtüşmede 20 yer; 15 sayıldı, 4 korelasyonu düşük, 0 tepe arama sınırında, 1 dokusuz. Yerler görüntülerin kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, görüntünün çift kübik ara değeriyle)."
+       ],
+       "seam": {
+        "patches": [
+         {
+          "at": [
+           487511.05,
+           4420118.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9916433334586021,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487513.05,
+           4420118.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9882057966108716,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487515.05,
+           4420118.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9915879832164286,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487517.05,
+           4420118.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9873638389650861,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487511.05,
+           4420116.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": -0.046875,
+          "d": 0.27280730950387433,
+          "correlation": 0.7763928265527219,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487513.05,
+           4420116.95
+          ],
+          "dx": 0.25156250002328306,
+          "dy": -0.006250000558793545,
+          "d": 0.2516401278114228,
+          "correlation": 0.7500887489685086,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487515.05,
+           4420116.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9879011310326972,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487517.05,
+           4420116.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9846524397249484,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487511.05,
+           4420114.95
+          ],
+          "dx": 0.2953125000349246,
+          "dy": 0.03125,
+          "d": 0.29696133616495823,
+          "correlation": 0.7610402804146854,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487513.05,
+           4420114.95
+          ],
+          "state": "flat",
+          "over": false
+         },
+         {
+          "at": [
+           487515.05,
+           4420114.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9863981747058517,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487517.05,
+           4420114.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.989154091120765,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487511.05,
+           4420112.95
+          ],
+          "dx": 0.2734375,
+          "dy": 0.028125000186264515,
+          "d": 0.2748801230386209,
+          "correlation": 0.9192607681426516,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487513.05,
+           4420112.95
+          ],
+          "dx": 0.2562500000349246,
+          "dy": -0.003124999813735485,
+          "d": 0.25626905420228696,
+          "correlation": 0.6229658724881336,
+          "state": "low",
+          "over": false
+         },
+         {
+          "at": [
+           487515.05,
+           4420112.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9919480861104776,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487517.05,
+           4420112.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9874137811549724,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487511.05,
+           4420110.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9875124570966574,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487513.05,
+           4420110.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9884854349970228,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487515.05,
+           4420110.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.9908784004058464,
+          "state": "ok",
+          "over": true
+         },
+         {
+          "at": [
+           487517.05,
+           4420110.95
+          ],
+          "dx": 0.26874999998835847,
+          "dy": 0.0,
+          "d": 0.26874999998835847,
+          "correlation": 0.98787263234642,
+          "state": "ok",
+          "over": true
+         }
+        ],
+        "ok": 15,
+        "low": 4,
+        "edge": 0,
+        "flat": 1,
+        "shift": {
+         "n": 15,
+         "rmseX": 0.26906504062755876,
+         "rmseY": 0.007261843822232198,
+         "kohXy": 0.19032699554136864,
+         "rmseR": 0.26916301838032713,
+         "meanX": 0.26906249998913456,
+         "meanY": 0.0018750000124176343,
+         "maxD": 0.2748801230386209,
+         "nZ": 0
+        },
+        "passed": false
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
    "name": "dikiş: sıfır adım",
    "steps": [
     {
@@ -15186,219 +17210,6 @@
        "x": 487515.0,
        "y": 4420114.0
       }
-     }
-    ],
-    "uids": [
-     "0192f5c0-1780-7000-8000-000000000001",
-     "0192f5c0-1780-7000-8000-000000000002",
-     "0192f5c0-1780-7000-8000-000000000003"
-    ],
-    "styles": {
-     "items": [],
-     "categories": []
-    }
-   }
-  },
-  {
-   "name": "dikiş hattı: yaylı",
-   "steps": [
-    {
-     "op": "execute",
-     "input": {
-      "first": "0192f5c0-1780-7000-8000-000000000001",
-      "second": "0192f5c0-1780-7000-8000-000000000002",
-      "firstPoints": "okuma-2024",
-      "secondPoints": "okuma-2026",
-      "seam": {
-       "step": 1.0,
-       "window": 21,
-       "search": 5,
-       "correlation": 0.8,
-       "line": "0192f5c0-1780-7000-8000-000000000003"
-      }
-     },
-     "result": {
-      "status": "failed",
-      "error": {
-       "code": "invalid_input",
-       "message": "Dikiş hattı düz kenarlı olmalı; yaylı çoklu çizgi bu ölçümde okunmaz.",
-       "path": "seam.line"
-      }
-     },
-     "expect": {
-      "revision": "same",
-      "canUndo": false
-     }
-    }
-   ],
-   "setup": {
-    "format": "kentos.document",
-    "version": 2,
-    "name": "Ortofoto karşılaştırması",
-    "settings": {
-     "srid": 5254,
-     "lengthDecimals": 3,
-     "areaDecimals": 2,
-     "areaUnit": "m2",
-     "angleUnit": "grad",
-     "plotScale": 1000.0,
-     "workspace": "cad",
-     "cadWork": "map"
-    },
-    "origin": {
-     "x": 487000.0,
-     "y": 4420000.0
-    },
-    "layers": [
-     {
-      "id": "0",
-      "name": "0",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-       "color": "fg",
-       "lineType": "continuous",
-       "lineWeight": 0.25
-      },
-      "children": []
-     },
-     {
-      "id": "altlik",
-      "name": "Altlık",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-       "color": "fg",
-       "lineType": "continuous",
-       "lineWeight": 0.25
-      },
-      "children": []
-     },
-     {
-      "id": "gnss",
-      "name": "GNSS denetim noktaları",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-       "color": "fg",
-       "lineType": "continuous",
-       "lineWeight": 0.25
-      },
-      "children": []
-     },
-     {
-      "id": "okuma-2024",
-      "name": "2024 ortofotosunda okunan",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-       "color": "fg",
-       "lineType": "continuous",
-       "lineWeight": 0.25
-      },
-      "children": []
-     },
-     {
-      "id": "okuma-2026",
-      "name": "2026 ortofotosunda okunan",
-      "type": "layer",
-      "visible": true,
-      "locked": false,
-      "expanded": true,
-      "style": {
-       "color": "fg",
-       "lineType": "continuous",
-       "lineWeight": 0.25
-      },
-      "children": []
-     }
-    ],
-    "activeLayer": "okuma-2026",
-    "entities": [
-     {
-      "kind": "raster",
-      "layerId": "altlik",
-      "attrs": {},
-      "affine": [
-       487500.0,
-       0.1,
-       0.0,
-       4420120.0,
-       0.0,
-       -0.1
-      ],
-      "width": 200,
-      "height": 120,
-      "bands": 1,
-      "sample": "u8",
-      "srid": 5254,
-      "style": {
-       "render": "gray",
-       "bands": [
-        1
-       ]
-      },
-      "file": "$fixture:orthophoto/v1/files/dikis-a.tif",
-      "id": 1
-     },
-     {
-      "kind": "raster",
-      "layerId": "altlik",
-      "attrs": {},
-      "affine": [
-       487510.0,
-       0.1,
-       0.0,
-       4420120.0,
-       0.0,
-       -0.1
-      ],
-      "width": 200,
-      "height": 120,
-      "bands": 1,
-      "sample": "u8",
-      "srid": 5254,
-      "style": {
-       "render": "gray",
-       "bands": [
-        1
-       ]
-      },
-      "file": "$fixture:orthophoto/v1/files/dikis-b.tif",
-      "id": 2
-     },
-     {
-      "kind": "polyline",
-      "layerId": "0",
-      "attrs": {},
-      "pts": [
-       {
-        "x": 487515.0,
-        "y": 4420121.5
-       },
-       {
-        "x": 487516.2,
-        "y": 4420114.0
-       },
-       {
-        "x": 487514.4,
-        "y": 4420106.5
-       }
-      ],
-      "bulges": [
-       0.2,
-       0.0,
-       0.0
-      ],
-      "id": 3
      }
     ],
     "uids": [

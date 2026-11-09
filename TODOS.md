@@ -150,6 +150,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   paketten sonra değişmiş” uyarısı; Saha paketi iletisinde `yuzey.xml` (komutlar ortak, yalnız pencere).
 - MAP-20 / ADR 3240: web'in İş grafiği penceresinde Tariften üret… (`road.project.produce`, tarif dosyası seçimi,
   üretilen ve bırakılan çizimlerin satırları).
+- MAP-12 / ADR 3260: web'in Ortofoto karşılaştırması penceresinde Piksel altı (Parabol / Çift kübik) ve yaylı dikiş
+  hattının alınması (komut ortak).
 - MAP-20 / ADR 2840: web'in `.kcad` okuyucu/yazıcısında şema 209 (çizim kaydının `version` ve `revision`'ı; web codec'i
   Rust'ın WASM'ıysa yalnız yeniden derleme), web'in yol çizim kaydında ikisinin yazılması ve İş grafiği'nde Revizyon.
 - MAP-18 / ADR 2400: web'in pafta girdilerinde `positionAccuracy`, `heightAccuracy`, `networkAdjustment`,
