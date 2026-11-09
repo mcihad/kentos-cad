@@ -41,7 +41,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820 | kalıcı parsel kaydı ve sınır kimliği (saklanan veri modeli) | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840 | plan değişikliği taslağı; sembolün karardan seçilmesi; hata katmanının GeoPackage'a yazılması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860 | eğim; ağ üzerinden erişim; damganın çizimde saklanması | — |
-| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
+| MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880 | numara yazısının dar parçaya sığması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri; dönük birinci görüntü | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500 | çoklu tarama demeti; eksen-açı ya da Euler girişi; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520 | yüzey birleştirme; bölgesel yeniden kurma; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü |
@@ -1274,6 +1274,12 @@ katmanına yazar: parça alan olarak (Parsel, Kısım, ParselNo) ve içinde numa
 yatay çizginin parçanın içindeki en geniş aralığının ortası); çapın Koordinat listesi yalnız köşeleri okur; cevapta
 `labels`. Ortak durumlar (bağımsız başvuru, yeni durum), Python, MCP, masaüstü ve resimler. Açık: yazının dar parçaya
 sığması, değer esaslı dağıtım, tescil bildirimi.
+
+**9 Kasım 2026, yedinci tur — dış parça numarasının retinde parselin adı ve nedeni ([ADR 3880](../docs/adr/3880-outside-part-number-refusal-names-the-parcel.md)).**
+Kapsam: **Harita ve CBS**. Kanıtlanan: `cad.readjustment.sheets` kısmen girmeyen parsele numara verilince parseli
+Ada/Parsel adıyla ve nedeniyle söyler (kapsamda tamamen içeride, tamamen dışarıda, kapsamda değil; adı olmayan nesne
+kimlikle); masaüstünün Dış parça no'su aynı sözlerle. 3 yeni bağımsız durum (38), Rust, Python, masaüstü ve resim.
+Açık: numara yazısının dar parçaya sığması, tescil bildirimi.
 
 ### MAP-12 — Ortofoto ve görüntü kaynaklarını kalite kontrollü üretime bağla [ ]
 

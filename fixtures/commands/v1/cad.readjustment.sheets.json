@@ -1578,8 +1578,115 @@
       "status": "failed",
       "error": {
        "code": "invalid_input",
-       "message": "“0192f800-2060-7000-8000-000000000002” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
+       "message": "“101/1” parseli kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
        "path": "numbers.0192f800-2060-7000-8000-000000000002"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: kapsamda tamamen içerideki parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000002",
+        "0192f800-2060-7000-8000-000000000004"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000002": [
+        "5"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“101/1” parseli düzenleme sınırının tamamen içinde, dışarıda parçası yok; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
+       "path": "numbers.0192f800-2060-7000-8000-000000000002"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: kapsamda düzenleme dışındaki parsel",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000009",
+        "0192f800-2060-7000-8000-000000000004"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000009": [
+        "5"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“101/8” parseli düzenleme sınırının tamamen dışında, düzenlemeye girmiyor; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
+       "path": "numbers.0192f800-2060-7000-8000-000000000009"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "sheets": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel numaraları: adı olmayan nesne kimliğiyle söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "scope": {
+       "boundary": "0192f800-2060-7000-8000-000000000001",
+       "scale": 2,
+       "rounding": "half_even",
+       "uids": [
+        "0192f800-2060-7000-8000-000000000004"
+       ]
+      },
+      "numbers": {
+       "0192f800-2060-7000-8000-000000000001": [
+        "5"
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“0192f800-2060-7000-8000-000000000001” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir.",
+       "path": "numbers.0192f800-2060-7000-8000-000000000001"
       }
      },
      "expect": {

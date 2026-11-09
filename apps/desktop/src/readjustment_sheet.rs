@@ -112,7 +112,13 @@ pub fn typed_numbers(text: &str, scope: &ReadjustmentScoped) -> Result<Option<st
         };
         let parcel = parcel.trim();
         let Some(p) = scope.parcels.iter().find(|p| p.parcel == parcel && p.kind == "partial") else {
-            return Err(format!("Dış parça no: “{parcel}” kapsamda kısmen giren bir parsel değil."));
+            // Why it takes no number, as the command says it (docs/adr/3880).
+            let why = match scope.parcels.iter().find(|p| p.parcel == parcel).map(|p| p.kind.as_str()) {
+                Some("whole") => "düzenleme sınırının tamamen içinde, dışarıda parçası yok",
+                Some("outside") => "düzenleme sınırının tamamen dışında, düzenlemeye girmiyor",
+                _ => "kapsamda kısmen giren bir parsel değil",
+            };
+            return Err(format!("Dış parça no: “{parcel}” parseli {why}."));
         };
         out.insert(p.uid.clone(), list.split(',').map(|n| n.trim().to_owned()).collect());
     }

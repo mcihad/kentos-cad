@@ -212,6 +212,10 @@ def sheets(entities, chosen, kw, given_scale=None, taken=(), numbers=None):
     return rows, listing
 
 
+# The parcel 101/8, wholly outside the boundary (the scope's kind `outside`; ADR 3880's case).
+EIGHT = next(i for i, e in enumerate(rs.MAIN) if e["attrs"].get("Ada") == "101" and e["attrs"].get("Parsel") == "8")
+
+
 def scope_input(chosen=None, **kw):
     inp = {"boundary": rs.uid(1), "scale": kw.get("scale", 2), "rounding": kw.get("mode", "half_even")}
     if chosen is not None:
@@ -292,10 +296,23 @@ def cases():
                 "numbers": {rs.uid(P(10) + 1): ["101/24"]}}, "invalid_input",
                 "“101/10” parselinin düzenleme dışında 2 parçası var; 1 parsel numarası verildi.",
                 f"numbers.{rs.uid(P(10) + 1)}"),
+        # ADR 3880: the parcel named by its Ada/Parsel, and why it takes no number.
         refused("parsel numaraları: kısmen giren parsel değil", {"scope": scope_input([P(3)]),
                 "numbers": {rs.uid(P(1) + 1): ["5"]}}, "invalid_input",
-                f"“{rs.uid(P(1) + 1)}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin "
+                "“101/1” parseli kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin "
                 "dışarıda kalan parçalarına verilir.", f"numbers.{rs.uid(P(1) + 1)}"),
+        refused("parsel numaraları: kapsamda tamamen içerideki parsel", {"scope": scope_input([P(1), P(3)]),
+                "numbers": {rs.uid(P(1) + 1): ["5"]}}, "invalid_input",
+                f"“101/1” parseli düzenleme sınırının tamamen içinde, dışarıda parçası yok; numaralar kısmen giren "
+                "parsellerin dışarıda kalan parçalarına verilir.", f"numbers.{rs.uid(P(1) + 1)}"),
+        refused("parsel numaraları: kapsamda düzenleme dışındaki parsel", {"scope": scope_input([EIGHT, P(3)]),
+                "numbers": {rs.uid(EIGHT + 1): ["5"]}}, "invalid_input",
+                "“101/8” parseli düzenleme sınırının tamamen dışında, düzenlemeye girmiyor; numaralar kısmen giren "
+                "parsellerin dışarıda kalan parçalarına verilir.", f"numbers.{rs.uid(EIGHT + 1)}"),
+        refused("parsel numaraları: adı olmayan nesne kimliğiyle söylenir", {"scope": scope_input([P(3)]),
+                "numbers": {rs.uid(1): ["5"]}}, "invalid_input",
+                f"“{rs.uid(1)}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin "
+                "dışarıda kalan parçalarına verilir.", f"numbers.{rs.uid(1)}"),
         refused("parsel numaraları: aynı numara iki parçada", {"scope": scope_input([P(10)]),
                 "numbers": {rs.uid(P(10) + 1): ["101/24", "101/24"]}}, "invalid_input",
                 "“101/10” parselinin iki parçasına aynı parsel numarası (“101/24”) verilmiş.",

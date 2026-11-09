@@ -204,7 +204,15 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
     let ten = k.parcels.iter().find(|p| p.parcel == "101/10").expect("101/10").uid.clone();
     let typed = crate::readjustment_sheet::typed_numbers("101/10: 101/24, 101/25", &k).expect("reads").expect("some");
     assert_eq!(typed.get(&ten).map(Vec::as_slice), Some(&["101/24".to_owned(), "101/25".to_owned()][..]));
-    assert!(crate::readjustment_sheet::typed_numbers("101/1: 5", &k).expect_err("not partial").contains("kısmen giren"));
+    // Why a parcel takes no number (docs/adr/3880): wholly inside, wholly outside, not of the scope.
+    let why = |text: &str| crate::readjustment_sheet::typed_numbers(text, &k).expect_err("not partial");
+    let kind = |name: &str| k.parcels.iter().find(|p| p.parcel == name).map(|p| p.kind.clone());
+    assert_eq!(kind("101/1").as_deref(), Some("whole"));
+    assert_eq!(why("101/1: 5"), "Dış parça no: “101/1” parseli düzenleme sınırının tamamen içinde, dışarıda parçası yok.");
+    if kind("101/8").as_deref() == Some("outside") {
+        assert_eq!(why("101/8: 5"), "Dış parça no: “101/8” parseli düzenleme sınırının tamamen dışında, düzenlemeye girmiyor.");
+    }
+    assert_eq!(why("999/9: 5"), "Dış parça no: “999/9” parseli kapsamda kısmen giren bir parsel değil.");
     assert!(crate::readjustment_sheet::typed_numbers("101/10 101/24", &k).expect_err("no colon").contains("okunmadı"));
     assert_eq!(crate::readjustment_sheet::typed_numbers("  ", &k), Ok(None));
     // One number short: the command refuses, nothing written, the window stays.
@@ -394,6 +402,38 @@ fn numbers_screens() {
             std::fs::write(out.join("paftalar.pdf"), &pdf.bytes).expect("writes");
         }
     }
+}
+
+/// docs/adr/3880: Dış parça no typed for 101/1, a parcel wholly inside the boundary: the window says why it takes no
+/// number; light wide, `.run/gui-evidence/dis-parca-ret-3880/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib readjustment_window_tests::refusal_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn refusal_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-ret-3880");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let size = Size::new(1440.0, 900.0);
+    let mut app = named();
+    let _ = app.update(Message::WindowResized(size));
+    let _ = app.update(Message::Run("view.zoomExtents"));
+    let _ = app.update(Message::Run("readjustment.distribute"));
+    let _ = app.update(Message::Readjustment(R::View(View::Sheet)));
+    let _ = app.update(Message::Readjustment(R::Numbers("101/1: 5".into())));
+    // Çapın paftaları: the typed numbers read, the parcel's reason said.
+    let _ = app.update(Message::Readjustment(R::MakeSheets));
+    let mut snapshot = Snapshot::new(size).expect("a renderer");
+    let mut update = |app: &mut App, m: Message| {
+        let _ = app.update(m);
+    };
+    snapshot.settle(&mut app, App::view, &mut update);
+    let file = out.join("pencere-acik-genis.png");
+    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    println!("{}", file.display());
 }
 
 /// docs/adr/3480: 101/10's sheet after Dış parça no, its two pieces outside drawn with their numbers inside; and the

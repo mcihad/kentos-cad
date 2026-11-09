@@ -256,17 +256,47 @@ pub fn part_rows(p: &ReadjustmentScopeParcel, scale: u32, mode: RoundingMode, nu
         .collect()
 }
 
+/// An object's parcel name as the scope writes it (`Ada/Parsel`, else the one there is); none without either or when
+/// the id names no object.
+fn parcel_name(doc: &Document, uid: &str) -> Option<String> {
+    let e = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s))?;
+    let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+    let (ada, parsel) = (attr("Ada"), attr("Parsel"));
+    match (ada.is_empty(), parsel.is_empty()) {
+        (false, false) => Some(format!("{ada}/{parsel}")),
+        (true, false) => Some(parsel),
+        (false, true) => Some(ada),
+        (true, true) => None,
+    }
+}
+
 /// The parcel numbers checked (docs/adr/3080): each for a partial parcel of the scope, one for each of its outside
 /// parts, not empty, at most 20 characters, none twice in a parcel.
-fn numbers_ok(partial: &[&ReadjustmentScopeParcel], numbers: Option<&std::collections::BTreeMap<String, Vec<String>>>) -> Result<(), Stop> {
+fn numbers_ok(
+    doc: &Document,
+    parcels: &[ReadjustmentScopeParcel],
+    partial: &[&ReadjustmentScopeParcel],
+    numbers: Option<&std::collections::BTreeMap<String, Vec<String>>>,
+) -> Result<(), Stop> {
     for (uid, given) in numbers.into_iter().flatten() {
         let at = format!("numbers.{uid}");
         let Some(p) = partial.iter().find(|p| p.uid == *uid) else {
-            return Err(fail(
-                codes::INVALID_INPUT,
-                format!("“{uid}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir."),
-                &at,
-            ));
+            // Named by its Ada/Parsel when it has one (docs/adr/3880), and why: a parcel of the scope wholly inside the
+            // boundary or wholly outside it has no part outside to number; any other is not among the scope's parcels.
+            let of_scope = parcels.iter().find(|q| q.uid == *uid);
+            let named = of_scope.map(|q| q.parcel.clone()).filter(|n| !n.is_empty()).or_else(|| parcel_name(doc, uid));
+            let why = match of_scope.map(|q| q.kind.as_str()) {
+                Some("whole") => "düzenleme sınırının tamamen içinde, dışarıda parçası yok",
+                Some("outside") => "düzenleme sınırının tamamen dışında, düzenlemeye girmiyor",
+                _ => "kapsamda kısmen giren bir parsel değil",
+            };
+            let said = match named {
+                Some(name) => format!("“{name}” parseli {why}; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir."),
+                None => format!(
+                    "“{uid}” kapsamda kısmen giren bir parsel değil; numaralar kısmen giren parsellerin dışarıda kalan parçalarına verilir."
+                ),
+            };
+            return Err(fail(codes::INVALID_INPUT, said, &at));
         };
         let outside = p.parts.iter().filter(|q| q.side == "outside").count();
         if given.len() != outside {
@@ -392,7 +422,7 @@ fn prepare(doc: &Document, input: &ReadjustmentSheets) -> Result<Laid, Stop> {
             ));
         }
     }
-    numbers_ok(&partial, input.numbers.as_ref())?;
+    numbers_ok(doc, &scope.parcels, &partial, input.numbers.as_ref())?;
     let template = template_of(input.source.as_ref())?;
     let options: InstanceOptions = serde_json::from_value(input.options.clone())
         .map_err(|e| fail(codes::INVALID_OPTIONS, format!("Şablon seçenekleri okunamadı: {e}"), "options"))?;

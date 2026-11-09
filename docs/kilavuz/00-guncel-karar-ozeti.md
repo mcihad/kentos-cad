@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dış parça numarasının retinde parselin adı ve nedeni (9 Kasım 2026; MAP-11, [ADR 3880](../../docs/adr/3880-outside-part-number-refusal-names-the-parcel.md)).**
+  `cad.readjustment.sheets` ve Dış parça no, numara alamayan parseli Ada/Parsel adıyla ve nedeniyle söyler. Harita ve
+  CBS.
 - **Altyapı bağları katmanda (9 Kasım 2026; MAP-10, [ADR 3860](../../docs/adr/3860-scenario-links-drawn-on-a-layer.md)).**
   Yeni İşlem aracı Altyapı bağlarını çiz (`scenarios.links`): senaryo ölçüsünün bağları “Altyapı bağları” katmanına
   çizgi olarak, tek geri alma adımı. Harita + CBS.
