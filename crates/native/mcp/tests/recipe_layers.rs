@@ -49,7 +49,9 @@ fn a_recipe_s_layers_over_mcp() {
         .iter()
         .filter_map(|n| n.get("recipe").map(|r| r["layer"].clone()))
         .collect();
-    let want = json!({"id": added, "name": "Kazı sınırı", "color": "#2A9D8F", "lineType": "dashed", "lineWeight": 0.35});
+    // Docs/adr/4040: with its whole style too (the recipe from before gave colour, line type and weight).
+    let style = json!({"color": "#2A9D8F", "lineType": "dashed", "lineWeight": 0.35});
+    let want = json!({"id": added, "name": "Kazı sınırı", "color": "#2A9D8F", "lineType": "dashed", "lineWeight": 0.35, "style": style});
     assert_eq!(defs, vec![want.clone(), want]);
 
     // Again: found by its name, both left.

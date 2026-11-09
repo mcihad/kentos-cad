@@ -22,7 +22,15 @@ rules, by hand:
   definition, the one layer here of that name folded as Katmanları çevir folds it (I → ı, İ → i, then lower case;
   two of them: asked, the drawing left or, named, refused), or one added last with the recipe's colour, line type and
   weight, said as a warning and taken away again when no drawing went on it; a recipe from before, the layer's id. The
-  answer lists each recipe layer the produced drawings went on, in the order they first did, and how it was found.
+  answer lists each recipe layer the produced drawings went on, in the order they first did, and how it was found;
+- a recipe layer keeping its groups, whole style and line type (docs/adr/4040): a layer added goes in its groups, each
+  the first group of its name (folded) among its parent's, else added last in it; it takes the whole style; the
+  project line type the style names is this project's of that name (letters' case aside), else added from the
+  recipe's definition, else left out of the style (the built-in type stays); the answer says the groups it went in
+  (their names here), those added and the line type added. A layer taken away again takes the groups added for it
+  that hold nothing then and the line type added for it that no layer names. A definition whose style's colour, line
+  type or weight is not its own, with an empty group name, or with a line type its style does not name or that does
+  not hold, is refused.
 
 No KentOS code.
 
@@ -82,6 +90,26 @@ def ldef(id_, name, color="#E5484D", line_type="continuous", weight=0.5):
     return {"id": id_, "name": name, "color": color, "lineType": line_type, "lineWeight": weight}
 
 
+# Docs/adr/4040: a project line type of the recipe's project (millimetres on paper) and a layer's whole style naming it
+# (its nearest built-in type dash-dot), with a fill, a point and a label.
+SINIR = {"name": "SINIR", "description": "Kazı sınırı", "elements": [{"length": 4.0}, {"length": -1.0}, {"length": 0.5},
+                                                                    {"length": -1.0}], "unit": "paper"}
+STYLE = {"color": "#2A9D8F", "lineType": "dashdot", "lineWeight": 0.35, "linePattern": "SINIR", "fill": "#2A9D8F",
+         "point": {"symbol": "cross", "size": 6.0}, "label": {"placement": "along", "size": 10.0}}
+
+
+def sdef(id_, name, group=(), style=None, line_type=SINIR):
+    """Docs/adr/4040: a recipe layer's definition with its groups, whole style and line type's definition."""
+    st = copy.deepcopy(STYLE if style is None else style)
+    out = ldef(id_, name, color=st["color"], line_type=st["lineType"], weight=st["lineWeight"])
+    if group:
+        out["group"] = list(group)
+    out["style"] = st
+    if line_type is not None:
+        out["lineTypeDef"] = copy.deepcopy(line_type)
+    return out
+
+
 K7 = ldef("k-7", "Sıfır hattı")
 K9 = ldef("k-9", "Kazı sınırı", color="#2A9D8F", line_type="dashed", weight=0.35)
 K11 = ldef("k-11", "Ova sınırı", color="#264653", line_type="dotted", weight=0.18)
@@ -89,6 +117,19 @@ TWO_K = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-7"}
          drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "k-7"}, objects=2, layer=K7)]
 TWO_NEW = [drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-9"}, layer=K9),
            drawing("cz-2", {"base": "a-6", "comparison": "Set", "layerId": "k-9"}, objects=2, layer=K9)]
+# Docs/adr/4040: “Kazı sınırı” in the group Yol (written YOL: folded, the setup's Yol) › Toprak işleri; in two groups
+# this project lacks; a style naming a line type the recipe does not define.
+K12 = sdef("k-12", "Kazı sınırı", group=("YOL", "Toprak işleri"))
+K13 = sdef("k-13", "Kazı sınırı", group=("Toprak", "Sınırlar"))
+K14 = sdef("k-14", "Kazı sınırı", style=dict(STYLE, linePattern="YOKTUR"), line_type=None)
+
+
+def on_layer(drawings, layer):
+    """The drawings with their layer `layer` (its id in their inputs, its definition kept)."""
+    out = []
+    for id_, command, version, inp, objects, _ in drawings:
+        out.append((id_, command, version, dict(inp, layerId=layer["id"]), objects, layer))
+    return out
 
 
 def recipe(drawings, sources=SOURCES, epsg="EPSG:5254", system="TUREF / TM30"):
@@ -148,6 +189,16 @@ FILES = {
                                                         layer=K11)], sources=SOURCES + [("a-1", "Ova")]),
     "tanimi-tutmayan.json": recipe([drawing("cz-1", {"base": "a-5", "comparison": "a-10", "layerId": "k-7"},
                                             layer=dict(K7, id="k-8"))]),
+    # Docs/adr/4040: recipes keeping their layers' groups, whole styles and line types.
+    "grup-stilli.json": recipe(on_layer(TWO, K12)),
+    "yeni-gruplu.json": recipe(on_layer(TWO, K13)),
+    "tanimsiz-cizgi-turlu.json": recipe(on_layer(TWO[:1], K14)),
+    "yeni-gruplu-eksik.json": recipe(TWO_K + [drawing("cz-3", {"base": "a-1", "comparison": "a-5", "layerId": "k-13"},
+                                                      layer=K13)], sources=SOURCES + [("a-1", "Ova")]),
+    "stili-tutmayan.json": recipe(on_layer(TWO[:1], dict(K12, color="#000000"))),
+    "bos-gruplu.json": recipe(on_layer(TWO[:1], dict(K12, group=["Yol", " "]))),
+    "adlanmayan-cizgi-turlu.json": recipe(on_layer(TWO[:1], dict(K12, lineTypeDef=dict(SINIR, name="KESIK")))),
+    "bosluklu-cizgi-turlu.json": recipe(on_layer(TWO[:1], dict(K12, lineTypeDef=dict(SINIR, name=" SINIR")))),
 }
 
 
@@ -302,6 +353,7 @@ def cases():
     out.append(case("Adıyla istenen çizimin katmanı bir grup: ret",
                     step({"path": fx("grup-katmanli.json"), "drawings": ["cz-1"]}, failed("not_a_layer", ANY, "layerId"))))
     out += layer_cases()
+    out += group_cases()
     # The file and the recipe.
     out.append(case("Tarifte olmayan çizim", step({"path": path, "drawings": ["cz-9"]},
                                                  failed("unknown_drawing", "Tarifte “cz-9” kimlikli çizim yok.",
@@ -409,6 +461,101 @@ def layer_cases():
     return out
 
 
+# Docs/adr/4040: a new node's look and flags (a group's style is the default), and this project's own line type of the
+# recipe's line type's name (another case, another pattern).
+DEFAULT = {"color": "fg", "lineType": "continuous", "lineWeight": 0.18}
+HERE_SINIR = {"name": "Sinir", "description": "Bu projenin sınırı", "elements": [{"length": 6.0}, {"length": -2.0}],
+              "unit": "paper"}
+
+
+def node(name, style, kind="layer", children=()):
+    return {"id": ANY, "name": name, "type": kind, "visible": True, "locked": False, "expanded": True,
+            "style": copy.deepcopy(style), "children": list(children)}
+
+
+def tree_with(added, into=None, setup=None):
+    """The setup's layer tree with `added` last in the group `into` (none: last at the top)."""
+    layers = copy.deepcopy((setup or zc.setup(work="road"))["layers"])
+    if into is None:
+        layers.append(added)
+    else:
+        walk(layers)[into]["children"].append(added)
+    return layers
+
+
+def own_line_type():
+    """The project with a line type of its own named Sinir (the recipe's SINIR, letters' case aside)."""
+    s = zc.setup(work="road")
+    s["settings"]["lineTypes"] = [copy.deepcopy(HERE_SINIR)]
+    return s
+
+
+def group_cases():
+    """Docs/adr/4040: a recipe layer's groups, whole style and line type."""
+    out = []
+    path = fx("grup-stilli.json")
+    went_a = dict(went("k-12", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı"), group=["Yol", "Toprak işleri"],
+                  groupsAdded=["Toprak işleri"], lineTypeAdded="SINIR")
+    said_a = {"code": "recipe_layer_created", "message": "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki "
+              "stiliyle “Yol › Toprak işleri” grubuna eklendi. “Toprak işleri” grubu da eklendi. “SINIR” çizgi türü de "
+              "tarifteki tanımıyla eklendi.", "path": "layers"}
+    tree_a = tree_with(node("Toprak işleri", DEFAULT, "group", [node("Kazı sınırı", STYLE)]), into="grup")
+    left_both = [{"drawing": "cz-1", "why": "exists", "message": EXISTS},
+                 {"drawing": "cz-2", "why": "exists", "message": EXISTS}]
+    out.append(case("Grubuyla ve bütün stiliyle eklenir: grup adıyla bulunur, alt grubu ve çizgi türü eklenir; ikinci kez "
+                    "adıyla bulunur",
+                    step({"path": path}, done({"produced": both(), "layers": [went_a], "revision": "$current"}, [said_a]),
+                         expect=dict(STEPPED, layers=tree_a, settings={"lineTypes": [SINIR]})),
+                    step({"path": path}, done({"produced": [], "left": left_both, "revision": "$current"}),
+                         expect=SAME),
+                    note="tarifte YOL › Toprak işleri: YOL katlanınca buradaki Yol; Toprak işleri yok, eklenir"))
+    out.append(case("Plan grupları ve çizgi türünü söyler, yazmaz",
+                    step({"path": path}, done({"produced": both(False), "layers": [went_a], "revision": "$current"},
+                                              [said_a]), op="plan")))
+    went_c = dict(went("k-13", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı"), group=["Toprak", "Sınırlar"],
+                  groupsAdded=["Toprak", "Sınırlar"])
+    said_c = {"code": "recipe_layer_created", "message": "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki "
+              "stiliyle “Toprak › Sınırlar” grubuna eklendi. “Toprak”, “Sınırlar” grupları da eklendi.", "path": "layers"}
+    tree_c = tree_with(node("Toprak", DEFAULT, "group", [node("Sınırlar", DEFAULT, "group", [
+        node("Kazı sınırı", dict(STYLE, linePattern="Sinir"))])]), setup=own_line_type())
+    out.append(case("Tarifin grupları yoksa eklenir; projede o adda çizgi türü varsa onunki kullanılır",
+                    step({"path": fx("yeni-gruplu.json")},
+                         done({"produced": both(), "layers": [went_c], "revision": "$current"}, [said_c]),
+                         expect=dict(STEPPED, layers=tree_c, settings={"lineTypes": [HERE_SINIR]})),
+                    setup="$cizgi", note="tarifin SINIR'ı burada Sinir adıyla başka desenle var: projeninki kalır"))
+    plain = {k: v for k, v in STYLE.items() if k != "linePattern"}
+    said_d = {"code": "recipe_layer_created", "message": "Tarifin “Kazı sınırı” katmanı bu projede yoktu; tarifteki "
+              "stiliyle eklendi. “YOKTUR” çizgi türü bu projede de tarifte de tanımlı değil; katman yerleşik türüyle "
+              "çizilir.", "path": "layers"}
+    out.append(case("Tarifte tanımı olmayan çizgi türü: katman yerleşik türüyle eklenir",
+                    step({"path": fx("tanimsiz-cizgi-turlu.json")},
+                         done({"produced": [produced("cz-1", "cz-1", "Düz", "Tümsek")],
+                               "layers": [went("k-14", ANY, "created", "Kazı sınırı", to_name="Kazı sınırı")],
+                               "revision": "$current"}, [said_d]),
+                         expect=dict(STEPPED, layers=tree_with(node("Kazı sınırı", plain))))))
+    ova = "“Ova” kimlikli ya da adlı yüzey projede yok."
+    by_name = [went("k-7", "sifir", "name", "Sıfır hattı")]
+    out.append(case("Bütün çizimler: eklenen katmana çizilemeyen çizim bırakılır; katmanla eklenen gruplar ve çizgi türü "
+                    "de geri alınır",
+                    step({"path": fx("yeni-gruplu-eksik.json")},
+                         done({"produced": both(), "left": [{"drawing": "cz-3", "why": "refused", "message": ova}],
+                               "layers": by_name, "revision": "$current"}),
+                         expect=dict(STEPPED, layers=zc.setup(work="road")["layers"], settings={"lineTypes": None}))))
+    bad = "Tarifteki “cz-1” çiziminin katman tanımı (k-12) tutarsız: "
+    for name, file_, why in [
+        ("Stili tanımınkiyle tutmayan katman", "stili-tutmayan.json",
+         "stilin rengi, çizgi türü ya da kalınlığı tanımınkiyle aynı değil."),
+        ("Adı boş grup", "bos-gruplu.json", "grup adlarından biri boş."),
+        ("Stilin adlamadığı çizgi türü tanımı", "adlanmayan-cizgi-turlu.json",
+         "“KESIK” çizgi türünün tanımı var ama stil onu adlamıyor."),
+        ("Proje çizgi türü olarak tutmayan tanım", "bosluklu-cizgi-turlu.json",
+         "“ SINIR” çizgi tipinin adının başında ya da sonunda boşluk var."),
+    ]:
+        out.append(case(f"Tarifin katman tanımı tutarsız: {name.lower()}",
+                        step({"path": fx(file_)}, failed("invalid_project_recipe", bad + why, "path"))))
+    return out
+
+
 def main():
     found = cases()
     for c in found:
@@ -418,9 +565,11 @@ def main():
             c["setup"] = zc.setup(work="map")
         elif c.get("setup") == "$cift":
             c["setup"] = doubled()
+        elif c.get("setup") == "$cizgi":
+            c["setup"] = own_line_type()
     doc = {"format": "kentos.command-cases", "version": 1, "command": "road.project.produce", "commandVersion": 1,
            "title": "Tariften üret",
-           "note": "ADR 3240, 3640. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
+           "note": "ADR 3240, 3640, 4040. Bağımsız başvuru scripts/fixtures/road_project_produce_cases.py: tarifler (İş grafiği'nin "
                    "graf biçimi) fixtures/recipes/v1 altında elle yazılır; sıfır hatlarının çizgi sayısı "
                    "road_terrain_zeroline_cases.py'den; KentOS kodu yok.",
            "setup": zc.setup(work="road"), "cases": found}

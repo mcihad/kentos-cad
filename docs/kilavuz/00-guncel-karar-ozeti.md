@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Tarifin katmanının grubu ve tam stili; çizimlerin içinde durdurma (9 Kasım 2026; MAP-20, [ADR 4040](../../docs/adr/4040-recipe-layer-groups-style-and-stop-within-drawings.md)).**
+  Tarif katmanın gruplarını, bütün stilini ve proje çizgi türünü taşır; Tariften üret katmanı gruplarına ekler.
+  Enkesit, istinat duvarı, eş yükselti, kazı-dolgu ve sıfır hattı kendi hesabının içinde ilerler ve durur. Harita + Yol.
 - **Uygulama kontrolünde yüzeye en yakın uzaklık (9 Kasım 2026; MAP-19, [ADR 4020](../../docs/adr/4020-asbuilt-nearest-distance-to-surface.md)).**
   `cad.asbuilt.check` her noktanın yüzeye en kısa 3B uzaklığını (`nearest`, işareti düşey farkınki) ve yerini verir;
   `surfaceBy: nearest` sınırı ona uygular. Harita + Yol + CBS.

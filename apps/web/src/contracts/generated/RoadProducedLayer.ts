@@ -5,4 +5,17 @@ import type { RoadLayerMatch } from "./RoadLayerMatch";
  * A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
  * it was found; in the order the drawings first use them.
  */
-export type RoadProducedLayer = { from: string, name: string, to: string, toName: string, how: RoadLayerMatch, };
+export type RoadProducedLayer = { from: string, name: string, to: string, toName: string, how: RoadLayerMatch, 
+/**
+ * A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
+ * name, its name here); empty: at the top.
+ */
+group?: Array<string>, 
+/**
+ * A layer added: those of its groups added with it (none of their names was here), from the top.
+ */
+groupsAdded?: Array<string>, 
+/**
+ * A layer added: the project line type its style names, added with it from the recipe's definition.
+ */
+lineTypeAdded?: string, };

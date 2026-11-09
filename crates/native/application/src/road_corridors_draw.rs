@@ -214,14 +214,9 @@ fn write(cx: &mut ExecutionContext<'_>, input: &CorridorsDraw, c: Checked) -> Co
     }
 }
 
-/// A check's `tick` that only listens for the job's stop (validate and plan: the progress is the write's).
-fn stop_only<'a>(cx: &'a ExecutionContext<'_>) -> impl Fn(u64, u64) -> bool + 'a {
-    move |_, _| cx.stopped()
-}
-
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResult<()> {
-    match check(cx.doc, input, &stop_only(cx)) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -229,7 +224,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResu
 
 /// What execute would write now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResult<CorridorsDrawn> {
-    let c = match check(cx.doc, input, &stop_only(cx)) {
+    let c = match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -254,10 +249,7 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::Corri
 
 /// [`check`] as the write's: the job's progress told a section at a time, its stop heard between them (docs/adr/3640).
 fn checked(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> Result<Checked, Stop> {
-    check(cx.doc, input, &|done, total| {
-        cx.progress(done, total);
-        cx.stopped()
-    })
+    check(cx.doc, input, &cx.told())
 }
 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsDraw) -> CommandResult<CorridorsDrawn> {

@@ -117,10 +117,28 @@ pub fn cut_fill(
     interval: Option<f64>,
     most_bands: u64,
 ) -> Result<Zones, TooManyBands> {
+    Ok(cut_fill_told(comparison, base, interval, most_bands, &|_, _| false)?.unwrap_or_default())
+}
+
+/// The parts of each half of [`cut_fill_told`]'s progress.
+pub const HALF: u64 = 1000;
+
+/// [`cut_fill`] telling `tick` how far it has come (`done` of 2 × [`HALF`], docs/adr/4040): the overlay is the first
+/// half, a comparison triangle at a time; dissolving the bands the second, a band at a time. `tick` answering true stops
+/// it there: none.
+pub fn cut_fill_told(
+    comparison: &[Triangle],
+    base: &[Triangle],
+    interval: Option<f64>,
+    most_bands: u64,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Option<Zones>, TooManyBands> {
+    let whole = 2 * HALF;
     let mut out = Zones::default();
     let mut kept: Vec<Vec<([f64; 2], f64)>> = Vec::new();
     let mut ground = Ground::new(base);
-    let (covered, uncovered) = ground.overlay(comparison, |raw| {
+    let first = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * HALF / all }, whole);
+    let Some((covered, uncovered)) = ground.overlay_told(comparison, |raw| {
         let with: Vec<([f64; 2], f64)> = raw.iter().map(|(p, d)| (*p, if d.abs() <= ZERO { 0.0 } else { *d })).collect();
         if with.iter().all(|(_, d)| *d == 0.0) {
             out.coincident += integral(&with).0;
@@ -137,10 +155,12 @@ pub fn cut_fill(
             out.largest = Some(out.largest.map_or(*d, |v| v.max(*d)));
         }
         kept.push(with);
-    });
+    }, &first) else {
+        return Ok(None);
+    };
     out.covered = covered;
     out.uncovered = uncovered;
-    let (Some(least), Some(largest)) = (out.least, out.largest) else { return Ok(out) };
+    let (Some(least), Some(largest)) = (out.least, out.largest) else { return Ok(Some(out)) };
     if let Some(i) = interval {
         let count = band_count(least, largest, i);
         if !(count <= most_bands as f64) {
@@ -165,7 +185,11 @@ pub fn cut_fill(
             }
         }
     }
-    for (band, pieces) in bands {
+    let count = bands.len() as u64;
+    for (b, (band, pieces)) in bands.into_iter().enumerate() {
+        if tick(HALF + b as u64 * HALF / count, whole) {
+            return Ok(None);
+        }
         out.zones.extend(dissolve(band, &pieces));
     }
     out.zones.sort_by(|a, b| {
@@ -173,7 +197,7 @@ pub fn cut_fill(
             .partial_cmp(&(b.band, b.outer.first().map(|p| (p[0], p[1]))))
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    Ok(out)
+    Ok(Some(out))
 }
 
 /// A band's pieces dissolved into its zones, each with its pieces' area and volume.
@@ -424,5 +448,33 @@ mod tests {
         let far = rect(100.0, 0.0, 110.0, 10.0, |_, _| 0.0);
         let apart = cut_fill(&far, &base, None, 1000).expect("zones");
         assert!(apart.zones.is_empty() && apart.covered == 0.0 && close(apart.uncovered, 100.0));
+    }
+
+    /// Docs/adr/4040: the overlay is told a comparison triangle at a time within the first half, the bands one at a
+    /// time within the second; the zones are the plain call's; a stop asked at the fourth tick goes no further.
+    #[test]
+    fn the_overlay_and_the_bands_are_told_and_a_stop_is_heard_between_them() {
+        let base = rect(0.0, 0.0, 10.0, 10.0, |_, _| 0.0);
+        let comparison = lattice(0.0, 0.0, 1.0, 10, |x, _| x - 5.0);
+        let seen = std::cell::RefCell::new(Vec::new());
+        let told = cut_fill_told(&comparison, &base, Some(1.0), 1000, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        })
+        .expect("zones")
+        .expect("not stopped");
+        assert_eq!(told, cut_fill(&comparison, &base, Some(1.0), 1000).expect("zones"));
+        let seen = seen.into_inner();
+        let (overlay, bands): (Vec<(u64, u64)>, Vec<(u64, u64)>) = seen.iter().partition(|(done, _)| *done < HALF);
+        assert_eq!(overlay.len(), comparison.len());
+        assert_eq!(bands.len(), 10, "bands from −5 to 4: {seen:?}");
+        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[1].1 == 2 * HALF && w[1].0 < 2 * HALF), "{seen:?}");
+        let asked = std::cell::Cell::new(0);
+        let stopped = cut_fill_told(&comparison, &base, Some(1.0), 1000, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert_eq!(stopped, Ok(None));
+        assert_eq!(asked.get(), 4);
     }
 }

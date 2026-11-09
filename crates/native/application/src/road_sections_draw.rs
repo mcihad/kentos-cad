@@ -79,7 +79,8 @@ pub fn ground_runs(row: &SectionRow) -> Vec<Vec<[f64; 2]>> {
     runs
 }
 
-fn check(doc: &kentos_domain::Document, input: &SectionsDraw) -> Result<Checked, Stop> {
+/// Checks `input`, `told` the set's sections and answering whether to stop (docs/adr/4040).
+fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find_set(doc.road_sections(), &input.set, "set")?;
     let columns = input.columns.unwrap_or(5);
@@ -134,7 +135,7 @@ fn check(doc: &kentos_domain::Document, input: &SectionsDraw) -> Result<Checked,
         }
         Some(Ok(_)) => {}
     }
-    let (rows, more) = common::sections(doc, def, &built, &stations);
+    let (rows, more) = common::sections_told(doc, def, &built, &stations, told).ok_or(Stop::Cancelled)?;
     let ranges: Vec<Option<(f64, f64)>> = rows
         .iter()
         .map(|r| {
@@ -360,7 +361,7 @@ pub(crate) type Pitch = (Vec<f64>, [f64; 2], Vec<CommandWarning>);
 /// across and down in drawing units (its column of elevations, the frame and the gap; the km row, the frame, the rows
 /// under it and the gap).
 pub(crate) fn pitch(doc: &kentos_domain::Document, input: &SectionsDraw) -> Result<Pitch, Stop> {
-    let c = check(doc, input)?;
+    let c = check(doc, input, &|_, _| false)?;
     let h = c.height * doc.settings().plot_scale / 1000.0;
     let row = 2.4 * h;
     let across = 8.0 * h + c.left + c.right + 4.0 * h;
@@ -374,7 +375,7 @@ pub(crate) fn view(
     doc: &kentos_domain::Document,
     input: &SectionsDraw,
 ) -> Result<(Vec<NewObject>, SectionsDrawn, Vec<CommandWarning>), Stop> {
-    let c = check(doc, input)?;
+    let c = check(doc, input, &|_, _| false)?;
     let h = c.height * doc.settings().plot_scale / 1000.0;
     let frames = frames(&c, input.at, h);
     let objects = objects(&c, &frames, h);
@@ -408,7 +409,7 @@ pub(crate) fn view(
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -416,7 +417,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResul
 
 /// What execute would write now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<SectionsDrawn> {
-    let c = match check(cx.doc, input) {
+    let c = match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -433,7 +434,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<Se
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
 pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::SectionsDraw) -> CommandResult<kentos_commands::SectionsDrawn> {
-    match check(cx.doc, input) {
+    let checked = check(cx.doc, input, &cx.told());
+    match checked {
         Ok(c) => write(cx, input, c),
         Err(stop) => stop.into(),
     }
@@ -446,11 +448,68 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsDraw) -> CommandRes
         kentos_commands::ROAD_SECTIONS_DRAW_VERSION,
         input,
         |cx, input| {
-            let r = match check(cx.doc, &input) {
+            let checked = check(cx.doc, &input, &cx.told());
+            let r = match checked {
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
             crate::road_drawings::kept(cx, kentos_commands::ROAD_SECTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Sections, "set"), r, |o| &o.uids)
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::{Cell, RefCell};
+
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::Value;
+
+    use super::*;
+
+    /// The shared cases' project and their first case's input.
+    fn project() -> (kentos_domain::Document, kentos_commands::SectionsDraw) {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.sections.draw.json")).expect("cases");
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        (doc, input)
+    }
+
+    /// docs/adr/4040: a set's sections are told one at a time, increasing within one whole; a stop asked at the fourth is heard there, cancelled.
+    #[test]
+    fn the_sections_are_told_and_a_stop_is_heard_between_them() {
+        let (doc, input) = project();
+        let seen = RefCell::new(Vec::new());
+        let whole = check(&doc, &input, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        });
+        assert!(whole.is_ok());
+        let seen = seen.into_inner();
+        assert!(seen.len() > 4, "{} ticks", seen.len());
+        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        assert_eq!(seen, (0..seen.len() as u64).map(|k| (k, seen.len() as u64)).collect::<Vec<_>>());
+        let asked = Cell::new(0);
+        let stopped = check(&doc, &input, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(matches!(stopped, Err(Stop::Cancelled)));
+        assert_eq!(asked.get(), 4);
+    }
+
+    /// As a job's part (a rebuild's, Tariften üret's), a stop is heard in the set's sections: cancelled, nothing written.
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input) = project();
+        let before = doc.to_snapshot_v2();
+        let job = crate::jobs::Progress::default();
+        job.stop();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        assert!(matches!(draw(&mut cx, &input), CommandResult::Cancelled));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
 }

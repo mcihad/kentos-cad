@@ -183857,8 +183857,29 @@
         "from": {
           "type": "string"
         },
+        "group": {
+          "description": "A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its\nname, its name here); empty: at the top.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "groupsAdded": {
+          "description": "A layer added: those of its groups added with it (none of their names was here), from the top.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "how": {
           "$ref": "#/$defs/RoadLayerMatch"
+        },
+        "lineTypeAdded": {
+          "description": "A layer added: the project line type its style names, added with it from the recipe's definition.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "type": "string"
@@ -183931,16 +183952,34 @@
       "type": "object"
     },
     "RoadRecipeLayer": {
-      "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look.",
+      "description": "A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it\ntakes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).\n`road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the\ngroups it was in, its whole style and the project line type that style names, as its project defines it; a layer\nadded from it goes into those groups with that style. A recipe from before has none of them.",
       "properties": {
         "color": {
           "type": "string"
+        },
+        "group": {
+          "description": "The names of the groups it was in, from the top of the tree; empty: at the top.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
         },
         "id": {
           "type": "string"
         },
         "lineType": {
           "$ref": "#/$defs/LineType"
+        },
+        "lineTypeDef": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineTypeDef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The project line type its style names (`style.linePattern`), as its project defines it; none when the style\nnames none or its project has no such line type."
         },
         "lineWeight": {
           "format": "double",
@@ -183949,6 +183988,17 @@
         },
         "name": {
           "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayerStyle"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the\nfields above."
         }
       },
       "required": [

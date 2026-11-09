@@ -77,6 +77,19 @@ pub struct RoadProducedLayer {
     pub to: String,
     pub to_name: String,
     pub how: RoadLayerMatch,
+    /// A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
+    /// name, its name here); empty: at the top.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub group: Vec<String>,
+    /// A layer added: those of its groups added with it (none of their names was here), from the top.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub groups_added: Vec<String>,
+    /// A layer added: the project line type its style names, added with it from the recipe's definition.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type_added: Option<String>,
 }
 
 /// The main source a produced drawing was drawn from in this project: its kind, id and name.

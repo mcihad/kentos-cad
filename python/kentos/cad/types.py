@@ -81621,12 +81621,20 @@ class RoadNode(_Model):
 class RoadProducedLayer(_Model):
     """A recipe layer its produced drawings went on (docs/adr/3640): its id and name in the recipe, the layer here and how
     it was found; in the order the drawings first use them.
+    Attributes:
+        group: A layer added (docs/adr/4040): the names of the groups it went in, from the top (a group found here by its
+            name, its name here); empty: at the top.
+        groups_added: A layer added: those of its groups added with it (none of their names was here), from the top.
+        line_type_added: A layer added: the project line type its style names, added with it from the recipe's definition.
     """
     from_: str
     name: str
     to: str
     to_name: str
     how: RoadLayerMatch | RoadLayerMatchName
+    group: list[str] | Unset = UNSET
+    groups_added: list[str] | Unset = UNSET
+    line_type_added: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -81635,6 +81643,12 @@ class RoadProducedLayer(_Model):
         out["to"] = self.to
         out["toName"] = self.to_name
         out["how"] = _enum_out(self.how)
+        if self.group is not UNSET:
+            out["group"] = list(self.group)
+        if self.groups_added is not UNSET:
+            out["groupsAdded"] = list(self.groups_added)
+        if self.line_type_added is not UNSET:
+            out["lineTypeAdded"] = self.line_type_added
         return out
 
     @classmethod
@@ -81645,6 +81659,9 @@ class RoadProducedLayer(_Model):
             to=data["to"],
             to_name=data["toName"],
             how=_enum_in(RoadLayerMatch, data["how"]),
+            group=list(data["group"]) if "group" in data else UNSET,
+            groups_added=list(data["groupsAdded"]) if "groupsAdded" in data else UNSET,
+            line_type_added=data.get("lineTypeAdded", UNSET),
         )
 
 
@@ -82240,15 +82257,25 @@ class RoadProjectTree(_Model):
 class RoadRecipeLayer(_Model):
     """A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it
     takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
-    `road.project.produce` finds the layer by this name; where none is, it adds one with this look.
+    `road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the
+    groups it was in, its whole style and the project line type that style names, as its project defines it; a layer
+    added from it goes into those groups with that style. A recipe from before has none of them.
     Attributes:
         line_weight: Unit: paper-mm.
+        group: The names of the groups it was in, from the top of the tree; empty: at the top.
+        line_type_def: The project line type its style names (`style.linePattern`), as its project defines it; none when the style
+            names none or its project has no such line type.
+        style: Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
+            fields above.
     """
     id: str
     name: str
     color: str
     line_type: LineType | LineTypeName
     line_weight: float
+    group: list[str] | Unset = UNSET
+    line_type_def: LineTypeDef | None | Unset = UNSET
+    style: LayerStyle | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -82257,6 +82284,12 @@ class RoadRecipeLayer(_Model):
         out["color"] = self.color
         out["lineType"] = _enum_out(self.line_type)
         out["lineWeight"] = float(self.line_weight)
+        if self.group is not UNSET:
+            out["group"] = list(self.group)
+        if self.line_type_def is not UNSET:
+            out["lineTypeDef"] = None if self.line_type_def is None else self.line_type_def.to_json()
+        if self.style is not UNSET:
+            out["style"] = None if self.style is None else self.style.to_json()
         return out
 
     @classmethod
@@ -82267,6 +82300,9 @@ class RoadRecipeLayer(_Model):
             color=data["color"],
             line_type=_enum_in(LineType, data["lineType"]),
             line_weight=float(data["lineWeight"]),
+            group=list(data["group"]) if "group" in data else UNSET,
+            line_type_def=UNSET if "lineTypeDef" not in data else None if data["lineTypeDef"] is None else LineTypeDef.from_json(data["lineTypeDef"]),
+            style=UNSET if "style" not in data else None if data["style"] is None else LayerStyle.from_json(data["style"]),
         )
 
 

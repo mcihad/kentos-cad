@@ -53,11 +53,12 @@ fn polyline(pts: &[[f64; 2]], closed: bool) -> NewObject {
     })
 }
 
-fn check(doc: &Document, input: &RetainingWallsDraw) -> Result<Checked, Stop> {
+/// Checks `input`, `told` the wall's corridor sections and stations and answering whether to stop (docs/adr/4040).
+fn check(doc: &Document, input: &RetainingWallsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_walls(), &input.wall, "wall")?;
-    let read = common::read(doc, def)?;
+    let read = common::read_told(doc, def, told)?;
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     warnings.extend(read.warnings);
     let r = &read.report;
@@ -127,7 +128,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: &RetainingWallsDraw, c: Checked) 
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -135,7 +136,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> Comman
 
 /// What execute would draw now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandResult<RetainingWallsDrawn> {
-    let c = match check(cx.doc, input) {
+    let c = match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -152,7 +153,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandRes
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
 pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::RetainingWallsDraw) -> CommandResult<kentos_commands::RetainingWallsDrawn> {
-    match check(cx.doc, input) {
+    let checked = check(cx.doc, input, &cx.told());
+    match checked {
         Ok(c) => write(cx, input, c),
         Err(stop) => stop.into(),
     }
@@ -165,11 +167,69 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RetainingWallsDraw) -> Comm
         kentos_commands::ROAD_WALLS_DRAW_VERSION,
         input,
         |cx, input| {
-            let r = match check(cx.doc, &input) {
+            let checked = check(cx.doc, &input, &cx.told());
+            let r = match checked {
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
             crate::road_drawings::kept(cx, kentos_commands::ROAD_WALLS_DRAW, &input, (kentos_commands::RoadSourceKind::Wall, "wall"), r, |o| &o.uids)
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::{Cell, RefCell};
+
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::Value;
+
+    use super::*;
+
+    /// The shared cases' project and their first case's input.
+    fn project() -> (kentos_domain::Document, kentos_commands::RetainingWallsDraw) {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.walls.draw.json")).expect("cases");
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        (doc, input)
+    }
+
+    /// docs/adr/4040: the wall's corridor sections, then its own stations, are told within one whole, increasing within one whole; a stop asked at the fourth is heard there, cancelled.
+    #[test]
+    fn the_corridor_and_the_wall_s_stations_are_told_and_a_stop_is_heard() {
+        let (doc, input) = project();
+        let seen = RefCell::new(Vec::new());
+        let whole = check(&doc, &input, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        });
+        assert!(whole.is_ok());
+        let seen = seen.into_inner();
+        assert!(seen.len() > 4, "{} ticks", seen.len());
+        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        assert!(seen.iter().any(|t| t.0 < crate::road_corridors::TICKS) && seen.iter().any(|t| t.0 >= crate::road_corridors::TICKS), "{seen:?}");
+        assert!(seen.iter().all(|t| t.1 == 2 * crate::road_corridors::TICKS), "{seen:?}");
+        let asked = Cell::new(0);
+        let stopped = check(&doc, &input, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(matches!(stopped, Err(Stop::Cancelled)));
+        assert_eq!(asked.get(), 4);
+    }
+
+    /// As a job's part (a rebuild's, Tariften üret's), a stop is heard in the wall's corridor sections: cancelled, nothing written.
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input) = project();
+        let before = doc.to_snapshot_v2();
+        let job = crate::jobs::Progress::default();
+        job.stop();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        assert!(matches!(draw(&mut cx, &input), CommandResult::Cancelled));
+        assert_eq!(doc.to_snapshot_v2(), before);
+    }
 }

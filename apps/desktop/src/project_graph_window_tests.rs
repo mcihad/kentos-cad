@@ -342,3 +342,82 @@ fn recipe_layer_screens() {
         }
     }
 }
+
+/// docs/adr/4040: a recipe whose layer keeps its groups, whole style and line type. The plan says the layer goes in the
+/// project's group Yol (the recipe's YOL, folded), in a Toprak işleri added there, and SINIR is added; nothing is written
+/// before Üret. Üret adds them so: the layer under Yol › Toprak işleri with the recipe's style as it is, SINIR among the
+/// project's line types as the recipe defines it; the window says what was added.
+#[test]
+fn tariften_uret_adds_the_recipe_layer_in_its_groups_with_its_style() {
+    use crate::project_graph_window::{plan_lines, produced_lines};
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/recipes/v1/grup-stilli.json");
+    let recipe: Value = serde_json::from_str(&std::fs::read_to_string(&path).expect("the recipe")).expect("JSON");
+    let def = recipe["nodes"].as_array().expect("nodes").iter().find_map(|n| n.get("recipe")).expect("a drawing")["layer"].clone();
+    let mut b = other_project();
+    let _ = b.update(Message::ProjectGraph(G::Open));
+    let revision = b.document.as_ref().map(|d| d.model.revision());
+    let _ = b.update(Message::ProjectGraph(G::Picked(Some(path.clone()))));
+    let lines = plan_lines(b.project_graph.recipe.as_ref().expect("the recipe shown"));
+    let planned = "“Kazı sınırı” katmanı bu projede yok; tarifteki stiliyle “Yol › Toprak işleri” grubuna eklenecek. \
+                   “Toprak işleri” grubu ve “SINIR” çizgi türü de eklenecek.";
+    assert!(lines.iter().any(|(_, l)| l == planned), "{lines:?}");
+    assert_eq!(b.document.as_ref().map(|d| d.model.revision()), revision, "nothing written before Üret");
+    let _ = b.update(Message::ProjectGraph(G::Confirm));
+    let out = b.project_graph.produced.clone().expect("produced");
+    let done = "“Kazı sınırı” katmanı tarifteki stiliyle “Yol › Toprak işleri” grubuna eklendi. “Toprak işleri” grubu ve \
+                “SINIR” çizgi türü de eklendi.";
+    assert!(produced_lines(&out).iter().any(|(_, l)| l == done), "{:?}", produced_lines(&out));
+    let model = &b.document.as_ref().expect("a drawing").model;
+    let id = out.layers[0].to.clone();
+    let layers = model.layers();
+    assert_eq!(serde_json::to_value(&layers.get(&id).expect("added").style).expect("JSON"), def["style"]);
+    let parent = layers.place_of(&id).and_then(|(p, _)| p).expect("in a group");
+    assert_eq!(layers.get(&parent).map(|n| n.name.as_str()), Some("Toprak işleri"));
+    assert_eq!(layers.place_of(&parent).and_then(|(p, _)| p).as_deref(), Some("grup"), "in the project's Yol");
+    let sinir = model.settings().line_types.iter().find(|t| t.name == "SINIR").expect("SINIR added");
+    assert_eq!(serde_json::to_value(sinir).expect("JSON"), def["lineTypeDef"]);
+}
+
+/// `.run/gui-evidence/tarif-grubu-4040/`: the grouped, styled recipe before Üret, and the layer tree after it.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib project_graph_window_tests::recipe_group_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn recipe_group_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarif-grubu-4040");
+    std::fs::create_dir_all(&out).expect("a folder");
+    let recipe = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/recipes/v1/grup-stilli.json");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = other_project();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::ProjectGraph(G::Open));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        let _ = app.update(Message::ProjectGraph(G::Picked(Some(recipe.clone()))));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let shot = out.join(format!("1-plan-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&shot).expect("writes");
+        println!("{}", shot.display());
+        let _ = app.update(Message::ProjectGraph(G::Confirm));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let shot = out.join(format!("2-uretildi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&shot).expect("writes");
+        println!("{}", shot.display());
+        let _ = app.update(Message::ProjectGraph(G::Close));
+        // The layer tree given most of the dock, so the group added shows under Yol.
+        let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.85, 0.15])));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let shot = out.join(format!("3-katmanlar-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&shot).expect("writes");
+        println!("{}", shot.display());
+    }
+}

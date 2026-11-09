@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use iced::widget::container;
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, RoadEdgeKind as E, RoadGraphKind as G, RoadLayerMatch, RoadNodeState as S, RoadProjectGraph,
+    CommandResult, RoadEdgeKind as E, RoadGraphKind as G, RoadLayerMatch, RoadNodeState as S, RoadProducedLayer, RoadProjectGraph,
     RoadProjectProduce, RoadProjectProduced,
 };
 use kentos_interaction::Level;
@@ -102,6 +102,31 @@ pub fn recipe_layers(path: &std::path::Path) -> Vec<(String, String)> {
     out
 }
 
+/// What adding a recipe layer brings (docs/adr/3640, 4040), in the plan or (`done`) after Üret: the recipe's style, the
+/// groups it goes in, and the groups and the line type added with it.
+fn added_words(l: &RoadProducedLayer, done: bool) -> String {
+    let verb = if done { "eklendi" } else { "eklenecek" };
+    let into = if l.group.is_empty() { String::new() } else { format!(" “{}” grubuna", l.group.join(" › ")) };
+    let mut out = if done {
+        format!("“{}” katmanı tarifteki stiliyle{into} {verb}.", l.name)
+    } else {
+        format!("“{}” katmanı bu projede yok; tarifteki stiliyle{into} {verb}.", l.name)
+    };
+    let mut also = Vec::new();
+    match l.groups_added.as_slice() {
+        [] => {}
+        [one] => also.push(format!("“{one}” grubu")),
+        many => also.push(format!("{} grupları", many.iter().map(|g| format!("“{g}”")).collect::<Vec<_>>().join(", "))),
+    }
+    if let Some(t) = &l.line_type_added {
+        also.push(format!("“{t}” çizgi türü"));
+    }
+    if !also.is_empty() {
+        out.push_str(&format!(" {} de {verb}.", also.join(" ve ")));
+    }
+    out
+}
+
 /// What the picked recipe would do (docs/adr/3640): the drawings it would draw and leave, where each recipe layer goes.
 pub fn plan_lines(r: &Recipe) -> Vec<(Kind, String)> {
     let mut lines = Vec::new();
@@ -118,9 +143,7 @@ pub fn plan_lines(r: &Recipe) -> Vec<(Kind, String)> {
     for l in &out.layers {
         lines.push(match l.how {
             RoadLayerMatch::Name => (Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name)),
-            RoadLayerMatch::Created => {
-                (Kind::Info, format!("“{}” katmanı bu projede yok; tarifteki rengi, çizgi türü ve kalınlığıyla eklenecek.", l.name))
-            }
+            RoadLayerMatch::Created => (Kind::Info, added_words(l, false)),
             RoadLayerMatch::Given => (Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name)),
             RoadLayerMatch::Id => (Kind::Info, format!("“{}” katmanına kimliğiyle (eski tarif).", l.to_name)),
         });
@@ -177,10 +200,7 @@ pub fn produced_lines(out: &RoadProjectProduced) -> Vec<(Kind, String)> {
     // Where the recipe's layers went (docs/adr/3640); a recipe from before, by the layer's id, is no news.
     for l in &out.layers {
         match l.how {
-            RoadLayerMatch::Created => lines.push((
-                Kind::Info,
-                format!("“{}” katmanı tarifteki rengi, çizgi türü ve kalınlığıyla eklendi.", l.name),
-            )),
+            RoadLayerMatch::Created => lines.push((Kind::Info, added_words(l, true))),
             RoadLayerMatch::Name => lines.push((Kind::Ok, format!("“{}” katmanı adıyla bulundu: {}.", l.name, l.to_name))),
             RoadLayerMatch::Given => lines.push((Kind::Ok, format!("“{}” katmanının yerine seçilen: {}.", l.name, l.to_name))),
             RoadLayerMatch::Id => {}
@@ -439,7 +459,7 @@ impl App {
                 );
             }
             if !r.layers.is_empty() {
-                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki rengi, çizgi türü ve kalınlığıyla eklenir. Başka bir katmana çizmek için seçin.");
+                form = form.help("Tarifin katmanı bu projede adıyla bulunur; yoksa tarifteki stili ve gruplarıyla eklenir. Başka bir katmana çizmek için seçin.");
             }
             // What it would do, read before Üret.
             let ready = matches!(&r.plan, Ok(out) if !out.produced.is_empty());

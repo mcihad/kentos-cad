@@ -66,7 +66,9 @@ pub enum RoadGraphKind {
 
 /// A drawing's layer as the recipe's project had it (docs/adr/3640): its id and name, and the look a layer made from it
 /// takes (colour, built-in line type, plot line weight in mm; a project line type comes as its nearest built-in one).
-/// `road.project.produce` finds the layer by this name; where none is, it adds one with this look.
+/// `road.project.produce` finds the layer by this name; where none is, it adds one with this look. Docs/adr/4040: the
+/// groups it was in, its whole style and the project line type that style names, as its project defines it; a layer
+/// added from it goes into those groups with that style. A recipe from before has none of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -79,6 +81,20 @@ pub struct RoadRecipeLayer {
     pub line_type: LineType,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "paper-mm")))]
     pub line_weight: f64,
+    /// The names of the groups it was in, from the top of the tree; empty: at the top.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub group: Vec<String>,
+    /// Its whole style (colour, line types, weight, fill, point, labels …); its colour, line type and weight are the
+    /// fields above.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub style: Option<crate::LayerStyle>,
+    /// The project line type its style names (`style.linePattern`), as its project defines it; none when the style
+    /// names none or its project has no such line type.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub line_type_def: Option<crate::LineTypeDef>,
 }
 
 /// How a drawing is made again: its command and the version that draws it again (a record keeps no version; every

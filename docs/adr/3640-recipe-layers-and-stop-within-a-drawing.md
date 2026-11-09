@@ -122,7 +122,7 @@ içinde durdurma (koridorun kesitleri arasında)” maddeleri.
 
 - Bellek ve CPU bütçesi, gerçek veriyle ölçümle birlikte (Sınırlar).
 - Kesitler, istinat duvarı, eş yükselti eğrileri ve kazı-dolgu çizimlerinin kendi hesabının içinde durması ve
-  ilerlemesi.
-- Tarifin katmanının grubu ve tam stili.
+  ilerlemesi: [ADR 4040](4040-recipe-layer-groups-style-and-stop-within-drawings.md) (sıfır hattıyla).
+- Tarifin katmanının grubu ve tam stili: ADR 4040.
 - Ölçüm arşivinin zincire bağlanması; atlas sayfalarının denetimi.
 - Web (TODOS §0.2).

@@ -77,4 +77,19 @@ impl<'a> ExecutionContext<'a> {
             job.set(done, total);
         }
     }
+
+    /// A long reckoning's tick as a write runs it (docs/adr/3640, 4040): the job's progress told `done` of `total`,
+    /// its stop heard; true stops the reckoning there.
+    pub(crate) fn told(&self) -> impl Fn(u64, u64) -> bool + '_ {
+        move |done, total| {
+            self.progress(done, total);
+            self.stopped()
+        }
+    }
+
+    /// A long reckoning's tick as a check runs it (validate and plan): only the job's stop is heard, the progress is
+    /// the write's.
+    pub(crate) fn stop_only(&self) -> impl Fn(u64, u64) -> bool + '_ {
+        move |_, _| self.stopped()
+    }
 }

@@ -27,7 +27,8 @@ fn triangles(s: &Surface) -> Vec<Triangle> {
     s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
 }
 
-fn check(doc: &kentos_domain::Document, input: &TerrainsZeroLine) -> Result<Checked, Stop> {
+/// Checks `input`, `told` the comparison's triangles gone through and answering whether to stop (docs/adr/4040).
+fn check(doc: &kentos_domain::Document, input: &TerrainsZeroLine, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     terrains::terrain_project(doc)?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -44,7 +45,7 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsZeroLine) -> Result<Chec
     let (b, c) = (def(&base)?, def(&comparison)?);
     let (made_b, made_c) = (terrains::make(doc, &b), terrains::make(doc, &c));
     let (sb, sc) = (made_b.built()?, made_c.built()?);
-    let (found, coincident) = volume::zero_lines(&triangles(sc), &triangles(sb));
+    let (found, coincident) = volume::zero_lines_told(&triangles(sc), &triangles(sb), told).ok_or(Stop::Cancelled)?;
     if found.is_empty() {
         return Err(fail(
             codes::NO_ZERO_LINE,
@@ -119,7 +120,7 @@ fn objects(lines: &[TerrainZeroLine]) -> Vec<NewObject> {
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsZeroLine) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -127,7 +128,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsZeroLine) -> CommandR
 
 /// The lines execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsZeroLine) -> CommandResult<TerrainsZeroLined> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -162,7 +163,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> Comman
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> CommandResult<TerrainsZeroLined> {
-    let c = match check(cx.doc, &input) {
+    let c = match check(cx.doc, &input, &cx.told()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -178,5 +179,61 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsZeroLine) -> CommandResul
             warnings,
         },
         other => crate::trim::relay(other),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::{Cell, RefCell};
+
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::Value;
+
+    use super::*;
+
+    /// The shared cases' project and their first case's input.
+    fn project() -> (kentos_domain::Document, kentos_commands::TerrainsZeroLine) {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.zeroline.json")).expect("cases");
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        (doc, input)
+    }
+
+    /// docs/adr/4040: the comparison's triangles are told one at a time, increasing within one whole; a stop asked at the fourth is heard there, cancelled.
+    #[test]
+    fn the_triangles_are_told_and_a_stop_is_heard_between_them() {
+        let (doc, input) = project();
+        let seen = RefCell::new(Vec::new());
+        let whole = check(&doc, &input, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        });
+        assert!(whole.is_ok());
+        let seen = seen.into_inner();
+        assert!(seen.len() > 4, "{} ticks", seen.len());
+        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        assert_eq!(seen, (0..seen.len() as u64).map(|k| (k, seen.len() as u64)).collect::<Vec<_>>());
+        let asked = Cell::new(0);
+        let stopped = check(&doc, &input, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(matches!(stopped, Err(Stop::Cancelled)));
+        assert_eq!(asked.get(), 4);
+    }
+
+    /// As a job's part (a rebuild's, Tariften üret's), a stop is heard in the comparison's triangles: cancelled, nothing written.
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input) = project();
+        let before = doc.to_snapshot_v2();
+        let job = crate::jobs::Progress::default();
+        job.stop();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        assert!(matches!(draw(&mut cx, &input), CommandResult::Cancelled));
+        assert_eq!(doc.to_snapshot_v2(), before);
     }
 }

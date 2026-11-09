@@ -444,13 +444,34 @@ impl Ground {
     /// Each piece where a design triangle and a ground triangle overlap in plan, with `d = z_design − z_ground` at its
     /// corners (counterclockwise, convex); and the area both cover and the design's area the ground does not.
     pub fn overlay(&mut self, design: &[Triangle], mut visit: impl FnMut(&[([f64; 2], f64)])) -> (f64, f64) {
-        self.overlay_on(design, |_, with| visit(with))
+        self.overlay_on(design, |_, with| visit(with), &|_, _| false).unwrap_or_default()
     }
 
-    /// [`Ground::overlay`] with each piece's ground triangle (its index among the triangles given, those with area).
-    fn overlay_on(&mut self, design: &[Triangle], mut visit: impl FnMut(usize, &[([f64; 2], f64)])) -> (f64, f64) {
+    /// [`Ground::overlay`] telling `tick` how many design triangles it has gone through of all before each one
+    /// (docs/adr/4040); `tick` answering true stops it there: none.
+    pub fn overlay_told(
+        &mut self,
+        design: &[Triangle],
+        mut visit: impl FnMut(&[([f64; 2], f64)]),
+        tick: &dyn Fn(u64, u64) -> bool,
+    ) -> Option<(f64, f64)> {
+        self.overlay_on(design, |_, with| visit(with), tick)
+    }
+
+    /// [`Ground::overlay_told`] with each piece's ground triangle (its index among the triangles given, those with
+    /// area).
+    fn overlay_on(
+        &mut self,
+        design: &[Triangle],
+        mut visit: impl FnMut(usize, &[([f64; 2], f64)]),
+        tick: &dyn Fn(u64, u64) -> bool,
+    ) -> Option<(f64, f64)> {
         let (mut covered_all, mut uncovered) = (0.0, 0.0);
-        for d in design {
+        let all = design.len() as u64;
+        for (i, d) in design.iter().enumerate() {
+            if tick(i as u64, all) {
+                return None;
+            }
             let Some(d) = ccw(d) else { continue };
             let plan = [[d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]];
             let whole = area2(plan[0], plan[1], plan[2]) / 2.0;
@@ -494,7 +515,7 @@ impl Ground {
             covered_all += covered;
             uncovered += (whole - covered).max(0.0);
         }
-        (covered_all, uncovered)
+        Some((covered_all, uncovered))
     }
 }
 
@@ -576,10 +597,16 @@ pub struct ZeroLine {
 /// at zero counts once); segments are joined at their ends (places equal to 10⁻⁹ m), a corner where three or more meet
 /// ends the lines through it; a vertex in line with its neighbours (within 10⁻¹² of the lengths) is dropped.
 pub fn zero_lines(comparison: &[Triangle], base: &[Triangle]) -> (Vec<ZeroLine>, f64) {
+    zero_lines_told(comparison, base, &|_, _| false).unwrap_or_default()
+}
+
+/// [`zero_lines`] telling `tick` how many of the comparison's triangles it has gone through of all before each one
+/// (docs/adr/4040); `tick` answering true stops it there: none.
+pub fn zero_lines_told(comparison: &[Triangle], base: &[Triangle], tick: &dyn Fn(u64, u64) -> bool) -> Option<(Vec<ZeroLine>, f64)> {
     let mut ground = Ground::new(base);
     let mut segments: Vec<[[f64; 2]; 2]> = Vec::new();
     let mut coincident = 0.0;
-    ground.overlay(comparison, |with| {
+    ground.overlay_told(comparison, |with| {
         if with.iter().all(|(_, d)| *d == 0.0) {
             coincident += integral(with).0;
             return;
@@ -602,8 +629,8 @@ pub fn zero_lines(comparison: &[Triangle], base: &[Triangle]) -> (Vec<ZeroLine>,
         if at.len() == 2 {
             segments.push([at[0], at[1]]);
         }
-    });
-    (join(segments), coincident)
+    }, tick)?;
+    Some((join(segments), coincident))
 }
 
 /// A place's key for joining: to 10⁻⁹ m.
@@ -805,7 +832,7 @@ pub fn sensitivity(design: &[Triangle], vertices: &[[f64; 3]], triangles: &[[u32
                 out.cut_area += area;
             }
         }
-    });
+    }, &|_, _| false).unwrap_or_default();
     out.covered = covered.0;
     out
 }
@@ -1003,5 +1030,49 @@ mod nearest_tests {
         // The foot moves down the slope's normal: −0.5 east for every 1 up, scaled.
         assert!((q[0] - (10.0 + 0.5 / 1.25)).abs() < 1e-12 && (q[1] - 10.0).abs() < 1e-12, "{q:?}");
         assert!(ground.nearest([100.0, 100.0, 0.0], 1.0).is_none_or(|(_, d)| d > 1.0));
+    }
+}
+
+#[cfg(test)]
+mod told_tests {
+    use std::cell::{Cell, RefCell};
+
+    use super::*;
+
+    /// A 4 × 4 lattice of 1 m cells' triangles with heights from `z`.
+    fn lattice(z: impl Fn(f64, f64) -> f64) -> Vec<Triangle> {
+        let mut out = Vec::new();
+        for j in 0..4 {
+            for i in 0..4 {
+                let (a, b) = (f64::from(i), f64::from(j));
+                let p = |x: f64, y: f64| [x, y, z(x, y)];
+                out.push([p(a, b), p(a + 1.0, b), p(a + 1.0, b + 1.0)]);
+                out.push([p(a, b), p(a + 1.0, b + 1.0), p(a, b + 1.0)]);
+            }
+        }
+        out
+    }
+
+    /// Docs/adr/4040: the overlay tells each design triangle before it (the plain call's answer when not stopped); the
+    /// zero line stopped at the fourth goes through no triangle after it.
+    #[test]
+    fn the_overlay_is_told_a_triangle_at_a_time_and_a_stop_is_heard() {
+        let base = lattice(|_, _| 0.0);
+        let design = lattice(|x, y| x - 2.0 + 0.1 * y);
+        let seen = RefCell::new(Vec::new());
+        let told = Ground::new(&base).overlay_told(&design, |_| {}, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        });
+        assert_eq!(told, Some(Ground::new(&base).overlay(&design, |_| {})));
+        assert_eq!(seen.into_inner(), (0..32).map(|k| (k, 32)).collect::<Vec<_>>());
+        assert_eq!(zero_lines_told(&design, &base, &|_, _| false), Some(zero_lines(&design, &base)));
+        let asked = Cell::new(0);
+        let stopped = zero_lines_told(&design, &base, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(stopped.is_none());
+        assert_eq!(asked.get(), 4);
     }
 }

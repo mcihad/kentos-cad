@@ -11,7 +11,8 @@ road_project_cases.py's (ADR 0911's rules, the stamps by hand); the graph is bui
   source by id), its objects written and there now (the objects' stamp is the command's: `$any`); a drawing a step
   drew keeps the version that drew it (1) and the revision its write made (docs/adr/2840): the revision a
   `captureRevision` step takes right after the step that drew it, or drew it again; and (docs/adr/3640) its layer's
-  definition (id, name, colour, line type, line weight), as the setup's layer holds it;
+  definition (id, name, colour, line type, line weight), as the setup's layer holds it, with (docs/adr/4040) the
+  groups it is in from the top, its whole style and the definition of the project line type the style names;
 - edges: a surface's layers build it; a row is made on its parent in the tree (not a drawing: its sources say it); every
   source a drawing keeps, in the record's order, the first the main one, its stamp then and now (none: gone; a
   definition's stamp of its grades as KentOS holds them, road_grades.py, as the file is written); a sheet's
@@ -158,14 +159,38 @@ def layer_nodes(layers, out=None):
     return out
 
 
+def groups_above(layers, lid, above=()):
+    """The names of the groups `lid` is in, from the top; none when it is not in the tree."""
+    for n in layers:
+        if n["id"] == lid:
+            return list(above)
+        found = groups_above(n.get("children", []), lid, (*above, n["name"]))
+        if found is not None:
+            return found
+    return None
+
+
 def layer_def(st, lid):
     """Docs/adr/3640: the definition of the layer a drawing went on (id, name, colour, line type, line weight), as the
-    setup's layer holds it; none for a group or a layer not in the drawing."""
+    setup's layer holds it; none for a group or a layer not in the drawing. Docs/adr/4040: the groups it is in (from
+    the top), its whole style and, when the style names a project line type the setup's settings define (letters' case
+    aside), that line type's definition."""
     n = layer_nodes(st.setup["layers"]).get(lid)
     if n is None or n.get("type", "layer") != "layer":
         return None
     s = n["style"]
-    return {"id": lid, "name": n["name"], "color": s["color"], "lineType": s["lineType"], "lineWeight": s["lineWeight"]}
+    out = {"id": lid, "name": n["name"], "color": s["color"], "lineType": s["lineType"], "lineWeight": s["lineWeight"]}
+    group = groups_above(st.setup["layers"], lid)
+    if group:
+        out["group"] = group
+    out["style"] = copy.deepcopy(s)
+    pattern = s.get("linePattern")
+    if pattern is not None:
+        own = st.setup["settings"].get("lineTypes", [])
+        found = next((t for t in own if t["name"].strip().lower() == pattern.strip().lower()), None)
+        if found is not None:
+            out["lineTypeDef"] = copy.deepcopy(found)
+    return out
 
 
 def layers_of(surface):
@@ -283,6 +308,25 @@ def map_setup(book_=BOOK, auto=False, **settings):
     return s
 
 
+# Docs/adr/4040: a project line type of the zero line's layer (KentOS's own unit: millimetres on paper).
+SINIR = {"name": "SINIR", "description": "Kazı sınırı", "elements": [{"length": 4.0}, {"length": -1.0}, {"length": 0.5},
+                                                                    {"length": -1.0}], "unit": "paper"}
+
+
+def grouped_setup():
+    """The map project with the zero line's layer in the groups Harita › Toprak işleri and its style naming the
+    project line type SINIR (its nearest built-in type dash-dot)."""
+    s = map_setup()
+    layer = next(n for n in s["layers"] if n["id"] == "sifir")
+    s["layers"] = [n for n in s["layers"] if n["id"] != "sifir"]
+    layer["style"].update({"lineType": "dashdot", "linePattern": "SINIR"})
+    group = next(n for n in s["layers"] if n["id"] == "grup")
+    inner = dict(copy.deepcopy(group), id="toprak", name="Toprak işleri", children=[layer])
+    s["layers"].append(dict(copy.deepcopy(group), id="harita", name="Harita", children=[inner]))
+    s["settings"]["lineTypes"] = [copy.deepcopy(SINIR)]
+    return s
+
+
 def edit_height(st):
     """The mound's corner set lower by an edit of its surface (road_project_cases.py's): the mound's stamp changes."""
     t = st.find("surface", "t-10")
@@ -346,6 +390,11 @@ def cases():
     add("Plan da sorulur: aynı grafik", [*a, asked(st, book_=BOOK, boxes=boxes, op="plan")], sm)
     st = rp.State(sm)
     add("Doğrulama", [asked(st, book_=BOOK, op="validate")], sm)
+    sgr = grouped_setup()
+    st = rp.State(sgr)
+    a = drawn(st, rp.ZEROLINE)
+    add("Gruptaki katmanın tarifi: grupları, bütün stili ve adladığı proje çizgi türünün tanımı",
+        [*a, asked(st, book_=BOOK, boxes=boxes)], sgr)
     st = rp.State(sm)
     a = drawn(st, rp.ZEROLINE)
     add("Derin okuma: kurulamayan yüzey grafikte de", [*a, asked(st, deep=True, book_=BOOK, boxes=boxes)], sm)

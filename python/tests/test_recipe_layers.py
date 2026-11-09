@@ -96,8 +96,9 @@ class RecipeLayers(unittest.TestCase):
     def test_the_recipe_keeps_the_layer_s_definition(self) -> None:
         layers = [n["recipe"]["layer"] for n in self.recipe["nodes"] if n["kind"] == "drawing"]
         s = self.theirs["style"]
+        # Docs/adr/4040: with its whole style too (the layer is at the top of the tree and names no project line type).
         want = {"id": "sifir", "name": self.theirs["name"], "color": s["color"], "lineType": s["lineType"],
-                "lineWeight": s["lineWeight"]}
+                "lineWeight": s["lineWeight"], "style": s}
         self.assertEqual(layers, [want, want])
 
     def test_a_project_without_the_layer_gets_it_with_the_recipe_s_look(self) -> None:

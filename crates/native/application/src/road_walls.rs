@@ -76,6 +76,13 @@ pub(crate) fn footing_edges(def: &RetainingWallDef, offset: f64, fill: bool) -> 
 
 /// The wall read now.
 pub(crate) fn read(doc: &Document, def: &RetainingWallDef) -> Result<Read, Stop> {
+    read_told(doc, def, &|_, _| false)
+}
+
+/// [`read`] telling `tick` how far it has come (`done` of 2 × [`corridors::TICKS`], docs/adr/4040): its corridor's
+/// sections the first half, the wall's own stations the second; `tick` answering true stops it there, cancelled.
+pub(crate) fn read_told(doc: &Document, def: &RetainingWallDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
+    let whole = 2 * corridors::TICKS;
     let (_, corridor) = corridors::find(doc.road_corridors(), &def.corridor, "corridor")?;
     let bad = |words: String, path: &str| fail(codes::INVALID_RETAINING_WALL, words, path);
     let first = corridor.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min);
@@ -94,15 +101,24 @@ pub(crate) fn read(doc: &Document, def: &RetainingWallDef) -> Result<Read, Stop>
             ));
         }
     }
-    let made = corridors::make(doc, corridor, false).map_err(|stop| {
-        let why = format!("“{}” koridoru kurulamıyor: {}", corridor.name, words(stop));
-        bad(format!("“{}” istinat duvarının koridoru okunamıyor: {why}", def.name), "corridor")
+    let first = |done: u64, all: u64| tick(if all == 0 { 0 } else { done * corridors::TICKS / all }, whole);
+    let made = corridors::make_ticked(doc, corridor, false, &first).map_err(|stop| match stop {
+        Stop::Cancelled => Stop::Cancelled,
+        stop => {
+            let why = format!("“{}” koridoru kurulamıyor: {}", corridor.name, words(stop));
+            bad(format!("“{}” istinat duvarının koridoru okunamıyor: {why}", def.name), "corridor")
+        }
     })?;
     let mut warnings = made.warnings.clone();
     let shape = shape_of(def);
     let text = |s: f64| km_text(made.sampler.alignment.km(s), 3);
     let (mut rows, mut lines, mut slices, mut places) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
-    for s in crate::road_stakeout::stepped(def.from, def.to, def.step) {
+    let stations = crate::road_stakeout::stepped(def.from, def.to, def.step);
+    let all = stations.len() as u64;
+    for (k, s) in stations.into_iter().enumerate() {
+        if tick(corridors::TICKS + k as u64 * corridors::TICKS / all, whole) {
+            return Err(Stop::Cancelled);
+        }
         let none = || bad(format!("“{}” istinat duvarının km {}'sinde koridorun kesiti yok.", def.name, text(s)), "from");
         let ri = corridor.regions.iter().position(|r| s >= r.from - 1e-9 && s <= r.to + 1e-9).ok_or_else(none)?;
         let (cross, terrain) = made.sampler.sample(&made.template_at(ri, s), s).ok_or_else(none)?;

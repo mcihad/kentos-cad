@@ -28,7 +28,7 @@ use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::ops::convert::points::interior_point;
 use kentos_road::surface::Surface;
 use kentos_road::volume::Triangle;
-use kentos_road::volume_zones::{TooManyBands, cut_fill};
+use kentos_road::volume_zones::{TooManyBands, cut_fill_told};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -55,7 +55,9 @@ fn num(v: f64) -> String {
     format!("{v}")
 }
 
-fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Checked, Stop> {
+/// Checks `input`, `told` the overlay and the bands (`kentos_road::volume_zones::cut_fill_told`) and answering whether
+/// to stop (docs/adr/4040).
+fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     terrains::terrain_project(doc)?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -81,8 +83,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill) -> Result<Check
     let (b, c) = (def(&base)?, def(&comparison)?);
     let (made_b, made_c) = (terrains::make(doc, &b), terrains::make(doc, &c));
     let (sb, sc) = (made_b.built()?, made_c.built()?);
-    let z = match cut_fill(&triangles(sc), &triangles(sb), input.interval, MOST_CUTFILL_BANDS) {
-        Ok(z) => z,
+    let z = match cut_fill_told(&triangles(sc), &triangles(sb), input.interval, MOST_CUTFILL_BANDS, told) {
+        Ok(Some(z)) => z,
+        Ok(None) => return Err(Stop::Cancelled),
         Err(TooManyBands(n)) => {
             return Err(fail(
                 codes::INVALID_ANALYSIS,
@@ -418,7 +421,7 @@ fn objects(out: &TerrainsCutFilled, names: &(String, String)) -> Vec<NewObject> 
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -426,7 +429,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandRe
 
 /// The zones execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -461,7 +464,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> Command
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
-    let c = match check(cx.doc, &input) {
+    let c = match check(cx.doc, &input, &cx.told()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
@@ -479,5 +482,63 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult
             warnings,
         },
         other => crate::trim::relay(other),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::{Cell, RefCell};
+
+    use kentos_commands::DocumentSnapshotV2;
+    use serde_json::Value;
+
+    use super::*;
+
+    /// The shared cases' project and their first case's input.
+    fn project() -> (kentos_domain::Document, kentos_commands::TerrainsCutFill) {
+        let cases: Value =
+            serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.cutfill.json")).expect("cases");
+        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        (doc, input)
+    }
+
+    /// docs/adr/4040: the overlay's triangles, then the bands, are told within one whole, increasing within one whole; a stop asked at the fourth is heard there, cancelled.
+    #[test]
+    fn the_overlay_and_the_bands_are_told_and_a_stop_is_heard() {
+        let (doc, input) = project();
+        let seen = RefCell::new(Vec::new());
+        let whole = check(&doc, &input, &|done, total| {
+            seen.borrow_mut().push((done, total));
+            false
+        });
+        assert!(whole.is_ok());
+        let seen = seen.into_inner();
+        assert!(seen.len() > 4, "{} ticks", seen.len());
+        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        let half = kentos_road::volume_zones::HALF;
+        assert!(seen.iter().any(|t| t.0 < half) && seen.iter().any(|t| t.0 >= half), "{seen:?}");
+        assert!(seen.iter().all(|t| t.1 == 2 * half), "{seen:?}");
+        let asked = Cell::new(0);
+        let stopped = check(&doc, &input, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert!(matches!(stopped, Err(Stop::Cancelled)));
+        assert_eq!(asked.get(), 4);
+    }
+
+    /// As a job's part (a rebuild's, Tariften üret's), a stop is heard in the overlay: cancelled, nothing written.
+    #[test]
+    fn a_stopped_job_draws_nothing() {
+        let (mut doc, input) = project();
+        let before = doc.to_snapshot_v2();
+        let job = crate::jobs::Progress::default();
+        job.stop();
+        let mut cx = ExecutionContext::new(&mut doc);
+        cx.job = Some(&job);
+        assert!(matches!(draw(&mut cx, &input), CommandResult::Cancelled));
+        assert_eq!(doc.to_snapshot_v2(), before);
     }
 }

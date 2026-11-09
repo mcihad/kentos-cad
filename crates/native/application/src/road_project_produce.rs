@@ -16,9 +16,9 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, RoadDrawingLeft, RoadDrawingProduced, RoadGraphKind as G,
+    CommandResult, CommandWarning, LayerNodeType, RoadDrawingLeft, RoadDrawingProduced, RoadGraphKind as G,
     RoadLayerMatch, RoadProducedLayer, RoadProducedSource, RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
-    RoadRecipeLayer, fold_name,
+    RoadRecipeLayer, fold_name, same_line_type_name,
 };
 use kentos_domain::{Document, NewLayer, default_style};
 use serde_json::Value;
@@ -222,6 +222,15 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
                 "path",
             ));
         }
+        if let Some(def) = &r.layer
+            && let Some(why) = definition_problem(def)
+        {
+            return Err(refuse(
+                codes::INVALID_PROJECT_RECIPE,
+                format!("Tarifteki “{id}” çiziminin katman tanımı ({}) tutarsız: {why}", def.id),
+                "path",
+            ));
+        }
         wanted.push(Wanted { from: id.to_owned(), command: r.command.clone(), input, layer_from, layer: r.layer.clone() });
     }
     // The layers given (docs/adr/3640): each a layer of the recipe's drawings, each a layer here that takes objects.
@@ -260,6 +269,26 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
     Ok(Asked { wanted, named: input.drawings.is_some(), given: input.layers.clone(), warnings })
 }
 
+/// What does not hold in a recipe layer's definition (docs/adr/4040): a group without a name; a style whose colour,
+/// line type or weight is not the definition's; a line type definition its style does not name, or one that does not
+/// hold as a project line type.
+fn definition_problem(def: &RoadRecipeLayer) -> Option<String> {
+    if def.group.iter().any(|g| g.trim().is_empty()) {
+        return Some("grup adlarından biri boş.".to_owned());
+    }
+    if let Some(s) = &def.style
+        && (s.color != def.color || s.line_type != def.line_type || s.line_weight != def.line_weight)
+    {
+        return Some("stilin rengi, çizgi türü ya da kalınlığı tanımınkiyle aynı değil.".to_owned());
+    }
+    let d = def.line_type_def.as_ref()?;
+    let named = def.style.as_ref().and_then(|s| s.line_pattern.as_deref());
+    if !named.is_some_and(|n| same_line_type_name(n, &d.name)) {
+        return Some(format!("“{}” çizgi türünün tanımı var ama stil onu adlamıyor.", d.name));
+    }
+    kentos_commands::line_types_problem(std::slice::from_ref(d)).map(|p| format!("{p}."))
+}
+
 /// Whether the project has the drawing: the same command from the same main source on the same layer (`input`'s, the
 /// layer found here).
 fn exists(doc: &Document, command: &str, input: &BTreeMap<String, Value>, field: &str, main: &str) -> bool {
@@ -284,6 +313,117 @@ fn naming(result: CommandResult<()>, from: &str, words: &str) -> CommandResult<(
     }
 }
 
+/// The undo step's name, and the label of what it adds.
+const STEP: &str = "Tariften üret";
+
+/// A layer added for a recipe layer (docs/adr/3640, 4040): its id and the recipe layer's name, whether a drawing went
+/// on it; the groups it went in (their names here), those added for it (id, name), the project line type added for it,
+/// one its style named that neither this project nor the recipe defines (left out), and whether the recipe kept its
+/// whole style.
+struct Added {
+    id: String,
+    name: String,
+    used: bool,
+    group: Vec<String>,
+    groups_added: Vec<(String, String)>,
+    line_type_added: Option<String>,
+    dropped: Option<String>,
+    styled: bool,
+}
+
+/// Adds the layer of `def` here (docs/adr/4040): in its groups, each found among its parent's groups by its name
+/// (folded, the first of that name) or added last in it; with its whole style (a recipe from before: its colour, line
+/// type and weight over the default), the project line type the style names taken from here by its name, else added
+/// from the recipe's definition, else left out (its nearest built-in type draws); last among its group's nodes.
+fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
+    let refused = |r: kentos_domain::Refusal| Stop::failed(error(codes::LAYER_REFUSED, r.0, Some("layers".into())));
+    let mut parent: Option<String> = None;
+    let (mut group, mut groups_added) = (Vec::new(), Vec::new());
+    for name in &def.group {
+        let want = fold_name(name.trim());
+        let layers = doc.layers();
+        let siblings = match &parent {
+            None => layers.nodes(),
+            Some(p) => layers.get(p).map_or(&[][..], |n| n.children.as_slice()),
+        };
+        let found = siblings.iter().find(|n| n.kind == LayerNodeType::Group && fold_name(n.name.trim()) == want);
+        let (id, here) = match found {
+            Some(n) => (n.id.clone(), n.name.clone()),
+            None => {
+                let id = doc.add_layer_at(NewLayer::group(name.trim()), parent.as_deref(), None, Some(STEP), false).map_err(refused)?;
+                groups_added.push((id.clone(), name.trim().to_owned()));
+                (id, name.trim().to_owned())
+            }
+        };
+        group.push(here);
+        parent = Some(id);
+    }
+    let mut style = match &def.style {
+        Some(s) => s.clone(),
+        None => kentos_commands::LayerStyle {
+            color: def.color.clone(),
+            line_type: def.line_type,
+            line_weight: def.line_weight,
+            ..default_style()
+        },
+    };
+    let (mut line_type_added, mut dropped) = (None, None);
+    if let Some(name) = style.line_pattern.clone() {
+        let settings = doc.settings();
+        if let Some(t) = settings.line_types.iter().find(|t| same_line_type_name(&t.name, &name)) {
+            style.line_pattern = Some(t.name.clone());
+        } else if let Some(d) = def.line_type_def.as_ref() {
+            let mut types = settings.line_types.clone();
+            types.push(d.clone());
+            let hatches = settings.hatch_patterns.clone();
+            doc.set_pattern_tables(types, hatches, STEP);
+            style.line_pattern = Some(d.name.clone());
+            line_type_added = Some(d.name.clone());
+        } else {
+            style.line_pattern = None;
+            dropped = Some(name);
+        }
+    }
+    let mut new = NewLayer::layer(def.name.trim());
+    new.style = style;
+    let id = doc.add_layer_at(new, parent.as_deref(), None, Some(STEP), false).map_err(refused)?;
+    Ok(Added {
+        id,
+        name: def.name.trim().to_owned(),
+        used: false,
+        group,
+        groups_added,
+        line_type_added,
+        dropped,
+        styled: def.style.is_some(),
+    })
+}
+
+/// What adding `a` brought, said (docs/adr/3640, 4040): its look, its group, the groups and the line type added with it.
+fn created_words(a: &Added) -> String {
+    let look = if a.styled { "tarifteki stiliyle" } else { "tarifteki tanımıyla (renk, çizgi türü, kalınlık)" };
+    let mut out = if a.group.is_empty() {
+        format!("Tarifin “{}” katmanı bu projede yoktu; {look} eklendi.", a.name)
+    } else {
+        format!("Tarifin “{}” katmanı bu projede yoktu; {look} “{}” grubuna eklendi.", a.name, a.group.join(" › "))
+    };
+    match a.groups_added.as_slice() {
+        [] => {}
+        [(_, one)] => out.push_str(&format!(" “{one}” grubu da eklendi.")),
+        many => {
+            let names: Vec<String> = many.iter().map(|(_, n)| format!("“{n}”")).collect();
+            out.push_str(&format!(" {} grupları da eklendi.", names.join(", ")));
+        }
+    }
+    if let Some(t) = &a.line_type_added {
+        out.push_str(&format!(" “{t}” çizgi türü de tarifteki tanımıyla eklendi."));
+    }
+    if let Some(t) = &a.dropped {
+        out.push_str(&format!(" “{t}” çizgi türü bu projede de tarifte de tanımlı değil; katman yerleşik türüyle çizilir."));
+    }
+    out
+}
+
 fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProjectProduced> {
     let mut produced = Vec::new();
     let mut left = Vec::new();
@@ -291,7 +431,7 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
     let mut stepped = false;
     // The layers the drawings went on, and those added here with whether a drawing went on them (docs/adr/3640).
     let mut layers: Vec<RoadProducedLayer> = Vec::new();
-    let mut added: Vec<(String, String, bool)> = Vec::new();
+    let mut added: Vec<Added> = Vec::new();
     let total = asked.wanted.len() as u64;
     for (k, w) in asked.wanted.iter().enumerate() {
         cx.progress(k as u64, total);
@@ -306,22 +446,16 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             Some(Place::Here(id, how)) => (on_layer(&w.input, &id), Some((id, how))),
             Some(Place::Create(def)) => {
                 if !stepped {
-                    cx.doc.name_step("Tariften üret");
+                    cx.doc.name_step(STEP);
                     stepped = true;
                 }
-                let mut new = NewLayer::layer(def.name.trim());
-                new.style = kentos_commands::LayerStyle {
-                    color: def.color.clone(),
-                    line_type: def.line_type,
-                    line_weight: def.line_weight,
-                    ..default_style()
-                };
-                match cx.doc.add_layer_at(new, None, None, Some("Tariften üret"), false) {
-                    Ok(id) => {
-                        added.push((id.clone(), def.name.trim().to_owned(), false));
+                match create(cx.doc, &def) {
+                    Ok(a) => {
+                        let id = a.id.clone();
+                        added.push(a);
                         (on_layer(&w.input, &id), Some((id, RoadLayerMatch::Created)))
                     }
-                    Err(r) => return Stop::failed(error(codes::LAYER_REFUSED, r.0, Some("layers".into()))).into(),
+                    Err(stop) => return stop.into(),
                 }
             }
             Some(Place::Ambiguous(name, ids)) => {
@@ -352,21 +486,26 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             continue;
         }
         if !stepped {
-            cx.doc.name_step("Tariften üret");
+            cx.doc.name_step(STEP);
             stepped = true;
         }
         match in_share(cx, k as u64, total, |cx| run_drawing(cx, &w.from, &w.command, &input, &[])) {
             Ok((uids, said)) => {
                 if let Some((id, how)) = found {
-                    if let Some(a) = added.iter_mut().find(|a| a.0 == id) {
-                        a.2 = true;
-                    }
+                    let made = added.iter_mut().find(|a| a.id == id);
+                    let (group, groups_added, line_type_added) = match made {
+                        Some(a) => {
+                            a.used = true;
+                            (a.group.clone(), a.groups_added.iter().map(|g| g.1.clone()).collect(), a.line_type_added.clone())
+                        }
+                        None => (Vec::new(), Vec::new(), None),
+                    };
                     let from = w.layer_from.clone().unwrap_or_default();
                     if !layers.iter().any(|l| l.from == from) {
                         // A recipe from before keeps no name: the layer's here.
                         let to_name = cx.doc.layers().get(&id).map(|n| n.name.clone()).unwrap_or_default();
                         let name = w.layer.as_ref().map_or_else(|| to_name.clone(), |d| d.name.clone());
-                        layers.push(RoadProducedLayer { from, name, to: id, to_name, how });
+                        layers.push(RoadProducedLayer { from, name, to: id, to_name, how, group, groups_added, line_type_added });
                     }
                 }
                 let drawing = match road_drawings::keep(cx.doc, &w.command, &input, main, &uids, None) {
@@ -394,16 +533,31 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             },
         }
     }
-    // A layer added for drawings none of which went on it is taken away again; one kept is said (docs/adr/3640).
-    for (id, name, used) in added {
-        if used {
+    // A layer added for drawings none of which went on it is taken away again, with the groups added for it that hold
+    // nothing then and the line type added for it that no layer names; one kept is said (docs/adr/3640, 4040).
+    for a in &added {
+        if a.used {
             warnings.push(CommandWarning {
                 code: codes::RECIPE_LAYER_CREATED.into(),
-                message: format!("Tarifin “{name}” katmanı bu projede yoktu; tarifteki tanımıyla (renk, çizgi türü, kalınlık) eklendi."),
+                message: created_words(a),
                 path: Some("layers".into()),
             });
-        } else {
-            let _ = cx.doc.remove_layer(&id);
+            continue;
+        }
+        let _ = cx.doc.remove_layer(&a.id);
+        for (g, _) in a.groups_added.iter().rev() {
+            if cx.doc.layers().get(g).is_some_and(|n| n.children.is_empty()) {
+                let _ = cx.doc.remove_layer(g);
+            }
+        }
+    }
+    for t in added.iter().filter_map(|a| a.line_type_added.as_deref()) {
+        let named = cx.doc.layers().leaves().iter().any(|l| l.style.line_pattern.as_deref().is_some_and(|p| same_line_type_name(p, t)));
+        if !named {
+            let settings = cx.doc.settings();
+            let types = settings.line_types.iter().filter(|x| !same_line_type_name(&x.name, t)).cloned().collect();
+            let hatches = settings.hatch_patterns.clone();
+            cx.doc.set_pattern_tables(types, hatches, STEP);
         }
     }
     cx.progress(total, total);

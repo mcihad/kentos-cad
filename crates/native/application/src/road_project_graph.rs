@@ -83,16 +83,34 @@ pub fn drawing_within(doc: &Document, d: &RoadDrawingDef, (lo, hi): ([f64; 2], [
 }
 
 /// The definition of the layer drawing `d` went on (docs/adr/3640): its id, name and look; none when the layer is gone
-/// or not a layer.
+/// or not a layer. Docs/adr/4040: the groups it is in (from the top), its whole style and the project line type the
+/// style names, as this project defines it (none: it names none, or the project has no line type of that name).
 fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::RoadRecipeLayer> {
     let id = d.input.get("layerId")?.as_str()?;
-    let node = doc.layers().get(id)?;
-    (node.kind == kentos_commands::LayerNodeType::Layer).then(|| kentos_commands::RoadRecipeLayer {
+    let layers = doc.layers();
+    let node = layers.get(id)?;
+    if node.kind != kentos_commands::LayerNodeType::Layer {
+        return None;
+    }
+    let mut group = Vec::new();
+    let mut at = layers.place_of(id).and_then(|(parent, _)| parent);
+    while let Some(g) = at {
+        group.push(layers.get(&g).map(|n| n.name.clone()).unwrap_or_default());
+        at = layers.place_of(&g).and_then(|(parent, _)| parent);
+    }
+    group.reverse();
+    let line_type_def = node.style.line_pattern.as_deref().and_then(|name| {
+        doc.settings().line_types.iter().find(|t| kentos_commands::same_line_type_name(&t.name, name)).cloned()
+    });
+    Some(kentos_commands::RoadRecipeLayer {
         id: id.to_owned(),
         name: node.name.clone(),
         color: node.style.color.clone(),
         line_type: node.style.line_type,
         line_weight: node.style.line_weight,
+        group,
+        style: Some(node.style.clone()),
+        line_type_def,
     })
 }
 

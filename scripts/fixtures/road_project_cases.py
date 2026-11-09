@@ -122,6 +122,9 @@ class State:
         tc.UIDS = self.setup["uids"]
         tc.ENTITIES = [(e["kind"], e["layerId"], {k: v for k, v in e.items() if k not in ("kind", "id", "layerId", "attrs")})
                        for e in self.setup["entities"]]
+        # The terrain cases' gather reads their drawing with the pad's objects and layer (docs/adr/3920): this project's
+        # drawing stands for both.
+        tc.ALL_UIDS, tc.ALL_ENTITIES, tc.PAD_LAYERS = tc.UIDS, tc.ENTITIES, tc.LAYERS
         return tc.digest(tc.gather(d)[0])
 
     def stamp_now(self, kind, id_):

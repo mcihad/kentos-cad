@@ -462,8 +462,21 @@ pub(crate) fn sections(
     built: &Built,
     stations: &[f64],
 ) -> (Vec<SectionRow>, Vec<CommandWarning>) {
+    sections_told(doc, def, built, stations, &|_, _| false).unwrap_or_default()
+}
+
+/// [`sections`] telling `tick` how many stations it has solved of all before each one (docs/adr/4040: a job's stop
+/// heard between a set's sections, its progress told a section at a time); `tick` answering true stops it there:
+/// none.
+pub(crate) fn sections_told(
+    doc: &Document,
+    def: &SectionSetDef,
+    built: &Built,
+    stations: &[f64],
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Option<(Vec<SectionRow>, Vec<CommandWarning>)> {
     let template = def.template.as_ref().and_then(|t| doc.road_templates().iter().find(|q| q.id == *t));
-    sections_with(doc, def, built, stations, template)
+    sections_with(doc, def, built, stations, template, tick)
 }
 
 /// A set (perhaps not written) and its sections now with `template` (perhaps not written either), for the desktop's
@@ -479,7 +492,7 @@ pub fn preview(
     };
     let built = alignment_of(doc, def).map_err(words)?;
     let stations = stations_of(doc, def, &built).map_err(words)?;
-    Ok(sections_with(doc, def, &built, &stations, template))
+    Ok(sections_with(doc, def, &built, &stations, template, &|_, _| false).unwrap_or_default())
 }
 
 fn sections_with(
@@ -488,7 +501,8 @@ fn sections_with(
     built: &Built,
     stations: &[f64],
     template: Option<&TemplateDef>,
-) -> (Vec<SectionRow>, Vec<CommandWarning>) {
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Option<(Vec<SectionRow>, Vec<CommandWarning>)> {
     let mut warnings = Vec::new();
     let surface = match surface_of(doc, def) {
         Some(Ok(s)) => Some(s),
@@ -522,7 +536,11 @@ fn sections_with(
     if let Some(w) = crossing_warning(def, stations, &crossing) {
         warnings.push(w);
     }
+    let all = stations.len() as u64;
     for (k, &s) in stations.iter().enumerate() {
+        if tick(k as u64, all) {
+            return None;
+        }
         let (left, right) = widths[k];
         let Some(line) = sample_line(&built.core, s, left, right) else { continue };
         let km = built.km(s);
@@ -597,7 +615,7 @@ fn sections_with(
             path: Some("set".into()),
         });
     }
-    (rows, warnings)
+    Some((rows, warnings))
 }
 
 /// The set-stale warning.

@@ -90,13 +90,26 @@ impl Surface {
     /// The contour lines every `interval` metres from `base`, every `major`-th level (counted from the base) a major
     /// one (0: none).
     pub fn contours(&self, interval: f64, base: f64, major: u32) -> Result<Vec<ContourLine>, ContourError> {
+        Ok(self.contours_told(interval, base, major, &|_, _| false)?.unwrap_or_default())
+    }
+
+    /// [`Surface::contours`] telling `tick` how many levels it has drawn of all before each level (docs/adr/4040, as
+    /// GDAL's contour generator reports its progress and is interrupted through its callback); `tick` answering true
+    /// stops it there: none.
+    pub fn contours_told(
+        &self,
+        interval: f64,
+        base: f64,
+        major: u32,
+        tick: &dyn Fn(u64, u64) -> bool,
+    ) -> Result<Option<Vec<ContourLine>>, ContourError> {
         if !(interval.is_finite() && interval > 0.0 && base.is_finite()) {
             return Err(ContourError::Interval);
         }
         let used: Vec<f64> = self.triangles.iter().flatten().map(|&i| self.vertices[i as usize][2]).collect();
         let (Some(lo), Some(hi)) = (used.iter().copied().reduce(f64::min), used.iter().copied().reduce(f64::max))
         else {
-            return Ok(Vec::new());
+            return Ok(Some(Vec::new()));
         };
         let first = ((lo - base) / interval).ceil();
         let last = ((hi - base) / interval).floor();
@@ -107,8 +120,12 @@ impl Surface {
             return Err(ContourError::TooMany);
         }
         let mut out = Vec::new();
+        let levels = (last - first + 1.0).max(0.0) as u64;
         let mut k = first;
         while k <= last {
+            if tick((k - first) as u64, levels) {
+                return Ok(None);
+            }
             let z = base + k * interval;
             let is_major = major > 0 && (k as i64).rem_euclid(i64::from(major)) == 0;
             out.extend(
@@ -116,7 +133,7 @@ impl Surface {
             );
             k += 1.0;
         }
-        Ok(out)
+        Ok(Some(out))
     }
 
     /// The lines of the level `z` over the kept triangles `keep` takes (by their index in [`Surface::triangles`]),
@@ -236,4 +253,45 @@ fn start_closed(p: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
     let (next, prev) = (p[(s + 1) % n], p[(s + n - 1) % n]);
     let forward = less(&next, &prev);
     (0..n).map(|k| if forward { p[(s + k) % n] } else { p[(s + n - k) % n] }).collect()
+}
+
+#[cfg(test)]
+mod told_tests {
+    use std::cell::{Cell, RefCell};
+
+    use crate::surface::{SpotPoint, SurfaceInput, build};
+
+    /// A cone of points: 0 m at the rim, 10 m at the top; levels every metre cross it from 0 to 10.
+    fn cone() -> crate::surface::Surface {
+        let mut points = vec![SpotPoint { x: 0.0, y: 0.0, z: 10.0, source: None }];
+        for k in 0..12 {
+            let a = f64::from(k) * std::f64::consts::TAU / 12.0;
+            points.push(SpotPoint { x: 20.0 * a.cos(), y: 20.0 * a.sin(), z: 0.0, source: None });
+        }
+        build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds")
+    }
+
+    /// Docs/adr/4040: the levels are told one at a time within one whole; a stop asked at the fourth draws no level after
+    /// it; told without a stop the lines are the plain call's.
+    #[test]
+    fn the_levels_are_told_and_a_stop_is_heard_between_them() {
+        let s = cone();
+        let seen = RefCell::new(Vec::new());
+        let lines = s
+            .contours_told(1.0, 0.0, 5, &|done, total| {
+                seen.borrow_mut().push((done, total));
+                false
+            })
+            .expect("draws")
+            .expect("not stopped");
+        assert_eq!(lines, s.contours(1.0, 0.0, 5).expect("draws"));
+        assert_eq!(seen.into_inner(), (0..11).map(|k| (k, 11)).collect::<Vec<_>>());
+        let asked = Cell::new(0);
+        let stopped = s.contours_told(1.0, 0.0, 5, &|_, _| {
+            asked.set(asked.get() + 1);
+            asked.get() > 3
+        });
+        assert_eq!(stopped, Ok(None));
+        assert_eq!(asked.get(), 4);
+    }
 }

@@ -50,7 +50,7 @@ sırayla alır; beşinci tur 9 Kasım'da MAP-12 ile bitti (ADR 2880–3260).
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980 | boşluklu öznitelik adlarının ATTRIB etiketi | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); yalnız değişen atlas sayfalarının PDF'i | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020 | zaman serisi (ikiden çok dönem); yetkili inceleme kaydı | canlı cihaz; cihaz biçimleri |
-| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640 | bütçe (gerçek veriyle ölçüm); öbür çizimlerin kendi hesabının içinde durması; tarif katmanının grubu ve tam stili | — |
+| MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın saydamlığı ve türü | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
 
@@ -2185,6 +2185,18 @@ ve durdurmayı kesitler arasında duyar, yeniden üretimde ve üretimde her çiz
 İş grafiği'nde tarif önce gösterilir (katman seçimi, plan, Üret/Vazgeç). Bulunan: İş grafiği'nin MCP testi ADR 2840'tan
 beri kırıktı (yakalanan revizyon), düzeltildi. Açık: bütçe (ölçüm ister), öbür çizimlerin kendi hesabının içinde durması,
 tarif katmanının grubu ve tam stili.
+
+**9 Kasım 2026, yedinci tur — tarifin katmanının grubu ve tam stili; öbür çizimlerin kendi hesabının içinde durması ([ADR 4040](../docs/adr/4040-recipe-layer-groups-style-and-stop-within-drawings.md)).**
+Kapsam: **Harita + Yol**. Dayanak: AutoCAD'in Layer Translator'ındaki yeni katmanın alanları (ad, çizgi türü, renk,
+kalınlık, saydamlık, çizim stili), QGIS'in QLR'ı (katman ağacı grup bilgisiyle; verilen gruba eklenir), GDAL'ın eş
+yükselti üreticisinin ilerleme ve kesme geri çağrısı. Kanıtlanan: enkesit (km km), istinat duvarı (koridorun kesitleri,
+sonra duvarın km'leri), eş yükselti (düzey düzey), kazı-dolgu (örtüşme, sonra bant bant) ve sıfır hattı çizimleri
+ilerlemesini söyler ve durdurmayı kendi hesabının içinde duyar; sonuçlar değişmez. Tarif katmanın gruplarını, bütün
+stilini ve adladığı proje çizgi türünün tanımını taşır; Tariften üret eklediği katmanı katlanmış adıyla bulunan ya da
+eklenen gruplarına, tarifin stiliyle koyar, çizgi türünü projede yoksa ekler; kullanılmayınca hepsi geri alınır. 9 yeni
+bağımsız durum (55), İş grafiği'nde yeni durum (22), Python, MCP, masaüstü. Bulunan: proje üreticileri ADR 3920'den beri
+yüzey damgalarını boş çizimden hesaplıyordu (yazılmış durumlar doğru), düzeltildi. Açık: bütçe, öbür yedi çizimin kendi
+hesabının içinde durması, katmanın saydamlığı ve türü.
 
 ## Uygulama sırası ve sahiplik
 
