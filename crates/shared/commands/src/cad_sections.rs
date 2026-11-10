@@ -23,6 +23,8 @@ pub const SECTION_DERIVE_STEP: &str = "Kesit çıkar";
 pub const SECTION_REFRESH_STEP: &str = "Kesiti yeniden çiz";
 pub const FACADE_DERIVE_STEP: &str = "Görünüş çıkar";
 pub const FACADE_REFRESH_STEP: &str = "Görünüşü yeniden çiz";
+/// Görünüş çıkar › Tümü (docs/adr/8043 §8): every facade not drawn yet, and the marks when the drawing has none.
+pub const FACADES_DERIVE_STEP: &str = "Görünüşleri çıkar";
 
 /// What `cad.sections.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

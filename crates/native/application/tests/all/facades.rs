@@ -342,3 +342,122 @@ fn the_permit_set_gives_the_facade_its_gr_sheet_after_the_section() {
     let f = fields(&doc, north);
     assert_eq!(f.words.bottom, made[facade].number);
 }
+
+fn placement(doc: &Document, m: Uuid) -> (f64, f64) {
+    doc.entities()
+        .find_map(|e| match e {
+            Entity::Insert(i) if i.block == sections::block_id(m) => Some((i.p.x, i.p.y)),
+            _ => None,
+        })
+        .unwrap()
+}
+
+#[test]
+fn tumu_draws_every_facade_not_drawn_north_first_in_a_row_in_one_undo_step() {
+    let mut doc = facades();
+    let south = mark(&doc, ViewMarkForm::Elevation, "2");
+    derive(&mut doc, south, (20.0, 20.0));
+    let (placed, names) = sections_edit::derive_facades(&mut doc, "isaret").unwrap();
+    assert_eq!(placed, 0, "the drawing has its marks");
+    // The south one drawn already; the rest clockwise from north.
+    assert_eq!(names, ["Kuzey görünüşü", "Doğu görünüşü", "Batı görünüşü"]);
+    assert_eq!(
+        doc.undo_labels().first().map(String::as_str),
+        Some("Görünüşleri çıkar")
+    );
+    // Each placed right of what the drawing holds, at the first one's ±0.00: a row, left to right in that order.
+    let at: Vec<(f64, f64)> = ["1", "3", "4"]
+        .iter()
+        .map(|n| placement(&doc, mark(&doc, ViewMarkForm::Elevation, n)))
+        .collect();
+    assert!(
+        at[0].0 > 20.0 && at[0].0 < at[1].0 && at[1].0 < at[2].0,
+        "{at:?}"
+    );
+    assert!(
+        at.iter().all(|p| (p.1 - at[0].1).abs() < 1e-9),
+        "one row: {at:?}"
+    );
+    // Once more: nothing left to draw, nothing written.
+    let revision = doc.revision();
+    assert_eq!(
+        sections_edit::derive_facades(&mut doc, "isaret").unwrap(),
+        (0, vec![])
+    );
+    assert_eq!(doc.revision(), revision);
+    // One undo takes the three back; the south one stays.
+    doc.undo();
+    for n in ["1", "3", "4"] {
+        assert!(
+            doc.block(sections::block_id(mark(&doc, ViewMarkForm::Elevation, n)))
+                .is_none()
+        );
+    }
+    assert!(doc.block(sections::block_id(south)).is_some());
+}
+
+#[test]
+fn a_drawing_without_elevation_marks_gets_four_around_the_building_and_their_facades() {
+    let snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
+    let mut doc = Document::from_snapshot_v2(snap).unwrap();
+    let elevations = |doc: &Document| -> Vec<kentos_commands::ViewMarkFields> {
+        doc.entities()
+            .filter_map(|e| match e {
+                Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => {
+                    Some(v.mark.clone())
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    assert!(elevations(&doc).is_empty());
+    let (placed, names) = sections_edit::derive_facades(&mut doc, "isaret").unwrap();
+    assert_eq!(placed, 4);
+    assert_eq!(
+        names,
+        [
+            "Kuzey görünüşü",
+            "Doğu görünüşü",
+            "Güney görünüşü",
+            "Batı görünüşü"
+        ]
+    );
+    // 4 m past the 30/30 corner columns' faces (−0.15 … 12.15 × −0.15 … 9.15), at each side's middle, looking at it.
+    let marks: Vec<(String, f64, f64, f64)> = elevations(&doc)
+        .into_iter()
+        .map(|m| {
+            (
+                m.mark.clone(),
+                m.points[0].x,
+                m.points[0].y,
+                m.angle.unwrap(),
+            )
+        })
+        .collect();
+    let want = [
+        ("1", 6.0, 13.15, 270.0),
+        ("2", 16.15, 4.5, 180.0),
+        ("3", 6.0, -4.15, 90.0),
+        ("4", -4.15, 4.5, 0.0),
+    ];
+    for (n, x, y, a) in want {
+        let got = marks
+            .iter()
+            .find(|m| m.0 == n)
+            .unwrap_or_else(|| panic!("{n} in {marks:?}"));
+        assert!(
+            (got.1 - x).abs() < 1e-6 && (got.2 - y).abs() < 1e-6 && (got.3 - a).abs() < 1e-6,
+            "{n}: {got:?}"
+        );
+    }
+    // One undo takes the marks and the facades back.
+    assert_eq!(
+        doc.undo_labels().first().map(String::as_str),
+        Some("Görünüşleri çıkar")
+    );
+    doc.undo();
+    assert!(elevations(&doc).is_empty());
+}

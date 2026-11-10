@@ -2939,9 +2939,10 @@
       "level": "semantic",
       "via": [
         "cad.sections.edit",
-        "cad.sections.query"
+        "cad.sections.query",
+        "cad.viewmarks.create"
       ],
-      "note": "Tıklanan görünüş işaretinin balonu ve görünüşün yeri derive'a verilir; görünenler, kapı ve pencerelerin açılım çizgileri, kotlar, akslar, kuzey okuna göre başlık ve leftOut komutun hesabı, önizleme planından. Çıkarılmış görünüşün işaretine tıklamak refresh; eski rozet ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8043)."
+      "note": "Tıklanan görünüş işaretinin balonu ve görünüşün yeri derive'a verilir; görünenler, kapı ve pencerelerin açılım çizgileri, kotlar, akslar, kuzey okuna göre başlık ve leftOut komutun hesabı, önizleme planından. Çıkarılmış görünüşün işaretine tıklamak refresh; eski rozet ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8043). Tümü (T): işaret yoksa dördü cad.viewmarks.create ile, sonra her biri derive; hepsi tek geri alma adımı (ADR 8043 §8)."
     },
     "tool.roomElevation": {
       "level": "semantic",

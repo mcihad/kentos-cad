@@ -936,8 +936,10 @@ pencereleri kesitleri basmaz), yayında eski kesit uyarısı, Denetim › Mevzua
 ortak merdivenden). M43 1. bölüm yapıldı ([ADR 8043](../docs/adr/8043-elevation-derived-from-an-elevation-mark.md)): Mimari ›
 İşaret ▾ › Görünüş çıkar, görünüş işaretinin baktığı cepheyi 1/50 çıkarır (kapı ve pencereler Türkiye'nin açılım
 çizgileriyle, zeminin altı kesik, adı ve başlığı kuzey okuna göre "KUZEY GÖRÜNÜŞÜ"), eskir ve Yeniden çiz ile güncellenir,
-Ruhsat takımında kesitlerden sonra GR paftası. Kalan (M43 2. bölüm): dört görünüşü birden, cephe malzemesi yazısı,
-Mevzuat'ta görünüş denetimi.
+Ruhsat takımında kesitlerden sonra GR paftası. M43 2. bölüm sürüyor (ADR 8043 §7–§8): aynı düzlemde ve aynı kaplamada
+birleşen yüzlerin ek yeri çizilmez (sıvalı cephede kiriş ve döşeme alnı yok), görünüşün derinlik dilimi en yakın yüzden;
+Görünüş çıkar › Tümü (T) çizilmemiş bütün görünüşleri yan yana tek adımda çıkarır, işaret yoksa binanın dört yanına koyar.
+Kalan: cephe malzemesi yazısı, Mevzuat'ta görünüş denetimi.
 
 **Kullanıcı sonucu:** En az iki kesit ve dört görünüş (PAİY 57(2)(a)) plandan türer. Plan değişince eskidikleri görünür.
 Dayanak S20, S22.
@@ -1193,7 +1195,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 | M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları **(M40, ADR 8040: duvar betonarmeden betonarmeye, katın yüksekliğini geçmez; kat yüksekliği değişince üstteki katlar ve duvar tepeleri izler; döşemenin kaplama, şap, yalıtım ve sıva katmanları, metrajı katman katman, `.kcad` 232; mahalin döşeme kot farkı, asma tavanı ve iç yüksekliği, PAİY 28/4–6 denetimi, `.kcad` 233; yapıldı)** |
 | M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama **(M41, ADR 8041: kiriş nesnesi, planda kesikli ve ince, 1:100'de numarası, 1:50'den "K101 25/50"; duvar kirişin altında biter; Mimari › Kiriş aracı, numara K101 → K102; `.kcad` 234; kolonun malzemesi, duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesit: perde + kolon kesintisiz, tuğla kolonda biter; etiketin `{size}`'ı "30/50"; `.kcad` 235; kirişin türü (lento, hatıl) ve kattan yüksekliği, lento açıklığa tıklanarak (TBDY 11.5.3), Metraj › Kirişler; `.kcad` 236; yapıldı)** |
 | M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti **(M42 1. bölüm, ADR 8042: Kesit çıkar kesit işaretinden 1/50 kesiti işaretin bloğuna çizer — kesilen taralı, görünen derinlikle, merdiven, kotlar, akslar, mahaller; "B-B kesiti eski" ve Yeniden çiz; kesit çizgisi noktalı kesikli; 2. bölüm, ADR 8042 §6–§7: Ruhsat takımında KS paftası ve balonda pafta numarası, yayında eski kesit uyarısı, Mevzuat'ta PAİY 57/2-a-6; yapıldı)** |
-| M43 | Görünüş türetimi | ADV-19 | Dört cephe **(1. bölüm, ADR 8043: Görünüş çıkar görünüş işaretinden 1/50 cepheyi işaretin bloğuna çizer — kapı ve pencereler açılım çizgileriyle, zeminin altı kesik, kuzey okuna göre adı; eskime ve Yeniden çiz; Ruhsat takımında GR paftası; yapıldı. 2. bölüm: dört görünüş birden, cephe malzemesi, Mevzuat)** |
+| M43 | Görünüş türetimi | ADV-19 | Dört cephe **(1. bölüm, ADR 8043: Görünüş çıkar görünüş işaretinden 1/50 cepheyi işaretin bloğuna çizer — kapı ve pencereler açılım çizgileriyle, zeminin altı kesik, kuzey okuna göre adı; eskime ve Yeniden çiz; Ruhsat takımında GR paftası; yapıldı. 2. bölüm: ek yeri çizilmez, Tümü ile dört görünüş birden (yapıldı); cephe malzemesi, Mevzuat)** |
 | M44 | Çatı ve çatı planı | ADV-20 | Çatı planı paftası |
 | M45 | Merdiven ve özel elemanlar | ADV-21 | Balansman, asansör, korkuluk, otopark yeri |
 

@@ -1,7 +1,7 @@
 # ADR 8043: Görünüş çıkar — görünüş işaretinden bina görünüşü, yönüne göre adı, ruhsat takımında görünüş paftası
 
 - **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ikinci teslimi (M43 1. bölüm:
-  §1–§6; 2. bölüm: §7).
+  §1–§6; 2. bölüm: §7–§8).
 - **Bağlam belgesi:** ADR 0345 (görünüm işaretleri), ADR 8038 §6 (Türkiye'nin açılım çizgileri), ADR 8042 (Kesit çıkar:
   blok, çekirdek, eskime, ruhsat takımı; bu ADR onun üstüne kurulur).
 
@@ -117,6 +117,17 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 - Bağımsız başvuruya 19. ve 20. durumlar: duvar–kiriş–döşeme ek yerleri gizli, önde duran kolon görünür; farklı
   kaplamanın ek yeri ve açılı yüzün köşesi görünür. Önceki 18 durumun hiçbiri değişmedi.
 
+### 8. Tümü: bütün görünüşler bir adımda (2. bölüm)
+
+- Görünüş çıkar'ın ilk adımında **Tümü (T)**: çizilmemiş her görünüş işaretinin görünüşü, kuzeyden başlayıp saat
+  yönünde (KUZ, KDG, DOG …), her biri yer verilmemiş bir çıkarma gibi çizimin sağına, yani yan yana; tek geri alma adımı
+  "Görünüşleri çıkar". Hepsi çıkarılmışsa bir şey yazılmaz, söylenir. Mimarlar Odası: "Bütün görünüşler çizilir".
+- **İşaret yoksa dördü konur:** modelin katılarının kuzeye göre dönmüş kutusunun her yanının ortasına, 4 m öteye
+  (aksların balonlarının ötesi: 1/50'de duvardan 2–2,5 m), binaya bakan dört görünüş işareti, 1–4 numaralı, işaret
+  katmanında (`cad.viewmarks.create`); sonra dört görünüş. Bir ret olursa hiçbir şey yazılmaz.
+- **Ölçüm (kesit binası, görünüş işaretsiz):** işaretler (6; 13,15) 270°, (16,15; 4,5) 180°, (6; −4,15) 90°, (−4,15;
+  4,5) 0° — köşe kolonlarının yüzünden 4 m; tek geri alma işaretleri ve görünüşleri birlikte geri alır.
+
 ## Doğrulama
 
 - **Çekirdek:** bağımsız başvuruya (`scripts/fixtures/section_cases.py`) 18. durum: doğramanın çizgileri kendi
@@ -143,7 +154,6 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 
 ## Sonraya kalan (M43 2. bölüm)
 
-- Dört görünüşü birden çıkarmak (balonlara tek tek tıklamadan).
 - Cephe kaplama malzemesi ve renk yazısı (MO: "Cephe kaplama malzemesi ve renkler yazılır").
 - Denetim › Mevzuat: "yeteri sayıda görünüş" (her cephenin görünüşü var mı).
 - Tabii zemin "nokta nokta" (modelin tabii zemini olunca) ve çatı (ADV-20).

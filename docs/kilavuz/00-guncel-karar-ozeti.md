@@ -335,6 +335,9 @@
       kaplaması (`Solid.finish`: duvar katmanının proje malzemesi ya da malzeme adı) varsa ve farklıysa çizilir; kaplamasız
       katı (kiriş, kolon, döşeme) hizalı yüzünkini alır. Köşe (iki düzlem) ve işaretler her zaman çizilir. Kesitte de.
     - Görünüşün derinlik dilimi en yakın yüzden, en az 1 m'lik dilimlerle (kesit düzleminden); düz cephe bütünüyle `-1`.
+  - **Tümü (M43 2. bölüm, ADR 8043 §8):** Görünüş çıkar'da T: çizilmemiş bütün görünüşler (kuzeyden saat yönünde,
+    çizimin sağında yan yana), tek adım "Görünüşleri çıkar" (`sections_edit::derive_facades`); görünüş işareti yoksa önce
+    dördü, katıların kuzeye dönük kutusunun her yanından 4 m öteye (`sections::facade_marks`, `FACADE_MARK_OFF`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

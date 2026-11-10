@@ -1085,6 +1085,64 @@ pub fn view_of(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Option
     }
 }
 
+/// How far past the building the four marks of [`facade_marks`] stand, metres: past the grids' bubbles (2–2.5 m off
+/// the walls at 1/50).
+pub const FACADE_MARK_OFF: f64 = 4.0;
+
+/// Four elevation marks around the building (docs/adr/8043 §8), for a drawing that has none: past the middle of each
+/// side of the model's extent as the plan's north turns it, [`FACADE_MARK_OFF`] off, each looking at the building: the
+/// north facade's first, then the east, the south and the west, numbered 1–4. None for a model with nothing in it.
+pub fn facade_marks(doc: &Document) -> Vec<kentos_commands::NewViewMark> {
+    let m = model(doc);
+    let n = plan_north(doc);
+    let e = P::new(n.y, -n.x);
+    let (mut e0, mut e1, mut n0, mut n1) = (
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+    );
+    for q in m.solids.iter().flat_map(|s| s.rings.iter().flatten()) {
+        let (a, b) = (q.x * e.x + q.y * e.y, q.x * n.x + q.y * n.y);
+        e0 = e0.min(a);
+        e1 = e1.max(a);
+        n0 = n0.min(b);
+        n1 = n1.max(b);
+    }
+    if e0 > e1 || n0 > n1 {
+        return Vec::new();
+    }
+    let (em, nm) = ((e0 + e1) / 2.0, (n0 + n1) / 2.0);
+    let at = |a: f64, b: f64| P::new(e.x * a + n.x * b, e.y * a + n.y * b);
+    let back = |v: P| P::new(-v.x, -v.y);
+    [
+        (at(em, n1 + FACADE_MARK_OFF), back(n)),
+        (at(e1 + FACADE_MARK_OFF, nm), back(e)),
+        (at(em, n0 - FACADE_MARK_OFF), n),
+        (at(e0 - FACADE_MARK_OFF, nm), e),
+    ]
+    .into_iter()
+    .enumerate()
+    .map(|(k, (p, look))| kentos_commands::NewViewMark {
+        form: ViewMarkForm::Elevation,
+        points: vec![Vec2 { x: p.x, y: p.y }],
+        radius: None,
+        at: None,
+        angle: Some(look.y.atan2(look.x).to_degrees().rem_euclid(360.0)),
+        flip: false,
+        mark: (k + 1).to_string(),
+        target: None,
+        size: None,
+    })
+    .collect()
+}
+
+/// Where a facade stands among [`FACINGS`] (north first, clockwise): the order Tümü draws them in.
+pub fn facing_rank(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> usize {
+    let code = facing(doc, mark).code;
+    FACINGS.iter().position(|f| f.code == code).unwrap_or(FACINGS.len())
+}
+
 /// How a mark's drawing is called: "B-B kesiti", "Kuzey görünüşü".
 pub fn view_name(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> String {
     match view_of(doc, mark) {

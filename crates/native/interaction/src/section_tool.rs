@@ -3,6 +3,10 @@
 //! `cad.sections.edit` draws the section from the model into the mark's block, one undo step. Its plan is the preview
 //! drawn at the cursor. A mark whose section is drawn already is drawn again (Yeniden çiz) when the model changed, and
 //! said to be current when it did not.
+//!
+//! Görünüş çıkar › Tümü (T, docs/adr/8043 §8): every elevation mark's facade not drawn yet, in a row right of the
+//! drawing, one undo step; a drawing without an elevation mark gets four first, around the building, on the symbols'
+//! layer.
 
 use kentos_commands::{
     BuildingSectionLeft, BuildingSectionsEdit, BuildingSectionsOperation, CommandResult, Entity,
@@ -17,7 +21,7 @@ use crate::edge::Outline;
 use crate::format::Format;
 use crate::log::Level;
 use crate::points;
-use crate::prompt::Prompt;
+use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tag, TextGhost, Tone, Tool};
 
 pub const ID: &str = "sectionDraw";
@@ -201,6 +205,64 @@ impl SectionTool {
         }
     }
 
+    /// Tümü: every facade not drawn yet (and four marks first when the drawing has none), one undo step.
+    fn all(&mut self, cx: &mut Context<'_>) {
+        let marked = cx.doc.entities().any(
+            |e| matches!(e, Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation),
+        );
+        let group = cx.doc.begin_group(kentos_commands::FACADES_DERIVE_STEP);
+        let mut outcome = None;
+        if marked {
+            outcome = Some(sections_edit::derive_facades(cx.doc, ""));
+        } else {
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Symbol, cx, |layer, cx| {
+                let done = sections_edit::derive_facades(cx.doc, layer);
+                let ok = done.is_ok();
+                outcome = Some(done);
+                ok
+            });
+        }
+        match outcome {
+            Some(Ok((_, names))) if names.is_empty() => {
+                cx.doc.cancel_group(group);
+                cx.say(
+                    Level::Info,
+                    "Bütün görünüşler çıkarılmış; plan değişince eskiyenleri Öznitelikler › Durum › Yeniden çiz \
+                     günceller.",
+                );
+            }
+            Some(Ok((placed, names))) => {
+                cx.doc.end_group(group);
+                let which = match names.as_slice() {
+                    [one] => one.clone(),
+                    [rest @ .., last] => format!(
+                        "{} ve {}",
+                        rest.iter()
+                            .map(|n| n.trim_end_matches(" görünüşü"))
+                            .collect::<Vec<_>>()
+                            .join(", "),
+                        last.replace(" görünüşü", " görünüşleri")
+                    ),
+                    [] => String::new(),
+                };
+                let marks = if placed > 0 {
+                    "Binanın dört yanına görünüş işareti kondu; "
+                } else {
+                    ""
+                };
+                cx.say(
+                    Level::Success,
+                    format!("{marks}{which} çıkarıldı, çizimin sağında yan yana; tek geri alma adımı."),
+                );
+            }
+            Some(Err(why)) => {
+                cx.doc.cancel_group(group);
+                cx.say(Level::Warn, why);
+            }
+            None => cx.doc.cancel_group(group),
+        }
+    }
+
     fn write(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
         let Some(input) = self.input_at(at, cx) else {
             return;
@@ -276,7 +338,12 @@ impl Tool for SectionTool {
             (false, false, false) => "kesitin sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
             (true, false, false) => "görünüşün sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
         };
-        Prompt::new(self.label(), step)
+        let prompt = Prompt::new(self.label(), step);
+        if self.elevations() && self.mark.is_none() {
+            prompt.option("Tümü", "T")
+        } else {
+            prompt
+        }
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -318,6 +385,10 @@ impl Tool for SectionTool {
     }
 
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if self.elevations() && self.mark.is_none() && upper_tr(text.trim()) == "T" {
+            self.all(cx);
+            return true;
+        }
         if self.mark.is_some()
             && !self.pieces.is_empty()
             && let Some(p) = cx.typed_point(text, None, self.hover)

@@ -546,3 +546,85 @@ fn write_execute(
         }
     }
 }
+
+/// Görünüş çıkar › Tümü (docs/adr/8043 §8): every elevation mark's facade not drawn yet, the north one first and then
+/// clockwise, each 5 m right of what the drawing holds by then, all at the first one's ±0.00 (a row: at the drawing's
+/// bottom each time, every facade stood lower than the one before, its grids' bubbles and title having moved the
+/// bottom down), in one undo step "Görünüşleri çıkar". A drawing without an elevation mark gets four first, on `layer`
+/// ([`sections::facade_marks`]). The number of marks placed and the facades' names in order; the first refusal's words
+/// when one is refused, nothing written.
+pub fn derive_facades(doc: &mut Document, layer: &str) -> Result<(usize, Vec<String>), String> {
+    let elevations = |doc: &Document| -> Vec<(kentos_domain::Uuid, kentos_commands::ViewMarkFields)> {
+        doc.entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => Some((u, v.mark.clone())),
+                _ => None,
+            })
+            .collect()
+    };
+    let group = doc.begin_group(kentos_commands::FACADES_DERIVE_STEP);
+    let mut placed = 0;
+    if elevations(doc).is_empty() {
+        let marks = sections::facade_marks(doc);
+        if marks.is_empty() {
+            doc.cancel_group(group);
+            return Err("Çizimde görünüşü çıkarılacak bir yapı yok: önce duvar, döşeme ya da kolon çizin.".into());
+        }
+        placed = marks.len();
+        let input = kentos_commands::ViewMarksCreate {
+            layer_id: layer.to_owned(),
+            marks,
+            color: None,
+            line_weight: None,
+            expected_revision: None,
+        };
+        match crate::viewmarks_create::execute(&mut ExecutionContext::new(doc), input) {
+            CommandResult::Completed { .. } => {}
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                doc.cancel_group(group);
+                return Err(error.message);
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                doc.cancel_group(group);
+                return Err("Görünüş işaretleri yazılamadı.".into());
+            }
+        }
+    }
+    let mut todo: Vec<(usize, String, kentos_domain::Uuid)> = elevations(doc)
+        .into_iter()
+        .filter(|(u, _)| doc.block(sections::block_id(*u)).is_none())
+        .map(|(u, f)| (sections::facing_rank(doc, &f), f.mark.clone(), u))
+        .collect();
+    todo.sort();
+    let row = beside(doc).y;
+    let mut names = Vec::new();
+    for (_, _, u) in todo {
+        let input = BuildingSectionsEdit {
+            operation: BuildingSectionsOperation::Derive {
+                mark: u.to_string(),
+                at: Some(Vec2 {
+                    x: beside(doc).x,
+                    y: row,
+                }),
+            },
+            expected_revision: None,
+        };
+        match execute(&mut ExecutionContext::new(doc), input) {
+            CommandResult::Completed { output, .. } => names.push(output.name),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                doc.cancel_group(group);
+                return Err(error.message);
+            }
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                doc.cancel_group(group);
+                return Err("Görünüş çıkarılamadı.".into());
+            }
+        }
+    }
+    doc.end_group(group);
+    Ok((placed, names))
+}
