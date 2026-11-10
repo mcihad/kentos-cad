@@ -547,8 +547,15 @@ impl App {
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let out =
-                    edit::remove(&mut doc.model, target.slot, &at, topology.of(&self.spatial));
+                // Arcs of one circle stay one arc within Topolojik temizlik's tolerance (docs/adr/5000 §8).
+                let join = Some(self.memory.topology_tolerance);
+                let out = edit::remove(
+                    &mut doc.model,
+                    target.slot,
+                    &at,
+                    topology.of(&self.spatial),
+                    join,
+                );
                 self.say_vertex(out);
             }
         }

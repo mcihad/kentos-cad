@@ -169,7 +169,7 @@ fn every_write_is_the_references() {
                 })
                 .collect();
             let slot = Slot(a["id"].as_u64().unwrap_or_default() as u32);
-            let out = remove(&mut doc, slot, &at, None);
+            let out = remove(&mut doc, slot, &at, None, None);
             (out.said, out.step, out.stay, None)
         };
         let objects: Vec<Value> = doc.entities().map(view).collect();

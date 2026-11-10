@@ -143,3 +143,20 @@ fn the_table_shows_the_way_the_vertices_run() {
     assert!((mid.x - E - 20.0 - h).abs() < 1e-9 && (mid.y - N - h).abs() < 1e-9, "{mid:?}");
     assert!((dir.x + std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12 && (dir.y - std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12);
 }
+
+/// docs/adr/5000 §8: Köşe tablosu's Sil on A's fourth vertex joins its two arcs into the half circle; B, along the same
+/// arcs, follows with Topolojik düzenleme.
+#[test]
+fn the_table_s_removal_joins_the_arcs_too() {
+    use crate::vertices::Event as V;
+    let mut app = App::boot(None).0;
+    opened(&mut app);
+    let _ = app.update(Message::Run("view.coords"));
+    let _ = app.update(Message::Vertices(V::Press(3)));
+    let _ = app.update(Message::Vertices(V::Remove));
+    let (pts, bulges) = path(&app, 1);
+    assert_eq!(pts.len(), 3, "{pts:?}");
+    assert!((bulges[2] - 1.0).abs() < 1e-12, "{bulges:?}");
+    let (_, bulges) = path(&app, 2);
+    assert!((bulges[0] + 1.0).abs() < 1e-12, "{bulges:?}");
+}

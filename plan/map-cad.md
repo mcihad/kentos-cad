@@ -38,7 +38,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
-| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600, 5000 | tutamaçla birden çok nesne; Köşe tablosunda Kaldır'da yayların birleşmesi; gidiş okunun anahtarı | büyük veri ölçümü |
+| MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600, 5000 | tutamaçla birden çok nesne; gidiş okunun anahtarı ve ilk/son köşe rengi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
@@ -1129,7 +1129,8 @@ süpürmeleri toplanarak tek yay olur (büküm (b₁ + b₂)/(1 − b₁b₂)); 
 düz ve `arcs_not_joined`; aynı yayları paylaşan komşu Topolojik düzenlemeyle tek yayı alır. Masaüstünde tutamaç menüsü ve
 Köşe ekle/sil aracı Topolojik temizlik'in toleransıyla. 8 yeni bağımsız durum (93), çekirdek, Python, MCP, masaüstü ve resimler. Köşe tablosu açıkken tablonun nesnesinin
 her kenarında köşelerin gidiş yönüne ok (BÖHHBÜY Ek-3 notu 2: çizgi işaretinin yanı yöne bağlı); masaüstü testi ve
-resim. Açık: gidiş okunun anahtarı ve ilk/son köşe rengi, tutamaçla birden çok nesne, Köşe tablosunda Kaldır'da yayların birleşmesi, büyük veri ölçümü.
+resim. Köşe tablosunda Sil'de silinen dizinin yayları da tek yay olur. Açık: gidiş okunun anahtarı ve ilk/son köşe
+rengi, tutamaçla birden çok nesne, büyük veri ölçümü.
 
 ### MAP-08 — Sayısal kadastro için kayıt, sınır ve tarihçeyi ayır [ ]
 

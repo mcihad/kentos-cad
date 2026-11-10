@@ -65,10 +65,15 @@ Tarih: 2026-11-11. plan/map-cad.md MAP-07, onuncu tur. Durum: taslak. ADR 4200'�
    - Ekranda 48 px'ten kısa kenarda ok yok. Halkalar, delikler ve parçalar dahil; en çok 2000 ok.
    - Çizim, simge ya da komut değildir; belge değişmez. Renk vurgu ve hale jetonları (`MarkColors`).
    - Okların yeri çekirdeğin `segment_mid`'idir (`App::vertex_ways`).
+8. **Köşe tablosunda Sil** (`vertex_table::removed_joining`): seçili köşeler silinince kalan bir köşeden sonrakine
+   uzanan kenar dizisi tek kenar olur.
+   - Dizideki her kenar yay olmalı. Biriken yay `arc_join` ile sıradakine katılır: aynı yön, merkez ve yarıçap
+     tolerans içinde, toplam tam daireden az.
+   - Biri tutmazsa kenar eskisi gibi düz. Tolerans Topolojik temizlik'in toleransıdır, tutamaç menüsündeki gibi.
+   - Tek köşe silindiyse komşu `Change::Join` ile izler (§3). Birden çok köşede komşu değişikliği eskisi gibi yok.
 
 ## Sınırlar
 
-- Köşe tablosundaki Kaldır (birden çok köşe birlikte, `vertex_table::removed`) yayları birleştirmez.
 - Yay ile düz kenar birleşmez (yayın parçası düz kenar sayılmaz).
 - Yüzde ile yarıçap ölçütü yok; tek uzunluk toleransı.
 - Gidiş oku yalnız Köşe tablosu açıkken; ayrı bir aç/kapa anahtarı ve ilk/son köşe renkleri yok. Oklar her çizimde
@@ -91,18 +96,23 @@ Tarih: 2026-11-11. plan/map-cad.md MAP-07, onuncu tur. Durum: taslak. ADR 4200'�
 - **Masaüstü** (`arc_join_scenes.rs`): A yarım daire, kenarı (20, 25)'te birleşen iki çeyrek yay; B üstte aynı yaylarla.
   - Tutamaçta sağ tık “Köşe 4 / Köşeyi sil”: A'nın bükümü 1, B'ninki −1; ileti doğru; tek geri alma ikisini de geri koyar.
   - Çapraz denetimler (module_tests, ribbon_tests, history::text, catalog, settings, topology_inner_scenes,
-    drawing_menus, vertices, marks) geçer: 184 test.
+    drawing_menus, vertices, marks) geçer: 185 test.
   - Resimler `.run/gui-evidence/yay-birlestir-5000/`.
 - **Gidiş oku** (`arc_join_scenes::the_table_shows_the_way_the_vertices_run`): tablo kapalıyken ok yok. Açıkken A'nın
   4 kenarı: ilki (−5, 0) → (20, 0), ortası (7.5, 0), doğu; yay (45, 0) → (20, 25)'in ortası dairede 45°'de, yön
   kuzeybatı. Resimler `.run/gui-evidence/kose-gidis-oku-5000/`: düz kenarlarda doğu, yaylarda saatin tersi; orta
   tutamaçlar görünür.
+- **Köşe tablosunda Sil:**
+  - Çekirdek (`vertex_table::tests::a_removed_run_of_arcs_of_one_circle_is_one_arc`): üç 60° yaydan ikisinin köşesi
+    silinince büküm tan 45° = 1; toleranssız düz.
+  - Masaüstü (`arc_join_scenes::the_table_s_removal_joins_the_arcs_too`): A'nın 4. köşesi silinince A'da 1, B'de −1.
+  - Bu yol için bağımsız Python durumu yazılmadı. Birleşme kararı ve hesabı `arc_join`'dir; onun bağımsız durumları
+    komutunkilerdir.
 - **Bozma denetimi:** durum dosyasında birleşen bükümün son basamağı ve uyarıdaki merkez uzaklığı değiştirildi. Koşucu
   tam bu iki durumu yakaladı, dosya geri kondu. Esnet, Paralel kaydır ve topoloji komutlarının durumları değişmedi.
 
 ## Sonra
 
-- Köşe tablosunda Kaldır'da yayların birleşmesi.
 - Gidiş okunun aç/kapa anahtarı, ilk ve son köşenin rengi; tutamaçla birden çok nesne; büyük veri ölçümü (MAP-07'nin
   kalanı).
-- Web (TODOS §0.2): `joinArcs` ve `Change::Join` WASM'a.
+- Web (TODOS §0.2): `joinArcs`, `Change::Join` ve `removed_joining` WASM'a; Köşe tablosunun gidiş oku.
