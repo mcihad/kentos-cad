@@ -37510,6 +37510,10 @@ class FeaturesReconcile(_Model):
         radius: Unit: m.
         overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
             0.5 when not given (docs/adr/2140). Unit: 1.
+        reapply: Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved
+            review note of this command, its source's) still in the drawing and near it as two candidates are one group;
+            the nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's
+            corrections.
         reviewed_at: When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
     """
     name: str
@@ -37521,6 +37525,7 @@ class FeaturesReconcile(_Model):
     expected_revision: str | None | Unset = UNSET
     field: str | None | Unset = UNSET
     overlap: float | None | Unset = UNSET
+    reapply: bool | Unset = UNSET
     reviewed_at: str | None | Unset = UNSET
     reviewer: str | None | Unset = UNSET
 
@@ -37541,6 +37546,8 @@ class FeaturesReconcile(_Model):
             out["field"] = self.field
         if self.overlap is not UNSET:
             out["overlap"] = None if self.overlap is None else float(self.overlap)
+        if self.reapply is not UNSET:
+            out["reapply"] = self.reapply
         if self.reviewed_at is not UNSET:
             out["reviewedAt"] = self.reviewed_at
         if self.reviewer is not UNSET:
@@ -37559,6 +37566,7 @@ class FeaturesReconcile(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             field=data.get("field", UNSET),
             overlap=UNSET if "overlap" not in data else None if data["overlap"] is None else float(data["overlap"]),
+            reapply=data.get("reapply", UNSET),
             reviewed_at=data.get("reviewedAt", UNSET),
             reviewer=data.get("reviewer", UNSET),
         )
@@ -37572,12 +37580,14 @@ class FeaturesReconciled(_Model):
     Attributes:
         marked: Unit: count.
         notes: Unit: id.
+        reapplied: Docs/adr/4540: the recorded decisions taken again, each the candidate it went to and the note it came from.
     """
     groups: list[ReconciledGroup]
     candidates: list[ReconciledCandidate]
     marked: int
     revision: str
     notes: list[int] | Unset = UNSET
+    reapplied: list[ReappliedDecision] | Unset = UNSET
     written: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -37588,6 +37598,8 @@ class FeaturesReconciled(_Model):
         out["revision"] = self.revision
         if self.notes is not UNSET:
             out["notes"] = list(self.notes)
+        if self.reapplied is not UNSET:
+            out["reapplied"] = [e0.to_json() for e0 in self.reapplied]
         if self.written is not UNSET:
             out["written"] = list(self.written)
         return out
@@ -37600,6 +37612,7 @@ class FeaturesReconciled(_Model):
             marked=data["marked"],
             revision=data["revision"],
             notes=list(data["notes"]) if "notes" in data else UNSET,
+            reapplied=[ReappliedDecision.from_json(e0) for e0 in data["reapplied"]] if "reapplied" in data else UNSET,
             written=list(data["written"]) if "written" in data else UNSET,
         )
 
@@ -79086,6 +79099,30 @@ class ReadjustmentSheetsMade(_Model):
             uids=list(data["uids"]),
             revision=data["revision"],
             group=data.get("group", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReappliedDecision(_Model):
+    """A recorded decision taken again (docs/adr/4540): the candidate it went to and the number of the review note it came
+    from.
+    Attributes:
+        note: Unit: id.
+    """
+    candidate: str
+    note: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["candidate"] = self.candidate
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReappliedDecision:
+        return cls(
+            candidate=data["candidate"],
+            note=data["note"],
         )
 
 
@@ -135285,6 +135322,7 @@ __all__ = [
     "ReadjustmentScoped",
     "ReadjustmentSheets",
     "ReadjustmentSheetsMade",
+    "ReappliedDecision",
     "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",

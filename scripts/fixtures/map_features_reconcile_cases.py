@@ -762,8 +762,9 @@ def answer(cands, groups, sources, written=(), marked=0, notes=()):
     return out
 
 
-def executed(d, inp):
-    """Execute: the answer, the objects after (by slot: their fields) and the slots there after."""
+def executed(d, inp, taken=()):
+    """Execute: the answer, the objects after (by slot: their fields) and the slots there after; `taken` (ADR 4540)
+    the recorded decisions taken again, their notes saying so."""
     cands, groups = analyse(d, inp)
     sources = inp["sources"]
     lays = layers_of(d)
@@ -841,7 +842,11 @@ def executed(d, inp):
         source = sources[cands[c]["source"]]["name"].strip()
         asset = None if "reject" in dc else marked_by[c]
         number = max((n["number"] for n in book), default=0) + 1
-        note = {"id": "$any", "number": number, "text": decision_words(dc, source), "status": "resolved"}
+        text = decision_words(dc, source)
+        again = next((t for t in taken if t["candidate"] == dc["candidate"]), None)
+        if again is not None:
+            text += f" Önceki karar (not {again['note']}) yeniden uygulandı."
+        note = {"id": "$any", "number": number, "text": text, "status": "resolved"}
         if (reviewer or "").strip():
             note["author"] = reviewer.strip()
         if (inp.get("reviewedAt") or "").strip():
@@ -865,6 +870,60 @@ def executed(d, inp):
     return answer(cands, groups, sources, written, len(marks), numbers), fields, slot - 1, (book if numbers else None)
 
 
+def reapplied_of(d, inp):
+    """ADR 4540: the decisions recorded on earlier candidates that this run takes again: for each candidate without a
+    decision of its own (not reviewed, none given), the resolved review notes of `map.features.reconcile` of its source
+    (by name) whose candidate is still in the drawing (reviewed, on the same source's layer, of the same kind) and near it
+    as two candidates are one group (points: within the radius; lines: the Hausdorff distance within it; areas: their
+    overlap above the least); the nearest (areas: the largest overlap), then the note's number; a note naming a class
+    the profile does not have is left. The input with them added as decisions, and which candidate took which note."""
+    if not inp.get("reapply"):
+        return inp, []
+    cands, _ = analyse(d, dict(inp, reapply=False))
+    least, radius = inp.get("overlap", 0.5), inp["radius"]
+    names = [x["name"] for x in inp["sources"]]
+    given = {dc["candidate"] for dc in inp.get("decisions", [])}
+    recorded = [(n["number"], n["decision"]) for n in d["settings"].get("reviewNotes", [])
+                if n.get("status") == "resolved" and n.get("decision", {}).get("command") == "map.features.reconcile"
+                and ("class" not in n["decision"] or any(c["id"] == n["decision"]["class"] for c in CLASSES))]
+    decisions, taken = list(inp.get("decisions", [])), []
+    for c in cands:
+        if c["status"] == "reviewed" or c["uid"] in given:
+            continue
+        best = None
+        for number, dec in recorded:
+            if dec["source"].strip() != names[c["source"]].strip():
+                continue
+            old = next((o for o in cands if o["uid"] == dec["candidate"] and o["status"] == "reviewed"
+                        and o["source"] == c["source"] and o["kind"] == c["kind"]), None)
+            if old is None:
+                continue
+            if c["kind"] == "area":
+                r = iou(old["poly"], c["poly"])
+                if not r > least:
+                    continue
+                score = -r
+            else:
+                gap = (hausdorff(old["pts"], c["pts"], old["bulges"], c["bulges"]) if c["line"]
+                       else dist(old["pts"][0], c["pts"][0]))
+                if gap > radius:
+                    continue
+                score = gap
+            if best is None or score < best[0] or (score == best[0] and number < best[1]):
+                best = (score, number, dec)
+        if best is not None:
+            dec = best[2]
+            made = {"candidate": c["uid"]}
+            for k in ("class", "reject", "fields"):
+                if k in dec:
+                    made[k] = copy.deepcopy(dec[k])
+            if dec.get("accept"):
+                made["accept"] = True
+            decisions.append(made)
+            taken.append({"candidate": c["uid"], "note": best[1]})
+    return dict(inp, decisions=decisions), taken
+
+
 # ── Cases ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 SAME = {"revision": "same", "canUndo": False}
@@ -876,11 +935,15 @@ def failed(e):
 
 def step(d, inp, op="execute", undo=True):
     try:
+        # ADR 4540: the recorded decisions taken again, first.
+        taken_inp, taken = reapplied_of(d, inp)
         if op == "execute":
-            out, fields, last, notes = executed(d, inp)
+            out, fields, last, notes = executed(d, taken_inp, taken)
         else:
-            cands, groups = analyse(d, inp)
+            cands, groups = analyse(d, taken_inp)
             out, fields, last, notes = answer(cands, groups, inp["sources"]), {}, len(d["entities"]), None
+        if taken:
+            out["reapplied"] = taken
     except Refused as e:
         return [{"op": op, "input": inp, "result": failed(e), "expect": SAME}]
     result = {"status": "completed", "output": None if op == "validate" else out, "warnings": []}
@@ -952,6 +1015,7 @@ def cases():
     out.append(case("Yeniden çalıştırma: eşleştirilmiş adaylar okunmaz, insan kararı ezilmez", after,
                     step(after, BASE)))
     out.append(case("Doğrulama", d, step(d, BASE, op="validate")))
+    out += reapply_cases(d, decided)
     # ADR 3340: the arcs measured as arcs.
     arc_drawing = setup(objects=arcs())
     near = dict(BASE, radius=0.5)
@@ -1031,6 +1095,76 @@ def cases():
     out.append(case("Direğin katmanı kilitli: yazılmaz", locked, step(locked, BASE)))
     locked_src = setup(locked=(O,))
     out.append(case("Ortofoto adaylarının katmanı kilitli: işaretlenemez", locked_src, step(locked_src, BASE)))
+    return out
+
+
+def rerun(d, decided):
+    """ADR 4540: the drawing after `decided` ran, as a file holds it (its candidates marked, the assets it wrote on the
+    class layers, its decisions as resolved review notes numbered from 1 and bound to their candidates and assets; the
+    stamps a fixed one, so the notes read stale), with a model's new run: new candidates near four of the decided ones
+    (the orthophoto's tree again by the one corrected to a pole, the LiDAR's unknown again by the rejected one, the
+    LiDAR's door again by the one given its number, the orthophoto's manhole again by the accepted one) and one far from
+    them, before the assets."""
+    after = copy.deepcopy(d)
+    _, fields, last, book = executed(d, decided)
+    base = len(d["entities"])
+    new = [point(O, {"Kod": "AGC", "Güven": "0.72", "Cins": "Çınar"}, 50.25, 5.05),    # 18 by 8 (corrected: a pole)
+           point(L, {"Kod": "XYZ", "Güven": "0.52"}, 110.10, 5.05),                   # 19 by 11 (rejected)
+           point(L, {"Kod": "KAP", "Güven": "0.91"}, 130.05, 12.02),                  # 20 by 12 (its door number)
+           point(O, {"Kod": "ROG", "Güven": "0.60", "Sebeke": "Atıksu"}, 70.10, 8.05),  # 21 by 9 (accepted)
+           point(L, {"Kod": "XYZ", "Güven": "0.50"}, 112.0, 5.0)]                     # 22 far from 11
+    for e in new:
+        n = len(after["entities"]) + 1
+        after["entities"].append(dict(copy.deepcopy(e), id=n))
+        after["uids"].append(uid(n))
+    # The assets the decided run wrote, after the new candidates: each of its first candidate's kind.
+    renamed = {}
+    for slot in range(base + 1, last + 1):
+        f = fields[str(slot)]
+        n = len(after["entities"]) + 1
+        renamed[f"$uidOf:{slot}"] = uid(n)
+        first = d["entities"][d["uids"].index(f["attrs"]["Adaylar"].split(", ")[0])]
+        e = {"kind": first["kind"], "layerId": f["layerId"], "attrs": dict(f["attrs"]), "id": n}
+        for k in ("p", "z", "pts", "bulges"):
+            if k in f:
+                e[k] = copy.deepcopy(f[k])
+        after["entities"].append(e)
+        after["uids"].append(uid(n))
+    for k, f in fields.items():
+        i = int(k) - 1
+        if i < base:
+            attrs = dict(f["attrs"])
+            attrs["Eşleştirme"] = renamed.get(attrs["Eşleştirme"], attrs["Eşleştirme"])
+            after["entities"][i]["attrs"] = attrs
+    notes = []
+    for k, n in enumerate(book or [], 1):
+        n = copy.deepcopy(n)
+        n["id"] = f"0192f5b0-4540-7000-8000-{k:012x}"
+        n["anchors"] = [{"uid": renamed.get(a["uid"], a["uid"]), "stamp": "0123456789abcdef"} for a in n["anchors"]]
+        if "asset" in n["decision"]:
+            n["decision"]["asset"] = renamed[n["decision"]["asset"]]
+        notes.append(n)
+    after["settings"]["reviewNotes"] = notes
+    return after
+
+
+def reapply_cases(d, decided):
+    """ADR 4540: a model run again keeps the reviewer's corrections."""
+    again = rerun(d, decided)
+    out = []
+    plain = dict(BASE, reapply=True)
+    _, taken = reapplied_of(again, plain)
+    assert [(t["candidate"], t["note"]) for t in taken] == [(uid(18), 2), (uid(19), 4), (uid(20), 3), (uid(21), 1)], taken
+    out.append(case("Yeniden çıkarım, plan: kayıtlı kararlar yakınındaki yeni adaylara yeniden uygulanır, uzaktaki "
+                    "adaya uygulanmaz", again, step(again, plain, op="plan"),
+                    "Ağaç yine direğe düzeltilir ve yazılmış direk olur, bilinmeyen yine reddedilir, kapı numarasını alır, "
+                    "rögar kabul edilir."))
+    out.append(case("Yeniden çıkarım, eşleştir: adaylar yazılmış varlıklarla işaretlenir ya da reddedilir, notları "
+                    "önceki kararı anar", again, step(again, dict(plain, reviewer="Ayşe Demir"))))
+    out.append(case("Yeniden uygulama istenmeden: kayıtlı kararlar uygulanmaz", again,
+                    step(again, BASE, op="plan")))
+    out.append(case("Bu çalıştırmanın kararı kayıtlı karardan önce gelir", again,
+                    step(again, dict(plain, decisions=[{"candidate": uid(18), "class": "agac"}]), op="plan")))
     return out
 
 

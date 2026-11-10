@@ -64683,6 +64683,10 @@
             "type": "number",
             "x-unit": "m"
           },
+          "reapply": {
+            "description": "Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved\nreview note of this command, its source's) still in the drawing and near it as two candidates are one group;\nthe nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's\ncorrections.",
+            "type": "boolean"
+          },
           "reviewedAt": {
             "description": "When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.",
             "type": [
@@ -64742,6 +64746,13 @@
             "type": "array",
             "x-unit": "id"
           },
+          "reapplied": {
+            "description": "Docs/adr/4540: the recorded decisions taken again, each the candidate it went to and the note it came from.",
+            "items": {
+              "$ref": "#/$defs/ReappliedDecision"
+            },
+            "type": "array"
+          },
           "revision": {
             "type": "string"
           },
@@ -64791,6 +64802,13 @@
             },
             "type": "array",
             "x-unit": "id"
+          },
+          "reapplied": {
+            "description": "Docs/adr/4540: the recorded decisions taken again, each the candidate it went to and the note it came from.",
+            "items": {
+              "$ref": "#/$defs/ReappliedDecision"
+            },
+            "type": "array"
           },
           "revision": {
             "type": "string"
@@ -182013,6 +182031,25 @@
         "pieces",
         "slivers",
         "status"
+      ],
+      "type": "object"
+    },
+    "ReappliedDecision": {
+      "description": "A recorded decision taken again (docs/adr/4540): the candidate it went to and the number of the review note it came\nfrom.",
+      "properties": {
+        "candidate": {
+          "type": "string"
+        },
+        "note": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        }
+      },
+      "required": [
+        "candidate",
+        "note"
       ],
       "type": "object"
     },

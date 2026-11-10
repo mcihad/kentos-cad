@@ -11,6 +11,9 @@
 //! opens a form of those fields under the table (a field with a list chooses from it, the others are typed); Alanları
 //! ekle puts the values in the group's candidates' decisions and the plan reads them again, the rules' reasons in the
 //! table and the summary.
+//!
+//! Önceki kararlar (docs/adr/4540): with the switch on, a candidate of a model run again takes the decision recorded on
+//! an earlier candidate near it (a resolved review note of Detay eşleştirme); the summary says which notes were taken.
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
@@ -19,7 +22,7 @@ use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_features_reconcile};
 use kentos_ui::label;
 use kentos_ui::widget::grow::Grows;
-use kentos_ui::widget::{Dialog as Frame, Form, NumberInput};
+use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Switch};
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words::{self, Kind};
@@ -43,6 +46,8 @@ pub struct State {
     /// The overlap ratio two areas must exceed (docs/adr/2140).
     pub overlap: f64,
     pub reviewer: String,
+    /// Docs/adr/4540: the decisions recorded on earlier candidates taken again by the new ones near them.
+    pub reapply: bool,
     pub decisions: Vec<CandidateDecision>,
     pub answer: Option<Result<FeaturesReconciled, String>>,
     /// Alan gir: the group whose fields are typed, and the values typed by field (docs/adr/2540).
@@ -59,6 +64,8 @@ pub enum Event {
     Radius(f64),
     Overlap(f64),
     Reviewer(String),
+    /// Önceki kararlar: the recorded decisions taken again or not (docs/adr/4540).
+    Reapply(bool),
     /// A group's candidates: a single accepted, a conflict's corrected to a class, the group rejected.
     Accept(usize),
     Correct(usize, String),
@@ -106,6 +113,7 @@ impl App {
             overlap: (s.overlap != map_features_reconcile::DEFAULT_OVERLAP).then_some(s.overlap),
             decisions: s.decisions.clone(),
             reviewer: some(&s.reviewer),
+            reapply: s.reapply,
             reviewed_at: None,
             expected_revision: None,
         }
@@ -207,6 +215,10 @@ impl App {
                 }
             }
             Event::Reviewer(t) => self.features_reconcile.reviewer = t,
+            Event::Reapply(on) => {
+                self.features_reconcile.reapply = on;
+                self.reconcile_run();
+            }
             Event::Accept(g) => self.reconcile_decide(g, |uid, _| {
                 Some(CandidateDecision { candidate: uid.to_owned(), accept: true, ..CandidateDecision::default() })
             }),
@@ -294,7 +306,11 @@ impl App {
                 .spacing(8)
                 .align_y(Center),
             )
-            .field("Gözden geçiren", text(&s.reviewer, "Ad", Event::Reviewer));
+            .field("Gözden geçiren", text(&s.reviewer, "Ad", Event::Reviewer))
+            .field(
+                "Önceki kararlar",
+                Switch::new(s.reapply, |on| msg(Event::Reapply(on))).label("Yakındaki yeni adaylara yeniden uygula"),
+            );
         let mut lines = Vec::new();
         let mut runnable = false;
         let mut table: Element<'_, Message> = label::caption("").into();
@@ -322,6 +338,17 @@ impl App {
                     lines.push(words::text_line(
                         Kind::Warn,
                         format!("{duplicates} yinelenen aday, {unknown} sınıfı okunmayan aday; {reviewed} aday daha önce eşleştirildi (okunmaz)."),
+                    ));
+                }
+                // Docs/adr/4540: the recorded decisions taken again, by their notes' numbers.
+                if !a.reapplied.is_empty() {
+                    let mut numbers: Vec<u32> = a.reapplied.iter().map(|r| r.note).collect();
+                    numbers.sort_unstable();
+                    numbers.dedup();
+                    let numbers = numbers.iter().map(u32::to_string).collect::<Vec<_>>().join(", ");
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("{} adaya önceki karar yeniden uygulandı (inceleme notu {numbers}).", a.reapplied.len()),
                     ));
                 }
                 let missing = a.groups.iter().filter(|g| !g.missing.is_empty()).count();

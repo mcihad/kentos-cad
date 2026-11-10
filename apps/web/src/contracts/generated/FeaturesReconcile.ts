@@ -34,4 +34,11 @@ overlap?: number, decisions?: Array<CandidateDecision>, reviewer?: string,
 /**
  * When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
  */
-reviewedAt?: string, expectedRevision?: string, };
+reviewedAt?: string, 
+/**
+ * Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved
+ * review note of this command, its source's) still in the drawing and near it as two candidates are one group;
+ * the nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's
+ * corrections.
+ */
+reapply?: boolean, expectedRevision?: string, };

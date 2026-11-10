@@ -273,6 +273,10 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Detay eşleştirmede kayıtlı kararların yeniden uygulanması (10 Kasım 2026; MAP-04, [ADR 4540](../../docs/adr/4540-reapply-recorded-reconcile-decisions.md)).**
+  `map.features.reconcile`'in `reapply`'ı: yeni çıkarımın kararsız adayı aynı kaynağın yakınındaki eşleştirilmiş
+  adayının notundaki kararı alır (gruplama kuralı, en yakını); çıktı `reapplied`, yeni not önceki notu anar. Detay
+  eşleştirme › Önceki kararlar. Harita.
 - **Bilinen noktanın kabul farkı sınırı (10 Kasım 2026; MAP-03, [ADR 4520](../../docs/adr/4520-known-place-tolerance.md)).**
   `map.survey.query`'nin `tolerance`'ı (`places` ile): yatay ve düşey sınır; yerde `horizontal` ve `beyond`. GNSS
   arşivi › Kabul farkı sınırı (oturumluk). Harita.

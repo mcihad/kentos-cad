@@ -2913,6 +2913,7 @@ __all__ = [
     "ReadjustmentScoped",
     "ReadjustmentSheets",
     "ReadjustmentSheetsMade",
+    "ReappliedDecision",
     "RebindReviewNoteOp",
     "ReboundSpacesOperation",
     "RecipeCaseworkChange",

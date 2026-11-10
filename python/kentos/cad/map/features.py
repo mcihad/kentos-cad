@@ -232,6 +232,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reapply: bool | Unset = UNSET,
         reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         request_id: str | None = None,
@@ -273,6 +274,10 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             field:
             overlap: The overlap ratio (intersection over union, between 0 and 1) two area candidates' must exceed to be one group;
                 0.5 when not given (docs/adr/2140). Unit: 1.
+            reapply: Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved
+                review note of this command, its source's) still in the drawing and near it as two candidates are one group;
+                the nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's
+                corrections.
             reviewed_at: When the decisions were taken, as the caller writes it (“2026-11-09T16:00:00+03:00”); the review notes' time.
             reviewer:
             request_id: Names this write: sent again with the same call it is answered as
@@ -297,6 +302,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reapply=reapply,
             reviewed_at=reviewed_at,
             reviewer=reviewer,
         ), request_id=request_id, expected=expected)
@@ -315,6 +321,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reapply: bool | Unset = UNSET,
         reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> FeaturesReconciled:
@@ -331,6 +338,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reapply=reapply,
             reviewed_at=reviewed_at,
             reviewer=reviewer,
         ))
@@ -349,6 +357,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reapply: bool | Unset = UNSET,
         reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
@@ -365,6 +374,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reapply=reapply,
             reviewed_at=reviewed_at,
             reviewer=reviewer,
         ))
@@ -383,6 +393,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
         expected_revision: str | None | Unset = UNSET,
         field: str | None | Unset = UNSET,
         overlap: float | None | Unset = UNSET,
+        reapply: bool | Unset = UNSET,
         reviewed_at: str | None | Unset = UNSET,
         reviewer: str | None | Unset = UNSET,
         op: str = "execute",
@@ -404,6 +415,7 @@ class _MapFeaturesReconcile(LocalCommand[FeaturesReconcile, FeaturesReconciled, 
             expected_revision=expected_revision,
             field=field,
             overlap=overlap,
+            reapply=reapply,
             reviewed_at=reviewed_at,
             reviewer=reviewer,
         ), op=op, request_id=request_id, expected=expected)

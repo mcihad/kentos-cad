@@ -106,7 +106,7 @@ inceleme kaydı (kararların öznitelik değil kayıt olarak tutulması)”.
 
 ## Sonra
 
-- Katalog ya da model değişince kayıtlı kararların yeniden uygulanması ve katalog değişikliğinin geçiş raporu (ADR 1760
-  Sonra'nın kalanı).
+- Model değişince kayıtlı kararların yeniden uygulanması: [ADR 4540](4540-reapply-recorded-reconcile-decisions.md).
+  Katalog değişikliğinin geçiş raporu (ADR 1760 Sonra'nın kalanı).
 - AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm (MAP-04'ün kalanı, dış kaynak bekler).
 - Web (TODOS §0.2).

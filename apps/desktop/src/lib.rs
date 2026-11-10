@@ -412,6 +412,8 @@ mod features_reconcile_window_tests;
 #[cfg(test)]
 mod features_reconcile_fill_tests;
 #[cfg(test)]
+mod features_reconcile_reapply_tests;
+#[cfg(test)]
 mod zoning_window_tests;
 #[cfg(test)]
 mod zoning_symbols_window_tests;

@@ -35,7 +35,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480 | tipli katman profili; köşe köşe kayma (en büyük kayma) ve silinenin şekli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
@@ -688,6 +688,14 @@ ayrı, çözülmüş bir inceleme notudur (yazarı gözden geçiren, zamanı `re
 yapılandırılmış `decision`); varlık `İnceleme` ve `Gözden geçiren` taşımaz; `.kcad` şema 215 (bağımsız yazıcı ve
 okuyucu 1727 dosyada uyuşur); 44 bağımsız durum, Python, MCP, masaüstünde İnceleme notları kaydı gösterir. Açık:
 kayıtlı kararların yeniden uygulanması ve katalog geçiş raporu, AI çıkarımı ve gerçek çıkarımla ölçüm (dış kaynak).
+
+**10 Kasım 2026, dokuzuncu tur — kayıtlı kararların yeni çıkarıma yeniden uygulanması ([ADR 4540](../docs/adr/4540-reapply-recorded-reconcile-decisions.md)).**
+Kapsam: **Harita**. Dayanak: ArcGIS Pro'da hata sonuçlarının yaşam döngüsü (istisna olarak işaretlenen nesne gelecekte
+yeni hata olarak işaretlenmez). Kanıtlanan: `reapply` ile yeni çıkarımın kararsız adayı, aynı kaynağın yakınındaki
+(komutun gruplama kuralı ve kullanıcının yarıçapı ya da örtüşme oranı) eşleştirilmiş adayının çözülmüş notundaki kararı
+alır: en yakını, eşitlikte küçük numaralı not; çalıştırmada verilen karar önce gelir; çıktı `reapplied`, yeni not
+önceki notu anar. 48 bağımsız durum (4 yeni), Python, MCP, masaüstünde Önceki kararlar anahtarı ve özeti. Açık: katalog
+geçiş raporu, AI çıkarımı ve gerçek çıkarımla ölçüm (dış kaynak).
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 

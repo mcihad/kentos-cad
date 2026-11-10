@@ -205,6 +205,13 @@ pub struct FeaturesReconcile {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reviewed_at: Option<String>,
+    /// Docs/adr/4540: a candidate without a decision here takes the decision recorded on an earlier one (a resolved
+    /// review note of this command, its source's) still in the drawing and near it as two candidates are one group;
+    /// the nearest (areas: the largest overlap, then the note's number). A model run again keeps the reviewer's
+    /// corrections.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub reapply: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -320,5 +327,22 @@ pub struct FeaturesReconciled {
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<u32>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
     pub notes: Vec<u32>,
+    /// Docs/adr/4540: the recorded decisions taken again, each the candidate it went to and the note it came from.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReappliedDecision>>", optional))]
+    pub reapplied: Vec<ReappliedDecision>,
     pub revision: String,
+}
+
+/// A recorded decision taken again (docs/adr/4540): the candidate it went to and the number of the review note it came
+/// from.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ReappliedDecision {
+    pub candidate: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "id")))]
+    pub note: u32,
 }

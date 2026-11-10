@@ -44,8 +44,8 @@ use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_commands::{
     CandidateDecision, CommandResult, DEFAULT_CODE_FIELD, DataProfile, Entity, FeaturesReconcile, FeaturesReconciled,
     FieldTrouble, MAX_CANDIDATE_SOURCES, MAX_REVIEW_AUTHOR, MAX_REVIEW_LABEL, MAX_REVIEW_NOTES, ProfileGeometry,
-    RECONCILED_FIELD, RECONCILED_FIELD_BEFORE, ReconciledCandidate, ReconciledGroup, ReviewDecision, ReviewNote,
-    ReviewOrigin, ReviewStatus, Vec2, review_label_ok, review_text_ok,
+    RECONCILED_FIELD, RECONCILED_FIELD_BEFORE, ReappliedDecision, ReconciledCandidate, ReconciledGroup, ReviewDecision,
+    ReviewNote, ReviewOrigin, ReviewStatus, Vec2, review_label_ok, review_text_ok,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -861,11 +861,81 @@ fn answer(plan: &Plan, written: Vec<String>, marked: u32, notes: Vec<u32>, revis
         written,
         marked,
         notes,
+        reapplied: Vec::new(),
         revision,
     }
 }
 
+/// Docs/adr/4540: the decisions recorded on earlier candidates that this run takes again. For each candidate of this
+/// run without a decision of its own (not reviewed, none given), the resolved review notes of this command of its
+/// source (by name) whose candidate is still in the drawing (reviewed, on the same source's layer, of the same kind) and
+/// near it as two candidates are one group (within the radius; areas: their overlap above the least); the nearest
+/// (areas: the largest overlap), then the note's number; a note naming a class the profile no longer has is left. The
+/// input with them added as decisions, and which candidate took which note.
+fn with_reapplied(doc: &Document, input: &FeaturesReconcile) -> Result<(FeaturesReconcile, Vec<ReappliedDecision>), Stop> {
+    if !input.reapply {
+        return Ok((input.clone(), Vec::new()));
+    }
+    let plan = check(doc, input)?;
+    let least = input.overlap.unwrap_or(DEFAULT_OVERLAP);
+    let given: std::collections::BTreeSet<&str> = input.decisions.iter().map(|d| d.candidate.as_str()).collect();
+    let recorded: Vec<(u32, &ReviewDecision)> = doc
+        .settings()
+        .review_notes
+        .iter()
+        .filter(|n| n.status == ReviewStatus::Resolved)
+        .filter_map(|n| n.decision.as_ref().map(|d| (n.number, d)))
+        .filter(|(_, d)| d.command == kentos_commands::MAP_FEATURES_RECONCILE)
+        .filter(|(_, d)| d.class.as_ref().is_none_or(|k| plan.profile.classes.iter().any(|c| c.id == *k)))
+        .collect();
+    let mut out = input.clone();
+    let mut taken = Vec::new();
+    for c in plan.candidates.iter().filter(|c| c.status != "reviewed" && !given.contains(c.uid.as_str())) {
+        let source = plan.names[c.source].trim();
+        let mut best: Option<(f64, u32, &ReviewDecision)> = None;
+        for &(number, d) in &recorded {
+            if d.source.trim() != source {
+                continue;
+            }
+            let Some(old) =
+                plan.candidates.iter().find(|o| o.uid == d.candidate && o.status == "reviewed" && o.source == c.source && o.kind == c.kind)
+            else {
+                continue;
+            };
+            let score = match c.kind {
+                Kind::Area => {
+                    let r = overlap(old, c);
+                    if r > least { -r } else { continue }
+                }
+                _ => {
+                    let a = apart(old, c);
+                    if a <= input.radius { a } else { continue }
+                }
+            };
+            if best.is_none_or(|(s, n, _)| score < s || (score == s && number < n)) {
+                best = Some((score, number, d));
+            }
+        }
+        if let Some((_, number, d)) = best {
+            out.decisions.push(CandidateDecision {
+                candidate: c.uid.clone(),
+                class: d.class.clone(),
+                accept: d.accept,
+                reject: d.reject.clone(),
+                fields: d.fields.clone(),
+            });
+            taken.push(ReappliedDecision { candidate: c.uid.clone(), note: number });
+        }
+    }
+    Ok((out, taken))
+}
+
 fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
+    // Docs/adr/4540: the recorded decisions taken again, first.
+    let (input, reapplied) = match with_reapplied(cx.doc, &input) {
+        Ok(x) => x,
+        Err(stop) => return stop.into(),
+    };
     let mut plan = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
@@ -899,7 +969,8 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
     let mut marked = 0u32;
     let mut notes: Vec<u32> = Vec::new();
     if !marks_any {
-        let output = answer(&plan, written, marked, Vec::new(), cx.doc.revision().to_string());
+        let mut output = answer(&plan, written, marked, Vec::new(), cx.doc.revision().to_string());
+        output.reapplied = reapplied;
         return CommandResult::Completed { output, warnings: Vec::new() };
     }
     // Docs/adr/4140: the decisions that take (their candidates marked), each a review note; room for them first.
@@ -1003,7 +1074,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
             book.push(ReviewNote {
                 id: Uuid::now_v7().to_string(),
                 number,
-                text: decision_words(&plan, d, &source),
+                text: match reapplied.iter().find(|r| r.candidate == d.candidate) {
+                    // Docs/adr/4540: the note it came from.
+                    Some(r) => format!("{} Önceki karar (not {}) yeniden uygulandı.", decision_words(&plan, d, &source), r.note),
+                    None => decision_words(&plan, d, &source),
+                },
                 status: ReviewStatus::Resolved,
                 origin: ReviewOrigin::User,
                 author: reviewer.clone(),
@@ -1032,13 +1107,14 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesReconcile) -> CommandResu
         }
         Ok(())
     });
-    let output = answer(&plan, written, marked, notes, cx.doc.revision().to_string());
+    let mut output = answer(&plan, written, marked, notes, cx.doc.revision().to_string());
+    output.reapplied = reapplied;
     CommandResult::Completed { output, warnings: Vec::new() }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match with_reapplied(cx.doc, input).and_then(|(input, _)| check(cx.doc, &input)) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -1046,8 +1122,12 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> Command
 
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &FeaturesReconcile) -> CommandResult<FeaturesReconciled> {
-    match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: answer(&p, Vec::new(), 0, Vec::new(), cx.doc.revision().to_string()), warnings: Vec::new() },
+    match with_reapplied(cx.doc, input).and_then(|(input, reapplied)| check(cx.doc, &input).map(|p| (p, reapplied))) {
+        Ok((p, reapplied)) => {
+            let mut output = answer(&p, Vec::new(), 0, Vec::new(), cx.doc.revision().to_string());
+            output.reapplied = reapplied;
+            CommandResult::Completed { output, warnings: Vec::new() }
+        }
         Err(stop) => stop.into(),
     }
 }
