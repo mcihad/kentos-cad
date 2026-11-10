@@ -310,7 +310,10 @@ pub(crate) fn sessions_line(a: &MapSurveyNetworked) -> Option<(Kind, String)> {
     if let Some(g) = &a.velocity_grid {
         parts.push(format!("yeni noktaların hızı “{}” hız ızgarasından", g.name));
     }
-    (!parts.is_empty()).then(|| (kind, format!("{}.", parts.join("; "))))
+    let text = parts.join("; ");
+    let mut chars = text.chars();
+    let first = chars.next()?;
+    Some((kind, format!("{}{}.", first.to_uppercase(), chars.as_str())))
 }
 
 /// A row of Bazlar: an archive baseline and, when it went into the network, its free stage's test.
@@ -707,12 +710,12 @@ impl App {
                             num("σ kuzey (mm)", 90.0),
                             num("σ doğu (mm)", 90.0),
                             num("σ yukarı (mm)", 90.0),
+                            col("Hız D/K/Y (mm/yıl)", 130.0),
                             col("Güven bölgesi a/b, yön, kot (mm)", 190.0),
                             num("ΔY (mm)", 80.0),
                             num("ΔX (mm)", 80.0),
                             num("ΔZ (mm)", 80.0),
                             col("Sınıf", 70.0),
-                            col("Hız D/K/Y (mm/yıl)", 130.0),
                             col("Kabul edilen", 90.0),
                         ],
                         a.stations
@@ -729,6 +732,8 @@ impl App {
                                     mm(st.sigma[0]),
                                     mm(st.sigma[1]),
                                     mm(st.sigma[2]),
+                                    // Docs/adr/4920: from the campaign's grid, east/north/up.
+                                    st.velocity.map_or(String::new(), |v| format!("{}/{}/{}", mm(v[0]), mm(v[1]), mm(v[2]))),
                                     // The error ellipse's semi-axes, its direction (a semt), the height's interval.
                                     st.ellipse.as_ref().map_or(String::new(), |e| {
                                         let way = e.azimuth.map_or("yönsüz".to_owned(), |d| self.format().bearing(d * 10.0 / 9.0));
@@ -738,8 +743,6 @@ impl App {
                                     f(st.dy),
                                     f(st.dz),
                                     st.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() }),
-                                    // Docs/adr/4920: from the campaign's grid, east/north/up.
-                                    st.velocity.map_or(String::new(), |v| format!("{}/{}/{}", mm(v[0]), mm(v[1]), mm(v[2]))),
                                     st.point.clone().unwrap_or_default(),
                                 ]
                             })

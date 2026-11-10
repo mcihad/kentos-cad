@@ -582,7 +582,7 @@ impl App {
             let kept = tree.tolerance.as_ref().map_or_else(
                 || "Projede sınır yok.".to_owned(),
                 |t| {
-                    let m = |v: Option<f64>| v.map_or("—".to_owned(), |v| format!("{v}"));
+                    let m = |v: Option<f64>| v.map_or("—".to_owned(), |v| format!("{v}").replace('.', ","));
                     format!("Projede: yatay {}, düşey {} m · {}", m(t.horizontal), m(t.vertical), t.source)
                 },
             );
