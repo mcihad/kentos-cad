@@ -36,7 +36,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
@@ -869,6 +869,16 @@ denklemleriyle hesaplar; 1500 bilinmeyen sınırı kalktı, zarf 30 milyon girdi
 çarpanınkiyle aynı. Ölçüm (M5, sürüm): 2 500 istasyon 0,13 s, 10 000 istasyon 1,5 s, 19 600 istasyon 6,0 s. Bütün GNSS
 ortak durumları aynı; 676 istasyonluk ağ numpy'yle (Python), MCP'de ve GNSS baz ağı penceresinde. Açık: bölümlü
 dengeleme, düzlem ve nivelman ağlarının seyrek çözümü, robust kestirim, ağırlıklı benzerlik.
+
+**11 Kasım 2026, onuncu tur — GNSS ağının dayanıklı kestirimi ([ADR 4960](../docs/adr/4960-gnss-network-robust-estimation.md)).**
+Kapsam: **Harita + CBS**. Dayanak: BÖHHBÜY m. 15, 28, 40, 79 (“uygun test”, 0,95; yöntem adı yok; uyuşumsuz ölçü
+yeniden ölçülür), Boz ve Gökalp FIG 2006 (GPS baz bileşenlerinde Huber, Danimarka, IGG-III; c 1,5–2 s0), açık kaynak bir
+eklentinin IRLS kodu (bazın tümüne tek çarpan; Huber 1,5, Danimarka 2,0). Kanıtlanan: `cad.survey.baselines`'ın
+`robust {method, c}`'si; bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (eklentinin q_vv'li biçimi örnek
+ağda dörtlü döngüye girdi, ölçüldü); çarpan birikmez, 10⁻⁹'da durur; baz silinmez, cevapta `factor` ve `robust`
+(adım, oturdu mu, düşen sayısı). 6 yeni bağımsız durum (31), 64 istasyonluk ağ numpy IRLS'iyle (Python), MCP, GNSS baz
+ağı penceresinde Dayanıklı kestirim satırı ve Ağırlık çarpanı sütunu, resimler. Açık: ağırlıklı benzerlik, bölümlü
+dengeleme, `map.survey.network` kabulünde ve düzlem/nivelman ağlarında dayanıklı kestirim, IGG-III.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

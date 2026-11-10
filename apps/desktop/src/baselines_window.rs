@@ -1,13 +1,14 @@
 //! GNSS baz ağı (docs/adr/1380; `survey.baselines`): a file of stations and baselines (`K;…`, `N;…`, `B;…` lines) read
 //! and adjusted by `cad.survey.baselines`, read only. The window shows the network's m0 and χ² test, each station's
 //! standard deviations in east, north, up (mm) and each baseline's residual and test; Minimal datum and the variance
-//! factor adjust it again. Nothing is written: taking the coordinates is a later, separate step.
+//! factor adjust it again; robust estimation (docs/adr/4960, Huber or Danish) reweights the baselines and shows each
+//! one's factor. Nothing is written: taking the coordinates is a later, separate step.
 
 use std::path::PathBuf;
 
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{BaselineDatum, CommandResult, SurveyBaselines, SurveyBaselinesAdjusted};
+use kentos_commands::{BaselineDatum, BaselineRobust, CommandResult, RobustMethod, SurveyBaselines, SurveyBaselinesAdjusted};
 use kentos_native_application::{ExecutionContext, survey_baselines};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented, Switch};
@@ -28,6 +29,9 @@ pub struct State {
     pub text: Option<String>,
     pub minimal: bool,
     pub scale: f64,
+    pub robust: Robust,
+    /// Robust estimation's constant c; 0 until the user gives one (the method's own then).
+    pub c: f64,
     pub answer: Option<Result<SurveyBaselinesAdjusted, String>>,
 }
 
@@ -48,6 +52,35 @@ impl std::fmt::Display for View {
     }
 }
 
+/// Robust estimation (docs/adr/4960): none, or the weight function.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Robust {
+    #[default]
+    Off,
+    Huber,
+    Danish,
+}
+
+impl std::fmt::Display for Robust {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Robust::Off => "Yok",
+            Robust::Huber => "Huber",
+            Robust::Danish => "Danimarka",
+        })
+    }
+}
+
+impl Robust {
+    fn method(self) -> Option<RobustMethod> {
+        match self {
+            Robust::Off => None,
+            Robust::Huber => Some(RobustMethod::Huber),
+            Robust::Danish => Some(RobustMethod::Danish),
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub enum Event {
     View(View),
@@ -55,6 +88,8 @@ pub enum Event {
     Picked(Option<PathBuf>),
     Minimal(bool),
     Scale(f64),
+    Robust(Robust),
+    C(f64),
     Close,
 }
 
@@ -73,6 +108,10 @@ impl App {
             text: Some(text),
             scale: (self.baselines.scale != 1.0).then_some(self.baselines.scale),
             datum: if self.baselines.minimal { BaselineDatum::Minimal } else { BaselineDatum::Given },
+            robust: self.baselines.robust.method().map(|method| BaselineRobust {
+                method,
+                c: (self.baselines.c > 0.0).then_some(self.baselines.c),
+            }),
             ..SurveyBaselines::default()
         };
         let Some(doc) = self.document.as_mut() else { return };
@@ -136,6 +175,18 @@ impl App {
                     self.baselines_run();
                 }
             }
+            Event::Robust(r) => {
+                self.baselines.robust = r;
+                // The method's own constant, until the user gives one.
+                self.baselines.c = 0.0;
+                self.baselines_run();
+            }
+            Event::C(v) => {
+                if v > 0.0 {
+                    self.baselines.c = v;
+                    self.baselines_run();
+                }
+            }
             Event::Close => {
                 self.baselines = State::default();
                 self.dialog = None;
@@ -152,7 +203,21 @@ impl App {
             .label_width(130.0)
             .field("Baz dosyası", row![words::secondary(OPEN, Some(msg(Event::Pick))), label::caption(file)].spacing(10).align_y(Center))
             .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140))
-            .row(Switch::new(s.minimal, |on| msg(Event::Minimal(on))).label("Minimal datum (sabit yokken ilk bilinen istasyonu tut)"));
+            .row(Switch::new(s.minimal, |on| msg(Event::Minimal(on))).label("Minimal datum (sabit yokken ilk bilinen istasyonu tut)"))
+            .field("Dayanıklı kestirim", {
+                let choice = Segmented::new([Robust::Off, Robust::Huber, Robust::Danish], s.robust, |r| msg(Event::Robust(r)));
+                // The constant shares the row: it belongs to the weight function (the owner: related small controls).
+                let used = match &s.answer {
+                    Some(Ok(a)) => a.robust.as_ref().map(|r| r.c),
+                    _ => None,
+                };
+                match (s.robust, used) {
+                    (Robust::Off, _) | (_, None) => row![choice].align_y(Center),
+                    (_, Some(c)) => row![choice, label::caption("c"), NumberInput::new(c, |v| msg(Event::C(v))).step(0.5).decimals(2).point().width(110)]
+                        .spacing(10)
+                        .align_y(Center),
+                }
+            });
         let mut body = Column::new().spacing(10).push(head);
         let mut lines = vec![words::text_line(
             Kind::Info,
@@ -172,6 +237,24 @@ impl App {
                     Kind::Info,
                     format!("{} istasyon, {} baz: {} bilinmeyen, {} gözlem denklemi.", a.stations.len(), a.baselines.len(), a.u, a.n),
                 ));
+                // Docs/adr/4960: robust estimation weighs a baseline down, it does not remove it; the regulation wants
+                // a discordant measurement measured again.
+                if let Some(r) = &a.robust {
+                    let name = if r.method == RobustMethod::Huber { "Huber" } else { "Danimarka" };
+                    let settled = if r.converged {
+                        format!("{} adımda oturdu", r.rounds)
+                    } else {
+                        format!("{} adımda oturmadı", r.rounds)
+                    };
+                    let (kind, text) = match r.downweighted {
+                        0 => (Kind::Ok, format!("Dayanıklı kestirim ({name}, c {:.2}): {settled}; hiçbir bazın ağırlığı düşmedi.", r.c)),
+                        n => (
+                            Kind::Warn,
+                            format!("Dayanıklı kestirim ({name}, c {:.2}): {settled}; {n} bazın ağırlığı düştü, silinmedi: denetleyip yeniden ölçün.", r.c),
+                        ),
+                    };
+                    lines.push(words::text_line(if r.converged { kind } else { Kind::Warn }, text));
+                }
                 if let Some(h) = &a.held {
                     lines.push(words::text_line(Kind::Info, format!("Minimal datum: “{h}” tutuldu.")));
                 }
@@ -194,7 +277,14 @@ impl App {
                         240.0,
                     ),
                     View::Baselines => sheet(
-                        vec![col("Başlangıç", 110.0), col("Bitiş", 110.0), num("Artık (mm)", 100.0), num("w", 80.0), col("Durum", 120.0)],
+                        {
+                            let mut cols = vec![col("Başlangıç", 90.0), col("Bitiş", 90.0), num("Artık (mm)", 90.0), num("w", 60.0)];
+                            if a.robust.is_some() {
+                                cols.push(num("Ağırlık çarpanı", 120.0));
+                            }
+                            cols.push(col("Durum", 110.0));
+                            cols
+                        },
                         a.baselines
                             .iter()
                             .enumerate()
@@ -202,11 +292,17 @@ impl App {
                                 let len = (b.v[0] * b.v[0] + b.v[1] * b.v[1] + b.v[2] * b.v[2]).sqrt();
                                 let state = match (b.flag.as_str(), a.worst == Some(i as u32)) {
                                     ("blunder", _) => "Kaba hata",
+                                    _ if b.factor.is_some_and(|f| f < 1.0) => "Ağırlık düştü",
                                     (_, true) => "En kötü",
                                     _ if b.w.is_none() => "Denetlenemez",
                                     _ => "Geçti",
                                 };
-                                vec![b.from.clone(), b.to.clone(), mm(len), b.w.map_or("—".to_owned(), |w| format!("{w:.2}")), state.to_owned()]
+                                let mut cells = vec![b.from.clone(), b.to.clone(), mm(len), b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))];
+                                if let Some(f) = b.factor {
+                                    cells.push(format!("{f:.4}"));
+                                }
+                                cells.push(state.to_owned());
+                                cells
                             })
                             .collect(),
                         "Baz yok.",

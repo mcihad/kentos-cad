@@ -16,6 +16,7 @@ from .types import (  # noqa: F401
     AngleUnitName,
     BaselineDatum,
     BaselineDatumName,
+    BaselineRobust,
     BaselineStation,
     BaselineVector,
     EntitiesCreatePlan,
@@ -188,9 +189,16 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
     verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
     B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
     (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-    okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
-    invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
-    datum_missing, network_too_large, network_disconnected.
+    okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. robust {method:
+    huber|danish, c} dayanıklı kestirimdir (yinelemeli yeniden ağırlıklandırma): her
+    adımda bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (σ verilen
+    kovaryanstan, önsel σ0 = 1), |w| > c ise ağırlık çarpanı Huber c/|w|, Danimarka
+    exp(−((|w| − c)/c)²); c verilmezse Huber 1,5, Danimarka 2,0; hiçbir çarpan 10⁻⁹'dan
+    çok değişmeyince (en çok 100 adım) durur. Baz silinmez: cevapta her bazın factor'ı
+    ve robust (adım, oturdu mu, ağırlığı düşen baz sayısı); istatistikler yeniden
+    ağırlıklı modelindir. Retler: invalid_input, no_baselines, duplicate_station,
+    unknown_station, invalid_covariance, datum_missing, network_too_large,
+    network_disconnected.
     """
     __slots__ = ()
     id = "cad.survey.baselines"
@@ -208,6 +216,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -228,14 +237,22 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
         B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
         (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-        okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
-        invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
-        datum_missing, network_too_large, network_disconnected.
+        okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. robust {method:
+        huber|danish, c} dayanıklı kestirimdir (yinelemeli yeniden ağırlıklandırma): her
+        adımda bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (σ verilen
+        kovaryanstan, önsel σ0 = 1), |w| > c ise ağırlık çarpanı Huber c/|w|, Danimarka
+        exp(−((|w| − c)/c)²); c verilmezse Huber 1,5, Danimarka 2,0; hiçbir çarpan 10⁻⁹'dan
+        çok değişmeyince (en çok 100 adım) durur. Baz silinmez: cevapta her bazın factor'ı
+        ve robust (adım, oturdu mu, ağırlığı düşen baz sayısı); istatistikler yeniden
+        ağırlıklı modelindir. Retler: invalid_input, no_baselines, duplicate_station,
+        unknown_station, invalid_covariance, datum_missing, network_too_large,
+        network_disconnected.
 
         Args:
             doc: The drawing it works on.
             baselines:
             datum:
+            robust:
             scale: Unit: 1.
             stations:
             text:
@@ -254,6 +271,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.execute_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -266,6 +284,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -276,6 +295,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.plan_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -288,6 +308,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -298,6 +319,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.validate_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,
@@ -310,6 +332,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         *,
         baselines: Sequence[BaselineVector] | Unset = UNSET,
         datum: BaselineDatum | BaselineDatumName | Unset = UNSET,
+        robust: BaselineRobust | None | Unset = UNSET,
         scale: float | None | Unset = UNSET,
         stations: Sequence[BaselineStation] | Unset = UNSET,
         text: str | None | Unset = UNSET,
@@ -325,6 +348,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         return self.answer_input(doc, SurveyBaselines(
             baselines=_opt(baselines, lambda x: list(x)),
             datum=datum,
+            robust=robust,
             scale=scale,
             stations=_opt(stations, lambda x: list(x)),
             text=text,

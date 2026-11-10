@@ -689,6 +689,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         datum: Datum::Given,
         sessions: sessions.clone(),
         correlated,
+        robust: None,
     };
     let free = gnss::adjust(&core(free_stations, baselines.clone())).map_err(refused)?;
     let held = gnss::adjust(&core(held_stations, baselines)).map_err(refused)?;

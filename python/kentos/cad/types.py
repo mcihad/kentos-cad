@@ -6735,6 +6735,18 @@ RoadSourceKindName = Literal["surface", "alignment", "profile", "template", "sec
 """The names of :class:`RoadSourceKind`, for a plain string."""
 
 
+class RobustMethod(_StrEnum):
+    """Robust estimation's weight function (docs/adr/4960): `huber` c / |w|, `danish` exp(−((|w| − c) / c)²); 1 when
+    |w| ≤ c.
+    """
+    HUBER = "huber"
+    DANISH = "danish"
+
+
+RobustMethodName = Literal["huber", "danish"]
+"""The names of :class:`RobustMethod`, for a plain string."""
+
+
 class ScaleBasis(_StrEnum):
     """What a pattern's Ölçek is of (docs/adr/0331 §3).
 
@@ -19069,15 +19081,17 @@ class AuditedRecord(_Model):
 @dataclass(kw_only=True, slots=True)
 class BaselineResult(_Model):
     """A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and
-    what it says (`ok`, `blunder`, `uncontrolled`).
+    what it says (`ok`, `blunder`, `uncontrolled`); with robust estimation its weight factor in the solution.
     Attributes:
         v: Unit: m.
+        factor: Unit: 1.
         w: Unit: 1.
     """
     from_: str
     to: str
     v: list[float]
     flag: str
+    factor: float | None | Unset = UNSET
     w: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -19086,6 +19100,8 @@ class BaselineResult(_Model):
         out["to"] = self.to
         out["v"] = [float(e0) for e0 in self.v]
         out["flag"] = self.flag
+        if self.factor is not UNSET:
+            out["factor"] = None if self.factor is None else float(self.factor)
         if self.w is not UNSET:
             out["w"] = None if self.w is None else float(self.w)
         return out
@@ -19097,7 +19113,34 @@ class BaselineResult(_Model):
             to=data["to"],
             v=[float(e0) for e0 in data["v"]],
             flag=data["flag"],
+            factor=UNSET if "factor" not in data else None if data["factor"] is None else float(data["factor"]),
             w=UNSET if "w" not in data else None if data["w"] is None else float(data["w"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BaselineRobust(_Model):
+    """Robust estimation (docs/adr/4960): the baselines reweighted round by round by the weight function of their
+    standardised residual (the largest component's |v| / √q_vv, a priori σ0 = 1); `c` the constant (default Huber 1.5,
+    Danish 2.0). Nothing is removed; a baseline whose factor fell below 1 is to be checked.
+    Attributes:
+        c: Unit: 1.
+    """
+    method: RobustMethod | RobustMethodName
+    c: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        if self.c is not UNSET:
+            out["c"] = None if self.c is None else float(self.c)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BaselineRobust:
+        return cls(
+            method=_enum_in(RobustMethod, data["method"]),
+            c=UNSET if "c" not in data else None if data["c"] is None else float(data["c"]),
         )
 
 
@@ -86929,6 +86972,41 @@ class RoadsEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RobustRounds(_Model):
+    """How the robust rounds went: the weight function, its constant, the rounds, whether the factors settled (no factor
+    moved by more than 10⁻⁹; at most 100 rounds), how many baselines' factors are below 1.
+    Attributes:
+        c: Unit: 1.
+        rounds: Unit: count.
+        downweighted: Unit: count.
+    """
+    method: RobustMethod | RobustMethodName
+    c: float
+    rounds: int
+    converged: bool
+    downweighted: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["c"] = float(self.c)
+        out["rounds"] = self.rounds
+        out["converged"] = self.converged
+        out["downweighted"] = self.downweighted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RobustRounds:
+        return cls(
+            method=_enum_in(RobustMethod, data["method"]),
+            c=float(data["c"]),
+            rounds=data["rounds"],
+            converged=data["converged"],
+            downweighted=data["downweighted"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RoofEntity(Entity):
     """A roof (docs/adr/8044 §1).
     Attributes:
@@ -100471,16 +100549,17 @@ class SurveyBaselines(_Model):
     """Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`
     a known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`
     a baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the
-    covariances are multiplied by (default 1); the datum.
+    covariances are multiplied by (default 1); the datum; robust estimation when asked (docs/adr/4960).
 
     Refusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station
-    fixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
+    fixed and weighted, robust estimation's c not above 0 …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
     definite), `datum_missing`, `network_too_large` (the normal matrix's envelope above 30 million entries, docs/adr/4560), `network_disconnected`.
     Attributes:
         scale: Unit: 1.
     """
     baselines: list[BaselineVector] | Unset = UNSET
     datum: BaselineDatum | BaselineDatumName | Unset = UNSET
+    robust: BaselineRobust | None | Unset = UNSET
     scale: float | None | Unset = UNSET
     stations: list[BaselineStation] | Unset = UNSET
     text: str | None | Unset = UNSET
@@ -100491,6 +100570,8 @@ class SurveyBaselines(_Model):
             out["baselines"] = [e0.to_json() for e0 in self.baselines]
         if self.datum is not UNSET:
             out["datum"] = _enum_out(self.datum)
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.scale is not UNSET:
             out["scale"] = None if self.scale is None else float(self.scale)
         if self.stations is not UNSET:
@@ -100504,6 +100585,7 @@ class SurveyBaselines(_Model):
         return cls(
             baselines=[BaselineVector.from_json(e0) for e0 in data["baselines"]] if "baselines" in data else UNSET,
             datum=_enum_in(BaselineDatum, data["datum"]) if "datum" in data else UNSET,
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else BaselineRobust.from_json(data["robust"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
             stations=[BaselineStation.from_json(e0) for e0 in data["stations"]] if "stations" in data else UNSET,
             text=data.get("text", UNSET),
@@ -100515,7 +100597,8 @@ class SurveyBaselinesAdjusted(_Model):
     """Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the
     minimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of
     freedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged
-    test value, and the drawing's revision.
+    test value, how the robust rounds went (when asked; the statistics are then the reweighted model's), and the
+    drawing's revision.
     Attributes:
         n: Unit: count.
         u: Unit: count.
@@ -100536,6 +100619,7 @@ class SurveyBaselinesAdjusted(_Model):
     held: str | None | Unset = UNSET
     m0: float | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
+    robust: RobustRounds | None | Unset = UNSET
     worst: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -100555,6 +100639,8 @@ class SurveyBaselinesAdjusted(_Model):
             out["m0"] = None if self.m0 is None else float(self.m0)
         if self.passed is not UNSET:
             out["passed"] = self.passed
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
         if self.worst is not UNSET:
             out["worst"] = self.worst
         return out
@@ -100573,6 +100659,7 @@ class SurveyBaselinesAdjusted(_Model):
             held=data.get("held", UNSET),
             m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
             passed=data.get("passed", UNSET),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RobustRounds.from_json(data["robust"]),
             worst=data.get("worst", UNSET),
         )
 
@@ -136931,6 +137018,7 @@ __all__ = [
     "BaselineDimensionMeasure",
     "BaselineMapSurveyOperation",
     "BaselineResult",
+    "BaselineRobust",
     "BaselineSigmaOf",
     "BaselineSigmaOfName",
     "BaselineSolution",
@@ -139788,6 +139876,9 @@ __all__ = [
     "RoadWork",
     "RoadsEdit",
     "RoadsEdited",
+    "RobustMethod",
+    "RobustMethodName",
+    "RobustRounds",
     "RoofEntity",
     "RoofsCreate",
     "RoofsCreated",

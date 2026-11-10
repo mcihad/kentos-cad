@@ -14,6 +14,7 @@ use super::linalg::Inverse;
 use super::session::{Group, whitener};
 pub use super::session::GnssSession;
 use super::sparse::{Envelope, reverse_cuthill_mckee};
+use super::robust::{MAX_ROUNDS, Robust, Rounds, TOLERANCE};
 use super::{ObservationResult, Observed, Statistics, name_key, statistics};
 use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 
@@ -58,6 +59,8 @@ pub struct GnssInput {
     /// Whether the baselines are tested component by component as correlated observations (docs/adr/4920); with
     /// sessions they must be.
     pub correlated: bool,
+    /// Robust estimation (docs/adr/4960): the baselines reweighted round by round; none, plain least squares.
+    pub robust: Option<Robust>,
 }
 
 /// A station adjusted: X, Y, Z and their standard deviations (scaled by m0), the same in the station's local east,
@@ -90,6 +93,10 @@ pub struct GnssResult {
     /// The station the minimal constraint held, when it held one.
     pub held: Option<String>,
     pub stats: Statistics,
+    /// Each baseline's weight factor in the solution (docs/adr/4960; all 1 without robust estimation).
+    pub factors: Vec<f64>,
+    /// How the robust rounds went, when asked.
+    pub rounds: Option<Rounds>,
 }
 
 /// Why a network was not adjusted: a code and the words.
@@ -323,6 +330,18 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     if !(input.scale.is_finite() && input.scale > 0.0) {
         return Err(refuse("invalid_input", "Varyans çarpanı sıfırdan büyük bir sayı olmalı.".into(), "scale".into()));
     }
+    if let Some(r) = input.robust {
+        if !(r.c.is_finite() && r.c > 0.0) {
+            return Err(refuse("invalid_input", "Dayanıklı kestirimin c sabiti sıfırdan büyük bir sayı olmalı.".into(), "robust.c".into()));
+        }
+        if !input.sessions.is_empty() || input.correlated {
+            return Err(refuse(
+                "invalid_input",
+                "Dayanıklı kestirim oturumlu ya da korelasyonlu sınanan ağda henüz yok; oturumları kaldırın ya da dayanıklı kestirimi kapatın.".into(),
+                "robust".into(),
+            ));
+        }
+    }
     if input.baselines.is_empty() {
         return Err(refuse("no_baselines", "Baz vektörü yok; en az bir baz verin.".into(), "baselines".into()));
     }
@@ -536,30 +555,70 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
             }
         }
     }
-    let mut n = Envelope::new(first);
-    let mut rhs = vec![0.0; u];
-    for (coef, l, _, _) in &rows {
-        for &(i, ai) in coef {
-            rhs[i] += ai * l;
-            for &(j, aj) in coef {
-                if i >= j {
-                    n.add(i, j, ai * aj);
+    // A baseline's standardised residual (docs/adr/4960): the largest of its components' |v| / σ, σ the component's
+    // given standard deviation (the covariance by the variance factor, a priori σ0 = 1), as Huber's M-estimate scales
+    // the residuals by a known scale.
+    let standardised = |k: usize, x: &[f64]| -> f64 {
+        let c = input.baselines[k].cov;
+        let mut worst = 0.0;
+        for (comp, var) in [c[0], c[3], c[5]].into_iter().enumerate() {
+            let (coef, l) = design(k, comp);
+            let v: f64 = coef.iter().map(|&(i, a)| a * x[i]).sum::<f64>() - l;
+            worst = js_max(worst, v.abs() / (var * input.scale).sqrt());
+        }
+        worst
+    };
+    // Robust estimation (docs/adr/4960): each round the baselines' whitened rows are multiplied by √factor (the
+    // covariance divided by it); plain least squares is one round with every factor 1.
+    let mut factors: Vec<f64> = vec![1.0; input.baselines.len()];
+    let mut rounds = 0;
+    let mut converged = false;
+    let (rows, x, q) = loop {
+        let weighted: Vec<Row> = rows
+            .iter()
+            .map(|(coef, l, kind, row)| {
+                let s = if *kind == "baseline" { factors[*row].sqrt() } else { 1.0 };
+                (coef.iter().map(|&(i, a)| (i, a * s)).collect(), l * s, *kind, *row)
+            })
+            .collect();
+        let mut n = Envelope::new(first.clone());
+        let mut rhs = vec![0.0; u];
+        for (coef, l, _, _) in &weighted {
+            for &(i, ai) in coef {
+                rhs[i] += ai * l;
+                for &(j, aj) in coef {
+                    if i >= j {
+                        n.add(i, j, ai * aj);
+                    }
                 }
             }
         }
-    }
-    let factor = n.cholesky().map_err(|bad| {
-        // The station the dense factor in input order named (a floating part), else the one whose pivot failed here.
-        let station = floating(input, &ends, &fixed)
-            .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).map_or(0, |i| i));
-        refuse(
-            "network_disconnected",
-            format!("“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.", input.stations[station].name.trim()),
-            "baselines".into(),
-        )
-    })?;
-    let x = factor.solve(&rhs);
-    let q = factor.inverse();
+        let factor = n.cholesky().map_err(|bad| {
+            // The station the dense factor in input order named (a floating part), else the one whose pivot failed here.
+            let station = floating(input, &ends, &fixed)
+                .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).map_or(0, |i| i));
+            refuse(
+                "network_disconnected",
+                format!("“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.", input.stations[station].name.trim()),
+                "baselines".into(),
+            )
+        })?;
+        let x = factor.solve(&rhs);
+        let q = factor.inverse();
+        let Some(robust) = input.robust else {
+            break (weighted, x, q);
+        };
+        rounds += 1;
+        let next: Vec<f64> = (0..input.baselines.len())
+            .map(|k| robust.factor(Some(standardised(k, &x))))
+            .collect();
+        let moved = next.iter().zip(&factors).fold(0.0, |m, (a, b)| js_max(m, (a - b).abs()));
+        if moved <= TOLERANCE || rounds == MAX_ROUNDS {
+            converged = moved <= TOLERANCE;
+            break (weighted, x, q);
+        }
+        factors = next;
+    };
     // The misclosures at the solution (observed − computed), unit weight.
     let obs: Vec<Observed> = rows
         .iter()
@@ -704,7 +763,8 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         }
         baselines.push(BaselineResidual { v, w, flag, adjusted });
     }
-    Ok(GnssResult { stations, baselines, held, stats })
+    let rounds = input.robust.map(|robust| Rounds { robust, rounds, converged });
+    Ok(GnssResult { stations, baselines, held, stats, factors, rounds })
 }
 
 #[cfg(test)]
@@ -752,7 +812,7 @@ mod tests {
                 }
             }
         }
-        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given, sessions: Vec::new(), correlated: false }
+        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given, sessions: Vec::new(), correlated: false, robust: None }
     }
 
     /// The same network by dense normal equations in input order (ADR 1380's solve, the unknowns corrections to

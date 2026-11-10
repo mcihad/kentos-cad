@@ -651,6 +651,11 @@
 - **GNSS ağının seyrek çözümü (10 Kasım 2026; MAP-05, [ADR 4560](../../docs/adr/4560-gnss-network-sparse-solution.md)).**
   `gnss::adjust`: ters Cuthill–McKee sırası, zarfında Cholesky, Takahashi ile seçili ters; 1500 bilinmeyen sınırı yerine
   zarf en çok 30 milyon girdi (19 600 istasyon 6 s, sürüm). GNSS baz ağı özeti ağın büyüklüğünü söyler. Harita + CBS.
+- **GNSS ağının dayanıklı kestirimi (11 Kasım 2026; MAP-05, [ADR 4960](../../docs/adr/4960-gnss-network-robust-estimation.md)).**
+  `cad.survey.baselines`'ın `robust`'u (huber | danish, c; öntanım 1,5 / 2,0): yinelemeli yeniden ağırlıklandırma,
+  bazın tümüne tek çarpan, standart artık bileşenlerin |v|/σ'sının en büyüğü; 10⁻⁹'da durur (en çok 100 adım). Baz
+  silinmez; cevapta `factor` ve `robust`. GNSS baz ağı › Dayanıklı kestirim, Ağırlık çarpanı sütunu. Oturumlu ağda ve
+  `map.survey.network`'te yok. Harita + CBS.
 - **Katalog geçiş raporu (11 Kasım 2026; MAP-04, [ADR 4940](../../docs/adr/4940-catalog-migration-report.md)).**
   `cad.profiles.compare` (salt okunur): eski ve yeni katalog (veri profili); sınıf kalıcı kimliğiyle, yoksa saha
   kodlarıyla izlenir (same, changed, renamed, split, merged, retired, added); alanlar, liste kodları ve Detay

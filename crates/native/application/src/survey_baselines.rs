@@ -4,10 +4,11 @@
 //! `fixtures/commands/v1/cad.survey.baselines.json`.
 
 use kentos_commands::{
-    AdjustedGnssStation, BaselineDatum, BaselineResult, BaselineStation, BaselineVector, CommandResult, SurveyBaselines,
-    SurveyBaselinesAdjusted,
+    AdjustedGnssStation, BaselineDatum, BaselineResult, BaselineStation, BaselineVector, CommandResult, RobustMethod,
+    RobustRounds, SurveyBaselines, SurveyBaselinesAdjusted,
 };
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssStation};
+use kentos_geometry_core::survey::adjust::robust::{Method, Robust};
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -103,6 +104,13 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
         },
         sessions: Vec::new(),
         correlated: false,
+        robust: input.robust.as_ref().map(|r| {
+            let method = match r.method {
+                RobustMethod::Huber => Method::Huber,
+                RobustMethod::Danish => Method::Danish,
+            };
+            Robust { method, c: r.c.unwrap_or(method.default_c()) }
+        }),
     };
     let r = gnss::adjust(&core).map_err(|e| fail(e.code, e.message, &e.path))?;
     let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
@@ -118,12 +126,14 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
             .baselines
             .into_iter()
             .zip(&baselines)
-            .map(|(v, b)| BaselineResult {
+            .zip(&r.factors)
+            .map(|((v, b), factor)| BaselineResult {
                 from: b.from.trim().to_owned(),
                 to: b.to.trim().to_owned(),
                 v: v.v,
                 w: v.w,
                 flag: v.flag.to_owned(),
+                factor: r.rounds.map(|_| *factor),
             })
             .collect(),
         held: r.held,
@@ -135,6 +145,13 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
         chi2: r.stats.chi2,
         passed: r.stats.passed,
         worst,
+        robust: r.rounds.map(|x| RobustRounds {
+            method: input.robust.as_ref().map_or(RobustMethod::Huber, |r| r.method),
+            c: x.robust.c,
+            rounds: count(x.rounds),
+            converged: x.converged,
+            downweighted: count(r.factors.iter().filter(|f| **f < 1.0).count()),
+        }),
         revision: String::new(),
     })
 }

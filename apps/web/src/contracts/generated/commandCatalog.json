@@ -64659,7 +64659,7 @@
       "id": "cad.survey.baselines",
       "version": 1,
       "title": "GNSS baz ağı dengelemesi",
-      "summary": "GNSS baz vektörlerinden kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz). İstasyonlar ECEF X, Y, Z'de (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale kovaryansların çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir). Bilinen istasyon fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum: minimal koordinatı olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı L·Lᵀ ayrıştırılıp üç denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95), artık sayıları ve Baarda testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir, bazın sonucu bileşenlerinin en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z], B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler: invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance, datum_missing, network_too_large, network_disconnected.",
+      "summary": "GNSS baz vektörlerinden kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz). İstasyonlar ECEF X, Y, Z'de (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale kovaryansların çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir). Bilinen istasyon fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum: minimal koordinatı olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı L·Lᵀ ayrıştırılıp üç denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95), artık sayıları ve Baarda testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir, bazın sonucu bileşenlerinin en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z], B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. robust {method: huber|danish, c} dayanıklı kestirimdir (yinelemeli yeniden ağırlıklandırma): her adımda bazın standart artığı bileşenlerinin |v|/σ'sının en büyüğü (σ verilen kovaryanstan, önsel σ0 = 1), |w| > c ise ağırlık çarpanı Huber c/|w|, Danimarka exp(−((|w| − c)/c)²); c verilmezse Huber 1,5, Danimarka 2,0; hiçbir çarpan 10⁻⁹'dan çok değişmeyince (en çok 100 adım) durur. Baz silinmez: cevapta her bazın factor'ı ve robust (adım, oturdu mu, ağırlığı düşen baz sayısı); istatistikler yeniden ağırlıklı modelindir. Retler: invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance, datum_missing, network_too_large, network_disconnected.",
       "aliases": [
         "gnssag",
         "bazdengele"
@@ -64678,7 +64678,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`\na known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`\na baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the\ncovariances are multiplied by (default 1); the datum.\n\nRefusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station\nfixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive\ndefinite), `datum_missing`, `network_too_large` (the normal matrix's envelope above 30 million entries, docs/adr/4560), `network_disconnected`.",
+        "description": "Input of `cad.survey.baselines` v1: the stations and baselines, or the same as `text` (lines `K;ad;X;Y;Z[;sX;sY;sZ]`\na known station, fixed without standard deviations; `N;ad[;X;Y;Z]` a new one; `B;from;to;dX;dY;dZ;xx;xy;xz;yy;yz;zz`\na baseline; `#` a remark; `;`, `,` or tabs between the values, a point before decimals); the variance factor the\ncovariances are multiplied by (default 1); the datum; robust estimation when asked (docs/adr/4960).\n\nRefusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station\nfixed and weighted, robust estimation's c not above 0 …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive\ndefinite), `datum_missing`, `network_too_large` (the normal matrix's envelope above 30 million entries, docs/adr/4560), `network_disconnected`.",
         "properties": {
           "baselines": {
             "items": {
@@ -64688,6 +64688,16 @@
           },
           "datum": {
             "$ref": "#/$defs/BaselineDatum"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BaselineRobust"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "scale": {
             "format": "double",
@@ -64715,7 +64725,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, and the drawing's revision.",
+        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, how the robust rounds went (when asked; the statistics are then the reweighted model's), and the\ndrawing's revision.",
         "properties": {
           "baselines": {
             "items": {
@@ -64770,6 +64780,16 @@
           },
           "revision": {
             "type": "string"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RobustRounds"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "stations": {
             "items": {
@@ -64807,7 +64827,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, and the drawing's revision.",
+        "description": "Output of `cad.survey.baselines` v1: the stations in the input's order, the baselines in theirs, the station the\nminimal constraint held, the counts (observations: three per baseline and per weighted station; unknowns; degrees of\nfreedom), vᵀPv, m0, the χ² quantile (95 %), whether the model test passed, the baseline with the largest flagged\ntest value, how the robust rounds went (when asked; the statistics are then the reweighted model's), and the\ndrawing's revision.",
         "properties": {
           "baselines": {
             "items": {
@@ -64862,6 +64882,16 @@
           },
           "revision": {
             "type": "string"
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RobustRounds"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "stations": {
             "items": {
@@ -121446,8 +121476,16 @@
       "type": "string"
     },
     "BaselineResult": {
-      "description": "A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and\nwhat it says (`ok`, `blunder`, `uncontrolled`).",
+      "description": "A baseline's residual vector (computed − observed, m), its largest component test value (Baarda, decorrelated) and\nwhat it says (`ok`, `blunder`, `uncontrolled`); with robust estimation its weight factor in the solution.",
       "properties": {
+        "factor": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
         "flag": {
           "type": "string"
         },
@@ -121481,6 +121519,27 @@
         "to",
         "v",
         "flag"
+      ],
+      "type": "object"
+    },
+    "BaselineRobust": {
+      "additionalProperties": false,
+      "description": "Robust estimation (docs/adr/4960): the baselines reweighted round by round by the weight function of their\nstandardised residual (the largest component's |v| / √q_vv, a priori σ0 = 1); `c` the constant (default Huber 1.5,\nDanish 2.0). Nothing is removed; a baseline whose factor fell below 1 is to be checked.",
+      "properties": {
+        "c": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "method": {
+          "$ref": "#/$defs/RobustMethod"
+        }
+      },
+      "required": [
+        "method"
       ],
       "type": "object"
     },
@@ -191831,6 +191890,50 @@
           "type": "object"
         }
       ]
+    },
+    "RobustMethod": {
+      "description": "Robust estimation's weight function (docs/adr/4960): `huber` c / |w|, `danish` exp(−((|w| − c) / c)²); 1 when\n|w| ≤ c.",
+      "enum": [
+        "huber",
+        "danish"
+      ],
+      "type": "string"
+    },
+    "RobustRounds": {
+      "description": "How the robust rounds went: the weight function, its constant, the rounds, whether the factors settled (no factor\nmoved by more than 10⁻⁹; at most 100 rounds), how many baselines' factors are below 1.",
+      "properties": {
+        "c": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "converged": {
+          "type": "boolean"
+        },
+        "downweighted": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "method": {
+          "$ref": "#/$defs/RobustMethod"
+        },
+        "rounds": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "method",
+        "c",
+        "rounds",
+        "converged",
+        "downweighted"
+      ],
+      "type": "object"
     },
     "RoofEntity": {
       "description": "A roof (docs/adr/8044 §1).",

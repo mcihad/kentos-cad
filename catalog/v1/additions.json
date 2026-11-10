@@ -188,7 +188,7 @@
       "title": "GNSS baz ağı…",
       "short": "GNSS ağı",
       "icon": "gnssBaselines",
-      "description": "GNSS baz vektörlerinden (ΔX, ΔY, ΔZ ve 3×3 kovaryans) kurulan ağı dengeler ve analiz eder (cad.survey.baselines): m0 ve χ² testi, istasyonların doğu/kuzey/yukarı standart sapmaları, bazların artığı ve Baarda testi. Bilinen istasyon sabit ya da ağırlıklı; yoksa minimal datum. Hiçbir şey yazmaz. Harita ve GIS'te.",
+      "description": "GNSS baz vektörlerinden (ΔX, ΔY, ΔZ ve 3×3 kovaryans) kurulan ağı dengeler ve analiz eder (cad.survey.baselines): m0 ve χ² testi, istasyonların doğu/kuzey/yukarı standart sapmaları, bazların artığı ve Baarda testi; isteğe bağlı dayanıklı kestirim (Huber, Danimarka) kaba hatalı bazın ağırlığını düşürür, silmez. Bilinen istasyon sabit ya da ağırlıklı; yoksa minimal datum. Hiçbir şey yazmaz. Harita ve GIS'te.",
       "aliases": ["GNSSAG", "BAZDENGELE"],
       "shortcuts": [],
       "category": "Ölçme",
