@@ -646,6 +646,10 @@
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Tarama ağı dengelemesi (10 Kasım 2026; MAP-13, [ADR 4720](../../docs/adr/4720-scan-network-adjustment.md)).**
+  Yeni `cad.pointclouds.network`: üç ve daha çok tarama bir GNSS ağı gibi birlikte dengelenir; bağlar Tarama kaydı gibi
+  kaydedilip normal matrisleriyle ağırlıklanır, sabit taramalar yerinde kalır; döngü kapanmaları ve her taramanın yatay
+  gücü söylenir. Nokta bulutu › Tarama ağı; Dönüşüm uygula taramayı matrisiyle taşır. Harita + CBS.
 - **Birleşme çizgisi ve mozaik elemanlarının KentOS'ta kurulması (10 Kasım 2026; MAP-12, [ADR 4700](../../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
   Yeni `cad.orthophoto.seamlines`: iki ortofotonun birleşme çizgisi ve mozaik elemanları (TUCBS Ortogörüntü), eşit uzaklık
   (Voronoi; Pan ve ark. 2009, düz kesimler kesin) ya da radyometrik fark (en büyük farkın en küçüğü, sonra en az maliyet;

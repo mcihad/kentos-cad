@@ -2210,6 +2210,7 @@ impl App {
             Asking::OrthoSeamlines => self.ortho_seamlines_view(),
             Asking::Overlap => self.overlap_view(),
             Asking::Register => self.register_view(),
+            Asking::ScanNetwork => self.scan_network_view(),
             Asking::SheetContours => self.sheet_contours_view(),
             Asking::Stockpile => self.stockpile_view(),
             Asking::XrefAttach => self.xref_attach_view(),

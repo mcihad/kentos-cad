@@ -43,8 +43,8 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan faydalı ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
@@ -1601,7 +1601,7 @@ en büyük farkı en küçük, sonra en az maliyetli hücre yolu (hücre, arama 
 geri alma adımında Mozaik elemanları katmanına, `Görüntü` özniteliğiyle. 44 bağımsız durum (dönüm yerleri başvuruda yoğun
 tarama ve ikiye bölmeyle, KentOS'ta doğruların kesişimiyle), çekirdek testleri, Python (yazılan elemanlar Ortofoto
 karşılaştırması'nın ortak sınırında çizginin kendisi), MCP, masaüstü Raster › Birleşme çizgisi. Açık: ikiden çok görüntünün
-birleşme çizgisi ağı, kenar algılama, NoData'dan faydalı ayak izi; türeyen nesnenin izi sahip kararını bekler.
+birleşme çizgisi ağı, kenar algılama, NoData'dan ayak izi; türeyen nesnenin izi sahip kararını bekler.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].
@@ -1716,6 +1716,17 @@ el kuralı), merkez (boş: bulutun kutusunun ortası), öteleme; çekirdek Rodri
 kaydı'nın tarifiyle tek matrise çevirir, geçmişe matris yazılır; üç ret. 6 yeni bağımsız durum (53; noktalar bayt
 bayt), Python (kuaterniyonla), MCP, masaüstü ve resimler. Açık: çoklu tarama demeti, dönüşümün dosyasız nesnede
 tutulması, gerçek veri ölçümü, Euler açıları (kaynak).
+
+**10 Kasım 2026, dokuzuncu tur — tarama ağı dengelemesi ([ADR 4720](../docs/adr/4720-scan-network-adjustment.md)).**
+Kapsam: **Harita + CBS** (nokta bulutu). Dayanak: Leica Cyclone REGISTER 360'ın demeti (bağların hatası ve örtüşmesi,
+Constraint List), FARO/E57'nin nesnedeki konumu, KentOS'un GNSS ağ dengelemesi (bazlar ölçü, noktalar bilinmeyen);
+mevzuat: TKGM yersel LİDAR esasları (oturumda iki kontrol noktası, m. 46(4) ±15 cm); çok taramalı kaydın artığına resmî
+sınır yok. Kanıtlanan: yeni `cad.pointclouds.network` üç ve daha çok taramayı birlikte kaydeder: her bağ Tarama kaydı gibi
+kaydedilir, ölçüsü ve normal matrisi ağın merkezine taşınır, sabit olmayan taramaların düzeltmeleri en küçük karelerle
+(Cholesky) dengelenir; her taramanın matrisi ve yatay gücü, bağların artığı ve kayması, döngülerin kapanmaması. Huber
+ağırlığıyla bilinen kaymalar 1 cm içinde (ağırlıksızda çatı kenarları 2,5 cm saptırır). 22 bağımsız durum, çekirdek
+testleri, Python (döngüde artıklar kapanmamayı siler), MCP, masaüstü Nokta bulutu › Tarama ağı. Açık: dönüşümün dosyasız
+nesnede tutulması, dış döngü ve kontrol noktalarının ağa girmesi; Euler açıları artık kaynaklı.
 
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 

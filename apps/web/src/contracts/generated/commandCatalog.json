@@ -58038,6 +58038,270 @@
       ]
     },
     {
+      "id": "cad.pointclouds.network",
+      "version": 1,
+      "title": "Tarama ağı dengelemesi",
+      "summary": "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable.",
+      "aliases": [
+        "taramaagi",
+        "agdengelemesi",
+        "coklutarama",
+        "bundleregistration"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.network` v1 (plan/map-cad.md MAP-13, docs/adr/4720): the scans (point clouds' persistent\nids, at least three), those held where they are (at least one, not all), the links (pairs of scans; none: every\npair whose plan boxes overlap, in the scans' order), and the pairwise registration's own options (docs/adr/1800:\n`spacing`, `reach`, `iterations`, `tolerance`, `neighbours`; docs/adr/2300 `robust`; docs/adr/2700 `reject`), the\nsame for every link. `drawing`: where a cloud's relative file is looked for.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`); `invalid_input` (fewer than three scans,\none twice; no fixed scan, every scan fixed, a fixed scan not among the scans; a link twice, of one scan, of a scan not\namong them; a scan joined to no fixed scan by the links; a link whose registration found fewer than six pairs; a\nnetwork that does not fix every scan's position, as flat ground leaves a horizontal shift free); the registration's\nown refusals at its option (`spacing` …); the files' (`file_not_found`, `import_unreadable`).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fixed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "iterations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "links": {
+            "description": "The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan\nboxes overlap.",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "reach": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "reject": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterReject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRobust"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spacing": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "fixed"
+        ],
+        "title": "PointCloudsNetwork",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'\nmean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's\npairs, metres), and notes.",
+        "properties": {
+          "centre": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/$defs/NetworkLink"
+            },
+            "type": "array"
+          },
+          "loops": {
+            "items": {
+              "$ref": "#/$defs/NetworkLoop"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scans": {
+            "items": {
+              "$ref": "#/$defs/NetworkScan"
+            },
+            "type": "array"
+          },
+          "shift": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "centre",
+          "scans",
+          "links",
+          "loops",
+          "shift",
+          "notes"
+        ],
+        "title": "PointCloudsNetworked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'\nmean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's\npairs, metres), and notes.",
+        "properties": {
+          "centre": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/$defs/NetworkLink"
+            },
+            "type": "array"
+          },
+          "loops": {
+            "items": {
+              "$ref": "#/$defs/NetworkLoop"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scans": {
+            "items": {
+              "$ref": "#/$defs/NetworkScan"
+            },
+            "type": "array"
+          },
+          "shift": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "centre",
+          "scans",
+          "links",
+          "loops",
+          "shift",
+          "notes"
+        ],
+        "title": "PointCloudsNetworked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç tarama, birincisi sabit, bağlar örtüşmeden",
+          "input": {
+            "fixed": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ],
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.pointclouds.register",
       "version": 1,
       "title": "Tarama kaydı denetimi",
@@ -159779,6 +160043,103 @@
       ],
       "type": "object"
     },
+    "NetworkLink": {
+      "description": "A link (docs/adr/4720): its two scans, its registration's pairs, overlap share, RMS after and strength\n(`cad.pointclouds.register`'s), the second's correction relative to the first it observed (rotation, then\ntranslation about the network's centre), the network's residual of it (adjusted − observed, the same order), and the\nshift that residual makes along the pairs' normals (the square root of rᵀ·N·r over the pairs, metres).",
+      "properties": {
+        "observed": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "overlap": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "pairs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "residual": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "rmsAfter": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "scans": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "shift": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "strength": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "scans",
+        "pairs",
+        "overlap",
+        "rmsAfter",
+        "strength",
+        "observed",
+        "residual",
+        "shift"
+      ],
+      "type": "object"
+    },
+    "NetworkLoop": {
+      "description": "A loop of links (docs/adr/4720): the scans it passes through in order (a held scan stands for every held one, which\ndo not move against each other), and how far its observations fail to close: the rotation's length (radians) and\nthe translation's (metres) of the sum round it.",
+      "properties": {
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "scans": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "translation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "scans",
+        "rotation",
+        "translation"
+      ],
+      "type": "object"
+    },
     "NetworkPeriod": {
       "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
       "properties": {
@@ -159913,6 +160274,63 @@
         "passed",
         "baselines",
         "stations"
+      ],
+      "type": "object"
+    },
+    "NetworkScan": {
+      "description": "A scan adjusted (docs/adr/4720): its id, whether it was held, its correction about the network's centre — the\nrotation (ω, φ, κ; R = Rz(κ)·Ry(φ)·Rx(ω)) and the translation — and the matrix taking its points where they belong\n(row by row, p ↦ R(p − centre) + centre + translation), for Dönüşüm uygula; for a free scan its horizontal strength in\nthe network: √(σz² / σh²) of its translation's covariance (σh² the larger plan eigenvalue), Tarama kaydı's\n`horizontal` for the network — under 0.1 the network barely fixes it in plan (flat ground).",
+      "properties": {
+        "fixed": {
+          "type": "boolean"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "matrix": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 16,
+          "minItems": 16,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "rotation": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "rad"
+        },
+        "translation": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "fixed",
+        "rotation",
+        "translation",
+        "matrix"
       ],
       "type": "object"
     },

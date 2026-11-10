@@ -116,7 +116,7 @@ tablodaki karşılığıyla okunur.
 - İki görüntü: üç ve daha çok görüntünün birleşme çizgisi ağı (üçlü düğümler, Pan ve ark.'nın çoklu örtüşmesi) yok.
 - Kenar algılama, paralaks ve harmanlama genişliği yok; radyometrik fark yöntemi renk dengelemesi yapmaz (BÖHHBÜY m.
   67(6) onu ister; not söyler).
-- Ayak izi dışbükey olmalı; NoData'dan faydalı ayak izi (TUCBS: faydalı ayakizi) çıkarılmaz (kullanıcı alanı verir).
+- Ayak izi dışbükey olmalı; NoData'dan ayak izi çıkarılmaz (kullanıcı alanı verir). TUCBS'nin “faydalı ayakizi” görüntünün mozaikte kullanılan bölümüdür, NoData'dan çıkan ayak izi değil.
 - Kurulan çizgi BÖHHBÜY'e “uygun” denmez: yönetmelik birleşme çizgisinin yerine kural koymaz; kayıklık ADR 1780/4460
   ile ayrıca ölçülür.
 - Görüntüden türeyen nesnenin kaynağa izi MAP-01'in sahip kararını bekler; mozaik elemanı yalnız `Görüntü` özniteliğini
@@ -149,7 +149,7 @@ tablodaki karşılığıyla okunur.
 ## Sonra
 
 - İkiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm, çoklu örtüşmede farkın en küçük olduğu yer).
-- Kenar algılama ve yüksek nesnelerden uzaklaştırma (Metashape'in Refine seamlines'ı); NoData'dan faydalı ayak izi
+- Kenar algılama ve yüksek nesnelerden uzaklaştırma (Metashape'in Refine seamlines'ı); NoData'dan ayak izi
   (gdal_footprint, ArcGIS Build Footprints).
 - Görüntüden türeyen nesnenin kaynağa izi (MAP-01'in sahip kararı).
 - Web (TODOS §0.2).

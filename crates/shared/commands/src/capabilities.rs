@@ -2510,6 +2510,13 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
+    // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720); the registration's own refusals and warnings.
+    Entry {
+        id: "cad.pointclouds.network",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.pointclouds.register",
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],

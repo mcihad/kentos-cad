@@ -59041,6 +59041,85 @@ class NetworkLevels(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NetworkLink(_Model):
+    """A link (docs/adr/4720): its two scans, its registration's pairs, overlap share, RMS after and strength
+    (`cad.pointclouds.register`'s), the second's correction relative to the first it observed (rotation, then
+    translation about the network's centre), the network's residual of it (adjusted − observed, the same order), and the
+    shift that residual makes along the pairs' normals (the square root of rᵀ·N·r over the pairs, metres).
+    Attributes:
+        pairs: Unit: count.
+        overlap: Unit: 1.
+        rms_after: Unit: length.
+        strength: Unit: 1.
+        observed: Unit: value.
+        residual: Unit: value.
+        shift: Unit: length.
+    """
+    scans: list[str]
+    pairs: int
+    overlap: float
+    rms_after: float
+    strength: float
+    observed: list[float]
+    residual: list[float]
+    shift: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scans"] = list(self.scans)
+        out["pairs"] = self.pairs
+        out["overlap"] = float(self.overlap)
+        out["rmsAfter"] = float(self.rms_after)
+        out["strength"] = float(self.strength)
+        out["observed"] = [float(e0) for e0 in self.observed]
+        out["residual"] = [float(e0) for e0 in self.residual]
+        out["shift"] = float(self.shift)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLink:
+        return cls(
+            scans=list(data["scans"]),
+            pairs=data["pairs"],
+            overlap=float(data["overlap"]),
+            rms_after=float(data["rmsAfter"]),
+            strength=float(data["strength"]),
+            observed=[float(e0) for e0 in data["observed"]],
+            residual=[float(e0) for e0 in data["residual"]],
+            shift=float(data["shift"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkLoop(_Model):
+    """A loop of links (docs/adr/4720): the scans it passes through in order (a held scan stands for every held one, which
+    do not move against each other), and how far its observations fail to close: the rotation's length (radians) and
+    the translation's (metres) of the sum round it.
+    Attributes:
+        rotation: Unit: rad.
+        translation: Unit: length.
+    """
+    scans: list[str]
+    rotation: float
+    translation: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scans"] = list(self.scans)
+        out["rotation"] = float(self.rotation)
+        out["translation"] = float(self.translation)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLoop:
+        return cls(
+            scans=list(data["scans"]),
+            rotation=float(data["rotation"]),
+            translation=float(data["translation"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NetworkPeriod(_Model):
     """A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their
     speed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).
@@ -59165,6 +59244,49 @@ class NetworkRules(_Model):
             stations=data["stations"],
             confidence=UNSET if "confidence" not in data else None if data["confidence"] is None else float(data["confidence"]),
             similarity=data.get("similarity", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkScan(_Model):
+    """A scan adjusted (docs/adr/4720): its id, whether it was held, its correction about the network's centre — the
+    rotation (ω, φ, κ; R = Rz(κ)·Ry(φ)·Rx(ω)) and the translation — and the matrix taking its points where they belong
+    (row by row, p ↦ R(p − centre) + centre + translation), for Dönüşüm uygula; for a free scan its horizontal strength in
+    the network: √(σz² / σh²) of its translation's covariance (σh² the larger plan eigenvalue), Tarama kaydı's
+    `horizontal` for the network — under 0.1 the network barely fixes it in plan (flat ground).
+    Attributes:
+        rotation: Unit: rad.
+        translation: Unit: length.
+        matrix: Unit: value.
+        horizontal: Unit: 1.
+    """
+    uid: str
+    fixed: bool
+    rotation: list[float]
+    translation: list[float]
+    matrix: list[float]
+    horizontal: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["fixed"] = self.fixed
+        out["rotation"] = [float(e0) for e0 in self.rotation]
+        out["translation"] = [float(e0) for e0 in self.translation]
+        out["matrix"] = [float(e0) for e0 in self.matrix]
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkScan:
+        return cls(
+            uid=data["uid"],
+            fixed=data["fixed"],
+            rotation=[float(e0) for e0 in data["rotation"]],
+            translation=[float(e0) for e0 in data["translation"]],
+            matrix=[float(e0) for e0 in data["matrix"]],
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
         )
 
 
@@ -71203,6 +71325,119 @@ class PointCloudsDescribed(_Model):
         return cls(
             clouds=[CloudDescribed.from_json(e0) for e0 in data["clouds"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsNetwork(_Model):
+    """Input of `cad.pointclouds.network` v1 (plan/map-cad.md MAP-13, docs/adr/4720): the scans (point clouds' persistent
+    ids, at least three), those held where they are (at least one, not all), the links (pairs of scans; none: every
+    pair whose plan boxes overlap, in the scans' order), and the pairwise registration's own options (docs/adr/1800:
+    `spacing`, `reach`, `iterations`, `tolerance`, `neighbours`; docs/adr/2300 `robust`; docs/adr/2700 `reject`), the
+    same for every link. `drawing`: where a cloud's relative file is looked for.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`); `invalid_input` (fewer than three scans,
+    one twice; no fixed scan, every scan fixed, a fixed scan not among the scans; a link twice, of one scan, of a scan not
+    among them; a scan joined to no fixed scan by the links; a link whose registration found fewer than six pairs; a
+    network that does not fix every scan's position, as flat ground leaves a horizontal shift free); the registration's
+    own refusals at its option (`spacing` …); the files' (`file_not_found`, `import_unreadable`).
+    Attributes:
+        iterations: Unit: count.
+        links: The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan
+            boxes overlap.
+        neighbours: Unit: count.
+        reach: Unit: length.
+        spacing: Unit: length.
+        tolerance: Unit: length.
+    """
+    uids: list[str]
+    fixed: list[str]
+    drawing: str | None | Unset = UNSET
+    iterations: int | None | Unset = UNSET
+    links: list[list[str]] | None | Unset = UNSET
+    neighbours: int | None | Unset = UNSET
+    reach: float | None | Unset = UNSET
+    reject: RegisterReject | None | Unset = UNSET
+    robust: RegisterRobust | None | Unset = UNSET
+    spacing: float | None | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["fixed"] = list(self.fixed)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.iterations is not UNSET:
+            out["iterations"] = self.iterations
+        if self.links is not UNSET:
+            out["links"] = None if self.links is None else [list(e0) for e0 in self.links]
+        if self.neighbours is not UNSET:
+            out["neighbours"] = self.neighbours
+        if self.reach is not UNSET:
+            out["reach"] = None if self.reach is None else float(self.reach)
+        if self.reject is not UNSET:
+            out["reject"] = None if self.reject is None else self.reject.to_json()
+        if self.robust is not UNSET:
+            out["robust"] = None if self.robust is None else self.robust.to_json()
+        if self.spacing is not UNSET:
+            out["spacing"] = None if self.spacing is None else float(self.spacing)
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsNetwork:
+        return cls(
+            uids=list(data["uids"]),
+            fixed=list(data["fixed"]),
+            drawing=data.get("drawing", UNSET),
+            iterations=data.get("iterations", UNSET),
+            links=UNSET if "links" not in data else None if data["links"] is None else [list(e0) for e0 in data["links"]],
+            neighbours=data.get("neighbours", UNSET),
+            reach=UNSET if "reach" not in data else None if data["reach"] is None else float(data["reach"]),
+            reject=UNSET if "reject" not in data else None if data["reject"] is None else RegisterReject.from_json(data["reject"]),
+            robust=UNSET if "robust" not in data else None if data["robust"] is None else RegisterRobust.from_json(data["robust"]),
+            spacing=UNSET if "spacing" not in data else None if data["spacing"] is None else float(data["spacing"]),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsNetworked(_Model):
+    """Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'
+    mean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's
+    pairs, metres), and notes.
+    Attributes:
+        centre: Unit: system.
+        shift: Unit: length.
+    """
+    centre: list[float]
+    scans: list[NetworkScan]
+    links: list[NetworkLink]
+    loops: list[NetworkLoop]
+    shift: float
+    notes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["centre"] = [float(e0) for e0 in self.centre]
+        out["scans"] = [e0.to_json() for e0 in self.scans]
+        out["links"] = [e0.to_json() for e0 in self.links]
+        out["loops"] = [e0.to_json() for e0 in self.loops]
+        out["shift"] = float(self.shift)
+        out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsNetworked:
+        return cls(
+            centre=[float(e0) for e0 in data["centre"]],
+            scans=[NetworkScan.from_json(e0) for e0 in data["scans"]],
+            links=[NetworkLink.from_json(e0) for e0 in data["links"]],
+            loops=[NetworkLoop.from_json(e0) for e0 in data["loops"]],
+            shift=float(data["shift"]),
+            notes=list(data["notes"]),
         )
 
 
@@ -136519,10 +136754,13 @@ __all__ = [
     "NetworkKindName",
     "NetworkLayer",
     "NetworkLevels",
+    "NetworkLink",
+    "NetworkLoop",
     "NetworkMapSurveyOperation",
     "NetworkPeriod",
     "NetworkProfile",
     "NetworkRules",
+    "NetworkScan",
     "NetworkSimilarity",
     "NetworkStage",
     "NetworkStation",
@@ -137065,6 +137303,8 @@ __all__ = [
     "PointCloudStyle",
     "PointCloudsDescribe",
     "PointCloudsDescribed",
+    "PointCloudsNetwork",
+    "PointCloudsNetworked",
     "PointCloudsOverlap",
     "PointCloudsOverlapped",
     "PointCloudsProfile",

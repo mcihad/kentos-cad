@@ -5554,6 +5554,22 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.network",
+   "kind": "command",
+   "title": "Tarama ağı dengelemesi…",
+   "level": "query",
+   "via": [
+    "cad.pointclouds.network"
+   ],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.network",
+   "mcp": "cad.pointclouds.network",
+   "note": "Pencere üç ve daha çok taramayı cad.pointclouds.network ile birlikte kaydeder (salt okunur): bağlar Tarama kaydı gibi kaydedilir ve normal matrisleriyle ağırlıklanır, sabit olmayan taramaların düzeltmeleri birlikte dengelenir (ADR 4720). Dönüşüm uygula seçilen taramayı matrisiyle taşır.",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.overlap",
    "kind": "command",
    "title": "Tarama uyumu…",

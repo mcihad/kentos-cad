@@ -9683,6 +9683,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720).
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_NETWORK.into(),
+            version: crate::CAD_POINTCLOUDS_NETWORK_VERSION,
+            title: "Tarama ağı dengelemesi".into(),
+            summary: "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). \
+                      links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur. \
+                      Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable."
+                .into(),
+            aliases: vec!["taramaagi".into(), "agdengelemesi".into(), "coklutarama".into(), "bundleregistration".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PointCloudsNetwork>(),
+            output: schema::<crate::PointCloudsNetworked>(),
+            plan: Some(schema::<crate::PointCloudsNetworked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Üç tarama, birincisi sabit, bağlar örtüşmeden".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"], "fixed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"] }),
+                output: None,
+            }],
+        },
         // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
         CommandDescriptor {
             id: crate::CAD_POINTCLOUDS_REGISTER.into(),
@@ -16953,6 +16980,7 @@ mod tests {
                     crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheets>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
+                    crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetwork>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlines>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
@@ -17935,6 +17963,7 @@ mod tests {
                         crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
+                        crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetworked>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlinesBuilt>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),

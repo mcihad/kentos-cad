@@ -450,6 +450,8 @@ pub enum Dialog {
     Overlap,
     /// Tarama kaydı (register_window.rs, docs/adr/1800); its state is `App::register`.
     Register,
+    /// Tarama ağı dengelemesi (scan_network_window.rs, docs/adr/4720); its state is `App::scan_network`.
+    ScanNetwork,
     /// Pafta eğrileri (sheet_contours_window.rs, docs/adr/1820); its state is `App::sheet_contours`.
     SheetContours,
     /// Stok hacmi (stockpile_window.rs, docs/adr/3140); its state is `App::stockpile`.
@@ -895,6 +897,7 @@ pub enum Message {
     OrthoSeamlines(crate::ortho_seamlines_window::Event),
     Overlap(crate::overlap_window::Event),
     Register(crate::register_window::Event),
+    ScanNetwork(crate::scan_network_window::Event),
     SheetContours(crate::sheet_contours_window::Event),
     Stockpile(crate::stockpile_window::Event),
     XrefWatch(crate::xrefs_watch::Event),
@@ -1587,6 +1590,7 @@ pub struct App {
     pub(crate) ortho_seamlines: crate::ortho_seamlines_window::State,
     pub(crate) overlap: crate::overlap_window::State,
     pub(crate) register: crate::register_window::State,
+    pub(crate) scan_network: crate::scan_network_window::State,
     pub(crate) sheet_contours: crate::sheet_contours_window::State,
     pub(crate) stockpile: crate::stockpile_window::State,
     /// Senaryo ölçüleri's base stamps saved this session, by scenario (docs/adr/1440 §3).
@@ -2070,6 +2074,7 @@ impl App {
             ortho_seamlines: Default::default(),
             overlap: Default::default(),
             register: Default::default(),
+            scan_network: Default::default(),
             sheet_contours: Default::default(),
             stockpile: Default::default(),
             impact_stamps: Default::default(),
@@ -2906,6 +2911,7 @@ impl App {
             Message::OrthoSeamlines(event) => return self.ortho_seamlines_event(event),
             Message::Overlap(event) => return self.overlap_event(event),
             Message::Register(event) => return self.register_event(event),
+            Message::ScanNetwork(event) => return self.scan_network_event(event),
             Message::SheetContours(event) => return self.sheet_contours_event(event),
             Message::Stockpile(event) => return self.stockpile_event(event),
             Message::XrefWatch(event) => return self.xref_watch_event(event),
@@ -3807,6 +3813,7 @@ impl App {
             "raster.seamlines" => return self.open_ortho_seamlines(),
             "pointcloud.overlap" => return self.open_overlap(),
             "pointcloud.register" => return self.open_register(),
+            "pointcloud.network" => return self.open_scan_network(),
             "terrain.sheetContours" => return self.open_sheet_contours(),
             "terrain.stockpile" => return self.open_stockpile(),
             // Harita işi on a contextual tab (map_work_panel.rs, docs/adr/1201 §3).

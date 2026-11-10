@@ -461,6 +461,17 @@ fn step(m: [[f64; 6]; 6], v: [f64; 6]) -> [f64; 6] {
 }
 
 fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegistered, Vec<CommandWarning>), Stop> {
+    registered(doc, input).map(|(out, warnings, _)| (out, warnings))
+}
+
+/// The registration and its last pairs' normal matrix (about the answer's centre; ω, φ, κ in radians, then the
+/// translation): what Tarama ağı dengelemesi weighs a link by (docs/adr/4720).
+pub(crate) type NormalMatrix = [[f64; 6]; 6];
+
+pub(crate) fn registered(
+    doc: &Document,
+    input: &PointCloudsRegister,
+) -> Result<(PointCloudsRegistered, Vec<CommandWarning>, NormalMatrix), Stop> {
     if input.uids.len() != 2 || input.uids[0] == input.uids[1] {
         return Err(fail(codes::INVALID_INPUT, "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.".into(), "uids"));
     }
@@ -823,6 +834,7 @@ fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegist
             notes,
         },
         warnings,
+        m,
     ))
 }
 
