@@ -116,8 +116,13 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
     değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin
     settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa
     changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da
-    başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi
-    değiştirmez ve geri alma adımı değildir.
+    başka paftanınsa no_previous. Sayfanın görünüşü (ADR 4820): sayfalar yapılınca her
+    sayfanın look'u (SHA-256): paftanın görüntü listesi yayının kendi damgaları dışarıda
+    (gün, kullanıcı, boş kaynak notuna yazılan çizim durumu), haritalarının yolları ve
+    yazıları, tabloları, koordinat listeleri, lejantları, kalite notları ve her sayfada
+    duran haritalar; kayıtta da. Önceki kayıt görünüşleri biliyorsa değişen her sayfanın
+    changes[].look'u same (yalnız çizmediği değişti) ya da changed. plan dosyayı yazmaz,
+    sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.
     """
     __slots__ = ()
     id = "file.export.atlas"
@@ -175,9 +180,14 @@ class _FileExportAtlas(LocalCommand[ExportAtlas, AtlasExported, AtlasExported]):
         söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni
         listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya
         da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa
-        olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan
-        dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı
-        değildir.
+        olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous.
+        Sayfanın görünüşü (ADR 4820): sayfalar yapılınca her sayfanın look'u (SHA-256):
+        paftanın görüntü listesi yayının kendi damgaları dışarıda (gün, kullanıcı, boş
+        kaynak notuna yazılan çizim durumu), haritalarının yolları ve yazıları, tabloları,
+        koordinat listeleri, lejantları, kalite notları ve her sayfada duran haritalar;
+        kayıtta da. Önceki kayıt görünüşleri biliyorsa değişen her sayfanın changes[].look'u
+        same (yalnız çizmediği değişti) ya da changed. plan dosyayı yazmaz, sayfaları ve
+        pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.
 
         Args:
             doc: The drawing it works on.

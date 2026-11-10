@@ -67,6 +67,6 @@ etiketi (“_” ile) ve geri okunduğunda adının KentOS verisinden düzeltilm
 
 ## Sonra
 
-- Tanımlı özniteliğin boşluklu etiketinin geri adı (ATTDEF'in KentOS verisi; işlenmiş baytlar ve bağımsız denetçi).
+- Tanımlı özniteliğin boşluklu etiketinin geri adı (ATTDEF'in KentOS verisi; işlenmiş baytlar ve bağımsız denetçi). [ADR 4800](4800-dxf-defined-attribute-name-back.md)'de.
 - DXF'te TABLE (ACAD_TABLE) yazımı (ADR 3580 Sonra): doğrulama yolu bekler.
 - Web (TODOS §0.2).

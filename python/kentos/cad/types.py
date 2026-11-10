@@ -592,6 +592,17 @@ AsbuiltKindName = Literal["asBuilt", "stakeout", "monitoring"]
 """The names of :class:`AsbuiltKind`, for a plain string."""
 
 
+class AsbuiltState(_StrEnum):
+    """A point's state against the thresholds (docs/adr/4840): the highest level any of its values goes beyond."""
+    NORMAL = "normal"
+    WARNING = "warning"
+    ALARM = "alarm"
+
+
+AsbuiltStateName = Literal["normal", "warning", "alarm"]
+"""The names of :class:`AsbuiltState`, for a plain string."""
+
+
 class AsbuiltSurfaceBy(_StrEnum):
     """What a point's surface difference is measured as (docs/adr/4020).
 
@@ -702,6 +713,20 @@ class AtlasLayerRole(_StrEnum):
 
 AtlasLayerRoleName = Literal["coverage", "map"]
 """The names of :class:`AtlasLayerRole`, for a plain string."""
+
+
+class AtlasLook(_StrEnum):
+    """Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.
+
+    - ``same``: It draws the same: only what it does not draw changed (an attribute no text, table or label shows).
+    - ``changed``: It draws otherwise.
+    """
+    SAME = "same"
+    CHANGED = "changed"
+
+
+AtlasLookName = Literal["same", "changed"]
+"""The names of :class:`AtlasLook`, for a plain string."""
 
 
 class AtlasPageState(_StrEnum):
@@ -17230,7 +17255,8 @@ class AsbuiltCheck(_Model):
     attribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring
     job without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a
     monitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that
-    is no `YYYY-MM-DD` day); the package's (docs/adr/2420;
+    is no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a
+    threshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;
     at `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a
     field package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,
     `lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its
@@ -17259,6 +17285,10 @@ class AsbuiltCheck(_Model):
         search: Unit: length.
         surface_by: What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the
             nearest distance to the surface (`nearest`, Trimble Access's Measure to surface).
+        thresholds: Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest
+            level it goes beyond. Needs a series (`epochs`). No threshold is the program's.
+        trend: A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and
+            which components move at the confidence asked. Needs a series (`epochs`).
         vertical: Unit: length.
     """
     measured: str
@@ -17278,6 +17308,8 @@ class AsbuiltCheck(_Model):
     search: float | None | Unset = UNSET
     surface: str | None | Unset = UNSET
     surface_by: AsbuiltSurfaceBy | AsbuiltSurfaceByName | None | Unset = UNSET
+    thresholds: AsbuiltThresholds | None | Unset = UNSET
+    trend: AsbuiltTrendAsk | None | Unset = UNSET
     vertical: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -17315,6 +17347,10 @@ class AsbuiltCheck(_Model):
             out["surface"] = self.surface
         if self.surface_by is not UNSET:
             out["surfaceBy"] = None if self.surface_by is None else _enum_out(self.surface_by)
+        if self.thresholds is not UNSET:
+            out["thresholds"] = None if self.thresholds is None else self.thresholds.to_json()
+        if self.trend is not UNSET:
+            out["trend"] = None if self.trend is None else self.trend.to_json()
         if self.vertical is not UNSET:
             out["vertical"] = None if self.vertical is None else float(self.vertical)
         return out
@@ -17339,6 +17375,8 @@ class AsbuiltCheck(_Model):
             search=UNSET if "search" not in data else None if data["search"] is None else float(data["search"]),
             surface=data.get("surface", UNSET),
             surface_by=UNSET if "surfaceBy" not in data else None if data["surfaceBy"] is None else _enum_in(AsbuiltSurfaceBy, data["surfaceBy"]),
+            thresholds=UNSET if "thresholds" not in data else None if data["thresholds"] is None else AsbuiltThresholds.from_json(data["thresholds"]),
+            trend=UNSET if "trend" not in data else None if data["trend"] is None else AsbuiltTrendAsk.from_json(data["trend"]),
             vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
@@ -17483,6 +17521,98 @@ class AsbuiltEpoch(_Model):
         return cls(
             layer=data["layer"],
             date=data.get("date", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltFit(_Model):
+    """The line fitted through a point's dated epochs (docs/adr/4840): by least squares, its movement from its reference
+    against the years since its first dated epoch, east, north and (with both heights) up apart.
+    Attributes:
+        epochs: The dated epochs the point was measured in (3 or more). Unit: count.
+        east: The velocity east and north (m a year). Unit: m/yr.
+        north: Unit: m/yr.
+        sigma_east: Their standard deviations from the residuals: s / √Σ(t − t̄)², s² = Σr² / (n − 2) (m a year). Unit: m/yr.
+        sigma_north: Unit: m/yr.
+        speed: The horizontal speed, √(east² + north²) (m a year). Unit: m/yr.
+        moving: The components whose velocity is more than Student's t times its standard deviation (`east`, `north`, `up`).
+        sigma_up: Unit: m/yr.
+        up: The velocity up (m a year), when 3 dated epochs or more have both heights. Unit: m/yr.
+    """
+    epochs: int
+    east: float
+    north: float
+    sigma_east: float
+    sigma_north: float
+    speed: float
+    moving: list[str] | Unset = UNSET
+    sigma_up: float | None | Unset = UNSET
+    up: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["epochs"] = self.epochs
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        out["sigmaEast"] = float(self.sigma_east)
+        out["sigmaNorth"] = float(self.sigma_north)
+        out["speed"] = float(self.speed)
+        if self.moving is not UNSET:
+            out["moving"] = list(self.moving)
+        if self.sigma_up is not UNSET:
+            out["sigmaUp"] = None if self.sigma_up is None else float(self.sigma_up)
+        if self.up is not UNSET:
+            out["up"] = None if self.up is None else float(self.up)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltFit:
+        return cls(
+            epochs=data["epochs"],
+            east=float(data["east"]),
+            north=float(data["north"]),
+            sigma_east=float(data["sigmaEast"]),
+            sigma_north=float(data["sigmaNorth"]),
+            speed=float(data["speed"]),
+            moving=list(data["moving"]) if "moving" in data else UNSET,
+            sigma_up=UNSET if "sigmaUp" not in data else None if data["sigmaUp"] is None else float(data["sigmaUp"]),
+            up=UNSET if "up" not in data else None if data["up"] is None else float(data["up"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltLevel(_Model):
+    """A threshold level's limits; a limit not given is not checked at that level.
+    Attributes:
+        horizontal: The horizontal movement from the point's reference at this epoch (m). Unit: m.
+        horizontal_rate: The horizontal speed (m a year): the fitted line's when there is one, else the mean rate. Unit: m/yr.
+        vertical: The height movement from the point's reference at this epoch, either way (m). Unit: m.
+        vertical_rate: The vertical speed, either way (m a year): the fitted line's when there is one, else the mean rate. Unit: m/yr.
+    """
+    horizontal: float | None | Unset = UNSET
+    horizontal_rate: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+    vertical_rate: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.horizontal_rate is not UNSET:
+            out["horizontalRate"] = None if self.horizontal_rate is None else float(self.horizontal_rate)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        if self.vertical_rate is not UNSET:
+            out["verticalRate"] = None if self.vertical_rate is None else float(self.vertical_rate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltLevel:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            horizontal_rate=UNSET if "horizontalRate" not in data else None if data["horizontalRate"] is None else float(data["horizontalRate"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
+            vertical_rate=UNSET if "verticalRate" not in data else None if data["verticalRate"] is None else float(data["verticalRate"]),
         )
 
 
@@ -17722,6 +17852,30 @@ class AsbuiltStep(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class AsbuiltThresholds(_Model):
+    """The two thresholds (docs/adr/4840); each limit given in both must be smaller at the warning.
+    Attributes:
+        warning: The warning level (Trimble's yellow).
+        alarm: The alarm level (Trimble's red).
+    """
+    warning: AsbuiltLevel
+    alarm: AsbuiltLevel
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["warning"] = self.warning.to_json()
+        out["alarm"] = self.alarm.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltThresholds:
+        return cls(
+            warning=AsbuiltLevel.from_json(data["warning"]),
+            alarm=AsbuiltLevel.from_json(data["alarm"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AsbuiltTrack(_Model):
     """A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was
     first measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch
@@ -17729,24 +17883,37 @@ class AsbuiltTrack(_Model):
     its mean rates (m a year: its last horizontal and vertical movement over the years between).
     Attributes:
         from_: Unit: index.
+        exceeded: The limits of its state's level its values go beyond (`horizontal`, `vertical`, `horizontalRate`,
+            `verticalRate`).
+        fit: The line fitted through its dated epochs (docs/adr/4840), asked and with 3 of them or more.
         rate_horizontal: Unit: m.
         rate_vertical: Unit: m.
+        state: Its state against the thresholds (docs/adr/4840), asked.
     """
     name: str
     from_: int
     steps: list[AsbuiltStep | None]
+    exceeded: list[str] | Unset = UNSET
+    fit: AsbuiltFit | None | Unset = UNSET
     rate_horizontal: float | None | Unset = UNSET
     rate_vertical: float | None | Unset = UNSET
+    state: AsbuiltState | AsbuiltStateName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["name"] = self.name
         out["from"] = self.from_
         out["steps"] = [None if e0 is None else e0.to_json() for e0 in self.steps]
+        if self.exceeded is not UNSET:
+            out["exceeded"] = list(self.exceeded)
+        if self.fit is not UNSET:
+            out["fit"] = None if self.fit is None else self.fit.to_json()
         if self.rate_horizontal is not UNSET:
             out["rateHorizontal"] = None if self.rate_horizontal is None else float(self.rate_horizontal)
         if self.rate_vertical is not UNSET:
             out["rateVertical"] = None if self.rate_vertical is None else float(self.rate_vertical)
+        if self.state is not UNSET:
+            out["state"] = None if self.state is None else _enum_out(self.state)
         return out
 
     @classmethod
@@ -17755,8 +17922,32 @@ class AsbuiltTrack(_Model):
             name=data["name"],
             from_=data["from"],
             steps=[None if e0 is None else AsbuiltStep.from_json(e0) for e0 in data["steps"]],
+            exceeded=list(data["exceeded"]) if "exceeded" in data else UNSET,
+            fit=UNSET if "fit" not in data else None if data["fit"] is None else AsbuiltFit.from_json(data["fit"]),
             rate_horizontal=UNSET if "rateHorizontal" not in data else None if data["rateHorizontal"] is None else float(data["rateHorizontal"]),
             rate_vertical=UNSET if "rateVertical" not in data else None if data["rateVertical"] is None else float(data["rateVertical"]),
+            state=UNSET if "state" not in data else None if data["state"] is None else _enum_in(AsbuiltState, data["state"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AsbuiltTrendAsk(_Model):
+    """The line fitted through a point's epochs (docs/adr/4840): the confidence its velocity's test is made at.
+    Attributes:
+        confidence: The confidence, between 0 and 1 (0.95: a component moves when its velocity is more than Student's t at 0.975
+            with n − 2 degrees of freedom times its standard deviation). The user's: no regulation gives one for monitoring. Unit: 1.
+    """
+    confidence: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["confidence"] = float(self.confidence)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AsbuiltTrendAsk:
+        return cls(
+            confidence=float(data["confidence"]),
         )
 
 
@@ -18173,12 +18364,15 @@ class AtlasPageChange(_Model):
     persistent id in the order listed; `changed` too when the project's parts the pages read changed.
     Attributes:
         index: Unit: index.
+        look: A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its
+            look; none otherwise (a previous record without looks, a page the previous update did not make).
     """
     index: int
     feature: str
     state: AtlasPageState | AtlasPageStateName
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
+    look: AtlasLook | AtlasLookName | None | Unset = UNSET
     removed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18190,6 +18384,8 @@ class AtlasPageChange(_Model):
             out["added"] = list(self.added)
         if self.changed is not UNSET:
             out["changed"] = list(self.changed)
+        if self.look is not UNSET:
+            out["look"] = None if self.look is None else _enum_out(self.look)
         if self.removed is not UNSET:
             out["removed"] = list(self.removed)
         return out
@@ -18202,6 +18398,7 @@ class AtlasPageChange(_Model):
             state=_enum_in(AtlasPageState, data["state"]),
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
+            look=UNSET if "look" not in data else None if data["look"] is None else _enum_in(AtlasLook, data["look"]),
             removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
@@ -18216,6 +18413,11 @@ class AtlasPageInfo(_Model):
         scale: The first atlas map's scale, the denominator (1000 is 1/1000). Unit: scale.
         center: The map's centre: the middle of the object's box. Unit: length.
         bbox: The object's box: minimum east, north, maximum east, north. Unit: length.
+        look: The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list
+            with the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an
+            empty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps
+            that stand still on every page. None where the pages were not made (a check), and for a page an update did not
+            make whose previous record had none.
         sources: The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
             its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
             when they are not listed (a check that makes no pages).
@@ -18226,6 +18428,7 @@ class AtlasPageInfo(_Model):
     scale: int
     center: Vec2
     bbox: list[float]
+    look: str | None | Unset = UNSET
     sources: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18236,6 +18439,8 @@ class AtlasPageInfo(_Model):
         out["scale"] = self.scale
         out["center"] = _vec2_out(self.center)
         out["bbox"] = [float(e0) for e0 in self.bbox]
+        if self.look is not UNSET:
+            out["look"] = self.look
         if self.sources is not UNSET:
             out["sources"] = list(self.sources)
         return out
@@ -18249,6 +18454,7 @@ class AtlasPageInfo(_Model):
             scale=data["scale"],
             center=Vec2.from_json(data["center"]),
             bbox=[float(e0) for e0 in data["bbox"]],
+            look=data.get("look", UNSET),
             sources=list(data["sources"]) if "sources" in data else UNSET,
         )
 
@@ -135400,15 +135606,21 @@ __all__ = [
     "AsbuiltChecked",
     "AsbuiltControl",
     "AsbuiltEpoch",
+    "AsbuiltFit",
     "AsbuiltKind",
     "AsbuiltKindName",
+    "AsbuiltLevel",
     "AsbuiltMissing",
     "AsbuiltPackage",
     "AsbuiltPoint",
+    "AsbuiltState",
+    "AsbuiltStateName",
     "AsbuiltStep",
     "AsbuiltSurfaceBy",
     "AsbuiltSurfaceByName",
+    "AsbuiltThresholds",
     "AsbuiltTrack",
+    "AsbuiltTrendAsk",
     "AssetCounts",
     "AssetKind",
     "AssetKindName",
@@ -135431,6 +135643,8 @@ __all__ = [
     "AtlasGonePage",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
+    "AtlasLook",
+    "AtlasLookName",
     "AtlasPageChange",
     "AtlasPageInfo",
     "AtlasPageState",

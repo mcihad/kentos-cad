@@ -29,7 +29,9 @@ library and no KentOS code:
 - a block with attribute definitions (docs/adr/0144 §7) is flagged so (70 2)
   and has an ATTDEF for each after its objects, on 0: its place, height,
   default, turn (none when 0), prompt and tag (white space and control
-  characters "_", a tag taken before "_2"); an insert of it says attributes
+  characters "_", a tag taken before "_2"; such a tag's ATTDEF, and only it,
+  holds KentOS's "tagname" item: the tag and the name, docs/adr/4800); an
+  insert of it says attributes
   follow (66 1) and is followed by an ATTRIB for each, owned by it, on its
   layer: the text it shows (its value, else the default, else nothing),
   placed as the insert places the definition (height times the scale; the
@@ -290,6 +292,27 @@ def kentos(e: list[tuple[int, str]]) -> dict[str, list[str]]:
         else:
             i += 1
     return items
+
+
+def kentos_items(e: list[tuple[int, str]], name: str) -> list[list[str]]:
+    """Every KentOS item `name` on an entity, in order: each one's values."""
+    out: list[list[str]] = []
+    at = next((i for i, g in enumerate(e) if g == (1001, "KENTOS")), None)
+    if at is None:
+        return out
+    i = at + 1
+    while i < len(e):
+        if e[i] == (1002, "{") and i + 1 < len(e) and e[i + 1] == (1000, name):
+            k = i + 2
+            values = []
+            while k < len(e) and e[k] != (1002, "}"):
+                values.append(e[k][1])
+                k += 1
+            out.append(values)
+            i = k + 1
+        else:
+            i += 1
+    return out
 
 
 def kentos_attrs(e: list[tuple[int, str]]) -> dict[str, str]:
@@ -974,12 +997,42 @@ def placed_frame(e: dict, degrees: float, align: str | None) -> tuple[float, str
     return turn, align
 
 
+def extra_attributes(e: dict, b: dict) -> list[tuple[str, str, str]]:
+    """An insert's attributes no definition of its block holds that go out as invisible ATTRIBs after its definitions'
+    (docs/adr/3980, 4380): in their names' order, each whose value is one line (no control character); its tag the
+    name with white space and control characters "_", "_2", "_3" … where the insert has the tag already but for case
+    (its definitions' tags first). (name, tag, value)."""
+    defined = {a["tag"] for a in b.get("attributes") or []}
+    taken = {t.upper() for t in dxf_tags(b)}
+    out = []
+    for name in sorted(e.get("attrs") or {}):
+        value = e["attrs"][name]
+        if name in defined or not name or any(unicodedata.category(c) == "Cc" for c in value):
+            continue
+        base = "".join("_" if (c.isspace() or unicodedata.category(c) == "Cc") else c for c in name)
+        tag, k = base, 2
+        while tag.upper() in taken:
+            tag = f"{base}_{k}"
+            k += 1
+        taken.add(tag.upper())
+        out.append((name, tag, value))
+    return out
+
+
 def check_attributes(o: list[list[tuple[int, str]]], e: dict, b: dict, layer: str, own: str, where: str, widths: dict) -> None:
-    """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle)."""
+    """An insert's ATTRIBs and SEQEND (`o`: the entities after it; `own`: its handle): its definitions', then its other
+    attributes' invisible ones (docs/adr/3980)."""
     attributes = b.get("attributes") or []
     tags = dxf_tags(b)
-    ensure(len(o) > len(attributes) and o[len(attributes)][0] == (0, "SEQEND"), f"{where}: {len(attributes)} ATTRIB, then SEQEND")
-    ensure(group(o[len(attributes)], 330) == own, f"{where}: its SEQEND is its own")
+    extra = extra_attributes(e, b)
+    n = len(attributes) + len(extra)
+    ensure(len(o) > n and o[n][0] == (0, "SEQEND"), f"{where}: {n} ATTRIB, then SEQEND")
+    ensure(group(o[n], 330) == own, f"{where}: its SEQEND is its own")
+    for (name, tag, value), r in zip(extra, o[len(attributes) : n]):
+        w = f"{where} › {name}"
+        ensure(r[0] == (0, "ATTRIB") and group(r, 330) == own and group(r, 8) == layer, f"{w}: an ATTRIB of its insert")
+        ensure(group(r, 2) == tag and group(r, 70) == "1", f"{w}: invisible, tag {tag!r}")
+        ensure(group(r, 1) == value, f"{w}: its value {value!r}")
     for k, (a, tag) in enumerate(zip(attributes, tags)):
         r = o[k]
         w = f"{where} › {a['tag']}"
@@ -1627,6 +1680,10 @@ def check(name: str) -> list[str]:
             ensure(group(d, 3) == (a.get("prompt") or ""), f"{w}: its prompt")
             ensure(group(d, 2) == tag and group(d, 70) == "0", f"{w}: tag {tag!r}, visible")
             ensure((group(d, 50) is None) if a["rotation"] == 0 else float(group(d, 50)) == a["rotation"], f"{w}: its turn")
+            # docs/adr/4800: a tag that is not the name holds the name in its own KentOS data; any other holds none.
+            record = kentos(d).get("tagname")
+            want = [tag, a["tag"]] if tag != a["tag"] else None
+            ensure(record == want, f"{w}: KentOS's name record {want!r}, not {record!r}")
         kinds = [k for e in b["entities"] for k in written_kinds(e)]
         ensure([o[0][1] for o in objects] == kinds, f"{b['name']}: objects {kinds}")
         k = 0
@@ -1680,10 +1737,16 @@ def check(name: str) -> list[str]:
             attributed += 1
         else:
             ensure(group(o, 66) is None, f"{where}: no attributes follow")
-        # The values of its block's attributes go out once, as its ATTRIBs; KentOS's data holds the others.
+        # The values of its block's attributes go out once, as its ATTRIBs; so do its other one-line attributes
+        # (docs/adr/3980), a tag not its name keeping the name in KentOS's data (docs/adr/4380); KentOS's data holds
+        # the rest.
         defined = {a["tag"] for a in b.get("attributes") or []}
-        others = {k: v for k, v in e["attrs"].items() if k not in defined}
+        extra = extra_attributes(e, b) if b.get("attributes") else []
+        out_as_attribs = {name for name, _, _ in extra}
+        others = {k: v for k, v in e["attrs"].items() if k not in defined and k not in out_as_attribs}
         ensure(kentos_attrs(o) == others, f"{where}: KentOS's data holds its other attributes {others}")
+        renamed = [[tag, name] for name, tag, _ in extra if tag != name]
+        ensure(kentos_items(o, "tagname") == renamed, f"{where}: KentOS's name records {renamed}")
     if attributed:
         said.append(f"{attributed} yerleştirmenin ATTRIB'leri")
 

@@ -34,4 +34,12 @@ bbox: [number, number, number, number],
  * its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
  * when they are not listed (a check that makes no pages).
  */
-sources?: Array<string>, };
+sources?: Array<string>, 
+/**
+ * The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list
+ * with the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an
+ * empty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps
+ * that stand still on every page. None where the pages were not made (a check), and for a page an update did not
+ * make whose previous record had none.
+ */
+look?: string, };

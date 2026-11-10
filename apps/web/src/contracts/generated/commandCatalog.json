@@ -62001,7 +62001,7 @@
       "id": "cad.asbuilt.check",
       "version": 1,
       "title": "Uygulama kontrolü",
-      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820) kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler; cevapta package.design. Retler: invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
+      "summary": "Sahada ölçülen noktaları (measured katmanının noktaları, adları field'da, yoksa Ad; kotları) tasarımla karşılaştırır (salt okunur): tasarım noktaları (design katmanı; önce adla, ad tutmazsa ve search verilmişse search yarıçapındaki tek tasarım noktasıyla öneri olarak, iki aday belirsiz), tasarım yüzeyi (surface; Harita/Yol; ölçülen − yüzey kotu) ve tasarım çizgileri (lines katmanı; en yakın çizgiye işaretli dik uzaklık, çizgi yönünün solu artı). Her nokta: eşlenen tasarım noktası ve nasıl (name, place), Δdoğu, Δkuzey, Δkot (ölçülen − tasarım), yatay uzaklık, yüzey farkı, çizgi uzaklığı, σ; durum within, outside, unmatched, ambiguous; işaretler proposed, outsideHorizontal, outsideVertical, outsideSurface, outsideLine, lowQuality (σ > quality; durumu değiştirmez), noHeight, offSurface. Ölçülmeyen tasarım noktaları missing; eşlenenlerin yatay ve düşey KOH'u ve en büyüğü. Toleranslar (horizontal, vertical), arama yarıçapı ve kalite sınırı kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820) kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler; cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler: invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.",
       "aliases": [
         "uygulamakontrolu",
         "asbuilt",
@@ -62021,7 +62021,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
+        "description": "Input of `cad.asbuilt.check` v1. `measured` is a layer's id; `design` and `lines` too (at least one of `design`,\n`surface`, `lines`); `surface` a terrain surface's id or name (Harita and Yol projects); `field` the attribute the\nnames are in (none: `Ad`); `search` the radius of a match by place (metres; none: by name only); the tolerances in\nmetres; `qualityField` the attribute of a point's σ (metres) and `quality` its limit; `expectedDesign` the design\ndigest the field record was made against.\n\nRefusals, in this order: `invalid_asbuilt_check` (no design at all, a limit or radius not above zero, an empty\nattribute's name, `quality` without `qualityField`, `packageDesign` without `package`; docs/adr/3620: a monitoring\njob without the earlier epoch's layer or with a surface, lines, a radius or a package, control points outside a\nmonitoring job, an empty control point's name; docs/adr/4420: a series or a day outside a monitoring job, a day that\nis no `YYYY-MM-DD` day; docs/adr/4840: a trend or thresholds without a series, a confidence not between 0 and 1, a\nthreshold not above zero, a warning not below its alarm); the package's (docs/adr/2420;\nat `package`): `invalid_file_path` (empty, relative, not `.zip`), `file_not_found`, `invalid_asbuilt_check` (not a\nfield package; at `expectedDesign`: another digest than the package's); `layer_not_found` (`measured`, `design`,\n`lines`, an epoch's `epochs[k].layer`); `invalid_asbuilt_check` (at `package`: its design files not read or not its digest's, docs/adr/2820; its\nsurface file not there, not read or not its SHA-256's, docs/adr/3220),\n`not_a_road_project` and the surface's own (`unknown_terrain`, `terrain_unbuildable`), `invalid_asbuilt_check`\n(more than 100 000 measured points).",
         "properties": {
           "control": {
             "description": "A monitoring job's control points by name (docs/adr/3620): marks taken as unmoved between the epochs; one beyond\nthe limits says the two epochs do not rest on one datum (or the mark moved).",
@@ -62139,6 +62139,28 @@
               }
             ],
             "description": "What the surface's limit (`vertical`) is held to (docs/adr/4020): the height difference (`vertical`, none) or the\nnearest distance to the surface (`nearest`, Trimble Access's Measure to surface)."
+          },
+          "thresholds": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltThresholds"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Two thresholds, warning and alarm (docs/adr/4840; Trimble's yellow and red): each point's state, the highest\nlevel it goes beyond. Needs a series (`epochs`). No threshold is the program's."
+          },
+          "trend": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AsbuiltTrendAsk"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A line fitted through each point's dated epochs (docs/adr/4840): its velocity, their standard deviations and\nwhich components move at the confidence asked. Needs a series (`epochs`)."
           },
           "vertical": {
             "format": "double",
@@ -100069,7 +100091,7 @@
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",
-      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. Sayfanın görünüşü (ADR 4820): sayfalar yapılınca her sayfanın look'u (SHA-256): paftanın görüntü listesi yayının kendi damgaları dışarıda (gün, kullanıcı, boş kaynak notuna yazılan çizim durumu), haritalarının yolları ve yazıları, tabloları, koordinat listeleri, lejantları, kalite notları ve her sayfada duran haritalar; kayıtta da. Önceki kayıt görünüşleri biliyorsa değişen her sayfanın changes[].look'u same (yalnız çizmediği değişti) ya da changed. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "atlaspdf"
       ],
@@ -118966,6 +118988,79 @@
       ],
       "type": "object"
     },
+    "AsbuiltFit": {
+      "description": "The line fitted through a point's dated epochs (docs/adr/4840): by least squares, its movement from its reference\nagainst the years since its first dated epoch, east, north and (with both heights) up apart.",
+      "properties": {
+        "east": {
+          "description": "The velocity east and north (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "epochs": {
+          "description": "The dated epochs the point was measured in (3 or more).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "moving": {
+          "description": "The components whose velocity is more than Student's t times its standard deviation (`east`, `north`, `up`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "north": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaEast": {
+          "description": "Their standard deviations from the residuals: s / √Σ(t − t̄)², s² = Σr² / (n − 2) (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaNorth": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "sigmaUp": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "speed": {
+          "description": "The horizontal speed, √(east² + north²) (m a year).",
+          "format": "double",
+          "type": "number",
+          "x-unit": "m/yr"
+        },
+        "up": {
+          "description": "The velocity up (m a year), when 3 dated epochs or more have both heights.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        }
+      },
+      "required": [
+        "epochs",
+        "east",
+        "north",
+        "sigmaEast",
+        "sigmaNorth",
+        "speed"
+      ],
+      "type": "object"
+    },
     "AsbuiltKind": {
       "description": "What a check is for (docs/adr/3620; plan/map-cad.md MAP-19: as-built, stakeout check and periodic deformation\nmeasurement as their own jobs): what was built against the design, stakes against their design points, or the same\nmarks at two epochs (physical movement, never a design change).",
       "enum": [
@@ -118974,6 +119069,49 @@
         "monitoring"
       ],
       "type": "string"
+    },
+    "AsbuiltLevel": {
+      "additionalProperties": false,
+      "description": "A threshold level's limits; a limit not given is not checked at that level.",
+      "properties": {
+        "horizontal": {
+          "description": "The horizontal movement from the point's reference at this epoch (m).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "horizontalRate": {
+          "description": "The horizontal speed (m a year): the fitted line's when there is one, else the mean rate.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        },
+        "vertical": {
+          "description": "The height movement from the point's reference at this epoch, either way (m).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "verticalRate": {
+          "description": "The vertical speed, either way (m a year): the fitted line's when there is one, else the mean rate.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m/yr"
+        }
+      },
+      "type": "object"
     },
     "AsbuiltMissing": {
       "description": "A design point no measured point matched.",
@@ -119213,6 +119351,15 @@
       ],
       "type": "object"
     },
+    "AsbuiltState": {
+      "description": "A point's state against the thresholds (docs/adr/4840): the highest level any of its values goes beyond.",
+      "enum": [
+        "normal",
+        "warning",
+        "alarm"
+      ],
+      "type": "string"
+    },
     "AsbuiltStep": {
       "description": "A point's movement at an epoch from its reference (docs/adr/4420): east, north, height (none without both heights)\nand horizontal; `outside` when it is beyond the job's horizontal or vertical limit.",
       "properties": {
@@ -119265,9 +119412,46 @@
         }
       ]
     },
+    "AsbuiltThresholds": {
+      "additionalProperties": false,
+      "description": "The two thresholds (docs/adr/4840); each limit given in both must be smaller at the warning.",
+      "properties": {
+        "alarm": {
+          "$ref": "#/$defs/AsbuiltLevel",
+          "description": "The alarm level (Trimble's red)."
+        },
+        "warning": {
+          "$ref": "#/$defs/AsbuiltLevel",
+          "description": "The warning level (Trimble's yellow)."
+        }
+      },
+      "required": [
+        "warning",
+        "alarm"
+      ],
+      "type": "object"
+    },
     "AsbuiltTrack": {
       "description": "A point measured now tracked through a monitoring job's series (docs/adr/4420): its name; `from`, the epoch it was\nfirst measured in (its reference: the series is the earlier epochs, oldest first, then this one); at each epoch\nits movement from the reference, none where it was not measured; with the days of its reference and of this epoch,\nits mean rates (m a year: its last horizontal and vertical movement over the years between).",
       "properties": {
+        "exceeded": {
+          "description": "The limits of its state's level its values go beyond (`horizontal`, `vertical`, `horizontalRate`,\n`verticalRate`).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "fit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltFit"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The line fitted through its dated epochs (docs/adr/4840), asked and with 3 of them or more."
+        },
         "from": {
           "format": "uint32",
           "minimum": 0,
@@ -119293,6 +119477,17 @@
           ],
           "x-unit": "m"
         },
+        "state": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AsbuiltState"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its state against the thresholds (docs/adr/4840), asked."
+        },
         "steps": {
           "items": {
             "anyOf": [
@@ -119311,6 +119506,22 @@
         "name",
         "from",
         "steps"
+      ],
+      "type": "object"
+    },
+    "AsbuiltTrendAsk": {
+      "additionalProperties": false,
+      "description": "The line fitted through a point's epochs (docs/adr/4840): the confidence its velocity's test is made at.",
+      "properties": {
+        "confidence": {
+          "description": "The confidence, between 0 and 1 (0.95: a component moves when its velocity is more than Student's t at 0.975\nwith n − 2 degrees of freedom times its standard deviation). The user's: no regulation gives one for monitoring.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "confidence"
       ],
       "type": "object"
     },
@@ -119745,6 +119956,21 @@
         }
       ]
     },
+    "AtlasLook": {
+      "description": "Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.",
+      "oneOf": [
+        {
+          "const": "same",
+          "description": "It draws the same: only what it does not draw changed (an attribute no text, table or label shows).",
+          "type": "string"
+        },
+        {
+          "const": "changed",
+          "description": "It draws otherwise.",
+          "type": "string"
+        }
+      ]
+    },
     "AtlasPageChange": {
       "description": "A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now\nwhose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by\npersistent id in the order listed; `changed` too when the project's parts the pages read changed.",
       "properties": {
@@ -119768,6 +119994,17 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "index"
+        },
+        "look": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AtlasLook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its\nlook; none otherwise (a previous record without looks, a page the previous update did not make)."
         },
         "removed": {
           "items": {
@@ -119815,6 +120052,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "index"
+        },
+        "look": {
+          "description": "The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list\nwith the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an\nempty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps\nthat stand still on every page. None where the pages were not made (a check), and for a page an update did not\nmake whose previous record had none.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "description": "The page's name (the atlas's page-name expression; a repeated one is numbered).",

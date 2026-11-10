@@ -123,6 +123,24 @@ pub struct AtlasPdf {
     pub notes: Vec<String>,
     /// What was read from bound sources: the plan's coverage table and the pages' map layers.
     pub read: Vec<AtlasRead>,
+    /// Each page made, in the file's order: its object (by lasting id) and its look (docs/adr/4820, [`look_of`]).
+    pub looks: Vec<(String, String)>,
+}
+
+/// What a page draws, set apart from how it was published (docs/adr/4820): its display list made with the
+/// publication's own stamps set aside, its maps, tables, coordinate lists, legends and survey notes. Hashed with the
+/// maps that stand still on every page into the page's look.
+struct Drawn {
+    feature: String,
+    list: display::DisplayList,
+    page: serde_json::Value,
+}
+
+/// A page's look (docs/adr/4820): the SHA-256 of its drawing set apart from its publication and of the standing maps,
+/// as one JSON array (serde's own order of each part's fields; numbers as they are).
+fn look_of(drawn: &Drawn, shared: &[PdfMap]) -> String {
+    let whole = serde_json::json!([drawn.list, drawn.page, shared]);
+    kentos_contracts::encoding::sha256_hex(&serde_json::to_vec(&whole).unwrap_or_default())
 }
 
 fn file_of(link: &kentos_contracts::SourceLink) -> Option<String> {
@@ -695,6 +713,7 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                 ),
                 bbox: boxes.get(&p.feature.id).copied().unwrap_or(p.feature.bbox),
                 sources: Vec::new(),
+                look: None,
             }
         })
         .collect();
@@ -956,6 +975,26 @@ impl AtlasPlanned {
             display::display_list(&book, &self.sheet, &render)
                 .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))
         };
+        // Docs/adr/4820: each page's look, its drawing set apart from its publication: the display list of the book as
+        // given (no drawing state written into an empty `kaynak`), no day and no user.
+        let mut quiet = base.clone();
+        quiet.project.date.clear();
+        quiet.project.user.clear();
+        let mut drawn: Vec<Drawn> = Vec::with_capacity(self.plan.len());
+        let drawn_of = |page: &display::AtlasPageInput,
+                        maps: &[PdfMap],
+                        data: &crate::inputs::SheetData|
+         -> Result<Drawn, AtlasError> {
+            let mut render = quiet.clone();
+            render.atlas = Some(page.clone());
+            let list = display::display_list(&self.book, &self.sheet, &render)
+                .map_err(|e| AtlasError::new("pdf_unwritable", e.message, "path"))?;
+            let page_json = serde_json::json!({
+                "maps": maps, "tables": data.tables, "coordinates": data.coordinates,
+                "legends": data.legends, "surveys": data.surveys,
+            });
+            Ok(Drawn { feature: page.feature.id.clone(), list, page: page_json })
+        };
         let said = |drawer: MapDrawer<'_>, notes: &mut Vec<String>| -> Result<(), AtlasError> {
             for n in drawer
                 .finish()
@@ -976,6 +1015,7 @@ impl AtlasPlanned {
                 let (maps, data) = self.page_maps(
                     &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
                 );
+                drawn.push(drawn_of(page, &maps, &data)?);
                 pages.push(PdfAtlasPage {
                     atlas: page.clone(),
                     maps,
@@ -1040,6 +1080,7 @@ impl AtlasPlanned {
                     &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
                 );
                 said(drawer, &mut notes)?;
+                drawn.push(drawn_of(page, &maps, &data)?);
                 pages.push(PdfAtlasPage {
                     atlas: page.clone(),
                     maps,
@@ -1065,6 +1106,8 @@ impl AtlasPlanned {
                     .to_owned(),
             );
         }
+        // Docs/adr/4820: the looks, now that the maps standing on every page are all drawn.
+        let looks: Vec<(String, String)> = drawn.iter().map(|d| (d.feature.clone(), look_of(d, &shared))).collect();
         let assets = self
             .pictures
             .iter()
@@ -1125,6 +1168,7 @@ impl AtlasPlanned {
             findings,
             notes,
             read,
+            looks,
         })
     }
 }

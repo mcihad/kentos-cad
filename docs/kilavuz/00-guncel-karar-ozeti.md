@@ -613,6 +613,16 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İzlemede dönemlerden doğru ve iki eşik (10 Kasım 2026; MAP-19, [ADR 4840](../../docs/adr/4840-monitoring-trend-and-thresholds.md)).**
+  İzleme dizisine `trend` (güven): üç ya da daha çok günlü dönemde noktanın doğu, kuzey ve kot doğrusu, σ'ları, Student
+  t'yle anlamlı hareket (`fit`); `thresholds` (uyarı, alarm) her noktaya `state` ve `exceeded`. Eşikler kullanıcının,
+  yönetmelik değeri yok. Uygulama kontrolü › İzleme › Dönem dizisi. Harita + Yol + CBS.
+- **Atlas sayfasının görünüşü (10 Kasım 2026; MAP-18, [ADR 4820](../../docs/adr/4820-atlas-page-look.md)).**
+  `file.export.atlas` sayfalar yapılınca her sayfanın `look`'u (çizdiğinin SHA-256'sı, yayının damgaları dışarıda) ve
+  değişen sayfanın `changes[].look`'u (same: yalnız çizmediği değişti); kayıtta da. CAD + CBS.
+- **Tanımlı özniteliğin boşluklu etiketinin geri adı (10 Kasım 2026; MAP-17, [ADR 4800](../../docs/adr/4800-dxf-defined-attribute-name-back.md)).**
+  Etiketi adından başka yazılan ATTDEF'in KentOS verisinde `tagname`; geri okumada tanım ve eklemelerin değerleri adı alır,
+  dosya kazanır (büyük harfli etiket uyar, değişen etiket ad olur ve söylenir). İstem ad kaynağı değil. CAD + CBS.
 - **Dış çap, hattın dış duvarı, kanal yönetmeliklerinin kural paketi (10 Kasım 2026; MAP-16, [ADR 4780](../../docs/adr/4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)).**
   `diameter.outer` (et = (dış − iç) / 2; etle uyuşmazsa `wallMismatch`); hat profilinde kendi borularının dış duvarları;
   `cad.pipes.check`'in `rules`'u `catalog/v1/rules/kanal-csb-2017.json`'dan (atıksu EK-1, yağmursuyu Çizelge 1.4):

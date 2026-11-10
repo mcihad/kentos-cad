@@ -537,6 +537,47 @@ def update_cases(case, P):
     case("Güncelleme: kayıt olmayan önceki dosya reddedilir", [
         {"op": "plan", "input": {"path": P, "sheet": "atlas-paftasi", "previous": "$tmp/yok.kaynaklar.json"},
          "result": refused("no_previous", "previous")}], "plain")
+    look_cases(case, P, against, record)
+
+
+def look_cases(case, P, against, record):
+    """Docs/adr/4820: a changed page's look against the previous atlas's, when this run made it. By the sheet's rule:
+    the object note prints the page's own parcel's Ada, Parsel and Durum (Malik is the form's redact and is never
+    carried), and the atlas map draws the parcels without labels. So an owner changed elsewhere changes the pages that
+    list the parcel and none of their looks; its Ada changed changes its own page's look (the note and the page's name)
+    and not its neighbours'."""
+    first = {"op": "execute", "input": {"path": P, "sheet": "atlas-paftasi"}, "result": done({"record": record})}
+    again = {"path": "$tmp/atlas-2.pdf", "sheet": "atlas-paftasi", "previous": record}
+
+    def looked(rows, own=None):
+        out = []
+        for r in rows:
+            row = dict(r)
+            if row["state"] == "changed":
+                row["look"] = "changed" if row["feature"] == own else "same"
+            out.append(row)
+        return out
+
+    owner = looked(against(pages(), 2))
+    assert all(r.get("look") in (None, "same") for r in owner)
+    case("Görünüş: çizilmeyen malik değişince onu listeleyen sayfalar değişti, görünüşleri aynı", [
+        first,
+        {"command": "cad.entities.set", "input": {"uids": ["$uidOf:2"], "operation": "attributes",
+                                                    "attrs": {"Malik": "Yeni Malik"}}, "result": done()},
+        {"op": "execute", "input": again, "result": done({"changes": {"pages": owner}})}], "plain")
+    island = looked(against(pages(), 2), own="$uidOf:2")
+    assert sum(1 for r in island if r.get("look") == "changed") == 1 and \
+        sum(1 for r in island if r.get("look") == "same") > 0, island
+    case("Görünüş: parselin adası değişince yalnız kendi sayfasının görünüşü değişti, komşularınınki aynı", [
+        first,
+        {"command": "cad.entities.set", "input": {"uids": ["$uidOf:2"], "operation": "attributes",
+                                                    "attrs": {"Ada": "A9"}}, "result": done()},
+        {"op": "execute", "input": again, "result": done({"changes": {"pages": island}})}], "plain")
+    case("Görünüş: planda da sayfalar yapılır, görünüş söylenir", [
+        first,
+        {"command": "cad.entities.set", "input": {"uids": ["$uidOf:2"], "operation": "attributes",
+                                                    "attrs": {"Malik": "Yeni Malik"}}, "result": done()},
+        {"op": "plan", "input": again, "result": done({"changes": {"pages": owner}})}], "plain")
 
 
 def update_pdf_cases(case, P):

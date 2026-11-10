@@ -87,6 +87,7 @@ mod pipes_check_window;
 mod pipes_check_rules;
 mod exchange_check_window;
 mod asbuilt_window;
+mod asbuilt_trend;
 mod project_graph_window;
 mod survey_network_window;
 mod features_reconcile_window;
@@ -420,6 +421,8 @@ mod asbuilt_window_tests;
 #[cfg(test)]
 mod asbuilt_series_tests;
 #[cfg(test)]
+mod asbuilt_trend_tests;
+#[cfg(test)]
 mod project_graph_window_tests;
 #[cfg(test)]
 mod recipe_layer_look_tests;
@@ -517,6 +520,8 @@ mod compare_sections_tests;
 mod pipes_profile_walls_tests;
 #[cfg(test)]
 mod pipes_rules_tests;
+#[cfg(test)]
+mod dxf_attribute_names_tests;
 #[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]

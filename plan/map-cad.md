@@ -48,9 +48,9 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740 | katman damgasının katman dizininden okunması; m. 63(2) ızgarasının taban noktası ve dönmesi; kesit kontrolünün kendisi (iki kontrol noktası arasında kesit, m. 93(1)) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
-| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
-| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
+| MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
+| MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420, 4840 | yetkili inceleme kaydı (.kcad bölümü); eşiklerin kaynağıyla saklanması; hareketin zaman grafiği | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın alanları | — |
 
 ## İnceleme yöntemi ve bulguların sınırı
@@ -2199,6 +2199,16 @@ geri okumada dosya kazanır (değer ATTRIB'in, silinen ATTRIB bir şey getirmez,
 etiket büyük küçük harf ayırmadan); yazıcı testleri (yeni kural testi; işlenmiş baytlar değişmedi), ezdxf ile bağımsız
 okuma, MCP. Açık: tanımlı özniteliğin boşluklu etiketinin geri adı.
 
+**10 Kasım 2026, dokuzuncu tur — tanımlı özniteliğin boşluklu etiketinin geri adı ([ADR 4800](../docs/adr/4800-dxf-defined-attribute-name-back.md)).**
+Kapsam: **CAD + CBS**; maddenin sıradaki işinin bütünü. Dayanak: AutoCAD DXF başvurusu (ATTDEF grup 2 etiket boşluk
+içermez, grup 3 istem), AutoCAD'in öznitelik tanımı ve BATTMAN'i (etiket büyük harfe çevrilir, değişir), TUCBS'nin okunur
+ad ile teknik ad ayrımı; 10 Kasım 2026'da okundu. Kanıtlanan: etiketi adından başka yazılan ATTDEF'in KentOS verisinde
+`tagname` (etiket, ad), söylenir; geri okumada dosya kazanır: tanım ve eklemelerinin değerleri adı alır, büyük harfli
+etiket de uyar, başka programda değişen etiket ad olur ve söylenir, kaydı silinen etiket kalır, adı başka ATTDEF'te olan
+alınmaz; istem ad kaynağı değil; yazıcı ve okuyucu testleri (blocks.dxf'e yalnız kayıt eklendi), bağımsız denetçi (ADR
+3980'den beri eskimiş ATTRIB denetimi de düzeltildi; 11 dosya geçer), ezdxf ile bağımsız okuma ve düzenleme, MCP;
+masaüstünde DXF gidiş-dönüşünde öznitelik ve blok kaybı yok. Açık: kurum profilinde ad dönüşümünün biçimi, DXF'te TABLE.
+
 ### MAP-18 — Harita anotasyonu, pafta ve teslimi tek revizyondan üret [ ]
 
 **Öncelik:** P0 mevcut okunurluk; P1 üretim bağları. **Kod:** [K20], [K36]–[K39].
@@ -2310,6 +2320,16 @@ sayfa etiketleri aynı; cevapta ve kayıtta `written`, kayıt bütün atlasın; 
 `no_previous` retleri; 4 bağımsız durum (eski 40 bayt bayt aynı), Python (pypdf etiketleri, pdftotext), MCP; masaüstünde
 Yalnız değişen ve yeni sayfalar. Açık: total station ve nivelman kalitesi, görünüşü değişen sayfa ayrımı.
 
+**10 Kasım 2026, dokuzuncu tur — atlas sayfasının görünüşü ([ADR 4820](../docs/adr/4820-atlas-page-look.md)).**
+Kapsam: **CAD + CBS**; maddenin sıradaki işinin ikinci parçası (total station ve nivelman kalitesi projenin kaydına yeni
+bir `.kcad` bölümü istediği için açık). Dayanak: QGIS QgsRenderChecker ve diff-pdf (çizerek karşılaştırma), BÖHHBÜY m. 76
+(imza çizilen sayfaya ait); 10 Kasım 2026'da okundu. Kanıtlanan: sayfalar yapılırken her sayfanın görünüş özeti (`look`,
+SHA-256): görüntü listesi yayının damgaları dışarıda (gün, kullanıcı, KentOS'un boş `kaynak`'a yazdığı çizim durumu),
+haritaların yolları ve yazıları, tablolar, koordinat listeleri, lejantlar, kalite notları, duran haritalar; PDF baytları
+ve yazı tipi alt kümesi değil; kayıtta da, güncellemenin yapmadığı sayfa öncekini taşır; değişen sayfanın
+`changes[].look`'u same ya da changed; 3 bağımsız durum (47; eskiler bayt bayt aynı), Python, MCP; masaüstünde yazıldı
+iletisi. Açık: total station ve nivelman kalitesi, önizlemede görünüş.
+
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 
 **Öncelik:** P1 çevrimdışı karşılaştırma; canlı cihaz işi donanım kapısında.
@@ -2415,6 +2435,17 @@ günleriyle) ve `date`: bu dönemde ölçülen her nokta ilk ölçüldüğü dö
 adımlar, sınırı aşan adım), günler varsa ortalama yatay ve düşey hız; gün denetimi ve retler; 22 bağımsız durum (eski 65
 değişmedi), Python (testin kendi okuması), MCP; masaüstünde Önceki dönemler satırı (günler katmanların Veri kümesi
 bilgisinden) ve Dönem dizisi tablosu. Açık: yetkili inceleme kaydı, doğru uydurma, uyarı ve alarm eşikleri.
+
+**10 Kasım 2026, dokuzuncu tur — dönemlerden doğru ve iki eşik ([ADR 4840](../docs/adr/4840-monitoring-trend-and-thresholds.md)).**
+Kapsam: **Harita + Yol + CBS**. Dayanak: Trimble 4D Control (hız = kayan penceredeki regresyonun eğimi; Attention,
+Warning, Alarm), TBC Monitor Point Movement (Warning, Alarm), Leica GeoMoS (düzeyli sınır, regresyon denetimi); resmî
+metinlerde izleme eşiği ve doğru uydurma hükmü yok (DSİ, TBDY 2018, AFAD, KGM; BÖHHBÜY m. 21 yalnız C derece hızı).
+Kanıtlanan: izleme dizisine `trend` (güven): üç ya da daha çok günlü dönemde nokta başına doğu, kuzey ve kot doğrusu (en
+küçük kareler), hızlar, σ'ları ve Student t'yle anlamlı hareket (`fit`); `thresholds` (uyarı ve alarm; son yatay ve kot
+hareketi, yatay ve kot hızı) her noktaya `state` ve aşılan sınırlar; beş ret; dördüncü dönemli çizimle 12 bağımsız durum
+(34; eski 22 bayt bayt aynı), Python (numpy.polyfit), MCP; masaüstünde Dönem dizisi bölümü (Doğru uydurma, Uyarı ve
+Alarm eşiği), özette durum sayıları, Hareketler | Doğru ve eşikler tablosu. Açık: yetkili inceleme kaydı (`.kcad`
+bölümü), eşiklerin kaynağıyla saklanması, hareketin zaman grafiği, ağırlıklı doğru.
 
 ### MAP-20 — Bütün iş akışlarını yeniden üretilebilir, durdurulabilir ve otomasyona açık teslim et [ ]
 
