@@ -4421,7 +4421,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 14.05 m; birinci görüntü örtüşmenin 52.11 m²'sini, ikinci 67.53 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 8.0, ortalama 1.7; aranan 12000 hücrenin ortalaması 12.5; hücre 0.10 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
        "revision": "$current"
@@ -4991,7 +4991,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 13.22 m; birinci görüntü örtüşmenin 59.93 m²'sini, ikinci 59.71 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 11.0, ortalama 6.3; aranan 3000 hücrenin ortalaması 19.6; hücre 0.20 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
        "revision": "$current"
@@ -5885,7 +5885,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 14.03 m; birinci görüntü örtüşmenin 58.64 m²'sini, ikinci 61.00 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 8.0, ortalama 1.8; aranan 2400 hücrenin ortalaması 12.3; hücre 0.10 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
        "revision": "$current"
@@ -6770,7 +6770,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 14.05 m; birinci görüntü örtüşmenin 51.89 m²'sini, ikinci 67.75 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 8.0, ortalama 1.8; aranan 11856 hücrenin ortalaması 12.6; hücre 0.10 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Geçilmeyecek alanların piksellerini içeren hücre aranmadı: birleşme çizgisi onları kesmez.",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
@@ -7618,7 +7618,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 14.05 m; birinci görüntü örtüşmenin 52.11 m²'sini, ikinci 67.53 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 8.0, ortalama 1.7; aranan 12000 hücrenin ortalaması 12.5; hücre 0.10 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
        "revision": "$current"
@@ -8766,7 +8766,7 @@
         "Mozaik elemanları (radyometrik fark): örtüşme 119.64 m², birleşme çizgisi 16.44 m; birinci görüntü örtüşmenin 65.03 m²'sini, ikinci 54.61 m²'sini kullanır.",
         "Birleşme çizgisinin uçları iki ayak izinin ortak sınırında, iki görüntünün kendi bölgelerinden eşit uzakta.",
         "Radyometrik fark: birleşme çizgisi boyunca en büyük 11.0, ortalama 6.1; aranan 2842 hücrenin ortalaması 15.3; hücre 0.20 m.",
-        "Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.",
+        "BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).",
         "Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin yerine kural koymaz, kayıklık m. 67(6) ile ayrıca denetlenir (Ortofoto karşılaştırması › Kayıklık ölçümü)."
        ],
        "revision": "$current"

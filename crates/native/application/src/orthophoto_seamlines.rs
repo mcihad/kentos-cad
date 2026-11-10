@@ -502,7 +502,7 @@ fn run(doc: &Document, input: &OrthophotoSeamlines) -> Result<(OrthophotoSeamlin
             "Radyometrik fark: birleşme çizgisi boyunca en büyük {:.1}, ortalama {:.1}; aranan {} hücrenin ortalaması {:.1}; hücre {:.2} m.",
             d.bottleneck, d.mean, d.searched, d.searched_mean, d.size
         ));
-        notes.push("Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark ondan sonra anlamlıdır.".into());
+        notes.push("BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).".into());
     }
     if input.avoid.is_some() {
         notes.push("Geçilmeyecek alanların piksellerini içeren hücre aranmadı: birleşme çizgisi onları kesmez.".into());

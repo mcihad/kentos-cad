@@ -1643,7 +1643,7 @@ sınıfları korunsun, düzeltme geri alınsın; kayıt ve nesne çıkarımı ba
 kontrolle değerlendirilsin. Gerçek veri/süre/bellek raporu olmadan “milyar nokta hızlı” denmesin.
 
 **6 Kasım 2026 — Tarama uyumu denetimi ([ADR 1500](../docs/adr/1500-scan-overlap-check.md)).** Kapsam işareti:
-**Harita + CBS**. Araştırma: BÖHHBÜY LiDAR'a ölçüt vermiyor (yalnız m. 4/h tanım; m. 91(2) KOH_Z ürün için); USGS LBS
+**Harita + CBS**. Araştırma: BÖHHBÜY LiDAR'a ölçüt vermiyor (yalnız m. 7(1)(h) tanım; m. 91(2) KOH_Z ürün için); USGS LBS
 QL2 şeritler arası RMSDz ≤ 8 cm (örnek, bağlayıcı değil); TBC/Cyclone/TerraMatch'te kayıt ve şerit uyumu ayrı iş.
 Kanıtlanan: iki taramanın tam çözünürlükte, hücre düzlemleriyle (eğim fark sayılmaz) RMSDz, sistematik kayma, en kötü
 hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si; kontrolsüz bulut “ölçüye kesin hazır” sayılmaz
@@ -1748,7 +1748,7 @@ GIS'te de tüketilir. UGRID/NetCDF mesh okuyucusu korunur; düzenlenebilir
 mühendislik yüzeyiyle aynı sözleşmeymiş gibi genişletilmez.
 
 **6 Kasım 2026 — Harita projesinde arazi yüzeyi ([ADR 1520](../docs/adr/1520-map-project-terrain-surfaces.md)).**
-Kapsam işareti: **Harita + Yol** (CBS yüzeyi analiz sekmesinden tüketir). Araştırma: BÖHHBÜY m. 4(1)(l) SAM'ı üçgensel
+Kapsam işareti: **Harita + Yol** (CBS yüzeyi analiz sekmesinden tüketir). Araştırma: BÖHHBÜY m. 6(1)(l) SAM'ı üçgensel
 biçimde tanımlar, m. 45(1)(c) ≥ 25 nokta/ha, m. 63 ve m. 78(1)(c–g) eş yükseklik eğrisi (aralık ölçeğe bağlı, her
 beşinci kalın); NetSURF yüzeyi harita üretiminin kaynağı yapar; Civil 3D yüzeyi tanım listesidir. Kanıtlanan: yol'un
 yüzey tarifi ve bütün `road.terrains.*` komutları Harita projesinde çalışır, Arazi sekmesinin Yüzey/Analiz/İşlemler

@@ -718,8 +718,8 @@ def built(s, inp, layer_=LAYER, opened=True):
         notes.append(f"Radyometrik fark: birleşme çizgisi boyunca en büyük {one(difference['bottleneck'])}, ortalama "
                      f"{one(difference['mean'])}; aranan {difference['searched']} hücrenin ortalaması "
                      f"{one(difference['searchedMean'])}; hücre {two(difference['size'])} m.")
-        notes.append("Birleşme çizgisinden önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)); fark "
-                     "ondan sonra anlamlıdır.")
+        notes.append("BÖHHBÜY m. 67(6): ortak alanda radyometrik düzeltme yapılmalıdır. Radyometrik fark düzeltilmiş "
+                     "görüntülerde anlamlıdır (KentOS'un önerisi: çizgiyi düzeltmeden sonra kurun).")
     if "avoid" in inp:
         notes.append("Geçilmeyecek alanların piksellerini içeren hücre aranmadı: birleşme çizgisi onları kesmez.")
     notes.append("Mozaik elemanı görüntünün mozaikte kullanılan bölümüdür (TUCBS Ortogörüntü); BÖHHBÜY birleşme çizgisinin "

@@ -344,7 +344,7 @@ impl App {
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             Some(Ok(r)) => {
                 // The colour-matching and keep-out notes are the radiometry rows' help already.
-                let said = ["Birleşme çizgisinden önce ortak alanda", "Geçilmeyecek alanların piksellerini"];
+                let said = ["BÖHHBÜY m. 67(6): ortak alanda", "Geçilmeyecek alanların piksellerini"];
                 for (k, n) in r.notes.iter().enumerate().filter(|(_, n)| !said.iter().any(|w| n.starts_with(w))) {
                     lines.push(words::text_line(if k == 0 { Kind::Ok } else { Kind::Info }, n.clone()));
                 }
@@ -419,7 +419,7 @@ impl App {
                 .align_y(Center),
             )
             .field("Geçilmeyecek alanlar", container(fields::select_owned(avoids, avoid, |v| msg(Event::Avoid(v)))).width(300))
-            .help("Birleşme çizgisi iki görüntünün radyometrik farkının en küçük olduğu yoldan geçer; seçilen katmanın alanlarını (bina, köprü) kesmez. Önce ortak alanda radyometrik düzeltme yapılmalıdır (BÖHHBÜY m. 67(6)).")
+            .help("Birleşme çizgisi iki görüntünün radyometrik farkının en küçük olduğu yoldan geçer; seçilen katmanın alanlarını (bina, köprü) kesmez. BÖHHBÜY m. 67(6) ortak alanda radyometrik düzeltme ister; çizgiyi düzeltmeden sonra kurun.")
         };
         let (lines, rows) = self.ortho_seamlines_lines();
         let f = self.format();

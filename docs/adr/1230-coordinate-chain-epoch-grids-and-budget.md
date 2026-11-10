@@ -178,7 +178,7 @@ ve nereden geldiği), ızgaralar (adı, türü, özetin başı, kutusu) ve sayı
   taşıyor.
 - Önizlemede nokta başına fark (kaynak − hedef) ve nedeni: bugün zincir çağrı başına karar verir.
 - Geoit ve hız modeline doğruluk vermek (kullanıcının söylediği, kaynaklı): olmadıkça bu yollar `limited` kalır.
-- Zamana bağlı Helmert (ITRF çerçeveleri arası), resmî TUREF hız alanı: kaynak ve kullanım hakkı bekleniyor.
+- Zamana bağlı Helmert (ITRF çerçeveleri arası), resmî TUREF hız alanı: kaynak ve kullanım hakkı bekleniyor. *(Düzeltme, 10 Kasım 2026, BÖHHBÜY denetimi: HGM “TUREF Hız Alanı-2020”yi yayımlamıştır; 4.10.2025 değişikliğiyle (CK 10455) BÖHHBÜY m. 21 yeni noktaların hızını HGM'nin güncel Türkiye Hız Alanı Modeli'nden ister. Bkz. plan/map-cad.md MAP-03.)*
 - Web (TODOS.md §0.2).
 - **Sahibin kararları:** (1) WGS 84'e her datum değişimini `datum_ensemble` ile sınırlı saymak doğru mu, yoksa yalnız
   epok yoksa mı; (2) TUREF'e 2005,0'ı ulusal tanım olarak varsayılan epok vermek (bugün verilmez); (3) EPSG kayıt sürümü
