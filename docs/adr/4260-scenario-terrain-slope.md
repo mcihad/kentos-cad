@@ -84,6 +84,6 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-10, sekizinci tur. Durum: taslak. ADR 144
 
 ## Sonra
 
-- Eğim sınıflarına göre alanlar ve haritada gösterim; bakı.
+- ~~Eğim sınıflarına göre alanlar; bakı~~ ([ADR 4660](4660-scenario-slope-classes-and-aspect.md)); haritada gösterim.
 - Ağ üzerinden erişim; damganın çizimde saklanması (MAP-10'un kalanı).
 - Web (TODOS §0.2).

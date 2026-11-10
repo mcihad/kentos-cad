@@ -27,7 +27,12 @@ The rules, by hand:
 - asked for (docs/adr/4260), the slope on the terrain surface “Zemin” (four points, its two triangles the Delaunay
   ones, decided here by the empty circle): each triangle's slope from its plane, 100 · √(a² + b²) for z = c + a·x + b·y;
   each measured area clipped by each triangle (Sutherland–Hodgman, exact fractions), the parts' area-weighted mean
-  slope, the steep part (slope ≥ the threshold) and its share, the part off the surface (a gap above 1e-6 m²).
+  slope, the steep part (slope ≥ the threshold) and its share, the part off the surface (a gap above 1e-6 m²);
+- docs/adr/4660 (ArcGIS's Surface Slope class breaks and Surface Aspect): with the user's rising breaks, the area of each
+  class (from 0 to the first break, between two, from the last up, each holding its lower break); with `aspect`, the
+  area by the direction each triangle's slope faces: the upward normal's horizontal part (−a, −b) for z = c + a·x + b·y,
+  clockwise from north, in the eight directions (north 337.5°–22.5° …, each holding its lower bound), a level triangle
+  (a = b = 0, exactly) flat.
 """
 
 import copy
@@ -368,8 +373,10 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
                 asked_gaps.append(f"Altyapı katmanında ({name}) {where} nesne yok; yakın alan 0.")
     if slope is not None:
         name = "Zemin"
-        triangles = ground_triangles()
-        (xw, xo, xs_, xd), (yw, yo, ys_, yd) = slopes(b, slope, triangles), slopes(a, slope, triangles)
+        ground = {e["attrs"]["Ad"]: (e["p"]["x"] - X0, e["p"]["y"] - Y0, e["z"]) for e in s["entities"]
+                  if e["layerId"] == "zemin"}
+        triangles = ground_triangles({k: (round(x), round(y), z) for k, (x, y, z) in ground.items()})
+        (xw, xo, xs_, xd, xc, xa), (yw, yo, ys_, yd, yc, ya) = slopes(b, slope, triangles), slopes(a, slope, triangles)
         uses_ = [u for u in slope.get("from", []) if u.strip()]
         whose = f"{', '.join(uses_)}, {name}" if uses_ else name
         th = rs(slope["threshold"])
@@ -385,6 +392,23 @@ def report(s, field="Kullanim", key="KararKimlik", since=None, impervious_=None,
                           "Dik alanın yüzeyin üstündeki ölçülen alana oranı; yüzeyde alanı olmayan tarafta 0."))
         measures.append(m("slopeOff", "Yüzeyin dışındaki alan", "m2", max(xw - xo, 0.0), max(yw - yo, 0.0),
                           f"Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."))
+        breaks = [rs(b_) for b_ in slope.get("classes", [])]
+        for k in range(len(breaks) + 1 if breaks else 0):
+            if k == 0:
+                label_, note = f"Eğimi {breaks[0]} %'den az ({whose})", f"Eğimi {breaks[0]} %'den az olan üçgenlere düşen alan."
+            elif k == len(breaks):
+                label_, note = (f"Eğimi en az {breaks[k - 1]} % ({whose})",
+                                f"Eğimi en az {breaks[k - 1]} % olan üçgenlere düşen alan.")
+            else:
+                label_, note = (f"Eğimi {breaks[k - 1]}–{breaks[k]} % ({whose})",
+                                f"Eğimi en az {breaks[k - 1]} %, {breaks[k]} %'den az olan üçgenlere düşen alan.")
+            measures.append(m(f"slopeClass{k + 1}", label_, "m2", xc[k], yc[k], note))
+        if slope.get("aspect"):
+            for k, (id_, word, bounds) in enumerate(ASPECTS):
+                note = ("Eğimi 0 olan (yatay) üçgenlere düşen alan; bakısı yok." if k == 0 else
+                        f"Bakısı (eğimin indiği yön, kuzeyden saat yönünde) {bounds} olan üçgenlere düşen alan; alt "
+                        "sınır dahil.")
+                measures.append(m(id_, f"Bakı: {word} ({whose})", "m2", xa[k], ya[k], note))
         for whole_, on, where in ((xw, xo, "mevcut durumda"), (yw, yo, "senaryoda")):
             if whole_ - on > 1e-6:
                 asked_gaps.append(f"Ölçülen alanların bir kısmı {where} {name} yüzeyinin dışında; eğim yalnız yüzeyin "
@@ -465,9 +489,11 @@ def in_circle(a, b, c, d):
     return det > 0
 
 
-def ground_triangles():
-    """The surface's two triangles (counter-clockwise, local x, y) with their slopes, percent."""
-    a, b, c, d = (GROUND[k] for k in "ABCD")
+def ground_triangles(ground=None):
+    """The surface's two triangles (counter-clockwise, local x, y) with their slopes, percent, and their aspects (ADR
+    4660: 0 flat, 1–8 north … north-west)."""
+    ground = ground or GROUND
+    a, b, c, d = (ground[k] for k in "ABCD")
     tris = [(a, b, c), (a, c, d)] if not in_circle(a, b, c, d) else [(a, b, d), (b, c, d)]
     out = []
     for p, q, r in tris:
@@ -475,7 +501,12 @@ def ground_triangles():
         det = Fraction((x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1))
         ga = ((z2 - z1) * (y3 - y1) - (z3 - z1) * (y2 - y1)) / det
         gb = ((x2 - x1) * (z3 - z1) - (x3 - x1) * (z2 - z1)) / det
-        out.append(([(Fraction(p[0]), Fraction(p[1])) for p in (p, q, r)], 100 * math.sqrt(ga * ga + gb * gb)))
+        if ga == 0 and gb == 0:
+            aspect = 0
+        else:
+            direction = math.degrees(math.atan2(-ga, -gb)) % 360
+            aspect = 1 + int(math.floor((direction + 22.5) / 45)) % 8
+        out.append(([(Fraction(p[0]), Fraction(p[1])) for p in (p, q, r)], 100 * math.sqrt(ga * ga + gb * gb), aspect))
     return out
 
 
@@ -505,31 +536,45 @@ def exact_area(poly):
 
 
 def slopes(sd, slope, triangles):
-    """A side's measured areas (rectangles) on the triangles: whole, on the surface, Σ area × slope, steep."""
+    """A side's measured areas (rectangles) on the triangles: whole, on the surface, Σ area × slope, steep; ADR 4660's
+    areas by class and by aspect."""
     every = all(not u.strip() for u in slope.get("from", []))
     whole = on = weighted = steep = 0.0
+    breaks = slope.get("classes", [])
+    classes, aspects = [0.0] * (len(breaks) + 1), [0.0] * 9
     for e, usage, a_ in sd["areas"]:
         if not every and usage not in slope["from"]:
             continue
         whole += a_
         rect = [(Fraction(p["x"]) - Fraction(X0), Fraction(p["y"]) - Fraction(Y0)) for p in e["pts"]]
-        for tri, s_ in triangles:
+        for tri, s_, aspect in triangles:
             got = float(exact_area(clip(rect, tri))) if len(clip(rect, tri)) >= 3 else 0.0
             if got > 0:
                 on += got
                 weighted += got * s_
                 if s_ >= slope["threshold"]:
                     steep += got
-    return whole, on, weighted, steep
+                classes[sum(1 for b_ in breaks if s_ >= b_)] += got
+                aspects[aspect] += got
+    return whole, on, weighted, steep, classes, aspects
 
 
-def ground_points():
+ASPECTS = [("aspectFlat", "Düz", ""), ("aspectN", "Kuzey", "337,5°–22,5°"), ("aspectNE", "Kuzeydoğu", "22,5°–67,5°"),
+           ("aspectE", "Doğu", "67,5°–112,5°"), ("aspectSE", "Güneydoğu", "112,5°–157,5°"),
+           ("aspectS", "Güney", "157,5°–202,5°"), ("aspectSW", "Güneybatı", "202,5°–247,5°"),
+           ("aspectW", "Batı", "247,5°–292,5°"), ("aspectNW", "Kuzeybatı", "292,5°–337,5°")]
+
+
+def ground_points(ground=None):
     return [{"kind": "point", "layerId": "zemin", "attrs": {"Ad": k}, "p": P(x, y), "z": float(z)}
-            for k, (x, y, z) in GROUND.items()]
+            for k, (x, y, z) in (ground or GROUND).items()]
 
 
 ZEMIN = [{"id": "t-1", "name": "Zemin", "points": {"layers": ["zemin"]}}]
 SLOPE_SETUP = setup(layers=tree(ground=True), extra=ground_points(), surfaces=ZEMIN)
+# ADR 4660: the same corners level, at 100 m: every triangle flat.
+FLAT_SETUP = setup(layers=tree(ground=True), extra=ground_points({k: (x, y, 100) for k, (x, y, _) in GROUND.items()}),
+                   surfaces=ZEMIN)
 
 
 def ok(name, s=None, op="plan", **kw):
@@ -658,6 +703,21 @@ def cases():
         refused("dik eğim eşiği 0", {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 0.0}},
                 "invalid_input", "Dik eğim eşiği 0'dan büyük bir yüzde olmalı (yazılan 0).", s=SLOPE_SETUP,
                 path="slope.threshold"),
+        # docs/adr/4660: the areas by slope class and by aspect.
+        ok("eğim sınıfları ve bakı: iki üçgen ayrı sınıflarda, bakıları güney ve güneybatı", SLOPE_SETUP,
+           slope={"surface": "t-1", "threshold": 10.0, "classes": [5.0, 15.0, 30.0], "aspect": True}),
+        ok("eğim sınıfları konutta, tek sınır: 20 %'den az ve en az", SLOPE_SETUP,
+           slope={"surface": "t-1", "threshold": 10.0, "from": ["konut"], "classes": [20.0]}),
+        ok("düz yüzey: bütün alan Düz, eğim 0 sınıfında", FLAT_SETUP,
+           slope={"surface": "t-1", "threshold": 10.0, "classes": [2.5], "aspect": True}),
+        refused("eğim sınıfı sınırları artmıyor", {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0,
+                                                                                "classes": [15.0, 5.0]}},
+                "invalid_input", "Eğim sınıflarının sınırları 0'dan büyük, artan yüzdeler olmalı, en çok 20 sınır "
+                "(yazılan 15; 5).", s=SLOPE_SETUP, path="slope.classes"),
+        refused("eğim sınıfı sınırı 0", {"scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0,
+                                                                       "classes": [0.0, 5.0]}},
+                "invalid_input", "Eğim sınıflarının sınırları 0'dan büyük, artan yüzdeler olmalı, en çok 20 sınır "
+                "(yazılan 0; 5).", s=SLOPE_SETUP, path="slope.classes"),
         refused("eğim için yüzey projede yok", {"scenario": "alt-a", "slope": {"surface": "yok", "threshold": 10.0}},
                 "unknown_terrain", "“yok” kimlikli ya da adlı yüzey projede yok.", s=SLOPE_SETUP, path="slope.surface"),
         {"name": "eğim: arazi yüzeyi Harita ve Yol projelerinde", "setup": setup(

@@ -74,6 +74,10 @@ pub struct State {
     pub slope_surface: String,
     pub slope_threshold: String,
     pub slope_from: String,
+    /// docs/adr/4660, the user's: the slope class breaks (“5; 15; 30”, percent) and whether the areas by aspect are
+    /// asked.
+    pub slope_classes: String,
+    pub slope_aspect: bool,
     /// The project's terrain surfaces: id and name (“—” first, none).
     pub surfaces: Vec<(String, String)>,
 }
@@ -94,6 +98,9 @@ pub enum Event {
     SlopeSurface(String),
     SlopeThreshold(String),
     SlopeFrom(String),
+    /// docs/adr/4660: the class breaks and Bakı.
+    SlopeClasses(String),
+    SlopeAspect(bool),
     Save,
     Saved(Option<PathBuf>),
     /// Erişimi çizimde göster (docs/adr/2260).
@@ -229,10 +236,22 @@ impl App {
         let slope = if s.slope_surface.is_empty() || s.slope_threshold.trim().is_empty() {
             None
         } else {
-            match s.slope_threshold.trim().replace(',', ".").parse::<f64>() {
-                Ok(threshold) => {
-                    Some(ImpactSlope { surface: s.slope_surface.clone(), threshold, from: uses_of(&s.slope_from) })
+            // docs/adr/4660: the breaks between semicolons (a comma is a decimal point).
+            let mut classes = Vec::new();
+            for part in s.slope_classes.split(';').map(str::trim).filter(|p| !p.is_empty()) {
+                match part.replace(',', ".").parse::<f64>() {
+                    Ok(v) => classes.push(v),
+                    Err(_) => return Err(format!("Eğim sınıfı sınırı “{part}” bir sayı değil; sınırları noktalı virgülle ayırın (5; 15; 30).")),
                 }
+            }
+            match s.slope_threshold.trim().replace(',', ".").parse::<f64>() {
+                Ok(threshold) => Some(ImpactSlope {
+                    surface: s.slope_surface.clone(),
+                    threshold,
+                    from: uses_of(&s.slope_from),
+                    classes,
+                    aspect: s.slope_aspect,
+                }),
                 Err(_) => return Err(format!("Dik eğim eşiği “{}” bir sayı değil.", s.slope_threshold.trim())),
             }
         };
@@ -352,6 +371,14 @@ impl App {
                 self.impact.slope_from = v;
                 self.impact_run();
             }
+            Event::SlopeClasses(v) => {
+                self.impact.slope_classes = v;
+                self.impact_run();
+            }
+            Event::SlopeAspect(on) => {
+                self.impact.slope_aspect = on;
+                self.impact_run();
+            }
             Event::Save => {
                 return Task::perform(
                     async {
@@ -459,6 +486,16 @@ impl App {
                 .spacing(10),
             )
             .field("Eğimde ölçülen kullanımlar", text(&s.slope_from, "boş: bütün alanlar", Event::SlopeFrom, 420.0))
+            // docs/adr/4660: the areas by slope class (the user's breaks) and by aspect.
+            .field(
+                "Eğim sınıfları (%) / bakı",
+                iced::widget::row![
+                    text(&s.slope_classes, "5; 15; 30", Event::SlopeClasses, 290.0),
+                    kentos_ui::widget::switch::Switch::new(s.slope_aspect, |on| msg(Event::SlopeAspect(on))).label("Bakıya göre alanlar")
+                ]
+                .spacing(10)
+                .align_y(iced::Center),
+            )
             .help("KentOS değer vermez; boş bırakılan ölçü hesaplanmaz. Erişim: kullanımın ağırlık merkezinden en yakın hedef alana düz uzaklık. Altyapı: alanın ağırlık merkezinden katmandaki en yakın nesneye düz uzaklık; hattın kapasitesi değildir. Eğim: alanın yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortalaması; üçgenin eğimi düzleminden.");
         let mut lines = Vec::new();
         let mut table: Element<'_, Message> = words::empty("Karşılaştırma yok.");

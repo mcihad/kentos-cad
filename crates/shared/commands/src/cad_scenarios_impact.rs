@@ -23,7 +23,8 @@ pub const CAD_SCENARIOS_IMPACT_VERSION: u32 = 1;
 /// `slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.
 ///
 /// Refusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
-/// `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above
+/// `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):
+/// a break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above
 /// zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
 /// none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
 /// `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
@@ -75,7 +76,23 @@ pub struct ImpactSlope {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub from: Vec<String>,
+    /// Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface
+    /// Slope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,
+    /// each holding its lower break.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<f64>>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub classes: Vec<f64>,
+    /// Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's
+    /// Surface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
+    /// flat (a level triangle, no aspect).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub aspect: bool,
 }
+
+/// The most slope class breaks `cad.scenarios.impact` takes (docs/adr/4660).
+pub const MAX_SLOPE_CLASSES: usize = 20;
 
 /// Altyapıya yakınlık (docs/adr/2660): an infrastructure layer (a water or sewer line's, by id), the straight distance,
 /// metres, from an area's centroid to the nearest object of that layer, and the uses measured (none or empty: every

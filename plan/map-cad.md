@@ -41,7 +41,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
-| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
+| MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
@@ -1357,6 +1357,14 @@ alanların yüzey üçgenlerine düşen parçalarının alan ağırlıklı ortal
 (veri eksiği). 8 yeni bağımsız durum (45; kesin kesirli kırpma), Python (ızgara integrali), MCP, masaüstü (Senaryo
 ölçüleri'nde Eğim yüzeyi / dik eşik) ve resimler. Açık: ağ üzerinden erişim, damganın çizimde saklanması, eğim
 sınıfları ve bakı.
+
+**10 Kasım 2026, dokuzuncu tur — eğim sınıfları ve bakı ([ADR 4660](../docs/adr/4660-scenario-slope-classes-and-aspect.md)).**
+Kapsam: **Harita + CBS** (eğim yüzeyi olan projede). Araştırma: ArcGIS Pro'nun Surface Slope'u (kullanıcının sınıf
+sınırları) ve Surface Aspect'i (sekiz yön, eğimsiz yüz “No Slope”). Kanıtlanan: `cad.scenarios.impact`'in
+`slope.classes`'ı (kullanıcının artan sınırları, her sınıf alt sınırını tutar) ve `slope.aspect`'i (üçgenin eğiminin
+indiği yön, sekiz yön ve Düz) ölçü satırları olarak; yeni `slope.classes` reddi. 50 bağımsız durum (5 yeni), Python
+(ızgara integrali), MCP, masaüstü (Eğim sınıfları (%) / bakı) ve resimler. Açık: haritada gösterim, ağ üzerinden
+erişim, damganın çizimde saklanması.
 
 ### MAP-11 — Arazi yönetimi işlemlerini sürümlü ve denetlenebilir taslaklarla ele al [ ]
 

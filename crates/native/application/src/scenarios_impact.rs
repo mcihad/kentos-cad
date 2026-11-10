@@ -270,11 +270,34 @@ struct Slopes {
     on: f64,
     weighted: f64,
     steep: f64,
+    /// Docs/adr/4660: the area of each slope class (the breaks' count plus one), and of each aspect: flat, then north,
+    /// north-east … north-west.
+    classes: Vec<f64>,
+    aspects: [f64; 9],
 }
 
-/// A triangle of the surface as an area, its box and its slope, percent: the rise over the run of its plane, from its
-/// normal (the cross product of two edges), as ArcGIS's Surface Slope; none for a vertical or degenerate triangle.
-fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<(Area, [f64; 4], f64)> {
+/// A surface triangle as the slope measures read it: its area, its box, its slope (percent) and its aspect (0: flat;
+/// 1–8: north, north-east … north-west).
+type SlopeTriangle = (Area, [f64; 4], f64, usize);
+
+/// The aspect's words and bounds (docs/adr/4660, ArcGIS's Surface Aspect): flat, then the eight directions.
+const ASPECTS: [(&str, &str, &str); 9] = [
+    ("aspectFlat", "Düz", ""),
+    ("aspectN", "Kuzey", "337,5°–22,5°"),
+    ("aspectNE", "Kuzeydoğu", "22,5°–67,5°"),
+    ("aspectE", "Doğu", "67,5°–112,5°"),
+    ("aspectSE", "Güneydoğu", "112,5°–157,5°"),
+    ("aspectS", "Güney", "157,5°–202,5°"),
+    ("aspectSW", "Güneybatı", "202,5°–247,5°"),
+    ("aspectW", "Batı", "247,5°–292,5°"),
+    ("aspectNW", "Kuzeybatı", "292,5°–337,5°"),
+];
+
+/// A triangle of the surface as an area, its box, its slope, percent: the rise over the run of its plane, from its
+/// normal (the cross product of two edges), as ArcGIS's Surface Slope; and its aspect (docs/adr/4660): the upward
+/// normal's horizontal part points down the slope, its direction clockwise from north, 0 for a level triangle (the
+/// normal straight up), else 1 + ⌊(direction + 22.5°) / 45°⌋ mod 8. None for a vertical or degenerate triangle.
+fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
     s.triangles
         .iter()
         .filter_map(|t| {
@@ -285,6 +308,13 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<(Area, [f64; 4], f6
                 return None;
             }
             let slope = n[0].hypot(n[1]) / n[2].abs() * 100.0;
+            let up = if n[2] > 0.0 { [n[0], n[1]] } else { [-n[0], -n[1]] };
+            let aspect = if up[0] == 0.0 && up[1] == 0.0 {
+                0
+            } else {
+                let direction = up[0].atan2(up[1]).to_degrees().rem_euclid(360.0);
+                1 + ((direction + 22.5) / 45.0).floor().rem_euclid(8.0) as usize
+            };
             // Counter-clockwise, as an area's outer ring.
             let pts = if n[2] > 0.0 { [a, b, c] } else { [a, c, b] };
             let ring = Ring { pts: pts.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect(), bulges: None };
@@ -296,13 +326,13 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<(Area, [f64; 4], f6
                 xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
                 ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
             ];
-            Some((Area { outer: ring, holes: Vec::new() }, bounds, slope))
+            Some((Area { outer: ring, holes: Vec::new() }, bounds, slope, aspect))
         })
         .collect()
 }
 
-fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[(Area, [f64; 4], f64)]) -> Slopes {
-    let mut r = Slopes::default();
+fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[SlopeTriangle]) -> Slopes {
+    let mut r = Slopes { classes: vec![0.0; wanted.classes.len() + 1], ..Slopes::default() };
     let every = wanted.from.iter().all(|f| f.trim().is_empty());
     for (sh, _, area, _) in s.areas.iter().filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u)) {
         r.whole += area;
@@ -311,7 +341,7 @@ fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[(Are
         let [x0, y0, x1, y1] = points.fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
             [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
         });
-        for (triangle, b, slope) in triangles {
+        for (triangle, b, slope, aspect) in triangles {
             if b[0] > x1 || b[2] < x0 || b[1] > y1 || b[3] < y0 {
                 continue;
             }
@@ -322,6 +352,10 @@ fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[(Are
                 if *slope >= wanted.threshold {
                     r.steep += got;
                 }
+                // Docs/adr/4660: the class whose lower break the slope reaches, and the aspect.
+                let class = wanted.classes.iter().filter(|b| *slope >= **b).count();
+                r.classes[class] += got;
+                r.aspects[*aspect] += got;
             }
         }
     }
@@ -330,6 +364,24 @@ fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[(Are
 
 /// The asked measures' own checks.
 fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
+    // Docs/adr/4660: the slope class breaks, the user's.
+    if let Some(s) = &input.slope {
+        let rising = s.classes.windows(2).all(|w| w[0] < w[1]);
+        if s.classes.len() > kentos_commands::MAX_SLOPE_CLASSES
+            || !rising
+            || s.classes.iter().any(|b| !(b.is_finite() && *b > 0.0))
+        {
+            let written = s.classes.iter().map(|b| b.to_string()).collect::<Vec<_>>().join("; ");
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!(
+                    "Eğim sınıflarının sınırları 0'dan büyük, artan yüzdeler olmalı, en çok {} sınır (yazılan {written}).",
+                    kentos_commands::MAX_SLOPE_CLASSES
+                ),
+                "slope.classes",
+            ));
+        }
+    }
     if let Some(s) = &input.slope
         && !(s.threshold.is_finite() && s.threshold > 0.0)
     {
@@ -587,6 +639,36 @@ fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Sto
             off(&y),
             &format!("Ölçülen alanların {name} yüzeyinin üçgenlerine düşmeyen kısmı; eğimi bilinmez."),
         ));
+        // Docs/adr/4660: the areas by slope class (each holding its lower break) and by aspect.
+        let breaks = &wanted.classes;
+        if !breaks.is_empty() {
+            for k in 0..=breaks.len() {
+                let (label, note) = if k == 0 {
+                    (format!("Eğimi {} %'den az ({whose})", breaks[0]), format!("Eğimi {} %'den az olan üçgenlere düşen alan.", breaks[0]))
+                } else if k == breaks.len() {
+                    (
+                        format!("Eğimi en az {} % ({whose})", breaks[k - 1]),
+                        format!("Eğimi en az {} % olan üçgenlere düşen alan.", breaks[k - 1]),
+                    )
+                } else {
+                    (
+                        format!("Eğimi {}–{} % ({whose})", breaks[k - 1], breaks[k]),
+                        format!("Eğimi en az {} %, {} %'den az olan üçgenlere düşen alan.", breaks[k - 1], breaks[k]),
+                    )
+                };
+                measures.push(measure(&format!("slopeClass{}", k + 1), &label, "m2", x.classes[k], y.classes[k], &note));
+            }
+        }
+        if wanted.aspect {
+            for (k, (id, word, bounds)) in ASPECTS.iter().enumerate() {
+                let note = if k == 0 {
+                    "Eğimi 0 olan (yatay) üçgenlere düşen alan; bakısı yok.".to_owned()
+                } else {
+                    format!("Bakısı (eğimin indiği yön, kuzeyden saat yönünde) {bounds} olan üçgenlere düşen alan; alt sınır dahil.")
+                };
+                measures.push(measure(id, &format!("Bakı: {word} ({whose})"), "m2", x.aspects[k], y.aspects[k], &note));
+            }
+        }
         // A residue below a square millimetre is the overlay's rounding, not land off the surface.
         for (r, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
             if off(r) > 1e-6 {

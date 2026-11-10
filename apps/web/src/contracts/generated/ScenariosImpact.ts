@@ -13,7 +13,8 @@ import type { ImpactSlope } from "./ImpactSlope";
  * `slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.
  *
  * Refusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
- * `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above
+ * `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):
+ * a break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above
  * zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
  * none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
  * `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),

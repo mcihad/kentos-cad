@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Senaryo ölçülerinde eğim sınıfları ve bakı (10 Kasım 2026; MAP-10, [ADR 4660](../../docs/adr/4660-scenario-slope-classes-and-aspect.md)).**
+  `cad.scenarios.impact`'in `slope.classes`'ı (kullanıcının sınırları, %) ve `slope.aspect`'i (sekiz yön ve Düz, ArcGIS'in
+  Surface Aspect'i) ölçü satırları olarak. Senaryo ölçüleri › Eğim sınıfları (%) / bakı. Harita + CBS.
 - **İmar denetiminde sembol uyuşmazlığı; hata katmanları GeoPackage'a (10 Kasım 2026; MAP-09, [ADR 4640](../../docs/adr/4640-zoning-symbol-mismatch-and-error-geopackage.md)).**
   `cad.zoning.check`'in `symbolMismatch`'i (sembol karardan, tablo ADR 4240'ın); imar ve topoloji hata katmanları İşlem'in
   Sonucun yeri ile GeoPackage tablosu olur, çizim değişmez. Harita + CBS.

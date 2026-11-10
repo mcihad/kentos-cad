@@ -46106,15 +46106,27 @@ class ImpactSlope(_Model):
     takes that slope. The surface is the same on both sides.
     Attributes:
         threshold: Unit: percent.
+        aspect: Docs/adr/4660: the areas by aspect, the direction a triangle's slope faces (clockwise from north), in ArcGIS's
+            Surface Aspect's eight directions (north 337.5°–22.5°, north-east 22.5°–67.5° …, each holding its lower bound) and
+            flat (a level triangle, no aspect).
+        classes: Docs/adr/4660: the user's slope class breaks, percent, rising (none: no classes; at most 20), as ArcGIS's Surface
+            Slope's class breaks: the classes run from 0 to the first break, between two breaks and from the last one up,
+            each holding its lower break. Unit: percent.
     """
     surface: str
     threshold: float
+    aspect: bool | Unset = UNSET
+    classes: list[float] | Unset = UNSET
     from_: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["surface"] = self.surface
         out["threshold"] = float(self.threshold)
+        if self.aspect is not UNSET:
+            out["aspect"] = self.aspect
+        if self.classes is not UNSET:
+            out["classes"] = [float(e0) for e0 in self.classes]
         if self.from_ is not UNSET:
             out["from"] = list(self.from_)
         return out
@@ -46124,6 +46136,8 @@ class ImpactSlope(_Model):
         return cls(
             surface=data["surface"],
             threshold=float(data["threshold"]),
+            aspect=data.get("aspect", UNSET),
+            classes=[float(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
             from_=list(data["from"]) if "from" in data else UNSET,
         )
 
@@ -84728,7 +84742,8 @@ class ScenariosImpact(_Model):
     `slope` (docs/adr/4260), the measured areas' slope on a terrain surface of the project.
 
     Refusals, in this order: `invalid_input` (`impervious.<use>`: a share not between 0 and 1; `access.distance`,
-    `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.threshold`: not above
+    `infrastructure.distance`: not above zero; `access.from`, `access.to`: no use given; `slope.classes` (docs/adr/4660):
+    a break not finite or not above zero, not rising, or more than 20; `slope.threshold`: not above
     zero), `scenario_not_found` (`scenario`: no such node, or not a scenario group), `nothing_to_compare` (`scenario`:
     none of its layers stands for a base layer), `invalid_input` (`infrastructure.layer`: no such layer),
     `not_a_road_project` (`slope` in a project without terrain surfaces), `unknown_terrain` (`slope.surface`),
