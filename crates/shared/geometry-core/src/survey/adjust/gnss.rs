@@ -11,8 +11,10 @@
 use std::collections::HashMap;
 
 use super::linalg::Inverse;
+use super::session::{Group, whitener};
+pub use super::session::GnssSession;
 use super::sparse::{Envelope, reverse_cuthill_mckee};
-use super::{Observed, Statistics, name_key, statistics};
+use super::{ObservationResult, Observed, Statistics, name_key, statistics};
 use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
@@ -51,6 +53,11 @@ pub struct GnssInput {
     /// The variance factor the baselines' covariances are multiplied by (a processor's are often optimistic).
     pub scale: f64,
     pub datum: Datum,
+    /// Sessions whose baselines are whitened together by their full covariance (docs/adr/4920).
+    pub sessions: Vec<GnssSession>,
+    /// Whether the baselines are tested component by component as correlated observations (docs/adr/4920); with
+    /// sessions they must be.
+    pub correlated: bool,
 }
 
 /// A station adjusted: X, Y, Z and their standard deviations (scaled by m0), the same in the station's local east,
@@ -105,14 +112,19 @@ pub const MAX_ENVELOPE: usize = 30_000_000;
 /// The unknowns' places (docs/adr/4560): the stations not held in reverse Cuthill–McKee order over the baselines, three
 /// unknowns each; each row's envelope from its station's earliest neighbour's first unknown. The station's first
 /// unknown (none: held), each row's first column and the stations not held.
-fn places(fixed: &[bool], ends: &[(usize, usize, [[f64; 3]; 3])]) -> (Vec<Option<usize>>, Vec<usize>, usize) {
+fn places(
+    fixed: &[bool],
+    ends: &[(usize, usize, [[f64; 3]; 3])],
+    joined: &[(usize, usize)],
+) -> (Vec<Option<usize>>, Vec<usize>, usize) {
     let free: Vec<usize> = (0..fixed.len()).filter(|&i| !fixed[i]).collect();
     let mut node = vec![usize::MAX; fixed.len()];
     for (k, &i) in free.iter().enumerate() {
         node[i] = k;
     }
     let mut neighbours: Vec<Vec<usize>> = vec![Vec::new(); free.len()];
-    for (from, to, _) in ends {
+    // A session's stations are all neighbours (docs/adr/4920): its full weight joins every pair of them.
+    for (from, to) in ends.iter().map(|(f, t, _)| (f, t)).chain(joined.iter().map(|(a, b)| (a, b))) {
         let (a, b) = (node[*from], node[*to]);
         if a != usize::MAX && b != usize::MAX {
             neighbours[a].push(b);
@@ -257,6 +269,55 @@ pub fn enu_rows(lat: f64, lon: f64) -> [[f64; 3]; 3] {
 /// A whitened equation: its coefficients (unknown, value), right-hand side, kind and the baseline or station it is of.
 type Row = (Vec<(usize, f64)>, f64, &'static str, usize);
 
+/// The sessions as groups whitened whole (docs/adr/4920), or why not: a baseline in two sessions or none of the
+/// network's, a pair of its baselines without its block, a full covariance that is not positive definite.
+fn session_groups(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])]) -> Result<Vec<Group>, Refused> {
+    if !input.sessions.is_empty() && !input.correlated {
+        return Err(refuse("invalid_input", "Oturumlu ağın bazları korelasyonlu ölçü gibi sınanır.".into(), "correlated".into()));
+    }
+    let mut seen = vec![false; ends.len()];
+    let mut out = Vec::with_capacity(input.sessions.len());
+    for (s, session) in input.sessions.iter().enumerate() {
+        let at = |f: &str| format!("sessions[{s}].{f}");
+        let mut place = HashMap::new();
+        for (p, &k) in session.baselines.iter().enumerate() {
+            if k >= ends.len() || std::mem::replace(&mut seen[k], true) {
+                return Err(refuse("invalid_input", format!("“{}” oturumunun bazları ağın ayrı bazları olmalı.", session.name), at("baselines")));
+            }
+            place.insert(k, p);
+        }
+        let m = session.baselines.len();
+        let mut cross = Vec::with_capacity(session.cross.len());
+        let mut pairs = std::collections::HashSet::new();
+        for &(a, b, c) in &session.cross {
+            let (Some(&p), Some(&q)) = (place.get(&a), place.get(&b)) else {
+                return Err(refuse("invalid_input", format!("“{}” oturumunun bloğu oturumun bazlarını eşlemeli.", session.name), at("cross")));
+            };
+            if p == q || !pairs.insert((p.min(q), p.max(q))) || !c.iter().all(|v| v.is_finite()) {
+                return Err(refuse("invalid_input", format!("“{}” oturumunun blokları iki ayrı bazın tek, sonlu bloğu olmalı.", session.name), at("cross")));
+            }
+            cross.push((p, q, c));
+        }
+        if pairs.len() != m * (m.saturating_sub(1)) / 2 {
+            return Err(refuse(
+                "session_blocks_missing",
+                format!("“{}” oturumunun {m} bazı için {} blok olmalı, {} var.", session.name, m * (m.saturating_sub(1)) / 2, pairs.len()),
+                at("cross"),
+            ));
+        }
+        let own: Vec<[f64; 6]> = session.baselines.iter().map(|&k| input.baselines[k].cov).collect();
+        let w = whitener(&own, &cross, input.scale).ok_or_else(|| {
+            refuse(
+                "session_covariance_invalid",
+                format!("“{}” oturumunun tam kovaryansı pozitif tanımlı değil.", session.name),
+                at("cross"),
+            )
+        })?;
+        out.push(Group { baselines: session.baselines.clone(), w });
+    }
+    Ok(out)
+}
+
 /// The network adjusted, or why not.
 pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     if !(input.scale.is_finite() && input.scale > 0.0) {
@@ -317,6 +378,23 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         })?;
         ends.push((from, to, l));
     }
+    // The sessions (docs/adr/4920): each whitened whole; a baseline in none is its own group.
+    let groups = session_groups(input, &ends)?;
+    let mut grouped = vec![false; input.baselines.len()];
+    let mut joined: Vec<(usize, usize)> = Vec::new();
+    for g in &groups {
+        for &k in &g.baselines {
+            grouped[k] = true;
+        }
+        let at: Vec<usize> = g.baselines.iter().flat_map(|&k| [ends[k].0, ends[k].1]).collect();
+        for (p, &a) in at.iter().enumerate() {
+            for &b in &at[p + 1..] {
+                if a != b {
+                    joined.push((a, b));
+                }
+            }
+        }
+    }
     // The datum: fixed and weighted stations, else the minimal constraint.
     let mut fixed: Vec<bool> = input.stations.iter().map(|s| s.fixed).collect();
     let anchored = input.stations.iter().any(|s| s.fixed || s.sigma.is_some() || s.cov.is_some());
@@ -337,7 +415,7 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         }
     }
     // The unknowns: every station not held, three each, in reverse Cuthill–McKee order (docs/adr/4560).
-    let (slot, first, unknown) = places(&fixed, &ends);
+    let (slot, first, unknown) = places(&fixed, &ends, &joined);
     let u = 3 * unknown;
     let entries = Envelope::entries(&first);
     if entries > MAX_ENVELOPE {
@@ -375,7 +453,37 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     let known = |i: usize| approx[i].unwrap_or([0.0; 3]);
     // Whitened rows: (coefficients, right-hand side) of each component.
     let mut rows: Vec<Row> = Vec::new();
+    // A component's design row (unknown, coefficient) and right-hand side.
+    let design = |k: usize, c: usize| -> (Vec<(usize, f64)>, f64) {
+        let (from, to, _) = ends[k];
+        let mut coef = Vec::with_capacity(2);
+        if let Some(t) = slot[to] {
+            coef.push((t + c, 1.0));
+        }
+        if let Some(f) = slot[from] {
+            coef.push((f + c, -1.0));
+        }
+        (coef, input.baselines[k].d[c] - (known(to)[c] - known(from)[c]))
+    };
+    for g in &groups {
+        for r in 0..g.size() {
+            let (mut coef, mut rhs) = (Vec::new(), 0.0);
+            for p in 0..=r {
+                let wp = g.at(r, p);
+                if wp == 0.0 {
+                    continue;
+                }
+                let (row, l) = design(g.baselines[p / 3], p % 3);
+                coef.extend(row.into_iter().map(|(i, a)| (i, a * wp)));
+                rhs += wp * l;
+            }
+            rows.push((coef, rhs, "baseline", g.baselines[r / 3]));
+        }
+    }
     for (k, (from, to, l)) in ends.iter().enumerate() {
+        if grouped[k] {
+            continue;
+        }
         let b = &input.baselines[k];
         // Each component: (X⁰_to + δ_to) − (X⁰_from + δ_from) = d; a held station's δ is 0.
         let mut rhs = b.d;
@@ -460,7 +568,77 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
             Observed { kind, row: *row, coef: coef.clone(), l: l - computed, sigma: 1.0 }
         })
         .collect();
-    let stats = statistics(&obs, &q);
+    let mut stats = statistics(&obs, &q);
+    if input.correlated {
+        // docs/adr/4920: each baseline's components tested on their own, as correlated observations.
+        let mut all = groups.clone();
+        for (k, (_, _, l)) in ends.iter().enumerate() {
+            if !grouped[k] {
+                let flat = [l[0][0], 0.0, 0.0, l[1][0], l[1][1], 0.0, l[2][0], l[2][1], l[2][2]];
+                all.push(Group { baselines: vec![k], w: super::session::lower_inverse(&flat, 3) });
+            }
+        }
+        let mut tested: Vec<Option<ObservationResult>> = vec![None; 3 * input.baselines.len()];
+        for g in &all {
+            let n = g.size();
+            let parts: Vec<(Vec<(usize, f64)>, f64)> = (0..n)
+                .map(|p| {
+                    let (coef, l) = design(g.baselines[p / 3], p % 3);
+                    let computed: f64 = coef.iter().map(|&(i, a)| a * x[i]).sum();
+                    (coef, computed - l)
+                })
+                .collect();
+            // P = WᵀW.
+            let mut pm = vec![0.0; n * n];
+            for a in 0..n {
+                for b in 0..n {
+                    let mut s = 0.0;
+                    for r in a.max(b)..n {
+                        s += g.at(r, a) * g.at(r, b);
+                    }
+                    pm[a * n + b] = s;
+                }
+            }
+            for p in 0..n {
+                let k = g.baselines[p / 3];
+                let pv: f64 = (0..n).map(|q| pm[p * n + q] * parts[q].1).sum();
+                let mut gq: Vec<(usize, f64)> = Vec::new();
+                for (q, (coef, _)) in parts.iter().enumerate() {
+                    let w = pm[q * n + p];
+                    gq.extend(coef.iter().map(|&(i, a)| (i, a * w)));
+                }
+                let mut gqg = 0.0;
+                for &(i, a) in &gq {
+                    for &(j, b) in &gq {
+                        gqg += a * q.get(i, j) * b;
+                    }
+                }
+                let aqg: f64 = parts[p].0.iter().map(|&(i, a)| gq.iter().map(|&(j, b)| a * q.get(i, j) * b).sum::<f64>()).sum();
+                let r = 1.0 - aqg;
+                let den = pm[p * n + p] - gqg;
+                let (w, flag) = if !(r >= super::UNCONTROLLED) || !(den > 0.0) {
+                    (None, "uncontrolled")
+                } else {
+                    let w = pv.abs() / den.sqrt();
+                    (Some(w), if w > super::W_LIMIT { "blunder" } else { "ok" })
+                };
+                let c = input.baselines[k].cov;
+                let var = [c[0], c[3], c[5]][p % 3] * input.scale;
+                tested[3 * k + p % 3] =
+                    Some(ObservationResult { kind: "baseline", row: k, v: parts[p].1, sigma: var.sqrt(), r, w, flag });
+            }
+        }
+        let mut observations: Vec<ObservationResult> = tested.into_iter().flatten().collect();
+        observations.extend(stats.observations.iter().filter(|o| o.kind == "station").cloned());
+        let mut worst: Option<usize> = None;
+        for (i, o) in observations.iter().enumerate() {
+            if o.flag == "blunder" && worst.is_none_or(|k| o.w > observations[k].w) {
+                worst = Some(i);
+            }
+        }
+        stats.observations = observations;
+        stats.worst = worst;
+    }
     let s0 = stats.sigma0();
     let coord = |i: usize| -> [f64; 3] {
         let a = known(i);
@@ -574,7 +752,7 @@ mod tests {
                 }
             }
         }
-        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given }
+        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given, sessions: Vec::new(), correlated: false }
     }
 
     /// The same network by dense normal equations in input order (ADR 1380's solve, the unknowns corrections to
@@ -690,6 +868,41 @@ mod tests {
         assert_eq!(got.stats.u, 3 * (14 * 14 - 1));
     }
 
+    /// docs/adr/4920: a session whose cross blocks are zero is the network without it (coordinates, deviations, m0); its
+    /// tests do not hang on the order its baselines are named in; correlations move the solution; a missing block and
+    /// a matrix that is not positive definite are refused.
+    #[test]
+    fn a_session_adjusts_with_its_full_covariance() {
+        let plain = grid(4);
+        let mut zero = plain.clone();
+        zero.correlated = true;
+        zero.sessions = vec![GnssSession { name: "O1".into(), baselines: vec![0, 1, 2], cross: vec![(0, 1, [0.0; 9]), (0, 2, [0.0; 9]), (1, 2, [0.0; 9])] }];
+        let (a, b) = (adjust(&plain).expect("plain"), adjust(&zero).expect("zero"));
+        for (s, t) in a.stations.iter().zip(&b.stations) {
+            for c in 0..3 {
+                assert!((s.xyz[c] - t.xyz[c]).abs() < 1e-9 && (s.sxyz[c] - t.sxyz[c]).abs() < 1e-12, "{}", s.name);
+            }
+        }
+        assert!((a.stats.omega - b.stats.omega).abs() < 1e-9);
+        let block = [3e-6, 0.0, 0.0, 0.0, 3e-6, 0.0, 0.0, 0.0, 9e-6];
+        let mut one = plain.clone();
+        one.correlated = true;
+        one.sessions = vec![GnssSession { name: "O1".into(), baselines: vec![0, 1, 2], cross: vec![(0, 1, block), (0, 2, block), (1, 2, block)] }];
+        let mut other = one.clone();
+        other.sessions[0].baselines = vec![2, 0, 1];
+        let (x, y) = (adjust(&one).expect("one"), adjust(&other).expect("other"));
+        assert!((x.stations[1].xyz[0] - a.stations[1].xyz[0]).abs() > 1e-6, "the correlations move the solution");
+        for (s, t) in x.stats.observations.iter().zip(&y.stats.observations) {
+            assert!((s.w.unwrap_or(0.0) - t.w.unwrap_or(0.0)).abs() < 1e-9 && s.row == t.row);
+        }
+        let mut missing = one.clone();
+        missing.sessions[0].cross.pop();
+        assert_eq!(adjust(&missing).expect_err("missing").code, "session_blocks_missing");
+        let mut bad = one.clone();
+        bad.sessions[0].cross[0].2 = [9e-6, 0.0, 0.0, 0.0, 9e-6, 0.0, 0.0, 0.0, 36e-6];
+        assert_eq!(adjust(&bad).expect_err("bad").code, "session_covariance_invalid");
+    }
+
     #[test]
     fn a_floating_part_is_named_as_the_dense_factor_named_it() {
         // Two parts float: S3–S5 and S1–S6; the dense factor in input order fails at S5 first (its part ends at S5).
@@ -724,7 +937,7 @@ mod tests {
             let index: HashMap<&str, usize> = input.stations.iter().enumerate().map(|(i, s)| (s.name.as_str(), i)).collect();
             let ends: Vec<(usize, usize, [[f64; 3]; 3])> =
                 input.baselines.iter().map(|b| (index[b.from.as_str()], index[b.to.as_str()], [[0.0; 3]; 3])).collect();
-            let (_, first, _) = places(&fixed, &ends);
+            let (_, first, _) = places(&fixed, &ends, &[]);
             println!("{w}×{w}: envelope {} entries", Envelope::entries(&first));
             let t = std::time::Instant::now();
             let got = adjust(&input);

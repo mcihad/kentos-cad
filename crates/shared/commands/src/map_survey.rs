@@ -13,8 +13,8 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 use crate::{
-    AcceptMethod, BaselineSolution, SolutionKind, SurveyAdjustment, SurveyAntenna, SurveyFileFormat, SurveyGrid,
-    SurveyKnown, SurveyReceiver, SurveyResult, TimeSystem,
+    AcceptMethod, BaselineSolution, SolutionKind, SurveyAdjustment, SurveyAntenna, SurveyBaselineSession,
+    SurveyFileFormat, SurveyGrid, SurveyKnown, SurveyReceiver, SurveyResult, SurveyTolerance, TimeSystem,
 };
 
 pub const MAP_SURVEY_QUERY: &str = "map.survey.query";
@@ -51,7 +51,7 @@ pub struct MapSurveyQuery {
 }
 
 /// How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal
-/// distance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a
+/// distance and their height difference (m), as a point comparison report takes a horizontal and a
 /// vertical tolerance; either may be left out, not both.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -276,6 +276,10 @@ pub struct SurveyBaselineRow {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
     pub adjustments: Vec<String>,
+    /// The baseline session `bo-N` it is in (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub session: Option<String>,
 }
 
 /// A mark: its sessions in the archive's order, its solutions, its accepted point.
@@ -385,6 +389,15 @@ pub struct MapSurveyTree {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyAdjustment>>"))]
     pub adjustments: Vec<SurveyAdjustment>,
+    /// The baseline sessions with their cross-correlations (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaselineSession>>"))]
+    pub baseline_sessions: Vec<SurveyBaselineSession>,
+    /// The place limits kept in the project, with their source (docs/adr/4920); `places` reads them when the input
+    /// gives none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tolerance: Option<SurveyTolerance>,
     /// With `places` (docs/adr/4120): each known point's own place in the project, in the archive's order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyKnownPlace>>"))]
@@ -666,6 +679,14 @@ pub enum MapSurveyOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
         epoch: Option<f64>,
+        /// The sessions' cross-correlations used or not (docs/adr/4920), as `map.survey.network` takes them.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        correlations: Option<NetworkCorrelations>,
+        /// Each new point's velocity read from the campaign's velocity grid and kept with it (docs/adr/4920).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        velocities: bool,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         layer: Option<String>,
@@ -698,8 +719,24 @@ pub enum MapSurveyOperation {
     },
     /// Objects recorded as made from accepted points by `operation`, at their revisions now.
     Use { uids: Vec<String>, points: Vec<String>, operation: String },
-    /// A record taken away: a campaign (with its sessions and solutions), a session (with its solutions), a solution,
-    /// an accepted point's record (its object stays) or a use. What an accepted point or a use rests on is not.
+    /// The known points' place limits kept in the project with their source (docs/adr/4920): a regulation's article
+    /// or an administration's specification; none of the three takes the kept limits away.
+    Tolerance {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        horizontal: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        vertical: Option<f64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        source: Option<String>,
+    },
+    /// A record taken away: a campaign (with its sessions, solutions, baselines and baseline sessions), a session (with
+    /// its solutions), a solution, an accepted point's record (its object stays), a use or a baseline session. What an
+    /// accepted point, a use or an adjustment rests on is not; nor is a baseline a session names.
     Remove { id: String },
 }
 
@@ -903,6 +940,44 @@ pub struct MapSurveyNetwork {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
     pub epoch: Option<f64>,
+    /// `session`: each baseline session's baselines whitened together by its full covariance, the baselines tested
+    /// component by component as correlated observations; `none` (when not given): each baseline by its own 3×3
+    /// (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub correlations: Option<NetworkCorrelations>,
+    /// Each new point's velocity east, north, up read from the campaign's velocity grid (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub velocities: bool,
+}
+
+/// Whether a network's baselines are adjusted with their sessions' cross-correlations (docs/adr/4920).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum NetworkCorrelations {
+    Session,
+    None,
+}
+
+/// Which correlations an adjustment used (docs/adr/4920): `session` or `none`, the baseline sessions whose full
+/// covariance went in, and those of the used baselines that were left out (their sessions incomplete or `none`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkCorrelationsUsed {
+    pub used: NetworkCorrelations,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub sessions: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub unused: Vec<String>,
 }
 
 /// Where the network's epoch comes from (docs/adr/2120): given, the baselines' observation times, the known points'.
@@ -1152,6 +1227,12 @@ pub struct NetworkStation {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub ellipse: Option<ErrorEllipse>,
+    /// With `velocities`: a new mark's velocity east, north, up (m/yr) read from the campaign's velocity grid
+    /// (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m/yr")))]
+    pub velocity: Option<[f64; 3]>,
 }
 
 /// The error ellipses an accepted network draws (docs/adr/2960): on `layer`, each the point's horizontal confidence
@@ -1325,6 +1406,14 @@ pub struct MapSurveyNetworked {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub current: Option<String>,
+    /// Which correlations were used (docs/adr/4920): written when asked for or when the used baselines have sessions.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub correlations: Option<NetworkCorrelationsUsed>,
+    /// With `velocities`: the velocity grid the new marks' velocities were read from (docs/adr/4920).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub velocity_grid: Option<SurveyGrid>,
     pub acceptable: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]

@@ -2542,6 +2542,12 @@ def document(d):
     if any("velocity" in k for k in surveyed.get("known", [])):
         # A known point's own velocity (docs/adr/2520).
         schema = max(schema, 207)
+    if surveyed.get("baselineSessions") or "tolerance" in surveyed or any(
+            a.get("sessions") for a in surveyed.get("adjustments", [])) or any(
+            "velocity" in r for p in surveyed.get("points", []) for r in [p["result"], *p.get("history", [])]):
+        # A GNSS archive's baseline sessions, an adjustment's sessions, the kept place limits, a point's velocity
+        # (docs/adr/4920).
+        schema = max(schema, 240)
     if any("textStyle" in st for st in d["settings"].get("leaderStyles", [])):
         # A leader style that names the text style of its note (docs/adr/1025).
         schema = max(schema, 187)
@@ -3647,7 +3653,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-240.kcad"] = container(root(cmap(parts), version=uint(240)))
+    files["schema-version-241.kcad"] = container(root(cmap(parts), version=uint(241)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6166,6 +6172,37 @@ def build():
         broken_moving = copy.deepcopy(moving)
         change(broken_moving)
         out[f"broken/map-survey-{name}.kcad"] = container(document(broken_moving))
+    # Schema 240 (docs/adr/4920): the velocity archive with a baseline session of its first two baselines (one block,
+    # row by row), the adjustment made with it, the known points' place limits kept with their source and the network
+    # point's velocity read from the campaign's grid; schema 239 refuses them, and a session of one baseline, a
+    # correlation above 1 and a limit of 0 are refused.
+    sessioned = copy.deepcopy(moving)
+    ms_ = sessioned["settings"]["mapSurvey"]
+    ms_["baselineSessions"] = [{
+        "id": "bo-1", "campaign": "kp-1", "name": "O1", "start": "2026-11-03T08:00:00.00Z",
+        "end": "2026-11-03T10:00:00.00Z", "baselines": ["bz-1", "bz-2"],
+        "blocks": [{"row": "bz-1", "col": "bz-2", "r": [0.12, -0.03, 0.01, 0.02, 0.15, -0.04, 0.0, 0.05, 0.18]}],
+        "file": {"path": "/veri/gnss/ag-2026-11.gvx",
+                 "revision": "5e0b3c2a8f1d4e6b7a9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a", "format": "gvx"}}]
+    ms_["adjustments"][0]["sessions"] = ["bo-1"]
+    ms_["tolerance"] = {"horizontal": 0.02, "vertical": 0.03,
+                        "source": "İdarenin şartnamesi (örnek), BÖHHBÜY m. 103(1)(c)"}
+    network_point = next(x for x in ms_["points"] if x["result"].get("method") == "network")
+    network_point["result"]["velocity"] = {"enu": [0.0213, 0.0105, -0.0012],
+                                          "grid": {"name": "tr-hiz-ornek.tif", "sha256": "1" * 64}}
+    out["map-survey-sessions.json"] = json_text(sessioned).encode("utf-8")
+    sessioned_data = document(sessioned)
+    assert sessioned_data.count(b"\x67version\x18\xf0") == 1, "a baseline session is schema 240"
+    out["map-survey-sessions.kcad"] = container(sessioned_data)
+    out["broken/map-survey-sessions-in-schema-239.kcad"] = container(
+        sessioned_data.replace(b"\x67version\x18\xf0", b"\x67version\x18\xef"))
+    for name, change in (
+            ("session-one-baseline", lambda m: (m["baselineSessions"][0].update({"baselines": ["bz-1"], "blocks": []}))),
+            ("correlation-above-one", lambda m: m["baselineSessions"][0]["blocks"][0]["r"].__setitem__(4, 1.25)),
+            ("tolerance-zero", lambda m: m["tolerance"].update({"horizontal": 0.0}))):
+        broken_sessioned = copy.deepcopy(sessioned)
+        change(broken_sessioned["settings"]["mapSurvey"])
+        out[f"broken/map-survey-{name}.kcad"] = container(document(broken_sessioned))
     # Schema 208 (docs/adr/2580): a parcel's front edge kept 5 m from the road's edge, a map bond; schema 207 refuses
     # it, and a boundary edge in a parallel and a bond from a boundary to a segment are refused.
     kept = load("map-bond.json")

@@ -409,6 +409,8 @@ pub(super) struct Features {
     pub(super) work_stamps: bool,
     /// Schema 207: a known point's own velocity (docs/adr/2520).
     pub(super) known_velocities: bool,
+    /// Schema 240: a GNSS archive's baseline sessions, kept limits, a network point's velocity (docs/adr/4920).
+    pub(super) gnss_sessions: bool,
     /// Schema 209: a road drawing's record with its version and revision (docs/adr/2840).
     pub(super) drawing_provenance: bool,
     /// Schema 210: a map work approval's objects' digests (docs/adr/2880).
@@ -754,6 +756,7 @@ impl Features {
             sheet_contour_drawings: schema >= crate::SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
             work_stamps: schema >= crate::SCHEMA_WITH_WORK_STAMPS,
             known_velocities: schema >= crate::SCHEMA_WITH_KNOWN_VELOCITIES,
+            gnss_sessions: schema >= crate::SCHEMA_WITH_GNSS_SESSIONS,
             drawing_provenance: schema >= crate::SCHEMA_WITH_DRAWING_PROVENANCE,
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
