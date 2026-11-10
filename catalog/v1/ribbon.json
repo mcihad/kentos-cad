@@ -1184,6 +1184,14 @@
         "command": "cogo.update",
         "size": "small"
        }
+      ],
+      "overflow": [
+       {
+        "command": "map.catalogReport",
+        "works": [
+         "map"
+        ]
+       }
       ]
      },
      {
@@ -3909,6 +3917,10 @@
       "items": [
        {
         "command": "profile.window",
+        "size": "small"
+       },
+       {
+        "command": "map.catalogReport",
         "size": "small"
        },
        {
@@ -7531,6 +7543,10 @@
    ],
    "map.featuresReconcile": [
     "harita"
+   ],
+   "map.catalogReport": [
+    "harita",
+    "cbs"
    ]
   }
  }

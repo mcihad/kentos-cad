@@ -1275,6 +1275,13 @@
       ],
       "note": "Seçilen dosya map.survey.edit session ile okunur ve oturum olur (ADR 1340 §4)."
     },
+    "map.catalogReport": {
+      "level": "query",
+      "via": [
+        "cad.profiles.compare"
+      ],
+      "note": "Pencere iki nesne kataloğunu cad.profiles.compare ile karşılaştırır (salt okunur): sınıflar kimlikleriyle, yoksa saha kodlarıyla izlenir; alanlar, değer listelerinin kodları ve Detay eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli (ADR 4940)."
+    },
     "map.featuresReconcile": {
       "level": "semantic",
       "via": [

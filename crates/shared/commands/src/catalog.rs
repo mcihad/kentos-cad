@@ -3227,6 +3227,34 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Katalog geçiş raporu (plan/map-cad.md MAP-04, docs/adr/4940).
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_COMPARE.into(),
+            version: crate::CAD_PROFILES_COMPARE_VERSION,
+            title: "Katalog geçiş raporu".into(),
+            summary: "Çizimin verisinin bir nesne kataloğundan (veri profili) ötekine geçişinin raporu; hiçbir şey yazmaz. Eski katalog from (yerleşik ya da projenin profilinin adı) ya da fromProfile (profilin kendisi), yeni katalog to ya da toProfile ile verilir. \
+                      Her eski sınıf yeni katalogda önce kalıcı kimliğiyle (aynı id: same ya da katmanı, geometrisi, kodları ya da alanları değişmişse changed), yoksa saha kodlarıyla izlenir: kodlarının hepsi tek bir sınıfa gidiyorsa renamed, o sınıf başka bir eski sınıfın da kodlarını alıyor ya da bir eski sınıfın kimliğini taşıyorsa merged, kodları iki ve daha çok sınıfa gidiyorsa split, ne kimliği ne kodu varsa retired; hiçbir eski sınıfın gitmediği yeni sınıf added. Addan ya da konumdan tahmin yapılmaz. \
+                      Her sınıf satırı eski sınıfın katmanındaki nesneleri sayar (kalıcı kimlikleri en çok 1000); retired ve split sınıfın, geometrisi değişen sınıfın nesneleri karar ister (decide). Tek sınıfa giden sınıfın alanları karşılaştırılır: removed (değeri olan nesneler taşınamaz), kindChanged ve listChanged (değeri olan nesneler yeniden okunmalı), nowRequired ve zorunlu added (boş olan nesneler). Değer listelerinin kodları: removed, retired (değeri o kod olan nesneler karar ister), relabelled, added. \
+                      Detay eşleştirmenin çözülmüş inceleme notu olarak kayıtlı kararları (ret dışında) sınıflarıyla izlenir: kept, follows (sınıfı yeniden adlandırılmış ya da birleşmiş), fieldDropped (verdiği alan kalkıyor), classRetired, classSplit. decide karar isteyen satırları sayar. Retler: unknown_profile (from, to), invalid_profile (fromProfile, toProfile ya da projenin dosyası). Plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["kataloggecisi".into(), "katalogkarsilastir".into(), "profilkarsilastir".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesCompare>(),
+            output: schema::<crate::ProfilesCompared>(),
+            plan: Some(schema::<crate::ProfilesCompared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Harita varlıkları kataloğundan kurumun kataloğuna geçiş".into(),
+                input: json!({ "from": "harita-varliklari", "to": "belediye-harita", "drawing": "/projeler/harita/alim.kcad" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_PROFILES_REMOVE.into(),
             version: crate::CAD_PROFILES_REMOVE_VERSION,
@@ -16435,6 +16463,9 @@ mod tests {
                     crate::CAD_PROFILES_MIGRATE => {
                         serde_json::from_value::<crate::ProfilesMigrate>(e.input.clone())
                             .map(|_| ())
+                    }
+                    crate::CAD_PROFILES_COMPARE => {
+                        serde_json::from_value::<crate::ProfilesCompare>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_PROFILES_REMOVE => {
                         serde_json::from_value::<crate::ProfilesRemove>(e.input.clone()).map(|_| ())

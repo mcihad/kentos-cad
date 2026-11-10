@@ -651,6 +651,11 @@
 - **GNSS ağının seyrek çözümü (10 Kasım 2026; MAP-05, [ADR 4560](../../docs/adr/4560-gnss-network-sparse-solution.md)).**
   `gnss::adjust`: ters Cuthill–McKee sırası, zarfında Cholesky, Takahashi ile seçili ters; 1500 bilinmeyen sınırı yerine
   zarf en çok 30 milyon girdi (19 600 istasyon 6 s, sürüm). GNSS baz ağı özeti ağın büyüklüğünü söyler. Harita + CBS.
+- **Katalog geçiş raporu (11 Kasım 2026; MAP-04, [ADR 4940](../../docs/adr/4940-catalog-migration-report.md)).**
+  `cad.profiles.compare` (salt okunur): eski ve yeni katalog (veri profili); sınıf kalıcı kimliğiyle, yoksa saha
+  kodlarıyla izlenir (same, changed, renamed, split, merged, retired, added); alanlar, liste kodları ve Detay
+  eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli. Taşımaz. Katalog geçiş raporu… (Ölçme ›
+  Noktalar ▾; CBS Veri › Standart). Harita + CBS.
 - **Detay eşleştirmede kayıtlı kararların yeniden uygulanması (10 Kasım 2026; MAP-04, [ADR 4540](../../docs/adr/4540-reapply-recorded-reconcile-decisions.md)).**
   `map.features.reconcile`'in `reapply`'ı: yeni çıkarımın kararsız adayı aynı kaynağın yakınındaki eşleştirilmiş
   adayının notundaki kararı alır (gruplama kuralı, en yakını); çıktı `reapplied`, yeni not önceki notu anar. Detay

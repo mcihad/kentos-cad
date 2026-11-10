@@ -16153,6 +16153,231 @@
       ]
     },
     {
+      "id": "cad.profiles.compare",
+      "version": 1,
+      "title": "Katalog geçiş raporu",
+      "summary": "Çizimin verisinin bir nesne kataloğundan (veri profili) ötekine geçişinin raporu; hiçbir şey yazmaz. Eski katalog from (yerleşik ya da projenin profilinin adı) ya da fromProfile (profilin kendisi), yeni katalog to ya da toProfile ile verilir. Her eski sınıf yeni katalogda önce kalıcı kimliğiyle (aynı id: same ya da katmanı, geometrisi, kodları ya da alanları değişmişse changed), yoksa saha kodlarıyla izlenir: kodlarının hepsi tek bir sınıfa gidiyorsa renamed, o sınıf başka bir eski sınıfın da kodlarını alıyor ya da bir eski sınıfın kimliğini taşıyorsa merged, kodları iki ve daha çok sınıfa gidiyorsa split, ne kimliği ne kodu varsa retired; hiçbir eski sınıfın gitmediği yeni sınıf added. Addan ya da konumdan tahmin yapılmaz. Her sınıf satırı eski sınıfın katmanındaki nesneleri sayar (kalıcı kimlikleri en çok 1000); retired ve split sınıfın, geometrisi değişen sınıfın nesneleri karar ister (decide). Tek sınıfa giden sınıfın alanları karşılaştırılır: removed (değeri olan nesneler taşınamaz), kindChanged ve listChanged (değeri olan nesneler yeniden okunmalı), nowRequired ve zorunlu added (boş olan nesneler). Değer listelerinin kodları: removed, retired (değeri o kod olan nesneler karar ister), relabelled, added. Detay eşleştirmenin çözülmüş inceleme notu olarak kayıtlı kararları (ret dışında) sınıflarıyla izlenir: kept, follows (sınıfı yeniden adlandırılmış ya da birleşmiş), fieldDropped (verdiği alan kalkıyor), classRetired, classSplit. decide karar isteyen satırları sayar. Retler: unknown_profile (from, to), invalid_profile (fromProfile, toProfile ya da projenin dosyası). Plan aynı cevabı verir.",
+      "aliases": [
+        "kataloggecisi",
+        "katalogkarsilastir",
+        "profilkarsilastir"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.compare` v1: the old catalog (`from`, a built-in or the project's profile by its name, or\n`fromProfile`, the profile itself) and the new one (`to` or `toProfile`); the drawing's file for the project's\nprofiles. Reads only.\n\nRefusals: `unknown_profile` (a catalog not named or not found; path `from` or `to`), `invalid_profile` (a\ncatalog that does not hold; path `fromProfile` or `toProfile`).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fromProfile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "toProfile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProfilesCompare",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.compare` v1.",
+        "properties": {
+          "classes": {
+            "description": "The old catalog's classes in its order, then the new catalog's added classes in its order.",
+            "items": {
+              "$ref": "#/$defs/CatalogClassChange"
+            },
+            "type": "array"
+          },
+          "codes": {
+            "description": "Per old list (in its order), its codes' changes in its order, then the added codes; a list only the new catalog\nhas, its codes as added.",
+            "items": {
+              "$ref": "#/$defs/CatalogCodeChange"
+            },
+            "type": "array"
+          },
+          "decide": {
+            "description": "The rows that need someone's decision.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "decisions": {
+            "description": "The reconcile decisions recorded as resolved review notes, by number.",
+            "items": {
+              "$ref": "#/$defs/CatalogDecisionChange"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "Per class row (in its order), the old fields' changes in the old class's order, then the added ones in the new\nclass's order; unchanged fields are left out.",
+            "items": {
+              "$ref": "#/$defs/CatalogFieldChange"
+            },
+            "type": "array"
+          },
+          "from": {
+            "$ref": "#/$defs/ComparedCatalog"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "to": {
+            "$ref": "#/$defs/ComparedCatalog"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "classes",
+          "fields",
+          "codes",
+          "decisions",
+          "decide",
+          "notes",
+          "revision"
+        ],
+        "title": "ProfilesCompared",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.compare` v1.",
+        "properties": {
+          "classes": {
+            "description": "The old catalog's classes in its order, then the new catalog's added classes in its order.",
+            "items": {
+              "$ref": "#/$defs/CatalogClassChange"
+            },
+            "type": "array"
+          },
+          "codes": {
+            "description": "Per old list (in its order), its codes' changes in its order, then the added codes; a list only the new catalog\nhas, its codes as added.",
+            "items": {
+              "$ref": "#/$defs/CatalogCodeChange"
+            },
+            "type": "array"
+          },
+          "decide": {
+            "description": "The rows that need someone's decision.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "decisions": {
+            "description": "The reconcile decisions recorded as resolved review notes, by number.",
+            "items": {
+              "$ref": "#/$defs/CatalogDecisionChange"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "Per class row (in its order), the old fields' changes in the old class's order, then the added ones in the new\nclass's order; unchanged fields are left out.",
+            "items": {
+              "$ref": "#/$defs/CatalogFieldChange"
+            },
+            "type": "array"
+          },
+          "from": {
+            "$ref": "#/$defs/ComparedCatalog"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "to": {
+            "$ref": "#/$defs/ComparedCatalog"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "classes",
+          "fields",
+          "codes",
+          "decisions",
+          "decide",
+          "notes",
+          "revision"
+        ],
+        "title": "ProfilesCompared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "invalid_profile"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Harita varlıkları kataloğundan kurumun kataloğuna geçiş",
+          "input": {
+            "drawing": "/projeler/harita/alim.kcad",
+            "from": "harita-varliklari",
+            "to": "belediye-harita"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.profiles.remove",
       "version": 1,
       "title": "Veri profilini çizimden kaldır",
@@ -124065,6 +124290,390 @@
       ],
       "type": "object"
     },
+    "CatalogClassChange": {
+      "description": "A class's row.",
+      "properties": {
+        "codes": {
+          "description": "The old class's field codes (an added class: the new one's).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "decide": {
+          "description": "Whether someone must decide before the data moves: a retired or split class, or one whose geometry changes,\nwith objects.",
+          "type": "boolean"
+        },
+        "from": {
+          "description": "The old class's id; none for an added class.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "kind": {
+          "$ref": "#/$defs/CatalogClassChangeKind"
+        },
+        "layer": {
+          "description": "The old class's layer path, `A › B` (an added class: the new one's).",
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "objects": {
+          "description": "The drawing's objects on the old class's layer (an added class: none).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "title": {
+          "description": "The old class's title (an added class: the new one's).",
+          "type": "string"
+        },
+        "to": {
+          "description": "The new classes it leads to, in the new catalog's order (an added class: itself).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "toCodes": {
+          "description": "The new classes' codes, in their order.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "toLayer": {
+          "description": "The new class's layer path when it leads to one; empty otherwise.",
+          "type": "string"
+        },
+        "uids": {
+          "description": "Those objects, in the drawing's order, at most 1000.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "to",
+        "kind",
+        "title",
+        "layer",
+        "toLayer",
+        "codes",
+        "toCodes",
+        "objects",
+        "uids",
+        "decide",
+        "note"
+      ],
+      "type": "object"
+    },
+    "CatalogClassChangeKind": {
+      "description": "What became of an old class in the new catalog.",
+      "oneOf": [
+        {
+          "const": "same",
+          "description": "Aynı: the same id, layer, geometry, codes and fields.",
+          "type": "string"
+        },
+        {
+          "const": "changed",
+          "description": "Değişti: the same id; its layer, geometry, codes or fields differ.",
+          "type": "string"
+        },
+        {
+          "const": "renamed",
+          "description": "Yeniden adlandırıldı: another id holds its codes, and no other old class's.",
+          "type": "string"
+        },
+        {
+          "const": "split",
+          "description": "Bölündü: its codes went to two classes or more.",
+          "type": "string"
+        },
+        {
+          "const": "merged",
+          "description": "Birleşti: its codes went to a class that holds another old class's too.",
+          "type": "string"
+        },
+        {
+          "const": "retired",
+          "description": "Kalktı: no class of the new catalog has its id or one of its codes.",
+          "type": "string"
+        },
+        {
+          "const": "added",
+          "description": "Yeni: a class of the new catalog no old class leads to.",
+          "type": "string"
+        }
+      ]
+    },
+    "CatalogCodeChange": {
+      "description": "A value list's code's row.",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "decide": {
+          "description": "Whether someone must decide: a removed or retired code that objects hold.",
+          "type": "boolean"
+        },
+        "domain": {
+          "description": "The list's id.",
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CatalogCodeChangeKind"
+        },
+        "label": {
+          "description": "The old label (an added code: the new one).",
+          "type": "string"
+        },
+        "note": {
+          "type": "string"
+        },
+        "objects": {
+          "description": "The objects of the old catalog's classes whose field linked to the list holds the code.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "toLabel": {
+          "description": "The new label; empty for a removed code.",
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "domain",
+        "code",
+        "kind",
+        "label",
+        "toLabel",
+        "objects",
+        "uids",
+        "decide",
+        "note"
+      ],
+      "type": "object"
+    },
+    "CatalogCodeChangeKind": {
+      "description": "What became of a value list's code.",
+      "oneOf": [
+        {
+          "const": "removed",
+          "description": "Kalktı: the new catalog's list (or the list itself) does not have it.",
+          "type": "string"
+        },
+        {
+          "const": "retired",
+          "description": "Kullanımdan kalktı: the new list keeps it retired.",
+          "type": "string"
+        },
+        {
+          "const": "added",
+          "description": "Yeni.",
+          "type": "string"
+        },
+        {
+          "const": "relabelled",
+          "description": "Etiketi değişti.",
+          "type": "string"
+        }
+      ]
+    },
+    "CatalogDecisionChange": {
+      "description": "A recorded decision's row.",
+      "properties": {
+        "asset": {
+          "description": "The asset's persistent id, when the decision wrote or tied one.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "candidate": {
+          "description": "The candidate's persistent id.",
+          "type": "string"
+        },
+        "class": {
+          "description": "The old class it concerns: its correction, else the class whose layer holds the asset.",
+          "type": "string"
+        },
+        "decide": {
+          "type": "boolean"
+        },
+        "fields": {
+          "description": "The fields it gave that the new class drops.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "kind": {
+          "$ref": "#/$defs/CatalogDecisionChangeKind"
+        },
+        "note": {
+          "type": "string"
+        },
+        "number": {
+          "description": "The review note's number.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "to": {
+          "description": "The new classes it leads to.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "number",
+        "candidate",
+        "class",
+        "to",
+        "kind",
+        "fields",
+        "decide",
+        "note"
+      ],
+      "type": "object"
+    },
+    "CatalogDecisionChangeKind": {
+      "description": "What becomes of a recorded reconcile decision.",
+      "oneOf": [
+        {
+          "const": "kept",
+          "description": "Korunur: its class is the same (or changed) and its fields are all there.",
+          "type": "string"
+        },
+        {
+          "const": "follows",
+          "description": "Sınıfıyla gider: its class is renamed or merged; the decision holds under the new class.",
+          "type": "string"
+        },
+        {
+          "const": "fieldDropped",
+          "description": "Alanı kalkar: a field it gave is removed.",
+          "type": "string"
+        },
+        {
+          "const": "classRetired",
+          "description": "Sınıfı kalkar.",
+          "type": "string"
+        },
+        {
+          "const": "classSplit",
+          "description": "Sınıfı bölünür: which new class it is, is a new decision.",
+          "type": "string"
+        }
+      ]
+    },
+    "CatalogFieldChange": {
+      "description": "A field's row.",
+      "properties": {
+        "becomes": {
+          "description": "The new field's; empty for a removed field.",
+          "type": "string"
+        },
+        "class": {
+          "description": "The old class's id.",
+          "type": "string"
+        },
+        "decide": {
+          "description": "Whether someone must decide: values dropped or to be read anew, or required values missing.",
+          "type": "boolean"
+        },
+        "field": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/CatalogFieldChangeKind"
+        },
+        "note": {
+          "type": "string"
+        },
+        "objects": {
+          "description": "The objects the change touches: a removed, retyped or relisted field's objects holding a value; an added or\nnewly required field's objects without one.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "toClass": {
+          "description": "The new class's id.",
+          "type": "string"
+        },
+        "uids": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "was": {
+          "description": "The old field's kind and list (`metin`, `metin, sebeke`); empty for an added field.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "class",
+        "toClass",
+        "field",
+        "kind",
+        "was",
+        "becomes",
+        "objects",
+        "uids",
+        "decide",
+        "note"
+      ],
+      "type": "object"
+    },
+    "CatalogFieldChangeKind": {
+      "description": "What became of an old class's field in its one new class.",
+      "oneOf": [
+        {
+          "const": "removed",
+          "description": "Kalktı: the new class has no field of the name.",
+          "type": "string"
+        },
+        {
+          "const": "added",
+          "description": "Yeni: the new class's field the old one had not.",
+          "type": "string"
+        },
+        {
+          "const": "kindChanged",
+          "description": "Türü değişti.",
+          "type": "string"
+        },
+        {
+          "const": "listChanged",
+          "description": "Değer listesi değişti (another list, or none).",
+          "type": "string"
+        },
+        {
+          "const": "nowRequired",
+          "description": "Zorunlu oldu.",
+          "type": "string"
+        }
+      ]
+    },
     "Cell": {
       "description": "A cell of a combination: a code of its field's list, any value (empty too), or empty.",
       "oneOf": [
@@ -126736,6 +127345,29 @@
       "required": [
         "name",
         "boundary"
+      ],
+      "type": "object"
+    },
+    "ComparedCatalog": {
+      "description": "A catalog as the report names it.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "release": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "title",
+        "release"
       ],
       "type": "object"
     },
