@@ -5207,6 +5207,22 @@
    "tests": 0
   },
   {
+   "id": "map.catalogReport",
+   "kind": "command",
+   "title": "Katalog geçiş raporu…",
+   "level": "query",
+   "via": [
+    "cad.profiles.compare"
+   ],
+   "operation": null,
+   "python": "kentos.cad.profiles.compare",
+   "mcp": "cad.profiles.compare",
+   "note": "Pencere iki nesne kataloğunu cad.profiles.compare ile karşılaştırır (salt okunur): sınıflar kimlikleriyle, yoksa saha kodlarıyla izlenir; alanlar, değer listelerinin kodları ve Detay eşleştirmenin kayıtlı kararları nesne sayılarıyla, karar isteyenler işaretli (ADR 4940).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "map.contours",
    "kind": "command",
    "title": "Eşyükselti üret…",

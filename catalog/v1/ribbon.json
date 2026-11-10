@@ -1173,6 +1173,13 @@
         ]
        },
        {
+        "command": "map.catalogReport",
+        "size": "small",
+        "works": [
+         "map"
+        ]
+       },
+       {
         "command": "crs.points",
         "size": "small"
        },
@@ -3909,6 +3916,10 @@
       "items": [
        {
         "command": "profile.window",
+        "size": "small"
+       },
+       {
+        "command": "map.catalogReport",
         "size": "small"
        },
        {
@@ -7531,6 +7542,10 @@
    ],
    "map.featuresReconcile": [
     "harita"
+   ],
+   "map.catalogReport": [
+    "harita",
+    "cbs"
    ]
   }
  }

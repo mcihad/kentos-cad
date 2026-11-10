@@ -1279,6 +1279,88 @@ CaseworkSideName = Literal["left", "right"]
 """The names of :class:`CaseworkSide`, for a plain string."""
 
 
+class CatalogClassChangeKind(_StrEnum):
+    """What became of an old class in the new catalog.
+
+    - ``same``: Aynı: the same id, layer, geometry, codes and fields.
+    - ``changed``: Değişti: the same id; its layer, geometry, codes or fields differ.
+    - ``renamed``: Yeniden adlandırıldı: another id holds its codes, and no other old class's.
+    - ``split``: Bölündü: its codes went to two classes or more.
+    - ``merged``: Birleşti: its codes went to a class that holds another old class's too.
+    - ``retired``: Kalktı: no class of the new catalog has its id or one of its codes.
+    - ``added``: Yeni: a class of the new catalog no old class leads to.
+    """
+    SAME = "same"
+    CHANGED = "changed"
+    RENAMED = "renamed"
+    SPLIT = "split"
+    MERGED = "merged"
+    RETIRED = "retired"
+    ADDED = "added"
+
+
+CatalogClassChangeKindName = Literal["same", "changed", "renamed", "split", "merged", "retired", "added"]
+"""The names of :class:`CatalogClassChangeKind`, for a plain string."""
+
+
+class CatalogCodeChangeKind(_StrEnum):
+    """What became of a value list's code.
+
+    - ``removed``: Kalktı: the new catalog's list (or the list itself) does not have it.
+    - ``retired``: Kullanımdan kalktı: the new list keeps it retired.
+    - ``added``: Yeni.
+    - ``relabelled``: Etiketi değişti.
+    """
+    REMOVED = "removed"
+    RETIRED = "retired"
+    ADDED = "added"
+    RELABELLED = "relabelled"
+
+
+CatalogCodeChangeKindName = Literal["removed", "retired", "added", "relabelled"]
+"""The names of :class:`CatalogCodeChangeKind`, for a plain string."""
+
+
+class CatalogDecisionChangeKind(_StrEnum):
+    """What becomes of a recorded reconcile decision.
+
+    - ``kept``: Korunur: its class is the same (or changed) and its fields are all there.
+    - ``follows``: Sınıfıyla gider: its class is renamed or merged; the decision holds under the new class.
+    - ``fieldDropped``: Alanı kalkar: a field it gave is removed.
+    - ``classRetired``: Sınıfı kalkar.
+    - ``classSplit``: Sınıfı bölünür: which new class it is, is a new decision.
+    """
+    KEPT = "kept"
+    FOLLOWS = "follows"
+    FIELD_DROPPED = "fieldDropped"
+    CLASS_RETIRED = "classRetired"
+    CLASS_SPLIT = "classSplit"
+
+
+CatalogDecisionChangeKindName = Literal["kept", "follows", "fieldDropped", "classRetired", "classSplit"]
+"""The names of :class:`CatalogDecisionChangeKind`, for a plain string."""
+
+
+class CatalogFieldChangeKind(_StrEnum):
+    """What became of an old class's field in its one new class.
+
+    - ``removed``: Kalktı: the new class has no field of the name.
+    - ``added``: Yeni: the new class's field the old one had not.
+    - ``kindChanged``: Türü değişti.
+    - ``listChanged``: Değer listesi değişti (another list, or none).
+    - ``nowRequired``: Zorunlu oldu.
+    """
+    REMOVED = "removed"
+    ADDED = "added"
+    KIND_CHANGED = "kindChanged"
+    LIST_CHANGED = "listChanged"
+    NOW_REQUIRED = "nowRequired"
+
+
+CatalogFieldChangeKindName = Literal["removed", "added", "kindChanged", "listChanged", "nowRequired"]
+"""The names of :class:`CatalogFieldChangeKind`, for a plain string."""
+
+
 class ChainStatus(_StrEnum):
     """Whether the chain is complete (every step's accuracy stated, the epochs settled, every point reached, heights
     carried by a stated rule) or limited, and why (docs/adr/1230 §3). A limited answer is never a precise one.
@@ -22100,6 +22182,221 @@ class CaseworkTie(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CatalogClassChange(_Model):
+    """A class's row.
+    Attributes:
+        to: The new classes it leads to, in the new catalog's order (an added class: itself).
+        title: The old class's title (an added class: the new one's).
+        layer: The old class's layer path, `A › B` (an added class: the new one's).
+        to_layer: The new class's layer path when it leads to one; empty otherwise.
+        codes: The old class's field codes (an added class: the new one's).
+        to_codes: The new classes' codes, in their order.
+        objects: The drawing's objects on the old class's layer (an added class: none). Unit: count.
+        uids: Those objects, in the drawing's order, at most 1000.
+        decide: Whether someone must decide before the data moves: a retired or split class, or one whose geometry changes,
+            with objects.
+        from_: The old class's id; none for an added class.
+    """
+    to: list[str]
+    kind: CatalogClassChangeKind | CatalogClassChangeKindName
+    title: str
+    layer: str
+    to_layer: str
+    codes: list[str]
+    to_codes: list[str]
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+    from_: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["title"] = self.title
+        out["layer"] = self.layer
+        out["toLayer"] = self.to_layer
+        out["codes"] = list(self.codes)
+        out["toCodes"] = list(self.to_codes)
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogClassChange:
+        return cls(
+            to=list(data["to"]),
+            kind=_enum_in(CatalogClassChangeKind, data["kind"]),
+            title=data["title"],
+            layer=data["layer"],
+            to_layer=data["toLayer"],
+            codes=list(data["codes"]),
+            to_codes=list(data["toCodes"]),
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
+            from_=data.get("from", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogCodeChange(_Model):
+    """A value list's code's row.
+    Attributes:
+        domain: The list's id.
+        label: The old label (an added code: the new one).
+        to_label: The new label; empty for a removed code.
+        objects: The objects of the old catalog's classes whose field linked to the list holds the code. Unit: count.
+        decide: Whether someone must decide: a removed or retired code that objects hold.
+    """
+    domain: str
+    code: str
+    kind: CatalogCodeChangeKind | CatalogCodeChangeKindName
+    label: str
+    to_label: str
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["domain"] = self.domain
+        out["code"] = self.code
+        out["kind"] = _enum_out(self.kind)
+        out["label"] = self.label
+        out["toLabel"] = self.to_label
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogCodeChange:
+        return cls(
+            domain=data["domain"],
+            code=data["code"],
+            kind=_enum_in(CatalogCodeChangeKind, data["kind"]),
+            label=data["label"],
+            to_label=data["toLabel"],
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogDecisionChange(_Model):
+    """A recorded decision's row.
+    Attributes:
+        number: The review note's number. Unit: id.
+        candidate: The candidate's persistent id.
+        class_: The old class it concerns: its correction, else the class whose layer holds the asset.
+        to: The new classes it leads to.
+        fields: The fields it gave that the new class drops.
+        asset: The asset's persistent id, when the decision wrote or tied one.
+    """
+    number: int
+    candidate: str
+    class_: str
+    to: list[str]
+    kind: CatalogDecisionChangeKind | CatalogDecisionChangeKindName
+    fields: list[str]
+    decide: bool
+    note: str
+    asset: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["number"] = self.number
+        out["candidate"] = self.candidate
+        out["class"] = self.class_
+        out["to"] = list(self.to)
+        out["kind"] = _enum_out(self.kind)
+        out["fields"] = list(self.fields)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogDecisionChange:
+        return cls(
+            number=data["number"],
+            candidate=data["candidate"],
+            class_=data["class"],
+            to=list(data["to"]),
+            kind=_enum_in(CatalogDecisionChangeKind, data["kind"]),
+            fields=list(data["fields"]),
+            decide=data["decide"],
+            note=data["note"],
+            asset=data.get("asset", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CatalogFieldChange(_Model):
+    """A field's row.
+    Attributes:
+        class_: The old class's id.
+        to_class: The new class's id.
+        was: The old field's kind and list (`metin`, `metin, sebeke`); empty for an added field.
+        becomes: The new field's; empty for a removed field.
+        objects: The objects the change touches: a removed, retyped or relisted field's objects holding a value; an added or
+            newly required field's objects without one. Unit: count.
+        decide: Whether someone must decide: values dropped or to be read anew, or required values missing.
+    """
+    class_: str
+    to_class: str
+    field: str
+    kind: CatalogFieldChangeKind | CatalogFieldChangeKindName
+    was: str
+    becomes: str
+    objects: int
+    uids: list[str]
+    decide: bool
+    note: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["toClass"] = self.to_class
+        out["field"] = self.field
+        out["kind"] = _enum_out(self.kind)
+        out["was"] = self.was
+        out["becomes"] = self.becomes
+        out["objects"] = self.objects
+        out["uids"] = list(self.uids)
+        out["decide"] = self.decide
+        out["note"] = self.note
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CatalogFieldChange:
+        return cls(
+            class_=data["class"],
+            to_class=data["toClass"],
+            field=data["field"],
+            kind=_enum_in(CatalogFieldChangeKind, data["kind"]),
+            was=data["was"],
+            becomes=data["becomes"],
+            objects=data["objects"],
+            uids=list(data["uids"]),
+            decide=data["decide"],
+            note=data["note"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CellField(_Model):
     """A cell bound to a source (docs/adr/0327 §3): its words are the value last written, `####` when broken.
     Attributes:
@@ -24476,6 +24773,32 @@ class CompareZone(_Model):
             boundary=data["boundary"],
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ComparedCatalog(_Model):
+    """A catalog as the report names it.
+    Attributes:
+        release: Unit: count.
+    """
+    name: str
+    title: str
+    release: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["title"] = self.title
+        out["release"] = self.release
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ComparedCatalog:
+        return cls(
+            name=data["name"],
+            title=data["title"],
+            release=data["release"],
         )
 
 
@@ -75174,6 +75497,96 @@ class ProfilesCheck(_Model):
             mapping_name=data.get("mappingName", UNSET),
             name=data.get("name", UNSET),
             profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCompare(_Model):
+    """Input of `cad.profiles.compare` v1: the old catalog (`from`, a built-in or the project's profile by its name, or
+    `fromProfile`, the profile itself) and the new one (`to` or `toProfile`); the drawing's file for the project's
+    profiles. Reads only.
+
+    Refusals: `unknown_profile` (a catalog not named or not found; path `from` or `to`), `invalid_profile` (a
+    catalog that does not hold; path `fromProfile` or `toProfile`).
+    """
+    drawing: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    from_profile: DataProfile | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+    to_profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.from_profile is not UNSET:
+            out["fromProfile"] = None if self.from_profile is None else self.from_profile.to_json()
+        if self.to is not UNSET:
+            out["to"] = self.to
+        if self.to_profile is not UNSET:
+            out["toProfile"] = None if self.to_profile is None else self.to_profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCompare:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            from_=data.get("from", UNSET),
+            from_profile=UNSET if "fromProfile" not in data else None if data["fromProfile"] is None else DataProfile.from_json(data["fromProfile"]),
+            to=data.get("to", UNSET),
+            to_profile=UNSET if "toProfile" not in data else None if data["toProfile"] is None else DataProfile.from_json(data["toProfile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCompared(_Model):
+    """Output (and plan) of `cad.profiles.compare` v1.
+    Attributes:
+        classes: The old catalog's classes in its order, then the new catalog's added classes in its order.
+        fields: Per class row (in its order), the old fields' changes in the old class's order, then the added ones in the new
+            class's order; unchanged fields are left out.
+        codes: Per old list (in its order), its codes' changes in its order, then the added codes; a list only the new catalog
+            has, its codes as added.
+        decisions: The reconcile decisions recorded as resolved review notes, by number.
+        decide: The rows that need someone's decision. Unit: count.
+    """
+    from_: ComparedCatalog
+    to: ComparedCatalog
+    classes: list[CatalogClassChange]
+    fields: list[CatalogFieldChange]
+    codes: list[CatalogCodeChange]
+    decisions: list[CatalogDecisionChange]
+    decide: int
+    notes: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_.to_json()
+        out["to"] = self.to.to_json()
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        out["codes"] = [e0.to_json() for e0 in self.codes]
+        out["decisions"] = [e0.to_json() for e0 in self.decisions]
+        out["decide"] = self.decide
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCompared:
+        return cls(
+            from_=ComparedCatalog.from_json(data["from"]),
+            to=ComparedCatalog.from_json(data["to"]),
+            classes=[CatalogClassChange.from_json(e0) for e0 in data["classes"]],
+            fields=[CatalogFieldChange.from_json(e0) for e0 in data["fields"]],
+            codes=[CatalogCodeChange.from_json(e0) for e0 in data["codes"]],
+            decisions=[CatalogDecisionChange.from_json(e0) for e0 in data["decisions"]],
+            decide=data["decide"],
+            notes=list(data["notes"]),
+            revision=data["revision"],
         )
 
 
@@ -136397,6 +136810,18 @@ __all__ = [
     "CaseworkSide",
     "CaseworkSideName",
     "CaseworkTie",
+    "CatalogClassChange",
+    "CatalogClassChangeKind",
+    "CatalogClassChangeKindName",
+    "CatalogCodeChange",
+    "CatalogCodeChangeKind",
+    "CatalogCodeChangeKindName",
+    "CatalogDecisionChange",
+    "CatalogDecisionChangeKind",
+    "CatalogDecisionChangeKindName",
+    "CatalogFieldChange",
+    "CatalogFieldChangeKind",
+    "CatalogFieldChangeKindName",
     "Cell",
     "CellField",
     "CellFormula",
@@ -136518,6 +136943,7 @@ __all__ = [
     "CompareMethod",
     "CompareMethodName",
     "CompareZone",
+    "ComparedCatalog",
     "ComponentEdge",
     "ComponentHatch",
     "ComputedExtractValue",
@@ -138635,6 +139061,8 @@ __all__ = [
     "ProfilesApplied",
     "ProfilesApply",
     "ProfilesCheck",
+    "ProfilesCompare",
+    "ProfilesCompared",
     "ProfilesCreate",
     "ProfilesDraw",
     "ProfilesDrawn",

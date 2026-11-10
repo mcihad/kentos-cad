@@ -4980,6 +4980,13 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Katalog geçiş raporu (plan/map-cad.md MAP-04, docs/adr/4940): read-only.
+    Entry {
+        id: "cad.profiles.compare",
+        refusals: &[&["unknown_profile", "invalid_profile"]],
+        warnings: &[],
+        targets: none,
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",
