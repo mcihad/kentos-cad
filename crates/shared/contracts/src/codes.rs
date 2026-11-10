@@ -2087,7 +2087,7 @@ codes! {
     /// GNSS baz ağı: nothing holds the network's datum.
     DATUM_MISSING = "datum_missing", Failed, false, "Ağın datumu yok: bir istasyonu sabit ya da ağırlıklı verin ya da minimal datumu seçin.";
     /// GNSS baz ağı: more unknowns than the dense solver takes.
-    NETWORK_TOO_LARGE = "network_too_large", Failed, false, "Ağ yoğun çözümün alabileceğinden büyük (en çok 1500 bilinmeyen).";
+    NETWORK_TOO_LARGE = "network_too_large", Failed, false, "Ağın normal denklemi seyrek çözümün alabileceğinden büyük (zarfı en çok 30 milyon girdi, ADR 4560).";
     /// GNSS baz ağı: a station no baseline ties to the datum.
     NETWORK_DISCONNECTED = "network_disconnected", Failed, false, "Bir istasyon datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.";
     /// GNSS ağı (docs/adr/1740): a baseline the outlier test calls a blunder; the network is not accepted.

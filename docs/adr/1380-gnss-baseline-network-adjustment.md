@@ -44,6 +44,7 @@ datum kısıtı). Durum: taslak. İlgili: [ADR 0203](0203-network-adjustment.md)
 
 Yoğun normal denklem: en çok 1500 bilinmeyen (500 istasyon), O(u³) Cholesky; 500 istasyonda ölçülmedi. Seyrek çözüm,
 bölümlü büyük ağ ve seçili kovaryans MAP-05'in kalanıdır; ölçüm raporu olmadan ölçeklenebilirlik iddia edilmez.
+Seyrek çözüm, seçili kovaryans ve ölçüm: [ADR 4560](4560-gnss-network-sparse-solution.md) (bölümlü dengeleme açık).
 
 ## Kanıt
 

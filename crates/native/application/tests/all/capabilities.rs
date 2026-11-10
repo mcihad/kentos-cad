@@ -87,8 +87,8 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
-    ("cad.survey.baselines", "network_too_large", "1500 bilinmeyenin (500 istasyon) üstü bir ortak durumda taşınmaz; sınır geometry-core'un gnss::adjust'ında MAX_UNKNOWNS ile denetlenir (ADR 1380 §Bütçe)."),
-    ("map.survey.network", "network_too_large", "1500 bilinmeyenin (500 işaret) üstü bir ortak durumda taşınmaz; arşivin ağı aynı çekirdekten (gnss::adjust, MAX_UNKNOWNS) geçer (ADR 1380 §Bütçe, ADR 1740)."),
+    ("cad.survey.baselines", "network_too_large", "Zarfı 30 milyon girdiyi aşan ağ (180 × 180 istasyonluk ızgara 35 milyon) bir ortak durumda taşınmaz; sınır geometry-core'un gnss::adjust'ında MAX_ENVELOPE ile denetlenir, gnss::tests::large_grids ölçer (ADR 4560)."),
+    ("map.survey.network", "network_too_large", "Zarfı 30 milyon girdiyi aşan ağ bir ortak durumda taşınmaz; arşivin ağı aynı çekirdekten (gnss::adjust, MAX_ENVELOPE) geçer (ADR 1740, ADR 4560)."),
     ("map.survey.edit", "network_too_large", "1500 bilinmeyenin (500 işaret) üstü bir ortak durumda taşınmaz; ağın kabulü map.survey.network'ün çözümlemesinden geçer (ADR 1740)."),
     ("map.survey.network", "invalid_covariance", "Arşivin kuralı (map_survey_problem) pozitif tanımlı olmayan baz kovaryansını yazdırmaz; varyans çarpanı 0'dan büyük olduğundan ölçeklenmiş kovaryans, σ'ları 0'dan büyük olduğundan bilinen noktanınki de pozitif tanımlı kalır (ADR 1740)."),
     ("map.survey.edit", "invalid_covariance", "Ağın çekirdeğe giden kovaryansları arşivin kuralıyla hep pozitif tanımlıdır (map.survey.network'ün gerekçesi); bazın kendi kovaryans reddi invalid_survey_value'dur (ADR 1740)."),

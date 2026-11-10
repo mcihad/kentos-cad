@@ -14,6 +14,7 @@ pub mod horizontal;
 pub mod levelling;
 pub mod student;
 mod linalg;
+mod sparse;
 
 use crate::api::Op;
 use crate::text::edit::fold;
@@ -134,7 +135,7 @@ impl Statistics {
 
 /// The statistics of `obs` at the solution, `q` the inverse of the normal
 /// matrix there (docs/adr/0203 §4).
-pub(crate) fn statistics(obs: &[Observed], q: &Normal) -> Statistics {
+pub(crate) fn statistics(obs: &[Observed], q: &impl linalg::Inverse) -> Statistics {
     let n = obs.len();
     let u = q.size();
     let f = n.saturating_sub(u);

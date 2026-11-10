@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **GNSS ağının seyrek çözümü (10 Kasım 2026; MAP-05, [ADR 4560](../../docs/adr/4560-gnss-network-sparse-solution.md)).**
+  `gnss::adjust`: ters Cuthill–McKee sırası, zarfında Cholesky, Takahashi ile seçili ters; 1500 bilinmeyen sınırı yerine
+  zarf en çok 30 milyon girdi (19 600 istasyon 6 s, sürüm). GNSS baz ağı özeti ağın büyüklüğünü söyler. Harita + CBS.
 - **Detay eşleştirmede kayıtlı kararların yeniden uygulanması (10 Kasım 2026; MAP-04, [ADR 4540](../../docs/adr/4540-reapply-recorded-reconcile-decisions.md)).**
   `map.features.reconcile`'in `reapply`'ı: yeni çıkarımın kararsız adayı aynı kaynağın yakınındaki eşleştirilmiş
   adayının notundaki kararı alır (gruplama kuralı, en yakını); çıktı `reapplied`, yeni not önceki notu anar. Detay

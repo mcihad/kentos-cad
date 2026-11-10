@@ -1,11 +1,29 @@
 //! The normal equations of an adjustment (docs/adr/0203 §4): a dense
 //! symmetric matrix, its Cholesky factor with the ADR's pivot rule (a
 //! diagonal not above 1e-10 of the column's own is a datum defect, named by
-//! its unknown), solving and the inverse. Networks are small (at most
-//! [`super::MAX_UNKNOWNS`] unknowns); a sparse solver is later work.
+//! its unknown), solving and the inverse. Plane and levelling networks are
+//! small (at most [`super::MAX_UNKNOWNS`] unknowns); a GNSS network's are
+//! sparse (`sparse.rs`, docs/adr/4560).
 
 /// A pivot not above this share of its column's diagonal: the unknown is not determined.
-const PIVOT: f64 = 1e-10;
+pub(crate) const PIVOT: f64 = 1e-10;
+
+/// The inverse of a normal matrix as the statistics read it: its size and an entry (docs/adr/4560: a sparse one holds
+/// only the entries its factor's pattern covers, every one an observation or a station reads).
+pub(crate) trait Inverse {
+    fn size(&self) -> usize;
+    fn get(&self, i: usize, j: usize) -> f64;
+}
+
+impl Inverse for Normal {
+    fn size(&self) -> usize {
+        self.m
+    }
+
+    fn get(&self, i: usize, j: usize) -> f64 {
+        self.a[i * self.m + j]
+    }
+}
 
 /// A square symmetric matrix, row by row.
 #[derive(Clone, Debug, PartialEq)]

@@ -167,6 +167,11 @@ impl App {
                     _ => (Kind::Warn, "Fazlalık yok: m0 ve χ² testi yok, bazlar denetlenemez.".to_owned()),
                 };
                 lines.push(words::text_line(test.0, test.1));
+                // Docs/adr/4560: the network's size (the normal equations are solved sparse, so a large one is read too).
+                lines.push(words::text_line(
+                    Kind::Info,
+                    format!("{} istasyon, {} baz: {} bilinmeyen, {} gözlem denklemi.", a.stations.len(), a.baselines.len(), a.u, a.n),
+                ));
                 if let Some(h) = &a.held {
                     lines.push(words::text_line(Kind::Info, format!("Minimal datum: “{h}” tutuldu.")));
                 }

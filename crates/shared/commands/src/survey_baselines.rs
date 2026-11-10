@@ -74,7 +74,7 @@ impl BaselineDatum {
 ///
 /// Refusals, in this order: `invalid_input` (text and lists both, a value not a number, a factor not above 0, a station
 /// fixed and weighted …), `no_baselines`, `duplicate_station`, `unknown_station`, `invalid_covariance` (not positive
-/// definite), `datum_missing`, `network_too_large` (more than 1500 unknowns), `network_disconnected`.
+/// definite), `datum_missing`, `network_too_large` (the normal matrix's envelope above 30 million entries, docs/adr/4560), `network_disconnected`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

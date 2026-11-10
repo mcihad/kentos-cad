@@ -378,6 +378,8 @@ mod features_window_tests;
 #[cfg(test)]
 mod baselines_window_tests;
 #[cfg(test)]
+mod baselines_large_tests;
+#[cfg(test)]
 mod grade_reference_tests;
 #[cfg(test)]
 mod grade_surface_tests;

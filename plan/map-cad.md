@@ -36,7 +36,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
-| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
+| MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200 | köşenin gidişine ok; Öznitelikler'den işaretleme; tutamaçla birden çok nesne | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220 | ifrazda komşunun sınırının bölünmesi; kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt | erişim denetimli hak/pay; resmî kapsam |
@@ -804,6 +804,15 @@ orta, sol orta, üst, alt; engel nesneler; gerekirse çakışma). Kanıtlanan: e
 yazı tipiyle ölçülür, elips kendi ekseninde birim çembere ölçeklenerek sınanır; cevapta `labelsMoved`, `labelsCrowded`.
 fontTools'la ölçen bağımsız başvuruda yeni durum (N1'in etiketi 15 m ötedeki N6 yüzünden sağ üstte), Python, MCP,
 masaüstü ve resimler; eski etiket durumları aynı. Açık: robust kestirim, seyrek çözüm, ağırlıklı benzerlik.
+
+**10 Kasım 2026, dokuzuncu tur — GNSS ağının seyrek çözümü ve büyük ağ ölçümü ([ADR 4560](../docs/adr/4560-gnss-network-sparse-solution.md)).**
+Kapsam: **Harita + CBS**. Dayanak: FIG 2021'de DynAdjust'ın büyük ağ notu (darboğaz normal matrisin tersi; aşamalı
+bloklar), SciPy'nin ters Cuthill–McKee'si, sparseinv'in Takahashi denklemleri. Kanıtlanan: `gnss::adjust` istasyonları
+ters Cuthill–McKee sırasına koyar, normal matrisi ve çarpanını zarfında tutar, tersin yalnız okunan girdilerini Takahashi
+denklemleriyle hesaplar; 1500 bilinmeyen sınırı kalktı, zarf 30 milyon girdiyle sınırlı; “bağlı değil” adı yoğun
+çarpanınkiyle aynı. Ölçüm (M5, sürüm): 2 500 istasyon 0,13 s, 10 000 istasyon 1,5 s, 19 600 istasyon 6,0 s. Bütün GNSS
+ortak durumları aynı; 676 istasyonluk ağ numpy'yle (Python), MCP'de ve GNSS baz ağı penceresinde. Açık: bölümlü
+dengeleme, düzlem ve nivelman ağlarının seyrek çözümü, robust kestirim, ağırlıklı benzerlik.
 
 ### MAP-06 — Kesin ve ilişkili harita tasarımını doğrudan sahnede yap [ ]
 

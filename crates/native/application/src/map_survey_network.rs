@@ -520,17 +520,20 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             ));
         }
     }
-    // The marks in the order the baselines name them.
+    // The marks in the order the baselines name them, each with its place in that order (a large network's lookups by
+    // name stay linear, docs/adr/4560).
     let mut marks: Vec<String> = Vec::new();
+    let mut mark_at: HashMap<String, usize> = HashMap::new();
     for b in &used {
         for m in [&b.from, &b.to] {
-            if !marks.iter().any(|x| x == m) {
+            if !mark_at.contains_key(m) {
+                mark_at.insert(m.clone(), marks.len());
                 marks.push(m.clone());
             }
         }
     }
     let known: Vec<&SurveyKnown> =
-        survey.known.iter().filter(|k| k.excluded.is_none() && marks.contains(&k.mark)).collect();
+        survey.known.iter().filter(|k| k.excluded.is_none() && mark_at.contains_key(&k.mark)).collect();
     if known.is_empty() {
         return Err(held_wrong(
             codes::DATUM_MISSING,
@@ -629,7 +632,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let epoch = measured.map(|m| m.0).or(epoch);
     let epoch_from = measured.map_or(NetworkEpochFrom::Known, |m| m.1);
     let place_of = |k: &SurveyKnown| at.get(&k.id).copied().unwrap_or((k.lat, k.lon, k.height));
-    let known_of = |m: &str| known.iter().find(|k| k.mark == m).copied();
+    let known_by: HashMap<&str, &SurveyKnown> = known.iter().rev().map(|k| (k.mark.as_str(), *k)).collect();
+    let known_of = |m: &str| known_by.get(m).copied();
     let baselines: Vec<Baseline> =
         used.iter().map(|b| Baseline { from: b.from.clone(), to: b.to.clone(), d: b.d, cov: b.covariance }).collect();
     let free_stations: Vec<GnssStation> = marks
@@ -659,13 +663,13 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let limit = w_limit(class);
     let ids: Vec<String> = used.iter().map(|b| b.id.clone()).collect();
     let known_ids: Vec<Option<String>> = marks.iter().map(|m| known_of(m).map(|k| k.id.clone())).collect();
-    let froms: Vec<usize> = used.iter().map(|b| marks.iter().position(|m| *m == b.from).unwrap_or(0)).collect();
+    let froms: Vec<usize> = used.iter().map(|b| mark_at.get(&b.from).copied().unwrap_or(0)).collect();
     let (free_stage, free_tests) = stage(&free, &ids, &froms, &known_ids, limit, vec![hold.mark.clone()]);
     // Madde 15(1)(c): the known points' given coordinates (at the measurement epoch) against the free stage's.
     let common: Vec<(String, String, [f64; 3], [f64; 3], f64, f64)> = known
         .iter()
         .filter_map(|k| {
-            let i = marks.iter().position(|m| *m == k.mark)?;
+            let i = *mark_at.get(&k.mark)?;
             let at = place_of(k);
             Some((k.id.clone(), k.mark.clone(), ecef(at, shape), free.stations[i].xyz, at.0, at.1))
         })
@@ -705,6 +709,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         })
         .collect();
     let mut failed_stations = 0u32;
+    let point_of: HashMap<&str, _> = survey.points.iter().rev().map(|p| (p.mark.as_str(), p)).collect();
     let mut stations = Vec::with_capacity(marks.len());
     let mut new = Vec::new();
     for (i, m) in marks.iter().enumerate() {
@@ -713,7 +718,7 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         let (lat, lon) = (lat * RAD, lon * RAD);
         let sigma = [s.senu[1], s.senu[0], s.senu[2]];
         let k = known_of(m);
-        let point = survey.points.iter().find(|p| p.mark == *m);
+        let point = point_of.get(m.as_str()).copied();
         let mut row = NetworkStation {
             mark: m.clone(),
             known: k.map(|k| k.id.clone()),

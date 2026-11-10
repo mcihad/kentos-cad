@@ -80,6 +80,6 @@ komşu elipsle çakışınca kaydırılması”.
 
 ## Sonra
 
-- Robust kestirim; seyrek çözüm; ağırlıklı benzerlik (MAP-05'in kalanı).
+- Robust kestirim; ağırlıklı benzerlik (MAP-05'in kalanı). Seyrek çözüm: [ADR 4560](4560-gnss-network-sparse-solution.md).
 - Çizimin öbür nesnelerini (nokta adları) de engel sayma seçeneği.
 - Web (TODOS §0.2).

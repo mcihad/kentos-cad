@@ -4,11 +4,15 @@
 //! L·Lᵀ and its three equations whitened by L⁻¹, so the correlated components go into the shared statistics (vᵀPv, m0,
 //! χ², redundancy numbers, Baarda) as three independent unit-weight observations. Known stations are held fixed or
 //! weighted by their own standard deviations; with neither, a minimal constraint holds the first station that has
-//! coordinates and says so. The normal equations are dense (at most [`super::MAX_UNKNOWNS`] unknowns: 500 stations).
+//! coordinates and says so. The normal equations are sparse (docs/adr/4560): the stations in reverse Cuthill–McKee order,
+//! the matrix and its factor within the envelope, the inverse's entries the statistics read by the Takahashi equations;
+//! a network is refused only when its envelope passes [`MAX_ENVELOPE`] entries.
 
 use std::collections::HashMap;
 
-use super::{MAX_UNKNOWNS, Normal, Observed, Statistics, name_key, statistics};
+use super::linalg::Inverse;
+use super::sparse::{Envelope, reverse_cuthill_mckee};
+use super::{Observed, Statistics, name_key, statistics};
 use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 
 /// A station: its name, its coordinates when known (m), whether they are held, and when weighted their standard
@@ -91,6 +95,80 @@ pub struct Refused {
 
 fn refuse(code: &'static str, message: String, path: String) -> Refused {
     Refused { code, message, path }
+}
+
+/// The most entries the normal matrix's envelope may hold (docs/adr/4560): the factor and the inverse's entries are as
+/// many doubles each, the columns' row numbers as many 4-byte numbers (20 bytes an entry, 600 MB in all). The ADR's
+/// measurement: a 140 × 140 station grid fits and is adjusted in about 6 s (release build), a 180 × 180 one does not.
+pub const MAX_ENVELOPE: usize = 30_000_000;
+
+/// The unknowns' places (docs/adr/4560): the stations not held in reverse Cuthill–McKee order over the baselines, three
+/// unknowns each; each row's envelope from its station's earliest neighbour's first unknown. The station's first
+/// unknown (none: held), each row's first column and the stations not held.
+fn places(fixed: &[bool], ends: &[(usize, usize, [[f64; 3]; 3])]) -> (Vec<Option<usize>>, Vec<usize>, usize) {
+    let free: Vec<usize> = (0..fixed.len()).filter(|&i| !fixed[i]).collect();
+    let mut node = vec![usize::MAX; fixed.len()];
+    for (k, &i) in free.iter().enumerate() {
+        node[i] = k;
+    }
+    let mut neighbours: Vec<Vec<usize>> = vec![Vec::new(); free.len()];
+    for (from, to, _) in ends {
+        let (a, b) = (node[*from], node[*to]);
+        if a != usize::MAX && b != usize::MAX {
+            neighbours[a].push(b);
+            neighbours[b].push(a);
+        }
+    }
+    for list in &mut neighbours {
+        list.sort_unstable();
+        list.dedup();
+    }
+    let order = reverse_cuthill_mckee(&neighbours);
+    let mut position = vec![0usize; free.len()];
+    for (p, &k) in order.iter().enumerate() {
+        position[k] = p;
+    }
+    let mut slot: Vec<Option<usize>> = vec![None; fixed.len()];
+    let mut first = vec![0usize; 3 * free.len()];
+    for (p, &k) in order.iter().enumerate() {
+        slot[free[k]] = Some(3 * p);
+        let earliest = neighbours[k].iter().map(|&w| position[w]).fold(p, usize::min);
+        for c in 0..3 {
+            first[3 * p + c] = 3 * earliest;
+        }
+    }
+    (slot, first, free.len())
+}
+
+/// The station a dense factor in input order names when the network does not reach the datum (docs/adr/0203 §4, kept
+/// by docs/adr/4560): the stations joined by baselines fall into parts; a part with no fixed or weighted station floats,
+/// and the dense factor fails at the last station of a floating part, the first failure being the part whose last
+/// station comes first.
+fn floating(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])], fixed: &[bool]) -> Option<usize> {
+    let n = input.stations.len();
+    let mut root: Vec<usize> = (0..n).collect();
+    fn find(root: &mut [usize], mut v: usize) -> usize {
+        while root[v] != v {
+            root[v] = root[root[v]];
+            v = root[v];
+        }
+        v
+    }
+    for (from, to, _) in ends {
+        let (a, b) = (find(&mut root, *from), find(&mut root, *to));
+        if a != b {
+            root[a.max(b)] = a.min(b);
+        }
+    }
+    let mut anchored = vec![false; n];
+    let mut last = vec![0usize; n];
+    for i in 0..n {
+        let r = find(&mut root, i);
+        let s = &input.stations[i];
+        anchored[r] |= fixed[i] || s.sigma.is_some() || s.cov.is_some();
+        last[r] = last[r].max(i);
+    }
+    (0..n).filter(|&r| find(&mut root, r) == r && !anchored[r]).map(|r| last[r]).min()
 }
 
 /// The lower Cholesky factor of a 3×3 covariance (xx, xy, xz, yy, yz, zz), none when it is not positive definite.
@@ -258,19 +336,16 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
             }
         }
     }
-    // The unknowns: every station not held, three each.
-    let mut slot: Vec<Option<usize>> = Vec::with_capacity(fixed.len());
-    let mut u = 0usize;
-    for f in &fixed {
-        slot.push((!f).then(|| {
-            u += 3;
-            u - 3
-        }));
-    }
-    if u > MAX_UNKNOWNS {
+    // The unknowns: every station not held, three each, in reverse Cuthill–McKee order (docs/adr/4560).
+    let (slot, first, unknown) = places(&fixed, &ends);
+    let u = 3 * unknown;
+    let entries = Envelope::entries(&first);
+    if entries > MAX_ENVELOPE {
         return Err(refuse(
             "network_too_large",
-            format!("Ağda {} bilinmeyen var; yoğun çözüm en çok {MAX_UNKNOWNS} bilinmeyen (500 istasyon) alır.", u),
+            format!(
+                "Ağın normal denklemi seyrek çözümde {entries} girdi tutuyor ({unknown} istasyon); en çok {MAX_ENVELOPE} girdi alınır. Ağı bölgelere ayırıp ayrı dengeleyin."
+            ),
             "stations".into(),
         ));
     }
@@ -353,18 +428,22 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
             }
         }
     }
-    let mut n = Normal::new(u);
+    let mut n = Envelope::new(first);
     let mut rhs = vec![0.0; u];
     for (coef, l, _, _) in &rows {
         for &(i, ai) in coef {
             rhs[i] += ai * l;
             for &(j, aj) in coef {
-                n.add(i, j, ai * aj);
+                if i >= j {
+                    n.add(i, j, ai * aj);
+                }
             }
         }
     }
     let factor = n.cholesky().map_err(|bad| {
-        let station = slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).map_or(0, |i| i);
+        // The station the dense factor in input order named (a floating part), else the one whose pivot failed here.
+        let station = floating(input, &ends, &fixed)
+            .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).map_or(0, |i| i));
         refuse(
             "network_disconnected",
             format!("“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.", input.stations[station].name.trim()),
@@ -448,4 +527,212 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         baselines.push(BaselineResidual { v, w, flag, adjusted });
     }
     Ok(GnssResult { stations, baselines, held, stats })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::linalg::Normal;
+    use super::*;
+
+    /// A `w` × `w` grid of stations 1 km apart near Ankara (ECEF), each joined to its east, north and north-east
+    /// neighbours; a baseline's vector is the true difference plus a few millimetres (a sine of its number), its
+    /// covariance correlated (3, 3, 6 mm with xy 0.3 of the product). The first station is fixed, every tenth one is
+    /// weighted by 2 cm, the others are unknown.
+    fn grid(w: usize) -> GnssInput {
+        let base = [4_121_000.0, 2_652_000.0, 4_069_000.0];
+        let (east, north) = ([-0.54, 0.84, 0.0], [-0.53, -0.34, 0.78]);
+        let at = |r: usize, c: usize| [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]));
+        let mut stations = Vec::with_capacity(w * w);
+        for r in 0..w {
+            for c in 0..w {
+                let i = r * w + c;
+                let known = i == 0 || i % 10 == 0;
+                stations.push(GnssStation {
+                    name: format!("S{i}"),
+                    xyz: known.then(|| at(r, c)),
+                    fixed: i == 0,
+                    sigma: (known && i != 0).then_some([0.02; 3]),
+                    cov: None,
+                });
+            }
+        }
+        let mut baselines = Vec::new();
+        for r in 0..w {
+            for c in 0..w {
+                for (dr, dc) in [(0, 1), (1, 0), (1, 1)] {
+                    if r + dr < w && c + dc < w {
+                        let (a, b) = (at(r, c), at(r + dr, c + dc));
+                        let k = baselines.len() as f64;
+                        let noise = [0.003 * (k * 0.7).sin(), 0.003 * (k * 1.3).cos(), 0.006 * (k * 0.9).sin()];
+                        baselines.push(Baseline {
+                            from: format!("S{}", r * w + c),
+                            to: format!("S{}", (r + dr) * w + c + dc),
+                            d: [0, 1, 2].map(|q| b[q] - a[q] + noise[q]),
+                            cov: [9e-6, 0.3 * 9e-6, 0.0, 9e-6, 0.0, 36e-6],
+                        });
+                    }
+                }
+            }
+        }
+        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given }
+    }
+
+    /// The same network by dense normal equations in input order (ADR 1380's solve, the unknowns corrections to
+    /// coordinates carried along the baselines): the coordinates and the X, Y, Z standard deviations, by name.
+    fn dense(input: &GnssInput) -> HashMap<String, ([f64; 3], [f64; 3])> {
+        let n = input.stations.len();
+        let index: HashMap<&str, usize> = input.stations.iter().enumerate().map(|(i, s)| (s.name.as_str(), i)).collect();
+        let mut slot = vec![None; n];
+        let mut u = 0;
+        for (i, s) in input.stations.iter().enumerate() {
+            if !s.fixed {
+                slot[i] = Some(u);
+                u += 3;
+            }
+        }
+        let mut approx: Vec<Option<[f64; 3]>> = input.stations.iter().map(|s| s.xyz).collect();
+        let mut grew = true;
+        while grew {
+            grew = false;
+            for b in &input.baselines {
+                let (f, t) = (index[b.from.as_str()], index[b.to.as_str()]);
+                match (approx[f], approx[t]) {
+                    (Some(a), None) => {
+                        approx[t] = Some([0, 1, 2].map(|c| a[c] + b.d[c]));
+                        grew = true;
+                    }
+                    (None, Some(z)) => {
+                        approx[f] = Some([0, 1, 2].map(|c| z[c] - b.d[c]));
+                        grew = true;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        let held = |i: usize| approx[i].unwrap_or([0.0; 3]);
+        let mut normal = Normal::new(u);
+        let mut rhs = vec![0.0; u];
+        let mut rows: Vec<(Vec<(usize, f64)>, f64)> = Vec::new();
+        for b in &input.baselines {
+            let (f, t) = (index[b.from.as_str()], index[b.to.as_str()]);
+            let l = cholesky3(&b.cov).expect("positive definite");
+            let mut d = b.d;
+            for c in 0..3 {
+                d[c] -= held(t)[c] - held(f)[c];
+            }
+            let wd = whiten(&l, d);
+            for r in 0..3 {
+                let mut coef = Vec::new();
+                for c in 0..3 {
+                    let mut e = [0.0; 3];
+                    e[c] = 1.0;
+                    let li = whiten(&l, e)[r];
+                    if let Some(s) = slot[t] {
+                        coef.push((s + c, li));
+                    }
+                    if let Some(s) = slot[f] {
+                        coef.push((s + c, -li));
+                    }
+                }
+                rows.push((coef, wd[r]));
+            }
+        }
+        for (i, s) in input.stations.iter().enumerate() {
+            if let (Some(sg), Some(x), Some(t)) = (s.sigma, s.xyz, slot[i]) {
+                for c in 0..3 {
+                    rows.push((vec![(t + c, 1.0 / sg[c])], (x[c] - held(i)[c]) / sg[c]));
+                }
+            }
+        }
+        for (coef, l) in &rows {
+            for &(i, a) in coef {
+                rhs[i] += a * l;
+                for &(j, b) in coef {
+                    normal.add(i, j, a * b);
+                }
+            }
+        }
+        let factor = normal.cholesky().expect("tied to the datum");
+        let x = factor.solve(&rhs);
+        let q = factor.inverse();
+        let mut omega = 0.0;
+        for (coef, l) in &rows {
+            let v: f64 = coef.iter().map(|&(i, a)| a * x[i]).sum::<f64>() - l;
+            omega += v * v;
+        }
+        let s0 = (omega / (rows.len() - u) as f64).sqrt();
+        input
+            .stations
+            .iter()
+            .enumerate()
+            .map(|(i, s)| {
+                let v = match slot[i] {
+                    Some(t) => ([0, 1, 2].map(|c| held(i)[c] + x[t + c]), [0, 1, 2].map(|c| (q.get(t + c, t + c)).sqrt() * s0)),
+                    None => (held(i), [0.0; 3]),
+                };
+                (s.name.clone(), v)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_grid_network_is_the_dense_solution() {
+        let input = grid(14);
+        let got = adjust(&input).expect("adjusted");
+        let want = dense(&input);
+        for s in &got.stations {
+            let (xyz, sigma) = want[&s.name];
+            for c in 0..3 {
+                assert!((s.xyz[c] - xyz[c]).abs() < 1e-9, "{} {c}: {} {}", s.name, s.xyz[c], xyz[c]);
+                assert!((s.sxyz[c] - sigma[c]).abs() < 1e-12, "{} σ{c}", s.name);
+            }
+        }
+        assert_eq!(got.stats.u, 3 * (14 * 14 - 1));
+    }
+
+    #[test]
+    fn a_floating_part_is_named_as_the_dense_factor_named_it() {
+        // Two parts float: S3–S5 and S1–S6; the dense factor in input order fails at S5 first (its part ends at S5).
+        let mut input = grid(2);
+        input.stations.extend(["S4", "S5", "S6"].map(|n| GnssStation { name: n.into(), xyz: None, fixed: false, sigma: None, cov: None }));
+        let cov = [9e-6, 0.0, 0.0, 9e-6, 0.0, 36e-6];
+        input.baselines.push(Baseline { from: "S4".into(), to: "S5".into(), d: [10.0, 0.0, 0.0], cov });
+        input.baselines.push(Baseline { from: "S6".into(), to: "S4".into(), d: [10.0, 0.0, 0.0], cov });
+        let refused = adjust(&input).expect_err("floating");
+        assert_eq!(refused.code, "network_disconnected");
+        assert!(refused.message.starts_with("“S6”"), "{}", refused.message);
+        let mut apart = grid(2);
+        apart.stations.extend(["S4", "S5", "S6", "S7"].map(|n| GnssStation { name: n.into(), xyz: None, fixed: false, sigma: None, cov: None }));
+        apart.baselines.push(Baseline { from: "S7".into(), to: "S4".into(), d: [10.0, 0.0, 0.0], cov });
+        apart.baselines.push(Baseline { from: "S5".into(), to: "S6".into(), d: [10.0, 0.0, 0.0], cov });
+        let refused = adjust(&apart).expect_err("floating");
+        assert!(refused.message.starts_with("“S6”"), "the part S5–S6 ends first: {}", refused.message);
+    }
+
+    /// The measurement of docs/adr/4560 (grids of 50 × 50 to 180 × 180 stations: the envelope's entries, the time),
+    /// by hand:
+    ///
+    /// ```text
+    /// cargo test --release -p kentos-geometry-core --lib survey::adjust::gnss::tests::large_grids -- --ignored --nocapture
+    /// ```
+    #[test]
+    #[ignore = "a measurement, run by hand"]
+    fn large_grids() {
+        for w in [50usize, 100, 140, 180] {
+            let input = grid(w);
+            let fixed: Vec<bool> = input.stations.iter().map(|s| s.fixed).collect();
+            let index: HashMap<&str, usize> = input.stations.iter().enumerate().map(|(i, s)| (s.name.as_str(), i)).collect();
+            let ends: Vec<(usize, usize, [[f64; 3]; 3])> =
+                input.baselines.iter().map(|b| (index[b.from.as_str()], index[b.to.as_str()], [[0.0; 3]; 3])).collect();
+            let (_, first, _) = places(&fixed, &ends);
+            println!("{w}×{w}: envelope {} entries", Envelope::entries(&first));
+            let t = std::time::Instant::now();
+            let got = adjust(&input);
+            let took = t.elapsed();
+            match got {
+                Ok(r) => println!("{w}×{w}: {} stations, {} unknowns, m0 {:?}, {:.3} s", w * w, r.stats.u, r.stats.m0, took.as_secs_f64()),
+                Err(e) => println!("{w}×{w}: {} ({:.3} s)", e.message, took.as_secs_f64()),
+            }
+        }
+    }
 }

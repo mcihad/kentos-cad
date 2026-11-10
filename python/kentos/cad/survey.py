@@ -186,9 +186,11 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
     ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü
     (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de
     verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
-    B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Yoğun çözüm en çok 1500 bilinmeyen
-    alır. Retler: invalid_input, no_baselines, duplicate_station, unknown_station,
-    invalid_covariance, datum_missing, network_too_large, network_disconnected.
+    B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
+    (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
+    okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
+    invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
+    datum_missing, network_too_large, network_disconnected.
     """
     __slots__ = ()
     id = "cad.survey.baselines"
@@ -224,9 +226,11 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları
         (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ²,
         geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
-        B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Yoğun çözüm en çok 1500 bilinmeyen
-        alır. Retler: invalid_input, no_baselines, duplicate_station, unknown_station,
-        invalid_covariance, datum_missing, network_too_large, network_disconnected.
+        B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
+        (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
+        okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
+        invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
+        datum_missing, network_too_large, network_disconnected.
 
         Args:
             doc: The drawing it works on.
