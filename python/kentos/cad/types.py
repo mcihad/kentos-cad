@@ -110368,10 +110368,15 @@ class WorkChangedAttribute(_Model):
 @dataclass(kw_only=True, slots=True)
 class WorkChangedObject(_Model):
     """A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
-    order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.
+    order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did,
+    and (docs/adr/4480) when its geometry changed, the object as approved.
+    Attributes:
+        approved: Its snapshot form as approved (without the slot id; docs/adr/4480), when its geometry changed and the approval
+            kept its objects' values: the shape Harita işi draws over the drawing.
     """
     uid: str
     parts: list[str]
+    approved: Any | Unset = UNSET
     attachments: bool | Unset = UNSET
     attributes: list[WorkChangedAttribute] | Unset = UNSET
 
@@ -110379,6 +110384,8 @@ class WorkChangedObject(_Model):
         out: dict[str, Any] = {}
         out["uid"] = self.uid
         out["parts"] = list(self.parts)
+        if self.approved is not UNSET:
+            out["approved"] = self.approved
         if self.attachments is not UNSET:
             out["attachments"] = self.attachments
         if self.attributes is not UNSET:
@@ -110390,6 +110397,7 @@ class WorkChangedObject(_Model):
         return cls(
             uid=data["uid"],
             parts=list(data["parts"]),
+            approved=data.get("approved", UNSET),
             attachments=data.get("attachments", UNSET),
             attributes=[WorkChangedAttribute.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
         )

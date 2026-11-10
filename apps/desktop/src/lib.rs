@@ -312,6 +312,7 @@ mod layer_merge;
 mod joins_window;
 mod event_links_window;
 mod alignment_layer;
+mod approved_layer;
 mod alignment_window;
 mod profile_lengths_window;
 mod profile_window;
@@ -362,6 +363,8 @@ mod map_work_stamps_tests;
 mod map_work_changes_tests;
 #[cfg(test)]
 mod map_work_restore_tests;
+#[cfg(test)]
+mod map_work_geometry_tests;
 #[cfg(test)]
 mod survey_heights_tests;
 #[cfg(test)]

@@ -80,6 +80,9 @@ pub struct PanelState {
     /// The item with a file the selection is recorded as derived from (Seçimi türet).
     derive_from: Option<String>,
     read: RefCell<Option<Read>>,
+    /// The approved shapes of the objects Değişenler selected whose geometry changed (docs/adr/4480), drawn over the
+    /// drawing while that selection stands (approved_layer.rs).
+    pub(crate) approved: Option<crate::approved_layer::Approved>,
 }
 
 impl Default for PanelState {
@@ -92,6 +95,7 @@ impl Default for PanelState {
             filter: None,
             derive_from: None,
             read: RefCell::new(None),
+            approved: None,
         }
     }
 }
@@ -483,13 +487,26 @@ impl App {
                     .collect();
             if named.is_empty() { String::new() } else { format!("; değişen: {}{attributes}", named.join(", ")) }
         });
+        // Docs/adr/4480: the approved shapes of those whose geometry changed, over the drawing with the selection.
+        let shapes: Vec<kentos_commands::Entity> = c
+            .objects
+            .iter()
+            .filter_map(|o| o.approved.as_ref())
+            .filter_map(kentos_native_application::map_work_restore::approved_entity)
+            .collect();
+        let drawn = match shapes.len() {
+            0 => String::new(),
+            k => format!(" Geometrisi değişen {k} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
+        };
         let words = if n == 0 {
             format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
         } else {
             let first = if (c.changed + c.added) as usize > n { format!(" (ilk {n})") } else { String::new() };
             self.select_slots(slots);
-            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.")
+            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.{drawn}")
         };
+        self.map_work.approved = (n > 0 && !shapes.is_empty())
+            .then(|| crate::approved_layer::Approved::of(&shapes, self.selection.version()));
         self.say(Level::Info, words);
     }
 

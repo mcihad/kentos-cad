@@ -461,6 +461,9 @@ class Drawing:
                                         o["attributes"] = attrs
                                     if attached:
                                         o["attachments"] = True
+                                    # docs/adr/4480: a changed geometry's object as approved.
+                                    if "geometry" in differ:
+                                        o["approved"] = then_values[u]
                                 part_objects.append(o)
                             ch["parts"] = by_part
                             if part_objects:
@@ -753,6 +756,35 @@ def query_cases():
     out.append(case("Onaydan sonra silinen nesnenin onaylanan hâli (onay değerleri tuttu)", [
         ask(v0), step("execute", {"uids": [gone]}, "$any", command="cad.entities.delete"),
         ask(v2, expect={"revision": "same"})], d=valued))
+    # docs/adr/4480: the line T2 moved after an approval that kept its objects' values: its geometry changed, the answer
+    # carries it as approved (the shape Harita işi draws over the drawing); its height, unchanged, is not listed.
+    v3 = Drawing(valued)
+    for end in ("a", "b"):
+        p_ = v3.entities[T2][end]
+        v3.entities[T2][end] = {"x": p_["x"] + 0.25, "y": p_["y"] - 0.1}
+    row4 = next(r for r in v3.tree(False)["items"] if r["id"] == "is-4")
+    moved_t2 = next(o for o in row4["changes"]["objects"] if o["uid"] == T2)
+    assert moved_t2["parts"] == ["geometry"] and "attributes" not in moved_t2, moved_t2
+    assert moved_t2["approved"]["a"] == {k: v for k, v in vd.entities[T2].items() if k != "id"}["a"], moved_t2
+    out.append(case("Onaydan sonra geometrisi değişen nesnenin onaylanan hâli (onay değerleri tuttu)", [
+        ask(v0), step("execute", {"uids": [T2], "transform": {"kind": "move", "dx": 0.25, "dy": -0.1}}, "$any",
+                      command="cad.entities.transform"),
+        ask(v3, expect={"revision": "same"})], d=valued))
+    # Both its geometry and its height changed: the attribute named and the object as approved.
+    v4 = Drawing(valued)
+    for end in ("a", "b"):
+        p_ = v4.entities[T2][end]
+        v4.entities[T2][end] = {"x": p_["x"] + 0.25, "y": p_["y"] - 0.1}
+    v4.entities[T2]["attrs"] = {"Kot": "1061"}
+    row4 = next(r for r in v4.tree(False)["items"] if r["id"] == "is-4")
+    both_t2 = next(o for o in row4["changes"]["objects"] if o["uid"] == T2)
+    assert both_t2["parts"] == ["geometry", "attributes"] and "approved" in both_t2, both_t2
+    out.append(case("Onaydan sonra hem geometrisi hem özniteliği değişen nesne: ikisi de söylenir", [
+        ask(v0), step("execute", {"uids": [T2], "transform": {"kind": "move", "dx": 0.25, "dy": -0.1}}, "$any",
+                      command="cad.entities.transform"),
+        step("execute", {"uids": [T2], "attrs": {"Kot": "1061"}, "operation": "attributes"}, "$any",
+             command="cad.entities.set"),
+        ask(v4, expect={"revision": "same"})], d=valued))
     same = setup()
     same["settings"]["mapWork"]["items"][3].update(status="approved", approved=Drawing(same).content("is-4"),
                                                    approvedObjects=Drawing(same).pairs("is-4"),

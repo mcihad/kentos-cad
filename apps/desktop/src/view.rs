@@ -891,6 +891,14 @@ impl App {
                                 warning: Tokens::of(&self.theme()).warning,
                             },
                         ))
+                        // Harita işi's approved shapes of the objects whose geometry changed (approved_layer.rs,
+                        // docs/adr/4480), while Değişenler's selection stands.
+                        .extend(crate::approved_layer::layer(
+                            self.map_work.approved.as_ref(),
+                            self.selection.version(),
+                            &self.viewport.camera,
+                            Tokens::of(&self.theme()).warning,
+                        ))
                         .extend(service_labels)
                         .push(labels)
                         // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).

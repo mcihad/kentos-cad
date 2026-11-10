@@ -70,7 +70,7 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     // Docs/adr/3680: the approval kept the values: the height by name, none then and “1060” now; the deleted line as it
     // was approved.
     let attributes = vec![kentos_commands::WorkChangedAttribute { name: "Kot".into(), approved: None, now: Some(json!("1060")) }];
-    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false }];
+    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false, approved: None }];
     let got = t.items[3].changes.clone().expect("changes");
     assert_eq!(got.removed_objects.len(), 1);
     assert_eq!(got.removed_objects[0].approved["kind"], "line");

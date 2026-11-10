@@ -3,6 +3,12 @@ import type { WorkChangedAttribute } from "./WorkChangedAttribute";
 
 /**
  * A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
- * order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.
+ * order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did,
+ * and (docs/adr/4480) when its geometry changed, the object as approved.
  */
-export type WorkChangedObject = { uid: string, parts: Array<string>, attributes?: Array<WorkChangedAttribute>, attachments?: boolean, };
+export type WorkChangedObject = { uid: string, parts: Array<string>, attributes?: Array<WorkChangedAttribute>, attachments?: boolean, 
+/**
+ * Its snapshot form as approved (without the slot id; docs/adr/4480), when its geometry changed and the approval
+ * kept its objects' values: the shape Harita işi draws over the drawing.
+ */
+approved?: Record<string, unknown>, };

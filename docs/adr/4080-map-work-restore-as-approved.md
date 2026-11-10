@@ -89,7 +89,7 @@ onaylanan hâline geri getirme komutu (değerden; komut, Python ve MCP bütünl�
 
 ## Sonra
 
-- Geometri farkının çizimde gösterilmesi (onaylanan hâlin hayalet çizimi).
+- ~~Geometri farkının çizimde gösterilmesi (onaylanan hâlin hayalet çizimi).~~ ADR 4480.
 - Dosyası olan öğede nesne başına fark; tipli katman profili (MAP-01'in kalanı).
 - Onaydan sonra eklenenleri de silen “tam onaylı hâl” seçeneği (kullanıcının kararı gerekir).
 - Web (TODOS §0.2).

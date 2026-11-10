@@ -172,7 +172,8 @@ fn attributes_changed(then: &serde_json::Value, now: &serde_json::Value) -> (Vec
 /// What changed since an approval that kept its objects' digests (docs/adr/2880): the added, the removed and the
 /// changed, by the persistent id; the ids there now listed (added or changed) by id, at most `WORK_CHANGES_LISTED`.
 /// With the approval's parts (`then_parts`, docs/adr/3280), each changed object's parts set against its parts now; with
-/// its values (`then_values`, docs/adr/3680), each changed object's attributes by name and each removed object as it was.
+/// its values (`then_values`, docs/adr/3680), each changed object's attributes by name and each removed object as it was;
+/// docs/adr/4480: a changed object whose geometry changed as it was too.
 pub(crate) fn changes_of(
     doc: &Document,
     then: &[(kentos_commands::EntityId, String)],
@@ -216,15 +217,19 @@ pub(crate) fn changes_of(
                         }
                         if objects.len() < kentos_commands::WORK_CHANGES_LISTED {
                             // docs/adr/3680: the attributes by name, their values then and now.
-                            let (attributes, attachments) = match (value_then(i), value_now(doc, &b.0)) {
-                                (Some(t), Some(n)) => attributes_changed(&t, &n),
+                            let then_value = value_then(i);
+                            let (attributes, attachments) = match (&then_value, value_now(doc, &b.0)) {
+                                (Some(t), Some(n)) => attributes_changed(t, &n),
                                 _ => (Vec::new(), false),
                             };
+                            // docs/adr/4480: a changed geometry's object as approved.
+                            let approved = if differ.contains(&0) { then_value } else { None };
                             objects.push(kentos_commands::WorkChangedObject {
                                 uid: kentos_commands::uuid_text(&b.0.0),
                                 parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
                                 attributes,
                                 attachments,
+                                approved,
                             });
                         }
                     }

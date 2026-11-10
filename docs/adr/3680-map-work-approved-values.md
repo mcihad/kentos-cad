@@ -94,6 +94,6 @@ adı ve onaylanan değeri; silinen nesnenin onaylanan hâli (onaylanan değerler
 
 - Silinen nesneyi onaylanan hâline geri getirme komutu (değerden; komut, Python ve MCP bütünlüğüyle):
   [ADR 4080](4080-map-work-restore-as-approved.md) (`map.work.restore`).
-- Geometri farkının çizimde gösterilmesi (onaylanan hâlin hayalet çizimi).
+- ~~Geometri farkının çizimde gösterilmesi (onaylanan hâlin hayalet çizimi).~~ ADR 4480.
 - Dosyası olan öğede nesne başına fark; tipli katman profili (MAP-01'in kalanı).
 - Web (TODOS §0.2).

@@ -54,7 +54,13 @@ struct Checked {
 
 /// The approved object's value as an object (its slot id any: the write gives it one).
 fn entity_of(text: &str) -> Option<Entity> {
-    let mut v: Value = serde_json::from_str(text).ok()?;
+    approved_entity(&serde_json::from_str(text).ok()?)
+}
+
+/// An approved object's value (its snapshot form without the slot id, docs/adr/3680) as an object, its slot id 0; none
+/// when it does not read as one. Harita işi draws a changed geometry's approved shape with it (docs/adr/4480).
+pub fn approved_entity(value: &Value) -> Option<Entity> {
+    let mut v = value.clone();
     v.as_object_mut()?.insert("id".into(), Value::from(0));
     serde_json::from_value(v).ok()
 }

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Onaydan sonra geometrisi değişenin onaylanan şekli (10 Kasım 2026; MAP-01, [ADR 4480](../../docs/adr/4480-map-work-approved-shape-in-the-drawing.md)).**
+  `map.work.query`'nin değişen nesnesinde `approved` (geometrisi değiştiyse); Harita işi › Değişenler onaylanan şekli
+  kesik çizgiyle çizimin üstünde gösterir (approved_layer.rs). Yalnız Harita.
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.

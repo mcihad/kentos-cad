@@ -225,7 +225,8 @@ pub struct WorkChangedParts {
 }
 
 /// A changed object and the parts that changed (docs/adr/3280: `geometry`, `attributes`, `layer`, `look`, in that
-/// order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did.
+/// order); with the approval's values kept (docs/adr/3680), each attribute that changed and whether its attachments did,
+/// and (docs/adr/4480) when its geometry changed, the object as approved.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -240,6 +241,11 @@ pub struct WorkChangedObject {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub attachments: bool,
+    /// Its snapshot form as approved (without the slot id; docs/adr/4480), when its geometry changed and the approval
+    /// kept its objects' values: the shape Harita işi draws over the drawing.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
+    pub approved: Option<serde_json::Value>,
 }
 
 /// The most ids [`WorkChanges`] lists.

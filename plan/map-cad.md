@@ -32,7 +32,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080 | tipli katman profili; geometri farkının çizimde gösterilmesi | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480 | tipli katman profili; köşe köşe kayma (en büyük kayma) ve silinenin şekli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100 | EPSG'nin çokgen kullanım alanları; karşılıklı başucu açıları | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
@@ -286,6 +286,15 @@ dört yeni ret kodu (onaylı değil, değerleri yok, onaylı nesne değil, geri 
 bağımsız durum (Rust, Python), bağımsız okuyucuyla Python testi, MCP; Harita işi'nde Değişenler satırında ↺ düğmesi.
 Geri gelen nesne türetme kaydında adlıysa kayıt yeniden tamamlanır. Açık: geometri farkının çizimde gösterilmesi, tipli
 katman profili, eklenenleri de silen tam onaylı hâl (sahip kararı).
+
+**10 Kasım 2026, dokuzuncu tur — geometrisi değişen nesnenin onaylanan şekli çizimde ([ADR 4480](../docs/adr/4480-map-work-approved-shape-in-the-drawing.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: ArcGIS Pro'nun dal sürümü farklarındaki Change Display görüntüleyicisi
+(seçili nesnenin geometrisi haritada Current, Target ya da Common ancestor hâliyle karşılaştırılır). Kanıtlanan:
+`map.work.query`'nin değişen nesnesinde geometrisi değiştiyse onaylanan hâli (`approved`, onay değerleri tuttuysa);
+Harita işi › Değişenler değişenleri seçerken geometrisi değişenlerin onaylanan şeklini çizimin üstünde temanın uyarı
+rengiyle kesik çizgiyle gösterir, seçim durdukça. 2 yeni bağımsız durum (query 38), bağımsız okuyucuyla Python testi,
+MCP, masaüstü. Açık: köşe köşe kayma, silinenin şekli, tipli katman profili, eklenenleri de silen tam onaylı hâl
+(sahip kararı).
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 
