@@ -338,6 +338,10 @@
   - **Tümü (M43 2. bölüm, ADR 8043 §8):** Görünüş çıkar'da T: çizilmemiş bütün görünüşler (kuzeyden saat yönünde,
     çizimin sağında yan yana), tek adım "Görünüşleri çıkar" (`sections_edit::derive_facades`); görünüş işareti yoksa önce
     dördü, katıların kuzeye dönük kutusunun her yanından 4 m öteye (`sections::facade_marks`, `FACADE_MARK_OFF`).
+  - **Mevzuat: her cephenin görünüşü (M43 2. bölüm, ADR 8043 §9):** `paiy_elevations_missing` (PAİY 57/2-a-6; MO "bütün
+    görünüşler çizilir"); cepheler `sections::building_facings` — katıların taban birleşiminin dış çizgisi, kenarlar kuzey
+    okuna göre sekiz yöne, en uzunun beşte birinden ve 2 m'den uzun yön bir cephe; çıkarılmış görünüşün yönü
+    `facing_rank`. `regulation_audit::CODES` 34.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -1,7 +1,7 @@
 # ADR 8043: Görünüş çıkar — görünüş işaretinden bina görünüşü, yönüne göre adı, ruhsat takımında görünüş paftası
 
 - **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ikinci teslimi (M43 1. bölüm:
-  §1–§6; 2. bölüm: §7–§8).
+  §1–§6; 2. bölüm: §7–§9).
 - **Bağlam belgesi:** ADR 0345 (görünüm işaretleri), ADR 8038 §6 (Türkiye'nin açılım çizgileri), ADR 8042 (Kesit çıkar:
   blok, çekirdek, eskime, ruhsat takımı; bu ADR onun üstüne kurulur).
 
@@ -128,6 +128,20 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 - **Ölçüm (kesit binası, görünüş işaretsiz):** işaretler (6; 13,15) 270°, (16,15; 4,5) 180°, (6; −4,15) 90°, (−4,15;
   4,5) 0° — köşe kolonlarının yüzünden 4 m; tek geri alma işaretleri ve görünüşleri birlikte geri alır.
 
+### 9. Denetim › Mevzuat: her cephenin görünüşü (2. bölüm)
+
+- **Kural:** PAİY 57/2-a-6 "yeteri sayıda görünüş" ister; Mimarlar Odası standartlarında "Bütün görünüşler çizilir".
+  Duvarı olan çizimde binanın cepheleri bulunur ve görünüşü Görünüş çıkar'la çıkarılmamış olanlar tek bulguda yazılır:
+  `paiy_elevations_missing` — "Doğu, Güney ve Batı cephelerinin görünüşü çıkarılmamış (binanın 4 cephesi, 1 görünüşü
+  var) — PAİY 57/2-a-6". Onarım: o cepheye bakan işaret ve Görünüş çıkar; hiç işaret yoksa Tümü (T).
+- **Cephe:** modelin katılarının tabanlarının birleşimi (delikleri dışarıda) bina dış çizgisidir; her kenarı dışa baktığı
+  yöne göre, kuzey okuna göre sekiz yönden birine sayılır. En uzun yönün beşte birinden ve 2 m'den uzun yön bir
+  cephedir: 12 m'lik duvarların yanında 1,20 m'lik pah kendi cephesi değildir, komşularının görünüşünde görünür.
+- Görünüşün yönü işaretten (§3) okunur; cephe ile aynı yöndeki çıkarılmış görünüş o cepheyi karşılar.
+- **Ölçüm:** görünüş binasında cepheler KUZ, DOG, GUN, BAT (12,3 ve 9,3 m; köşe kolonlarının 2,5 cm'lik çıkıntıları
+  eşiğin altında); hiç görünüş yokken dördü, kuzey çıkarılınca üçü istenir, Tümü'den sonra bulgu yok. Gerçek pencerede
+  Denetim › Mevzuat 24 → 25 bulgu. Dört katlı yapının masaüstü denetiminde de dört cephe istenir.
+
 ## Doğrulama
 
 - **Çekirdek:** bağımsız başvuruya (`scripts/fixtures/section_cases.py`) 18. durum: doğramanın çizgileri kendi
@@ -155,5 +169,4 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 ## Sonraya kalan (M43 2. bölüm)
 
 - Cephe kaplama malzemesi ve renk yazısı (MO: "Cephe kaplama malzemesi ve renkler yazılır").
-- Denetim › Mevzuat: "yeteri sayıda görünüş" (her cephenin görünüşü var mı).
 - Tabii zemin "nokta nokta" (modelin tabii zemini olunca) ve çatı (ADV-20).

@@ -1066,14 +1066,50 @@ pub fn plan_north(doc: &Document) -> P {
 /// named by the nearest of the eight directions from the plan's north.
 pub fn facing(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Facing {
     let a = mark.angle.unwrap_or(90.0).to_radians();
-    let face = P::new(-a.cos(), -a.sin());
-    let n = plan_north(doc);
+    FACINGS[rank_of(plan_north(doc), P::new(-a.cos(), -a.sin()))]
+}
+
+/// Which of the eight directions (an index into [`FACINGS`]) `face` points to, from the plan's north `n`.
+fn rank_of(n: P, face: P) -> usize {
     let east = P::new(n.y, -n.x);
     let bearing = (face.x * east.x + face.y * east.y)
         .atan2(face.x * n.x + face.y * n.y)
         .to_degrees();
-    let k = ((bearing.rem_euclid(360.0) + 22.5) / 45.0).floor() as usize % 8;
-    FACINGS[k]
+    ((bearing.rem_euclid(360.0) + 22.5) / 45.0).floor() as usize % 8
+}
+
+/// The building's sides (docs/adr/8043 §9): its outline (the union of the model's footprints, holes left out) edge by
+/// edge, each by the direction it faces among [`FACINGS`] from the plan's north, with their length; the ones at least
+/// 2 m and a fifth of the longest direction's, north first. A corner cut 1.20 m across beside 12 m walls is part of
+/// its neighbours' elevations, not a side of its own.
+pub fn building_facings(doc: &Document) -> Vec<(usize, f64)> {
+    let m = model(doc);
+    let areas: Vec<kentos_geometry_core::geom::arrangement::Area> = m
+        .solids
+        .iter()
+        .filter_map(|s| s.rings.first())
+        .filter(|r| r.len() >= 3)
+        .map(|r| area_of(r))
+        .collect();
+    let n = plan_north(doc);
+    let mut length = [0.0_f64; 8];
+    for a in kentos_geometry_core::geom::region::union_areas(&areas) {
+        let ring = area_of(&a.outer.pts).outer.pts;
+        for i in 0..ring.len() {
+            let (p, q) = (ring[i], ring[(i + 1) % ring.len()]);
+            let (dx, dy) = (q.x - p.x, q.y - p.y);
+            let len = kentos_geometry_core::jsmath::js_hypot(dx, dy);
+            if len > 1e-9 {
+                // Counter-clockwise: outside is on the right.
+                length[rank_of(n, P::new(dy / len, -dx / len))] += len;
+            }
+        }
+    }
+    let longest = length.iter().copied().fold(0.0, f64::max);
+    (0..8)
+        .filter(|k| length[*k] >= 2.0 && length[*k] >= 0.2 * longest)
+        .map(|k| (k, length[k]))
+        .collect()
 }
 
 /// What the mark draws; none for a detail mark.

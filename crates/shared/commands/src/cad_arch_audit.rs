@@ -326,7 +326,7 @@ pub struct ArchAuditFinding {
     /// (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
     /// `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
     /// `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036); `paiy_sections_missing`,
-    /// `paiy_section_stair_missing` (docs/adr/8042 §7).
+    /// `paiy_section_stair_missing` (docs/adr/8042 §7); `paiy_elevations_missing` (docs/adr/8043 §9).
     pub code: String,
     /// What is wrong.
     pub message: String,

@@ -461,3 +461,57 @@ fn a_drawing_without_elevation_marks_gets_four_around_the_building_and_their_fac
     doc.undo();
     assert!(elevations(&doc).is_empty());
 }
+
+/// Denetim › Mevzuat (PAİY 57/2-a-6: "yeteri sayıda görünüş"; Mimarlar Odası: "Bütün görünüşler çizilir"; docs/adr/8043
+/// §9): the building's four sides want their elevations. None drawn: four asked; the north one drawn: three; Tümü:
+/// nothing said.
+#[test]
+fn the_regulation_asks_an_elevation_of_every_side_of_the_building() {
+    let regulation = |doc: &mut Document| -> Vec<(String, String)> {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.arch.audit",
+            CallOp::Execute,
+            serde_json::json!({"checks": ["regulation"]}),
+        )
+        .unwrap();
+        answer["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| f["code"] == "paiy_elevations_missing")
+            .map(|f| {
+                let t = |k: &str| f[k].as_str().unwrap_or_default().to_owned();
+                (t("message"), t("rule"))
+            })
+            .collect()
+    };
+    let mut doc = facades();
+    // The outline's sides: 12 m and 9 m walls with their corner columns, north first and clockwise.
+    let sides: Vec<usize> = sections::building_facings(&doc)
+        .iter()
+        .map(|(k, _)| *k)
+        .collect();
+    assert_eq!(sides, [0, 2, 4, 6]);
+    let found = regulation(&mut doc);
+    assert_eq!(
+        found.iter().map(|f| f.0.as_str()).collect::<Vec<_>>(),
+        [
+            "Kuzey, Doğu, Güney ve Batı cephelerinin görünüşü çıkarılmamış (binanın 4 cephesi, 0 görünüşü var) — PAİY 57/2-a-6"
+        ]
+    );
+    assert!(found[0].1.starts_with("PAİY 57/2-a-6 · RG "), "{found:?}");
+    let north = mark(&doc, ViewMarkForm::Elevation, "1");
+    derive(&mut doc, north, (20.0, 20.0));
+    assert_eq!(
+        regulation(&mut doc)
+            .iter()
+            .map(|f| f.0.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "Doğu, Güney ve Batı cephelerinin görünüşü çıkarılmamış (binanın 4 cephesi, 1 görünüşü var) — PAİY 57/2-a-6"
+        ]
+    );
+    sections_edit::derive_facades(&mut doc, "isaret").unwrap();
+    assert!(regulation(&mut doc).is_empty());
+}

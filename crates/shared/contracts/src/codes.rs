@@ -2798,6 +2798,7 @@ codes! {
     PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";
     PAIY_SECTIONS_MISSING = "paiy_sections_missing", Warning, false, "Mimari projede Planlı Alanlar İmar Yönetmeliği 57/2-a-6'nın istediği en az iki kesit çıkarılmamış.";
     PAIY_SECTION_STAIR_MISSING = "paiy_section_stair_missing", Warning, false, "Çıkarılmış kesitlerin hiçbiri ortak merdivenden geçmiyor (Planlı Alanlar İmar Yönetmeliği 57/2-a-6).";
+    PAIY_ELEVATIONS_MISSING = "paiy_elevations_missing", Warning, false, "Binanın bir cephesinin görünüşü çıkarılmamış: Planlı Alanlar İmar Yönetmeliği 57/2-a-6 yeteri sayıda görünüş ister, Mimarlar Odası standartlarında bütün görünüşler çizilir.";
     REGULATION_CONFLICT = "regulation_conflict", Warning, false, "Ölçü yerel imar yönetmeliğine uyuyor, Planlı Alanlar İmar Yönetmeliği'ne uymuyor: çelişkide idare karar verir.";
     BYKHY_ESCAPE_DISTANCE_OVER = "bykhy_escape_distance_over", Warning, false, "Kaçış uzaklığı Binaların Yangından Korunması Hakkında Yönetmelik'in (32/4, 48/2, 48/4, Ek-5/B) en çoğunu aşıyor.";
     BYKHY_ESCAPE_NO_ROUTE = "bykhy_escape_no_route", Warning, false, "Mahalden kat çıkışına ya da daire kapısına yürünerek ulaşılmıyor (Binaların Yangından Korunması Hakkında Yönetmelik 33/6-b, 48/2).";

@@ -199,7 +199,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035).
-pub const CODES: [&str; 33] = [
+pub const CODES: [&str; 34] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -222,6 +222,7 @@ pub const CODES: [&str; 33] = [
     codes::PAIY_ELEVATOR_LANDING_NARROW,
     codes::PAIY_SECTIONS_MISSING,
     codes::PAIY_SECTION_STAIR_MISSING,
+    codes::PAIY_ELEVATIONS_MISSING,
     codes::REGULATION_CONFLICT,
     codes::BYKHY_ESCAPE_DISTANCE_OVER,
     codes::BYKHY_ESCAPE_NO_ROUTE,
@@ -1674,6 +1675,53 @@ pub fn findings(
                     None,
                 );
             }
+        }
+        // Görünüşler (57/2-a-6: "yeteri sayıda görünüş"; Mimarlar Odası: "Bütün görünüşler çizilir"; docs/adr/8043 §9):
+        // every side the building's outline shows wants a drawn elevation facing there.
+        let sides = crate::sections::building_facings(doc);
+        let elevations: Vec<(Slot, usize)> = doc
+            .entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                Entity::ViewMark(v)
+                    if v.mark.form == kentos_commands::ViewMarkForm::Elevation
+                        && doc.block(crate::sections::block_id(u)).is_some() =>
+                {
+                    Some((Slot(e.base().id), crate::sections::facing_rank(doc, &v.mark)))
+                }
+                _ => None,
+            })
+            .collect();
+        let missing: Vec<&str> = sides
+            .iter()
+            .filter(|(k, _)| !elevations.iter().any(|(_, r)| r == k))
+            .map(|(k, _)| crate::sections::FACINGS[*k].word)
+            .collect();
+        if !missing.is_empty() {
+            let which = match missing.as_slice() {
+                [one] => format!("{one} cephesinin"),
+                [rest @ .., last] => format!("{} ve {last} cephelerinin", rest.join(", ")),
+                [] => String::new(),
+            };
+            push(
+                Said {
+                    code: codes::PAIY_ELEVATIONS_MISSING,
+                    message: format!(
+                        "{which} görünüşü çıkarılmamış (binanın {} cephesi, {} görünüşü var) — {}",
+                        sides.len(),
+                        elevations.len(),
+                        SECTIONS_ARTICLE.short()
+                    ),
+                    repair: "O cepheye bakan bir görünüş işareti çizip Mimari › İşaret ▾ › Görünüş çıkar ile çıkarın; \
+                             çizimde hiç görünüş işareti yoksa Görünüş çıkar › Tümü (T) dördünü birden koyup çıkarır. \
+                             Mimarlar Odası: bütün görünüşler çizilir."
+                        .into(),
+                    rule: SECTIONS_ARTICLE.named(),
+                    binding: None,
+                },
+                elevations.iter().map(|(s, _)| *s).collect(),
+                building,
+                None,
+            );
         }
     }
     // Yangın kaçışı (docs/adr/8035): Binaların Yangından Korunması Hakkında Yönetmelik.
