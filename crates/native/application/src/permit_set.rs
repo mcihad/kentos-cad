@@ -423,7 +423,11 @@ pub(crate) fn pages(
             .collect();
         (all, found)
     });
-    let site_page = Page::site(Some(ground.0.id.clone()), Some(centre(site)), site_scale);
+    // The layers that hold nothing but sections' placements (docs/adr/8042 §6): the site plan's and the plans' maps do
+    // not draw them, or a section placed beside the building printed on the site plan at 1/500.
+    let freeze = section_layers(doc);
+    let mut site_page = Page::site(Some(ground.0.id.clone()), Some(centre(site)), site_scale);
+    site_page.freeze = freeze.clone();
     let mut out = vec![
         Page::info(),
         match views.as_ref().and_then(|(_, found)| found.get(3)) {
@@ -432,7 +436,8 @@ pub(crate) fn pages(
         },
     ];
     for (l, _) in &storeys {
-        let plan = Page::plan(&l.id, &l.name, code_of(&l.id), Some(centre(plans)), scale);
+        let mut plan = Page::plan(&l.id, &l.name, code_of(&l.id), Some(centre(plans)), scale);
+        plan.freeze = freeze.clone();
         let Some((_, found)) = &views else {
             out.push(plan);
             continue;
@@ -444,8 +449,79 @@ pub(crate) fn pages(
             out.push(page);
         }
     }
-    // The lists after the plans (MO: mahal listesi, then the parking calculation), each on the smallest paper it fits.
     let mut notes = Vec::new();
+    // The sections after the plans (MO: planlar, kesitler, cepheler; PAİY 57(2)(a)(6); docs/adr/8042 §6): each drawn
+    // section's first placement, at the scale it is drawn for (its words' size), on the smallest A paper it fits.
+    let section_scale = crate::sections::scale_of(doc).round() as u32;
+    let mut sections = 0;
+    for row in crate::sections_query::rows(doc) {
+        let (Some(mark), Some(block)) = (row.mark.as_deref(), row.block.as_deref()) else {
+            continue;
+        };
+        let placed = doc.entities().find(
+            |e| matches!(e, kentos_commands::Entity::Insert(i) if i.block.to_string() == block),
+        );
+        let Some(bounds) = placed.and_then(|e| sheets_fit::extent_of(doc, std::iter::once(e)))
+        else {
+            notes.push(format!(
+                "{} çizimde yerleştirilmemiş; paftası kurulmadı.",
+                row.name
+            ));
+            continue;
+        };
+        if row.state == kentos_commands::BuildingSectionState::Stale {
+            notes.push(format!(
+                "{} eski: plan çıkarıldığından beri değişti; paftası eski kesiti gösterir. Kesiti seçip \
+                 Öznitelikler › Durum › Yeniden çiz ile güncelleyin",
+                row.name
+            ));
+        }
+        let size = [on_paper(
+            permit::padded(bounds, section_scale),
+            section_scale,
+        )];
+        let words = kentos_domain::Uuid::parse_str(mark)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+            .and_then(|e| match e {
+                kentos_commands::Entity::ViewMark(v) => Some(v.mark.mark.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+        match permit::PAPERS
+            .into_iter()
+            .find(|p| permit::shelf(*p, &size).is_some())
+        {
+            Some(p) => {
+                sections += 1;
+                out.push(Page::section(
+                    &row.name,
+                    &section_place(&words),
+                    bounds,
+                    section_scale,
+                    PaperChoice {
+                        paper: p,
+                        orientation: kentos_sheet::Orientation::Landscape,
+                    },
+                    mark,
+                ));
+            }
+            None => notes.push(format!(
+                "{} A0 kâğıda sığmadı; paftası kurulmadı.",
+                row.name
+            )),
+        }
+    }
+    // Mimarlar Odası: "plan kesit ve görünüşlerinin … aynı ölçekte olması tercih edilmelidir".
+    if sections > 0 && section_scale != scale {
+        notes.push(format!(
+            "Kesitler çizimin ölçeğinde (1/{section_scale}) basıldı, planlar 1/{scale}: yazıları ancak o ölçekte \
+             doğru boydadır. Planlarla aynı ölçek için Öznitelikler › Çizim ölçeğini 1/{scale} yapıp kesitleri yeniden \
+             çizin"
+        ));
+    }
+    // The lists after the plans (MO: mahal listesi, then the parking calculation), each on the smallest paper it fits.
     for l in lists {
         let size = [on_paper(permit::padded(l.bounds, l.scale), l.scale)];
         match permit::PAPERS
@@ -488,6 +564,39 @@ pub(crate) fn pages(
         views: views.map(|(all, _)| all),
         notes,
     })
+}
+
+/// The layers whose every object is a section's placement (docs/adr/8042 §6), by id.
+pub fn section_layers(doc: &Document) -> Vec<String> {
+    let blocks: BTreeSet<kentos_commands::BlockId> = doc
+        .entities_with_uids()
+        .filter(|(_, e)| matches!(e, kentos_commands::Entity::ViewMark(_)))
+        .map(|(u, _)| crate::sections::block_id(u))
+        .filter(|b| doc.block(*b).is_some())
+        .collect();
+    let is_section = |e: &kentos_commands::Entity| matches!(e, kentos_commands::Entity::Insert(i) if blocks.contains(&i.block));
+    let mut layers: BTreeSet<String> = doc
+        .entities()
+        .filter(|e| is_section(e))
+        .map(|e| e.base().layer_id.clone())
+        .collect();
+    for e in doc.entities() {
+        if !is_section(e) {
+            layers.remove(&e.base().layer_id);
+        }
+    }
+    layers.into_iter().collect()
+}
+
+/// A section's place in its sheet's EK-2 name (2.9.3: for a section the author's three characters): "B-B" for a mark
+/// "B"; a longer mark's first three letters or digits (EK-4 4.11's folding), filled with X; "NNN" without one.
+pub fn section_place(words: &str) -> String {
+    let w = kentos_commands::ek4_word(words, 3);
+    match w.chars().count() {
+        0 => "NNN".into(),
+        1 => format!("{w}-{w}"),
+        _ => format!("{w:X<3}"),
+    }
 }
 
 /// The set's sheets' change of the book, through `cad.sheets.edit`'s input.
@@ -573,15 +682,56 @@ pub fn execute(
     }
     let (edit, made) = edit(cx.doc, input.phase, &planned).map_err(|s| s.into_error().message)?;
     match sheets_edit::execute(cx, edit) {
-        CommandResult::Completed { output, .. } => Ok((output, made, planned.notes)),
+        CommandResult::Completed { output, .. } => {
+            point_marks(cx.doc, &planned.pages, &made);
+            Ok((output, made, planned.notes))
+        }
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Ruhsat takımı kurulamadı.".into()),
+    }
+}
+
+/// Each section's mark pointed at its sheet's map (docs/adr/0345 §2, 8042 §6): its bubble then writes the sheet's
+/// number below its letter, and renumbering the set renumbers it.
+fn point_marks(doc: &mut Document, pages: &[Page], made: &[permit::Made]) {
+    let mut changed = Vec::new();
+    for (page, m) in pages.iter().zip(made) {
+        let (Some(source), Some(frame)) = (page.source.as_deref(), m.frame.as_deref()) else {
+            continue;
+        };
+        let Some(slot) = kentos_domain::Uuid::parse_str(source)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+        else {
+            continue;
+        };
+        let Some(kentos_commands::Entity::ViewMark(mut v)) = doc.get(slot).cloned() else {
+            continue;
+        };
+        v.mark.target = Some(kentos_commands::ViewTarget {
+            view: None,
+            sheet: Some(m.sheet.clone()),
+            item: Some(frame.to_owned()),
+        });
+        changed.push((slot, kentos_commands::Entity::ViewMark(v)));
+    }
+    if !changed.is_empty() {
+        doc.update_many(changed, "Ruhsat takımı");
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn section_places_follow_ek_2() {
+        assert_eq!(section_place("B"), "B-B");
+        assert_eq!(section_place(" a "), "A-A");
+        assert_eq!(section_place("A1"), "A1X");
+        assert_eq!(section_place("Çık"), "CIK");
+        assert_eq!(section_place(""), "NNN");
+    }
 
     #[test]
     fn particulars_are_added_once_and_written_over() {

@@ -546,6 +546,20 @@ fn work(
         }
     }
     let mut issues = Vec::new();
+    // A stale section a sheet prints (docs/adr/8042 §6): said, not refused (the drawing's own choice to print it).
+    for (sheet, name) in
+        kentos_native_application::sections_query::stale_on_sheets(doc, &book, &chosen)
+    {
+        issues.push(issue(
+            &sheet,
+            "section_stale",
+            format!(
+                "{name} eski: plan, kesit çıkarıldığından beri değişti; paftada eski kesit basılır."
+            ),
+            false,
+            "Kesiti seçip Öznitelikler › Durum › Yeniden çiz ile güncelleyin.".into(),
+        ));
+    }
     let resource_plan = if input.resources {
         match crate::sheet_resources::Prepared::plan(doc, input, &book, &chosen) {
             Ok(p) => {

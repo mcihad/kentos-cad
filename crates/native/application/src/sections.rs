@@ -26,11 +26,18 @@ use kentos_geometry_core::vec2::Vec2 as P;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 
-/// The scale a section is drawn for (docs/adr/8042 §4): the uygulama projesi's, Mimarlar Odası's 1/50.
-pub const SCALE: f64 = 50.0;
-/// Words 2.5 mm high on paper at the scale; the title 5 mm.
-const TEXT: f64 = 2.5 / 1000.0 * SCALE;
-const TITLE: f64 = 5.0 / 1000.0 * SCALE;
+/// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
+/// are; Mimarlar Odası's uygulama projesi 1/50 when the drawing has none. A section printed at another scale prints
+/// its words smaller or larger, so the set prints it at this one (as its calculation tables, docs/adr/8037).
+pub fn scale_of(doc: &Document) -> f64 {
+    let s = doc.settings().plot_scale.round();
+    if s.is_finite() && s >= 1.0 { s } else { 50.0 }
+}
+
+/// Words 2.5 mm high on paper at `scale`; the title 5 mm.
+fn text_at(scale: f64) -> f64 {
+    2.5 / 1000.0 * scale
+}
 /// Pens, paper millimetres: the 1:50 line group (docs/adr/8013: 0.5 and 0.25), a fainter one for what is far and the
 /// hatches.
 const HEAVY: f64 = 0.5;
@@ -912,6 +919,21 @@ pub fn frame_of(mark: &kentos_commands::ViewMarkFields) -> Option<Frame> {
     Frame::new(p(*a), p(*b), mark.flip, None)
 }
 
+/// The objects a mark's line cuts (docs/adr/8042 §7): the persistent ids of the model's solids its first two points'
+/// line passes through within its length. Denetim › Mevzuat reads whether a section passes through the common stair
+/// with it, the section's own geometry.
+pub fn cut_owners(m: &Model, mark: &kentos_commands::ViewMarkFields) -> BTreeSet<String> {
+    let Some(frame) = frame_of(mark) else {
+        return BTreeSet::new();
+    };
+    m.solids
+        .iter()
+        .zip(&m.owners)
+        .filter(|(s, _)| !sec::cut_stretches(&frame, &s.rings).is_empty())
+        .filter_map(|(_, o)| o.clone())
+        .collect()
+}
+
 /// The section drawn (docs/adr/8042 §4): what is cut, what is seen, the levels, grids, rooms, ground and title.
 pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     let m = model(doc);
@@ -920,7 +942,9 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
         entities: Vec::new(),
         layers: BTreeSet::new(),
     };
-    let plot = SCALE;
+    let plot = scale_of(doc);
+    let text = text_at(plot);
+    let title_height = 2.0 * text;
     // What is cut: hatches by material and fill, outlines by material (ISO 128-3 7.2).
     let mut outlines: BTreeMap<String, (Look, Vec<kentos_geometry_core::geom::arrangement::Area>)> =
         BTreeMap::new();
@@ -1106,7 +1130,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     let x0 = bx0 - 1.0;
     for z in &zs {
         let tip = P::new(x0, *z);
-        let w = TEXT * 0.6;
+        let w = text * 0.6;
         out.line(
             "MM-XXXX-OLCU",
             P::new(x0 - 0.9, *z),
@@ -1130,9 +1154,9 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
         );
         out.text(
             "MM-XXXX-OLCU",
-            P::new(x0 - 0.75, *z + w * 1.2 + TEXT * 0.4),
+            P::new(x0 - 0.75, *z + w * 1.2 + text * 0.4),
             &level_words(*z),
-            TEXT,
+            text,
             "bottomLeft",
         );
         hi.y = hi.y.max(*z);
@@ -1154,7 +1178,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
         let words = format!("{:.2}", b - a).replace('.', ",");
         out.put(
             "MM-XXXX-OLCU",
-            json!({"kind": "text", "p": {"x": xd - 0.1, "y": (a + b) / 2.0}, "text": words, "height": TEXT,
+            json!({"kind": "text", "p": {"x": xd - 0.1, "y": (a + b) / 2.0}, "text": words, "height": text,
                    "rotation": std::f64::consts::FRAC_PI_2, "align": "bottomCenter", "lineWeight": FAINT}),
         );
     }
@@ -1180,7 +1204,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
         if !(0.0..=frame.length).contains(&u) || !grid_seen.insert(g.grid.label.clone()) {
             continue;
         }
-        let r = g.grid.bubble_size.unwrap_or(8.0) / 1000.0 * SCALE / 2.0;
+        let r = g.grid.bubble_size.unwrap_or(8.0) / 1000.0 * plot / 2.0;
         out.put(
             "MM-AKSS-GENEL",
             json!({"kind": "line", "a": {"x": u, "y": z0}, "b": {"x": u, "y": z1}, "lineType": "dashdot",
@@ -1194,7 +1218,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
             "MM-AKSS-GENEL",
             P::new(u, z0 - r),
             &g.grid.label,
-            TEXT,
+            text,
             "middleCenter",
         );
         under = under.min(z0 - 2.0 * r);
@@ -1204,7 +1228,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     // ISO 3098-0: no line runs through words; a grid's line often runs through a room's middle, a stair through a
     // stair hall's): mid height in the middle first, then aside, higher or lower; with no such place in the middle,
     // masked (the text's “fon”).
-    let mut busy = Busy::of(&out, &s.cut);
+    let mut busy = Busy::of(&out, &s.cut, text);
     for e in doc.entities() {
         let Entity::Space(sp) = e else { continue };
         let rings: Vec<Vec<P>> = sp
@@ -1221,7 +1245,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
             continue;
         };
         let words = crate::elevations::label_of(sp);
-        let wide = words.chars().count() as f64 * TEXT * 0.6;
+        let wide = words.chars().count() as f64 * text * 0.6;
         if b - a < wide + 0.1 {
             continue;
         }
@@ -1231,7 +1255,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
             .map_or(floor + 2.5, |h| h.ceiling);
         let (at, mask) = busy.room_spot((a, b), (floor, top), wide);
         busy.take(at, wide);
-        let mut v = json!({"kind": "text", "p": {"x": at.x, "y": at.y}, "text": words, "height": TEXT,
+        let mut v = json!({"kind": "text", "p": {"x": at.x, "y": at.y}, "text": words, "height": text,
                            "rotation": 0.0, "align": "middleCenter", "lineWeight": FAINT});
         if mask {
             v["mask"] = json!(true);
@@ -1244,14 +1268,14 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
         "MM-XXXX-ETIKET",
         P::new(tx, lo.y - 0.9),
         &title(mark_words),
-        TITLE,
+        title_height,
         "bottomCenter",
     );
     out.text(
         "MM-XXXX-ETIKET",
         P::new(tx, lo.y - 1.2),
-        &format!("Ölçek 1/{SCALE:.0}"),
-        TEXT,
+        &format!("Ölçek 1/{plot:.0}"),
+        text,
         "topCenter",
     );
     lo.y -= 1.6;
@@ -1273,10 +1297,12 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
 struct Busy {
     lines: Vec<(P, P)>,
     areas: Vec<Vec<P>>,
+    /// The words' height.
+    text: f64,
 }
 
 impl Busy {
-    fn of(out: &Out, cut: &[sec::Cut]) -> Self {
+    fn of(out: &Out, cut: &[sec::Cut], text: f64) -> Self {
         let pt = |v: &Value| {
             P::new(
                 v["x"].as_f64().unwrap_or(0.0),
@@ -1305,12 +1331,13 @@ impl Busy {
         Busy {
             lines,
             areas: cut.iter().map(|c| c.ring.clone()).collect(),
+            text,
         }
     }
 
     /// Words `wide` long and their margin, centred on `at`.
-    fn frame(at: P, wide: f64) -> (P, P) {
-        let (hw, hh) = (wide / 2.0 + TEXT * 0.3, TEXT * 0.8);
+    fn frame(&self, at: P, wide: f64) -> (P, P) {
+        let (hw, hh) = (wide / 2.0 + self.text * 0.3, self.text * 0.8);
         (P::new(at.x - hw, at.y - hh), P::new(at.x + hw, at.y + hh))
     }
 
@@ -1328,7 +1355,7 @@ impl Busy {
     /// middle and mid height first, whose box touches nothing; and whether none did (then the middle, to be masked).
     fn room_spot(&self, (a, b): (f64, f64), (floor, top): (f64, f64), wide: f64) -> (P, bool) {
         let mid = (a + b) / 2.0;
-        let step = TEXT * 2.0;
+        let step = self.text * 2.0;
         let mut xs = vec![mid];
         let mut k = 1.0;
         while mid + k * step + wide / 2.0 <= b {
@@ -1338,7 +1365,7 @@ impl Busy {
         for f in [0.45, 0.6, 0.3, 0.75, 0.15] {
             let y = floor + (top - floor) * f;
             for x in &xs {
-                let (lo, hi) = Self::frame(P::new(*x, y), wide);
+                let (lo, hi) = self.frame(P::new(*x, y), wide);
                 if lo.x < a || hi.x > b || lo.y < floor || hi.y > top {
                     continue;
                 }
@@ -1352,7 +1379,7 @@ impl Busy {
 
     /// The words placed at `at` taken: the next room's keep off them.
     fn take(&mut self, at: P, wide: f64) {
-        let (lo, hi) = Self::frame(at, wide);
+        let (lo, hi) = self.frame(at, wide);
         let c = [lo, P::new(hi.x, lo.y), hi, P::new(lo.x, hi.y)];
         self.lines.extend((0..4).map(|i| (c[i], c[(i + 1) % 4])));
     }

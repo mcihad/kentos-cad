@@ -113,12 +113,12 @@ fn b_b_through_the_stair_is_drawn_into_its_block() {
     for id in &l {
         assert!(doc.layers().get(id).is_some(), "{id} is a layer");
     }
-    // Its placement on the marks' layer.
+    // Its placement on a layer of its own, which a set's plan and site maps leave out.
     let insert = doc
         .entities()
         .find(|e| matches!(e, Entity::Insert(i) if i.block == sections::block_id(b)))
         .unwrap();
-    assert_eq!(insert.base().layer_id, "mm-xxxx-sembol");
+    assert_eq!(insert.base().layer_id, "mm-xxxx-kesit");
 }
 
 #[test]
@@ -341,4 +341,214 @@ fn the_building_with_its_sections_is_written_when_asked() {
         ));
     }
     std::fs::write(out, kentos_kcad::encode(&doc.to_snapshot_v2()).unwrap()).unwrap();
+}
+
+/// Ruhsat takımı (docs/adr/8042 §6): B-B drawn and placed gets a sheet of its own after the plans, EK-2's KS and MMC
+/// with its place "B-B", at the scale it is drawn for; its mark then points at the sheet's map and writes the sheet's
+/// number below its letter. A section stale when the set is made, and drawn for 1/50 in a 1/100 set, is said.
+#[test]
+fn the_permit_set_gives_the_drawn_section_a_sheet_and_its_mark_the_sheet_s_number() {
+    use kentos_native_application::permit_set::{PermitSet, execute};
+    let mut doc = building();
+    let b = mark(&doc, "B");
+    derive(&mut doc, b);
+    // The entrance door 10 cm higher: B-B stale.
+    let (slot, mut door) = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Opening(o) if o.opening.number.as_deref() == Some("GK01") => {
+                Some((doc.slot_of(u).unwrap(), o.clone()))
+            }
+            _ => None,
+        })
+        .unwrap();
+    door.opening.head = Some(2.2);
+    doc.update_many(vec![(Slot(slot.0), Entity::Opening(door))], "Kapı");
+    let (_, made, notes) =
+        execute(&mut ExecutionContext::new(&mut doc), &PermitSet::default()).unwrap();
+    let titles: Vec<&str> = made.iter().map(|m| m.title.as_str()).collect();
+    let at = titles
+        .iter()
+        .position(|t| *t == "B-B kesiti")
+        .unwrap_or_else(|| panic!("{titles:?}"));
+    assert!(
+        titles[..at].iter().any(|t| t.ends_with("planı")),
+        "after the plans: {titles:?}"
+    );
+    assert!(
+        !titles.contains(&"A-A kesiti"),
+        "A-A is not drawn: {titles:?}"
+    );
+    let m = &made[at];
+    assert_eq!(m.frame, Some(format!("{}-kesit-1", m.sheet)));
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    let sheet = book.sheets.iter().find(|s| s.id == m.sheet).unwrap();
+    let var = |n: &str| {
+        sheet
+            .variables
+            .iter()
+            .find(|v| v.name == n)
+            .map(|v| v.value.clone())
+    };
+    let text = |t: &str| Some(kentos_sheet::model::VarValue::Text(t.into()));
+    assert_eq!(var("dosya_turu"), text("KS"));
+    assert_eq!(var("dosya_tipi"), text("MMC"));
+    assert_eq!(var("kat_konum"), text("B-B"));
+    // The site plan's and the plans' maps leave the sections placed beside the building out (they printed on the site
+    // plan at 1/500).
+    let plans: Vec<&kentos_sheet::Sheet> = book
+        .sheets
+        .iter()
+        .filter(|s| {
+            s.drawing_info
+                .as_ref()
+                .is_some_and(|i| i.title.ends_with("planı"))
+        })
+        .collect();
+    assert_eq!(plans.len(), 3, "site plan and two storeys");
+    for s in plans {
+        let frozen = s.items.iter().any(|i| {
+            matches!(&i.kind, kentos_sheet::ItemKind::Map(m)
+                if m.layer_overrides.iter().any(|o| o.layer == "mm-xxxx-kesit" && o.frozen))
+        });
+        assert!(frozen, "{}", s.name);
+    }
+    // The mark points at the sheet's map and writes the sheet's number below its letter.
+    let Some(Entity::ViewMark(v)) = doc.slot_of(b).and_then(|s| doc.get(s)) else {
+        panic!()
+    };
+    let target = v.mark.target.clone().unwrap();
+    assert_eq!(target.sheet.as_deref(), Some(m.sheet.as_str()));
+    assert_eq!(target.item, m.frame);
+    assert_eq!(v.mark.words.bottom, m.number);
+    assert_eq!(v.mark.words.top, "B");
+    // Said: B-B stale, and drawn for 1/50 in the Ruhsat set's 1/100.
+    assert!(
+        notes.iter().any(|n| n.starts_with("B-B kesiti eski")),
+        "{notes:?}"
+    );
+    assert!(
+        notes
+            .iter()
+            .any(|n| n.contains("1/50") && n.contains("1/100")),
+        "{notes:?}"
+    );
+}
+
+/// Publication says a stale section a sheet prints (docs/adr/8042 §6): the set's B-B sheet once the door changes, not
+/// after Yeniden çiz; a sheet that does not show it says nothing.
+#[test]
+fn a_sheet_that_prints_a_stale_section_is_said() {
+    use kentos_native_application::permit_set::{PermitSet, execute};
+    let mut doc = building();
+    let b = mark(&doc, "B");
+    derive(&mut doc, b);
+    let (_, made, _) =
+        execute(&mut ExecutionContext::new(&mut doc), &PermitSet::default()).unwrap();
+    let section = made
+        .iter()
+        .find(|m| m.title == "B-B kesiti")
+        .unwrap()
+        .sheet
+        .clone();
+    let book = |doc: &Document| {
+        kentos_sheet::project::read_project_sheets(doc.sheets().unwrap())
+            .unwrap()
+            .0
+    };
+    // Every sheet of the set: the site plan's 1/500 map holds B-B's placement but does not draw its layer.
+    let chosen: Vec<String> = made.iter().map(|m| m.sheet.clone()).collect();
+    assert!(sections_query::stale_on_sheets(&doc, &book(&doc), &chosen).is_empty());
+    let (slot, mut door) = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| match e {
+            Entity::Opening(o) if o.opening.number.as_deref() == Some("GK01") => {
+                Some((doc.slot_of(u).unwrap(), o.clone()))
+            }
+            _ => None,
+        })
+        .unwrap();
+    door.opening.head = Some(2.2);
+    doc.update_many(vec![(Slot(slot.0), Entity::Opening(door))], "Kapı");
+    assert_eq!(
+        sections_query::stale_on_sheets(&doc, &book(&doc), &chosen),
+        vec![(section, "B-B kesiti".to_owned())]
+    );
+    completed(sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        BuildingSectionsEdit {
+            operation: BuildingSectionsOperation::Refresh {
+                mark: b.to_string(),
+            },
+            expected_revision: None,
+        },
+    ));
+    assert!(sections_query::stale_on_sheets(&doc, &book(&doc), &chosen).is_empty());
+}
+
+/// Denetim › Mevzuat (PAİY 57/2-a-6, docs/adr/8042 §7): "bir tanesi ortak merdivenden geçmek üzere en az iki adet
+/// kesit". None drawn: two asked. B-B moved off the stair (x 2, the west rooms) and drawn: one more asked and none
+/// through the common stair. A-A (across the flights) drawn too: nothing said.
+#[test]
+fn the_regulation_asks_two_sections_one_through_the_common_stair() {
+    let regulation = |doc: &mut Document| -> Vec<(String, String, String)> {
+        let answer = kentos_native_application::registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.arch.audit",
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({"checks": ["regulation"]}),
+        )
+        .unwrap();
+        answer["output"]["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| {
+                f["code"]
+                    .as_str()
+                    .is_some_and(|c| c.starts_with("paiy_section"))
+            })
+            .map(|f| {
+                let t = |k: &str| f[k].as_str().unwrap_or_default().to_owned();
+                (t("code"), t("message"), t("rule"))
+            })
+            .collect()
+    };
+    let mut doc = building();
+    let found = regulation(&mut doc);
+    assert_eq!(found.len(), 1, "{found:?}");
+    assert_eq!(found[0].0, "paiy_sections_missing");
+    assert_eq!(
+        found[0].1,
+        "Mimari projede en az iki kesit gerekir, çizimde 0 kesit çıkarılmış — PAİY 57/2-a-6"
+    );
+    assert!(found[0].2.starts_with("PAİY 57/2-a-6 · RG "), "{found:?}");
+    // B-B along x 2: the bedroom and the living room, not the stair hall.
+    let b = mark(&doc, "B");
+    let slot = doc.slot_of(b).unwrap();
+    let Some(Entity::ViewMark(mut v)) = doc.get(slot).cloned() else {
+        panic!()
+    };
+    for p in &mut v.mark.points {
+        p.x = 2.0;
+    }
+    doc.update_many(vec![(slot, Entity::ViewMark(v))], "İşaret");
+    derive(&mut doc, b);
+    let codes: Vec<String> = regulation(&mut doc).into_iter().map(|f| f.0).collect();
+    assert_eq!(
+        codes,
+        ["paiy_sections_missing", "paiy_section_stair_missing"]
+    );
+    let a = mark(&doc, "A");
+    completed(sections_edit::execute(
+        &mut ExecutionContext::new(&mut doc),
+        BuildingSectionsEdit {
+            operation: BuildingSectionsOperation::Derive {
+                mark: a.to_string(),
+                at: Some(kentos_commands::Vec2 { x: 20.0, y: 15.0 }),
+            },
+            expected_revision: None,
+        },
+    ));
+    assert!(regulation(&mut doc).is_empty());
 }

@@ -50,6 +50,11 @@ fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
     let (mut app, _dir) = crate::acceptance_flat_tests::opened("mevzuat");
     let _ = crate::acceptance_flat_tests::drawn(&mut app);
     let found = regulation(&mut app, json!(["regulation"]));
+    // The flat has no section drawn (PAİY 57/2-a-6, docs/adr/8042 §7): said beside the doors.
+    let (sections, found): (Vec<_>, Vec<_>) = found
+        .into_iter()
+        .partition(|(c, ..)| c == "paiy_sections_missing");
+    assert_eq!(sections.len(), 1, "{sections:?}");
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
     assert_eq!(found.len(), 5, "{messages:?}");
     assert!(
@@ -148,6 +153,7 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
             "paiy_room_width_below",
             "paiy_corridor_narrow",
             "paiy_storey_height_over",
+            "paiy_sections_missing",
             "parking_short"
         ],
         "{messages:?}"
@@ -212,6 +218,11 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Büro"}]}}),
     );
     let found = regulation(&mut app, json!(["regulation"]));
+    // Its missing sections (57/2-a-6) are any building's; the rest is the office's.
+    let found: Vec<_> = found
+        .into_iter()
+        .filter(|(c, ..)| c != "paiy_sections_missing")
+        .collect();
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
     assert_eq!(messages.len(), 2, "{found:?}");
     assert!(
@@ -413,6 +424,11 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
         (
             "paiy_elevator_missing",
             "Binada asansör yok (4 kat) — PAİY 34/1 (1.7.2026)",
+        ),
+        // No section drawn (docs/adr/8042 §7); with none, whether one passes through the stair is not asked yet.
+        (
+            "paiy_sections_missing",
+            "Mimari projede en az iki kesit gerekir, çizimde 0 kesit çıkarılmış — PAİY 57/2-a-6",
         ),
     ];
     assert_eq!(

@@ -79,6 +79,9 @@ pub enum PageKind {
     /// The calculation tables (EK-2 2.8.1, “Mimari hesap raporu”): a locked map on each, at the plot scale. A list
     /// sheet (Mahal listesi, docs/adr/8038) is one too: its table, uncaptioned, on a paper of its own.
     Tables,
+    /// A building section (EK-2 Tablo 2.12 Kesit, docs/adr/8042 §6): as a list, its drawing's box in a locked map on a
+    /// paper of its own, at the scale it is drawn for; no north arrow.
+    Section,
 }
 
 /// One sheet of the set.
@@ -106,6 +109,12 @@ pub struct Page {
     /// The named view its map is linked to (docs/adr/8039 §6): the view's recipe gives the map its tadilat view and its
     /// scale, the map keeps its storey; none: the map draws the drawing as it is shown.
     pub link: Option<kentos_contracts::NamedView>,
+    /// The drawing's object the page shows, by the host's id (a section's mark, docs/adr/8042 §6): the host points it
+    /// at the page's map, so its bubble writes the sheet's number.
+    pub source: Option<String>,
+    /// Layers its map does not draw (the map's VPFREEZE, docs/adr/0314 §1): the sections placed beside the building
+    /// on a plan's or the site plan's map (docs/adr/8042 §6).
+    pub freeze: Vec<String>,
 }
 
 impl Page {
@@ -124,6 +133,8 @@ impl Page {
             captioned: false,
             scaled: false,
             link: None,
+            source: None,
+            freeze: Vec::new(),
         }
     }
 
@@ -142,6 +153,8 @@ impl Page {
             captioned: false,
             scaled: false,
             link: None,
+            source: None,
+            freeze: Vec::new(),
         }
     }
 
@@ -166,6 +179,8 @@ impl Page {
             captioned: false,
             scaled: false,
             link: None,
+            source: None,
+            freeze: Vec::new(),
         }
     }
 
@@ -194,6 +209,8 @@ impl Page {
             captioned: true,
             scaled: false,
             link: None,
+            source: None,
+            freeze: Vec::new(),
         }
     }
 
@@ -222,6 +239,40 @@ impl Page {
             captioned: false,
             scaled,
             link: None,
+            source: None,
+            freeze: Vec::new(),
+        }
+    }
+}
+
+impl Page {
+    /// A section's sheet (EK-2 Tablo 2.12 Kesit, KS, Tablo 2.13 MMC; docs/adr/8042 §6): `view`, its drawing's box
+    /// (metres), at `scale` on `paper`; its place (2.9.3: the author's three characters for a section) `place`; `source`
+    /// the section's mark.
+    pub fn section(
+        title: &str,
+        place: &str,
+        view: [f64; 4],
+        scale: u32,
+        paper: PaperChoice,
+        source: &str,
+    ) -> Page {
+        Page {
+            kind: PageKind::Section,
+            title: title.to_owned(),
+            level: None,
+            center: None,
+            scale: Some(scale),
+            file_type: "KS",
+            file_kind: "MMC",
+            place: place.to_owned(),
+            views: vec![(title.to_owned(), view)],
+            paper: Some(paper),
+            captioned: false,
+            scaled: true,
+            link: None,
+            source: Some(source.to_owned()),
+            freeze: Vec::new(),
         }
     }
 }
@@ -358,6 +409,8 @@ pub struct Made {
     pub sheet: String,
     pub number: String,
     pub title: String,
+    /// A section's page: its map's item id (its mark points at it, docs/adr/8042 §6).
+    pub frame: Option<String>,
 }
 
 /// The operations, in order, and what they make.
@@ -594,7 +647,12 @@ pub fn permit_sheets(
         // The template's items are the instance's by their place (`create::ids_for`).
         let map_item = ids.items.get(map_at).cloned().unwrap_or_default();
         let north_item = north_at.and_then(|k| ids.items.get(k).cloned());
-        if !north || matches!(page.kind, PageKind::Info | PageKind::Tables) {
+        if !north
+            || matches!(
+                page.kind,
+                PageKind::Info | PageKind::Tables | PageKind::Section
+            )
+        {
             drop_items(sheet, &|id: &String| Some(id) == north_item.as_ref());
         }
         match page.kind {
@@ -612,7 +670,7 @@ pub fn permit_sheets(
                     sheet.items.push(item);
                 }
             }
-            PageKind::Tables => {
+            PageKind::Tables | PageKind::Section => {
                 // The template's map, cloned for each table: locked at the plot scale on the table's box.
                 let template_map = sheet.items.iter().find(|i| i.id == map_item).cloned();
                 drop_items(sheet, &|id: &String| *id == map_item);
@@ -638,7 +696,12 @@ pub fn permit_sheets(
                         "permit_tables_do_not_fit",
                         "pages",
                         format!(
-                            "Hesap tabloları {} kâğıda sığmıyor.",
+                            "{} {} kâğıda sığmıyor.",
+                            if page.kind == PageKind::Section {
+                                page.title.as_str()
+                            } else {
+                                "Hesap tabloları"
+                            },
                             paper.paper.id().to_uppercase()
                         ),
                     )
@@ -648,7 +711,11 @@ pub fn permit_sheets(
                     page.views.iter().zip(places.iter().zip(&sizes)).enumerate()
                 {
                     if let Some(mut map) = template_map.clone() {
-                        map.id = format!("{}-tablo-{}", ids.sheet, n + 1);
+                        map.id = if page.kind == PageKind::Section {
+                            format!("{}-kesit-{}", ids.sheet, n + 1)
+                        } else {
+                            format!("{}-tablo-{}", ids.sheet, n + 1)
+                        };
                         map.name = name.clone();
                         map.frame =
                             crate::RectUm::new(um(at[0]), um(at[1]), um(size[0]), um(size[1]));
@@ -692,6 +759,19 @@ pub fn permit_sheets(
                     }
                     // A set's scale is its phase's: locked, as a detail's is (docs/adr/1090 §2).
                     m.view_locked = true;
+                    for layer in &page.freeze {
+                        if !m.layer_overrides.iter().any(|o| &o.layer == layer) {
+                            m.layer_overrides.push(crate::kinds::LayerOverride {
+                                layer: layer.clone(),
+                                frozen: true,
+                                plot: None,
+                                color: None,
+                                line_type: None,
+                                line_pattern: None,
+                                line_weight: None,
+                            });
+                        }
+                    }
                     // A tadilat set's plan shows its view's state (docs/adr/8039 §6): the camera and the scale the
                     // view's, the storey the map's.
                     if let Some(view) = &page.link {
@@ -721,6 +801,7 @@ pub fn permit_sheets(
             }
         }
         out.made.push(Made {
+            frame: (page.kind == PageKind::Section).then(|| format!("{}-kesit-1", ids.sheet)),
             sheet: ids.sheet,
             number,
             title: page.title.clone(),

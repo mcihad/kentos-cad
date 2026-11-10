@@ -1,6 +1,7 @@
-# ADR 8042: Kesit çıkar — kesit işaretinden 1:50 bina kesiti, eskime işareti
+# ADR 8042: Kesit çıkar — kesit işaretinden bina kesiti, eskime işareti, ruhsat takımında kesit paftası
 
-- **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ilk teslimi (M42 1. bölüm).
+- **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ilk teslimi (M42 1. bölüm: §1–§5;
+  2. bölüm: §6–§7).
 - **Bağlam belgesi:** ADR 0345 (görünüm işaretleri), ADR 0347 §3 (otomatik kesitin tasarımı), ADR 0799 (türetilmiş çizim:
   oda iç görünüşü), ADR 8008 (EK-4 katman anahtarı), ADR 8013 (ölçeğe göre çizgi grupları), ADR 8014 (TS 5319
   taramaları), ADR 8040 (düşey model), ADR 8041 (kiriş, lento, kolon–duvar düğümü).
@@ -48,6 +49,11 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
 - **Archicad, *Model Display in the Section Window*:** kesilen elemanlar katmanlarının taramasıyla; "Marked Distant Area"
   uzaktaki elemanları ayrı renkte çizer — EK-4 4.14.3'ün 1–4 derinlik ekine karşılık
   (`archicad-SectionComposite.png`, `archicad-SectionEx3.png`).
+- **Archicad, *Drawing Manager*:** paftalara yerleşmiş her çizimin durumu (OK, Modified "kaynak değişti, Update'e basın",
+  Missing, Needs Checking) ve yerleştiği pafta ("Placed To") tek listede; otomatik güncellenen çizimler yayından önce
+  kendiliğinden yenilenir, elle güncellenenler yalnız komutla (`archicad-DrawingMgrListColumns.png`).
+- **Revit, kesit başı:** kesit görünümü bir paftaya konunca kesit işareti paftanın numarasını ve çizim numarasını
+  kendiliğinden yazar; pafta yeniden numaralanınca izler (`revit-section-head-sheet-number.png`).
 
 ## Karar
 
@@ -85,7 +91,11 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
 - Merdiven: her düz kolu bir kol, sahanlığı bir döşeme; plağı vardığı döşemenin taşıyıcısı kalınlığında.
 - Çizilmeyen ve listelenen: çatı (ADV-20), tabii zemin, eğri merdiven, rampa, niş ve baca.
 
-### 4. Çizim (1/50)
+### 4. Çizim (çizimin ölçeğinde, Mimari'de 1/50)
+
+- **Ölçek (2. bölüm):** kesit çizimin kendi ölçeğine (Öznitelikler › Çizim ölçeği) göre çizilir: yazılar 2,5 mm, başlık
+  5 mm o ölçekte, başlığın altında "Ölçek 1/<ölçek>". 1. bölüm 1/50'yi sabit tutuyordu; planların yazıları da çizimin
+  ölçeğini okur ve kesit 1/100 bir çizimde 1/50 yazılarla duruyordu. Ölçek değişince kesit eskir.
 
 - **Kesilen:** malzeme malzeme birleşir (betonarme döşeme, kiriş, kolon, merdiven ve perde tek kesit); duvarın sıvası
   çekirdeğiyle tek çevre. Çevre 0,50 mm (döşemenin kaplama katmanları 0,25 mm); tarama planın 1:50'deki gibi
@@ -119,6 +129,36 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
   söyler ("çizilmeyen: çatı, tabii zemin"); tıklanan yer kesitin sol ucunun ±0,00'ı (Enter: çizimin sağına). Kesiti
   çıkmış işarete tıklamak onu yeniden çizer; tek geri alma adımı.
 
+### 6. Ruhsat takımı ve yayın (2. bölüm)
+
+- **Kesit paftası:** Proje › Ruhsat takımı, çıkarılmış ve yerleştirilmiş her kesite planlardan sonra kendi paftasını
+  kurar (MO sunuş sırası: planlar, kesitler, cepheler; ADR 8037). Pafta adı "B-B kesiti"; EK-2 Tablo 2.12 türü KS, Tablo
+  2.13 tipi MMC, konumu (2.9.3: kesitte müellifin verdiği üç karakter) varsayılan "B-B" (iki ve üç harfli işarette harfler
+  X ile üçe tamamlanır, işaretsizde NNN), paftada değiştirilebilir. Kesitin kutusu kilitli bir görünüm penceresinde,
+  kesitin çizildiği ölçekte, sığdığı en küçük A kâğıdında; kuzey oku yok (hesap tablosu ve doğrama listesi gibi).
+- **Ölçek farkı söylenir:** kesit çizimin ölçeğinde basılır (yazıları ancak o ölçekte doğru boydadır); takımın planları
+  başka ölçekteyse (Ruhsat 1/100) takım notu söyler ve çizim ölçeğini değiştirip yeniden çizmeyi önerir: Mimarlar Odası
+  "projenin plan kesit ve görünüşlerinin … aynı ölçekte olması tercih edilmelidir" der (bir kural değil, bir tercih).
+- **İşaret paftayı gösterir:** kesitin işareti kesit paftasının penceresine bağlanır (ADR 0345 §2); balonunun altına
+  paftanın numarası ("UP-06") yazılır, takım yeniden numaralanınca izler (Revit'in kesit başı gibi).
+- **Kesit kendi katmanında:** yerleşimi `MM-XXXX-KESIT` katmanına konur (EK-4'ün biçimi, genel öğe; 1. bölümde işaretlerin
+  `MM-XXXX-SEMBOL` katmanındaydı). Takımın vaziyet ve kat planı pencereleri yalnız kesit yerleşimi taşıyan katmanları
+  dondurur (pencerenin VPFREEZE'i, ADR 0314 §1): ilk denemede 1/500'lük vaziyet planı binanın yanına konan iki kesiti de
+  basıyordu. Başka nesne de taşıyan katman dondurulmaz.
+- **Eski kesit:** takım kurulurken eski bir kesit notla söylenir; Paftaları toplu yayınla, basacağı paftalardan birinin
+  görünüm penceresinde eski bir kesit varsa "B-B kesiti eski: … paftada eski kesit basılır" uyarısını verir ve Yeniden
+  çiz'i önerir (`section_stale`; yayını durdurmaz: çizimin kendi seçimi; Archicad'in Modified durumu gibi). Pencerenin
+  çizmediği katman (dondurulmuş ya da listesinde olmayan) sayılmaz: vaziyet planı yanlışlıkla "eski kesit basıyor"
+  deniyordu.
+
+### 7. Denetim › Mevzuat (2. bölüm)
+
+- PAİY 57/2-a-6 ("bir tanesi ortak merdivenden geçmek üzere en az iki adet kesit"): duvarı olan çizimde Kesit çıkar'ın
+  çıkardığı kesit ikiden azsa `paiy_sections_missing`; en az bir kesit çıkarılmış ve hiçbirinin çizgisi ortak merdivenin
+  (31/1-a'nın sınıfı, ADR 8034) bir kolunu ya da sahanlığını kesmiyorsa `paiy_section_stair_missing`. Kesip kesmediği
+  kesitin kendi geometrisinden okunur (çizgi merdivenin katılarından birinin taban alanından geçer mi). İşareti olup
+  kesiti çıkarılmamış çizgi kesit sayılmaz; elle çizilmiş kesitleri denetim bilemez, bulgu bunu söyler.
+
 ## Doğrulama
 
 - **Çekirdek:** `geom::section` birim testleri 12 (rıhtın üstünden geçen kesit dahil); bağımsız başvuruyla 17 durum
@@ -146,7 +186,25 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
     üstüne düşmesi; rıhtın üstünden geçen kesitte basamak burnunun taramayı bölmesi; kotların binadan 2,4 m uzakta
     kalması.
 
+### 2. bölümün doğrulaması
+
+- **Testler:** `sections` 9 (takım: B-B paftası planlardan sonra, KS/MMC/B-B, işaretin hedefi ve "UP-0N" yazısı,
+  plan ve vaziyet pencerelerinde `mm-xxxx-kesit` dondurulmuş, eski kesit ve ölçek notu; yayın: bütün paftalar seçiliyken
+  yalnız B-B paftası, Yeniden çiz'den sonra hiçbiri; mevzuat: 0 kesit → iki istenir, merdiveni ıskalayan tek kesit → iki
+  bulgu, A-A eklenince hiçbiri); `permit_set` birim 3 (konum kuralı); masaüstü mevzuat testleri yeni bulguyu bekler
+  (kesitsiz binalarda "en az iki kesit").
+- **Gerçek pencere** (1920 × 1080, `.run/gui-evidence/mimari-m42/p2/`):
+  - Önce (1. bölümün ikilisi): Ruhsat takımı UP-01…06, kesit paftası yok; B-B'nin balonunda "B / —"; Mevzuat'ta 7 bulgu.
+  - Sonra: UP-05 A-A kesiti, UP-06 B-B kesiti (A2 yatay, 1/50; `…_KS_MMC_A-A_01_000.pdf`, `…_KS_MMC_B-B_01_000.pdf`);
+    balon "B / UP-06"; kapı taşınınca durum çubuğu "2 kesit eski" (A-A kapıyı uzakta görür, B-B keser) ve yayın
+    denetiminde UP-05 ve UP-06 için "kesit eski"; vaziyet planı kesitleri basmıyor; Mevzuat'ta 8. bulgu "Mimari
+    projede en az iki kesit gerekir, çizimde 0 kesit çıkarılmış — PAİY 57/2-a-6".
+  - Bu turda bulunup düzeltilenler: vaziyet planının yanına konan kesitleri basması; dondurulmuş katmandaki kesitin
+    yayında "eski basılıyor" denmesi.
+- **Bilinen:** M37'nin hesap tabloları etkin katmana konuyor ve 1/500 vaziyet planında küçük bir tablo olarak görünüyor
+  (bu maddeden önceki davranış); ayrı bir işte tabloların da kendi katmanına alınması gerekir.
+
 ## Sonraya kalan
 
-Kırıklı kesit, rampa, çatı (ADV-20), tabii zemin, paftaya KS olarak yerleştirme ve iki kesit denetimi (2. bölüm), görünüş
-(M43), bağı koparma (Patlat bugün yapar).
+Kırıklı kesit, rampa, çatı (ADV-20), tabii zemin, görünüş (M43), bağı koparma (Patlat bugün yapar), yayından önce eski
+kesitleri kendiliğinden yenileme seçeneği (Archicad'in otomatik güncellemesi).

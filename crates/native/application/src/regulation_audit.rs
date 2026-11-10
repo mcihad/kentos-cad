@@ -189,6 +189,7 @@ pub const AIR_SHAFT_ARTICLE: Article = Article::paiy("32/3", ORIGINAL);
 pub const ELEVATOR_ARTICLE: Article = Article::paiy("34/1", "1.7.2026/33297 değişikliğiyle");
 pub const CABIN_ARTICLE: Article = Article::paiy("34/2", ORIGINAL);
 pub const RAILING_ARTICLE: Article = Article::paiy("38/1", ORIGINAL);
+pub const SECTIONS_ARTICLE: Article = Article::paiy("57/2-a-6", ORIGINAL);
 pub const SIVAS_STOREY_ARTICLE: Article = Article::sivas("28/1-c");
 pub const SIVAS_STAIR_ARTICLE: Article = Article::sivas("31/1-a");
 pub const SIVAS_LIGHTWELL_ARTICLE: Article = Article::sivas("32/2-a");
@@ -198,7 +199,7 @@ pub const SIVAS_DOOR_ARTICLE: Article = Article::sivas("39/1-c");
 
 /// The codes the group finds, in their order: PAİY's and the local regulation's, then the fire regulation's
 /// (docs/adr/8035).
-pub const CODES: [&str; 31] = [
+pub const CODES: [&str; 33] = [
     codes::PAIY_ROOM_MISSING,
     codes::PAIY_ROOM_AREA_BELOW,
     codes::PAIY_ROOM_WIDTH_BELOW,
@@ -219,6 +220,8 @@ pub const CODES: [&str; 31] = [
     codes::PAIY_ELEVATOR_MISSING,
     codes::PAIY_ELEVATOR_SMALL,
     codes::PAIY_ELEVATOR_LANDING_NARROW,
+    codes::PAIY_SECTIONS_MISSING,
+    codes::PAIY_SECTION_STAIR_MISSING,
     codes::REGULATION_CONFLICT,
     codes::BYKHY_ESCAPE_DISTANCE_OVER,
     codes::BYKHY_ESCAPE_NO_ROUTE,
@@ -1107,6 +1110,8 @@ pub fn findings(
     }
     // Stairs (31; 38/1).
     let mut first_stair: Option<V> = None;
+    // The common stairs (31/1-a's), by id, for the sections (57/2-a-6).
+    let mut common_stairs: Vec<(Slot, String, V)> = Vec::new();
     for e in doc.entities() {
         let Entity::Stair(st) = e else { continue };
         let x = &st.stair;
@@ -1132,6 +1137,11 @@ pub fn findings(
             None if room_on_level => StairIn::Outside,
             None => StairIn::Common,
         };
+        if place == StairIn::Common
+            && let Some(u) = doc.uid(slot)
+        {
+            common_stairs.push((slot, u.to_string(), at));
+        }
         // Its flight and landing (31/1-a).
         let limits = match place {
             StairIn::Common if dwelling_building => Some(("Ortak merdivenin", 1.20, 1.30, "")),
@@ -1590,6 +1600,79 @@ pub fn findings(
                 )
             {
                 push(s, vec![p.slot], at, None);
+            }
+        }
+    }
+    // Kesitler (57/2-a-6, docs/adr/8042 §7): "bir tanesi ortak merdivenden geçmek üzere en az iki adet kesit", read
+    // from the sections Kesit çıkar drew (a mark with no section is not one); a drawing without walls is no project.
+    if doc.entities().any(|e| matches!(e, Entity::Wall(_))) {
+        let drawn: Vec<(Slot, kentos_commands::ViewMarkFields)> = doc
+            .entities_with_uids()
+            .filter_map(|(u, e)| match e {
+                Entity::ViewMark(v)
+                    if v.mark.form == kentos_commands::ViewMarkForm::Section
+                        && doc.block(crate::sections::block_id(u)).is_some() =>
+                {
+                    Some((Slot(e.base().id), v.mark.clone()))
+                }
+                _ => None,
+            })
+            .collect();
+        let at_of = |f: &kentos_commands::ViewMarkFields| {
+            f.points
+                .first()
+                .map_or(V::new(0.0, 0.0), |p| V::new(p.x, p.y))
+        };
+        let building = doc
+            .entities()
+            .find_map(|e| match e {
+                Entity::Wall(w) => w.wall.pts.first().map(|p| V::new(p.x, p.y)),
+                _ => None,
+            })
+            .unwrap_or(V::new(0.0, 0.0));
+        if drawn.len() < 2 {
+            push(
+                Said {
+                    code: codes::PAIY_SECTIONS_MISSING,
+                    message: format!(
+                        "Mimari projede en az iki kesit gerekir, çizimde {} kesit çıkarılmış — {}",
+                        drawn.len(),
+                        SECTIONS_ARTICLE.short()
+                    ),
+                    repair: "Planda kesit işareti çizin ve Mimari › İşaret ▾ › Kesit çıkar ile kesitini çıkarın; biri \
+                             ortak merdivenden geçsin."
+                        .into(),
+                    rule: SECTIONS_ARTICLE.named(),
+                    binding: None,
+                },
+                drawn.iter().map(|(s, _)| *s).collect(),
+                drawn.first().map_or(building, |(_, f)| at_of(f)),
+                None,
+            );
+        }
+        if !drawn.is_empty() && !common_stairs.is_empty() {
+            let model = crate::sections::model(doc);
+            let through = drawn.iter().any(|(_, f)| {
+                let cut = crate::sections::cut_owners(&model, f);
+                common_stairs.iter().any(|(_, u, _)| cut.contains(u))
+            });
+            if !through {
+                push(
+                    Said {
+                        code: codes::PAIY_SECTION_STAIR_MISSING,
+                        message: format!(
+                            "Çıkarılmış {} kesitin hiçbiri ortak merdivenden geçmiyor — {}",
+                            drawn.len(),
+                            SECTIONS_ARTICLE.short()
+                        ),
+                        repair: "Ortak merdivenin kollarından geçen bir kesit işareti çizip kesitini çıkarın.".into(),
+                        rule: SECTIONS_ARTICLE.named(),
+                        binding: None,
+                    },
+                    common_stairs.iter().map(|(s, _, _)| *s).collect(),
+                    common_stairs[0].2,
+                    None,
+                );
             }
         }
     }

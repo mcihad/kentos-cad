@@ -421,18 +421,19 @@ fn write_execute(
             if let Err(r) = doc.add_block(block) {
                 return refused(doc, group, r.to_string());
             }
-            // Its placement on the marks' layer (EK-4's Kuzey oku, kesit ve görünüş işareti: MM-XXXX-SEMBOL).
+            // Its placement on a layer of its own (EK-4's form, the general element: MM-XXXX-KESIT), so a set's plan and
+            // site maps leave the sections drawn beside the building out (docs/adr/8042 §6).
             let mut one = BTreeMap::new();
             one.insert(
-                "MM-XXXX-SEMBOL".to_owned(),
-                layer_ids(doc, &std::iter::once("MM-XXXX-SEMBOL".to_owned()).collect())
-                    .remove("MM-XXXX-SEMBOL")
-                    .unwrap_or(("mm-xxxx-sembol".into(), true)),
+                "MM-XXXX-KESIT".to_owned(),
+                layer_ids(doc, &std::iter::once("MM-XXXX-KESIT".to_owned()).collect())
+                    .remove("MM-XXXX-KESIT")
+                    .unwrap_or(("mm-xxxx-kesit".into(), true)),
             );
             if let Err(why) = open_layers(doc, &one) {
                 return refused(doc, group, why);
             }
-            let layer = one["MM-XXXX-SEMBOL"].0.clone();
+            let layer = one["MM-XXXX-KESIT"].0.clone();
             let insert: Entity = match serde_json::from_value(serde_json::json!({
                 "kind": "insert", "id": 0, "layerId": layer, "attrs": {},
                 "block": sections::block_id(mark).to_string(), "p": {"x": at.x, "y": at.y}, "scale": 1.0, "rotation": 0.0

@@ -311,6 +311,15 @@
       yükseklikleri binanın ucundan 1 m; aks balonları tek sırada; mahal adı hiçbir çizgiye değmeyen ilk yerde.
     - Durum çubuğunda "B-B kesiti eski" → tıklayınca seçilir; Öznitelikler › Durum › Yeniden çiz. Plandaki kesit çizgisi
       noktalı kesikli (EK-4 4.28).
+  - **Kesit paftası ve denetimi (M42 2. bölüm, [ADR 8042](../adr/8042-section-derived-from-a-section-mark.md) §6–§7):**
+    - Kesit çizimin ölçeğinde çizilir (Çizim ölçeği; 1/50 sabit değil); yerleşimi `MM-XXXX-KESIT` katmanında.
+    - Ruhsat takımı her yerleştirilmiş kesite planlardan sonra paftasını kurar (`PageKind::Section`; EK-2 KS/MMC, konum
+      "B-B"; kesitin ölçeğinde, sığdığı en küçük A kâğıdında); işaret paftanın penceresine bağlanır, balon "B / UP-06".
+      Vaziyet ve kat planı pencereleri yalnız kesit taşıyan katmanları dondurur. Eski kesit ve ölçek farkı takım notunda.
+    - Yayın: basılacak paftanın penceresinde (dondurulmamış) eski kesit varsa `section_stale` uyarısı
+      (`sections_query::stale_on_sheets`).
+    - Mevzuat: `paiy_sections_missing` (ikiden az çıkarılmış kesit), `paiy_section_stair_missing` (hiçbiri ortak merdiveni
+      kesmiyor; `sections::cut_owners`), PAİY 57/2-a-6.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

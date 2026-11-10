@@ -102,6 +102,93 @@ pub fn rows(doc: &Document) -> Vec<BuildingSectionRow> {
     out
 }
 
+/// The stale sections the sheets `sheets` of `book` print (docs/adr/8042 §6): a placement of a stale section within a
+/// fixed map's ground, by the sheet's id and the section's name ("B-B kesiti"), in the sheets' order. Publication says
+/// them before it writes, as Archicad's Drawing Manager marks a drawing whose source changed.
+pub fn stale_on_sheets(
+    doc: &Document,
+    book: &kentos_sheet::SheetBook,
+    sheets: &[String],
+) -> Vec<(String, String)> {
+    let mut stale: Vec<(kentos_commands::BlockId, String)> = Vec::new();
+    for (u, e) in doc.entities_with_uids() {
+        let Entity::ViewMark(v) = e else { continue };
+        if v.mark.form == ViewMarkForm::Section
+            && doc.block(sections::block_id(u)).is_some()
+            && state_of(doc, u, &v.mark) == BuildingSectionState::Stale
+        {
+            stale.push((
+                sections::block_id(u),
+                format!("{} kesiti", sections::label(&v.mark.mark)),
+            ));
+        }
+    }
+    if stale.is_empty() {
+        return Vec::new();
+    }
+    let placed: Vec<([f64; 4], &str, &str)> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Insert(i) => stale
+                .iter()
+                .find(|(b, _)| *b == i.block)
+                .and_then(|(_, name)| {
+                    crate::sheets_fit::extent_of(doc, std::iter::once(e))
+                        .map(|x| (x, name.as_str(), e.base().layer_id.as_str()))
+                }),
+            _ => None,
+        })
+        .collect();
+    let mut out: Vec<(String, String)> = Vec::new();
+    for id in sheets {
+        let Some(sheet) = book.sheet(id) else {
+            continue;
+        };
+        for item in &sheet.items {
+            let Some(c) = kentos_sheet::display::fixed_corners(item) else {
+                continue;
+            };
+            let kentos_sheet::ItemKind::Map(m) = &item.kind else {
+                continue;
+            };
+            // A layer the map does not draw (frozen in it, or left out of its list) prints nothing of it.
+            let drawn = |layer: &str| {
+                !m.layer_overrides
+                    .iter()
+                    .any(|o| o.frozen && o.layer == layer)
+                    && match &m.layers {
+                        kentos_sheet::kinds::MapLayers::List(l) => {
+                            l.layers.iter().any(|x| x == layer)
+                        }
+                        _ => true,
+                    }
+            };
+            let (x0, x1) = c
+                .iter()
+                .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), q| {
+                    (a.min(q[0]), b.max(q[0]))
+                });
+            let (y0, y1) = c
+                .iter()
+                .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), q| {
+                    (a.min(q[1]), b.max(q[1]))
+                });
+            for (b, name, layer) in &placed {
+                if drawn(layer)
+                    && b[0] <= x1
+                    && b[2] >= x0
+                    && b[1] <= y1
+                    && b[3] >= y0
+                    && !out.iter().any(|(s, n)| s == id && n == name)
+                {
+                    out.push((id.clone(), (*name).to_owned()));
+                }
+            }
+        }
+    }
+    out
+}
+
 pub fn validate(cx: &ExecutionContext<'_>, input: &BuildingSectionsQuery) -> CommandResult<()> {
     match check(cx.doc, input) {
         Ok(_) => CommandResult::Completed {
