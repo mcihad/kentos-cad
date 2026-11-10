@@ -140,7 +140,7 @@ fn screens() {
     let _ = app.update(Message::Run("map.catalogReport"));
     let _ = app.update(Message::CatalogReport(C::Show(Show::Decisions)));
     shoot(&mut app, narrow, "4-kararlar-koyu-dar.png");
-    // Its place in the ribbon: Ölçme › Noktalar, beside Detay eşleştirme.
+    // Its place in the ribbon: Ölçme › Noktalar' ▾ (beside Detay eşleştirme), in map work.
     let mut app = opened(Some(Module::Map));
     set(&mut app, "light", wide);
     let _ = app.update(Message::RibbonTab("survey"));

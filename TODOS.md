@@ -236,6 +236,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
   `wrong_place`; cad.entities.drape.json'un 13 yeni durumu) ve web Eğimle kot ver › Yüzeyden'de Kot farkı ve Aralık.
 - MAP-05 / ADR 4560: web'e `cad.survey.baselines` işleyicisi gelirken WASM çekirdeğinin seyrek GNSS çözümü (zarf sınırı,
   ölçüm) ve GNSS baz ağı özetindeki büyüklük satırı.
+- MAP-04 / ADR 4940: web'de `cad.profiles.compare` işleyicisi (cad.profiles.compare.json'un 21 durumu) ve Katalog geçiş
+  raporu penceresi (iki katalog seçici, Sınıflar | Alanlar | Kodlar | Kararlar, Karar isteyenleri seç).
 - MAP-04 / ADR 4540: web'in `map.features.reconcile` işleyicisinde kayıtlı kararların yeniden uygulanması (`reapply`,
   `reapplied`; map.features.reconcile.json'un 4 yeni durumu) ve web Detay eşleştirme'de Önceki kararlar anahtarı.
 - MAP-03 / ADR 4520: web'in `map.survey.query` işleyicisinde kabul farkı sınırı (`tolerance`, `horizontal`, `beyond`;

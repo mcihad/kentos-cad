@@ -1173,13 +1173,6 @@
         ]
        },
        {
-        "command": "map.catalogReport",
-        "size": "small",
-        "works": [
-         "map"
-        ]
-       },
-       {
         "command": "crs.points",
         "size": "small"
        },
@@ -1190,6 +1183,14 @@
        {
         "command": "cogo.update",
         "size": "small"
+       }
+      ],
+      "overflow": [
+       {
+        "command": "map.catalogReport",
+        "works": [
+         "map"
+        ]
        }
       ]
      },

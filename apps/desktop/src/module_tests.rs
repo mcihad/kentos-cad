@@ -1369,7 +1369,7 @@ fn the_drawing_standard_is_kentos_mimaris() {
     );
     assert_eq!(
         standart(Module::Gis, "data").expect("Veri › Standart"),
-        ["profile.window", "zoning.check", "lineTypes.manage", "layer.impact"]
+        ["profile.window", "map.catalogReport", "zoning.check", "lineTypes.manage", "layer.impact"]
     );
 }
 

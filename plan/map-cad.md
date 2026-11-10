@@ -35,7 +35,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880 | öğe türüne göre önerilen profil (kurum profiliyle); kaymanın kullanıcının seçtiği resmî değerle (yanılma sınırı) karşılaştırılması | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
-| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
+| MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
@@ -716,6 +716,23 @@ yeni hata olarak işaretlenmez). Kanıtlanan: `reapply` ile yeni çıkarımın k
 alır: en yakını, eşitlikte küçük numaralı not; çalıştırmada verilen karar önce gelir; çıktı `reapplied`, yeni not
 önceki notu anar. 48 bağımsız durum (4 yeni), Python, MCP, masaüstünde Önceki kararlar anahtarı ve özeti. Açık: katalog
 geçiş raporu, AI çıkarımı ve gerçek çıkarımla ölçüm (dış kaynak).
+
+**11 Kasım 2026, onuncu tur — katalog geçiş raporu ([ADR 4940](../docs/adr/4940-catalog-migration-report.md)).**
+Kapsam: **Harita + CBS**. Dayanak: TUCBS GKM §9.3, §14.5, §17, §19 (kalıcı kimlik; değişen ve kalkan öğe kayıtta
+kalır), BÖHHBÜY Ek-2 §3.1.1 ve §7; şemalar arası eşlemede önce tür sonra özellik (hale studio), alan tanımlarının ve
+satır başına farkın karşılaştırılması (ArcGIS Pro Feature Compare); Netcad wiki sertifika yüzünden açılamadı, VGA'nın
+önce/sonra raporu okundu. Kanıtlanan:
+- `cad.profiles.compare` (salt okunur): eski ve yeni katalog; her eski sınıf kalıcı kimliğiyle, yoksa saha kodlarıyla
+  izlenir (aynı, değişti, yeniden adlandırıldı, bölündü, birleşti, kalktı, yeni); addan ya da konumdan tahmin yok;
+- tek hedefe giden sınıfın alanları (kalktı, türü ya da listesi değişti, zorunlu oldu, yeni), değer listelerinin kodları
+  (kalktı, kullanımdan kalktı, etiketi değişti, yeni), her satırda çizimin nesneleri ve “karar ister”;
+- kabul edilmiş insan düzeltmeleri: Detay eşleştirmenin kayıtlı kararları korunur, sınıfıyla sürer, alanı kalkar,
+  sınıfı kalkar ya da bölünür diye satır satır söylenir;
+- 21 bağımsız durum (`profile_compare_cases.py`), Python, MCP; masaüstünde Katalog geçiş raporu… (Ölçme › Noktalar ▾,
+  CBS Veri › Standart), dört tablo ve Karar isteyenleri seç.
+
+Açık: iki katalog arasında rapordan göç adımları üretip uygulamak (taşıma), AI çıkarımı ve gerçek çıkarımla ölçüm
+(sahibin bekleyen işleri). Madde `[ ]` kalır.
 
 ### MAP-05 — Üç boyutlu belirsizlik ve büyük ağ kalite yönetimini geliştir [ ]
 
