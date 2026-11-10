@@ -40,7 +40,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
-| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
+| MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
@@ -1258,6 +1258,14 @@ karar alanının sembolü planının kademesi ve Kullanım'ından, kullanıcın�
 hiç; yanlış sembollü alan kararının sembolünü alır. 26 bağımsız durum, Python, MCP, masaüstü (İmar planı denetimi ›
 Sembolleri karardan ver…) ve resimler. Açık: seçimlerin projede saklanması, plan değişikliği taslağı, hata katmanının
 GeoPackage'a yazılması, resmî şema ve eşleme.
+
+**10 Kasım 2026, dokuzuncu tur — sembol uyuşmazlığı; hata katmanlarının GeoPackage'a yazılması ([ADR 4640](../docs/adr/4640-zoning-symbol-mismatch-and-error-geopackage.md)).**
+Kapsam: **Harita + CBS**. Dayanak: ADR 4240'ın kuralı (sembol karardan; sembolden karar okunmaz), OGC GeoPackage
+§2.1.3'ün geometri biçimi. Kanıtlanan: `cad.zoning.check`'in yeni `symbolMismatch`'i karar alanının kitaplık sembolü
+KentOS'un tablosunun kararına verdiği değilse çıkar (sembolsüz alan, eşi olmayan kullanım değerlendirilmez); İmar
+planını denetle ve Topolojiyi kurallarla denetle'nin hata katmanları İşlem'in Sonucun yeri ile GeoPackage tablosu olur
+(alan ve nokta, projenin SRID'i), çizim değişmez. 51 bağımsız durum (4 yeni), testin kendi GeoPackage okuyucusuyla
+Python, MCP, masaüstü ve resimler. Açık: seçimlerin projede saklanması, plan değişikliği taslağı, resmî şema ve eşleme.
 
 ### MAP-10 — Plan ve saha alternatiflerini ölçülebilir etkiyle karşılaştır [ ]
 

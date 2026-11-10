@@ -213895,7 +213895,7 @@
       ]
     },
     "ZoningFinding": {
-      "description": "A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,\n`overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,\n`levelOrder`), its objects' persistent ids in the drawing's order, the area it measures (square metres) when it\nmeasures one, and what it says.",
+      "description": "A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,\n`overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,\n`levelOrder`; docs/adr/4640's `symbolMismatch`: a decision area whose library symbol is not the one KentOS's table\ngives its use, judged only with a symbol and a mapped use), its objects' persistent ids in the drawing's order, the\narea it measures (square metres) when it measures one, and what it says.",
       "properties": {
         "area": {
           "format": "double",

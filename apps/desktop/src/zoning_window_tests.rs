@@ -44,6 +44,55 @@ fn the_messy_plan_is_found_out_and_its_areas_shown() {
     assert_eq!(app.selection.ids(), [Slot(5), Slot(9), Slot(6), Slot(1)]);
 }
 
+const SYMBOL: &str =
+    "sembol kararı göstermiyor: ticaret alanı park sembolüyle; eşleşen, eşi olmayan kullanım ve sembolsüz alan denetlenmez";
+
+/// docs/adr/4640: the trade area drawn with the park's symbol is a Sembol uyuşmazlığı in the Karar ve değer group, and
+/// Seç ve göster selects it alone (the park with its own symbol, the housing area and the area without one are not
+/// judged).
+#[test]
+fn a_symbol_that_does_not_show_its_decision_is_found() {
+    let mut app = opened(Some(Module::Map), SYMBOL);
+    let _ = app.update(Message::Run("zoning.check"));
+    let r = app.zoning.answer.clone().expect("an answer").expect("checked");
+    assert_eq!((r.findings.len(), r.counts.get("symbolMismatch")), (1, Some(&1)));
+    assert_eq!(crate::zoning_window::kind_word("symbolMismatch"), "Sembol uyuşmazlığı");
+    assert!(Group::Decisions.holds("symbolMismatch"));
+    let _ = app.update(Message::Zoning(Z::Group(Group::Decisions)));
+    let _ = app.update(Message::Zoning(Z::Show));
+    assert_eq!(app.selection.ids(), [Slot(2)], "S1, the trade area");
+}
+
+/// `.run/gui-evidence/imar-sembol-4640/`:
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib zoning_window_tests::symbol_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn symbol_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-sembol-4640");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = opened(Some(Module::Map), SYMBOL);
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let _ = app.update(Message::Run("zoning.check"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("1-sembol-uyusmazligi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
 const ROAD_GAP: &str = "kopuk yol aksı: ucu ne yola ne plan sınırına değiyor";
 const OUTSIDE_UPPER: &str = "alt plan üst planın sınırının dışına taşıyor";
 

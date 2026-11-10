@@ -39,7 +39,9 @@ fn attr(e: &Entity, key: &str) -> String {
 }
 
 /// The objects whose symbol changes and the answer, or why not.
-fn run(doc: &Document, input: &ZoningSymbolize) -> Result<(Vec<(Slot, Entity)>, ZoningSymbolized), Stop> {
+/// `writes`: whether the symbols are to be written (a locked layer refuses then); the zoning check reads the rows
+/// only (docs/adr/4640).
+fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<(Vec<(Slot, Entity)>, ZoningSymbolized), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let (Some(p), Some(table)) = (builtin_profile(ZONING_PROFILE), builtin_zoning_symbols()) else {
         return Err(fail(codes::INVALID_INPUT, "İmar planı profili ya da sembol tablosu okunamadı.".into(), None));
@@ -193,7 +195,7 @@ fn run(doc: &Document, input: &ZoningSymbolize) -> Result<(Vec<(Slot, Entity)>, 
                     if same {
                         "same"
                     } else {
-                        if doc.layers().is_locked(&e.base().layer_id) {
+                        if writes && doc.layers().is_locked(&e.base().layer_id) {
                             return Err(fail(
                                 codes::LAYER_LOCKED,
                                 format!(
@@ -228,7 +230,7 @@ fn run(doc: &Document, input: &ZoningSymbolize) -> Result<(Vec<(Slot, Entity)>, 
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<()> {
-    match run(cx.doc, input) {
+    match run(cx.doc, input, false) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -236,14 +238,14 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandRe
 
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
-    match run(cx.doc, input) {
+    match run(cx.doc, input, false) {
         Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
-    let (changed, mut out) = match run(cx.doc, &input) {
+    let (changed, mut out) = match run(cx.doc, &input, true) {
         Ok(done) => done,
         Err(stop) => return stop.into(),
     };
@@ -260,4 +262,17 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> Command
         input,
         write,
     )
+}
+
+/// The decision areas as `cad.zoning.symbolize` reads them without the user's picks, writing nothing (docs/adr/4640, the
+/// zoning check's symbol rule): none when the table or the decision layer is not there.
+pub(crate) fn rows(doc: &Document) -> Option<Vec<kentos_commands::ZoningSymbolRow>> {
+    run(doc, &ZoningSymbolize::default(), false).ok().map(|(_, out)| out.areas)
+}
+
+/// A library symbol's name as KentOS's table lists it among a level's choices; the id itself when it is not there.
+pub(crate) fn symbol_name(id: &str) -> String {
+    builtin_zoning_symbols()
+        .and_then(|t| t.levels.iter().flat_map(|l| &l.choices).find(|c| c.id == id).map(|c| c.name.clone()))
+        .unwrap_or_else(|| id.to_owned())
 }

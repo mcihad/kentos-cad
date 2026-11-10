@@ -44,7 +44,7 @@ PROFILE = json.loads((ROOT / "catalog/v1/profiles/imar-plani.json").read_text("u
 X0, Y0 = 487000.0, 4420000.0
 KINDS = ["missingLayer", "noLevel", "upperMissing", "levelOrder", "outsideUpper", "noPlan", "noUse", "unknownUse",
          "missingValue", "declaredValued", "kaksReview", "overlap", "uncovered", "outside", "roadGap", "roadWidth",
-         "roadParcel", "noteMissing", "noteUnused"]
+         "roadParcel", "noteMissing", "noteUnused", "symbolMismatch"]
 OPEN = {"park", "yesil", "meydan", "yol"}
 RANK = ["msp", "cdp", "nip", "uip"]
 LAYER_IDS = {"plan-siniri": "plan", "karar-alani": "karar", "plan-notu": "notlar", "yol-aksi": "yollar"}
@@ -54,6 +54,14 @@ CLASS_OF = {"plan": "plan-siniri", "karar": "karar-alani", "notlar": "plan-notu"
 
 def uid(n):
     return f"0192f5c0-1420-7000-8000-{n:012x}"
+
+
+# ADR 4640: the symbols by ADR 4240's rule, from the library on its own (scripts/fixtures/zoning_symbols_cases.py
+# derives them by the same written name; KentOS code none), and the library's names.
+sys.path.insert(0, str(ROOT / "scripts/fixtures"))
+import zoning_symbols_cases as zs  # noqa: E402
+SYMBOLS = zs.KNOWN
+NAMES = {i["id"]: i["name"] for i in zs.LIBRARY if i.get("kind") == "symbol"}
 
 
 def domain(d):
@@ -114,7 +122,7 @@ def parsel(ada, no, r):
 def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
     ents = []
     for i, (layer, geo, attrs) in enumerate(objects, start=1):
-        a = {k: v for k, v in attrs.items() if v is not None}
+        a = {k: v for k, v in attrs.items() if v is not None and k != "@symbol"}
         if layer == "notlar":
             ents.append({"kind": "point", "id": i, "layerId": layer, "attrs": a,
                          "p": {"x": X0 + geo[0], "y": Y0 + geo[1]}})
@@ -123,6 +131,8 @@ def setup(objects, classes=("plan-siniri", "karar-alani", "plan-notu")):
                          "pts": [{"x": X0 + x, "y": Y0 + y} for x, y in geo]})
         else:
             ents.append({"kind": "polygon", "id": i, "layerId": layer, "attrs": a, "pts": rect_pts(geo)})
+            if attrs.get("@symbol"):
+                ents[-1]["symbol"] = attrs["@symbol"]
     return {"format": "kentos.document", "version": 2, "name": "İmar planı denetimi",
             "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
                          "plotScale": 1000.0, "workspace": "cad", "cadWork": "map"},
@@ -446,6 +456,28 @@ def check(objects, classes=("plan-siniri", "karar-alani", "plan-notu"), toleranc
                 name = "/".join(v for v in (g(q, "Ada"), g(q, "Parsel")) if v) or "kimliksiz"
                 say("roadParcel", [i, j], area, f"“{g(o, 'YolKimlik')}” yolunun {written} m genişliği içine “{name}” "
                                                 "parseli giriyor.", outlines(inside, tolerance))
+    # ADR 4640: a decision area whose library symbol is not the one KentOS's table gives its use (ADR 4240's rule: its
+    # Plan names a plan boundary, else the one plan boundary there is; the level that plan's), judged only when the
+    # area has a symbol and the table maps its use.
+    for i, o in decisions:
+        symbol = (o[2].get("@symbol") or "").strip()
+        if not symbol:
+            continue
+        written = g(o, "Plan")
+        named = [q for _, q in plans if g(q, "PlanKimlik") == written] if written else (
+            [q for _, q in plans] if len(plans) == 1 else [])
+        if not named:
+            continue
+        level, use = g(named[0], "Seviye"), g(o, "Kullanim")
+        if not level or not use or use not in domain("plan-kullanim"):
+            continue
+        want = SYMBOLS.get(level, {}).get(use)
+        if want is None or want == symbol:
+            continue
+        say("symbolMismatch", [i], None, f"Karar alanının sembolü “{NAMES.get(symbol, symbol)}”, kararı "
+                                         f"“{label('plan-kullanim', use)}” ({label('plan-seviye', level)}) "
+                                         f"“{NAMES.get(want, want)}” sembolünü verir: sembol kararı göstermiyor. "
+                                         "Sembolleri karardan ver ile düzeltin.")
     found.sort(key=lambda f: (f[0], f[1]))
     findings = [f[2] for f in found]
     counts = {}
@@ -522,6 +554,20 @@ U_ROAD = [
 
 # docs/adr/2640: three parcels on the parcel layer, two in block A1 and one in A4, up to the planned roads' edges.
 PARCELS = [parsel("101", "1", (0, 0, 20, 25)), parsel("101", "2", (20, 0, 45, 25)), parsel("102", "1", (55, 35, 100, 60))]
+
+
+# ADR 4640: decision areas carrying library symbols: a trade area drawn with the park's symbol, a park with its own, a
+# housing area (no symbol in the table) with the park's, a trade area without a symbol.
+PARK, TRADE = SYMBOLS["uip"]["park"], SYMBOLS["uip"]["ticaret"]
+SYMBOLED = [
+    plan("UIP-S", (0, 0, 100, 50)),
+    karar("S1", (0, 0, 25, 50), "ticaret", Plan="UIP-S", Nizam="BL", TAKS="0.35", KAKS="1.75", KatAdedi="5",
+          **{"@symbol": PARK}),
+    karar("S2", (25, 0, 50, 50), "park", Plan="UIP-S", **{"@symbol": PARK}),
+    karar("S3", (50, 0, 75, 50), "konut", Plan="UIP-S", Nizam="A", TAKS="0.40", KAKS="1.20", KatAdedi="3",
+          **{"@symbol": PARK}),
+    karar("S4", (75, 0, 100, 50), "ticaret", Plan="UIP-S", Nizam="BL", TAKS="0.35", KAKS="1.75", KatAdedi="5"),
+]
 
 
 def with_(objects, index, **attrs):
@@ -639,6 +685,17 @@ def cases():
              tolerance=0.05, expect=[]),
         case("kimliği yazılmamış parsel kimliksiz diye söylenir",
              roady(w1="12") + [("parsel", (0, 0, 20, 25), {})], classes=ROADS, expect=["roadWidth"] * 4 + ["roadParcel"]),
+        # docs/adr/4640: the symbol against the decision.
+        case("sembol kararı göstermiyor: ticaret alanı park sembolüyle; eşleşen, eşi olmayan kullanım ve sembolsüz alan "
+             "denetlenmez", SYMBOLED, expect=["symbolMismatch"]),
+        case("sembolü kararınınki: bulgu yok", with_(SYMBOLED, 1, **{"@symbol": TRADE}), expect=[]),
+        case("Plan yazılmamış alan tek plan sınırının kademesiyle denetlenir",
+             with_(SYMBOLED, 1, Plan=None), expect=["symbolMismatch"]),
+        case("nazım planın kararı: sanayi alanı spor sembolüyle",
+             [plan("NIP-S", (0, 0, 100, 50), seviye="nip"),
+              karar("N1", (0, 0, 100, 50), "sanayi", Plan="NIP-S", TAKS="0.50", KAKS="1.00", KatAdedi="2",
+                    **{"@symbol": SYMBOLS["nip"]["spor"]})],
+             expect=["symbolMismatch"]),
         refused("tolerans sıfır", 0.0, "0"),
         refused("tolerans eksi", -1.0, "-1"),
     ]

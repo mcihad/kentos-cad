@@ -4,8 +4,9 @@ import type { ZoningRegion } from "./ZoningRegion";
 /**
  * A finding: its kind (`missingLayer`, `noUse`, `unknownUse`, `missingValue`, `declaredValued`, `kaksReview`,
  * `overlap`, `uncovered`, `outside`, `noPlan`, `noteMissing`, `noteUnused`, `noLevel`, `upperMissing`,
- * `levelOrder`), its objects' persistent ids in the drawing's order, the area it measures (square metres) when it
- * measures one, and what it says.
+ * `levelOrder`; docs/adr/4640's `symbolMismatch`: a decision area whose library symbol is not the one KentOS's table
+ * gives its use, judged only with a symbol and a mapped use), its objects' persistent ids in the drawing's order, the
+ * area it measures (square metres) when it measures one, and what it says.
  */
 export type ZoningFinding = { kind: string, uids: Array<string>, area?: number, message: string, 
 /**

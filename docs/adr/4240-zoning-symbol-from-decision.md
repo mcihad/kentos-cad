@@ -101,6 +101,7 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-09, sekizinci tur. Durum: taslak. ADR 142
 
 ## Sonra
 
-- Kullanıcının kademe ve kullanım seçimlerinin projede saklanması; imar denetiminde sembol ile karar uyuşmazlığı.
+- Kullanıcının kademe ve kullanım seçimlerinin projede saklanması; ~~imar denetiminde sembol ile karar uyuşmazlığı~~
+  ([ADR 4640](4640-zoning-symbol-mismatch-and-error-geopackage.md)).
 - Plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; resmî şema ve eşleme (MAP-09'un kalanı).
 - Web (TODOS §0.2).

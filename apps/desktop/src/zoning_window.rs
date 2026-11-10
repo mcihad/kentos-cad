@@ -54,7 +54,7 @@ impl Group {
                 matches!(kind, "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "outsideUpper" | "noPlan")
             }
             Group::Decisions => {
-                matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview")
+                matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview" | "symbolMismatch")
             }
             Group::Areas => {
                 matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth" | "roadParcel")

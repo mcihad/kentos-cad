@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **İmar denetiminde sembol uyuşmazlığı; hata katmanları GeoPackage'a (10 Kasım 2026; MAP-09, [ADR 4640](../../docs/adr/4640-zoning-symbol-mismatch-and-error-geopackage.md)).**
+  `cad.zoning.check`'in `symbolMismatch`'i (sembol karardan, tablo ADR 4240'ın); imar ve topoloji hata katmanları İşlem'in
+  Sonucun yeri ile GeoPackage tablosu olur, çizim değişmez. Harita + CBS.
 - **İfrazda komşunun sınırının bölünmesi (10 Kasım 2026; MAP-08, [ADR 4620](../../docs/adr/4620-subdivision-splits-neighbour-boundary.md)).**
   `cad.parcels.record`: yeni köşe güncel komşunun düz sınırının içindeyse (1 µm) ve parçalar belgenin sınırlarıysa
   sınır bölünür, komşunun halkası parçaları alır, eski sınır kapanır; `boundariesSplit`, `neighbours`. Harita + CBS.

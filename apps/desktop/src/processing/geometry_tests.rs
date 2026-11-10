@@ -217,6 +217,34 @@ fn the_zoning_regions_go_to_an_error_layer_in_one_step() {
     assert!(doc.layers().leaves().iter().all(|l| l.name != "İmar bulguları"));
 }
 
+/// docs/adr/4640: İmar planını denetle with Bulguları hata katmanına yaz and Sonucun yeri a GeoPackage: the run is made on
+/// a copy, the two regions go to the file's İmar bulguları table, the message says so, the drawing does not change.
+#[test]
+fn the_zoning_error_layer_goes_to_a_geopackage() {
+    use super::sink::{Place, SinkEvent, run_to_sink};
+    let mut app = app_with(ZONING);
+    let _ = app.update(Message::Run("processing.run.zoning.check"));
+    value(&mut app, "write", json!(true));
+    let dir = crate::files_testing::scratch("imar-bulgulari-gpkg");
+    let out = dir.join("imar-bulgulari.gpkg");
+    event(&mut app, Event::Sink(SinkEvent::Place(Place::File)));
+    event(&mut app, Event::Sink(SinkEvent::Path(out.display().to_string())));
+    let before = app.document.as_ref().expect("open").model.revision();
+    let input = app.processing_sink_input().expect("an input");
+    event(&mut app, Event::Run);
+    let mut copy = app.document.as_ref().expect("open").model.reading_copy();
+    let end = run_to_sink(&mut copy, &input, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)));
+    event(&mut app, Event::Sink(SinkEvent::Ran(end)));
+    let RunStatus::Ok { text, undo, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert!(!undo);
+    assert!(text.contains("1 bulgunun 2 bölgesi hata katmanına yazıldı."), "{text}");
+    assert!(text.contains("Sonuç imar-bulgulari.gpkg dosyasına yazıldı: İmar bulguları (2 satır)."), "{text}");
+    assert!(out.exists(), "the file is written");
+    assert_eq!(app.document.as_ref().expect("open").model.revision(), before, "the drawing does not change");
+}
+
 /// İmar planını denetle with Bulguları hata katmanına yaz on the drawing with four decisions and three parcels in a
 /// wide road, then the error layer on the drawing; `.run/gui-evidence/imar-hata-3840/`:
 ///

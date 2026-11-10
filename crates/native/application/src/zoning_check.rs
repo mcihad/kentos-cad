@@ -29,7 +29,7 @@ use crate::geometry::shape;
 use crate::profiles::{Place, find, path_words};
 
 /// The kinds in the order the answer lists them.
-pub const KINDS: [&str; 19] = [
+pub const KINDS: [&str; 20] = [
     "missingLayer",
     "noLevel",
     "upperMissing",
@@ -49,6 +49,8 @@ pub const KINDS: [&str; 19] = [
     "roadParcel",
     "noteMissing",
     "noteUnused",
+    // Docs/adr/4640: last, so that the earlier kinds keep their order.
+    "symbolMismatch",
 ];
 
 /// The uses on which nothing is built: they ask for no TAKS, KAKS or height.
@@ -137,6 +139,7 @@ pub fn kind_word(kind: &str) -> &'static str {
         "roadParcel" => "Yola giren parsel",
         "noteMissing" => "Plan notu yok",
         "noteUnused" => "Anılmayan not",
+        "symbolMismatch" => "Sembol uyuşmazlığı",
         _ => "Bulgu",
     }
 }
@@ -699,6 +702,27 @@ fn run_with_regions(
         }
     }
 
+    // Docs/adr/4640: a decision area whose library symbol is not the one its decision gives (KentOS's table, ADR 4240,
+    // read as Sembolleri karardan ver reads it): judged only when the area has a symbol and the table gives its use one;
+    // the symbol shows the decision, never the other way round.
+    if let Some(rows) = crate::zoning_symbolize::rows(doc) {
+        for row in rows.iter().filter(|r| r.state == "set") {
+            let (Some(was), Some(symbol)) = (row.was.as_deref(), row.symbol.as_deref()) else { continue };
+            let Some(item) = decisions.iter().find(|d| d.uid == row.uid) else { continue };
+            say(
+                "symbolMismatch",
+                &[item],
+                None,
+                format!(
+                    "Karar alanının sembolü “{}”, kararı “{}” ({}) “{}” sembolünü verir: sembol kararı göstermiyor. Sembolleri karardan ver ile düzeltin.",
+                    crate::zoning_symbolize::symbol_name(was),
+                    label(&p, "plan-kullanim", &row.usage),
+                    label(&p, "plan-seviye", &row.level),
+                    crate::zoning_symbolize::symbol_name(symbol)
+                ),
+            );
+        }
+    }
     findings.sort_by_key(|(order, first, _, _)| (*order, *first));
     let (findings, regions): (Vec<ZoningFinding>, Vec<Vec<_>>) = findings.into_iter().map(|(_, _, f, r)| (f, r)).unzip();
     let mut counts: BTreeMap<String, u32> = BTreeMap::new();

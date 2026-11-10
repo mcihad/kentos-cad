@@ -72,5 +72,6 @@ katmanına yazılması (topoloji bulguları gibi, ADR 2200)”.
 
 - Plan değişikliği taslağı; ~~sembolün karardan seçilmesi~~ (ADR 4240); resmî şema ve eşleme (MAP-09'un öbür
   maddeleri).
-- Hata katmanının GeoPackage'a yazılması (İşlem penceresinin Sonucun yeri ile; ADR 2200 Sonra).
+- ~~Hata katmanının GeoPackage'a yazılması (İşlem penceresinin Sonucun yeri ile; ADR 2200 Sonra)~~
+  ([ADR 4640](4640-zoning-symbol-mismatch-and-error-geopackage.md)).
 - Web (TODOS §0.2).
