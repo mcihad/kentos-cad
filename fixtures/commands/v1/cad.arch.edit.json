@@ -838,6 +838,203 @@
       ]
     },
     {
+      "name": "Değiştir: kolonun malzemesi; null Betonarme'ye döndürür",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.columns.create",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "material": "Çelik"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "material": "Çelik"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "material": "Ahşap"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.3,
+                  "material": "Ahşap"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3,
+                "material": "Ahşap"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.arch.edit",
+          "input": {
+            "uids": [
+              "$uidOf:10"
+            ],
+            "operation": {
+              "kind": "set",
+              "material": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "elements": [
+                {
+                  "kind": "column",
+                  "id": 10,
+                  "layerId": "kolon",
+                  "attrs": {},
+                  "at": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "width": 0.3
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                "width": 0.3
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "Değiştir: merdivenin rıhtları uyarılarıyla",
       "steps": [
         {

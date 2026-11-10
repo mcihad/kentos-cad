@@ -170,11 +170,27 @@ pub struct ColumnSpec {
     pub fill: bool,
     pub tag: Option<String>,
     pub place: Option<String>,
+    /// Its material (docs/adr/3041 §2); none: Betonarme ([`COLUMN_MATERIAL`]). A wall's layer of the same material it
+    /// meets is one section with it.
+    pub material: Option<String>,
+    /// Its level's id (the contract's `arch.level`): a wall it cuts is on the same one, or both on none.
+    pub level: Option<String>,
+}
+
+/// A column's material when it names none (docs/adr/3041 §2).
+pub const COLUMN_MATERIAL: &str = "Betonarme";
+
+impl ColumnSpec {
+    /// Its material's name: its own, else Betonarme.
+    pub fn material_name(&self) -> &str {
+        self.material.as_deref().unwrap_or(COLUMN_MATERIAL)
+    }
 }
 
 impl crate::api::json::Flat for ColumnSpec {
-    const NAMES: &'static [&'static str] =
-        &["shape", "width", "depth", "legs", "rotation", "anchor", "fill", "tag", "place"];
+    const NAMES: &'static [&'static str] = &[
+        "shape", "width", "depth", "legs", "rotation", "anchor", "fill", "tag", "place", "material", "arch",
+    ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         let (round, l) = match word(v, "shape").as_deref() {
@@ -212,6 +228,8 @@ impl crate::api::json::Flat for ColumnSpec {
             fill: matches!(v.get("fill"), Json::Bool(true)),
             tag: word(v, "tag"),
             place: word(v, "place"),
+            material: word(v, "material"),
+            level: word(v.get("arch"), "level"),
         })
     }
 
@@ -244,6 +262,19 @@ impl crate::api::json::Flat for ColumnSpec {
         }
         if let Some(t) = &self.place {
             field(out, first, "place", t.as_str());
+        }
+        if let Some(t) = &self.material {
+            field(out, first, "material", t.as_str());
+        }
+        if let Some(l) = &self.level {
+            // The contract's place for it, so the store's JSON reads back the same.
+            if !*first {
+                out.push(',');
+            }
+            *first = false;
+            out.push_str("\"arch\":{\"level\":");
+            l.as_str().write_json(out);
+            out.push('}');
         }
     }
 }
@@ -797,7 +828,7 @@ fn column_size(spec: &ColumnSpec) -> String {
 
 /// A column's pieces at 1:`scale`: its fill, its outline, its tag and place beside its upper right.
 pub fn column_pieces(at: Vec2, spec: &ColumnSpec, scale: f64) -> Vec<Piece> {
-    column_pieces_at(at, spec, scale, Level::Whole, false)
+    column_pieces_at(at, spec, scale, Level::Whole, false, None)
 }
 
 /// [`column_pieces`] at `level`: beyond 1:150 without its words, from 1:50 with its size under them (docs/adr/3011);
@@ -809,6 +840,7 @@ fn column_pieces_at(
     scale: f64,
     level: Level,
     detailed: bool,
+    joined: Option<(&crate::geom::column_join::Joined, crate::geom::wall::Detail)>,
 ) -> Vec<Piece> {
     let mut out = Vec::new();
     let r = spec.width / 2.0;
@@ -819,10 +851,39 @@ fn column_pieces_at(
         let c = column_corners(at, spec);
         (c.clone(), polygon(c))
     };
-    let concrete = detailed
+    // One section with a wall's layer of its material (docs/adr/3041 §2): that layer's look, as the wall draws it at
+    // the view's detail.
+    let joined_look = joined.and_then(|(j, detail)| {
+        use crate::geom::wall::Detail;
+        if detail == Detail::Schematic {
+            j.fill.as_ref().map(|c| (HatchPattern::user("solid", 0.0, 1.0), Some(c.clone()), false))
+        } else {
+            let (fill, least, turn) = j.hatch.as_ref()?;
+            (detail >= *least)
+                .then(|| crate::geom::wall::component_hatch(&fill.pattern, fill.scale, turn + fill.angle, scale))
+                .flatten()
+                .map(|p| (p, fill.color.clone(), !fill.pattern.eq_ignore_ascii_case("solid")))
+        }
+    });
+    // TS 5319's SN46 at 1:20 is reinforced concrete's: a column of another material is not hatched as concrete.
+    let concrete = (detailed && is_concrete(spec))
         .then(|| crate::geom::wall::component_hatch(CONCRETE, 1.0, 0.0, scale))
         .flatten();
-    if let Some(pattern) = concrete {
+    if let Some((pattern, color, lines)) = joined_look {
+        let mut hatch = piece(Shape::Hatch {
+            ring: ring.clone(),
+            holes: None,
+            pattern,
+            assoc: None,
+            boundary: None,
+        });
+        hatch.color = color;
+        if lines {
+            // The pattern's lines narrow (ISO 128-23: hatching is the narrow line), as the column's own.
+            hatch.stroke.weight_scale = Some(0.5);
+        }
+        out.push(hatch);
+    } else if let Some(pattern) = concrete {
         let mut hatch = piece(Shape::Hatch {
             ring,
             holes: None,
@@ -842,7 +903,11 @@ fn column_pieces_at(
             boundary: None,
         }));
     }
-    out.push(piece(outline));
+    match joined {
+        // Not drawn where it lies inside the layer it is one section with.
+        Some((j, _)) => out.extend(j.outline.iter().map(|part| piece(polyline(part.clone())))),
+        None => out.push(piece(outline)),
+    }
     let mut words: Vec<String> = if level == Level::Simple {
         Vec::new()
     } else {
@@ -867,6 +932,29 @@ fn column_pieces_at(
         out.push(piece(text(p, words.join("\n"), h, TextAlign::BottomLeft)));
     }
     out
+}
+
+/// Whether the column is reinforced concrete (docs/adr/3041 §2): its material's name says so (Betonarme, Betonarme C30).
+fn is_concrete(spec: &ColumnSpec) -> bool {
+    crate::geom::column_join::material_key(spec.material_name()).starts_with("betonarme")
+}
+
+/// A column's pieces as a view draws it one section with a wall's layer of its material (docs/adr/3041 §2): that
+/// layer's look over it, its outline where it is not inside the layer.
+pub fn column_pieces_joined(
+    at: Vec2,
+    spec: &ColumnSpec,
+    view: crate::geom::wall::View,
+    joined: &crate::geom::column_join::Joined,
+) -> Vec<Piece> {
+    column_pieces_at(
+        at,
+        spec,
+        view.scale,
+        level_of(view),
+        view.detail == crate::geom::wall::Detail::Detailed,
+        Some((joined, view.detail)),
+    )
 }
 
 /// A walking line measured: its segments' lengths and the arc length at each point; a curved stair's one arc
@@ -1977,6 +2065,7 @@ pub fn pieces_in(shape: &Shape, view: crate::geom::wall::View) -> Vec<Piece> {
             scale,
             level,
             view.detail == crate::geom::wall::Detail::Detailed,
+            None,
         ),
         Shape::Stair { pts, stair } => stair_pieces_at(pts, stair, scale, level),
         Shape::Ramp { pts, ramp } => ramp_pieces_at(pts, ramp, scale, level),

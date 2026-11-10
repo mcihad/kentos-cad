@@ -22639,6 +22639,8 @@ class ColumnEntity(Entity):
             (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
             ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
             object (docs/adr/0139). Unit: paper-mm.
+        material: Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
+            are one section, hatched alike with no line between them.
         order: Its place in its layer's drawing order: lower first, equals in the
             document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
         place: Its place by its grids' labels (“B-3”), which the document writes.
@@ -22671,6 +22673,7 @@ class ColumnEntity(Entity):
     line_type: LineType | LineTypeName | None | Unset = UNSET
     line_type_scale: float | None | Unset = UNSET
     line_weight: float | None | Unset = UNSET
+    material: str | None | Unset = UNSET
     order: int | None | Unset = UNSET
     place: str | None | Unset = UNSET
     rotation: float | Unset = UNSET
@@ -22720,6 +22723,8 @@ class ColumnEntity(Entity):
             out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
         if self.line_weight is not UNSET:
             out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.order is not UNSET:
             out["order"] = self.order
         if self.place is not UNSET:
@@ -22764,6 +22769,7 @@ class ColumnEntity(Entity):
             line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
             line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            material=data.get("material", UNSET),
             order=data.get("order", UNSET),
             place=data.get("place", UNSET),
             rotation=float(data["rotation"]) if "rotation" in data else UNSET,
@@ -56914,6 +56920,7 @@ class NewColumn(_Model):
         grids: The two grids it stands where they cross, by their persistent ids; it follows them.
         legs: An L's legs, metres (docs/adr/0725 §3): the thickness of the one along its width, then of the one along its
             depth; only with `shape` L, which needs them. Unit: length.
+        material: Its material (docs/adr/3041 §2); absent: Betonarme.
         rotation: Its turn, radians counter-clockwise. Unit: rad.
         tag: Absent: from `tagStart` on, else none.
         type: Its type's name.
@@ -56927,6 +56934,7 @@ class NewColumn(_Model):
     fill: bool | None | Unset = UNSET
     grids: list[str] | None | Unset = UNSET
     legs: list[float] | None | Unset = UNSET
+    material: str | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     shape: ColumnShape | ColumnShapeName | None | Unset = UNSET
     tag: str | None | Unset = UNSET
@@ -56951,6 +56959,8 @@ class NewColumn(_Model):
             out["grids"] = None if self.grids is None else list(self.grids)
         if self.legs is not UNSET:
             out["legs"] = None if self.legs is None else [float(e0) for e0 in self.legs]
+        if self.material is not UNSET:
+            out["material"] = self.material
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.shape is not UNSET:
@@ -56973,6 +56983,7 @@ class NewColumn(_Model):
             fill=data.get("fill", UNSET),
             grids=UNSET if "grids" not in data else None if data["grids"] is None else list(data["grids"]),
             legs=UNSET if "legs" not in data else None if data["legs"] is None else [float(e0) for e0 in data["legs"]],
+            material=data.get("material", UNSET),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(ColumnShape, data["shape"]),
             tag=data.get("tag", UNSET),
@@ -105864,7 +105875,7 @@ class SetArchOperation(ArchOperation):
         landing: A stair's or a ramp's; null: the width. Unit: length.
         legs: An L column's legs (docs/adr/0725 §3). Unit: length.
         level: Any kind's.
-        material: A beam's material; null: Betonarme.
+        material: A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
         numbering: A stair's.
         offset: A beam's top over where it hangs. Unit: elevation.
         phase: Any kind's.

@@ -367,6 +367,8 @@ impl Document {
                     "tag" => text(&x.tag),
                     "place" => text(&x.place),
                     "type" => text(&x.kind),
+                    // Its size as its plan writes it (docs/adr/3041 §2): 30/50, Ø40.
+                    "size" => Some(Text(x.size_text())),
                     "width" => Some(Length(x.width)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
@@ -750,4 +752,24 @@ fn placed_box(
         }
     };
     [at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::wall_height::tests::document;
+
+    /// A column's tag writes its size as its plan does (docs/adr/3041 §2): `{tag} {size}` of a 30/50 column "S1 30/50",
+    /// of a round 40 cm one "S2 Ø40".
+    #[test]
+    fn a_column_s_tag_writes_its_size() {
+        let doc = document(serde_json::json!([
+            {"kind": "column", "at": {"x": 0.0, "y": 0.0}, "width": 0.3, "depth": 0.5, "tag": "S1"},
+            {"kind": "column", "at": {"x": 4.0, "y": 0.0}, "shape": "round", "width": 0.4, "tag": "S2"}
+        ]));
+        let words: Vec<String> = doc
+            .entities()
+            .map(|e| doc.tag_text(e, Some("{tag} {size}")))
+            .collect();
+        assert_eq!(words, ["S1 30/50", "S2 Ø40"]);
+    }
 }

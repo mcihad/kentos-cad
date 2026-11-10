@@ -1266,6 +1266,72 @@
       ]
     },
     {
+      "name": "çelik kolon",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3,
+                "material": "Çelik"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10
+            ],
+            "entities": {
+              "10": {
+                "kind": "column",
+                "id": 10,
+                "layerId": "kolon",
+                "attrs": {},
+                "at": {
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                "width": 0.3,
+                "material": "Çelik"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "kolon ve kesişim verilmezse reddedilir",
       "steps": [
         {
@@ -1575,6 +1641,49 @@
               "code": "invalid_column",
               "message": "Boş metin yazılmaz; alanı kaldırın ya da bir değer yazın.",
               "path": "columns[0].tag"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş malzemeli kolon reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kolon",
+            "columns": [
+              {
+                "at": {
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                "width": 0.3,
+                "material": ""
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_column",
+              "message": "Boş metin yazılmaz; alanı kaldırın ya da bir değer yazın.",
+              "path": "columns[0].material"
             }
           },
           "expect": {

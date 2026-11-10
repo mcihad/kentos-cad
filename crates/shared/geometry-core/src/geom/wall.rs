@@ -591,7 +591,7 @@ pub fn area(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Option<f64> {
 }
 
 /// The direction of the path's first edge, degrees counter-clockwise from east (its chord when it is an arc).
-fn first_direction(pts: &[Vec2]) -> f64 {
+pub fn first_direction(pts: &[Vec2]) -> f64 {
     let (a, b) = (pts[0], pts[1]);
     atan2(b.y - a.y, b.x - a.x) * 180.0 / PI
 }

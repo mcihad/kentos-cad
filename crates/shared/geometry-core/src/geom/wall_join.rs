@@ -1548,12 +1548,12 @@ impl<'a> Solver<'a> {
 }
 
 /// The walls joined: their joints, what is not joined, and the drawings of those in `only` (all when none).
-/// Only walls with the same explicit level (or both unassigned) can join.
+/// Only walls with the same explicit level (or both unassigned) can join: a wall's level, its `arch.level`.
 pub fn solve(walls: &[WallIn<'_>], only: Option<&[usize]>) -> Solved {
     solve_with(walls, &[], only)
 }
 
-fn level(spec: &Spec) -> Option<&str> {
+pub fn level(spec: &Spec) -> Option<&str> {
     match spec.arch.as_ref()?.get("level") {
         crate::api::json::Json::Str(id) => Some(id.as_str()),
         _ => None,

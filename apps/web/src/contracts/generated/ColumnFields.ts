@@ -40,6 +40,11 @@ anchor?: ColumnAnchor,
  */
 type?: string, tag?: string, fill?: boolean, 
 /**
+ * Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
+ * are one section, hatched alike with no line between them.
+ */
+material?: string, 
+/**
  * The two grids it stands where they cross, by their persistent ids.
  */
 grids?: Array<string>, 

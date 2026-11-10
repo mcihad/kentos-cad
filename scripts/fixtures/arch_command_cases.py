@@ -423,7 +423,8 @@ def column_problem(c, path):
     g = c.get("grids")
     if g is not None and (len(g) != 2 or g[0] == g[1]):
         return refusal(code, "Kolon iki ayrı aksın kesişimine bağlanır.", f"{path}.grids")
-    return blank(c.get("type"), "type", code, path) or blank(c.get("tag"), "tag", code, path)
+    return (blank(c.get("type"), "type", code, path) or blank(c.get("tag"), "tag", code, path)
+            or blank(c.get("material"), "material", code, path))
 
 
 def flight_problem(pts, what, code, path):
@@ -984,6 +985,9 @@ def column_fields(n, tag, at):
         c["tag"] = tag
     if n.get("fill"):
         c["fill"] = True
+    # Its material (docs/adr/3041 §2); absent: Betonarme.
+    if n.get("material") is not None:
+        c["material"] = n["material"]
     if n.get("grids") is not None:
         c["grids"] = n["grids"]
     if n.get("arch"):
@@ -1859,6 +1863,8 @@ def column_cases():
         ("aks kesişimlerinin hepsine kolon (paralel akslar atlanır)", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(2), uid_of(3), uid_of(4)], "width": 0.3, "depth": 0.5, "fill": True}, "tagStart": "S1"}),
         ("kesişimlerde yuvarlak kolon, aksın dışındaki kesişim atlanır", {"layerId": "kolon", "crossings": {"grids": [uid_of(7), uid_of(3), uid_of(5)], "shape": "round", "width": 0.5}}),
         ("tek kolon ve kesişimler birlikte", {"layerId": "kolon", "columns": [{"at": P(9, 9), "width": 0.25}], "crossings": {"grids": [uid_of(2), uid_of(4)], "width": 0.3}}),
+        # Its material (docs/adr/3041 §2).
+        ("çelik kolon", col([{"at": P(4, 4), "width": 0.3, "material": "Çelik"}])),
     ]:
         c.add(name, [create_step(Drawing(), COLUMNS, "execute", inp)])
     refusals(c, COLUMNS, [
@@ -1870,6 +1876,7 @@ def column_cases():
         ("tek aksa bağlanan kolon reddedilir", col([{"grids": [uid_of(1)], "width": 0.3}]), {}),
         ("aynı aksa iki kez bağlanan kolon reddedilir", col([{"grids": [uid_of(1), uid_of(1)], "width": 0.3}]), {}),
         ("boş etiketli kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "tag": " "}]), {}),
+        ("boş malzemeli kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "material": ""}]), {}),
         ("kimlik olmayan aks reddedilir", col([{"grids": ["aks-a", uid_of(3)], "width": 0.3}]), {}),
         ("olmayan aks reddedilir", col([{"grids": [MISSING, uid_of(3)], "width": 0.3}]), {}),
         ("aks olmayan nesne reddedilir", col([{"grids": [uid_of(1), uid_of(6)], "width": 0.3}]), {}),
@@ -2366,7 +2373,9 @@ FIELDS = [  # wire name, kinds, nullable
     ("railings", ("stair", "ramp"), True),
     ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp",), True),
     # A beam's (docs/adr/3041 §1).
-    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False), ("material", ("beam",), True),
+    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False),
+    # A column's or a beam's (docs/adr/3041 §2).
+    ("material", ("column", "beam"), True),
     ("level", ("grid", "column", "stair", "ramp", "beam"), True), ("phase", ("grid", "column", "stair", "ramp", "beam"), True),
 ]
 KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş"}
@@ -2583,6 +2592,10 @@ def edit_cases():
     c.add("Değiştir: kolonun biçimi, ölçüleri, dönüşü, türü, etiketi ve dolgusu", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "round", "width": 0.45, "rotation": 0.3, "type": "Çelik", "tag": "S4", "fill": True})])
     d, made, k = with_column(depth=0.6, type="Betonarme")
     c.add("Değiştir: null kolonun boyunu ve türünü kaldırır", [made, one(d, [uid_of(k)], {"kind": "set", "depth": None, "type": None})])
+    # A column's material (docs/adr/3041 §2): null back to Betonarme.
+    d, made, k = with_column(material="Çelik")
+    c.add("Değiştir: kolonun malzemesi; null Betonarme'ye döndürür", [made, one(d, [uid_of(k)], {"kind": "set", "material": "Ahşap"}),
+                                                                       one(d, [uid_of(k)], {"kind": "set", "material": None})])
     d = Drawing()
     c.add("Değiştir: merdivenin rıhtları uyarılarıyla", [one(d, [uid_of(8)], {"kind": "set", "risers": 17, "riserHeight": 0.18})])
     d = Drawing()

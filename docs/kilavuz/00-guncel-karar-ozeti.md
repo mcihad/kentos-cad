@@ -286,6 +286,13 @@
     - Duvar kirişin altında biter (`WallTop::Beam`, "Kirişin altına kadar"); metraj ve iç görünüşler aynı kuralı okur.
     - Mimari › Yerleştir › Kiriş: varsayılan 25/50, numara her kirişten sonra ilerler; katmanı MM-TASI-KIRIS (EK-2'de
       Kiriş öğesi yok, Taşıyıcı altında). Seçim süzgecinde Kiriş türü (listenin sonunda, eski süzgeç bitleri korunur).
+  - **Kolon–duvar düğümü (M41 2. bölüm, [ADR 3041](../adr/3041-beams-lintels-column-wall-joins.md) §2):**
+    - `ColumnFields.material` (`.kcad` şema 223; yoksa Betonarme). Depo ve DXF yazıcısı aynı kuralla
+      (`geom::column_join`): aynı kattaki kolon duvarın çizgilerini, kapaklarını ve bantlarını keser (duvarlar
+      birleştikten sonra). Kolon, kendi malzemesindeki (katlanmış ad) bir duvar katmanıyla alan paylaşıyorsa o katmanın
+      görünüşünü alır, dış çizgisi katmanın içinde çizilmez: perde + kolon tek kesit (TS EN ISO 128-3, 7.2).
+    - Depo duvarların kesilmemiş çizimini (`wall_whole`) ve kolonların ayak izini (`column_feet`) tutar; kolon değişince
+      yeri `wall_dirty`'ye düşer. SN46 (1:20) yalnız betonarme kolonda. Etiketin `{size}`'ı kolonda "30/50", "Ø40".
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

@@ -46,6 +46,8 @@ pub fn core_column(c: &ColumnFields) -> Shape {
             fill: c.fill,
             tag: c.tag.clone(),
             place: c.place.clone(),
+            material: c.material.clone(),
+            level: c.arch.level.clone(),
         },
     }
 }
@@ -202,6 +204,11 @@ pub fn plain_pieces_in(
     plain_of(e, kentos_geometry_core::geom::arch::pieces_in(&shape, view))
 }
 
+/// Pieces of `e` as plain objects, each on its layer with its look (a piece's own line type over it).
+pub fn plain_of_pieces(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
+    plain_of(e, pieces)
+}
+
 fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
     let mut out = Vec::new();
     for piece in pieces {
@@ -213,6 +220,13 @@ fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Opti
         base.attachments.clear();
         base.label_pins.clear();
         base.label = None;
+        // A piece's own colour and weight: a column one section with a wall's layer takes its fill's (docs/adr/3041 §2).
+        if piece.color.is_some() {
+            base.color = piece.color.clone();
+        }
+        if piece.line_weight.is_some() {
+            base.line_weight = piece.line_weight;
+        }
         if let Some(t) = piece
             .stroke
             .line_type

@@ -370,3 +370,114 @@ fn a_beam_is_drawn_dashed_by_the_view_and_snapped_to() {
     let x = s.get(1.0).unwrap().expanded.clone().unwrap();
     assert_eq!(x.strokes[0].weight_scale, Some(0.25));
 }
+
+/// Perde + kolon + tuğla (docs/adr/3041 §2; ADV-18's acceptance): a 40 × 40 column at (4, 0) where a 25 cm concrete
+/// shear wall comes from the west and a 20 cm brick wall from the north. The column takes the shear wall's look, one
+/// section with it: at 1:50 its grey (SOLID #A6A6A6), at 1:100 its dark fill; its side across the shear wall's end is
+/// not drawn, 1.6 − 0.25 = 1.35 m of its outline is. The brick wall stops at the column's top face (y 0.2), the column's
+/// line there between them. Neither wall draws inside the column. Moved away, the column leaves both walls whole.
+#[test]
+fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
+    let mut s = Store::new();
+    s.set_wall_view(View::new(Detail::Standard, 50.0));
+    let column = |x: f64, y: f64| {
+        format!(r#"[{{"id":3,"layerId":"a","kind":"column","at":{{"x":{x},"y":{y}}},"width":0.4,"depth":0.4}}]"#)
+    };
+    s.put_json(
+        r##"[{"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":4,"y":0}],"width":0.25,"justify":"center",
+              "components":[{"material":"Betonarme","detail":"standard","hatch":{"pattern":"SOLID","scale":1,"angle":0,"color":"#A6A6A6"}}],
+              "fill":"#3C3C3C"},
+             {"id":2,"layerId":"a","kind":"wall","pts":[{"x":4,"y":4},{"x":4,"y":0}],"width":0.2,"justify":"center",
+              "components":[{"material":"Tuğla","detail":"standard","hatch":{"pattern":"ANSI31","scale":1,"angle":0}}],
+              "fill":"#5A5A5A"}]"##,
+    )
+    .unwrap();
+    s.put_json(&column(4.0, 0.0)).unwrap();
+    let length = |pts: &[Vec2]| -> f64 {
+        pts.windows(2)
+            .map(|w| crate::jsmath::js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .sum()
+    };
+    let look = |s: &Store| {
+        let x = s.get(3.0).unwrap().expanded.clone().unwrap();
+        let fills: Vec<Option<String>> = x
+            .shapes
+            .iter()
+            .zip(&x.colors)
+            .filter(|(sh, _)| matches!(sh, Shape::Hatch { .. }))
+            .map(|(_, c)| c.clone())
+            .collect();
+        let drawn: f64 = x
+            .shapes
+            .iter()
+            .map(|sh| match sh {
+                Shape::Polyline { pts, closed, .. } => {
+                    let mut p = pts.clone();
+                    if *closed {
+                        p.push(pts[0]);
+                    }
+                    length(&p)
+                }
+                Shape::Polygon { pts, .. } => {
+                    let mut p = pts.clone();
+                    p.push(pts[0]);
+                    length(&p)
+                }
+                _ => 0.0,
+            })
+            .sum();
+        (fills, drawn)
+    };
+    let (fills, drawn) = look(&s);
+    assert_eq!(fills, [Some("#A6A6A6".to_owned())], "the shear wall's grey");
+    assert!((drawn - 1.35).abs() < 1e-9, "{drawn}");
+    let strictly_in = |p: &Vec2| p.x > 3.8 + 1e-9 && p.x < 4.2 - 1e-9 && p.y > -0.2 + 1e-9 && p.y < 0.2 - 1e-9;
+    for id in [1.0, 2.0] {
+        let x = s.get(id).unwrap().expanded.clone().unwrap();
+        for sh in &x.shapes {
+            let pts: Vec<Vec2> = match sh {
+                Shape::Polyline { pts, .. } | Shape::Polygon { pts, .. } => pts.clone(),
+                Shape::Line { a, b } => vec![*a, *b],
+                Shape::Hatch { ring, .. } => ring.clone(),
+                _ => Vec::new(),
+            };
+            assert!(!pts.iter().any(strictly_in), "wall {id} draws inside the column: {sh:?}");
+        }
+    }
+    // The brick wall's two faces stop at the column's top face.
+    let brick = s.get(2.0).unwrap().expanded.clone().unwrap();
+    let low: Vec<f64> = brick
+        .shapes
+        .iter()
+        .filter_map(|sh| match sh {
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.y).reduce(crate::jsmath::js_min),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(low.len(), 2, "{low:?}");
+    assert!(low.iter().all(|y| (y - 0.2).abs() < 1e-9), "{low:?}");
+    // At 1:100 the shear wall's dark fill.
+    s.set_wall_view(View::new(Detail::Schematic, 100.0));
+    assert_eq!(look(&s).0, [Some("#3C3C3C".to_owned())]);
+    // A steel column: no look of the wall's, its whole outline; the walls still stop at it.
+    s.set_wall_view(View::new(Detail::Standard, 50.0));
+    s.put_json(
+        r#"[{"id":3,"layerId":"a","kind":"column","at":{"x":4,"y":0},"width":0.4,"depth":0.4,"material":"Çelik"}]"#,
+    )
+    .unwrap();
+    let (fills, drawn) = look(&s);
+    assert!(fills.is_empty(), "{fills:?}");
+    assert!((drawn - 1.6).abs() < 1e-9, "{drawn}");
+    // Moved away: the shear wall reaches its end again.
+    s.put_json(&column(10.0, 10.0)).unwrap();
+    let shear = s.get(1.0).unwrap().expanded.clone().unwrap();
+    let far = shear
+        .shapes
+        .iter()
+        .filter_map(|sh| match sh {
+            Shape::Polyline { pts, .. } => pts.iter().map(|p| p.x).reduce(crate::jsmath::js_max),
+            _ => None,
+        })
+        .fold(0.0, crate::jsmath::js_max);
+    assert!(far > 4.0, "{far}");
+}

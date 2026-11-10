@@ -130,7 +130,7 @@ justify?: WallJustify,
  */
 offset?: number, 
 /**
- * A beam's material; null: Betonarme.
+ * A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
  */
 material?: string | null, 
 /**

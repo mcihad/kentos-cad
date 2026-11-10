@@ -2270,6 +2270,13 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 223 (docs/adr/3041 §2): a column's material.
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Column(c) if c.column.material.is_some()))
+    {
+        return crate::SCHEMA_WITH_COLUMN_MATERIAL;
+    }
     // Schema 222 (docs/adr/3041 §1): a beam.
     if objs.iter().any(|e| matches!(e, Entity::Beam(_))) {
         return crate::SCHEMA_WITH_BEAMS;

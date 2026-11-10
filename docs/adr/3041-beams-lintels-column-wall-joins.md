@@ -3,7 +3,9 @@
 Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
 - §1: kiriş nesnesi; planda kesikli ve ince çizilir, 1:100'de numarası, 1:50'den numarası ve ölçüsü yazılır; altındaki
   duvar kirişin altında biter; `.kcad` 222.
-- §2 (kolon malzemesi, kolon–duvar düğümü, kolon etiketinde ölçü) ve §3 (lento ve hatıl) sonraki bölümlerde.
+- §2: kolonun malzemesi; duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesittir
+  (perde + kolon kesintisiz, tuğla kolonun yüzünde biter); etiketin `{size}`'ı; `.kcad` 223.
+- §3 (lento ve hatıl) sonraki bölümde.
 
 ## Sorun
 
@@ -13,6 +15,13 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
   - altındaki duvar döşemenin altına kadar sayılıyordu: duvar kirişin içinden geçiyor, metraj kirişin döşemeden sarkan
     kısmını duvar yüzü olarak da sayıyordu.
 - Plan maddesi ADV-18'in ilk kabulü "kiriş planda kesikli görünür" bu yüzden tutmuyordu.
+- **Duvar kolona birleşmiyordu (§2).** ADR 0771 §1'in sınırı: "duvar kolona birleşmez; kolon kendi çizilir".
+  - Kolon duvarın üstüne koyu, yarı saydam bir dolgu olarak biniyordu. Perdenin ve tuğlanın çizgileri, aralarındaki
+    gönye çizgisi ve tuğlanın taraması kolonun içinden geçiyordu.
+  - Betonarme perde ile betonarme kolon iki ayrı kesit gibi görünüyordu: 1:50'de perde gri, kolon koyu; 1:20'de
+    kolonun SN46'sı perdenin grisinin üstüne biniyordu. ADV-18'in ikinci kabulü "perde + kolon + tuğla düğümünde tarama
+    süreklidir" tutmuyordu.
+  - Kolonun malzemesi yoktu: her kolon 1:20'de betonarme (SN46) taranıyordu, çelik kolon da.
 
 ## Araştırma (10 Kasım 2026)
 
@@ -35,11 +44,25 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
 - **Mimarlar Odası çizim standardı** (kolon için; ADR 3011): ön projede (1:100) kolon adı, uygulama projesinde (1:50)
   adı ve ölçüsü yazılır.
 
+### Kesitte tarama (§2)
+
+- **TS EN ISO 128-3** (2020; ISO 128-50:2001'in içeriği onun 7.2'sinde): aynı parçanın kesit kısımları aynı taramayla,
+  bitişik farklı parçalar farklı açı ya da aralıkla taranır. Standardın metni ücretli; kural EPO'nun PCT kılavuzunun
+  A-V 7.3.2'sinde (PCT Kural 11.13(b)) aynı sözlerle özetlenir: "All parts of the same item use the same hatching,
+  while neighbouring different elements use different angles."
+- **Dijital Hazırlama Yönetmeliği** EK-4 4.23: tarama TS EN ISO 128-3'e göre.
+- **Mimarlar Odası standardı** §14.5.3 i (ADR 3014): taşıyıcı elemanlar (kolon, perde, duvar, pano) ayrı çizim
+  tekniğiyle gösterilir, içleri koyulaştırılır.
+- Sonuç: birlikte dökülen betonarme kolon ve perde tek parçadır, tek tarama ve aralarında çizgi yok; tuğla duvar ayrı
+  parçadır, kolonun yüzünde biter ve sınır çizgisi kalır.
+
 ### Başka uygulamalar (yalnız görünüş için)
 
 - Revit: kiriş plan görünümünde kesit düzleminin üstündeyse "Beyond/Hidden" çizgisiyle çizilir; etiketi kiriş boyunca,
   okunacak yöne döner.
 - Archicad: kiriş kat üstüne göre konur, planda üstü kesikli.
+- Revit (§2): birleşen elemanlar aynı malzemedeyse aralarında çizgi kalmaz, farklı malzemede kalır; mimari kolon
+  birleştiği duvarın görünüşünü alır (Autodesk forumları, *About Wall Joins* yardımı).
 
 ## Karar
 
@@ -91,6 +114,40 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
   - DXF kirişi kesikli çizgiler ve yazı olarak yazar. Sunucu `beam` türünü kabul eder (migration 0038).
   - Hızlı paket (pack) türü 39; düzenle, taşı, döndür, aynala, esnet, böl ve tutamaçlar diğer mimari nesneler gibi.
 
+### 2. Kolon malzemesi ve kolon–duvar düğümü
+
+- **Model** (`ColumnFields.material`, `.kcad` şema 223): kolonun malzemesi; verilmezse Betonarme ve yazılmaz.
+  - Malzemeli kolonu olan dosya 223 olur; olmayan eski şemasıyla bayt bayt aynıdır. Şema 222 malzemeyi
+    `unknown_field` ile reddeder. Çok yeni şema örneği 224'e kaydı.
+  - Boş malzeme `invalid_column` ile reddedilir.
+  - `cad.columns.create` malzeme alır. `cad.arch.edit`'in `material` alanı kolona da yazar; null Betonarme'ye
+    döndürür. Öznitelikler'de kolonun Malzeme satırı.
+- **Duvar kolonda kesilir** (`geom::column_join::cut`): aynı kattaki kolonlar duvarı keser (ikisi de katsızsa da).
+  - Duvarın çizgileri, uç kapakları, girintileri ve kapama çizgileri kolonun içinde kalan parçalarını yitirir. Kolonun
+    kenarı üstünde kalan nokta içeride sayılmaz: yüzü kolonun kenarına denk gelen duvar o yüzünü korur.
+  - Katmanların bantlarından ve duvarın gövdesinden kolonun ayak izi çıkar.
+  - Kesme, duvarlar birbirine birleştikten sonra yapılır; köşedeki gönye kolonun içinde kalır.
+  - Yuvarlak kolon 64 kenarlı halkasıyla keser. 1:50'de kenarlar çemberden kâğıtta yüzde bir milimetre sapar.
+  - Kolonun her malzemesi keser: kolon taşıyıcıdır, duvar ona dayanır.
+- **Tek kesit** (`geom::column_join::joined`): kolon, kendi malzemesindeki bir duvar katmanının bandıyla alan
+  paylaşıyorsa o katmanla tek kesittir.
+  - Malzemeler katlanarak karşılaştırılır: kenar boşlukları atılır, Türkçe harfler sadeleşir, küçük harfe çevrilir;
+    "BETONARME" ile "Betonarme" aynıdır.
+  - Kolon o katmanın görünüşünü alır. Şematikte duvarın dolgusunu, Uygulama ve Ayrıntılı'da katmanın taramasını (katman
+    o ayrıntıda çiziliyorsa) alır. Tarama, duvardaki gibi duvarın ilk kenarının yönüne döner.
+  - Kolonun dış çizgisi o katmanın içinde kalan yerde çizilmez. Böylece perde ile kolon arasındaki çizgi kalkar, iki
+    gri bir olur.
+  - Birden çok uygun katmanda, duvarların çizimdeki sırasıyla ilki görünüşü verir; çizgi hepsinin içinde gizlenir.
+  - Farklı malzemede kolon kendi görünüşündedir ve aradaki çizgi kalır.
+- **Kolonun kendi görünüşü:** 1:20'deki SN46 yalnız betonarme kolonda (adı "Betonarme" ile başlayan malzeme). Başka
+  malzemede dolgu bayrağına göre dolu ya da boş.
+- **Ekran, pafta, PDF ve DXF aynı çizer.** Depo kolonların ayak izlerini ve duvarların kesilmemiş çizimlerini tutar.
+  Bir kolon konunca, taşınınca ya da silinince o yerdeki duvarlar yeniden birleşir ve kesilir, kolonların görünüşü
+  yeniden bulunur. DXF yazıcısı (`walls::plain_joined`) aynı işlevleri çağırır.
+  - DXF'te mimari nesne parçasının rengi artık yazılıyor. Önce yazılmıyordu ve birleşik kolonun grisi kayboluyordu
+    (test yakaladı).
+- **Etiketin `{size}`'ı** kolonda planın yazdığı ölçüdür: "30/50", yuvarlakta "Ø40" (`ColumnFields::size_text`).
+
 ## Doğrulama
 
 - Geometri (`geom::beam`): ortalı bant ±0,125; sol yüzü eksende bant 0 ile −0,25 arası; L kirişte dış köşe gönyeli.
@@ -125,6 +182,46 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
 - Testlerin yakaladıkları: Değiştir'in kataloğu `invalid_beam`'i anmıyordu; Kat ver ve nokta yapımı kirişi alıyor ama
   katalogları kirişi saymıyordu; kiriş aracının kot farkı K harfindeydi, döşeme aracınınki F (aynı ada aynı harf
   kuralı, ADR 3003); kiriş çiziminde çekirdeğin belirlenimci matematiği yerine Rust'ın kendi sin/cos/atan2'si vardı.
+- Kolon–duvar düğümü, §2:
+  - Geometri (`geom::column_join`):
+    - 20 cm tuğla duvar 40 × 40 kolonda biter: yüzleri x 3,8'de durur, kolondaki ucu gider, bandı 3,8 × 0,2.
+    - Ortadaki kolon duvarı ikiye böler.
+    - 25 cm perde ile kolon tek kesittir: SOLID, dış çizginin 1,6 m'sinden 1,35'i çizilir.
+    - Çelik kolon birleşmez.
+  - Bağımsız başvuru (`scripts/fixtures/column_join_cases.py` → `fixtures/walls/v1/column-joins.json`, kesirli): 15
+    durumun çizgileri, uç kapakları, bant alanları ve kolon görünüşleri Rust'ta aynı. Durumlar:
+    - kolonda biten ve ortadan bölünen duvar;
+    - yüzü kolonun kenarında kalan ve kolona yalnız değen duvar;
+    - dışarıdaki, başka kattaki ve aynı kattaki kolon;
+    - sıvalı üç katmanlı duvar;
+    - perde ile kolon, büyük harfli malzeme, çelik kolon;
+    - iki yandan birleşen kolon (1,1 m çizilir) ve perdeden derin kolon (1,75 m);
+    - iki kolonun üçe böldüğü duvar.
+  - Depo (`a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section`), batıdan perde, kuzeyden tuğla, köşede kolon:
+    - kolon 1:50'de #A6A6A6, 1:100'de #3C3C3C; dış çizgisinin 1,35 m'si çizilir;
+    - tuğlanın yüzleri y 0,2'de durur; iki duvar da kolonun içine çizmez;
+    - çelik kolon kendi görünüşünde, dış çizgisi 1,6 m;
+    - taşınınca perde ucuna kadar döner.
+  - DXF (`a_column_cuts_the_wall_it_stands_in_and_joins_its_layer_of_one_material`): perde 3,8'de durur; kolonun taraması
+    #A6A6A6, dış çizgisi 1,35 m; çelik kolon kendi yolundan.
+  - Sözleşme ve etiket: malzeme yoksa Betonarme, boşu reddedilir, "30/50", "Ø27.5"; etiket `{tag} {size}` "S1 30/50",
+    "S2 Ø40".
+  - Ortak durumlar: kolon oluşturmada "çelik kolon" ve "boş malzemeli kolon reddedilir", Değiştir'de kolonun malzemesi ve
+    null'u; bütün durum dosyaları Rust'ta bağımsız başvuruyla aynı.
+  - KCAD: `column-material` örneği ve şema 222'deki bozuk dosyası; 1729 dosya bağımsız okuyucuyla tutarlı; Rust 254
+    geçerli örnek.
+  - Gerçek pencere (iz `fixtures/interaction/real/kolon-duvar.txt`, 1920×1080): batıdan Betonarme perde 25, kuzeyden ve
+    doğudan İç duvar 15 (sıva + tuğla + sıva), köşede 40 × 40 dolu kolon S1; Uygulama ve Ayrıntılı ayrıntıda.
+    - ÖNCE (M39'un ikilisi): kolon duvarların üstüne koyu bir dolgu olarak biner. Perdenin yüzleri, gönye çizgisi ve
+      tuğlanın çizgileri kolonun içinden geçer; 1:20'de kolonun SN46'sı perdenin üstünde.
+    - SONRA: perde ile kolon tek gri, aralarında çizgi yok; tuğla duvarlar kolonun yüzünde biter, çizgileri ve
+      taramaları kolona girmez. Ayrıntılı'da sıva çizgileri de kolonda durur.
+    - Kolon seçilince Öznitelikler'de Malzeme "Betonarme".
+  - Testler: 18 paket 9863 geçti (masaüstünün tek kırmızısı yine `each_program_docks_its_own_panels`); MCP 167 geçti,
+    iki kırmızısı §1'de yazılan yol işinden. Clippy kolon kodunda çekirdeğin yasakladığı `min`/`max`/`powi`'yi yakaladı;
+    yerlerine `js_min`/`js_max`/`js_hypot`.
+  - Disk, takım koşarken doldu (`No space left on device`). Yeniden üretilebilen artımlı derleme klasörü (122 GB)
+    silindi ve kalan paketler yeniden koşuldu.
 
 ## Sınırlar
 
@@ -135,3 +232,9 @@ Tarih: 2026-11-10. Durum: kabul (M41; ADV-18).
   döşemeden tavan kaplamasına ölçülür.
 - Kiriş kolona ya da öbür kirişe birleşmez; kesişen bantlar üst üste kesikli çizilir. Eğri kiriş yok.
 - Kirişin yazısı mahalin yazısıyla çakışabilir; çakışmayı kullanıcı kirişi ya da mahalin yazısını taşıyarak çözer.
+- §2: duvarın metrajı (net yüz, hacim) kolonun kapladığı parçayı düşmez; duvarın kendi geometrisinden ölçülür.
+- §2: kolonun malzemesi bir metindir. Proje malzemesine (`materialId`, ADR 0785) bağlanmaz, eşleşme ada göredir.
+- §2: kolon katmanı gizlense de duvar kolonda kesik kalır, çünkü kolon modelde durur. Tasarım seçeneği gösterilmeyen
+  duvarlar (ADR 0788 §4) kesilmez.
+- §2: kesilen eğri duvar çizgisi, kesik parçalarında kısa düz parçalarla çizilir.
+- §2: kolon–duvar birleşiminde kullanıcı kararı yok: duvar her zaman kolonda biter.

@@ -53,6 +53,120 @@ impl Store {
         } else {
             self.wall_ids.remove(&key);
             self.wall_drawn.remove(&key);
+            self.wall_whole.remove(&key);
+        }
+    }
+
+    /// Object `id` put as `now`, or removed (none): a column where it was and where it is cuts the walls again and
+    /// takes its look again (docs/adr/3041 §2); any other kind changes nothing here.
+    pub(super) fn note_column(&mut self, id: f64, now: Option<&Shape>) {
+        let key = id.to_bits();
+        let foot = match now {
+            Some(Shape::Column { at, column }) => crate::geom::column_join::Foot::of(*at, column),
+            _ => None,
+        };
+        let was = self.column_feet.get(&key).map(|f| f.bounds);
+        if was.is_none() && foot.is_none() {
+            return;
+        }
+        self.wall_dirty.extend(was);
+        match foot {
+            Some(f) => {
+                self.wall_dirty.push(f.bounds);
+                self.column_feet.insert(key, Arc::new(f));
+            }
+            None => {
+                self.column_feet.remove(&key);
+                self.column_looks.remove(&key);
+            }
+        }
+    }
+
+    /// Wall `item`'s drawing `d` cut by the columns on its level that reach it (docs/adr/3041 §2); none when none does.
+    fn cut_by_columns(&self, item: &super::Item, d: &crate::geom::wall::Drawn) -> Option<crate::geom::wall::Drawn> {
+        let Shape::Wall { wall, .. } = &item.shape else {
+            return None;
+        };
+        let level = wall_join::level(wall);
+        let feet: Vec<&crate::geom::column_join::Foot> = self
+            .column_feet
+            .values()
+            .filter(|f| f.level.as_deref() == level && touches(&f.bounds, &item.bounds, 0.0))
+            .map(|f| &**f)
+            .collect();
+        crate::geom::column_join::cut(d, &feet)
+    }
+
+    /// The columns standing where the walls changed (`dirty`; `all`: every column) take their look again from the walls
+    /// on their level they meet, and are expanded again (docs/adr/3041 §2).
+    fn settle_columns(&mut self, dirty: &[Bounds], all: bool) {
+        let grow = JOIN_TOLERANCE;
+        let keys: Vec<u64> = self
+            .column_feet
+            .iter()
+            .filter(|(_, f)| all || dirty.iter().any(|d| touches(&f.bounds, d, grow)))
+            .map(|(k, _)| *k)
+            .collect();
+        if keys.is_empty() {
+            return;
+        }
+        let mut looks = Vec::with_capacity(keys.len());
+        for key in keys {
+            let Some(foot) = self.column_feet.get(&key).cloned() else {
+                continue;
+            };
+            // The walls on its level it reaches, in the document's order: the first layer of its material looks.
+            let mut walls: Vec<(u64, crate::geom::column_join::WallAt<'_>)> = self
+                .wall_ids
+                .iter()
+                .filter_map(|w| {
+                    let s = *self.by_id.get(w)?;
+                    let it = self.slots[s as usize].as_ref()?;
+                    let Shape::Wall { pts, wall, .. } = &it.shape else {
+                        return None;
+                    };
+                    if wall_join::level(wall) != foot.level.as_deref()
+                        || !touches(&it.bounds, &foot.bounds, 0.0)
+                        || pts.len() < 2
+                    {
+                        return None;
+                    }
+                    let drawn = self.wall_whole.get(w)?;
+                    Some((
+                        it.order,
+                        crate::geom::column_join::WallAt {
+                            drawn,
+                            spec: wall,
+                            turn: crate::geom::wall::first_direction(pts),
+                        },
+                    ))
+                })
+                .collect();
+            walls.sort_by_key(|w| w.0);
+            let at: Vec<crate::geom::column_join::WallAt<'_>> = walls.into_iter().map(|w| w.1).collect();
+            looks.push((key, crate::geom::column_join::joined(&foot, &at)));
+        }
+        for (key, look) in looks {
+            match look {
+                Some(l) => {
+                    self.column_looks.insert(key, Arc::new(l));
+                }
+                None => {
+                    self.column_looks.remove(&key);
+                }
+            }
+            let Some(&slot) = self.by_id.get(&key) else {
+                continue;
+            };
+            let fresh = self.slots[slot as usize]
+                .as_ref()
+                .map(|it| self.expansion_of(it.id, &it.shape));
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[slot as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = None;
+            }
+            self.loosen(slot);
         }
     }
 
@@ -293,6 +407,7 @@ impl Store {
         for &i in apart.iter().filter(|&&i| affected[i]) {
             let (key, slot, _, _) = walls[i];
             self.wall_drawn.remove(&key);
+            self.wall_whole.remove(&key);
             let fresh = self.slots[slot as usize]
                 .as_ref()
                 .map(|it| self.wall_expansion(it.id, &it.shape));
@@ -365,10 +480,17 @@ impl Store {
             let (key, slot, _, _) = walls[i];
             match d {
                 Some(d) => {
-                    self.wall_drawn.insert(key, Arc::new(d));
+                    // Cut where the columns on its level stand (docs/adr/3041 §2); the whole kept for their looks.
+                    let cut = self.slots[slot as usize]
+                        .as_ref()
+                        .and_then(|it| self.cut_by_columns(it, &d));
+                    let whole = Arc::new(d);
+                    self.wall_drawn.insert(key, cut.map_or_else(|| whole.clone(), Arc::new));
+                    self.wall_whole.insert(key, whole);
                 }
                 None => {
                     self.wall_drawn.remove(&key);
+                    self.wall_whole.remove(&key);
                 }
             }
             let fresh = self.slots[slot as usize]
@@ -383,6 +505,7 @@ impl Store {
             }
             self.loosen(slot);
         }
+        self.settle_columns(&dirty, full);
     }
 
     /// Walls that meet and are not joined (docs/adr/0340 §2), as of the last change.

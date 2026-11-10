@@ -425,6 +425,10 @@ pub struct NewColumn {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub fill: Option<bool>,
+    /// Its material (docs/adr/3041 §2); absent: Betonarme.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
@@ -1104,7 +1108,7 @@ pub struct ArchChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
-    /// A beam's material; null: Betonarme.
+    /// A column's or a beam's material (docs/adr/3041 §2); null: Betonarme.
     #[serde(
         default,
         with = "crate::cad_properties::nullable",

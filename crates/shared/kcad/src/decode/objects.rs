@@ -449,6 +449,8 @@ pub(super) struct Features {
     pub(super) room_heights: bool,
     /// Schema 222 (docs/adr/3041 §1): beams.
     pub(super) beams: bool,
+    /// Schema 223 (docs/adr/3041 §2): a column's material.
+    pub(super) column_material: bool,
     /// Schema 219 (docs/adr/3039 §5): the Tadilat projesi view.
     pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
@@ -746,6 +748,7 @@ impl Features {
             slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
             room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
             beams: schema >= crate::SCHEMA_WITH_BEAMS,
+            column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
             renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
@@ -2566,6 +2569,10 @@ pub(super) fn object(
             Code::UnknownField,
             "kapı ve pencerenin kendi tadilat durumu (phase) şema 218 ister",
         ));
+    }
+    // Schema 223 (docs/adr/3041 §2): a column's material.
+    if matches!(&entity, Entity::Column(c) if c.column.material.is_some()) && !has.column_material {
+        return Err(r.fail(Code::UnknownField, "kolonun malzemesi (material) şema 223 ister"));
     }
     // Schema 221 (docs/adr/3040 §3): a room's floor offset and asma tavan.
     if kentos_contracts::needs_room_heights(&entity) && !has.room_heights {

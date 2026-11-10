@@ -224,10 +224,11 @@ pub enum ArchField {
     MarkNumber,
     /// A view mark's words' height on paper, mm; empty 2.5.
     MarkSize,
-    /// A beam's height, its top's offset (empty 0) and its material (empty: Betonarme; docs/adr/3041 §1).
+    /// A beam's height and its top's offset (empty 0; docs/adr/3041 §1).
     BeamHeight,
     BeamOffset,
-    BeamMaterial,
+    /// A column's or a beam's material (empty: Betonarme; docs/adr/3041 §2).
+    Material,
 }
 
 /// The value a cell edits.
@@ -2003,7 +2004,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 && !n.is_finite()
                 && !matches!(
                     which,
-                    ArchField::Label | ArchField::Tag | ArchField::Type | ArchField::BeamMaterial
+                    ArchField::Label | ArchField::Tag | ArchField::Type | ArchField::Material
                 )
             {
                 return Vec::new();
@@ -2024,7 +2025,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     kind: Some(words),
                     ..Default::default()
                 },
-                ArchField::BeamMaterial => ArchChange {
+                ArchField::Material => ArchChange {
                     material: Some(words),
                     ..Default::default()
                 },

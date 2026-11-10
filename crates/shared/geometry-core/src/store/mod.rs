@@ -341,6 +341,13 @@ pub struct Store {
     wall_dirty: Vec<Bounds>,
     wall_drawn: IdMap<Arc<crate::geom::wall::Drawn>>,
     wall_issues: Vec<wall_joins::WallIssue>,
+    /// Each wall's drawing as its joins left it, before the columns standing in it cut it (`wall_drawn` is after,
+    /// docs/adr/3041 §2): what a column's look is taken from.
+    wall_whole: IdMap<Arc<crate::geom::wall::Drawn>>,
+    /// Each column's footprint as the walls on its level meet it (docs/adr/3041 §2): they are cut where it stands.
+    column_feet: IdMap<Arc<crate::geom::column_join::Foot>>,
+    /// Each column's look taken from a wall's layer of its material it meets (docs/adr/3041 §2).
+    column_looks: IdMap<Arc<crate::geom::column_join::Joined>>,
     /// Each opening's wall, by the opening's id (`set_hosts`, docs/adr/0341 §2): its wall's lines are cut where it is.
     opening_hosts: IdMap<f64>,
     /// The openings in no wall (broken, or their wall gone): each shows a warning (docs/adr/0341 §1).
@@ -598,6 +605,7 @@ impl Store {
     ) {
         let layer = self.layer_index(layer_id);
         self.note_wall(id, matches!(shape, Shape::Wall { .. }).then_some(bounds));
+        self.note_column(id, Some(&shape));
         let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();
         // Its labels' texts and pins come again with it (docs/adr/0212 §3.1).
@@ -670,6 +678,7 @@ impl Store {
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
             self.note_wall(*id, None);
+            self.note_column(*id, None);
             self.forget_opening(*id);
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
@@ -1033,6 +1042,16 @@ impl Store {
                 let pieces = self.space_pieces(parts, space, false, view);
                 self.expanded_of(self.with_line_group(shape, pieces, view), b)
             }
+            // One section with a wall's layer of its material (docs/adr/3041 §2): that layer's look, its outline where
+            // it is not inside the layer.
+            Shape::Column { at, column } => match self.column_looks.get(&id.to_bits()) {
+                Some(look) => {
+                    let b = entity_bounds_in(shape, self.font);
+                    let pieces = crate::geom::arch::column_pieces_joined(*at, column, view, look);
+                    self.expanded_of(self.with_line_group(shape, pieces, view), b)
+                }
+                None => self.expansion_in(shape, view),
+            },
             _ => self.expansion_in(shape, view),
         }
     }

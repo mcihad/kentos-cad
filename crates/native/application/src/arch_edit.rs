@@ -84,7 +84,7 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.height.is_some(), "height", BEAM);
     add(c.justify.is_some(), "justify", BEAM);
     add(c.offset.is_some(), "offset", BEAM);
-    add(c.material.is_some(), "material", BEAM);
+    add(c.material.is_some(), "material", TAGGED);
     add(c.level.is_some(), "level", ALL);
     add(c.phase.is_some(), "phase", ALL);
     out
@@ -186,6 +186,10 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
             }
             if let Some(v) = c.fill {
                 f.fill = v;
+            }
+            // Its material (docs/adr/3041 §2); null: Betonarme again.
+            if let Some(v) = &c.material {
+                f.material.clone_from(v);
             }
         }
         Entity::Stair(s) => {

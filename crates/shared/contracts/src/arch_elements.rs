@@ -303,6 +303,9 @@ fn is_zero(v: &f64) -> bool {
     *v == 0.0
 }
 
+/// A column's material when it names none (docs/adr/3041 §2): reinforced concrete, as Turkish frames are built.
+pub const COLUMN_MATERIAL: &str = "Betonarme";
+
 /// A column's own fields (docs/adr/0343 §1).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -350,6 +353,11 @@ pub struct ColumnFields {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub fill: bool,
+    /// Its material (docs/adr/3041 §2); absent: Betonarme. Where it meets a wall's layer of the same material the two
+    /// are one section, hatched alike with no line between them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
     /// The two grids it stands where they cross, by their persistent ids.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -370,6 +378,30 @@ impl ColumnFields {
     /// Its depth: its own, else its width.
     pub fn depth(&self) -> f64 {
         self.depth.unwrap_or(self.width)
+    }
+
+    /// Its material's name (docs/adr/3041 §2): its own, else Betonarme.
+    pub fn material_name(&self) -> &str {
+        self.material.as_deref().unwrap_or(COLUMN_MATERIAL)
+    }
+
+    /// Its size as a construction plan writes it beside its name (docs/adr/3041 §2, a tag's `{size}`): its width and
+    /// depth in centimetres (30/50), a round one's diameter (Ø40); whole, else to one decimal (27.5), as its plan's
+    /// words (docs/adr/3011).
+    pub fn size_text(&self) -> String {
+        let cm = |m: f64| {
+            let c = (m * 1000.0).round() / 10.0;
+            if c.fract() == 0.0 {
+                format!("{c:.0}")
+            } else {
+                format!("{c:.1}")
+            }
+        };
+        if self.shape == ColumnShape::Round {
+            format!("Ø{}", cm(self.width))
+        } else {
+            format!("{}/{}", cm(self.width), cm(self.depth()))
+        }
     }
 
     /// What is wrong with its legs (docs/adr/0725 §3): an L needs both, each above 0 and thinner than the side it is
@@ -680,7 +712,9 @@ impl ColumnFields {
                 "Kolon iki ayrı aksın kesişimine bağlanır.".into(),
             ));
         }
-        blank(&self.kind, "type").or_else(|| blank(&self.tag, "tag"))
+        blank(&self.kind, "type")
+            .or_else(|| blank(&self.tag, "tag"))
+            .or_else(|| blank(&self.material, "material"))
     }
 }
 
@@ -943,6 +977,25 @@ mod tests {
         assert_eq!(g.base.label, None, "the grid's label is its own field");
         let back = serde_json::to_value(&e).expect("writes");
         assert_eq!(back["name"], "B");
+    }
+
+    /// A column's material (docs/adr/3041 §2): absent Betonarme, left out of its JSON; a blank one refused; its size
+    /// as its plan writes it.
+    #[test]
+    fn a_column_says_its_material_and_size() {
+        let text = r#"{"kind":"column","id":1,"layerId":"kolon","attrs":{},"at":{"x":0,"y":0},"width":0.3,"depth":0.5}"#;
+        let crate::Entity::Column(mut c) = serde_json::from_str(text).expect("reads") else { panic!("a column") };
+        assert_eq!(c.column.material_name(), "Betonarme");
+        assert_eq!(c.column.size_text(), "30/50");
+        assert!(serde_json::to_value(&c.column).unwrap().get("material").is_none());
+        c.column.material = Some("Çelik".into());
+        assert_eq!(c.column.material_name(), "Çelik");
+        assert_eq!(serde_json::to_value(&c.column).unwrap()["material"], "Çelik");
+        c.column.material = Some(" ".into());
+        assert_eq!(c.column.problem().map(|p| p.0), Some("material".to_owned()));
+        c.column.shape = crate::ColumnShape::Round;
+        c.column.width = 0.275;
+        assert_eq!(c.column.size_text(), "Ø27.5");
     }
 
     #[test]

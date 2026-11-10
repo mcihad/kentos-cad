@@ -358,6 +358,8 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     pick("Boş".into(), !x.fill, fill(false), None),
                 ],
             ))));
+            // Its material (docs/adr/3041 §2): one section with a wall's layer of the same material.
+            out.push(text("Malzeme", x.material_name().to_owned(), ArchField::Material));
             let tied = if x.grids.is_some() {
                 x.place.clone().unwrap_or_else(|| "Bağlı".into())
             } else {
@@ -544,7 +546,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(text(
                 "Malzeme",
                 x.material_name().to_owned(),
-                ArchField::BeamMaterial,
+                ArchField::Material,
             ));
             out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
             out.extend(arch_rows(doc, slot, &x.arch, &edit));

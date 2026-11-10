@@ -874,7 +874,9 @@ fn plain_walls(
     for (e, pieces) in input.entities.iter().zip(plain) {
         match (e, pieces) {
             (
-                kentos_contracts::Entity::Wall(_) | kentos_contracts::Entity::Opening(_),
+                kentos_contracts::Entity::Wall(_)
+                | kentos_contracts::Entity::Opening(_)
+                | kentos_contracts::Entity::Column(_),
                 Some(pieces),
             ) => {
                 let pieces = hatches_aside(&mut out, e, pieces);

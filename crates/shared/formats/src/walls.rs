@@ -213,9 +213,11 @@ pub fn plain_pieces(base: &EntityBase, w: &WallFields, view: View) -> Option<Vec
     Some(plain_of(base, pieces))
 }
 
-/// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5) and cut by its
-/// openings (docs/adr/0341 §2; the walls' persistent ids `uid_of` their object ids), and every opening as its symbol:
-/// one entry per entity, none for one that is neither or cannot be drawn.
+/// Every wall of `entities` as `plain_pieces` gives it, but joined with the others (docs/adr/0340 §5), cut by its
+/// openings (docs/adr/0341 §2; the walls' persistent ids `uid_of` their object ids) and by the columns on its level
+/// (docs/adr/3041 §2), and every opening as its symbol and every column one section with a wall's layer of its material
+/// as that layer looks: one entry per entity, none for one that is none of these or cannot be drawn (a column that
+/// meets no such layer draws as on its own, `arch_elements::plain_pieces_in`).
 pub fn plain_joined(
     entities: &[Entity],
     view: View,
@@ -250,13 +252,56 @@ pub fn plain_joined(
             out[i] = Some(crate::openings::plain_pieces(&o.base, &o.opening, view));
         }
     }
-    for ((i, shape), drawn) in walls.iter().zip(solved.drawn) {
-        let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) =
-            (drawn, shape, &entities[*i])
-        else {
+    // The columns (docs/adr/3041 §2): the walls on their level are cut where they stand.
+    use kentos_geometry_core::geom::column_join::{Foot, WallAt, cut, joined};
+    let columns: Vec<(usize, Shape, Foot)> = entities
+        .iter()
+        .enumerate()
+        .filter_map(|(i, e)| {
+            let Entity::Column(c) = e else {
+                return None;
+            };
+            let s = crate::arch_elements::core_column(&c.column);
+            let Shape::Column { at, column } = &s else {
+                return None;
+            };
+            let foot = Foot::of(*at, column)?;
+            Some((i, s, foot))
+        })
+        .collect();
+    let level = |s: &Shape| match s {
+        Shape::Wall { wall, .. } => kentos_geometry_core::geom::wall_join::level(wall).map(str::to_owned),
+        _ => None,
+    };
+    let wholes: Vec<Option<wall::Drawn>> = solved.drawn;
+    for ((i, shape), drawn) in walls.iter().zip(&wholes) {
+        let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) = (drawn, shape, &entities[*i]) else {
             continue;
         };
+        let lv = level(shape);
+        let feet: Vec<&Foot> = columns.iter().filter(|c| c.2.level == lv).map(|c| &c.2).collect();
+        let d = cut(d, &feet).unwrap_or_else(|| d.clone());
         out[*i] = Some(plain_of(&w.base, wall::pieces_of(&d, pts, wall, view)));
+    }
+    for (i, shape, foot) in &columns {
+        let at: Vec<WallAt<'_>> = walls
+            .iter()
+            .zip(&wholes)
+            .filter_map(|((_, s), d)| {
+                let (Some(d), Shape::Wall { pts, wall, .. }) = (d, s) else {
+                    return None;
+                };
+                (level(s) == foot.level && pts.len() >= 2).then(|| WallAt {
+                    drawn: d,
+                    spec: wall,
+                    turn: wall::first_direction(pts),
+                })
+            })
+            .collect();
+        if let (Some(look), Shape::Column { at: p, column }) = (joined(foot, &at), shape) {
+            let pieces = kentos_geometry_core::geom::arch::column_pieces_joined(*p, column, view, &look);
+            out[*i] = crate::arch_elements::plain_of_pieces(&entities[*i], pieces);
+        }
     }
     out
 }
@@ -588,5 +633,73 @@ mod tests {
             (4, 5),
             "1:50: and the frame's sides"
         );
+    }
+
+    /// DXF draws a column in a wall as the drawing does (docs/adr/3041 §2): the shear wall stops at the column's face
+    /// and the column takes its grey, its side across the wall's end left out (1.35 m of its 1.6 m outline); a steel
+    /// column still cuts the wall but draws on its own.
+    #[test]
+    fn a_column_cuts_the_wall_it_stands_in_and_joins_its_layer_of_one_material() {
+        let entities = |material: Option<&str>| -> Vec<Entity> {
+            let mut column = serde_json::json!({"kind":"column","id":2,"layerId":"0","attrs":{},"at":{"x":4.0,"y":0.0},
+                                               "width":0.4,"depth":0.4});
+            if let Some(m) = material {
+                column["material"] = m.into();
+            }
+            vec![
+                serde_json::from_value(serde_json::json!({"kind":"wall","id":1,"layerId":"0","attrs":{},
+                    "pts":[{"x":0.0,"y":0.0},{"x":4.0,"y":0.0}],"width":0.25,
+                    "components":[{"name":"Betonarme","material":"Betonarme","detail":"standard",
+                                   "hatch":{"pattern":"SOLID","scale":1.0,"angle":0.0,"color":"#A6A6A6"}}]}))
+                .unwrap(),
+                serde_json::from_value(column).unwrap(),
+            ]
+        };
+        let length = |pieces: &[Entity]| -> f64 {
+            pieces
+                .iter()
+                .filter_map(|p| match p {
+                    Entity::Polyline(l) => Some(
+                        l.pts
+                            .windows(2)
+                            .map(|w| kentos_geometry_core::jsmath::js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                            .sum::<f64>(),
+                    ),
+                    _ => None,
+                })
+                .sum()
+        };
+        let view = View::new(Detail::Standard, 50.0);
+        let plain = plain_joined(&entities(None), view, |_| None);
+        let wall = plain[0].as_ref().expect("the wall");
+        let far = wall
+            .iter()
+            .filter_map(|p| match p {
+                Entity::Polyline(l) => l.pts.iter().map(|q| q.x).reduce(f64::max),
+                _ => None,
+            })
+            .fold(0.0, f64::max);
+        assert!((far - 3.8).abs() < 1e-9, "the wall stops at the column's face: {far}");
+        let column = plain[1].as_ref().expect("one section with the wall's concrete");
+        assert!(
+            column
+                .iter()
+                .any(|p| matches!(p, Entity::Hatch(h) if h.base.color.as_deref() == Some("#A6A6A6"))),
+            "{column:?}"
+        );
+        assert!((length(column) - 1.35).abs() < 1e-9, "{}", length(column));
+        // Steel: the wall still stops there, the column draws on its own (the writer's arch path).
+        let plain = plain_joined(&entities(Some("Çelik")), view, |_| None);
+        assert!(plain[1].is_none());
+        let far = plain[0]
+            .as_ref()
+            .unwrap()
+            .iter()
+            .filter_map(|p| match p {
+                Entity::Polyline(l) => l.pts.iter().map(|q| q.x).reduce(f64::max),
+                _ => None,
+            })
+            .fold(0.0, f64::max);
+        assert!((far - 3.8).abs() < 1e-9, "{far}");
     }
 }

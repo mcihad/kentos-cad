@@ -1,0 +1,15 @@
+# M41 2. bölüm (docs/adr/3041 §2): a node of a 25 cm Betonarme perde from the west, 15 cm İç duvar 15 walls (sıva + tuğla
+# + sıva) from the north and to the east, and a 40 × 40 filled column S1 where they meet, the drawing's detail Uygulama
+# (and Ayrıntılı in a second copy). The perde and the column are one grey section with no line between them; the brick
+# walls stop at the column's faces, their lines and hatch outside it. The column selected: Malzeme Betonarme.
+fit KentOS Mimari — Düğüm
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+move 1200 950
+wait 800
+shot 01-genel
+click 790 852    # the column's lower side
+wait 1500
+shot 02-kolon-secili
