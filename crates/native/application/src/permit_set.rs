@@ -449,6 +449,28 @@ pub(crate) fn pages(
             out.push(page);
         }
     }
+    // The roof plan after the storeys' plans (docs/adr/8044 §7; PAİY 57(2)(a), Mimarlar Odası 14.3.3 u): when a roof
+    // stands over its storey's plan's cut (that plan draws its eaves dashed) and no storey over it has a plan to draw
+    // it whole, a sheet of its own: every roof whole, as seen from above. Its map's storey is the highest such roof's.
+    let paged: BTreeSet<&str> = storeys.iter().map(|(l, _)| l.id.as_str()).collect();
+    let unseen = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Roof(r) => r.roof.arch.level.as_deref().map(|l| (l, r.roof.offset)),
+            _ => None,
+        })
+        .filter(|(level, offset)| {
+            crate::roofs::over_its_storey(doc.settings(), level, *offset)
+                && crate::roofs::storey_over(doc.settings(), level)
+                    .is_none_or(|up| !paged.contains(up.id.as_str()))
+        })
+        .filter_map(|(level, _)| levels.iter().find(|l| l.id == level))
+        .max_by(|a, b| a.elevation.total_cmp(&b.elevation));
+    if let Some(top) = unseen {
+        let mut roof = Page::roof_plan(&top.id, Some(centre(plans)), scale);
+        roof.freeze = freeze.clone();
+        out.push(roof);
+    }
     let mut notes = Vec::new();
     // The sections after the plans (MO: planlar, kesitler, cepheler; PAİY 57(2)(a)(6); docs/adr/8042 §6): each drawn
     // section's first placement, at the scale it is drawn for (its words' size), on the smallest A paper it fits.

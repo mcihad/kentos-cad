@@ -2227,6 +2227,7 @@ fn a_map_draws_a_level() {
         Some(MapLevel {
             id: id.to_owned(),
             below,
+            roof: false,
         })
     };
     let mut d = Designer::new(Context {
@@ -2298,7 +2299,14 @@ fn kat_plani_paftalari_make_a_sheet_per_level() {
                 _ => None,
             })
             .expect("a map");
-        assert_eq!(map.level, Some(MapLevel { id: level.into(), below: false }));
+        assert_eq!(
+            map.level,
+            Some(MapLevel {
+                id: level.into(),
+                below: false,
+                roof: false
+            })
+        );
         let MapView::Fixed(v) = &map.view else {
             panic!("a fixed map")
         };

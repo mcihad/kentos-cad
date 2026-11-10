@@ -138,7 +138,8 @@ pub fn valid_annotation_scale(scale: f64) -> bool {
     scale.is_finite() && scale > 0. && scale <= kentos_contracts::MAX_ANNOTATIVE_SCALE
 }
 
-/// A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`.
+/// A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`; the
+/// roof plan with `roof` (docs/adr/8044 §7).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -153,6 +154,9 @@ pub enum MapLevelChoice {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         below: bool,
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        roof: bool,
     },
 }
 
@@ -384,7 +388,7 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
     if let Some(level) = &input.level {
         changed.level = match level {
             MapLevelChoice::All => None,
-            MapLevelChoice::Level { id, below } => {
+            MapLevelChoice::Level { id, below, roof } => {
                 if id.trim().is_empty() || id.chars().count() > 128 {
                     return Err(SheetError::new(
                         "bad_level",
@@ -394,6 +398,7 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
                 Some(crate::kinds::MapLevel {
                     id: id.clone(),
                     below: *below,
+                    roof: *roof,
                 })
             }
         };
@@ -417,9 +422,10 @@ pub fn configure(item: &Item, input: &SetViewport) -> Result<Op> {
         patch["kind"]["layerOverrides"] = serde_json::json!(changed.layer_overrides);
     }
     if input.level.is_some() {
-        // Both fields, so that the item's patch replaces a level whole (objects merge key by key).
+        // Every field, so that the item's patch replaces a level whole (objects merge key by key): a roof plan made a
+        // storey's plan again loses its `roof`.
         patch["kind"]["level"] = match &changed.level {
-            Some(l) => serde_json::json!({"id": l.id, "below": l.below}),
+            Some(l) => serde_json::json!({"id": l.id, "below": l.below, "roof": l.roof}),
             None => serde_json::Value::Null,
         };
     }

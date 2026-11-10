@@ -181,3 +181,33 @@ fn outside_any_roof_or_on_its_own_storeys_plan_nothing_is_put() {
         )
     );
 }
+
+/// The roof plan (docs/adr/8044 §7): every roof whole, none dashed, its storey's other objects left out; the objects on
+/// no level stay.
+#[test]
+fn the_roof_plan_draws_every_roof_whole_and_no_storey_s_inside() {
+    use kentos_interaction::level_view::{LevelView, looks, roof_plan};
+    let mut b = roofed();
+    // A wall on Zemin kat under the roof, and a line on no level.
+    run(
+        &mut b,
+        "cad.walls.create",
+        json!({"layerId": "cizim", "walls": [{"pts": [{"x": E, "y": N}, {"x": E + 12.0, "y": N}], "width": 0.25,
+                                              "justify": "center", "arch": {"level": "zemin"}}]}),
+    );
+    let wall = b.newest().base().id;
+    let line = b.add_line("cizim", [0.0, -3.0], [5.0, -3.0]).0;
+    let roof = the_roof(&b).base.id;
+    // On Zemin kat's own plan the roof is dashed; on the roof plan it is whole and the wall is out.
+    assert_eq!(
+        looks(&b.doc, LevelView::Active, Some("zemin")).roofs,
+        vec![roof]
+    );
+    let plan = roof_plan(&b.doc);
+    assert!(plan.roofs.is_empty(), "{plan:?}");
+    assert!(plan.hidden.contains(&wall), "{plan:?}");
+    assert!(
+        !plan.hidden.contains(&roof) && !plan.hidden.contains(&line),
+        "{plan:?}"
+    );
+}

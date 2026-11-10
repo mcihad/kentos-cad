@@ -492,10 +492,23 @@ impl Spatial {
             },
             None => (self.level_view, self.active_level.clone()),
         };
-        let mut looks = crate::level_view::looks(doc, view, active.as_deref());
+        // A sheet's roof plan (docs/adr/8044 §7): every roof whole, the levels' other objects out.
+        let roof_plan = self
+            .sheet_view
+            .as_ref()
+            .and_then(|v| v.level.as_ref())
+            .is_some_and(|l| l.roof);
+        let mut looks = if roof_plan {
+            crate::level_view::roof_plan(doc)
+        } else {
+            crate::level_view::looks(doc, view, active.as_deref())
+        };
         if !self.isolation_ignored && doc.objects_isolated() {
-            looks.hidden.extend(doc.entities().filter(|e| !doc.isolation_shown(Slot(e.base().id)))
-                .map(|e| e.base().id));
+            looks.hidden.extend(
+                doc.entities()
+                    .filter(|e| !doc.isolation_shown(Slot(e.base().id)))
+                    .map(|e| e.base().id),
+            );
             looks.hidden.sort_unstable();
             looks.hidden.dedup();
         }

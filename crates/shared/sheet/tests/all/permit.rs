@@ -161,14 +161,16 @@ fn a_permit_set_is_made_in_mo_s_order_with_its_file_names_fields() {
         map(1).level,
         Some(MapLevel {
             id: "zemin".into(),
-            below: false
+            below: false,
+            roof: false
         })
     );
     assert_eq!(
         map(3).level,
         Some(MapLevel {
             id: "k1".into(),
-            below: false
+            below: false,
+            roof: false
         })
     );
     let scale = |i: usize| match &map(i).view {
@@ -473,7 +475,8 @@ fn a_tadilat_plan_draws_its_view_s_state_on_its_own_storey() {
             drawn.level,
             Some(MapLevel {
                 id: "zemin".into(),
-                below: false
+                below: false,
+                roof: false
             }),
             "the storey the map's"
         );

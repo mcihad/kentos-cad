@@ -91,6 +91,18 @@ fn a_map_draws_its_level_and_the_one_below_faint() {
     assert!(has(&ground, "UST").is_none() && has(&ground, "ALT").is_some(), "no level under Zemin kat: {ground:?}");
 }
 
+/// The roof plan (docs/adr/8044 §7): every level's objects out but its roofs; the words on no level stay.
+#[test]
+fn a_roof_plan_map_leaves_every_storey_s_inside_out() {
+    let doc = drawing();
+    let roof = words(&doc, json!({"type": "level", "id": "kat-1", "roof": true}));
+    assert!(
+        has(&roof, "ALT").is_none() && has(&roof, "UST").is_none(),
+        "{roof:?}"
+    );
+    assert!(has(&roof, "ORTAK").is_some(), "{roof:?}");
+}
+
 #[test]
 fn a_level_gone_from_the_project_is_a_finding_with_its_fix() {
     let doc = drawing();

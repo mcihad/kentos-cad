@@ -2,8 +2,8 @@
 
 - **Durum:** sürüyor (10 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm yapıldı: çekirdek
   geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm yapıldı: kesit ve görünüşte çatı
-  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). Sırada oluk ve iniş borusu, kar siperliği, çatı
-  planı paftası ve PAİY 40/42 denetimi.
+  (§5). 3. bölüm yapıldı: baca, hava bacası ve çatı penceresi (§6). 4. bölüm yapıldı: çatı planı paftası (§7). Sırada
+  oluk ve iniş borusu, kar siperliği ve PAİY 40/42 denetimi.
 - **Bağlam belgesi:** ADR 8040 (düşey model: kat yükseklikleri, döşemenin katmanları), ADR 8042–8043 (kesit ve görünüş:
   "çizilmeyen: çatı"), ADR 8008 (EK-4 katman anahtarı), ADR 8011 (ölçeğe göre ayrıntı).
 
@@ -235,6 +235,28 @@ projede çatı planını ister.
 - **Öznitelikler:** her parça bir satır, aynı türden birden çoksa numaralı: "Duman bacası — 0.400 × 0.400 m · tepesi
   +8.58".
 
+### 7. Çatı planı paftası (4. bölüm)
+
+- **Mevzuat:** PAİY 57(2)(a) mimari projede çatı planını ister; Mimarlık Hizmetleri Şartnamesi 14.3.3 u çatı planında
+  "eğimler, su toplama yerleri, dereler, tesisat ve asansör çıkıntıları, bacalar ve çatıya çıkış delikleri" ile
+  kotları. Dijital proje yönetmeliği EK-2 Tablo 2.13'te çatı planının kendi dosya tipi var: **CAT** ("çatı planı ve
+  detayları"); Tablo 2.14'te çatı bir kat değil: yeri **NNN** (kattan bağımsız). Dosya adı `…_PL_CAT_NNN_01_000.pdf`.
+- **Çatı planı kuralı** (`level_view::roof_plan`): bütün çatılar bütün hâliyle (kesikli değil), bacaları ve
+  pencereleriyle; katsız nesneler (akslar, kesit ve görünüş işaretleri, katsız ölçü ve yazılar) durur; herhangi bir
+  katın başka her nesnesi (duvar, kapı, mahal, merdiven, döşeme, katın ölçüleri) çıkar. Revit ve Archicad'de çatı planı
+  çatının üstündeki katın planıdır; en üst katın çatısının üstünde kat olmadığı için kural adıyla istenir.
+- **Paftanın haritası:** `MapLevel.roof` (isteğe bağlı, yanlışsa yazılmaz; `MapLevelChoice::Level.roof` ile
+  `setViewport` da kurar). Pafta kitabı `.kcad`'de olduğu gibi saklanır (şema değişmedi); alanı bilmeyen eski sürüm
+  bu kitabı okumaz, sessizce düşürmez. Masaüstündeki pafta haritası, paftanın modelde düzenlenmesi ve PDF çıktısı
+  aynı kuralı kullanır (`kentos_plot::layers::level_looks`, `Spatial` paftanın görünümü).
+- **Ruhsat takımı** (`permit_set::pages`): bir çatı kendi katının planında kesikli (saçağı katın üstünde) ve üstünde
+  planı olan bir kat yoksa (kat yok ya da boş) katların planlarından sonra "Çatı planı" eklenir: planlarla aynı zemin
+  ve ölçek (Ruhsat 1/100), haritanın katı bu çatıların en yükseğinin katı. Üstte planı olan kat varsa o planda çatı
+  zaten bütün görünür; ayrı pafta açılmaz. "Çatı kendi katının üstünde mi" kuralı tek yerde
+  (`roofs::over_its_storey`); kat görünümü ona başvurur.
+- **Sonraya:** çatı planında alttaki dış duvarların kesik çizgiyle gösterilmesi (Türk kaynağında doğrulanamadı; Revit
+  ve Archicad göstermiyor), saçak ve bina ölçüleri, oluk ve iniş boruları.
+
 ## Doğrulama
 
 - `geom::roof` birim testleri 7 (kırma, beşik, tek eğim, düz ve saat yönü, içe dönen köşe reddi, planın okları ve
@@ -278,10 +300,23 @@ projede çatı planını ister.
   Gerçek pencerede bulunan iki çizim kusuru düzeltildi (üst üste binen kotlar, zincirdeki baca halkaları); bir harf
   seçeneği (T) yazılır yazılmaz uygulanır, ardından gelen Enter "Bitir"dir (senaryo buna göre).
 
+- 4. bölüm (§7): pafta `map_levels` (çatı planı bütün yazılır ve geri alınır), Ruhsat takımı'nın pafta testleri 21;
+  etkileşim: çatı planı kuralı (çatı bütün, kendi katının duvarı çıkar, katsız çizgi kalır); çıktı: çatı planı
+  haritası iki katın mahal adlarını yazmaz, katsız yazı kalır; uygulama: çatılı binanın takımında "Çatı planı" 1. kat
+  planından sonra, PL / CAT / NNN, haritası `roof`; çatısız binada yok. Masaüstü: Ruhsat takımı'nın 15 × 6 m binası
+  çatı, baca ve pencereyle: UP-01…UP-05, UP-05 Çatı planı; `260457_00_MM_XXXX_PL_CAT_NNN_01_000.pdf` PDF/A-2'ye uyar
+  (mahya +7.15, baca +7.95; dosya `.run/gui-evidence/mimari-m44/p4/ruhsat/`).
+- Gerçek pencere (`fixtures/interaction/real/cati-plani-paftasi.txt`): takımda UP-05 Çatı planı planlardan sonra;
+  paftası A3, 1/100, haritada bütün çatı, baca (+8.58) ve pencere, akslar ve işaretler, duvar ve mahal yok; antette
+  "…_PL_CAT_NNN_01_000".
+- Bulunan iki hata: görünüm penceresinin yaması katı yalnız `id` ve `below` ile yazıyordu (çatı planı kayboluyordu);
+  geri alma yaması eski katta olmayan alana `null` yazıyor ve `bool` alan onu okuyamıyordu (`below` için de
+  geçerliydi, testlere hiç düşmemişti): ikisi de `null`ı yanlış okur (`default_on_null`).
+
 ## Sonraya kalan
 
 - §9: içe dönen köşeli saçak (L, T) ve dereler.
-- Oluk, iniş borusu, kar siperliği; çatı planı paftası; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (PAİY 40'ın
+- Oluk, iniş borusu, kar siperliği; PAİY 40/42 ve Sivas denetimleri Mevzuat panelinde (PAİY 40'ın
   mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır; duman
   bacası mahya + 0,80 m, hava bacası 0,60 m, pencerenin cepheye 1 m ve birbirine 2 m uzaklığı); bacanın duvar içi
   bacayla (Baca aracı) bağı; çatının ve parçalarının Öznitelikler'den düzenlenmesi (komut hazır: `cad.arch.edit`);

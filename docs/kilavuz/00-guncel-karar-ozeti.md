@@ -369,6 +369,11 @@
     `ÇP` = `CP` Kopyala ile çakışırdı). Kesitte baca ANSI31 taramalı prizma (MM-BACA-GENEL), tepesi "+8.49 Baca";
     çatı yüzü bacayı `Void` olarak taşır, eğik bant bacanın iki yanında kesilir (çekirdek ve başvuru, 25 durum). Bir
     kot üsttekine yazı boyunun 2,2 katından yakınsa yazısı sola alınır; yükseklik zinciri baca tepelerini almaz.
+  - **Çatı planı paftası (M44 4. bölüm, ADR 8044 §7):** haritanın katı `MapLevel.roof` (ve `MapLevelChoice::Level.roof`)
+    ile çatı planı olur: `level_view::roof_plan` bütün çatıları bütün hâliyle, katsız nesneleri tutar, katların gerisini
+    çıkarır (masaüstü harita, model düzenleme ve PDF aynı kural). Ruhsat takımı, kendi katının planında kesikli kalan ve
+    üstünde planı olan kat bulunmayan çatı için planlardan sonra "Çatı planı" ekler: EK-2 PL / CAT / NNN. Görünüm penceresi
+    yaması seviyeyi bütün alanlarıyla yazar; tasarımcıda kat seçmek çatı planını kat planına çevirir.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

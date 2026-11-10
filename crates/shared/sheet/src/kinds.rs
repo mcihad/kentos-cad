@@ -388,7 +388,9 @@ pub struct MapItem {
 }
 
 /// A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
-/// no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
+/// no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With
+/// `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
+/// chimneys and windows, and the objects on no level; nothing else of any level.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -398,10 +400,24 @@ pub struct MapItem {
 pub struct MapLevel {
     /// The level's id among the project's levels.
     pub id: String,
-    /// The level under it drawn faint too.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    /// The level under it drawn faint too. Null is false: an inverse writes null for a field the old level left out.
+    #[serde(
+        default,
+        deserialize_with = "crate::viewport::default_on_null",
+        skip_serializing_if = "std::ops::Not::not"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub below: bool,
+    /// The roof plan (docs/adr/8044 §7): the roofs whole, the levels' other objects out. Null is false, as `below`.
+    #[serde(
+        default,
+        deserialize_with = "crate::viewport::default_on_null",
+        skip_serializing_if = "std::ops::Not::not"
+    )]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<bool>"))]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub roof: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]

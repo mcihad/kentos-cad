@@ -11182,7 +11182,8 @@ class PaperMapLayers(_Union):
 
 
 class PaperMapLevelChoice(_Union):
-    """A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`.
+    """A map's level set (docs/adr/0716): every level, or one level's plan, the level under it faint with `below`; the
+    roof plan with `roof` (docs/adr/8044 §7).
 
     One of:
 
@@ -65606,19 +65607,25 @@ class PaperMapGrid(_Model):
 @dataclass(kw_only=True, slots=True)
 class PaperMapLevel(_Model):
     """A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
-    no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
+    no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With
+    `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
+    chimneys and windows, and the objects on no level; nothing else of any level.
     Attributes:
         id: The level's id among the project's levels.
-        below: The level under it drawn faint too.
+        below: The level under it drawn faint too. Null is false: an inverse writes null for a field the old level left out.
+        roof: The roof plan (docs/adr/8044 §7): the roofs whole, the levels' other objects out. Null is false, as `below`.
     """
     id: str
-    below: bool | Unset = UNSET
+    below: bool | None | Unset = UNSET
+    roof: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["id"] = self.id
         if self.below is not UNSET:
             out["below"] = self.below
+        if self.roof is not UNSET:
+            out["roof"] = self.roof
         return out
 
     @classmethod
@@ -65626,6 +65633,7 @@ class PaperMapLevel(_Model):
         return cls(
             id=data["id"],
             below=data.get("below", UNSET),
+            roof=data.get("roof", UNSET),
         )
 
 
@@ -126243,12 +126251,15 @@ class LevelPaperMapLevelChoice(PaperMapLevelChoice):
     TAG_VALUE: ClassVar[str] = "level"
     id: str
     below: bool | Unset = UNSET
+    roof: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {"type": "level"}
         out["id"] = self.id
         if self.below is not UNSET:
             out["below"] = self.below
+        if self.roof is not UNSET:
+            out["roof"] = self.roof
         return out
 
     @classmethod
@@ -126256,6 +126267,7 @@ class LevelPaperMapLevelChoice(PaperMapLevelChoice):
         return cls(
             id=data["id"],
             below=data.get("below", UNSET),
+            roof=data.get("roof", UNSET),
         )
 
 

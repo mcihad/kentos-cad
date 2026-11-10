@@ -115,6 +115,8 @@ pub struct Page {
     /// Layers its map does not draw (the map's VPFREEZE, docs/adr/0314 §1): the sections placed beside the building
     /// on a plan's or the site plan's map (docs/adr/8042 §6).
     pub freeze: Vec<String>,
+    /// The roof plan's map (docs/adr/8044 §7): the roofs whole, the storeys' other objects out.
+    pub roof: bool,
 }
 
 impl Page {
@@ -135,6 +137,7 @@ impl Page {
             link: None,
             source: None,
             freeze: Vec::new(),
+            roof: false,
         }
     }
 
@@ -155,6 +158,7 @@ impl Page {
             link: None,
             source: None,
             freeze: Vec::new(),
+            roof: false,
         }
     }
 
@@ -181,6 +185,31 @@ impl Page {
             link: None,
             source: None,
             freeze: Vec::new(),
+            roof: false,
+        }
+    }
+
+    /// The roof plan (docs/adr/8044 §7; PAİY 57(2)(a), Mimarlar Odası 14.3.3 u): the roofs of `level` and every other
+    /// level whole, as seen from above, with what is on no level, at `scale`; EK-2's file type PL and kind CAT (Tablo
+    /// 2.13, "çatı planı ve detayları"), its place NNN (it belongs to no storey).
+    pub fn roof_plan(level: &str, center: Option<GroundPoint>, scale: u32) -> Page {
+        Page {
+            kind: PageKind::Plan,
+            title: "Çatı planı".into(),
+            level: Some(level.to_owned()),
+            center,
+            scale: Some(scale),
+            file_type: "PL",
+            file_kind: "CAT",
+            place: "NNN".into(),
+            views: Vec::new(),
+            paper: None,
+            captioned: false,
+            scaled: false,
+            link: None,
+            source: None,
+            freeze: Vec::new(),
+            roof: true,
         }
     }
 
@@ -211,6 +240,7 @@ impl Page {
             link: None,
             source: None,
             freeze: Vec::new(),
+            roof: false,
         }
     }
 
@@ -241,6 +271,7 @@ impl Page {
             link: None,
             source: None,
             freeze: Vec::new(),
+            roof: false,
         }
     }
 }
@@ -274,6 +305,7 @@ impl Page {
             link: None,
             source: Some(source.to_owned()),
             freeze: Vec::new(),
+            roof: false,
         }
     }
 }
@@ -756,6 +788,7 @@ pub fn permit_sheets(
                         m.level = Some(MapLevel {
                             id: level.clone(),
                             below: false,
+                            roof: page.roof,
                         });
                     }
                     // A set's scale is its phase's: locked, as a detail's is (docs/adr/1090 §2).

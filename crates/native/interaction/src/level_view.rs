@@ -74,15 +74,7 @@ pub fn roof_over_its_storey(settings: &ProjectSettings, e: &Entity) -> bool {
 
 /// Whether a roof on `level` at `offset` stands over that storey's plan's cut ([`roof_over_its_storey`]).
 pub fn roof_over(settings: &ProjectSettings, level: &str, offset: f64) -> bool {
-    let Some(floor) = levels(settings)
-        .iter()
-        .find(|l| l.id == level)
-        .map(|l| l.elevation)
-    else {
-        return false;
-    };
-    kentos_native_application::geometry::storey_top(settings, Some(level))
-        .is_some_and(|top| top + offset > floor + 1e-9)
+    kentos_native_application::roofs::over_its_storey(settings, level, offset)
 }
 
 /// The project's levels.
@@ -108,6 +100,35 @@ pub fn above<'a>(settings: &'a ProjectSettings, active: &str) -> Option<&'a Arch
         .iter()
         .filter(|l| l.elevation > at)
         .min_by(|a, b| a.elevation.total_cmp(&b.elevation))
+}
+
+/// The roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above (none dashed, whatever its storey),
+/// with its chimneys and windows, and the objects on no level; everything else on a level of the project left out.
+/// Revit's and Archicad's roof plan is the plan of the level over the roof; a building's top roof has none, so a sheet
+/// asks for this rule by name (`MapLevel::roof`).
+pub fn roof_plan(doc: &Document) -> LevelLooks {
+    let mut out = LevelLooks::default();
+    let all = levels(doc.settings());
+    if all.is_empty() {
+        return out;
+    }
+    let by_uid = |u: &str| {
+        Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    };
+    for e in doc.entities() {
+        let Some(level) = e.level(by_uid) else {
+            continue;
+        };
+        if !all.iter().any(|l| l.id == level) || matches!(e, Entity::Roof(_)) {
+            continue;
+        }
+        out.hidden.push(e.base().id);
+        out.elsewhere.push(e.base().id);
+    }
+    out
 }
 
 /// What `view` hides and draws faint in `doc` with `active` the active level (none: Katsız, the objects on no level),

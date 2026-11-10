@@ -145,9 +145,20 @@ pub fn level_view(level: &kentos_sheet::kinds::MapLevel) -> kentos_interaction::
 pub fn level_looks(
     doc: &kentos_domain::Document,
     level: &kentos_sheet::kinds::MapLevel,
-) -> (std::collections::HashSet<u32>, std::collections::HashSet<u32>) {
-    let l = kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id));
-    (l.hidden.into_iter().collect(), l.faded.into_iter().collect())
+) -> (
+    std::collections::HashSet<u32>,
+    std::collections::HashSet<u32>,
+) {
+    // The roof plan (docs/adr/8044 §7): every roof whole, the levels' other objects out.
+    let l = if level.roof {
+        kentos_interaction::level_view::roof_plan(doc)
+    } else {
+        kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id))
+    };
+    (
+        l.hidden.into_iter().collect(),
+        l.faded.into_iter().collect(),
+    )
 }
 
 /// Whether a map of `level` shows a stair of the level under it from above (docs/adr/0724 §4), a slab of the level
@@ -157,6 +168,10 @@ pub fn shows_from_above(
     doc: &kentos_domain::Document,
     level: &kentos_sheet::kinds::MapLevel,
 ) -> bool {
+    // The roof plan draws its roofs as the drawing's own store does: whole.
+    if level.roof {
+        return false;
+    }
     let l = kentos_interaction::level_view::looks(doc, level_view(level), Some(&level.id));
     !l.upper.is_empty() || !l.overhead.is_empty() || !l.roofs.is_empty()
 }

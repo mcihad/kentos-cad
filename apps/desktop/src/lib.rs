@@ -824,6 +824,8 @@ mod provisions_tests;
 #[cfg(test)]
 mod permit_set_tests;
 #[cfg(test)]
+mod roof_plan_set_tests;
+#[cfg(test)]
 mod room_list_tests;
 #[cfg(test)]
 mod joinery_list_tests;

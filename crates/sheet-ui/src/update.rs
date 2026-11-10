@@ -436,16 +436,18 @@ impl Designer {
                 Some(n) => json!({ "layers": { "type": "theme", "name": n } }),
                 None => json!({ "layers": { "type": "all" } }),
             }),
-            // A map's level (docs/adr/0716), written whole: objects merge key by key.
+            // A map's level (docs/adr/0716), written whole: objects merge key by key. A storey chosen, or the one under
+            // it, makes a roof plan (docs/adr/8044 §7) a storey's plan.
             Message::MapLevel(id) => self.patch_map_layers(|m| match &id {
                 Some(id) => json!({ "level": {
                     "id": id,
                     "below": m.level.as_ref().is_some_and(|l| l.below),
+                    "roof": false,
                 } }),
                 None => json!({ "level": null }),
             }),
             Message::MapLevelBelow(on) => self.patch_map_layers(|m| match &m.level {
-                Some(l) => json!({ "level": { "id": l.id, "below": on } }),
+                Some(l) => json!({ "level": { "id": l.id, "below": on, "roof": false } }),
                 None => json!({}),
             }),
             Message::MapOverrideAdd(layer) => self.edit_overrides(|list| {

@@ -35,13 +35,18 @@ fn level_of(book: &SheetBook) -> Option<MapLevel> {
 fn a_level_is_set_whole_taken_off_and_undone() {
     let b0 = book();
     let a = ops::apply(&b0, &set(json!({"type": "level", "id": "kat-1", "below": true}))).unwrap();
-    assert_eq!(level_of(&a.book), Some(MapLevel { id: "kat-1".into(), below: true }));
+    assert_eq!(level_of(&a.book), Some(MapLevel { id: "kat-1".into(), below: true, roof: false }));
     // Another level without `below`: not faint (the patch writes the level whole).
     let b = ops::apply(&a.book, &set(json!({"type": "level", "id": "zemin"}))).unwrap();
-    assert_eq!(level_of(&b.book), Some(MapLevel { id: "zemin".into(), below: false }));
+    assert_eq!(level_of(&b.book), Some(MapLevel { id: "zemin".into(), below: false, roof: false }));
     // Its inverse puts kat-1 and its faint level below back.
     let back = b.inverse.iter().fold(b.book.clone(), |book, op| ops::apply(&book, op).unwrap().book);
     assert_eq!(level_of(&back), level_of(&a.book));
+    // The roof plan (docs/adr/8044 §7) over a level without it, and its inverse: the old level back, no roof.
+    let roof = ops::apply(&b.book, &set(json!({"type": "level", "id": "zemin", "roof": true}))).unwrap();
+    assert_eq!(level_of(&roof.book), Some(MapLevel { id: "zemin".into(), below: false, roof: true }));
+    let undone = roof.inverse.iter().fold(roof.book.clone(), |book, op| ops::apply(&book, op).unwrap().book);
+    assert_eq!(level_of(&undone), level_of(&b.book));
     let all = ops::apply(&b.book, &set(json!({"type": "all"}))).unwrap();
     assert_eq!(level_of(&all.book), None);
     // Carried to the display primitive and the paper's model scope.

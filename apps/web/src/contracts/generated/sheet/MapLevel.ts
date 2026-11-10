@@ -2,7 +2,9 @@
 
 /**
  * A map's level (docs/adr/0716; Revit's plan view of a level, its underlay): the objects on the level and those on
- * no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map.
+ * no level; `below`, the level under it faint as well. Objects on the other levels are left out of the map. With
+ * `roof` the map is the roof plan (çatı planı, docs/adr/8044 §7): every roof whole, as seen from above, with its
+ * chimneys and windows, and the objects on no level; nothing else of any level.
  */
 export type MapLevel = { 
 /**
@@ -10,6 +12,10 @@ export type MapLevel = {
  */
 id: string, 
 /**
- * The level under it drawn faint too.
+ * The level under it drawn faint too. Null is false: an inverse writes null for a field the old level left out.
  */
-below?: boolean, };
+below?: boolean, 
+/**
+ * The roof plan (docs/adr/8044 §7): the roofs whole, the levels' other objects out. Null is false, as `below`.
+ */
+roof?: boolean, };

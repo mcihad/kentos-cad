@@ -1,0 +1,69 @@
+# M44 4. bölüm (docs/adr/8044 §7), on fixtures/arch/v1/facade-building.kcad (--modul mimari): 1. kat active, the roof by
+# Binadan near the south wall, a chimney typed on B-B at (5.2, 6.5) and a roof window at (5.2, 1.5). Proje › Ruhsat
+# takımı: Paftaları oluştur; Paftaları toplu yayınla lists UP-05 Çatı planı after the storeys' plans (publishing waits
+# for the drawing's own particulars and parcel); closed, the UP-05 tab: the roof plan sheet, its map every roof whole
+# with the chimney and the window, the axes and the marks, no storey's walls or rooms; its title block "Çatı planı",
+# 1/100, UP-05, EK-2's …_PL_CAT_NNN_01_000.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Çatı bacası
+wait 1500
+key Return
+wait 1500
+move 900 420
+wait 1000
+type 5.2,6.5
+key Return
+wait 1500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Çatı penceresi
+wait 1500
+key Return
+wait 1500
+type 5.2,1.5
+key Return
+wait 1500
+key Escape
+wait 800
+key alt+q
+wait 600
+type ruhsat takımı
+wait 1500
+key Return
+wait 3000
+shot t1-ruhsat-penceresi
+click 1250 897
+wait 15000
+shot t2-yayin
+click 661 854
+wait 1500
+move 1400 120
+wait 800
+shot t4-paftalar
+click 895 1000
+wait 4000
+move 1400 120
+wait 800
+shot t5-cati-plani

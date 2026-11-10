@@ -283,3 +283,57 @@ fn the_north_facade_sees_the_roofs_fascia_its_hips_and_its_ridge() {
         assert!(t.iter().any(|x| x == w), "{w} in {t:?}");
     }
 }
+
+/// Ruhsat takımı (docs/adr/8044 §7; PAİY 57(2)(a)): the roof over 1. kat has no storey over it whose plan would draw it
+/// whole: the set gets "Çatı planı" after the storeys' plans, EK-2's PL and CAT (Tablo 2.13, "çatı planı ve
+/// detayları"), its place NNN, its map the roof plan. Without a roof there is none.
+#[test]
+fn the_permit_set_gives_a_roof_no_storey_draws_whole_a_roof_plan() {
+    use kentos_native_application::permit_set::{PermitSet, execute};
+    let titles_of = |doc: &mut Document| {
+        let (_, made, _) = execute(&mut ExecutionContext::new(doc), &PermitSet::default()).unwrap();
+        made
+    };
+    let mut plain = building();
+    assert!(
+        !titles_of(&mut plain)
+            .iter()
+            .any(|m| m.title == "Çatı planı"),
+        "no roof, no roof plan"
+    );
+    let mut doc = roofed(&building());
+    let made = titles_of(&mut doc);
+    let titles: Vec<&str> = made.iter().map(|m| m.title.as_str()).collect();
+    let at = titles
+        .iter()
+        .position(|t| *t == "Çatı planı")
+        .unwrap_or_else(|| panic!("{titles:?}"));
+    assert_eq!(
+        titles[at - 1],
+        "1. kat planı",
+        "after the storeys' plans: {titles:?}"
+    );
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    let sheet = book.sheets.iter().find(|s| s.id == made[at].sheet).unwrap();
+    let var = |n: &str| {
+        sheet
+            .variables
+            .iter()
+            .find(|v| v.name == n)
+            .map(|v| v.value.clone())
+    };
+    let text = |t: &str| Some(kentos_sheet::model::VarValue::Text(t.into()));
+    assert_eq!(var("dosya_turu"), text("PL"));
+    assert_eq!(var("dosya_tipi"), text("CAT"));
+    assert_eq!(var("kat_konum"), text("NNN"));
+    let level = sheet
+        .items
+        .iter()
+        .find_map(|i| match &i.kind {
+            kentos_sheet::ItemKind::Map(m) => m.level.clone(),
+            _ => None,
+        })
+        .expect("its map's level");
+    assert_eq!(level.id, "k1");
+    assert!(level.roof && !level.below, "{level:?}");
+}

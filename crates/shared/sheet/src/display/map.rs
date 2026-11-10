@@ -496,6 +496,7 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
             Some(l) => Some(crate::kinds::MapLevel {
                 id: l.id.clone(),
                 below: l.below,
+                roof: false,
             }),
             None => m.level.clone(),
         },
