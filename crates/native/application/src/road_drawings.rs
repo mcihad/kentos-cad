@@ -408,6 +408,12 @@ fn record<I: Serialize>(
                     add(doc, RoadSourceKind::Layer, &id, &mut all);
                 }
             }
+            // Docs/adr/4760: a cut and fill drawing's sections and materials follow their axis's and boundaries' layers.
+            if command == kentos_commands::ROAD_TERRAINS_CUTFILL {
+                for id in cutfill_layers(doc, input) {
+                    add(doc, RoadSourceKind::Layer, &id, &mut all);
+                }
+            }
             all
         },
         uids: uids.to_vec(),
@@ -431,6 +437,26 @@ fn sheet_layers<I: Serialize>(input: &I) -> Vec<String> {
             if !id.is_empty() && !out.iter().any(|x| x == id) {
                 out.push(id.to_owned());
             }
+        }
+    }
+    out
+}
+
+/// The layers of the objects a cut and fill drawing reads (docs/adr/4760): its sections' axis's, then its materials'
+/// boundaries', each once.
+fn cutfill_layers<I: Serialize>(doc: &Document, input: &I) -> Vec<String> {
+    let v = serde_json::to_value(input).unwrap_or(Value::Null);
+    let mut uids: Vec<&str> = v.pointer("/sections/axis").and_then(Value::as_str).into_iter().collect();
+    for m in v.get("materials").and_then(Value::as_array).into_iter().flatten() {
+        uids.extend(m.get("boundary").and_then(Value::as_str));
+    }
+    let mut out: Vec<String> = Vec::new();
+    for u in uids {
+        let layer = Uuid::parse_str(u).ok().and_then(|id| doc.slot_of(id)).and_then(|s| doc.get(s)).map(|e| e.base().layer_id.clone());
+        if let Some(l) = layer
+            && !out.contains(&l)
+        {
+            out.push(l);
         }
     }
     out

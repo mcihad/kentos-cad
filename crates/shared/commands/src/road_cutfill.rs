@@ -24,12 +24,20 @@ pub const MOST_CUTFILL_BANDS: u64 = 1000;
 /// `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
 /// `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
 /// docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
-/// docs/adr/2740).
+/// docs/adr/2740). `sections` (docs/adr/4760): sections along a drawn axis, as `road.terrains.compare`'s, written as
+/// their lines, each with its kilometre at its left end and its cut and fill areas at its right end (along the line,
+/// kept upright), and with `table` a section volume table (kübaj cetveli). `materials` (docs/adr/4760): material zones,
+/// as `road.terrains.compare`'s `zones` (docs/adr/3540), each one's name and cut and fill volumes written inside it, and
+/// with `table` a material table.
 ///
 /// Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
-/// `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
-/// `invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),
-/// `no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.
+/// `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0; the sections' interval not over 0,
+/// a width not a length of 0 or more or both 0, a formula's; a material without a name, a factor not over 0 or over 10),
+/// `unknown_terrain`, `invalid_analysis` (the same surface twice), `entity_not_found` (the sections' axis, a material's
+/// boundary), `invalid_analysis` (an axis not a line or a single-part open polyline; a boundary not a straight-edged
+/// single-part closed polyline or area; two materials sharing more than 1 mm²), `terrain_unbuildable`,
+/// `invalid_analysis` (more than 1000 bands, more than 10 000 sections), `no_cut_fill` (the surfaces do not overlap, or
+/// coincide wherever they do). Warnings: `layer_hidden`, `compare_uncovered` (part of a material off the two surfaces).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -55,8 +63,91 @@ pub struct TerrainsCutFill {
     pub depths: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
+    pub sections: Option<CutFillSections>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::CompareZone>>", optional))]
+    pub materials: Vec<crate::CompareZone>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
+/// polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
+/// take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
+/// end area) and the kilometre of the axis's start (m; Netcad's “Güzergah Başlangıç Km”; none: 0), which the sections'
+/// kilometres count from.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CutFillSections {
+    pub axis: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub interval: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub left: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub right: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corners: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub formula: Option<crate::SectionFormula>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub start: Option<f64>,
+}
+
+/// A section as written (docs/adr/4760): its station (from the axis's start) and its kilometre (the start's kilometre
+/// added, as written: `k+mmm.cc`), the axis's place there, its left and right ends, its cut and fill areas (m²) and the
+/// cut and fill volumes between it and the section before (m³; none for the first).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CutFillSection {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub station: f64,
+    pub km: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub ends: [[f64; 2]; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub cut_area: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub fill_area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub cut_volume: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub fill_volume: Option<f64>,
+}
+
+/// A section's words as written (docs/adr/4760): its place (the section's end it stands beyond, half a text's height
+/// out), its text, its turn (degrees counterclockwise from east, along the section, kept upright) and its alignment
+/// (its end towards the section).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CutFillSectionLabel {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: [f64; 2],
+    pub text: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "deg")))]
+    pub rotation: f64,
+    pub align: crate::TextAlign,
 }
 
 /// A zone's label (docs/adr/2340): its place inside the zone (the core's interior point, GEOS's rule: the middle of
@@ -171,6 +262,40 @@ pub struct TerrainsCutFilled {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
     pub depths: Vec<CutFillLabel>,
+    /// The sections (docs/adr/4760), in station order; their volumes summed; the axis's length; each one's words (its
+    /// kilometre, then its areas); the section volume table's cells (asked for with `table`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillSection>>", optional))]
+    pub sections: Vec<CutFillSection>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub section_cut: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub section_fill: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: Option<f64>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillSectionLabel>>", optional))]
+    pub section_labels: Vec<CutFillSectionLabel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
+    pub section_table: Vec<Vec<String>>,
+    /// The materials (docs/adr/4760): `road.terrains.compare`'s zones, each one's words inside it, and the material
+    /// table's cells (asked for with `table`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TerrainZoneVolumes>>", optional))]
+    pub materials: Vec<crate::TerrainZoneVolumes>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]
+    pub material_labels: Vec<CutFillLabel>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
+    pub material_table: Vec<Vec<String>>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub uids: Vec<String>,

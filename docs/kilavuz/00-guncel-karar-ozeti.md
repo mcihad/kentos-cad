@@ -667,6 +667,11 @@
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Aks boyunca kesit; kesitler ve malzeme bölgeleri çizimde (10 Kasım 2026; MAP-15, [ADR 4760](../../docs/adr/4760-sections-along-an-axis-and-materials-drawn.md)).**
+  `road.terrains.compare`'in kesit yöntemi çizimdeki bir eksen boyunca da ölçer (`axis`, `left`, `right`, `corners`;
+  kurpta yarıçap doğrultusunda). `road.terrains.cutfill` kesitleri (`sections`: çizgi, km, alanlar, `start`, kübaj
+  cetveli) ve malzeme bölgelerini (`materials`: adı ve hacmi, malzeme tablosu) yazar. Yüzey analizi › Fark › Kesit:
+  Eksen, genişlikler, Eksen noktalarında da, Başlangıç km. Harita + Yol.
 - **Pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması (10 Kasım 2026; MAP-14, [ADR 4740](../../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
   `road.terrains.sheetcontours` çizimi yüzeyin ve okuduğu katmanların damgasıyla tutulur (yeni kaynak türü `layer`),
   eskir ve yeniden üretilir. Yalnız değişeni yaz sırayı korur: aynı renkli yazısız çizgiler kalır, maskeli yazı ve nokta

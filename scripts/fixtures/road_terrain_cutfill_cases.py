@@ -23,6 +23,14 @@ corners' mean), the one where |d| is largest; within 1 nm of it, the westmost, t
 Asked for, each zone's deepest place and its words: “derinlik” for a cut, “yükseklik” for a fill, |d| to two
 decimals and “m”.
 
+Asked for (docs/adr/4760), sections along a drawn axis (road_terrain_compare_section_cases.py's `axis_sections`: the
+lattices' exact linear difference along each section) with their kilometres (the start's added, k+mmm.cc, the metres
+to the centimetre half up) and their words (the kilometre at the left end, the areas at the right end, along the
+section from left to right and kept upright), and materials (each zone measured as road_terrain_compare_zone_cases.py
+measures it: GEOS's intersections with the lattices' rectangles, each part's integral its area times d at its
+centroid), their words at GEOS's representative point; with `table` the section volume table (Netcad's columns) and the
+material table.
+
 No KentOS code.
 
     uv run --no-project --python 3.11 --with shapely python3 scripts/fixtures/road_terrain_cutfill_cases.py [--check]
@@ -34,13 +42,15 @@ import math
 import sys
 from pathlib import Path
 
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, box
 from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import road_drainage_cases as drainage  # noqa: E402
 import road_terrain_analysis_cases as analysis  # noqa: E402
+import road_terrain_compare_cases as cmp  # noqa: E402
+import road_terrain_compare_section_cases as sec  # noqa: E402
 import road_terrain_zeroline_cases as zeroline  # noqa: E402
 
 OUT = Path(__file__).resolve().parents[2] / "fixtures/commands/v1"
@@ -76,6 +86,31 @@ LATTICES = {**zeroline.LATTICES, **{sid: (layer, f, xs, ys) for sid, _, layer, f
 NAMES = {**zeroline.NAMES, **{sid: name for sid, name, *_ in EXTRA}}
 
 
+# Docs/adr/4760: an axis across the far mound (TM coordinates): east, a quarter circle counterclockwise round (TMX + 5,
+# TMY + 5), then north; a straight one; and the materials: hard rock in the south-west, earth in the north-east.
+ARC = math.tan(math.pi / 8)
+AXIS = [(TMX + 1.0, TMY + 2.0), (TMX + 5.0, TMY + 2.0), (TMX + 8.0, TMY + 5.0), (TMX + 8.0, TMY + 9.0)]
+AXIS_BULGES = [0.0, ARC, 0.0]
+STRAIGHT_AXIS = [(TMX + 0.5, TMY + 5.0), (TMX + 9.5, TMY + 5.0)]
+MATERIALS = [("Sert kaya", [(TMX + 1.0, TMY + 1.0), (TMX + 4.0, TMY + 1.0), (TMX + 4.0, TMY + 4.0), (TMX + 1.0, TMY + 4.0)]),
+             ("Toprak", [(TMX + 5.0, TMY + 5.0), (TMX + 9.0, TMY + 5.0), (TMX + 9.0, TMY + 9.0), (TMX + 5.0, TMY + 9.0)]),
+             # Half off the two surfaces (their east edge at TMX + 10): warned.
+             ("Kum", [(TMX + 8.0, TMY + 0.5), (TMX + 12.0, TMY + 0.5), (TMX + 12.0, TMY + 3.0), (TMX + 8.0, TMY + 3.0)])]
+
+
+# Each material's factors as its attributes (Yüzey analizi reads them so, docs/adr/3540).
+MATERIAL_FACTORS = {"Sert kaya": {"Kazı katsayısı": "1.3"}, "Toprak": {"Dolgu katsayısı": "0.9"}}
+
+
+def extra_objects(first):
+    """The axis, the straight axis and the materials' boundaries, numbered from `first`: (kind, layer, geometry)."""
+    return [("polyline", "eksen", {"pts": [{"x": x, "y": y} for x, y in AXIS], "bulges": AXIS_BULGES + [0.0]}),
+            ("line", "eksen", {"a": {"x": STRAIGHT_AXIS[0][0], "y": STRAIGHT_AXIS[0][1]},
+                               "b": {"x": STRAIGHT_AXIS[1][0], "y": STRAIGHT_AXIS[1][1]}})] + \
+           [("polygon", "malzeme", {"pts": [{"x": x, "y": y} for x, y in ring], "attrs": {"Malzeme": name, **MATERIAL_FACTORS.get(name, {})}})
+            for name, ring in MATERIALS]
+
+
 def setup(work="road"):
     s = zeroline.setup(work)
     base = {"type": "layer", "visible": True, "locked": False, "expanded": True,
@@ -94,7 +129,105 @@ def setup(work="road"):
     if work in ("road", "map"):
         s["settings"]["road"]["surfaces"] += [{"id": sid, "name": name, "points": {"layers": [layer]}}
                                               for sid, name, layer, *_ in EXTRA]
+    # Docs/adr/4760: the axes and the materials, after every other object.
+    for lid, name in (("eksen", "Eksen"), ("malzeme", "Malzeme bölgeleri")):
+        s["layers"].append({"id": lid, "name": name, **copy.deepcopy(base)})
+    for kind, layer, geo in extra_objects(k + 1):
+        k += 1
+        geo = dict(geo)
+        s["entities"].append({"kind": kind, "id": k, "layerId": layer, "attrs": geo.pop("attrs", {}), **geo})
+        s["uids"].append(UID.format(k))
     return s
+
+
+EXTRA_UIDS = []
+
+
+def extra_uid(i):
+    """The uid of the i-th of `extra_objects` (0: the axis, 1: the straight axis, 2, 3 and 4: the materials)."""
+    if not EXTRA_UIDS:
+        s = setup()
+        EXTRA_UIDS.extend(s["uids"][len(s["uids"]) - len(extra_objects(0)):])
+    return EXTRA_UIDS[i]
+
+
+def km_text(v):
+    cm = math.floor(v * 100.0 + 0.5)
+    return f"{cm // 100000}+{(cm % 100000) // 100:03d}.{cm % 100:02d}"
+
+
+def section_words(sections):
+    """Each section's kilometre at its left end and its areas at its right end, along it and kept upright."""
+    out = []
+    for s in sections:
+        (lx, ly), (rx, ry) = s["ends"]
+        angle = math.degrees(math.atan2(ry - ly, rx - lx))
+        flipped = angle > 90.0 or angle <= -90.0
+        rotation = angle if not flipped else (angle - 180.0 if angle > 90.0 else angle + 180.0)
+        km, areas = ("middleLeft", "middleRight") if flipped else ("middleRight", "middleLeft")
+        out.append({"at": [lx, ly], "text": s["km"], "rotation": rotation, "align": km})
+        out.append({"at": [rx, ry], "text": f"Kazı {s['cutArea']:.2f} m² · Dolgu {s['fillArea']:.2f} m²",
+                    "rotation": rotation, "align": areas})
+    return out
+
+
+def section_table(sections):
+    """The section volume table's cells (Netcad's columns)."""
+    rows = [["Km", "Ara uzaklık (m)", "Kazı alanı (m²)", "Dolgu alanı (m²)", "Kazı hacmi (m³)", "Dolgu hacmi (m³)",
+             "Kümülatif kazı (m³)", "Kümülatif dolgu (m³)"]]
+    cut = fill = 0.0
+    for k, s in enumerate(sections):
+        first = k == 0
+        cut += s.get("cutVolume", 0.0)
+        fill += s.get("fillVolume", 0.0)
+        rows.append([s["km"], "" if first else f"{s['station'] - sections[k - 1]['station']:.2f}",
+                     f"{s['cutArea']:.2f}", f"{s['fillArea']:.2f}",
+                     "" if first else f"{s['cutVolume']:.2f}", "" if first else f"{s['fillVolume']:.2f}",
+                     "" if first else f"{cut:.2f}", "" if first else f"{fill:.2f}"])
+    return rows
+
+
+def material_measure(bid, cid, ring):
+    """A material's part of the difference, as road_terrain_compare_zone_cases.py measures a zone."""
+    z = Polygon(ring)
+    m = {"area": z.area, "covered": 0.0, "cut": 0.0, "fill": 0.0, "cutArea": 0.0, "fillArea": 0.0}
+    _, fb, bxs, bys = LATTICES[bid]
+    _, fc, cxs, cys = LATTICES[cid]
+    xs = sorted({x for x in bxs + cxs if cxs[0] <= x <= cxs[-1]})
+    ys = sorted({y for y in bys + cys if cys[0] <= y <= cys[-1]})
+    for j in range(len(ys) - 1):
+        for i in range(len(xs) - 1):
+            x0, x1, y0, y1 = xs[i], xs[i + 1], ys[j], ys[j + 1]
+            if not (bxs[0] <= x0 and x1 <= bxs[-1] and bys[0] <= y0 and y1 <= bys[-1]):
+                continue
+            inter = z.intersection(box(x0, y0, x1, y1))
+            if inter.is_empty or inter.area == 0.0:
+                continue
+            m["covered"] += inter.area
+            poly = [([x, y], fc(x, y) - fb(x, y)) for x, y in ((x0, y0), (x1, y0), (x1, y1), (x0, y1))]
+            d00, d10, d01 = poly[0][1], poly[1][1], poly[3][1]
+
+            def d_at(x, y):
+                return d00 + (x - x0) / (x1 - x0) * (d10 - d00) + (y - y0) / (y1 - y0) * (d01 - d00)
+            for above in (True, False):
+                part = cmp.split(poly, 0.0, above)
+                if len(part) < 3:
+                    continue
+                side = Polygon([q for q, _ in part])
+                if side.area <= 0.0:
+                    continue
+                g = z.intersection(side)
+                if g.is_empty or g.area == 0.0:
+                    continue
+                c = g.centroid
+                v = g.area * d_at(c.x, c.y)
+                if above:
+                    m["fill"] += v
+                    m["fillArea"] += g.area
+                else:
+                    m["cut"] -= v
+                    m["cutArea"] += g.area
+    return m
 
 
 def rectangles(bid, cid):
@@ -317,7 +450,56 @@ def answer(inp):
     if inp.get("depths"):
         out["depths"] = [{"at": z["deepest"], "text": f"{'derinlik' if z['kind'] == 'cut' else 'yükseklik'} "
                                                        f"{z['depth']:.2f} m"} for z in zones]
+    # Docs/adr/4760: the sections along the axis and the materials.
+    s = inp.get("sections")
+    if s:
+        pts, bulges = (AXIS, AXIS_BULGES) if s["axis"] == extra_uid(0) else (STRAIGHT_AXIS, [])
+        rows, between, cut, fill, length = sec.axis_sections(LATTICES[cid], LATTICES[bid], pts, bulges, s["interval"],
+                                                             s["left"], s["right"], s.get("corners", False),
+                                                             s.get("formula") == "prismoidal")
+        start = s.get("start", 0.0)
+        sections = []
+        for k, (st, p, a, b, c, f) in enumerate(rows):
+            row = {"station": st, "km": km_text(start + st), "at": list(p), "ends": [list(a), list(b)], "cutArea": c,
+                   "fillArea": f}
+            if k > 0:
+                row["cutVolume"], row["fillVolume"] = between[k - 1]
+            sections.append(row)
+        out.update({"sections": sections, "sectionCut": cut, "sectionFill": fill, "length": length,
+                    "sectionLabels": section_words(sections)})
+        if inp.get("table"):
+            out["sectionTable"] = section_table(sections)
+    if inp.get("materials"):
+        rows, words, warns = [], [], []
+        for k, mat in enumerate(inp["materials"]):
+            ring = next(r for i, (_, r) in enumerate(MATERIALS) if extra_uid(2 + i) == mat["boundary"])
+            m = material_measure(bid, cid, ring)
+            name = mat["name"].strip()
+            cf, ff = mat.get("cutFactor", 1.0), mat.get("fillFactor", 1.0)
+            rows.append({"name": name, "boundary": mat["boundary"], "area": m["area"], "covered": m["covered"],
+                         "cut": m["cut"], "fill": m["fill"], "net": m["fill"] - m["cut"], "cutArea": m["cutArea"],
+                         "fillArea": m["fillArea"],
+                         "adjusted": {"cutFactor": cf, "fillFactor": ff, "cut": m["cut"] * cf, "fill": m["fill"] * ff,
+                                      "net": m["fill"] * ff - m["cut"] * cf}})
+            p = Polygon(ring).representative_point()
+            words.append({"at": [p.x, p.y], "text": f"{name}: kazı {m['cut']:.2f} m³, dolgu {m['fill']:.2f} m³"})
+            off = m["area"] - m["covered"]
+            if off > 1e-6 * max(m["area"], 1.0):
+                warns.append({"code": "compare_uncovered", "message": f"“{name}” bölgesinin {off:.2f} m²'si iki yüzeyin "
+                              "ortak alanının dışında; o kısım bölgenin hacmine girmedi.", "path": f"materials[{k}].boundary"})
+        out.update({"materials": rows, "materialLabels": words})
+        WARNS[:] = warns
+        if inp.get("table"):
+            num = lambda v: repr(float(v))[:-2] if repr(float(v)).endswith(".0") else repr(float(v))  # noqa: E731
+            out["materialTable"] = [["Malzeme", "Alan (m²)", "Kazı (m³)", "Dolgu (m³)", "Kazı katsayısı",
+                                     "Dolgu katsayısı", "Katsayılı net (m³)"]] + \
+                [[r["name"], f"{r['area']:.2f}", f"{r['cut']:.2f}", f"{r['fill']:.2f}", num(r["adjusted"]["cutFactor"]),
+                  num(r["adjusted"]["fillFactor"]), f"{r['adjusted']['net']:.2f}"] for r in rows]
     return out
+
+
+# The warnings the last `answer` gave beside the layer's (docs/adr/4760: a material off the surfaces).
+WARNS = []
 
 
 def failed(code, message, path=None):
@@ -329,11 +511,16 @@ def cases():
     n = len(setup()["entities"])
 
     def ok(name, inp, op="execute", warns=(), note=None, setup_=None, entities=None):
+        WARNS.clear()
         o = answer(inp)
+        warns = list(warns) + WARNS
         written = op == "execute"
         o["revision"] = "$current"
         added = (2 * len(o["zones"]) + len(o.get("labels", [])) + 2 * len(o.get("depths", []))
-                 + (1 if o.get("table") else 0))
+                 + (1 if o.get("table") else 0)
+                 # Docs/adr/4760: each section's line and two words, each material's words, their tables.
+                 + len(o.get("sections", [])) + len(o.get("sectionLabels", [])) + len(o.get("materialLabels", []))
+                 + (1 if o.get("sectionTable") else 0) + (1 if o.get("materialTable") else 0))
         if written:
             # Each zone a hatch (its fill) and a closed area (its data); its label; the table.
             o["uids"] = [ANY] * added
@@ -442,6 +629,42 @@ def cases():
     no("Eski sürüme göre hazırlanmış", {"base": "Düz", "comparison": "Tümsek", "expectedRevision": "41"},
        zeroline.CONFLICT)
     no("Mimari proje", {"base": "Düz", "comparison": "Tümsek"}, NOT_SURFACE, setup_="$mimari")
+    # Docs/adr/4760: sections along a drawn axis and material zones, written beside the zones.
+    far = {"base": "Uzak düz", "comparison": "Uzak tümsek"}
+    along = {"axis": extra_uid(0), "interval": 1.0, "left": 1.0, "right": 1.5}
+    o = ok("Kesitler eksen boyunca: düz, kurp, düz; km 1+000'dan, kübaj cetveliyle",
+           {**far, "sections": {**along, "start": 1000.0}, "table": True},
+           note="Netcad'in Enkesit Çiz'i ve kübaj cetveli gibi: kesit çizgisi, solda km, sağda alanlar; büyük koordinat")
+    assert o["sections"] and o["sectionTable"] and o["sectionLabels"], o.keys()
+    ok("Eksen noktalarında da ve prizmoidal", {**far, "sections": {**along, "corners": True, "formula": "prismoidal"}})
+    ok("Düz eksen: kesitler kuzey–güney", {**far, "sections": {"axis": extra_uid(1), "interval": 1.5, "left": 4.0,
+                                                               "right": 4.0}})
+    ok("Malzeme bölgeleri: adları ve hacimleri içlerinde, malzeme tablosu",
+       {**far, "materials": [{"name": "Sert kaya", "boundary": extra_uid(2), "cutFactor": 1.3},
+                             {"name": " Toprak ", "boundary": extra_uid(3), "fillFactor": 0.9}], "table": True})
+    ok("Malzeme iki yüzeyin dışına taşar: uyarılır, dışarısı hacme girmez",
+       {**far, "materials": [{"name": "Kum", "boundary": extra_uid(4)}]})
+    ok("Kesitler ve malzemeler birlikte, plan yazmaz",
+       {**far, "sections": along, "materials": [{"name": "Sert kaya", "boundary": extra_uid(2)}]}, op="plan")
+    widths = "Kesitin sol ve sağ genişliği 0 ya da daha büyük bir uzunluk olmalı; ikisi birden 0 olamaz."
+    no("Kesit aralığı 0", {**far, "sections": {**along, "interval": 0.0}},
+       failed("invalid_analysis", "Kesit aralığı 0'dan büyük bir uzunluk olmalı.", "sections.interval"))
+    no("Eksi genişlik", {**far, "sections": {**along, "left": -1.0}}, failed("invalid_analysis", widths, "sections.left"))
+    no("Eksi başlangıç km", {**far, "sections": {**along, "start": -5.0}},
+       failed("invalid_analysis", "Eksenin başlangıç kilometresi 0 ya da daha büyük bir uzunluk olmalı (m).",
+              "sections.start"))
+    no("Malzemenin adı boş", {**far, "materials": [{"name": " ", "boundary": extra_uid(2)}]},
+       failed("invalid_analysis", "Malzeme bölgesinin adı boş olamaz; malzemeyi yazın (ör. Kaya).", "materials[0].name"))
+    no("Malzemenin katsayısı 0", {**far, "materials": [{"name": "Kaya", "boundary": extra_uid(2), "cutFactor": 0.0}]},
+       failed("invalid_analysis", "Kazı ve dolgu katsayısı 0'dan büyük, en çok 10 olur (1: düzeltme yok).",
+              "materials[0].cutFactor"))
+    no("Olmayan eksen", {**far, "sections": {**along, "axis": UID.format(999999)}},
+       failed("entity_not_found", f"“{UID.format(999999)}” kimlikli nesne çizimde yok.", "sections.axis"))
+    no("Alan eksen olamaz", {**far, "sections": {**along, "axis": extra_uid(2)}},
+       failed("invalid_analysis", f"“{extra_uid(2)}” kesitlerin ekseni olamaz: bir çizgi ya da tek parçalı açık bir çoklu "
+              "çizgi olmalı.", "sections.axis"))
+    no("Olmayan malzeme sınırı", {**far, "materials": [{"name": "Kaya", "boundary": UID.format(999999)}]},
+       failed("entity_not_found", f"“{UID.format(999999)}” kimlikli nesne çizimde yok.", "materials[0].boundary"))
     return out
 
 

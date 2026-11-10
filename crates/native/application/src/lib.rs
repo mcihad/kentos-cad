@@ -447,6 +447,7 @@ pub mod road_terrains_contours;
 pub mod road_terrains_sheet;
 pub mod road_terrains_zeroline;
 pub mod road_terrains_cutfill;
+mod road_terrains_cutfill_sections;
 pub mod road_terrains_create;
 pub mod road_terrains_edit;
 pub mod road_terrains_query;

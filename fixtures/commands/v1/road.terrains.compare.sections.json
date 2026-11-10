@@ -842,6 +842,20 @@
      "lineWeight": 0.25
     },
     "children": []
+   },
+   {
+    "id": "eksen",
+    "name": "Eksen",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
    }
   ],
   "activeLayer": "0",
@@ -10430,6 +10444,91 @@
      "y": 10.0
     },
     "z": 31.25
+   },
+   {
+    "kind": "line",
+    "a": {
+     "x": 8000.0,
+     "y": 5.0
+    },
+    "b": {
+     "x": 8010.0,
+     "y": 5.0
+    },
+    "id": 871,
+    "layerId": "eksen",
+    "attrs": {}
+   },
+   {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 8001.0,
+      "y": 2.0
+     },
+     {
+      "x": 8005.0,
+      "y": 2.0
+     },
+     {
+      "x": 8009.0,
+      "y": 6.0
+     },
+     {
+      "x": 8009.0,
+      "y": 9.5
+     }
+    ],
+    "bulges": [
+     0.0,
+     0.4142135623730951,
+     0.0,
+     0.0
+    ],
+    "id": 872,
+    "layerId": "eksen",
+    "attrs": {}
+   },
+   {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 8001.0,
+      "y": 1.0
+     },
+     {
+      "x": 8006.0,
+      "y": 1.0
+     },
+     {
+      "x": 8006.0,
+      "y": 9.0
+     }
+    ],
+    "id": 873,
+    "layerId": "eksen",
+    "attrs": {}
+   },
+   {
+    "kind": "polyline",
+    "pts": [
+     {
+      "x": 8001.0,
+      "y": 1.0
+     },
+     {
+      "x": 8003.0,
+      "y": 1.0
+     },
+     {
+      "x": 8003.0,
+      "y": 3.0
+     }
+    ],
+    "closed": true,
+    "id": 874,
+    "layerId": "eksen",
+    "attrs": {}
    }
   ],
   "uids": [
@@ -11302,7 +11401,11 @@
    "0192f5f0-7c3e-7d4a-9b1e-000000000867",
    "0192f5f0-7c3e-7d4a-9b1e-000000000868",
    "0192f5f0-7c3e-7d4a-9b1e-000000000869",
-   "0192f5f0-7c3e-7d4a-9b1e-000000000870"
+   "0192f5f0-7c3e-7d4a-9b1e-000000000870",
+   "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+   "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+   "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+   "0192f5f0-7c3e-7d4a-9b1e-000000000874"
   ],
   "styles": {
    "items": [],
@@ -13173,6 +13276,20 @@
      {
       "id": "set",
       "name": "Set",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "eksen",
+      "name": "Eksen",
       "type": "layer",
       "visible": true,
       "locked": false,
@@ -22771,6 +22888,91 @@
        "y": 10.0
       },
       "z": 31.25
+     },
+     {
+      "kind": "line",
+      "a": {
+       "x": 8000.0,
+       "y": 5.0
+      },
+      "b": {
+       "x": 8010.0,
+       "y": 5.0
+      },
+      "id": 871,
+      "layerId": "eksen",
+      "attrs": {}
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 8001.0,
+        "y": 2.0
+       },
+       {
+        "x": 8005.0,
+        "y": 2.0
+       },
+       {
+        "x": 8009.0,
+        "y": 6.0
+       },
+       {
+        "x": 8009.0,
+        "y": 9.5
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.4142135623730951,
+       0.0,
+       0.0
+      ],
+      "id": 872,
+      "layerId": "eksen",
+      "attrs": {}
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 8001.0,
+        "y": 1.0
+       },
+       {
+        "x": 8006.0,
+        "y": 1.0
+       },
+       {
+        "x": 8006.0,
+        "y": 9.0
+       }
+      ],
+      "id": 873,
+      "layerId": "eksen",
+      "attrs": {}
+     },
+     {
+      "kind": "polyline",
+      "pts": [
+       {
+        "x": 8001.0,
+        "y": 1.0
+       },
+       {
+        "x": 8003.0,
+        "y": 1.0
+       },
+       {
+        "x": 8003.0,
+        "y": 3.0
+       }
+      ],
+      "closed": true,
+      "id": 874,
+      "layerId": "eksen",
+      "attrs": {}
      }
     ],
     "uids": [
@@ -23643,7 +23845,11 @@
      "0192f5f0-7c3e-7d4a-9b1e-000000000867",
      "0192f5f0-7c3e-7d4a-9b1e-000000000868",
      "0192f5f0-7c3e-7d4a-9b1e-000000000869",
-     "0192f5f0-7c3e-7d4a-9b1e-000000000870"
+     "0192f5f0-7c3e-7d4a-9b1e-000000000870",
+     "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+     "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+     "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+     "0192f5f0-7c3e-7d4a-9b1e-000000000874"
     ],
     "styles": {
      "items": [],
@@ -23911,6 +24117,1738 @@
        "code": "invalid_analysis",
        "message": "Bu aralıkla 10 000'den çok kesit olur; kesit aralığını büyütün.",
        "path": "interval"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Düz eksen boyunca: semt 90°'nin kesitleri, uçlarıyla",
+   "note": "eksen doğuya: sol uç kuzeyde, sağ uç güneyde; kesitler kafesin bütün eninde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "left": 5.0,
+      "right": 5.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 1.0000000000000142,
+       "fill": 7.999999999999972,
+       "net": 6.999999999999957,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 2.0,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+       "length": 10.0,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.5000000000000071,
+         "fillArea": 0.0,
+         "at": [
+          8000.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8000.0,
+           10.0
+          ],
+          [
+           8000.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 2.0,
+         "cutArea": 0.0,
+         "fillArea": 0.5000000000000071,
+         "at": [
+          8002.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8002.0,
+           10.0
+          ],
+          [
+           8002.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 4.0,
+         "cutArea": 0.0,
+         "fillArea": 1.4999999999999858,
+         "at": [
+          8004.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           10.0
+          ],
+          [
+           8004.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 1.4999999999999858,
+         "at": [
+          8006.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8006.0,
+           10.0
+          ],
+          [
+           8006.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 8.0,
+         "cutArea": 0.0,
+         "fillArea": 0.5000000000000071,
+         "at": [
+          8008.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8008.0,
+           10.0
+          ],
+          [
+           8008.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 10.0,
+         "cutArea": 0.5000000000000071,
+         "fillArea": 0.0,
+         "at": [
+          8010.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8010.0,
+           10.0
+          ],
+          [
+           8010.0,
+           0.0
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yaylı eksen: kurpta kesitler yarıçap doğrultusunda",
+   "note": "kurbun dışındaki sağ uç kafesin dışına taşar: yalnız iki yüzeyin örttüğü kısım sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 1.5,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+      "left": 1.5,
+      "right": 1.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 0.14274236243882407,
+       "fill": 2.8119570719097164,
+       "net": 2.6692147094708925,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 1.5,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+       "length": 13.783185307179586,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           3.5
+          ],
+          [
+           8001.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 1.5,
+         "cutArea": 0.0,
+         "fillArea": 0.22499999999999787,
+         "at": [
+          8002.5,
+          2.0
+         ],
+         "ends": [
+          [
+           8002.5,
+           3.5
+          ],
+          [
+           8002.5,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 3.0,
+         "cutArea": 0.0,
+         "fillArea": 0.44999999999999574,
+         "at": [
+          8004.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           3.5
+          ],
+          [
+           8004.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 4.5,
+         "cutArea": 0.0,
+         "fillArea": 0.525195159968803,
+         "at": [
+          8005.498698933541,
+          2.031209331082684
+         ],
+         "ends": [
+          [
+           8005.311686833464,
+           3.5195058319266774
+          ],
+          [
+           8005.685711033619,
+           0.5429128302386905
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 0.3123446768375255,
+         "at": [
+          8006.9177021544165,
+          2.4896697524385094
+         ],
+         "ends": [
+          [
+           8006.19856384651,
+           3.806043595274068
+          ],
+          [
+           8007.636840462323,
+           1.1732959096029505
+          ]
+         ]
+        },
+        {
+         "station": 7.5,
+         "cutArea": 0.001597873383419136,
+         "fillArea": 0.14107177204175542,
+         "at": [
+          8008.070174008944,
+          3.4360125673466997
+         ],
+         "ends": [
+          [
+           8006.91885875559,
+           4.397507854591687
+          ],
+          [
+           8009.221489262299,
+           2.474517280101712
+          ]
+         ]
+        },
+        {
+         "station": 9.0,
+         "cutArea": 0.0263439464561362,
+         "fillArea": 0.0697819900724979,
+         "at": [
+          8008.795938477422,
+          4.738710550418926
+         ],
+         "ends": [
+          [
+           8007.372461548389,
+           5.211694094011829
+          ],
+          [
+           8010.2194154064555,
+           4.2657270068260225
+          ]
+         ]
+        },
+        {
+         "station": 10.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          6.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           6.216814692820414
+          ],
+          [
+           8010.5,
+           6.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 12.0,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          7.716814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           7.716814692820414
+          ],
+          [
+           8010.5,
+           7.716814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.216814692820414
+          ],
+          [
+           8010.5,
+           9.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.783185307179586,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.5
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.5
+          ],
+          [
+           8010.5,
+           9.5
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Yaylı eksen, prizmoidal",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 1.5,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+      "left": 1.5,
+      "right": 1.5,
+      "formula": "prismoidal"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 0.14605393778827913,
+       "fill": 2.860539813132919,
+       "net": 2.7144858753446397,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 1.5,
+       "formula": "prismoidal",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+       "length": 13.783185307179586,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           3.5
+          ],
+          [
+           8001.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 1.5,
+         "cutArea": 0.0,
+         "fillArea": 0.22499999999999787,
+         "at": [
+          8002.5,
+          2.0
+         ],
+         "ends": [
+          [
+           8002.5,
+           3.5
+          ],
+          [
+           8002.5,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 3.0,
+         "cutArea": 0.0,
+         "fillArea": 0.44999999999999574,
+         "at": [
+          8004.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           3.5
+          ],
+          [
+           8004.0,
+           0.5
+          ]
+         ]
+        },
+        {
+         "station": 4.5,
+         "cutArea": 0.0,
+         "fillArea": 0.525195159968803,
+         "at": [
+          8005.498698933541,
+          2.031209331082684
+         ],
+         "ends": [
+          [
+           8005.311686833464,
+           3.5195058319266774
+          ],
+          [
+           8005.685711033619,
+           0.5429128302386905
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 0.3123446768375255,
+         "at": [
+          8006.9177021544165,
+          2.4896697524385094
+         ],
+         "ends": [
+          [
+           8006.19856384651,
+           3.806043595274068
+          ],
+          [
+           8007.636840462323,
+           1.1732959096029505
+          ]
+         ]
+        },
+        {
+         "station": 7.5,
+         "cutArea": 0.001597873383419136,
+         "fillArea": 0.14107177204175542,
+         "at": [
+          8008.070174008944,
+          3.4360125673466997
+         ],
+         "ends": [
+          [
+           8006.91885875559,
+           4.397507854591687
+          ],
+          [
+           8009.221489262299,
+           2.474517280101712
+          ]
+         ]
+        },
+        {
+         "station": 9.0,
+         "cutArea": 0.0263439464561362,
+         "fillArea": 0.0697819900724979,
+         "at": [
+          8008.795938477422,
+          4.738710550418926
+         ],
+         "ends": [
+          [
+           8007.372461548389,
+           5.211694094011829
+          ],
+          [
+           8010.2194154064555,
+           4.2657270068260225
+          ]
+         ]
+        },
+        {
+         "station": 10.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          6.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           6.216814692820414
+          ],
+          [
+           8010.5,
+           6.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 12.0,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          7.716814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           7.716814692820414
+          ],
+          [
+           8010.5,
+           7.716814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.5,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.216814692820414
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.216814692820414
+          ],
+          [
+           8010.5,
+           9.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.783185307179586,
+         "cutArea": 0.025000000000000355,
+         "fillArea": 0.056250000000000355,
+         "at": [
+          8009.0,
+          9.5
+         ],
+         "ends": [
+          [
+           8007.5,
+           9.5
+          ],
+          [
+           8010.5,
+           9.5
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Köşeli eksen: eksen noktasında açıortaya dik kesit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 3.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+      "left": 1.0,
+      "right": 2.0,
+      "corners": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 0.0,
+       "fill": 4.079181547239415,
+       "net": 4.079181547239415,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 3.0,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+       "length": 13.0,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          1.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           2.0
+          ],
+          [
+           8001.0,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 3.0,
+         "cutArea": 0.0,
+         "fillArea": 0.29999999999999716,
+         "at": [
+          8004.0,
+          1.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           2.0
+          ],
+          [
+           8004.0,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 5.0,
+         "cutArea": 0.0,
+         "fillArea": 0.34445436482629926,
+         "at": [
+          8006.0,
+          1.0
+         ],
+         "ends": [
+          [
+           8005.292893218813,
+           1.7071067811865475
+          ],
+          [
+           8007.414213562373,
+           -0.4142135623730949
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           2.0
+          ],
+          [
+           8008.0,
+           2.0
+          ]
+         ]
+        },
+        {
+         "station": 9.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           5.0
+          ],
+          [
+           8008.0,
+           5.0
+          ]
+         ]
+        },
+        {
+         "station": 12.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          8.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           8.0
+          ],
+          [
+           8008.0,
+           8.0
+          ]
+         ]
+        },
+        {
+         "station": 13.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          9.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           9.0
+          ],
+          [
+           8008.0,
+           9.0
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Köşeli eksen, eksen noktası istenmeden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 3.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+      "left": 1.0,
+      "right": 2.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 0.0,
+       "fill": 4.087499999999961,
+       "net": 4.087499999999961,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 3.0,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000873",
+       "length": 13.0,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          1.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           2.0
+          ],
+          [
+           8001.0,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 3.0,
+         "cutArea": 0.0,
+         "fillArea": 0.29999999999999716,
+         "at": [
+          8004.0,
+          1.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           2.0
+          ],
+          [
+           8004.0,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           2.0
+          ],
+          [
+           8008.0,
+           2.0
+          ]
+         ]
+        },
+        {
+         "station": 9.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           5.0
+          ],
+          [
+           8008.0,
+           5.0
+          ]
+         ]
+        },
+        {
+         "station": 12.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          8.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           8.0
+          ],
+          [
+           8008.0,
+           8.0
+          ]
+         ]
+        },
+        {
+         "station": 13.0,
+         "cutArea": 0.0,
+         "fillArea": 0.37499999999999645,
+         "at": [
+          8006.0,
+          9.0
+         ],
+         "ends": [
+          [
+           8005.0,
+           9.0
+          ],
+          [
+           8008.0,
+           9.0
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Tek yana genişlik: solda 0",
+   "note": "eksen kazının dışında: kesitler boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Düz",
+      "comparison": "Kazı",
+      "method": "sections",
+      "interval": 2.5,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+      "left": 0.0,
+      "right": 3.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-5",
+       "comparison": "t-8",
+       "cut": 0.0,
+       "fill": 0.0,
+       "net": 0.0,
+       "cutArea": 75.0,
+       "fillArea": 0.0,
+       "covered": 75.0,
+       "uncovered": 25.0,
+       "least": {
+        "difference": -0.7749999999999915,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": -0.09999999999999432,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 28.124999999999755,
+        "fill": 0.0,
+        "net": -28.124999999999755
+       },
+       "interval": 2.5,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000872",
+       "length": 13.783185307179586,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8001.0,
+          2.0
+         ],
+         "ends": [
+          [
+           8001.0,
+           2.0
+          ],
+          [
+           8001.0,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 2.5,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8003.5,
+          2.0
+         ],
+         "ends": [
+          [
+           8003.5,
+           2.0
+          ],
+          [
+           8003.5,
+           -1.0
+          ]
+         ]
+        },
+        {
+         "station": 5.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8005.989615837018,
+          2.124350313157421
+         ],
+         "ends": [
+          [
+           8005.989615837018,
+           2.124350313157421
+          ],
+          [
+           8006.731827714782,
+           -0.7823869519745132
+          ]
+         ]
+        },
+        {
+         "station": 7.5,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8008.070174008944,
+          3.4360125673466997
+         ],
+         "ends": [
+          [
+           8008.070174008944,
+           3.4360125673466997
+          ],
+          [
+           8010.372804515652,
+           1.5130219928567246
+          ]
+         ]
+        },
+        {
+         "station": 10.0,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8008.9899799464165,
+          5.717051193329189
+         ],
+         "ends": [
+          [
+           8008.9899799464165,
+           5.717051193329189
+          ],
+          [
+           8011.982464906228,
+           5.50483958832608
+          ]
+         ]
+        },
+        {
+         "station": 12.5,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8009.0,
+          8.216814692820414
+         ],
+         "ends": [
+          [
+           8009.0,
+           8.216814692820414
+          ],
+          [
+           8012.0,
+           8.216814692820414
+          ]
+         ]
+        },
+        {
+         "station": 13.783185307179586,
+         "cutArea": 0.0,
+         "fillArea": 0.0,
+         "at": [
+          8009.0,
+          9.5
+         ],
+         "ends": [
+          [
+           8009.0,
+           9.5
+          ],
+          [
+           8012.0,
+           9.5
+          ]
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "compare_uncovered",
+        "message": "Karşılaştırma yüzeyinin 25.00 m²'si tabanın dışında; o kısım hacme girmedi.",
+        "path": "comparison"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksenle katsayılar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "left": 5.0,
+      "right": 5.0,
+      "cutFactor": 1.2,
+      "fillFactor": 0.9
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "base": "t-6",
+       "comparison": "t-9",
+       "cut": 1.0000000000000142,
+       "fill": 7.999999999999972,
+       "net": 6.999999999999957,
+       "cutArea": 20.0,
+       "fillArea": 80.0,
+       "covered": 100.0,
+       "uncovered": 0.0,
+       "least": {
+        "difference": -0.05000000000000071,
+        "at": "$any"
+       },
+       "largest": {
+        "difference": 0.1999999999999993,
+        "at": "$any"
+       },
+       "exact": {
+        "cut": 0.5000000000000071,
+        "fill": 7.999999999999936,
+        "net": 7.499999999999929
+       },
+       "interval": 2.0,
+       "formula": "endArea",
+       "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+       "length": 10.0,
+       "sections": [
+        {
+         "station": 0.0,
+         "cutArea": 0.5000000000000071,
+         "fillArea": 0.0,
+         "at": [
+          8000.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8000.0,
+           10.0
+          ],
+          [
+           8000.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 2.0,
+         "cutArea": 0.0,
+         "fillArea": 0.5000000000000071,
+         "at": [
+          8002.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8002.0,
+           10.0
+          ],
+          [
+           8002.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 4.0,
+         "cutArea": 0.0,
+         "fillArea": 1.4999999999999858,
+         "at": [
+          8004.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8004.0,
+           10.0
+          ],
+          [
+           8004.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 6.0,
+         "cutArea": 0.0,
+         "fillArea": 1.4999999999999858,
+         "at": [
+          8006.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8006.0,
+           10.0
+          ],
+          [
+           8006.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 8.0,
+         "cutArea": 0.0,
+         "fillArea": 0.5000000000000071,
+         "at": [
+          8008.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8008.0,
+           10.0
+          ],
+          [
+           8008.0,
+           0.0
+          ]
+         ]
+        },
+        {
+         "station": 10.0,
+         "cutArea": 0.5000000000000071,
+         "fillArea": 0.0,
+         "at": [
+          8010.0,
+          5.0
+         ],
+         "ends": [
+          [
+           8010.0,
+           10.0
+          ],
+          [
+           8010.0,
+           0.0
+          ]
+         ]
+        }
+       ],
+       "adjusted": {
+        "cutFactor": 1.2,
+        "fillFactor": 0.9,
+        "cut": 1.200000000000017,
+        "fill": 7.199999999999974,
+        "net": 5.999999999999957
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksen ve semt birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "left": 5.0,
+      "right": 5.0,
+      "azimuth": 90.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Kesitlerin ekseni ya semtle ya da çizimdeki bir eksenle verilir; ikisinden birini kaldırın.",
+       "path": "azimuth"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksen kesit yöntemi olmadan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Çizimdeki eksen kesit yönteminindir; yöntemi kesit seçin ya da ekseni kaldırın.",
+       "path": "axis"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Genişlik eksensiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "left": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Kesitlerin genişlikleri ve köşe kesitleri çizimdeki eksenle verilir; ekseni (axis) verin.",
+       "path": "left"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksen noktaları eksensiz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "corners": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Kesitlerin genişlikleri ve köşe kesitleri çizimdeki eksenle verilir; ekseni (axis) verin.",
+       "path": "corners"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksenle genişlik yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "right": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Eksenle kesitlerin sol ve sağ genişliğini (left, right, m) verin.",
+       "path": "left"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Eksi genişlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "left": -1.0,
+      "right": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Kesitin sol ve sağ genişliği 0 ya da daha büyük bir uzunluk olmalı; ikisi birden 0 olamaz.",
+       "path": "left"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "İki genişlik 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000871",
+      "left": 0.0,
+      "right": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "Kesitin sol ve sağ genişliği 0 ya da daha büyük bir uzunluk olmalı; ikisi birden 0 olamaz.",
+       "path": "left"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Olmayan eksen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000099999",
+      "left": 5.0,
+      "right": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“0192f5f0-7c3e-7d4a-9b1e-000000099999” kimlikli nesne çizimde yok.",
+       "path": "axis"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kapalı çoklu çizgi eksen olamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "base": "Teras",
+      "comparison": "Set",
+      "method": "sections",
+      "interval": 2.0,
+      "axis": "0192f5f0-7c3e-7d4a-9b1e-000000000874",
+      "left": 5.0,
+      "right": 5.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_analysis",
+       "message": "“0192f5f0-7c3e-7d4a-9b1e-000000000874” kesitlerin ekseni olamaz: bir çizgi ya da tek parçalı açık bir çoklu çizgi olmalı.",
+       "path": "axis"
       }
      },
      "expect": {

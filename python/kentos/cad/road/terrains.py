@@ -17,6 +17,7 @@ from ..types import (  # noqa: F401
     CompareMethodName,
     CompareZone,
     ContourRules,
+    CutFillSections,
     HeightReference,
     SectionFormula,
     SectionFormulaName,
@@ -531,10 +532,15 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
     semti azimuth (derece, kuzeyden saat yönünde; yoksa 0) olan eksene dik paralel
     kesitler, karşılaştırmanın eksen boyunca ilk yerinden başlayıp interval (m) arayla,
     sonuncusu son yerinde; her kesitin kazı ve dolgu alanı iki yüzeyin ortak yerinde
-    farkın kesin integralidir (fark sıfırında bölünür). Hacim ardışık iki kesit arasında
-    ortalama alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki kesitle L/6·(A₀ +
-    4·Aₘ + A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin TIN'in. Cevapta
-    interval, azimuth, formula ve sections (uzaklık, kazı alanı, dolgu alanı). Retler
+    farkın kesin integralidir (fark sıfırında bölünür). Aks boyunca (axis, ADR 4760;
+    Netcad'in Enkesit Çiz'i): çizimdeki bir çizgi ya da tek parçalı açık çoklu çizgi
+    (yaylar dahil), kesitler başından her interval'da ve sonunda (corners ile iç
+    köşelerinde de), aksa dik (kurpta yarıçap doğrultusunda, köşede açıortaya dik),
+    solda left, sağda right metre; boy aks boyunca; cevapta axis, length, her kesitin
+    at'ı ve ends'i; semtle birlikte verilmez. Hacim ardışık iki kesit arasında ortalama
+    alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki kesitle L/6·(A₀ + 4·Aₘ +
+    A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin TIN'in. Cevapta interval,
+    azimuth, formula ve sections (uzaklık, kazı alanı, dolgu alanı). Retler
     (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt [0, 360)
     dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan formül,
     10 000'den çok kesit. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi
@@ -562,14 +568,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        axis: str | None | Unset = UNSET,
         azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
+        corners: bool | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
         formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        left: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        right: float | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -592,32 +602,41 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         yönünde; yoksa 0) olan eksene dik paralel kesitler, karşılaştırmanın eksen boyunca
         ilk yerinden başlayıp interval (m) arayla, sonuncusu son yerinde; her kesitin kazı
         ve dolgu alanı iki yüzeyin ortak yerinde farkın kesin integralidir (fark sıfırında
-        bölünür). Hacim ardışık iki kesit arasında ortalama alan L·(A₀ + A₁)/2 ya da
-        formula: prismoidal ile ortadaki kesitle L/6·(A₀ + 4·Aₘ + A₁); kesin TIN–TIN
-        exact'te yanında, plan alanları kesin TIN'in. Cevapta interval, azimuth, formula ve
-        sections (uzaklık, kazı alanı, dolgu alanı). Retler (invalid_analysis): kesitte
-        aralık yok ya da 0'dan büyük değil, semt [0, 360) dışında, kesitte fark aralığı ya
-        da malzeme bölgesi, kesit yöntemi olmadan formül, 10 000'den çok kesit. Kotlar (ADR
-        1029): iki yüzeyin kaynakları (çizimin kendi kotları projenin ayarındaki düşey
-        sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey sistemde
-        gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır ve sonuç
-        taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret. Uyarılar:
-        heights_assumed, compare_uncovered. Retler: not_a_road_project, invalid_analysis,
-        unknown_terrain, entity_not_found, unproven_heights, terrain_unbuildable.
+        bölünür). Aks boyunca (axis, ADR 4760; Netcad'in Enkesit Çiz'i): çizimdeki bir çizgi
+        ya da tek parçalı açık çoklu çizgi (yaylar dahil), kesitler başından her interval'da
+        ve sonunda (corners ile iç köşelerinde de), aksa dik (kurpta yarıçap doğrultusunda,
+        köşede açıortaya dik), solda left, sağda right metre; boy aks boyunca; cevapta axis,
+        length, her kesitin at'ı ve ends'i; semtle birlikte verilmez. Hacim ardışık iki
+        kesit arasında ortalama alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki
+        kesitle L/6·(A₀ + 4·Aₘ + A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin
+        TIN'in. Cevapta interval, azimuth, formula ve sections (uzaklık, kazı alanı, dolgu
+        alanı). Retler (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt
+        [0, 360) dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan
+        formül, 10 000'den çok kesit. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin
+        kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
+        söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
+        true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
+        her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler:
+        not_a_road_project, invalid_analysis, unknown_terrain, entity_not_found,
+        unproven_heights, terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
             base:
             comparison:
             assume_heights:
+            axis: A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
             azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
             cell: Unit: m.
+            corners: Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
             cut_factor: Unit: 1.
             fill_factor: Unit: 1.
             formula: How the volume between two sections is reckoned; none: the average end area.
             interval: The sections' spacing, m (docs/adr/4340; the section method's). Unit: m.
+            left: The sections' widths left and right of the axis, m (docs/adr/4760). Unit: m.
             method:
             ranges: Unit: m.
+            right: Unit: m.
             zones:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -635,14 +654,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            axis=axis,
             azimuth=azimuth,
             cell=cell,
+            corners=corners,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
             formula=formula,
             interval=interval,
+            left=left,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            right=right,
             zones=_opt(zones, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
@@ -654,14 +677,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        axis: str | None | Unset = UNSET,
         azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
+        corners: bool | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
         formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        left: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        right: float | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
     ) -> TerrainsCompared:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -671,14 +698,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            axis=axis,
             azimuth=azimuth,
             cell=cell,
+            corners=corners,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
             formula=formula,
             interval=interval,
+            left=left,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            right=right,
             zones=_opt(zones, lambda x: list(x)),
         ))
 
@@ -690,14 +721,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        axis: str | None | Unset = UNSET,
         azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
+        corners: bool | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
         formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        left: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        right: float | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -707,14 +742,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            axis=axis,
             azimuth=azimuth,
             cell=cell,
+            corners=corners,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
             formula=formula,
             interval=interval,
+            left=left,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            right=right,
             zones=_opt(zones, lambda x: list(x)),
         ))
 
@@ -726,14 +765,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         base: str,
         comparison: str,
         assume_heights: bool | Unset = UNSET,
+        axis: str | None | Unset = UNSET,
         azimuth: float | None | Unset = UNSET,
         cell: float | None | Unset = UNSET,
+        corners: bool | None | Unset = UNSET,
         cut_factor: float | None | Unset = UNSET,
         fill_factor: float | None | Unset = UNSET,
         formula: SectionFormula | SectionFormulaName | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
+        left: float | None | Unset = UNSET,
         method: CompareMethod | CompareMethodName | None | Unset = UNSET,
         ranges: Sequence[float] | None | Unset = UNSET,
+        right: float | None | Unset = UNSET,
         zones: Sequence[CompareZone] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -748,14 +791,18 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
             base=base,
             comparison=comparison,
             assume_heights=assume_heights,
+            axis=axis,
             azimuth=azimuth,
             cell=cell,
+            corners=corners,
             cut_factor=cut_factor,
             fill_factor=fill_factor,
             formula=formula,
             interval=interval,
+            left=left,
             method=method,
             ranges=_opt(ranges, lambda x: list(x)),
+            right=right,
             zones=_opt(zones, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
@@ -1274,14 +1321,22 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
     road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde
     (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table:
     bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki
-    ondalık), projenin tablo yüksekliğiyle (ADR 2340). Her bölgenin en derin yeri ve
-    derinliği cevapta (deepest, depth; ADR 2740): parçalarının köşelerinden farkın
-    mutlak değeri en büyük olanı, 1 nm içinde eşitlerden en batıdaki, sonra en
-    güneydeki; depths: bu yerlere nokta ve yanına “derinlik 1.85 m” (dolguda
-    “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu
-    bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
-    invalid_revision, revision_conflict, invalid_analysis, unknown_terrain,
-    terrain_unbuildable, no_cut_fill.
+    ondalık), projenin tablo yüksekliğiyle (ADR 2340). sections (ADR 4760):
+    road.terrains.compare'inki gibi bir aks boyunca kesitler (axis, interval, left,
+    right, corners, formula, start: aksın başlangıç kilometresi); her kesit bir çizgi,
+    solda kilometresi (k+mmm.cc), sağda kazı ve dolgu alanı, kesit boyunca okunur yönde;
+    table ile kübaj cetveli (Km, Ara uzaklık, alanlar, hacimler, kümülatif hacimler;
+    Netcad'in düzeni). materials (ADR 4760): malzeme bölgeleri (ADR 3540'ın zones'u),
+    her birinin içine adı ve kazı, dolgu hacmi; table ile malzeme tablosu. Aksın ve
+    sınırların katmanları çizimin kaynağıdır. Her bölgenin en derin yeri ve derinliği
+    cevapta (deepest, depth; ADR 2740): parçalarının köşelerinden farkın mutlak değeri
+    en büyük olanı, 1 nm içinde eşitlerden en batıdaki, sonra en güneydeki; depths: bu
+    yerlere nokta ve yanına “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve
+    Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler:
+    not_a_road_project, layer_not_found, not_a_layer, layer_locked, invalid_revision,
+    revision_conflict, invalid_analysis, unknown_terrain, entity_not_found,
+    terrain_unbuildable, no_cut_fill. Uyarılar: layer_hidden, compare_uncovered (malzeme
+    iki yüzeyin dışına taşar).
     """
     __slots__ = ()
     id = "road.terrains.cutfill"
@@ -1304,6 +1359,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        materials: Sequence[CompareZone] | Unset = UNSET,
+        sections: CutFillSections | None | Unset = UNSET,
         table: bool | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -1324,13 +1381,21 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un
         kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu
         (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle
-        (ADR 2340). Her bölgenin en derin yeri ve derinliği cevapta (deepest, depth; ADR
-        2740): parçalarının köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde
-        eşitlerden en batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına
-        “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri
-        alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found,
-        not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis,
-        unknown_terrain, terrain_unbuildable, no_cut_fill.
+        (ADR 2340). sections (ADR 4760): road.terrains.compare'inki gibi bir aks boyunca
+        kesitler (axis, interval, left, right, corners, formula, start: aksın başlangıç
+        kilometresi); her kesit bir çizgi, solda kilometresi (k+mmm.cc), sağda kazı ve dolgu
+        alanı, kesit boyunca okunur yönde; table ile kübaj cetveli (Km, Ara uzaklık,
+        alanlar, hacimler, kümülatif hacimler; Netcad'in düzeni). materials (ADR 4760):
+        malzeme bölgeleri (ADR 3540'ın zones'u), her birinin içine adı ve kazı, dolgu hacmi;
+        table ile malzeme tablosu. Aksın ve sınırların katmanları çizimin kaynağıdır. Her
+        bölgenin en derin yeri ve derinliği cevapta (deepest, depth; ADR 2740): parçalarının
+        köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde eşitlerden en
+        batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına “derinlik 1.85 m”
+        (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı
+        ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer,
+        layer_locked, invalid_revision, revision_conflict, invalid_analysis,
+        unknown_terrain, entity_not_found, terrain_unbuildable, no_cut_fill. Uyarılar:
+        layer_hidden, compare_uncovered (malzeme iki yüzeyin dışına taşar).
 
         Args:
             doc: The drawing it works on.
@@ -1341,6 +1406,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             expected_revision:
             interval: Unit: m.
             labels:
+            materials:
+            sections:
             table:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -1362,6 +1429,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            materials=_opt(materials, lambda x: list(x)),
+            sections=sections,
             table=table,
         ), request_id=request_id, expected=expected)
 
@@ -1377,6 +1446,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        materials: Sequence[CompareZone] | Unset = UNSET,
+        sections: CutFillSections | None | Unset = UNSET,
         table: bool | None | Unset = UNSET,
     ) -> TerrainsCutFilled:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -1390,6 +1461,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            materials=_opt(materials, lambda x: list(x)),
+            sections=sections,
             table=table,
         ))
 
@@ -1405,6 +1478,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        materials: Sequence[CompareZone] | Unset = UNSET,
+        sections: CutFillSections | None | Unset = UNSET,
         table: bool | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -1418,6 +1493,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            materials=_opt(materials, lambda x: list(x)),
+            sections=sections,
             table=table,
         ))
 
@@ -1433,6 +1510,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         expected_revision: str | None | Unset = UNSET,
         interval: float | None | Unset = UNSET,
         labels: bool | None | Unset = UNSET,
+        materials: Sequence[CompareZone] | Unset = UNSET,
+        sections: CutFillSections | None | Unset = UNSET,
         table: bool | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -1451,6 +1530,8 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
             expected_revision=expected_revision,
             interval=interval,
             labels=labels,
+            materials=_opt(materials, lambda x: list(x)),
+            sections=sections,
             table=table,
         ), op=op, request_id=request_id, expected=expected)
 

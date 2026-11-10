@@ -962,3 +962,138 @@ fn screens_cut_fill() {
         }
     }
 }
+
+/// Docs/adr/4760: Fark by sections along the drawn axis (km 1+000): Kazı ve dolgu bölgelerini çiz writes the sections'
+/// lines and words and their table with the zones, as the shared case says, one undo step; the drawing kept with the
+/// axis's layer. Then in TIN, Malzemeler ticked: the materials' words and table are written too.
+#[test]
+fn fark_draws_the_sections_along_an_axis_and_the_materials() {
+    let (mut app, cases) = cutfill_app();
+    let find = |start: &str| {
+        cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).expect("the case")
+            ["steps"][0]["result"]["output"]
+            .clone()
+    };
+    let sectioned = find("Kesitler eksen boyunca");
+    let axis = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Kesitler eksen boyunca"))).unwrap()
+        ["steps"][0]["input"]["sections"]["axis"]
+        .as_str()
+        .expect("the axis")
+        .to_owned();
+    let _ = app.update(Message::Run("terrain.analysis"));
+    send(&mut app, W::Mode(Mode::Compare));
+    send(&mut app, W::Surface("t-12".into()));
+    send(&mut app, W::Comparison("t-13".into()));
+    send(&mut app, W::Layer("kazi-dolgu".into()));
+    send(&mut app, W::VolumeMethod(2));
+    send(&mut app, W::Axis(Some(axis)));
+    send(&mut app, W::Field(17, "1".into()));
+    send(&mut app, W::Field(19, "1".into()));
+    send(&mut app, W::Field(20, "1,5".into()));
+    send(&mut app, W::Field(21, "1000".into()));
+    send(&mut app, W::ZoneTable(true));
+    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    send(&mut app, W::DrawZones);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let written: Vec<&kentos_commands::Entity> = doc.entities().skip(before).collect();
+    let zones = sectioned["zones"].as_array().map_or(0, Vec::len);
+    let sections = sectioned["sections"].as_array().map_or(0, Vec::len);
+    // The zones (hatch and area), their table, each section's line and two words, the section table.
+    assert_eq!(written.len(), 2 * zones + 1 + 3 * sections + 1, "{}", crate::files_testing::last_said(&app));
+    let words: Vec<String> = written
+        .iter()
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.text.clone()),
+            _ => None,
+        })
+        .collect();
+    let want: Vec<String> = sectioned["sectionLabels"].as_array().expect("labels").iter().map(|l| l["text"].as_str().unwrap().to_owned()).collect();
+    assert_eq!(words, want);
+    let Some(kentos_commands::Entity::Table(t)) = written.last() else { panic!("the section table last") };
+    assert_eq!(serde_json::to_value(&t.cells).expect("cells"), sectioned["sectionTable"]);
+    let d = doc.road_drawings().iter().find(|d| d.command == "road.terrains.cutfill").expect("kept");
+    assert!(d.sources.iter().any(|s| s.kind == kentos_commands::RoadSourceKind::Layer && s.id == "eksen"), "{:?}", d.sources);
+    let undone = app.document.as_mut().and_then(|d| d.model.undo());
+    assert_eq!(undone.as_deref(), Some("Kazı ve dolgu bölgeleri"));
+    // In TIN, the materials' layer guessed from its name; ticked, their words and table come with the zones.
+    let materials = find("Malzeme bölgeleri: adları");
+    send(&mut app, W::VolumeMethod(0));
+    send(&mut app, W::ZoneTable(true));
+    send(&mut app, W::ZoneMaterials(true));
+    let before = app.document.as_ref().expect("a drawing").model.entities().count();
+    send(&mut app, W::DrawZones);
+    let doc = &app.document.as_ref().expect("a drawing").model;
+    let texts: Vec<String> = doc
+        .entities()
+        .skip(before)
+        .filter_map(|e| match e {
+            kentos_commands::Entity::Text(t) => Some(t.text.clone()),
+            _ => None,
+        })
+        .collect();
+    for w in materials["materialLabels"].as_array().expect("labels") {
+        assert!(texts.iter().any(|t| t == w["text"].as_str().unwrap()), "{texts:?}");
+    }
+}
+
+/// `.run/gui-evidence/aks-boyunca-kesit-4760/`: the sections and the materials drawn over the far mound's zones, the
+/// window with Eksen and its widths; light wide and dark narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib surface_analysis_window_tests::screens_sections_drawn -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_sections_drawn() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/aks-boyunca-kesit-4760");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let (mut app, cases) = cutfill_app();
+        let axis = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Kesitler eksen boyunca"))).unwrap()
+            ["steps"][0]["input"]["sections"]["axis"]
+            .as_str()
+            .expect("the axis")
+            .to_owned();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        // The test's mound is 10 m wide: drawn at 1:100 (KGM's scale for sections), so its words fit it.
+        if let Some(d) = app.document.as_mut() {
+            let mut s = d.model.settings().clone();
+            s.plot_scale = 100.0;
+            d.model.set_settings(s);
+        }
+        let _ = app.update(Message::Run("terrain.analysis"));
+        send(&mut app, W::Mode(Mode::Compare));
+        send(&mut app, W::Surface("t-12".into()));
+        send(&mut app, W::Comparison("t-13".into()));
+        send(&mut app, W::Layer("kazi-dolgu".into()));
+        send(&mut app, W::VolumeMethod(2));
+        send(&mut app, W::Axis(Some(axis)));
+        send(&mut app, W::Field(17, "1".into()));
+        send(&mut app, W::Field(19, "1".into()));
+        send(&mut app, W::Field(20, "1,5".into()));
+        send(&mut app, W::Field(21, "1000".into()));
+        send(&mut app, W::ZoneTable(true));
+        send(&mut app, W::Preview);
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("3-pencere-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+        send(&mut app, W::DrawZones);
+        send(&mut app, W::Close);
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let b = kentos_commands::Bounds { min_x: 511998.0, min_y: 4511994.0, max_x: 512031.0, max_y: 4512012.0 };
+        app.navigating(|a| a.zoom_to_bounds(&b));
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("4-cizim-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}

@@ -176,14 +176,21 @@ pub const ROAD_TERRAINS_COMPARE_VERSION: u32 = 1;
 /// its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
 /// the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
 /// with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
+/// `axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,
+/// a line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while
+/// short of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along
+/// its radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two
+/// is their stations' difference along the axis.
 ///
 /// Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
 /// increasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an
-/// interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; more than
-/// 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
+/// interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; an axis
+/// without sections or with an azimuth, widths or corners without an axis, a width not a length of 0 or more or both 0;
+/// more than 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
 /// comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
-/// `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
-/// polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
+/// `entity_not_found` (the axis), `invalid_analysis` (an axis not a line or a single-part open polyline, or without
+/// length), `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged
+/// single-part closed polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
 /// heights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a
 /// draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
 /// `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
@@ -234,6 +241,23 @@ pub struct TerrainsCompare {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub formula: Option<SectionFormula>,
+    /// A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub axis: Option<String>,
+    /// The sections' widths left and right of the axis, m (docs/adr/4760).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub left: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub right: Option<f64>,
+    /// Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub corners: Option<bool>,
 }
 
 /// The section method's formula (docs/adr/4340; Civil 3D's Average End Area and Prismoidal): `(A₀ + A₁)/2 · L`, or
@@ -253,7 +277,7 @@ pub enum SectionFormula {
 pub const MOST_COMPARE_SECTIONS: f64 = 10_000.0;
 
 /// A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
-/// fill areas (m²).
+/// fill areas (m²); along a drawn axis (docs/adr/4760) the axis's place there and the section's left and right ends.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -266,6 +290,14 @@ pub struct TerrainSection {
     pub cut_area: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
     pub fill_area: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub at: Option<[f64; 2]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub ends: Option<[[f64; 2]; 2]>,
 }
 
 /// A material zone (docs/adr/3540; Civil 3D's bounded volume): the material's name (the user's; no class or value is
@@ -494,6 +526,14 @@ pub struct TerrainsCompared {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub formula: Option<SectionFormula>,
+    /// The drawn axis the sections stood along and its length (docs/adr/4760).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub axis: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub length: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerrainSection>>", optional))]
     pub sections: Vec<TerrainSection>,

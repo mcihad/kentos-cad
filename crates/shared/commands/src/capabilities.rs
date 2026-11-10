@@ -1650,9 +1650,10 @@ const ENTRIES: &[Entry] = &[
             &["not_a_road_project"],
             LAYER,
             REVISION,
-            &["invalid_analysis", "unknown_terrain", "terrain_unbuildable", "no_cut_fill"],
+            // Docs/adr/4760: the sections' axis and a material's boundary missing.
+            &["invalid_analysis", "unknown_terrain", "entity_not_found", "terrain_unbuildable", "no_cut_fill"],
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "compare_uncovered"],
         targets: none,
     },
     Entry {

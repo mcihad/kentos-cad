@@ -46,7 +46,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740 | katman damgasının katman dizininden okunması; m. 63(2) ızgarasının taban noktası ve dönmesi; kesit kontrolünün kendisi (iki kontrol noktası arasında kesit, m. 93(1)) | gerçek veri ölçümü (karolu hesap) |
-| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
+| MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340, 4760 | kesit sayfaları (kesitin kendi çizimi) ve UVDF §6.4 dışa aktarımı; kesik koni formülü ve Brükner sütunu; Netcad'in ek kesitleri (üçgen kenarı, ekseni kesen çizgi) | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
@@ -1977,6 +1977,17 @@ ortalama alan ya da `formula: prismoidal` ile ortadaki gerçek kesitle; kesin TI
 TIN'in; dokuz ret; 27 bağımsız durum (kafes yüzeylerde kesin integral), çekirdekte analitik sınama (düzlemde ortalama alan
 kesin, üçgen planda prizmoidal kesin), Python (testin kapalı formülleri), MCP; masaüstünde Fark › Yöntem › Kesit, kesit
 alanları grafiği ve Kesitler tablosu. Açık: malzeme bölgelerinin ve kesitlerin çizime yazılması, aks boyunca kesit.
+
+**10 Kasım 2026, dokuzuncu tur — aks boyunca kesit; kesitlerin ve malzeme bölgelerinin çizime yazılması ([ADR 4760](../docs/adr/4760-sections-along-an-axis-and-materials-drawn.md)).**
+Kapsam: **Harita + Yol**. Dayanak: KGM 2019 teknik şartnamesi (enkesit aralığı, genişlik, kübaj), ÇŞB pozlarının kazı
+sınıfları; Netcad'in Enkesit Çiz penceresi ve Enkesitlerden Hacim Hesabı cetveli (ekran resimleri kaydedildi), Civil
+3D'nin örnek çizgileri, OpenRoads'un End Area Volumes Report'u. Kanıtlanan: `road.terrains.compare`'e çizimdeki eksen
+(`axis`, `left`, `right`, `corners`: kurpta yarıçap doğrultusunda, köşede açıortaya dik kesit; boy aks boyunca;
+çekirdek `volume_sections::along_axis`); `road.terrains.cutfill`'e `sections` (kesit çizgisi, solda km, sağda alanlar,
+`start`, Netcad'in sütunlarıyla kübaj cetveli) ve `materials` (bölgelerin içine adı ve hacimleri, malzeme tablosu;
+taşan malzeme uyarılır); aks ve sınır katmanları çizimin kaynağı; 43 + 58 bağımsız durum, Python, MCP, masaüstünde
+Eksen, Sola/Sağa genişlik, Eksen noktalarında da, Başlangıç km. Açık: kesit sayfaları, kesik koni formülü ve Brükner,
+Netcad'in ek kesitleri.
 
 ### MAP-16 — Akıllı altyapı tasarımı ile ağ analizini birleştir [ ]
 

@@ -28175,6 +28175,137 @@ class CutFillLabel(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CutFillSection(_Model):
+    """A section as written (docs/adr/4760): its station (from the axis's start) and its kilometre (the start's kilometre
+    added, as written: `k+mmm.cc`), the axis's place there, its left and right ends, its cut and fill areas (m²) and the
+    cut and fill volumes between it and the section before (m³; none for the first).
+    Attributes:
+        station: Unit: m.
+        at: Unit: length.
+        ends: Unit: length.
+        cut_area: Unit: area.
+        fill_area: Unit: area.
+        cut_volume: Unit: volume.
+        fill_volume: Unit: volume.
+    """
+    station: float
+    km: str
+    at: list[float]
+    ends: list[list[float]]
+    cut_area: float
+    fill_area: float
+    cut_volume: float | None | Unset = UNSET
+    fill_volume: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["station"] = float(self.station)
+        out["km"] = self.km
+        out["at"] = [float(e0) for e0 in self.at]
+        out["ends"] = [[float(e1) for e1 in e0] for e0 in self.ends]
+        out["cutArea"] = float(self.cut_area)
+        out["fillArea"] = float(self.fill_area)
+        if self.cut_volume is not UNSET:
+            out["cutVolume"] = None if self.cut_volume is None else float(self.cut_volume)
+        if self.fill_volume is not UNSET:
+            out["fillVolume"] = None if self.fill_volume is None else float(self.fill_volume)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSection:
+        return cls(
+            station=float(data["station"]),
+            km=data["km"],
+            at=[float(e0) for e0 in data["at"]],
+            ends=[[float(e1) for e1 in e0] for e0 in data["ends"]],
+            cut_area=float(data["cutArea"]),
+            fill_area=float(data["fillArea"]),
+            cut_volume=UNSET if "cutVolume" not in data else None if data["cutVolume"] is None else float(data["cutVolume"]),
+            fill_volume=UNSET if "fillVolume" not in data else None if data["fillVolume"] is None else float(data["fillVolume"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CutFillSectionLabel(_Model):
+    """A section's words as written (docs/adr/4760): its place (the section's end it stands beyond, half a text's height
+    out), its text, its turn (degrees counterclockwise from east, along the section, kept upright) and its alignment
+    (its end towards the section).
+    Attributes:
+        at: Unit: length.
+        rotation: Unit: deg.
+    """
+    at: list[float]
+    text: str
+    rotation: float
+    align: TextAlign | TextAlignName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = [float(e0) for e0 in self.at]
+        out["text"] = self.text
+        out["rotation"] = float(self.rotation)
+        out["align"] = _enum_out(self.align)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSectionLabel:
+        return cls(
+            at=[float(e0) for e0 in data["at"]],
+            text=data["text"],
+            rotation=float(data["rotation"]),
+            align=_enum_in(TextAlign, data["align"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CutFillSections(_Model):
+    """The sections a cut and fill drawing writes (docs/adr/4760): the drawn axis (a line's or a single-part open
+    polyline's persistent id), their interval and their widths left and right of it (m), whether the axis's inner corners
+    take sections too (Netcad's “Eksen Çizgisi Noktalarında”), the formula of the volume between two (none: the average
+    end area) and the kilometre of the axis's start (m; Netcad's “Güzergah Başlangıç Km”; none: 0), which the sections'
+    kilometres count from.
+    Attributes:
+        interval: Unit: m.
+        left: Unit: m.
+        right: Unit: m.
+        start: Unit: m.
+    """
+    axis: str
+    interval: float
+    left: float
+    right: float
+    corners: bool | None | Unset = UNSET
+    formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
+    start: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["axis"] = self.axis
+        out["interval"] = float(self.interval)
+        out["left"] = float(self.left)
+        out["right"] = float(self.right)
+        if self.corners is not UNSET:
+            out["corners"] = self.corners
+        if self.formula is not UNSET:
+            out["formula"] = None if self.formula is None else _enum_out(self.formula)
+        if self.start is not UNSET:
+            out["start"] = None if self.start is None else float(self.start)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CutFillSections:
+        return cls(
+            axis=data["axis"],
+            interval=float(data["interval"]),
+            left=float(data["left"]),
+            right=float(data["right"]),
+            corners=data.get("corners", UNSET),
+            formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
+            start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DataProfile(_Model):
     """A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
     Attributes:
@@ -104022,21 +104153,29 @@ class TerrainRoughness(_Model):
 @dataclass(kw_only=True, slots=True)
 class TerrainSection(_Model):
     """A section of the section method (docs/adr/4340): its distance from the first section along the axis and its cut and
-    fill areas (m²).
+    fill areas (m²); along a drawn axis (docs/adr/4760) the axis's place there and the section's left and right ends.
     Attributes:
         station: Unit: m.
         cut_area: Unit: area.
         fill_area: Unit: area.
+        at: Unit: length.
+        ends: Unit: length.
     """
     station: float
     cut_area: float
     fill_area: float
+    at: list[float] | None | Unset = UNSET
+    ends: list[list[float]] | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["station"] = float(self.station)
         out["cutArea"] = float(self.cut_area)
         out["fillArea"] = float(self.fill_area)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else [float(e0) for e0 in self.at]
+        if self.ends is not UNSET:
+            out["ends"] = None if self.ends is None else [[float(e1) for e1 in e0] for e0 in self.ends]
         return out
 
     @classmethod
@@ -104045,6 +104184,8 @@ class TerrainSection(_Model):
             station=float(data["station"]),
             cut_area=float(data["cutArea"]),
             fill_area=float(data["fillArea"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else [float(e0) for e0 in data["at"]],
+            ends=UNSET if "ends" not in data else None if data["ends"] is None else [[float(e1) for e1 in e0] for e0 in data["ends"]],
         )
 
 
@@ -104488,37 +104629,52 @@ class TerrainsCompare(_Model):
     its last; each section's cut and fill areas are the difference's exact integral along it where both surfaces are,
     the volumes the average end area between consecutive sections or, with `formula: prismoidal`, the prismoidal formula
     with a middle section; the exact TIN–TIN beside (`exact`), the plan areas the exact TIN's.
+    `axis` (docs/adr/4760; Civil 3D's sample lines, Netcad's Enkesit Al): the sections stand along a drawn axis instead,
+    a line's or a single-part open polyline's persistent id (arcs allowed): from its start every `interval` metres while
+    short of its end, then its end, and with `corners` its inner corners too; each square to the axis (on an arc along
+    its radius, at a corner to the bisector), `left` metres to its left and `right` to its right; the length between two
+    is their stations' difference along the axis.
 
     Refusals, in this order: `not_a_road_project`, `invalid_analysis` (ranges fewer than two, not finite or not
     increasing; grid without a cell, a cell not over 0, ranges or zones with grid; sections without an interval, an
-    interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; more than
-    10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
+    interval not over 0, an azimuth not in [0, 360), ranges or zones with sections, a formula without sections; an axis
+    without sections or with an azimuth, widths or corners without an axis, a width not a length of 0 or more or both 0;
+    more than 10 000 sections, said once the comparison is made; a factor not over 0 or over 10, the
     comparison's or a zone's; a zone without a name), `unknown_terrain`, `invalid_analysis` (the same surface twice),
-    `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged single-part closed
-    polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
+    `entity_not_found` (the axis), `invalid_analysis` (an axis not a line or a single-part open polyline, or without
+    length), `entity_not_found` (a zone's boundary), `invalid_analysis` (a boundary not a straight-edged
+    single-part closed polyline or area; two zones sharing more than 1 mm²). Then `unproven_heights` (docs/adr/1029: the two surfaces'
     heights are not shown to rest on one vertical system; `assumeHeights` takes them as one and the difference is a
     draft, `heights_assumed`), `terrain_unbuildable`, `invalid_analysis` (more than 4 000 000 cells). Warnings:
     `compare_uncovered` (part of the comparison is off the base and left out; part of a zone off the two surfaces).
     Attributes:
+        axis: A drawn axis the sections stand along (docs/adr/4760): a line's or an open polyline's persistent id.
         azimuth: The axis's direction, degrees from north clockwise (a survey azimuth); none: 0, the sections run east–west. Unit: deg.
         cell: Unit: m.
+        corners: Sections at the axis's inner corners too (docs/adr/4760; Civil 3D's At Horizontal Geometry Points).
         cut_factor: Unit: 1.
         fill_factor: Unit: 1.
         formula: How the volume between two sections is reckoned; none: the average end area.
         interval: The sections' spacing, m (docs/adr/4340; the section method's). Unit: m.
+        left: The sections' widths left and right of the axis, m (docs/adr/4760). Unit: m.
         ranges: Unit: m.
+        right: Unit: m.
     """
     base: str
     comparison: str
     assume_heights: bool | Unset = UNSET
+    axis: str | None | Unset = UNSET
     azimuth: float | None | Unset = UNSET
     cell: float | None | Unset = UNSET
+    corners: bool | None | Unset = UNSET
     cut_factor: float | None | Unset = UNSET
     fill_factor: float | None | Unset = UNSET
     formula: SectionFormula | SectionFormulaName | None | Unset = UNSET
     interval: float | None | Unset = UNSET
+    left: float | None | Unset = UNSET
     method: CompareMethod | CompareMethodName | None | Unset = UNSET
     ranges: list[float] | None | Unset = UNSET
+    right: float | None | Unset = UNSET
     zones: list[CompareZone] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -104527,10 +104683,14 @@ class TerrainsCompare(_Model):
         out["comparison"] = self.comparison
         if self.assume_heights is not UNSET:
             out["assumeHeights"] = self.assume_heights
+        if self.axis is not UNSET:
+            out["axis"] = self.axis
         if self.azimuth is not UNSET:
             out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.cell is not UNSET:
             out["cell"] = None if self.cell is None else float(self.cell)
+        if self.corners is not UNSET:
+            out["corners"] = self.corners
         if self.cut_factor is not UNSET:
             out["cutFactor"] = None if self.cut_factor is None else float(self.cut_factor)
         if self.fill_factor is not UNSET:
@@ -104539,10 +104699,14 @@ class TerrainsCompare(_Model):
             out["formula"] = None if self.formula is None else _enum_out(self.formula)
         if self.interval is not UNSET:
             out["interval"] = None if self.interval is None else float(self.interval)
+        if self.left is not UNSET:
+            out["left"] = None if self.left is None else float(self.left)
         if self.method is not UNSET:
             out["method"] = None if self.method is None else _enum_out(self.method)
         if self.ranges is not UNSET:
             out["ranges"] = None if self.ranges is None else [float(e0) for e0 in self.ranges]
+        if self.right is not UNSET:
+            out["right"] = None if self.right is None else float(self.right)
         if self.zones is not UNSET:
             out["zones"] = [e0.to_json() for e0 in self.zones]
         return out
@@ -104553,14 +104717,18 @@ class TerrainsCompare(_Model):
             base=data["base"],
             comparison=data["comparison"],
             assume_heights=data.get("assumeHeights", UNSET),
+            axis=data.get("axis", UNSET),
             azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
+            corners=data.get("corners", UNSET),
             cut_factor=UNSET if "cutFactor" not in data else None if data["cutFactor"] is None else float(data["cutFactor"]),
             fill_factor=UNSET if "fillFactor" not in data else None if data["fillFactor"] is None else float(data["fillFactor"]),
             formula=UNSET if "formula" not in data else None if data["formula"] is None else _enum_in(SectionFormula, data["formula"]),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
+            left=UNSET if "left" not in data else None if data["left"] is None else float(data["left"]),
             method=UNSET if "method" not in data else None if data["method"] is None else _enum_in(CompareMethod, data["method"]),
             ranges=UNSET if "ranges" not in data else None if data["ranges"] is None else [float(e0) for e0 in data["ranges"]],
+            right=UNSET if "right" not in data else None if data["right"] is None else float(data["right"]),
             zones=[CompareZone.from_json(e0) for e0 in data["zones"]] if "zones" in data else UNSET,
         )
 
@@ -104584,9 +104752,11 @@ class TerrainsCompared(_Model):
         fill_area: Unit: area.
         covered: Unit: area.
         uncovered: Unit: area.
+        axis: The drawn axis the sections stood along and its length (docs/adr/4760).
         azimuth: Unit: deg.
         cell: Unit: m.
         interval: Unit: m.
+        length: Unit: m.
         outside_area: Unit: area.
     """
     base: str
@@ -104599,6 +104769,7 @@ class TerrainsCompared(_Model):
     covered: float
     uncovered: float
     adjusted: TerrainAdjusted | None | Unset = UNSET
+    axis: str | None | Unset = UNSET
     azimuth: float | None | Unset = UNSET
     bands: list[TerrainDifferenceBand] | Unset = UNSET
     cell: float | None | Unset = UNSET
@@ -104607,6 +104778,7 @@ class TerrainsCompared(_Model):
     interval: float | None | Unset = UNSET
     largest: TerrainDifferenceAt | None | Unset = UNSET
     least: TerrainDifferenceAt | None | Unset = UNSET
+    length: float | None | Unset = UNSET
     outside_area: float | None | Unset = UNSET
     rest: TerrainZoneRest | None | Unset = UNSET
     sections: list[TerrainSection] | Unset = UNSET
@@ -104626,6 +104798,8 @@ class TerrainsCompared(_Model):
         out["uncovered"] = float(self.uncovered)
         if self.adjusted is not UNSET:
             out["adjusted"] = None if self.adjusted is None else self.adjusted.to_json()
+        if self.axis is not UNSET:
+            out["axis"] = self.axis
         if self.azimuth is not UNSET:
             out["azimuth"] = None if self.azimuth is None else float(self.azimuth)
         if self.bands is not UNSET:
@@ -104642,6 +104816,8 @@ class TerrainsCompared(_Model):
             out["largest"] = None if self.largest is None else self.largest.to_json()
         if self.least is not UNSET:
             out["least"] = None if self.least is None else self.least.to_json()
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
         if self.outside_area is not UNSET:
             out["outsideArea"] = None if self.outside_area is None else float(self.outside_area)
         if self.rest is not UNSET:
@@ -104667,6 +104843,7 @@ class TerrainsCompared(_Model):
             covered=float(data["covered"]),
             uncovered=float(data["uncovered"]),
             adjusted=UNSET if "adjusted" not in data else None if data["adjusted"] is None else TerrainAdjusted.from_json(data["adjusted"]),
+            axis=data.get("axis", UNSET),
             azimuth=UNSET if "azimuth" not in data else None if data["azimuth"] is None else float(data["azimuth"]),
             bands=[TerrainDifferenceBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
             cell=UNSET if "cell" not in data else None if data["cell"] is None else float(data["cell"]),
@@ -104675,6 +104852,7 @@ class TerrainsCompared(_Model):
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             largest=UNSET if "largest" not in data else None if data["largest"] is None else TerrainDifferenceAt.from_json(data["largest"]),
             least=UNSET if "least" not in data else None if data["least"] is None else TerrainDifferenceAt.from_json(data["least"]),
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
             outside_area=UNSET if "outsideArea" not in data else None if data["outsideArea"] is None else float(data["outsideArea"]),
             rest=UNSET if "rest" not in data else None if data["rest"] is None else TerrainZoneRest.from_json(data["rest"]),
             sections=[TerrainSection.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
@@ -105009,12 +105187,20 @@ class TerrainsCutFill(_Model):
     `comparison − base` from zero: band k holds `[k·interval, (k+1)·interval)`; none: one band of cut and one of fill.
     `labels` writes each zone's kind and volume inside it, `table` a quantity table beside the zones (none: neither;
     docs/adr/2340), `depths` each zone's deepest place, a point and its depth (the fill's height) beside it (none: not;
-    docs/adr/2740).
+    docs/adr/2740). `sections` (docs/adr/4760): sections along a drawn axis, as `road.terrains.compare`'s, written as
+    their lines, each with its kilometre at its left end and its cut and fill areas at its right end (along the line,
+    kept upright), and with `table` a section volume table (kübaj cetveli). `materials` (docs/adr/4760): material zones,
+    as `road.terrains.compare`'s `zones` (docs/adr/3540), each one's name and cut and fill volumes written inside it, and
+    with `table` a material table.
 
     Refusals, in this order: `not_a_road_project`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_revision`,
-    `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0), `unknown_terrain`,
-    `invalid_analysis` (the same surface twice), `terrain_unbuildable`, `invalid_analysis` (more than 1000 bands),
-    `no_cut_fill` (the surfaces do not overlap, or coincide wherever they do). Warning: `layer_hidden`.
+    `revision_conflict`, `invalid_analysis` (the interval not finite or not over 0; the sections' interval not over 0,
+    a width not a length of 0 or more or both 0, a formula's; a material without a name, a factor not over 0 or over 10),
+    `unknown_terrain`, `invalid_analysis` (the same surface twice), `entity_not_found` (the sections' axis, a material's
+    boundary), `invalid_analysis` (an axis not a line or a single-part open polyline; a boundary not a straight-edged
+    single-part closed polyline or area; two materials sharing more than 1 mm²), `terrain_unbuildable`,
+    `invalid_analysis` (more than 1000 bands, more than 10 000 sections), `no_cut_fill` (the surfaces do not overlap, or
+    coincide wherever they do). Warnings: `layer_hidden`, `compare_uncovered` (part of a material off the two surfaces).
     Attributes:
         layer_id: The layer the zones go on.
         interval: Unit: m.
@@ -105026,6 +105212,8 @@ class TerrainsCutFill(_Model):
     expected_revision: str | None | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: bool | None | Unset = UNSET
+    materials: list[CompareZone] | Unset = UNSET
+    sections: CutFillSections | None | Unset = UNSET
     table: bool | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -105041,6 +105229,10 @@ class TerrainsCutFill(_Model):
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
             out["labels"] = self.labels
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
+        if self.sections is not UNSET:
+            out["sections"] = None if self.sections is None else self.sections.to_json()
         if self.table is not UNSET:
             out["table"] = self.table
         return out
@@ -105055,6 +105247,8 @@ class TerrainsCutFill(_Model):
             expected_revision=data.get("expectedRevision", UNSET),
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=data.get("labels", UNSET),
+            materials=[CompareZone.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
+            sections=UNSET if "sections" not in data else None if data["sections"] is None else CutFillSections.from_json(data["sections"]),
             table=data.get("table", UNSET),
         )
 
@@ -105082,6 +105276,13 @@ class TerrainsCutFilled(_Model):
             (asked for, docs/adr/2740).
         interval: Unit: m.
         labels: The zones' labels, in the zones' order (asked for, docs/adr/2340).
+        length: Unit: m.
+        materials: The materials (docs/adr/4760): `road.terrains.compare`'s zones, each one's words inside it, and the material
+            table's cells (asked for with `table`).
+        section_cut: Unit: volume.
+        section_fill: Unit: volume.
+        sections: The sections (docs/adr/4760), in station order; their volumes summed; the axis's length; each one's words (its
+            kilometre, then its areas); the section volume table's cells (asked for with `table`).
         table: The quantity table's cells, heading first (asked for, docs/adr/2340).
     """
     base: str
@@ -105101,6 +105302,15 @@ class TerrainsCutFilled(_Model):
     depths: list[CutFillLabel] | Unset = UNSET
     interval: float | None | Unset = UNSET
     labels: list[CutFillLabel] | Unset = UNSET
+    length: float | None | Unset = UNSET
+    material_labels: list[CutFillLabel] | Unset = UNSET
+    material_table: list[list[str]] | Unset = UNSET
+    materials: list[TerrainZoneVolumes] | Unset = UNSET
+    section_cut: float | None | Unset = UNSET
+    section_fill: float | None | Unset = UNSET
+    section_labels: list[CutFillSectionLabel] | Unset = UNSET
+    section_table: list[list[str]] | Unset = UNSET
+    sections: list[CutFillSection] | Unset = UNSET
     table: list[list[str]] | Unset = UNSET
     uids: list[str] | Unset = UNSET
 
@@ -105126,6 +105336,24 @@ class TerrainsCutFilled(_Model):
             out["interval"] = None if self.interval is None else float(self.interval)
         if self.labels is not UNSET:
             out["labels"] = [e0.to_json() for e0 in self.labels]
+        if self.length is not UNSET:
+            out["length"] = None if self.length is None else float(self.length)
+        if self.material_labels is not UNSET:
+            out["materialLabels"] = [e0.to_json() for e0 in self.material_labels]
+        if self.material_table is not UNSET:
+            out["materialTable"] = [list(e0) for e0 in self.material_table]
+        if self.materials is not UNSET:
+            out["materials"] = [e0.to_json() for e0 in self.materials]
+        if self.section_cut is not UNSET:
+            out["sectionCut"] = None if self.section_cut is None else float(self.section_cut)
+        if self.section_fill is not UNSET:
+            out["sectionFill"] = None if self.section_fill is None else float(self.section_fill)
+        if self.section_labels is not UNSET:
+            out["sectionLabels"] = [e0.to_json() for e0 in self.section_labels]
+        if self.section_table is not UNSET:
+            out["sectionTable"] = [list(e0) for e0 in self.section_table]
+        if self.sections is not UNSET:
+            out["sections"] = [e0.to_json() for e0 in self.sections]
         if self.table is not UNSET:
             out["table"] = [list(e0) for e0 in self.table]
         if self.uids is not UNSET:
@@ -105152,6 +105380,15 @@ class TerrainsCutFilled(_Model):
             depths=[CutFillLabel.from_json(e0) for e0 in data["depths"]] if "depths" in data else UNSET,
             interval=UNSET if "interval" not in data else None if data["interval"] is None else float(data["interval"]),
             labels=[CutFillLabel.from_json(e0) for e0 in data["labels"]] if "labels" in data else UNSET,
+            length=UNSET if "length" not in data else None if data["length"] is None else float(data["length"]),
+            material_labels=[CutFillLabel.from_json(e0) for e0 in data["materialLabels"]] if "materialLabels" in data else UNSET,
+            material_table=[list(e0) for e0 in data["materialTable"]] if "materialTable" in data else UNSET,
+            materials=[TerrainZoneVolumes.from_json(e0) for e0 in data["materials"]] if "materials" in data else UNSET,
+            section_cut=UNSET if "sectionCut" not in data else None if data["sectionCut"] is None else float(data["sectionCut"]),
+            section_fill=UNSET if "sectionFill" not in data else None if data["sectionFill"] is None else float(data["sectionFill"]),
+            section_labels=[CutFillSectionLabel.from_json(e0) for e0 in data["sectionLabels"]] if "sectionLabels" in data else UNSET,
+            section_table=[list(e0) for e0 in data["sectionTable"]] if "sectionTable" in data else UNSET,
+            sections=[CutFillSection.from_json(e0) for e0 in data["sections"]] if "sections" in data else UNSET,
             table=[list(e0) for e0 in data["table"]] if "table" in data else UNSET,
             uids=list(data["uids"]) if "uids" in data else UNSET,
         )
@@ -136121,6 +136358,9 @@ __all__ = [
     "CutFillKind",
     "CutFillKindName",
     "CutFillLabel",
+    "CutFillSection",
+    "CutFillSectionLabel",
+    "CutFillSections",
     "DataProfile",
     "DatasetDescription",
     "DatasetDim",
