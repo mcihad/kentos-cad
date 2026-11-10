@@ -108,8 +108,11 @@ fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
 /// velocity and source in the tip, and (docs/adr/4120) its own place in the project, how far its epoch moved it and how
 /// far its mark's accepted point lies, or why it has no place.
 fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Message> {
+    // Docs/adr/4520: beyond the user's tolerance of its place against its mark's accepted point.
+    let beyond = tree.known_places.iter().any(|p| p.id == k.id && p.beyond == Some(true));
     let (tone, words) = match (&k.excluded, k.sigma) {
         (Some(_), _) => (Status::Neutral, "Dışlandı"),
+        _ if beyond => (Status::Warning, "Sınırı aşıyor"),
         (None, None) => (Status::Info, "Sabit"),
         (None, Some(_)) => (Status::Info, "Ağırlıklı"),
     };
@@ -177,6 +180,12 @@ pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
     if let (Some(point), Some(dx), Some(dy)) = (&p.point, p.dx, p.dy) {
         let dz = p.dz.map_or_else(String::new, |dz| format!(", kot farkı {:+.1} mm", dz * 1000.0));
         out.push(format!("{point} kabul noktası bu yerden {:.1} mm uzakta{dz}.", dx.hypot(dy) * 1000.0));
+        // Docs/adr/4520: against the user's tolerance.
+        match p.beyond {
+            Some(true) => out.push("Kabul farkı sınırını aşıyor.".to_owned()),
+            Some(false) => out.push("Kabul farkı sınırının içinde.".to_owned()),
+            None => {}
+        }
     }
     out
 }

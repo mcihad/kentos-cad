@@ -26,9 +26,10 @@ pub const MAP_SURVEY_NETWORK_VERSION: u32 = 1;
 
 /// Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
 /// file is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says
-/// where each known point lies in the project by its own coordinates.
+/// where each known point lies in the project by its own coordinates; `tolerance` (docs/adr/4520, with `places`) the
+/// user's limits a known point's place may lie from its mark's accepted point.
 ///
-/// Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+/// Refusals, in this order: `invalid_input` (the tolerance's), `not_a_map_project`, `invalid_uid`, `entity_not_found`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -44,6 +45,28 @@ pub struct MapSurveyQuery {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub places: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tolerance: Option<SurveyPlaceTolerance>,
+}
+
+/// How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal
+/// distance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a
+/// vertical tolerance; either may be left out, not both.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SurveyPlaceTolerance {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub vertical: Option<f64>,
 }
 
 /// How a session's file stands: there (looked for only), the content read, other content, not there.
@@ -930,7 +953,9 @@ pub struct KnownMoved {
 /// else the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid
 /// (`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's
 /// status (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the
-/// place minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).
+/// place minus the point (project units), and (docs/adr/4520) their horizontal distance and, with the user's tolerance,
+/// whether it lies beyond (`beyond`: none when the tolerance has nothing of it to judge); or why it has no place
+/// (`why`, the chain's or the epoch's words).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -977,6 +1002,13 @@ pub struct SurveyKnownPlace {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub dz: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub horizontal: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub beyond: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub why: Option<String>,

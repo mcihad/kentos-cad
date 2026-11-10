@@ -34,7 +34,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480 | tipli katman profili; köşe köşe kayma (en büyük kayma) ve silinenin şekli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
-| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; kabul noktası farkının kullanıcı toleransı | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
+| MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140 | kayıtlı kararların yeniden uygulanması; katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160 | robust kestirim; seyrek çözüm; ağırlıklı benzerlik | deformasyon için gerçek seri |
 | MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye göreli kot | — |
@@ -566,6 +566,13 @@ ya da yeri olmama nedenini; PROJ'la altı yeni bağımsız durum (eski sayılar 
 bazın kabul noktası olmayan ucu bilinen noktanın yerinden (üçgen, adıyla) çizilir, Ağı göster sekiz bazı birden
 gösterir, satırın ipucu yeri ve kaymayı söyler. Açık: kabul noktası farkının kullanıcı toleransı, GVX oturum
 korelasyonları, yeni noktaların hızı.
+
+**10 Kasım 2026, dokuzuncu tur — bilinen noktanın kabul noktasına farkı için kullanıcının sınırı ([ADR 4520](../docs/adr/4520-known-place-tolerance.md)).**
+Kapsam: **Harita**. Dayanak: TBC'nin nokta karşılaştırma raporu (yatay ve düşey tolerans, aşan çift kırmızı; değerleri
+kullanıcı verir). Kanıtlanan: `map.survey.query`'nin `tolerance`'ı (`places` ile): her karşılaştırılan yer yatay
+uzaklığını taşır, sınırla `beyond`; değerlendirecek bir şeyi olmayan yer söylenmez; dört ret. 8 yeni bağımsız durum
+(36), Python, MCP; GNSS arşivi'nde Kabul farkı sınırı satırı, aşan satır uyarı rengiyle. Açık: sınırların projede
+saklanması (şema), GVX oturum korelasyonları, yeni noktaların hızı.
 
 ### MAP-04 — Semantik nesne kataloğu ve kontrollü otomatik harita üretimi sağla [ ]
 

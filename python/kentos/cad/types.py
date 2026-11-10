@@ -54803,12 +54803,14 @@ class MapSurveyNetworked(_Model):
 class MapSurveyQuery(_Model):
     """Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a
     file is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says
-    where each known point lies in the project by its own coordinates.
+    where each known point lies in the project by its own coordinates; `tolerance` (docs/adr/4520, with `places`) the
+    user's limits a known point's place may lie from its mark's accepted point.
 
-    Refusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.
+    Refusals, in this order: `invalid_input` (the tolerance's), `not_a_map_project`, `invalid_uid`, `entity_not_found`.
     """
     deep: bool | Unset = UNSET
     places: bool | Unset = UNSET
+    tolerance: SurveyPlaceTolerance | None | Unset = UNSET
     uid: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -54817,6 +54819,8 @@ class MapSurveyQuery(_Model):
             out["deep"] = self.deep
         if self.places is not UNSET:
             out["places"] = self.places
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else self.tolerance.to_json()
         if self.uid is not UNSET:
             out["uid"] = self.uid
         return out
@@ -54826,6 +54830,7 @@ class MapSurveyQuery(_Model):
         return cls(
             deep=data.get("deep", UNSET),
             places=data.get("places", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else SurveyPlaceTolerance.from_json(data["tolerance"]),
             uid=data.get("uid", UNSET),
         )
 
@@ -97342,24 +97347,29 @@ class SurveyKnownPlace(_Model):
     else the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid
     (`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's
     status (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the
-    place minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).
+    place minus the point (project units), and (docs/adr/4520) their horizontal distance and, with the user's tolerance,
+    whether it lies beyond (`beyond`: none when the tolerance has nothing of it to judge); or why it has no place
+    (`why`, the chain's or the epoch's words).
     Attributes:
         id: `bn-N`.
         dx: Unit: length.
         dy: Unit: length.
         dz: Unit: elevation.
         epoch: Unit: year.
+        horizontal: Unit: length.
         x: Unit: length.
         y: Unit: length.
         z: Unit: elevation.
     """
     id: str
     mark: str
+    beyond: bool | None | Unset = UNSET
     chain: str | None | Unset = UNSET
     dx: float | None | Unset = UNSET
     dy: float | None | Unset = UNSET
     dz: float | None | Unset = UNSET
     epoch: float | None | Unset = UNSET
+    horizontal: float | None | Unset = UNSET
     moved: KnownMoved | None | Unset = UNSET
     point: str | None | Unset = UNSET
     why: str | None | Unset = UNSET
@@ -97371,6 +97381,8 @@ class SurveyKnownPlace(_Model):
         out: dict[str, Any] = {}
         out["id"] = self.id
         out["mark"] = self.mark
+        if self.beyond is not UNSET:
+            out["beyond"] = self.beyond
         if self.chain is not UNSET:
             out["chain"] = self.chain
         if self.dx is not UNSET:
@@ -97381,6 +97393,8 @@ class SurveyKnownPlace(_Model):
             out["dz"] = None if self.dz is None else float(self.dz)
         if self.epoch is not UNSET:
             out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
         if self.moved is not UNSET:
             out["moved"] = None if self.moved is None else self.moved.to_json()
         if self.point is not UNSET:
@@ -97400,11 +97414,13 @@ class SurveyKnownPlace(_Model):
         return cls(
             id=data["id"],
             mark=data["mark"],
+            beyond=data.get("beyond", UNSET),
             chain=data.get("chain", UNSET),
             dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
             dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
             dz=UNSET if "dz" not in data else None if data["dz"] is None else float(data["dz"]),
             epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
             moved=UNSET if "moved" not in data else None if data["moved"] is None else KnownMoved.from_json(data["moved"]),
             point=data.get("point", UNSET),
             why=data.get("why", UNSET),
@@ -97467,6 +97483,34 @@ class SurveyObject(_Model):
             point=UNSET if "point" not in data else None if data["point"] is None else SurveyPointRow.from_json(data["point"]),
             solutions=[SurveySolutionRow.from_json(e0) for e0 in data["solutions"]] if "solutions" in data else UNSET,
             used=UNSET if "used" not in data else None if data["used"] is None else SurveyUseRow.from_json(data["used"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SurveyPlaceTolerance(_Model):
+    """How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal
+    distance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a
+    vertical tolerance; either may be left out, not both.
+    Attributes:
+        horizontal: Unit: length.
+        vertical: Unit: length.
+    """
+    horizontal: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SurveyPlaceTolerance:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
 
@@ -136040,6 +136084,7 @@ __all__ = [
     "SurveyKnownPlace",
     "SurveyMarkRow",
     "SurveyObject",
+    "SurveyPlaceTolerance",
     "SurveyPoint",
     "SurveyPointRow",
     "SurveyPoints",

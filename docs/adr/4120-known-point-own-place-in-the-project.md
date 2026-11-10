@@ -61,7 +61,8 @@ Tarih: 2026-11-09. plan/map-cad.md MAP-03, sekizinci tur. Durum: taslak. ADR 332
 
 - Çerçeve farkının büyüklüğü ayrıca söylenmez: zincirin kendi dönüşümüdür, durumu (tam ya da sınırlı) söylenir. Epok
   farkının kaydırdığı ayrıca söylenir.
-- Kabul noktasına uzaklık için tolerans yok. TBC'de olduğu gibi toleransı kullanıcı verir; KentOS değer uydurmaz.
+- Kabul noktasına uzaklık için tolerans yok. TBC'de olduğu gibi toleransı kullanıcı verir; KentOS değer uydurmaz
+  (kullanıcının sınırı: [ADR 4520](4520-known-place-tolerance.md)).
 - Dışlanan bilinen nokta bazın ucu olmaz.
 
 ## Kanıt

@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Bilinen noktanın kabul farkı sınırı (10 Kasım 2026; MAP-03, [ADR 4520](../../docs/adr/4520-known-place-tolerance.md)).**
+  `map.survey.query`'nin `tolerance`'ı (`places` ile): yatay ve düşey sınır; yerde `horizontal` ve `beyond`. GNSS
+  arşivi › Kabul farkı sınırı (oturumluk). Harita.
 - **Poligon hesabında karşılıklı başucu açıları (10 Kasım 2026; MAP-02, [ADR 4500](../../docs/adr/4500-traverse-reciprocal-zenith-angles.md)).**
   `cad.survey.points`'in `heights.back`'i: geri nişanlı kenarın kot farkı iki yönün ortalaması (k düşer), aynı iki uç
   arasındaki çiftin k'sı `refractions`'ta (Baselga vd. 2014, denklem 11). Poligon hesabı › Karşılıklı. CAD + CBS.

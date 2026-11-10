@@ -3722,6 +3722,7 @@ __all__ = [
     "SurveyKnownPlace",
     "SurveyMarkRow",
     "SurveyObject",
+    "SurveyPlaceTolerance",
     "SurveyPoint",
     "SurveyPointRow",
     "SurveyPoints",

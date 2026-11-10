@@ -688,9 +688,39 @@ pub(crate) fn place(
     })
 }
 
+/// Docs/adr/4520: the tolerance's own rules: with `places`, one limit at least, each a length above 0.
+fn tolerance_checked(input: &MapSurveyQuery) -> Result<(), Stop> {
+    let Some(t) = &input.tolerance else { return Ok(()) };
+    let bad = |message: &str, path: &str| Err(Stop::failed(error(codes::INVALID_INPUT, message.to_owned(), Some(path.to_owned()))));
+    if !input.places {
+        return bad("Kabul farkı sınırı bilinen noktaların yerleriyle okunur: places'i de verin.", "tolerance");
+    }
+    if t.horizontal.is_none() && t.vertical.is_none() {
+        return bad("Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).", "tolerance");
+    }
+    for (v, what, path) in [(t.horizontal, "Yatay", "tolerance.horizontal"), (t.vertical, "Düşey", "tolerance.vertical")] {
+        if let Some(v) = v
+            && !(v.is_finite() && v > 0.0)
+        {
+            return bad(&format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m)."), path);
+        }
+    }
+    Ok(())
+}
+
+/// The archive as asked: the tolerance checked first, the known places judged against it (docs/adr/4520).
+fn asked_tree(doc: &Document, input: &MapSurveyQuery) -> Result<MapSurveyTree, Stop> {
+    tolerance_checked(input)?;
+    let mut out = tree(doc, input.deep, input.uid.as_deref(), input.places)?;
+    if let Some(t) = &input.tolerance {
+        crate::map_survey_places::judged(&mut out.known_places, t);
+    }
+    Ok(out)
+}
+
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<()> {
-    match tree(cx.doc, input.deep, input.uid.as_deref(), input.places) {
+    match asked_tree(cx.doc, input) {
         Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -698,7 +728,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandRes
 
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<MapSurveyTree> {
-    match tree(cx.doc, input.deep, input.uid.as_deref(), input.places) {
+    match asked_tree(cx.doc, input) {
         Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
         Err(stop) => stop.into(),
     }
@@ -713,6 +743,17 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyQuery) -> CommandR
 /// docs/adr/4120), or why it does not read.
 pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, places: bool) -> Result<MapSurveyTree, String> {
     tree(doc, deep, uid, places).map_err(|stop| stop.into_error().message)
+}
+
+/// The archive for a panel with the known points' places judged against the user's `tolerance` (docs/adr/4520), as
+/// `map.survey.query` with `places` gives it; or why it does not read (a tolerance that does not hold, too).
+pub fn preview_judged(
+    doc: &Document,
+    deep: bool,
+    tolerance: Option<kentos_commands::SurveyPlaceTolerance>,
+) -> Result<MapSurveyTree, String> {
+    let input = MapSurveyQuery { deep, uid: None, places: true, tolerance };
+    asked_tree(doc, &input).map_err(|stop| stop.into_error().message)
 }
 
 /// What one object is in the archive, read quickly, for the properties; none outside a map project with an archive,

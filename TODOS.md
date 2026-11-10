@@ -212,6 +212,8 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-03 / ADR 4520: web'in `map.survey.query` işleyicisinde kabul farkı sınırı (`tolerance`, `horizontal`, `beyond`;
+  map.survey.query.json'un 8 yeni durumu) ve web GNSS arşivi'nde sınır kutuları.
 - MAP-02 / ADR 4500: web'in `cad.survey.points` işleyicisinde ve WASM çekirdeğinde karşılıklı başucu açıları
   (`heights.back`, `refractions`; cad.survey.points.json'un 5 yeni durumu, reference-calls.json'un 120. çağrısı) ve web
   Poligon hesabı'nda geri nişan sütunları.

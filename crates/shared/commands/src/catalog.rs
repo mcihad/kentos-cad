@@ -10279,7 +10279,9 @@ pub fn catalog() -> CommandCatalog {
             title: "GNSS arşivini sorgula".into(),
             summary: "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki \
                       kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından \
-                      farkı) ya da neden yeri olmadığı. Retler: not_a_map_project, invalid_uid, entity_not_found."
+                      farkı ve yatay uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını \
+                      aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project, invalid_uid, \
+                      entity_not_found."
                 .into(),
             aliases: vec!["gnssarsivi".into()],
             effect: CommandEffect::Query,

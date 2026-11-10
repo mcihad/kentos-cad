@@ -64011,7 +64011,7 @@
       "id": "map.survey.query",
       "version": 1,
       "title": "GNSS arşivini sorgula",
-      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı) ya da neden yeri olmadığı. Retler: not_a_map_project, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin GNSS ölçüm arşivini bugün okur; hiçbir şey yazmaz: arazi ölçümleri (epok kararı, hız ızgarası, bağlı harita işi öğesi ve o öğenin hâlâ olup olmadığı), oturumlar (işaret, zamanlar, zaman sistemi, alıcı, anten ve düşey ARP yüksekliği, dosyası found/missing ya da deep ile current/changed, ham ölçüm sayısı ve oynatma özeti: fix sayıları, RTK sabitten düşüş, zaman atlaması, olağan adım), işaretler (oturumları, çözümleri: son ölçülen, kabul edilen, dengelemede, dışlandı ve nedeni, işaret yüksekliği = h + uygulanmış anten − oturumun düşey anteni), kabul edilen noktalar (current, stale: oturumun anteni değişti, epok kararı değişti, çözüm dışlandı; missing: nesnesi yok; sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.",
       "aliases": [
         "gnssarsivi"
       ],
@@ -64029,13 +64029,23 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a\nfile is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says\nwhere each known point lies in the project by its own coordinates.\n\nRefusals, in this order: `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
+        "description": "Input of `map.survey.query` v1: `deep` reads every session's file (its SHA-256 against its revision); without it a\nfile is only looked for. `uid` also says what that object is in the archive. `places` (docs/adr/4120) also says\nwhere each known point lies in the project by its own coordinates; `tolerance` (docs/adr/4520, with `places`) the\nuser's limits a known point's place may lie from its mark's accepted point.\n\nRefusals, in this order: `invalid_input` (the tolerance's), `not_a_map_project`, `invalid_uid`, `entity_not_found`.",
         "properties": {
           "deep": {
             "type": "boolean"
           },
           "places": {
             "type": "boolean"
+          },
+          "tolerance": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SurveyPlaceTolerance"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "uid": {
             "type": [
@@ -198799,8 +198809,14 @@
       "type": "object"
     },
     "SurveyKnownPlace": {
-      "description": "A known point's own place in the project (docs/adr/4120): its latitude, longitude and ellipsoidal height carried\ninto the project as an accepted point's are (the epoch decision of the campaign of the first baseline on its mark,\nelse the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid\n(`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's\nstatus (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the\nplace minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).",
+      "description": "A known point's own place in the project (docs/adr/4120): its latitude, longitude and ellipsoidal height carried\ninto the project as an accepted point's are (the epoch decision of the campaign of the first baseline on its mark,\nelse the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid\n(`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's\nstatus (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the\nplace minus the point (project units), and (docs/adr/4520) their horizontal distance and, with the user's tolerance,\nwhether it lies beyond (`beyond`: none when the tolerance has nothing of it to judge); or why it has no place\n(`why`, the chain's or the epoch's words).",
       "properties": {
+        "beyond": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "chain": {
           "type": [
             "string",
@@ -198838,6 +198854,14 @@
             "null"
           ],
           "x-unit": "year"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
         },
         "id": {
           "description": "`bn-N`.",
@@ -198967,6 +198991,29 @@
       "required": [
         "uid"
       ],
+      "type": "object"
+    },
+    "SurveyPlaceTolerance": {
+      "additionalProperties": false,
+      "description": "How far a known point's own place may lie from its mark's accepted point (docs/adr/4520), the user's: their horizontal\ndistance and their height difference (m), as Trimble Business Center's point comparison takes a horizontal and a\nvertical tolerance; either may be left out, not both.",
+      "properties": {
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "vertical": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
       "type": "object"
     },
     "SurveyPoint": {

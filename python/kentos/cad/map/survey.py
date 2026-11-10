@@ -19,6 +19,7 @@ from ..types import (  # noqa: F401
     MapSurveyOperation,
     MapSurveyQuery,
     MapSurveyTree,
+    SurveyPlaceTolerance,
 )
 
 if TYPE_CHECKING:
@@ -425,8 +426,10 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
     sonuç ve eski sonuç sayısı) ve dayananlar. HDOP birimsizdir, metre değildir; RTK
     sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her
     bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız
-    ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı) ya da
-    neden yeri olmadığı. Retler: not_a_map_project, invalid_uid, entity_not_found.
+    ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay
+    uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve
+    düşey sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da
+    0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.survey.query"
@@ -444,6 +447,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         *,
         deep: bool | Unset = UNSET,
         places: bool | Unset = UNSET,
+        tolerance: SurveyPlaceTolerance | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -460,13 +464,16 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         dayananlar. HDOP birimsizdir, metre değildir; RTK sabit doğruluk garantisi değildir.
         uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi
         yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle;
-        işaretinin kabul noktasından farkı) ya da neden yeri olmadığı. Retler:
+        işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı;
+        tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond.
+        Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil),
         not_a_map_project, invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.
             deep:
             places:
+            tolerance:
             uid:
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -483,6 +490,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         return self.execute_input(doc, MapSurveyQuery(
             deep=deep,
             places=places,
+            tolerance=tolerance,
             uid=uid,
         ), request_id=request_id, expected=expected)
 
@@ -493,6 +501,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         *,
         deep: bool | Unset = UNSET,
         places: bool | Unset = UNSET,
+        tolerance: SurveyPlaceTolerance | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> MapSurveyTree:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -501,6 +510,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         return self.plan_input(doc, MapSurveyQuery(
             deep=deep,
             places=places,
+            tolerance=tolerance,
             uid=uid,
         ))
 
@@ -511,6 +521,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         *,
         deep: bool | Unset = UNSET,
         places: bool | Unset = UNSET,
+        tolerance: SurveyPlaceTolerance | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -519,6 +530,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         return self.validate_input(doc, MapSurveyQuery(
             deep=deep,
             places=places,
+            tolerance=tolerance,
             uid=uid,
         ))
 
@@ -529,6 +541,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         *,
         deep: bool | Unset = UNSET,
         places: bool | Unset = UNSET,
+        tolerance: SurveyPlaceTolerance | None | Unset = UNSET,
         uid: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -542,6 +555,7 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         return self.answer_input(doc, MapSurveyQuery(
             deep=deep,
             places=places,
+            tolerance=tolerance,
             uid=uid,
         ), op=op, request_id=request_id, expected=expected)
 

@@ -37,6 +37,9 @@ pub enum Event {
     Imported(Option<PathBuf>),
     /// The toolbar's text: a mark, or a reason.
     Text(String),
+    /// Docs/adr/4520: the user's limits of the known points' places against their accepted points, as typed.
+    LimitHorizontal(String),
+    LimitVertical(String),
     Deep(bool),
     /// A solution left out with the toolbar's reason, or taken back.
     Exclude(String),
@@ -64,7 +67,7 @@ pub(crate) fn msg(e: Event) -> Message {
     Message::MapSurvey(e)
 }
 
-type Read = (String, bool, Result<MapSurveyTree, String>);
+type Read = (String, bool, Option<kentos_commands::SurveyPlaceTolerance>, Result<MapSurveyTree, String>);
 
 /// The panel's state: deep or quick, the toolbar's text, the user's folds, the filter, and the last tree.
 #[derive(Default)]
@@ -74,6 +77,10 @@ pub struct PanelState {
     toggled: HashSet<String>,
     filter: Option<Status>,
     read: RefCell<Option<Read>>,
+    /// Docs/adr/4520: the user's limits of a known point's place against its mark's accepted point, as typed (m;
+    /// empty: none).
+    pub limit_horizontal: String,
+    pub limit_vertical: String,
 }
 
 impl std::fmt::Debug for PanelState {
@@ -124,21 +131,34 @@ fn end_of(tree: &MapSurveyTree, mark: &str) -> Option<crate::survey_baseline_mar
 }
 
 impl App {
-    /// The tree as the drawing is now, read again when its revision or the depth changed.
+    /// Docs/adr/4520: the limits typed, each a length above 0 (another text: not a limit); none when neither is.
+    pub(crate) fn map_survey_limits(&self) -> Option<kentos_commands::SurveyPlaceTolerance> {
+        let read = |t: &str| crate::calc::read::read_number(t).filter(|v| v.is_finite() && *v > 0.0);
+        let t = kentos_commands::SurveyPlaceTolerance {
+            horizontal: read(&self.map_survey.limit_horizontal),
+            vertical: read(&self.map_survey.limit_vertical),
+        };
+        (t.horizontal.is_some() || t.vertical.is_some()).then_some(t)
+    }
+
+    /// The tree as the drawing is now, read again when its revision, the depth or the limits changed.
     pub(crate) fn map_survey_read(&self) -> Option<Result<MapSurveyTree, String>> {
         let doc = self.document.as_ref()?;
         let revision = doc.model.revision().to_string();
         let deep = self.map_survey.deep;
+        let limits = self.map_survey_limits();
         let mut kept = self.map_survey.read.borrow_mut();
-        if let Some((r, d, answer)) = kept.as_ref()
+        if let Some((r, d, l, answer)) = kept.as_ref()
             && *r == revision
             && *d == deep
+            && *l == limits
         {
             return Some(answer.clone());
         }
-        // Docs/adr/4120: with the known points' own places, for their rows and the baselines' ends.
-        let answer = map_survey::preview(&doc.model, deep, None, true);
-        *kept = Some((revision, deep, answer.clone()));
+        // Docs/adr/4120: with the known points' own places, for their rows and the baselines' ends; docs/adr/4520:
+        // judged against the limits typed.
+        let answer = map_survey::preview_judged(&doc.model, deep, limits.clone());
+        *kept = Some((revision, deep, limits, answer.clone()));
         Some(answer)
     }
 
@@ -391,6 +411,8 @@ impl App {
             Event::Imported(Some(path)) => self.import_session(path),
             Event::Imported(None) => {}
             Event::Text(t) => self.map_survey.text = t,
+            Event::LimitHorizontal(t) => self.map_survey.limit_horizontal = t,
+            Event::LimitVertical(t) => self.map_survey.limit_vertical = t,
             Event::Deep(on) => self.map_survey.deep = on,
             Event::Exclude(id) => {
                 let reason = self.map_survey.text.trim().to_owned();
@@ -502,7 +524,29 @@ impl App {
         ]
         .spacing(4)
         .align_y(Center);
-        let head = container(bar).padding([4, 12]).width(Fill);
+        // Docs/adr/4520: the user's limits of the known points' places against their accepted points (TBC's point
+        // comparison's horizontal and vertical tolerances), shown with known points.
+        let head: Element<'_, Message> = if tree.known.is_empty() {
+            container(bar).padding([4, 12]).width(Fill).into()
+        } else {
+            let bad = |t: &str| !t.trim().is_empty() && crate::calc::read::read_number(t).is_none_or(|v| !(v.is_finite() && v > 0.0));
+            let limits = row![
+                label::caption("Kabul farkı sınırı (m)"),
+                container(
+                    crate::style::fields::input(None, "yatay", &self.map_survey.limit_horizontal, bad(&self.map_survey.limit_horizontal), false)
+                        .on_input(|t| msg(Event::LimitHorizontal(t)))
+                )
+                .width(72),
+                container(
+                    crate::style::fields::input(None, "düşey", &self.map_survey.limit_vertical, bad(&self.map_survey.limit_vertical), false)
+                        .on_input(|t| msg(Event::LimitVertical(t)))
+                )
+                .width(72),
+            ]
+            .spacing(6)
+            .align_y(Center);
+            container(iced::widget::column![bar, limits].spacing(4)).padding([4, 12]).width(Fill).into()
+        };
         let mut items = Vec::new();
         if !tree.campaigns.is_empty() {
             let mut group = StatusItem::new("campaigns", "Arazi ölçümleri")

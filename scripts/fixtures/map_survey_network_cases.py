@@ -1469,6 +1469,27 @@ def query_cases():
     q("N1 hem bilinen nokta hem kabul noktası: kendi yeri kabul noktasından 6 mm doğu, 4 mm güney, 12 mm yukarı", on_n1,
       "Fark, yerden kabul noktası çıkarılarak (proje birimi).")
     out.append(ms.case("Bilinen noktaların yerleri: plan aynı cevabı verir", [ms.ask(base, op="plan", places=True)], d=base))
+    # docs/adr/4520: the user's tolerance of a known point's place against its mark's accepted point (N1's: 6 mm east,
+    # 4 mm south, 12 mm up; horizontally √52 ≈ 7.2 mm). BN1 and BN2, without accepted points, are not judged.
+    for name, tol in [
+        ("Kabul farkı sınırı: yatay 5 mm, N1'in 7,2 mm'si aşar", {"horizontal": 0.005}),
+        ("Kabul farkı sınırı: yatay 1 cm, N1 içinde", {"horizontal": 0.01}),
+        ("Kabul farkı sınırı: düşey 1 cm, N1'in 12 mm'si aşar", {"vertical": 0.01}),
+        ("Kabul farkı sınırı: yatay 1 cm içinde, düşey 2 cm içinde", {"horizontal": 0.01, "vertical": 0.02}),
+    ]:
+        out.append(ms.case(name, [ms.ask(on_n1, places=True, tolerance=tol)], d=on_n1))
+    for name, input_, message, path in [
+        ("Kabul farkı sınırı yerler olmadan", {"tolerance": {"horizontal": 0.01}},
+         "Kabul farkı sınırı bilinen noktaların yerleriyle okunur: places'i de verin.", "tolerance"),
+        ("Kabul farkı sınırı boş", {"places": True, "tolerance": {}},
+         "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).", "tolerance"),
+        ("Kabul farkı sınırı: yatay 0", {"places": True, "tolerance": {"horizontal": 0.0}},
+         "Yatay sınır 0'dan büyük bir uzunluk olmalı (m).", "tolerance.horizontal"),
+        ("Kabul farkı sınırı: düşey eksi", {"places": True, "tolerance": {"vertical": -0.01}},
+         "Düşey sınır 0'dan büyük bir uzunluk olmalı (m).", "tolerance.vertical"),
+    ]:
+        out.append(ms.case(name, [ms.step("execute", input_, ms.refused("invalid_input", message, path), ms.UNCHANGED,
+                                          command="map.survey.query")], d=on_n1))
     return out
 
 

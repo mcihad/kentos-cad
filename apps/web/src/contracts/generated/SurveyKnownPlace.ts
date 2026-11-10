@@ -7,10 +7,12 @@ import type { KnownMoved } from "./KnownMoved";
  * else the project's), its epoch first by its own velocity when it has one, else along that campaign's velocity grid
  * (`moved`, docs/adr/2520), then by the coordinate chain itself: x, y (z when the project has heights) and the chain's
  * status (`complete`, `limited`) at `epoch`. Its mark's accepted point (`kn-N`) and how far that lies from it, the
- * place minus the point (project units); or why it has no place (`why`, the chain's or the epoch's words).
+ * place minus the point (project units), and (docs/adr/4520) their horizontal distance and, with the user's tolerance,
+ * whether it lies beyond (`beyond`: none when the tolerance has nothing of it to judge); or why it has no place
+ * (`why`, the chain's or the epoch's words).
  */
 export type SurveyKnownPlace = { 
 /**
  * `bn-N`.
  */
-id: string, mark: string, x?: number, y?: number, z?: number, chain?: string, epoch?: number, moved?: KnownMoved, point?: string, dx?: number, dy?: number, dz?: number, why?: string, };
+id: string, mark: string, x?: number, y?: number, z?: number, chain?: string, epoch?: number, moved?: KnownMoved, point?: string, dx?: number, dy?: number, dz?: number, horizontal?: number, beyond?: boolean, why?: string, };

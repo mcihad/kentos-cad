@@ -798,9 +798,11 @@ class Model:
             row["dx"], row["dy"] = p["x"] - r["x"], p["y"] - r["y"]
             if "z" in p and "z" in r:
                 row["dz"] = p["z"] - r["z"]
+            # docs/adr/4520: their horizontal distance.
+            row["horizontal"] = math.hypot(row["dx"], row["dy"])
         return row
 
-    def tree(self, deep=False, of=None, files=None, places=False):
+    def tree(self, deep=False, of=None, files=None, places=False, tolerance=None):
         files = files or {}
         sv = self.survey or {"campaigns": [], "sessions": [], "solutions": [], "points": [], "uses": []}
         self.survey = sv
@@ -889,6 +891,17 @@ class Model:
             out["adjustments"] = copy.deepcopy(sv["adjustments"])
         if places and sv.get("known"):
             out["knownPlaces"] = [self.known_place(k) for k in sv["known"]]
+            # docs/adr/4520: each place against the user's tolerance: beyond when its horizontal distance passes the
+            # horizontal limit or its height difference the vertical one; nothing to judge, nothing said.
+            if tolerance:
+                for row in out["knownPlaces"]:
+                    judged = []
+                    if "horizontal" in tolerance and "horizontal" in row:
+                        judged.append(row["horizontal"] > tolerance["horizontal"])
+                    if "vertical" in tolerance and "dz" in row:
+                        judged.append(abs(row["dz"]) > tolerance["vertical"])
+                    if judged:
+                        row["beyond"] = any(judged)
         if of is not None:
             out["object"] = self.object(of, latest)
         out["stale"] = sum(p["state"] == "stale" for p in points) + sum(u["state"] == "stale" for u in uses)
@@ -1018,7 +1031,7 @@ def case(name, steps, note=None, d=None):
     return c
 
 
-def ask(m, deep=False, of=None, op="execute", expect=None, files=None, places=False):
+def ask(m, deep=False, of=None, op="execute", expect=None, files=None, places=False, tolerance=None):
     input_ = {}
     if deep:
         input_["deep"] = True
@@ -1026,8 +1039,10 @@ def ask(m, deep=False, of=None, op="execute", expect=None, files=None, places=Fa
         input_["uid"] = of
     if places:
         input_["places"] = True
-    return step(op, input_, done(m.tree(deep, of, files, places)), expect or UNCHANGED, command="map.survey.query",
-                within=WITHIN)
+    if tolerance is not None:
+        input_["tolerance"] = tolerance
+    return step(op, input_, done(m.tree(deep, of, files, places, tolerance)), expect or UNCHANGED,
+                command="map.survey.query", within=WITHIN)
 
 
 def query_cases(base):

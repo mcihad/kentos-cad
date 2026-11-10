@@ -5,7 +5,7 @@
 //! it has one (docs/adr/2520, IERS Conventions 2010 §4.1), else along that campaign's velocity grid by the chain
 //! itself, and says how far it moved east, north and up. Then the coordinate chain takes it into the project. Its
 //! mark's accepted point, when it has one, is compared with it; a point the chain or the epoch cannot carry says why.
-//! Reads only: nothing is written.
+//! Docs/adr/4520: with the user's tolerance, each compared place is judged against it. Reads only: nothing is written.
 
 use kentos_commands::{KnownMoved, KnownMovedBy, MapSurvey, SurveyKnown, SurveyKnownPlace};
 use kentos_domain::Document;
@@ -41,6 +41,8 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
         dx: None,
         dy: None,
         dz: None,
+        horizontal: None,
+        beyond: None,
         why: None,
     };
     let given = (k.lat, k.lon, k.height);
@@ -90,12 +92,29 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
             row.chain = Some(p.chain);
             row.epoch = p.target.or(epoch);
             if let Some(pt) = point {
-                row.dx = Some(p.x - pt.result.x);
-                row.dy = Some(p.y - pt.result.y);
+                let (dx, dy) = (p.x - pt.result.x, p.y - pt.result.y);
+                row.dx = Some(dx);
+                row.dy = Some(dy);
                 row.dz = p.z.zip(pt.result.z).map(|(a, b)| a - b);
+                // docs/adr/4520: their horizontal distance.
+                row.horizontal = Some(dx.hypot(dy));
             }
         }
         Err(stop) => row.why = Some(stop.into_error().message),
     }
     row
+}
+
+/// Docs/adr/4520: each place against the user's `tolerance`: beyond when its horizontal distance from its mark's
+/// accepted point passes the horizontal limit or its height difference the vertical one; none when the tolerance has
+/// nothing of it to judge (no accepted point, no height, or only the other limit given).
+pub(crate) fn judged(places: &mut [SurveyKnownPlace], tolerance: &kentos_commands::SurveyPlaceTolerance) {
+    for p in places {
+        let horizontal = tolerance.horizontal.zip(p.horizontal).map(|(t, h)| h > t);
+        let vertical = tolerance.vertical.zip(p.dz).map(|(t, dz)| dz.abs() > t);
+        p.beyond = match (horizontal, vertical) {
+            (None, None) => None,
+            (a, b) => Some(a.unwrap_or(false) || b.unwrap_or(false)),
+        };
+    }
 }
