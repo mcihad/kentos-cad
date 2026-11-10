@@ -2,10 +2,11 @@
 //! A, a half disc about (20, 0) of radius 25 whose round edge is two quarter arcs meeting at (20, 25), and parcel B
 //! above it along the same arcs the other way. Topolojik düzenleme on, A selected, a right click on the grip at (20, 25)
 //! and Köşeyi sil: A's two arcs become one half circle (bulge 1) and B's the same, the other way (−1); the shared
-//! boundary stays one. `tools_screens` takes the pictures:
+//! boundary stays one. docs/adr/5000 §7: Köşe tablosu open on A, an arrow by each edge's middle the way the vertices
+//! run. `tools_screens` takes the pictures:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=yay-birlestir-menu,yay-birlestir-yazildi cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=yay-birlestir-menu,yay-birlestir-yazildi,kose-gidis-oku cargo test -p kentos-desktop --lib tools_screens::screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -115,5 +116,30 @@ fn removing_the_vertex_between_two_arcs_of_one_circle_leaves_one_arc() {
 }
 
 pub(crate) fn scenes() -> Vec<Scene> {
-    vec![("yay-birlestir-menu", menu), ("yay-birlestir-yazildi", removed)]
+    vec![("yay-birlestir-menu", menu), ("yay-birlestir-yazildi", removed), ("kose-gidis-oku", table_ways)]
+}
+
+/// docs/adr/5000 §7: Köşe tablosu open on A: an arrow at each edge's middle the way the vertices run.
+fn table_ways(app: &mut App) {
+    opened(app);
+    let _ = app.update(Message::Run("view.coords"));
+}
+
+/// docs/adr/5000 §7: A's four edges, each with its middle (the arcs' on the arc) and its way; none with the table shut.
+#[test]
+fn the_table_shows_the_way_the_vertices_run() {
+    let mut app = App::boot(None).0;
+    opened(&mut app);
+    assert!(app.vertex_ways().is_empty());
+    let _ = app.update(Message::Run("view.coords"));
+    let ways = app.vertex_ways();
+    assert_eq!(ways.len(), 4, "{ways:?}");
+    // The first edge (−5, 0) → (20, 0): its middle, east.
+    let (mid, dir, len) = ways[0];
+    assert!((mid.x - E - 7.5).abs() < 1e-9 && (mid.y - N).abs() < 1e-9 && (dir.x - 1.0).abs() < 1e-12 && len == 25.0);
+    // The arc (45, 0) → (20, 25) about (20, 0): its middle at 45° on the circle, the way north-west.
+    let (mid, dir, _) = ways[2];
+    let h = 25.0 / std::f64::consts::SQRT_2;
+    assert!((mid.x - E - 20.0 - h).abs() < 1e-9 && (mid.y - N - h).abs() < 1e-9, "{mid:?}");
+    assert!((dir.x + std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12 && (dir.y - std::f64::consts::FRAC_1_SQRT_2).abs() < 1e-12);
 }

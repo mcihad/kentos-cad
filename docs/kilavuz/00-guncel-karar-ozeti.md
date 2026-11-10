@@ -645,7 +645,8 @@
   `cad.entities.vertex`'in `joinArcs`'ı (uzunluk toleransı, yalnız Köşeyi sil): aynı yöne dönen, merkez ve yarıçapı
   tolerans içinde iki yay süpürmeleri toplanarak tek yay olur; olmazsa kenar düz, `arcs_not_joined` uyarısı. Aynı yayları
   paylaşan komşu Topolojik düzenlemeyle tek yayı alır (`Change::Join`). Masaüstünde tutamaç menüsü ve Köşe aracı
-  Topolojik temizlik'in toleransını verir. CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
+  Topolojik temizlik'in toleransını verir. Köşe tablosu açıkken nesnenin her kenarında köşelerin gidiş yönüne ok (yalnız
+  görünüm, §7). CAD (Harita + Yol) ve CBS'nin tipli katman düzenlemesi.
 - **Topoloji bulgusunun Öznitelikler'den işaretlenmesi (10 Kasım 2026; MAP-07, [ADR 4600](../../docs/adr/4600-topology-findings-marked-from-attributes.md)).**
   Öznitelikler › Topoloji: Gerekçe satırı ve bulgunun durumu açılır listede (`cad.topology.exceptions`); çoklu seçimde
   bulgular duruma göre sayılır. Komut değişmedi. Harita + CBS.

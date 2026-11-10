@@ -354,6 +354,39 @@ impl App {
         rows
     }
 
+    /// The way the shown object's vertices run, for the drawing's arrows (docs/adr/5000 §7): each edge's middle (an
+    /// arc's on the arc), its direction from its start vertex to its end and its chord; none while the panel does
+    /// not show the table.
+    pub(crate) fn vertex_ways(&self) -> Vec<(kentos_interaction::Vec2, kentos_interaction::Vec2, f64)> {
+        use kentos_geometry_core::geom::bulge::{bulge_at, segment_mid};
+        use kentos_interaction::Vec2;
+        if !self.command_expanded || self.bottom_tab != crate::bottom::BottomTab::Coords {
+            return Vec::new();
+        }
+        let (Some(target), Some(doc)) = (self.vertex_target(), &self.document) else {
+            return Vec::new();
+        };
+        let Some(e) = doc.model.get(target.slot) else {
+            return Vec::new();
+        };
+        let mut out = Vec::new();
+        for path in kentos_native_application::elevation::paths(e) {
+            let n = path.pts.len();
+            let edges = if path.closed { n } else { n.saturating_sub(1) };
+            for k in 0..edges {
+                let (a, b) = (path.pts[k], path.pts[(k + 1) % n]);
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let len = dx.hypot(dy);
+                if !(len > 0.0) {
+                    continue;
+                }
+                let mid = segment_mid(a, b, bulge_at(path.bulges.as_deref(), k));
+                out.push((mid, Vec2::new(dx / len, dy / len), len));
+            }
+        }
+        out
+    }
+
     /// The vertices the table's selected rows name, to ring in the drawing:
     /// none while the panel does not show the table.
     pub(crate) fn vertex_marks(&self) -> Vec<kentos_interaction::Vec2> {
