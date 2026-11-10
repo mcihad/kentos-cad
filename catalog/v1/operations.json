@@ -149,6 +149,13 @@
       ],
       "note": "Pencere iki bulutu cad.pointclouds.overlap ile karşılaştırır (salt okunur); CSV kaydet en kötü hücreleri ve kontrol noktalarını yazar (ADR 1500)."
     },
+    "pointcloud.network": {
+      "level": "query",
+      "via": [
+        "cad.pointclouds.network"
+      ],
+      "note": "Pencere üç ve daha çok taramayı cad.pointclouds.network ile birlikte kaydeder (salt okunur): bağlar Tarama kaydı gibi kaydedilir ve normal matrisleriyle ağırlıklanır, sabit olmayan taramaların düzeltmeleri birlikte dengelenir (ADR 4720). Dönüşüm uygula seçilen taramayı matrisiyle taşır."
+    },
     "pointcloud.register": {
       "level": "query",
       "via": [
@@ -169,6 +176,13 @@
         "cad.orthophoto.compare"
       ],
       "note": "Pencere iki rasteri cad.orthophoto.compare ile karşılaştırır (salt okunur); CSV kaydet noktaların kaymalarını yazar (ADR 1780)."
+    },
+    "raster.seamlines": {
+      "level": "semantic",
+      "via": [
+        "cad.orthophoto.seamlines"
+      ],
+      "note": "Pencere iki ortofotonun birleşme çizgisini ve mozaik elemanlarını cad.orthophoto.seamlines'ın planıyla gösterir, Mozaik elemanlarını çiz komutun execute'uyla tek geri alma adımında yazar (ADR 4700)."
     },
     "readjustment.distribute": {
       "level": "query",
@@ -2217,6 +2231,13 @@
         "cad.beams.create"
       ],
       "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 8041 §1)."
+    },
+    "tool.roof": {
+      "level": "semantic",
+      "via": [
+        "cad.roofs.create"
+      ],
+      "note": "Saçağın köşeleri ve her kenarın eğimi (kalkan: yok), kot farkı, kalınlık, saçak, kaplama ve kat komuta verilir. Binadan'da saçağı aracın kendisi bulur: duvarların dış yüzü (Döşeme'nin Dış yüzler'i), saçak kadar dışarıda; eğimleri türe ve ön kenara göre verir. Yüzler, mahya, kırma ve kotlar komutun ve çizimin hesabıdır (ADR 8044 §1, §2, §4)."
     },
     "tool.casework": {
       "level": "semantic",

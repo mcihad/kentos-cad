@@ -52,7 +52,7 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 pub(crate) fn asked(a: &OrthoSeamAsk) -> Result<(), Stop> {
     let bad = |m: &str, path: &str| Err(fail(codes::INVALID_INPUT, m.to_owned(), path));
     if !(a.step.is_finite() && a.step > 0.0) {
-        return bad("Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).", "seam.step");
+        return bad("Kayıklık ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).", "seam.step");
     }
     if a.window % 2 == 0 || !(5..=255).contains(&a.window) {
         return bad("Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.", "seam.window");
@@ -68,20 +68,20 @@ pub(crate) fn asked(a: &OrthoSeamAsk) -> Result<(), Stop> {
     // docs/adr/4460: a drawn line or the seamline polygons, not both; two polygons.
     if a.line.is_some() && a.polygons.is_some() {
         return bad(
-            "Dikişi ya çizilmiş bir hatla (line) ya da iki dikiş çokgeniyle (polygons) verin; ikisi birden olmaz.",
+            "Ölçüyü ya çizilmiş bir birleşme çizgisi (line) ya da iki mozaik elemanı (polygons) boyunca isteyin; ikisi birden olmaz.",
             "seam.polygons",
         );
     }
     if let Some([p, q]) = &a.polygons
         && p.trim() == q.trim()
     {
-        return bad("İki dikiş çokgeni aynı nesne; iki görüntünün ayrı dikiş çokgenlerini verin.", "seam.polygons");
+        return bad("İki mozaik elemanı aynı nesne; iki görüntünün ayrı mozaik elemanlarını verin.", "seam.polygons");
     }
     Ok(())
 }
 
 /// A raster's pixels opened: its library bytes or its file, found from `folder` when relative.
-fn opened(doc: &Document, r: &RasterEntity, folder: Option<&str>, path: &str) -> Result<Opened, Stop> {
+pub(crate) fn opened(doc: &Document, r: &RasterEntity, folder: Option<&str>, path: &str) -> Result<Opened, Stop> {
     let bytes = if let Some(id) = &r.raster.asset {
         let Some(b) = crate::rasters_georef::asset_bytes(doc, id) else {
             return Err(fail(codes::FILE_NOT_FOUND, format!("Ortofotonun görüntüsü “{id}” projenin kitaplığında yok."), path));
@@ -127,7 +127,7 @@ fn ncc(a: &[f64], b: &[f64]) -> Option<f64> {
 }
 
 /// Keys' cubic convolution kernel with a = −1/2 (docs/adr/3260).
-fn keys(t: f64) -> f64 {
+pub(crate) fn keys(t: f64) -> f64 {
     let t = t.abs();
     if t <= 1.0 {
         (1.5 * t - 2.5) * t * t + 1.0
@@ -200,7 +200,7 @@ fn seam_line(doc: &Document, uid: &str) -> Result<(Vec<[f64; 2]>, Vec<f64>), Sto
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
-        .ok_or_else(|| bad(format!("“{uid}” kimlikli dikiş hattı çizimde yok.")))?;
+        .ok_or_else(|| bad(format!("“{uid}” kimlikli birleşme çizgisi çizimde yok.")))?;
     Ok(match e {
         Entity::Line(l) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], vec![0.0]),
         Entity::Polyline(p) => {
@@ -212,7 +212,7 @@ fn seam_line(doc: &Document, uid: &str) -> Result<(Vec<[f64; 2]>, Vec<f64>), Sto
             }
             (pts, bulges)
         }
-        _ => return Err(bad("Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.".into())),
+        _ => return Err(bad("Birleşme çizgisi bir çizgi ya da çoklu çizgi olmalı.".into())),
     })
 }
 
@@ -275,7 +275,7 @@ pub(crate) fn measure(
     if !alike && !a.resample {
         return Err(fail(
             codes::INVALID_INPUT,
-            "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.".into(),
+            "Kayıklık ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini birincinin ızgarasına yeniden örneklemek için resample verin.".into(),
             "seam",
         ));
     }
@@ -397,7 +397,7 @@ pub(crate) fn measure(
             if places.is_empty() {
                 return Err(fail(
                     codes::INVALID_INPUT,
-                    "Dikiş çokgenlerinin ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); örtüşmede buluşan dikiş çokgenlerini verin ya da adımı küçültün.".into(),
+                    "Mozaik elemanlarının ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); örtüşmede buluşan mozaik elemanlarını verin ya da adımı küçültün.".into(),
                     "seam.polygons",
                 ));
             }
@@ -409,7 +409,7 @@ pub(crate) fn measure(
             let (pts, bulges) = seam_line(doc, uid)?;
             let length = line_length(&pts, &bulges);
             if !(length > 0.0) {
-                return Err(fail(codes::INVALID_INPUT, "Dikiş hattının uzunluğu yok.".into(), "seam.line"));
+                return Err(fail(codes::INVALID_INPUT, "Birleşme çizgisinin uzunluğu yok.".into(), "seam.line"));
             }
             let (mut total, mut outside) = (0u32, 0u32);
             let mut k = 0u64;
@@ -430,7 +430,7 @@ pub(crate) fn measure(
             if places.is_empty() {
                 return Err(fail(
                     codes::INVALID_INPUT,
-                    "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı örtüşmeden geçirin ya da adımı küçültün.".into(),
+                    "Birleşme çizgisinin hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); çizgiyi örtüşmeden geçirin ya da adımı küçültün.".into(),
                     "seam.line",
                 ));
             }

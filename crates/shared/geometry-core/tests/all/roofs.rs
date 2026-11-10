@@ -48,6 +48,7 @@ fn every_roof_case_matches_the_reference() {
                 .map(Value::as_f64)
                 .collect(),
             base: 0.0,
+            overhead: false,
         };
         let want = &c["expect"];
         let got = faces(&pts, &spec).unwrap();

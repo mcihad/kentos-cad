@@ -100,9 +100,11 @@ mod survey_baseline_marks;
 mod impact_window;
 mod readjustment_window;
 mod ortho_compare_window;
+mod ortho_seamlines_window;
 mod ortho_window;
 mod overlap_window;
 mod register_window;
+mod scan_network_window;
 mod sheet_contours_window;
 mod stockpile_window;
 mod xrefs_review_view;
@@ -449,6 +451,8 @@ mod brand_tests;
 #[cfg(test)]
 mod ortho_compare_window_tests;
 #[cfg(test)]
+mod ortho_seamlines_window_tests;
+#[cfg(test)]
 mod ortho_seam_polygons_tests;
 #[cfg(test)]
 mod reproject_window_tests;
@@ -462,6 +466,8 @@ mod ortho_window_tests;
 mod overlap_window_tests;
 #[cfg(test)]
 mod register_window_tests;
+#[cfg(test)]
+mod scan_network_window_tests;
 #[cfg(test)]
 mod sheet_contours_window_tests;
 #[cfg(test)]

@@ -2,7 +2,7 @@
 //! `cad.orthophoto.compare`: with nothing selected the drawing's two rasters in order, the layers guessed (GNSS, each
 //! image's reading layer by the year in its file's name); the answer is the shared case's with the ground's points and
 //! without, and Yer değiştir turns the shifts over as the case does; a selected raster comes first; one raster in the
-//! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Dikiş ölçümü gives the shared seam case's
+//! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Kayıklık ölçümü gives the shared seam case's
 //! places (docs/adr/2460). And its pictures.
 
 use kentos_domain::Slot;
@@ -182,7 +182,7 @@ pub(crate) fn with_fixtures(setup: &Value) -> Value {
     serde_json::from_str(&text).expect("the setup")
 }
 
-/// docs/adr/2460: on the seam cases' two synthetic images, Dikiş ölçümü with the case's step, window, search and least
+/// docs/adr/2460: on the seam cases' two synthetic images, Kayıklık ölçümü with the case's step, window, search and least
 /// correlation gives the case's places, counts and shift; its table is the seam's; nothing written.
 #[test]
 fn dikis_olcumu_gives_the_shared_case_s_places() {
@@ -238,7 +238,7 @@ fn seam_screens() {
 }
 
 /// docs/adr/2860: the seam line chosen in the drawing (Seçili çizgiyi al) gives the shared case's places along it, the
-/// distance along the line in the table; with nothing chosen it is said and the grid stays; Hattı kaldır goes back to
+/// distance along the line in the table; with nothing chosen it is said and the grid stays; Çizgiyi kaldır goes back to
 /// the overlap's grid.
 #[test]
 fn the_seam_is_measured_along_the_chosen_line() {
@@ -311,7 +311,7 @@ fn piksel_alti_cift_kubik_gives_the_shared_case_s_places() {
     }
     let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");
     close(&got["seam"], &c["steps"][0]["result"]["output"]["seam"], "seam");
-    let note = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).find(|n| n.starts_with("Dikiş ölçümü")).unwrap_or("");
+    let note = got["notes"].as_array().expect("notes").iter().filter_map(Value::as_str).find(|n| n.starts_with("Kayıklık ölçümü")).unwrap_or("");
     assert!(note.contains("görüntünün çift kübik ara değeriyle"), "{note}");
     let _ = app.update(Message::OrthoCompare(C::Refine(Refine::Parabola)));
     let got = serde_json::to_value(app.ortho_compare.answer.clone().expect("an answer").expect("compared")).expect("json");

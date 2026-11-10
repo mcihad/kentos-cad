@@ -37,6 +37,8 @@ pub enum Kind {
     /// A beam (docs/adr/8041 §1): EK-2 Tablo 2.3 has no Kiriş; it is a Taşıyıcı (TASI), its type KIRIS. A lintel and a
     /// bond beam (docs/adr/8041 §3) are EK-2's own: Lento (LENT), Hatıl (HATL).
     Beam(kentos_commands::BeamRole),
+    /// A roof (docs/adr/8044 §1), by its covering (Kiremit): EK-2 Tablo 2.3's Çatı (CATI).
+    Roof(Option<String>),
     Grid,
     /// Kitchen units (Mutfak).
     Casework,
@@ -71,6 +73,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Beam) => "TASI",
             Kind::Beam(kentos_commands::BeamRole::Lintel) => "LENT",
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "HATL",
+            Kind::Roof(_) => "CATI",
             Kind::Grid => "AKSS",
             Kind::Casework | Kind::Furniture(_) => "TEFR",
             Kind::Space
@@ -87,7 +90,9 @@ impl Kind {
     pub fn detail(&self) -> String {
         let word = |w: &str| w.to_owned();
         match self {
-            Kind::Wall(m) | Kind::Slab(m) | Kind::Furniture(m) => m.clone().unwrap_or_default(),
+            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) => {
+                m.clone().unwrap_or_default()
+            }
             Kind::Void => word("BOSLUK"),
             Kind::Niche => word("NIS"),
             Kind::Casework => word("MUTFAK"),
@@ -146,6 +151,7 @@ impl Kind {
             Kind::Stair => "Merdiven",
             Kind::Ramp => "Rampa",
             Kind::Beam(role) => role.label(),
+            Kind::Roof(_) => "Çatı",
             Kind::Grid => "Aks",
             Kind::Casework => "Mutfak",
             Kind::Furniture(_) => "Donatı",
@@ -174,6 +180,7 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Beam) => "kiriş",
             Kind::Beam(kentos_commands::BeamRole::Lintel) => "lento",
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "hatıl",
+            Kind::Roof(_) => "çatı",
             Kind::Grid => "aks",
             Kind::Casework => "mutfak dolabı",
             Kind::Furniture(_) => "donatı",
@@ -195,7 +202,7 @@ impl Kind {
         };
         match self {
             Kind::Wall(_) | Kind::Column => look("ink", 0.5),
-            Kind::Slab(_) => look("ink", 0.35),
+            Kind::Slab(_) | Kind::Roof(_) => look("ink", 0.35),
             Kind::Door
             | Kind::Window
             | Kind::Void
@@ -398,6 +405,8 @@ mod tests {
             Kind::Beam(kentos_commands::BeamRole::Beam),
             Kind::Beam(kentos_commands::BeamRole::Lintel),
             Kind::Beam(kentos_commands::BeamRole::BondBeam),
+            Kind::Roof(Some("Kiremit".into())),
+            Kind::Roof(None),
         ];
         let names: Vec<String> = kinds.iter().map(Kind::layer_name).collect();
         for n in &names {
@@ -416,6 +425,8 @@ mod tests {
         assert_eq!(names[20], "MM-TASI-KIRIS");
         // A lintel and a bond beam (docs/adr/8041 §3): EK-2's own elements.
         assert_eq!((names[21].as_str(), names[22].as_str()), ("MM-LENT-GENEL", "MM-HATL-GENEL"));
+        // A roof (docs/adr/8044 §1): EK-2's Çatı, by its covering.
+        assert_eq!((names[23].as_str(), names[24].as_str()), ("MM-CATI-KIREMIT", "MM-CATI-GENEL"));
         assert_eq!(Kind::Wall(Some("Tuğla".into())).layer_id(), "mm-duva-tugla");
     }
 

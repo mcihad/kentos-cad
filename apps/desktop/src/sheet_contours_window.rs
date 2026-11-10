@@ -5,11 +5,13 @@
 //! Şevler (ğ, docs/adr/3120): a tick and the layers of the slopes' tops and bottoms (guessed from their names, left
 //! out of the details), whose lines' corners take spot heights. Seçilen noktalar (ğ, docs/adr/3520): a tick and the
 //! layer of the points the surveyor chose (guessed from its name: seçilen, karakteristik, kot noktası), each taking its
-//! own height or the surface's.
+//! own height or the surface's; their own heights against the surface's by m. 93(1)(c)'s limit (docs/adr/4740), said
+//! in the summary. Yerleşik alan (m. 63(2), docs/adr/4740): a tick and the layers of the built-up areas and of the
+//! roads' lines (guessed from their names), heights about every 2 cm on the sheet.
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
+use kentos_commands::{CommandResult, SheetBuiltUp, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrains_sheet};
 use kentos_ui::label;
@@ -51,6 +53,11 @@ pub struct State {
     /// The surveyor's chosen points (ğ, docs/adr/3520): ticked, and their layer ("" none).
     pub chosen: bool,
     pub chosen_layer: String,
+    /// The heights of built-up areas and roads (m. 63(2), docs/adr/4740): ticked, and the layers of the areas' bounds and
+    /// of the roads' lines ("" none).
+    pub built: bool,
+    pub built_area: String,
+    pub built_road: String,
     pub answer: Option<Result<TerrainsSheetContoured, String>>,
 }
 
@@ -70,6 +77,9 @@ pub enum Event {
     SlopeBottom(String),
     Chosen(bool),
     ChosenLayer(String),
+    Built(bool),
+    BuiltArea(String),
+    BuiltRoad(String),
     Draw,
     Close,
 }
@@ -99,6 +109,11 @@ impl State {
                 bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
             }),
             points: if self.chosen && !self.chosen_layer.is_empty() { vec![self.chosen_layer.clone()] } else { Vec::new() },
+            built_up: self.built.then(|| SheetBuiltUp {
+                areas: [&self.built_area].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                roads: [&self.built_road].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                every: None,
+            }),
             ..Default::default()
         })
     }
@@ -169,9 +184,12 @@ impl App {
         };
         let (slope_top, slope_bottom) = (slope(&["üst", "ust"]), slope(&["dip", "dib", "alt", "taban"]));
         let chosen_layer = named(&["seçilen", "secilen", "karakteristik", "kot noktası", "kot noktasi"]).into_iter().next().unwrap_or_default();
+        // Docs/adr/4740 (m. 63(2)): the built-up areas' and the roads' centre lines' layers.
+        let built_area = named(&["yerleşik", "yerlesik", "yerleşim", "yerlesim", "iskân", "iskan"]).into_iter().next().unwrap_or_default();
+        let built_road = named(&["yol ekseni", "yol-ekseni", "eksen", "aks"]).into_iter().next().unwrap_or_default();
         let details: Vec<String> = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"])
             .into_iter()
-            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer)
+            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer && *d != built_area && *d != built_road)
             .collect();
         self.sheet_contours = State {
             surfaces,
@@ -190,6 +208,9 @@ impl App {
             slope_bottom,
             chosen: false,
             chosen_layer,
+            built: false,
+            built_area,
+            built_road,
             answer: None,
         };
         self.sheet_contours_run();
@@ -209,7 +230,7 @@ impl App {
             self.say(
                 Level::Success,
                 format!(
-                    "{TITLE}: {} eğri, {} kot yazısı ve {} karakteristik nokta kotu çizildi.",
+                    "{TITLE}: {} eğri, {} eğri kotu ve {} nokta kotu çizildi; çizim yüzeyine ve okuduğu katmanlara bağlı tutulur.",
                     out.lines.len(),
                     out.labels.len(),
                     out.spots.len()
@@ -242,6 +263,9 @@ impl App {
             Event::SlopeBottom(v) => s.slope_bottom = v,
             Event::Chosen(v) => s.chosen = v,
             Event::ChosenLayer(v) => s.chosen_layer = v,
+            Event::Built(v) => s.built = v,
+            Event::BuiltArea(v) => s.built_area = v,
+            Event::BuiltRoad(v) => s.built_road = v,
             Event::Draw => {
                 self.sheet_contours_draw();
                 return Task::none();
@@ -263,7 +287,11 @@ impl App {
             .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
         let mut ticks = row![].spacing(14).align_y(Center);
         for (id, name) in &s.layers {
-            if *id == s.layer || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom)) || (s.chosen && *id == s.chosen_layer) {
+            if *id == s.layer
+                || (s.slopes && (*id == s.slope_top || *id == s.slope_bottom))
+                || (s.chosen && *id == s.chosen_layer)
+                || (s.built && (*id == s.built_area || *id == s.built_road))
+            {
                 continue;
             }
             let on = s.details.contains(id);
@@ -303,7 +331,8 @@ impl App {
                 .spacing(14)
                 .align_y(Center),
             )
-            .field("Kesmeyeceği (g)", ticks)
+            // Many layers wrap onto further lines rather than run out of the window.
+            .field("Kesmeyeceği (g)", ticks.wrap().vertical_spacing(6))
             .field("Şevler (ğ)", {
                 let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
                 choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
@@ -326,6 +355,20 @@ impl App {
                     label::caption("Katman"),
                     container(fields::select_owned(choices, &s.chosen_layer, |v| msg(Event::ChosenLayer(v)))).width(190),
                     label::caption("Kendi kotu varsa o, yoksa yüzeyden")
+                ]
+                .spacing(10)
+                .align_y(Center)
+            })
+            // docs/adr/4740: m. 63(2)'s heights in built-up areas and along roads, about every 2 cm on the sheet.
+            .field("Yerleşik alan (63/2)", {
+                let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
+                choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
+                row![
+                    words::check(s.built, "2 cm'de bir kot", Some(msg(Event::Built(!s.built)))),
+                    label::caption("Alan"),
+                    container(fields::select_owned(choices.clone(), &s.built_area, |v| msg(Event::BuiltArea(v)))).width(190),
+                    label::caption("Yol"),
+                    container(fields::select_owned(choices, &s.built_road, |v| msg(Event::BuiltRoad(v)))).width(190)
                 ]
                 .spacing(10)
                 .align_y(Center)
@@ -357,6 +400,26 @@ impl App {
                             self.format().coord(sp.x),
                             self.format().coord(sp.y)
                         ),
+                    ));
+                }
+                // Docs/adr/4740: the chosen points' heights against the surface, by m. 93(1)(c)'s limit.
+                if let Some(c) = &r.check {
+                    lines.push(words::text_line(
+                        if c.within { Kind::Ok } else { Kind::Warn },
+                        format!(
+                            "Ölçülen kot − yüzey: {} noktada KOH {}, m. 93(1)(c) sınırı {}: {}.",
+                            c.compared,
+                            self.format().length(c.rms),
+                            self.format().length(c.limit),
+                            if c.within { "altında" } else { "aşıyor" }
+                        ),
+                    ));
+                }
+                let built = |k: &str| r.spots.iter().filter(|sp| sp.kind == k).count();
+                if built("road") + built("builtUp") > 0 {
+                    lines.push(words::text_line(
+                        Kind::Ok,
+                        format!("m. 63(2): yolda {}, yerleşik alanda {} kot.", built("road"), built("builtUp")),
                     ));
                 }
                 for n in r.notes.iter().skip(1) {

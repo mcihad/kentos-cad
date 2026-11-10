@@ -13,7 +13,7 @@
 use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 31] = [
+pub const KINDS: [&str; 32] = [
     "point",
     "line",
     "polyline",
@@ -41,6 +41,7 @@ pub const KINDS: [&str; 31] = [
     "grid",
     "column",
     "beam",
+    "roof",
     "stair",
     "ramp",
     "tag",
@@ -78,6 +79,11 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "events_dirty",
     // Every write that changes or removes a kitchen run's object apart from its run (docs/adr/0727 §5).
     "casework_owned",
+    // Every write that leaves a project's drawings stale while it draws them again by itself (docs/adr/0911 §3,
+    // docs/adr/4740): what was drawn again, left as changed by hand, or could not be drawn.
+    "drawings_rebuilt",
+    "drawing_edited",
+    "drawing_not_rebuilt",
 ];
 
 /// The revision's two, every writing command's.
@@ -1669,7 +1675,7 @@ const ENTRIES: &[Entry] = &[
             REVISION,
             &["unknown_terrain", "terrain_unbuildable", "no_contours"],
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "section_check_exceeded"],
         targets: none,
     },
     Entry {
@@ -2510,6 +2516,13 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
+    // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720); the registration's own refusals and warnings.
+    Entry {
+        id: "cad.pointclouds.network",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.pointclouds.register",
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],
@@ -2528,6 +2541,14 @@ const ENTRIES: &[Entry] = &[
         id: "cad.orthophoto.compare",
         // The seam's image file (docs/adr/2460): file_not_found.
         refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input", "file_not_found"]],
+        warnings: &[],
+        targets: none,
+    },
+    // Mozaik birleşme çizgisi (plan/map-cad.md MAP-12, docs/adr/4700).
+    Entry {
+        id: "cad.orthophoto.seamlines",
+        // The radiometric seam's image files: invalid_file_path, file_not_found, import_unreadable.
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
         warnings: &[],
         targets: none,
     },
@@ -3853,8 +3874,8 @@ const ENTRIES: &[Entry] = &[
             vec![target(
                 None,
                 &[
-                    "wall", "space", "grid", "column", "beam", "stair", "ramp", "slab", "polyline",
-                    "insert",
+                    "wall", "space", "grid", "column", "beam", "roof", "stair", "ramp", "slab",
+                    "polyline", "insert",
                 ],
                 &[],
                 Some("not_levelled"),
@@ -4081,6 +4102,23 @@ const ENTRIES: &[Entry] = &[
                 "no_objects",
                 "not_finite",
                 "invalid_beam",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.roofs.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_roof",
                 "level_not_found",
                 "invalid_line_weight",
             ],
@@ -7002,6 +7040,7 @@ const ENTRIES: &[Entry] = &[
                         "grid",
                         "column",
                         "beam",
+                        "roof",
                         "stair",
                         "ramp",
                         "slab",
@@ -7013,7 +7052,7 @@ const ENTRIES: &[Entry] = &[
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, kirişin, merdivenin ve rampanın çevresi, çatının saçak çizgisi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

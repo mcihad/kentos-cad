@@ -1027,6 +1027,7 @@ fn finite(e: &Entity) -> bool {
             }
             Entity::Ramp(e) => ps(&e.ramp.pts) && fs(&[e.ramp.width, e.ramp.rise]),
             Entity::Beam(e) => ps(&e.beam.pts) && fs(&[e.beam.width, e.beam.height, e.beam.offset]),
+            Entity::Roof(e) => ps(&e.roof.pts) && e.roof.slopes.iter().flatten().all(|s| s.is_finite()) && fs(&[e.roof.offset]),
             Entity::Tag(e) => p(&e.tag.at),
             Entity::ViewMark(e) => ps(&e.mark.points),
             Entity::Nurbs(e) => {

@@ -1,4 +1,4 @@
-//! A road drawing drawn again writing only what changed (`road.project.rebuild`'s `regional`, docs/adr/4320;
+//! A road drawing drawn again writing only what changed (`road.project.rebuild`'s `regional`, docs/adr/4320 and 4740;
 //! plan/map-cad.md MAP-14: a source changed, only the part it reaches is made again).
 //!
 //! The surface is not kept but made from its sources (docs/adr/0900 §10); what the drawing keeps are the objects drawn
@@ -6,13 +6,18 @@
 //!
 //! - **Alike:** the same objects in the same order, none missing: nothing is written; the record takes its sources'
 //!   stamps now and keeps the version and revision of the write that made its objects.
-//! - **A line drawing** (every object old and new a line or a polyline without a label, all of one colour and one
-//!   transparency): strokes of one colour drawn over each other cover the same pixels whichever comes first, so the
-//!   drawing order does not change the picture. Each new line takes an old one alike that is not taken yet (exact
-//!   coordinates); those stay where they are with their ids, the old ones left are removed, the new ones left are
-//!   written. `region` is the box of what was removed and written.
-//! - **Any other drawing that changed** (a fill, a text, a mask or two colours, whose drawing order is part of the
-//!   picture): drawn whole, so its objects keep the command's order.
+//! - **Changed:** in the command's order each new object takes the first old one exactly alike not taken yet and stays
+//!   where that is, with its id, unless the picture could change (docs/adr/4740): an object before it in the order is
+//!   written (written objects go to the drawing's end, so they come after it) or stays from a later place, and the two
+//!   could draw another picture in the other order. Only strokes draw the same picture in any order: lines and
+//!   polylines without a label, of one colour and one transparency, cover the same pixels whichever comes first. A text
+//!   and its mask, a point's symbol, a fill keep their order. Such an object is written, and the old one alike stays
+//!   free for a later new one. The old objects left are removed, the new ones left written at the drawing's end in its
+//!   order. `region` is the box of what was removed and written (a text by its insertion point: its box is its font's).
+//!
+//! A line drawing (docs/adr/4320) is the case where every object is a stroke of one look: every line alike stays. A
+//! sheet's contour lines (docs/adr/4740): the lines alike stay; once a line is written, the heights written after it
+//! (masked texts) are written again too, so that their masks stay over the lines.
 //!
 //! The comparison reads an object's JSON without its number in the document; an object of the drawing that names
 //! another of the drawing (a label's object) names it by its index in the drawing, so two drawings made alike compare
@@ -55,26 +60,80 @@ fn content(e: &Entity, own: &HashMap<&str, usize>) -> String {
     v.to_string()
 }
 
-/// Whether the drawing order of `objects` cannot change their picture (docs/adr/4320 §2): lines and polylines without a
-/// label, all of one colour and one transparency.
-fn order_free<'a>(mut objects: impl Iterator<Item = &'a Entity>) -> bool {
-    let Some(first) = objects.next() else { return true };
-    let look = |e: &Entity| (e.base().color.clone(), e.base().look.transparency.map(f64::to_bits));
-    let stroke = |e: &Entity| matches!(e, Entity::Line(_) | Entity::Polyline(_)) && e.base().label.is_none();
-    let want = look(first);
-    stroke(first) && objects.all(|e| stroke(e) && look(e) == want)
+/// How an object may change place in the drawing order (docs/adr/4740): a line or a polyline without a label is a
+/// stroke of its colour and transparency; anything else keeps its place against what it may overlap.
+#[derive(Clone, Debug, PartialEq)]
+enum Look {
+    Stroke(Option<String>, Option<u64>),
+    Ordered,
 }
 
-/// The box (min x, min y, max x, max y) of `objects`; none when there are none.
+fn look(e: &Entity) -> Look {
+    if matches!(e, Entity::Line(_) | Entity::Polyline(_)) && e.base().label.is_none() {
+        Look::Stroke(e.base().color.clone(), e.base().look.transparency.map(f64::to_bits))
+    } else {
+        Look::Ordered
+    }
+}
+
+/// Whether two objects draw the same picture in either order: strokes of one look.
+fn free(a: &Look, b: &Look) -> bool {
+    matches!(a, Look::Stroke(..)) && a == b
+}
+
+/// Which new objects stay where an old one alike is (the module's rule): in the command's order a new object takes the
+/// first old one alike not taken yet, unless an object before it is written, or stays from a later place, and the two
+/// are not free in their order; then it is written and the old one stays free for a later one alike.
+fn staying(old: &[String], new: &[String], looks: &[Look]) -> Vec<Option<usize>> {
+    let mut alike: HashMap<&str, VecDeque<usize>> = HashMap::new();
+    for (i, c) in old.iter().enumerate() {
+        alike.entry(c.as_str()).or_default().push_back(i);
+    }
+    // The looks written so far, and each look kept so far with the latest old place one stays at.
+    let mut written: Vec<&Look> = Vec::new();
+    let mut kept: Vec<(&Look, usize)> = Vec::new();
+    let mut stays = vec![None; new.len()];
+    for (j, c) in new.iter().enumerate() {
+        let l = &looks[j];
+        let candidate = alike.get_mut(c.as_str()).and_then(VecDeque::pop_front);
+        let blocked = |i: usize| written.iter().any(|w| !free(w, l)) || kept.iter().any(|(k, m)| *m > i && !free(k, l));
+        match candidate {
+            Some(i) if !blocked(i) => {
+                stays[j] = Some(i);
+                match kept.iter_mut().find(|(k, _)| *k == l) {
+                    Some((_, m)) => *m = (*m).max(i),
+                    None => kept.push((l, i)),
+                }
+            }
+            other => {
+                if let (Some(i), Some(queue)) = (other, alike.get_mut(c.as_str())) {
+                    queue.push_front(i);
+                }
+                if !written.contains(&l) {
+                    written.push(l);
+                }
+            }
+        }
+    }
+    stays
+}
+
+/// The box (min x, min y, max x, max y) of `objects`, a text by its insertion point; none when there are none.
 fn region<'a>(objects: impl Iterator<Item = &'a Entity>) -> Option<[f64; 4]> {
     objects.fold(None, |acc, e| {
-        let b = entity_bounds(&crate::geometry::shape(e));
-        if !(b.min_x.is_finite() && b.min_y.is_finite() && b.max_x.is_finite() && b.max_y.is_finite()) {
+        let [x0, y0, x1, y1] = match e {
+            Entity::Text(t) => [t.p.x, t.p.y, t.p.x, t.p.y],
+            _ => {
+                let b = entity_bounds(&crate::geometry::shape(e));
+                [b.min_x, b.min_y, b.max_x, b.max_y]
+            }
+        };
+        if !(x0.is_finite() && y0.is_finite() && x1.is_finite() && y1.is_finite()) {
             return acc;
         }
         Some(match acc {
-            None => [b.min_x, b.min_y, b.max_x, b.max_y],
-            Some([x0, y0, x1, y1]) => [x0.min(b.min_x), y0.min(b.min_y), x1.max(b.max_x), y1.max(b.max_y)],
+            None => [x0, y0, x1, y1],
+            Some([a0, b0, a1, b1]) => [a0.min(x0), b0.min(y0), a1.max(x1), b1.max(y1)],
         })
     })
 }
@@ -149,24 +208,15 @@ pub(crate) fn redraw_regional(
         return Ok((rebuilt(0, kept, None, d.uids.clone()), warnings));
     }
 
-    // Which objects stay: in a line drawing each new line takes the first old one alike not taken; otherwise none.
-    let mut stays: Vec<Option<usize>> = vec![None; new.len()];
-    let lines = order_free(old.iter().copied().chain(new.iter().copied()));
-    if lines {
-        let mut alike: HashMap<&str, VecDeque<usize>> = HashMap::new();
-        for (i, c) in old_c.iter().enumerate() {
-            alike.entry(c.as_str()).or_default().push_back(i);
-        }
-        for (j, c) in new_c.iter().enumerate() {
-            stays[j] = alike.get_mut(c.as_str()).and_then(VecDeque::pop_front);
-        }
-    }
+    // Which objects stay (the module's rule).
+    let looks: Vec<Look> = new.iter().map(|e| look(e)).collect();
+    let stays = staying(&old_c, &new_c, &looks);
     let mut taken = vec![false; old.len()];
     stays.iter().flatten().for_each(|&i| taken[i] = true);
     let gone: Vec<Slot> = (0..old.len()).filter(|&i| !taken[i]).map(|i| slots[i]).collect();
     let written: Vec<(Uuid, Entity)> =
         (0..new.len()).filter(|&j| stays[j].is_none()).map(|j| (new_slots[j].0, new[j].clone())).collect();
-    let changed = lines.then(|| region(gone.iter().filter_map(|s| cx.doc.get(*s)).chain(written.iter().map(|(_, e)| e))));
+    let changed = region(gone.iter().filter_map(|s| cx.doc.get(*s)).chain(written.iter().map(|(_, e)| e)));
     let removed = gone.len();
     let kept = new.len() - written.len();
     let uids: Vec<String> = (0..new.len())
@@ -181,7 +231,7 @@ pub(crate) fn redraw_regional(
             .map_err(|e| refused_with(Stop::failed(error(codes::ROAD_DRAWINGS_FULL, format!("Çizim yazılamadı: {}.", e.0), None))))?;
     }
     road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id)).map_err(refused_with)?;
-    Ok((rebuilt(removed, kept, changed.flatten(), uids), warnings))
+    Ok((rebuilt(removed, kept, changed, uids), warnings))
 }
 
 #[cfg(test)]
@@ -249,29 +299,57 @@ mod tests {
         assert!(w.uids.iter().all(|u| !before.contains(u)), "drawn whole, every line is new");
     }
 
-    /// One colour and one transparency, lines and polylines without a label: order free; a second colour, a label or an
-    /// area is not.
+    /// One colour and one transparency, lines and polylines without a label: free in their order; a second colour, a
+    /// label or a point is not.
     #[test]
-    fn only_strokes_of_one_look_are_order_free() {
+    fn only_strokes_of_one_look_are_free_in_their_order() {
         let doc = stale();
         let lines: Vec<Entity> = doc.road_drawings()[0]
             .uids
             .iter()
             .filter_map(|u| doc.slot_of(Uuid::parse_str(u).ok()?).and_then(|s| doc.get(s)).cloned())
             .collect();
-        assert!(order_free(lines.iter()));
-        let mut red = lines.clone();
-        if let Entity::Polyline(p) = &mut red[0] {
+        let (a, b) = (look(&lines[0]), look(&lines[1]));
+        assert!(free(&a, &b));
+        let mut red = lines[0].clone();
+        if let Entity::Polyline(p) = &mut red {
             p.base.color = Some("#E5484D".into());
         }
-        assert!(!order_free(red.iter()));
-        let mut labelled = lines.clone();
-        if let Entity::Polyline(p) = &mut labelled[1] {
+        assert!(!free(&look(&red), &b));
+        let mut labelled = lines[1].clone();
+        if let Entity::Polyline(p) = &mut labelled {
             p.base.label = Some("120".into());
         }
-        assert!(!order_free(labelled.iter()));
+        assert!(!free(&a, &look(&labelled)));
         let point = doc.entities().next().cloned().expect("a ground point");
-        assert!(!order_free(lines.iter().chain(std::iter::once(&point))));
+        assert!(!free(&look(&point), &look(&point)), "a point keeps its order even against its like");
+    }
+
+    /// The rule's walk (docs/adr/4740): strokes alike stay whatever is written before them; an ordered object stays
+    /// only while nothing before it is written and no ordered one before it stays from a later place.
+    #[test]
+    fn an_ordered_object_after_a_written_one_is_written_too() {
+        let s = Look::Stroke(None, None);
+        let o = Look::Ordered;
+        let c = |v: &[&str]| v.iter().map(|x| (*x).to_owned()).collect::<Vec<_>>();
+        // Lines a, b, c and a text t: b changed to b2.
+        let old = c(&["a", "b", "c", "t"]);
+        let new = c(&["a", "b2", "c", "t"]);
+        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]), vec![Some(0), None, Some(2), None]);
+        // Nothing written before the text: it stays.
+        let new = c(&["a", "b", "c", "t"]);
+        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]), vec![Some(0), Some(1), Some(2), Some(3)]);
+        // Two texts in the other order: the second stays from an earlier place, the first is written.
+        let old = c(&["t1", "t2"]);
+        let new = c(&["t2", "t1"]);
+        assert_eq!(staying(&old, &new, &[o.clone(), o.clone()]), vec![Some(1), None]);
+        // Two strokes of one look in the other order: both stay.
+        assert_eq!(staying(&old, &new, &[s.clone(), s.clone()]), vec![Some(1), Some(0)]);
+        // A written object leaves its old one alike to a later one alike.
+        let old = c(&["t", "x"]);
+        let new = c(&["y", "t", "t"]);
+        assert_eq!(staying(&old, &new, &[o.clone(), o.clone(), o.clone()]), vec![None, None, None]);
+        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone()]), vec![None, Some(0), None]);
     }
 
     /// A drawing's object naming another of the drawing reads its index, so two drawings made alike compare equal.

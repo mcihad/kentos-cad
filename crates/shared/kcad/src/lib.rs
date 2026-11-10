@@ -935,11 +935,16 @@ pub const SCHEMA_WITH_COLUMN_MATERIAL: u32 = 235;
 /// Schema 236 (docs/adr/8041 §3): a beam's role (`role`: lintel, bond beam) and its base over its storey's floor
 /// (`baseOffset`).
 pub const SCHEMA_WITH_BEAM_ROLES: u32 = 236;
+/// Schema 237 (docs/adr/8044 §1): roofs (`roof`), the drawing's only.
+pub const SCHEMA_WITH_ROOFS: u32 = 237;
+/// Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing (`road.terrains.sheetcontours`), a layer as a
+/// drawing's source (`kind` `layer`), and drawing again whole (`road.rebuildWhole`).
+pub const SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS: u32 = 238;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 234] = [
+pub const SCHEMAS: [u32; 236] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1174,6 +1179,8 @@ pub const SCHEMAS: [u32; 234] = [
     SCHEMA_WITH_BEAMS,
     SCHEMA_WITH_COLUMN_MATERIAL,
     SCHEMA_WITH_BEAM_ROLES,
+    SCHEMA_WITH_ROOFS,
+    SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
 ];
 
 /// The file a drawing is saved as.

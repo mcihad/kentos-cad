@@ -94,8 +94,6 @@ pub struct PanelState {
     read: RefCell<Option<Read>>,
     /// The rebuild running as a job, if one is.
     pub running: Option<Running>,
-    /// Yalnız değişeni yaz unticked: every drawing drawn whole (docs/adr/4320; ticked, the default, only what changed).
-    pub whole: bool,
 }
 
 impl PanelState {
@@ -238,7 +236,9 @@ impl App {
                     return Task::none();
                 }
                 let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, regional: !self.road_project.whole, expected_revision: None };
+                // Docs/adr/4740: Yalnız değişeni yaz is the project's (drawing again by itself follows it too).
+                let regional = !doc.model.road_rebuild_whole();
+                let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, regional, expected_revision: None };
                 let envelope = CallEnvelope {
                     command: kentos_commands::ROAD_PROJECT_REBUILD.into(),
                     version: None,
@@ -264,7 +264,7 @@ impl App {
             }
             Event::Auto(on) => {
                 let Some(doc) = self.document.as_mut() else { return Task::none() };
-                let input = RoadProjectEdit { auto_rebuild: Some(on), expected_revision: None };
+                let input = RoadProjectEdit { auto_rebuild: Some(on), regional: None, expected_revision: None };
                 let result = road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if self.answered(result).is_some() {
                     let words = if on {
@@ -275,7 +275,20 @@ impl App {
                     self.say(Level::Info, words.to_owned());
                 }
             }
-            Event::Regional(on) => self.road_project.whole = !on,
+            // Docs/adr/4740: the project's choice, one undo step “Yalnız değişeni yaz”.
+            Event::Regional(on) => {
+                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let input = RoadProjectEdit { auto_rebuild: None, regional: Some(on), expected_revision: None };
+                let result = road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                if self.answered(result).is_some() {
+                    let words = if on {
+                        "Yalnız değişeni yaz açık: yeniden üretim, elle de kendiliğinden de, aynı çıkan nesneleri yerinde bırakır."
+                    } else {
+                        "Yalnız değişeni yaz kapalı: yeniden üretim her çizimi bütün çizer."
+                    };
+                    self.say(Level::Info, words.to_owned());
+                }
+            }
             Event::Deep(on) => self.road_project.deep = on,
             Event::Fold(key) => {
                 if !self.road_project.toggled.remove(&key) {
@@ -403,11 +416,12 @@ impl App {
                 "Kendiliğinden yeniden üret".to_owned(),
                 Some(msg(Event::Auto(!tree.auto_rebuild))),
             ),
-            // Docs/adr/4320: a drawing drawn again keeps the objects that come out as they are.
+            // Docs/adr/4320, 4740: a drawing drawn again, by hand or by itself, keeps the objects that come out as they
+            // are; the project's choice.
             crate::style::fields::check(
-                on(!self.road_project.whole),
+                on(tree.regional),
                 "Yalnız değişeni yaz".to_owned(),
-                Some(msg(Event::Regional(self.road_project.whole))),
+                Some(msg(Event::Regional(!tree.regional))),
             ),
             // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
             crate::exchange::words::secondary(

@@ -16,7 +16,7 @@ use crate::log::Level;
 use crate::tool::Context;
 
 /// The kinds the filter can hold, in its menu's order (the web's `FILTER_KINDS`).
-pub const KINDS: [&str; 28] = [
+pub const KINDS: [&str; 29] = [
     "point",
     "line",
     "polyline",
@@ -47,6 +47,8 @@ pub const KINDS: [&str; 28] = [
     "slab",
     // After it for the same reason (docs/adr/8041 §1).
     "beam",
+    // After it for the same reason (docs/adr/8044 §1).
+    "roof",
 ];
 
 /// Every kind: the filter's kinds at the start of a session.

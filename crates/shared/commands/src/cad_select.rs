@@ -233,11 +233,13 @@ pub enum SelectKind {
     Slab,
     /// Kiriş (docs/adr/8041 §1); after it for the same reason.
     Beam,
+    /// Çatı (docs/adr/8044 §1); after it for the same reason.
+    Roof,
 }
 
 impl SelectKind {
     /// Every kind, in the filter's menu's order.
-    pub const ALL: [SelectKind; 28] = [
+    pub const ALL: [SelectKind; 29] = [
         SelectKind::Point,
         SelectKind::Line,
         SelectKind::Polyline,
@@ -266,6 +268,7 @@ impl SelectKind {
         SelectKind::ViewMark,
         SelectKind::Slab,
         SelectKind::Beam,
+        SelectKind::Roof,
     ];
 
     /// Its name on the wire, the entity kind's.
@@ -299,6 +302,7 @@ impl SelectKind {
             SelectKind::ViewMark => "viewmark",
             SelectKind::Slab => "slab",
             SelectKind::Beam => "beam",
+            SelectKind::Roof => "roof",
         }
     }
 }

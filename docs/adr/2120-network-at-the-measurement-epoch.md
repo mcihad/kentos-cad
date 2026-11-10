@@ -86,4 +86,4 @@ koordinat epoğu … işlem kaydına bağlansın.” İlgili:
 - Bilinen noktanın kendi hızı (TUSAGA-Aktif istasyonlarının yayımlanan hızları), ızgarasız.
 - Oturum başına ölçme epoku: uzun kampanyada her oturumun kendi epokunda bazları.
 - GVX oturum çapraz korelasyonları; arşiv panelinde bazlar; 15(1)(c) benzerlik dönüşümü.
-- Resmî TUREF hız alanı (sahibin kaynağı bekleniyor; ADR 1230).
+- Resmî TUREF hız alanı (sahibin kaynağı bekleniyor; ADR 1230). *(Düzeltme, 10 Kasım 2026, BÖHHBÜY denetimi: HGM “TUREF Hız Alanı-2020”yi yayımlamıştır; 4.10.2025 değişikliğiyle (CK 10455) BÖHHBÜY m. 21 yeni noktaların hızını HGM'nin güncel Türkiye Hız Alanı Modeli'nden ister. Bkz. plan/map-cad.md MAP-03.)*

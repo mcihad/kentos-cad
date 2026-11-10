@@ -65,6 +65,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
 GRIDS, COLUMNS, STAIRS, RAMPS, EDIT = "cad.grids.create", "cad.columns.create", "cad.stairs.create", "cad.ramps.create", "cad.arch.edit"
 BEAMS = "cad.beams.create"
+ROOFS = "cad.roofs.create"
 
 
 def refusal(code, message, path, status="failed"):
@@ -1498,9 +1499,92 @@ def beams_create(d, inp, conflict=False):
     return finish(inp, conflict, made, [])
 
 
+def roof_fields(n):
+    """A roof as the document keeps it (docs/adr/8044 §1): its eaves and slopes; its offset, thickness, overhang,
+    covering and level only when given (the offset not when 0)."""
+    f = {"pts": n["pts"], "slopes": n["slopes"]}
+    if n.get("offset") is not None and n["offset"] != 0.0:
+        f["offset"] = n["offset"]
+    for k in ("thickness", "overhang", "material"):
+        if n.get(k) is not None:
+            f[k] = n[k]
+    if n.get("arch"):
+        f["arch"] = n["arch"]
+    return f
+
+
+def roof_problem(f, path):
+    """RoofFields::problem's rule and words, in its order; then the command's: an area, every corner turning out."""
+    pts, slopes = f["pts"], f["slopes"]
+    n = len(pts)
+    if not 3 <= n <= 1000:
+        return refusal("invalid_roof", f"Çatının saçak çizgisi en az üç, en çok 1000 noktadır; {n} verildi.", f"{path}.pts")
+    if any(pts[i] == pts[(i + 1) % n] for i in range(n)):
+        return refusal("invalid_roof", "Çatının saçak çizgisinde art arda iki aynı nokta var; birini kaldırın.", f"{path}.pts")
+    if len(slopes) != n:
+        return refusal("invalid_roof", f"Çatının her kenarının bir eğimi (ya da kalkanı) olur: {n} kenar, {len(slopes)} eğim verildi.",
+                       f"{path}.slopes")
+    for x in slopes:
+        if x is not None and not (math.isfinite(x) and 0 < x <= 500.0):
+            return refusal("invalid_roof", f"Çatının eğimi %{num(x)}; sıfırdan büyük, en çok %500 olmalı (kalkan: eğimsiz).",
+                           f"{path}.slopes")
+    o = f.get("offset", 0.0)
+    if not (math.isfinite(o) and abs(o) <= 10.0):
+        return refusal("invalid_roof", f"Çatının kot farkı {num(o)}; en çok ±10 m olmalı.", f"{path}.offset")
+    t = f.get("thickness")
+    if t is not None and not (math.isfinite(t) and 0 < t <= 2.0):
+        return refusal("invalid_roof", f"Çatının kalınlığı {num(t)}; sıfırdan büyük, en çok 2 m olmalı.", f"{path}.thickness")
+    h = f.get("overhang")
+    if h is not None and not (math.isfinite(h) and 0 <= h <= 5.0):
+        return refusal("invalid_roof", f"Çatının saçağı {num(h)}; sıfırla 5 m arasında olmalı.", f"{path}.overhang")
+    v = f.get("material")
+    if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
+        return refusal("invalid_roof", "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok 120 karakter.",
+                       f"{path}.material")
+    # The command's own (docs/adr/8044 §2): an area; no corner turning in (not drawn yet).
+    xs = [(F(p["x"]), F(p["y"])) for p in pts]
+    a2 = sum(xs[i][0] * xs[(i + 1) % n][1] - xs[(i + 1) % n][0] * xs[i][1] for i in range(n))
+    if a2 == 0:
+        return refusal("invalid_roof", "Saçak çizgisinin alanı yok: noktalar bir doğru üzerinde.", f"{path}.pts")
+    if a2 < 0:
+        xs = xs[::-1]
+    for i in range(n):
+        a, b, c = xs[i - 1], xs[i], xs[(i + 1) % n]
+        if (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]) < 0:
+            return refusal("invalid_roof", "Saçak çizgisinin bir köşesi içe dönük (L ya da T biçimli); böyle bir çatı henüz "
+                                           "çizilmiyor. Dışbükey bir saçak çizin ya da çatıyı dışbükey parçalara bölün.",
+                           f"{path}.pts")
+    return None
+
+
+def roofs_create(d, inp, conflict=False):
+    if not inp["roofs"]:
+        return refusal("no_objects", "Yazılacak çatı verilmedi. En az bir çatının saçak çizgisini ve kenarlarının eğimini verin.",
+                       "roofs"), None
+    made = []
+    for i, n in enumerate(inp["roofs"]):
+        at = f"roofs[{i}]"
+        r = points_not_finite(n["pts"], at) or finite_each(
+            [(n.get("offset"), "offset", "Kot farkı"), (n.get("thickness"), "thickness", "Kalınlık"),
+             (n.get("overhang"), "overhang", "Saçak")], at)
+        if not r:
+            for k, x in enumerate(n["slopes"]):
+                if x is not None and not math.isfinite(x):
+                    r = not_finite("Eğim", f"{at}.slopes[{k}]")
+                    break
+        if r:
+            return r, None
+        f = roof_fields(n)
+        r = roof_problem(f, at) or level_check(f.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        made.append(f)
+    return finish(inp, conflict, made, [])
+
+
 CREATES = {GRIDS: ("grid", "grids", grids_create, "Aks"), COLUMNS: ("column", "columns", columns_create, "Kolon"),
            STAIRS: ("stair", "stairs", stairs_create, "Merdiven"), RAMPS: ("ramp", "ramps", ramps_create, "Rampa"),
-           BEAMS: ("beam", "beams", beams_create, "Kiriş")}
+           BEAMS: ("beam", "beams", beams_create, "Kiriş"), ROOFS: ("roof", "roofs", roofs_create, "Çatı")}
 
 
 def extra_of(inp):
@@ -2199,6 +2283,53 @@ def beam_cases():
     return c.cases
 
 
+def roof(**kw):
+    r = {"pts": [P(0, 50), P(12, 50), P(12, 59), P(0, 59)], "slopes": [33.0, 33.0, 33.0, 33.0]}
+    r.update(kw)
+    return {"layerId": "cizim", "roofs": [r]}
+
+
+def roof_cases():
+    """docs/adr/8044 §1: roofs written as given, their defaults left out; their refusals."""
+    c = Cases()
+    life(c, ROOFS, roof(overhang=0.5, arch={"level": "kat-1"}), "12 × 9 m kırma çatı, 50 cm saçaklı")
+    for name, inp in [
+        ("beşik çatı: uzun kenarlar %40, kısalar kalkan", roof(slopes=[40.0, None, 40.0, None])),
+        ("tek eğimli çatı: güneye %10", roof(slopes=[10.0, None, None, None])),
+        ("düz çatı: hiçbir kenar eğimli değil", roof(slopes=[None, None, None, None])),
+        ("saat yönünde verilen saçak", roof(pts=[P(0, 50), P(0, 59), P(12, 59), P(12, 50)])),
+        ("kot farkı, kalınlık ve kaplama", roof(offset=0.3, thickness=0.3, material="Kiremit")),
+        ("sıfır kot farkı yazılmaz", roof(offset=0.0)),
+        ("tadilatta ilave çatı", roof(arch={"level": "kat-1", "phase": "new"})),
+        ("beşgen kırma çatı", roof(pts=[P(0, 50), P(12, 50), P(12, 56), P(6, 64), P(0, 56)], slopes=[40.0] * 5)),
+        ("iki çatı tek adımda", {"layerId": "cizim", "roofs": [roof()["roofs"][0],
+                                                          roof(pts=[P(20, 50), P(28, 50), P(28, 56), P(20, 56)])["roofs"][0]]}),
+        ("renkli ve kalın çatı", {**roof(), "color": "#cc3300", "lineWeight": 0.35}),
+    ]:
+        c.add(name, [create_step(Drawing(), ROOFS, "execute", inp)])
+    refusals(c, ROOFS, [
+        ("çatı verilmezse reddedilir", {"layerId": "cizim", "roofs": []}, {}),
+        ("sonsuz köşe reddedilir", roof(), {"non_finite": {"roofs[0].pts[1].x": "Infinity"}}),
+        ("sonsuz kot farkı reddedilir", roof(offset=0.1), {"non_finite": {"roofs[0].offset": "NaN"}}),
+        ("sonsuz eğim reddedilir", roof(), {"non_finite": {"roofs[0].slopes[1]": "Infinity"}}),
+        ("iki noktalı saçak reddedilir", roof(pts=[P(0, 50), P(12, 50)], slopes=[33.0, 33.0]), {}),
+        ("art arda aynı nokta reddedilir", roof(pts=[P(0, 50), P(12, 50), P(12, 50), P(0, 59)]), {}),
+        ("eğim sayısı kenarlardan az reddedilir", roof(slopes=[33.0, 33.0, 33.0]), {}),
+        ("sıfır eğim reddedilir", roof(slopes=[0.0, None, 33.0, None]), {}),
+        ("%600 eğim reddedilir", roof(slopes=[600.0, None, None, None]), {}),
+        ("12 m kot farkı reddedilir", roof(offset=12.0), {}),
+        ("sıfır kalınlık reddedilir", roof(thickness=0.0), {}),
+        ("eksi saçak reddedilir", roof(overhang=-0.1), {}),
+        ("boşluklu kaplama reddedilir", roof(material=" Kiremit"), {}),
+        ("doğru üzerindeki saçak reddedilir", roof(pts=[P(0, 50), P(6, 50), P(12, 50)], slopes=[33.0] * 3), {}),
+        ("L biçimli saçak henüz reddedilir", roof(pts=[P(0, 50), P(10, 50), P(10, 54), P(4, 54), P(4, 60), P(0, 60)],
+                                                  slopes=[33.0] * 6), {}),
+        ("olmayan kat reddedilir", roof(arch={"level": "yok"}), {}),
+    ])
+    common_refusals(c, ROOFS, roof())
+    return c.cases
+
+
 def ramp_level_cases():
     """docs/adr/0723 §2: a ramp's start bound to its level: written, followed when the level rises, set and freed."""
     c = Cases()
@@ -2747,6 +2878,7 @@ def files():
         "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
         "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 8041 §1)", beam_cases()),
+        "cad.roofs.create.json": document(ROOFS, "Çatı: saçak çizgisi, kenarların eğimi ya da kalkanı, kot farkı, kalınlık, saçak, kaplama; doğrulama, plan, yazma, geri alma; retler (ADR 8044 §1)", roof_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
         "cad.stairs.create.levels.json": document(STAIRS, "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)", stair_level_cases()),

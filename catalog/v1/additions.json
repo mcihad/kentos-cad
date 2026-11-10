@@ -2792,6 +2792,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.roof",
+      "title": "Çatı",
+      "icon": "roof",
+      "description": "Sınır (S): Binadan — binanın içine tıklanır; duvarların dış yüzünden Saçak (A, 50 cm; PAİY 42 en çok 1,00 m) kadar dışarıda saçak çizilir (çatının katında duvar yoksa altındaki katın duvarlarından). Köşeleri çiz — saçağın köşeleri, Enter kapatır. Tür (T): Kırma (her kenar eğimli), Beşik (ön kenar ve karşısındaki kenar eğimli, öbürleri kalkan), Tek eğimli (yalnız ön kenar), Düz. Ön kenar Binadan'da tıklanan yere en yakın kenar, çizerken ilk kenardır. Eğim (M, %33), Kalınlık (E, 25 cm), Kot farkı (F: saçağın katın üstüne göre farkı), Kaplama (P, Kiremit), Kat (L). Saçak katın üstündedir (bir üst katın döşemesi); planda saçak ve kalkan çizilir, mahya, kırma ve dereler ince; her yüzde aşağı bakan ok ve eğimi (%33), mahyanın kotu (+7.49). Önizleme mahyanın yüksekliğini söyler, PAİY 40'ın 5,00 m'sini aşınca uyarır. Saçağı içe dönen (L, T biçimli) çatı henüz çizilmez. Etkin kata, kaplamasının katmanına yazılır: MM-CATI-KIREMIT.",
+      "aliases": [
+        "ROOF",
+        "CATI",
+        "ÇATI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.casework",
       "title": "Mutfak dizisi",
       "short": "Mutfak",
@@ -3386,6 +3400,17 @@
       "short": "Kiriş",
       "icon": "beam",
       "description": "Seçim süzgecinde kirişleri seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.roof",
+      "title": "Seçim süzgecinde Çatı",
+      "short": "Çatı",
+      "icon": "roof",
+      "description": "Seçim süzgecinde çatıları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
       "aliases": [],
       "shortcuts": [],
       "category": "Düzen",
@@ -5103,7 +5128,9 @@
     {"id": "map.survey.adjustment", "title": "GNSS ağ dengelemesi…", "short": "Ağı dengele", "icon": "gnssNetworkAccept", "description": "GNSS arşivindeki bazları (GVX 1.0 ya da baz metninden içe aktarılır) ve bilinen noktaları iki aşamada dengeler (map.survey.network): önce tek bilinen noktaya dayalı serbest dengeleme (uyuşumsuz bazlar, ağın kendi duyarlığı), sonra bilinen noktalara dayalı dengeleme (işaretlerin koordinatları ve σ'ları); BÖHHBÜY 2018'in C1, C2, C3 sınıflarıyla baz ve nokta standart sapmalarını denetler, kabul edilmiş noktaların ne kadar kayacağını gösterir. Dışla bazı nedeniyle silmeden çıkarır. Kabul et (map.survey.edit network) dengeleme kaydını yazar, yeni işaretleri çizer, kabul edilmiş noktaları eski sonucunu koruyarak taşır; tek geri alma adımı. Teknik denetimdir, kurum onayı değildir. Yalnız KentOS Harita.", "aliases": ["ARSIVAG", "ARŞİVAĞ", "AGKABUL", "AĞKABUL", "GVX"], "shortcuts": [], "category": "Ölçme", "status": "implemented"},
     {"id": "map.survey.select", "title": "Kabul edilen noktalar", "short": "Kabul edilenler", "icon": "gnssSelect", "description": "Projenin GNSS arşivinde kabul edilen noktaların nesnelerini seçer ve gösterir; Öznitelikler'in GNSS ölçümü bölümü her birinin yöntemini, çözümlerini, σ'sını, epoğunu, koordinat zincirini ve güncelliğini salt okunur verir. HDOP ve fix doğruluk değildir. map.survey.query ile. KentOS Harita ve GIS.", "aliases": ["KABULEDILEN", "KABULEDİLEN"], "shortcuts": [], "category": "Ölçme", "status": "implemented"},
     {"id": "raster.compare", "title": "Ortofoto karşılaştır…", "short": "Karşılaştır", "icon": "orthoCompare", "description": "Çizimdeki iki ortofotoyu aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır (cad.orthophoto.compare; ADR 1780): her noktanın kayması (ikinci − birinci), görüntüler arasındaki sistematik kayma ve kaymaların KOH_X,Y'si; nokta başına sınır BÖHHBÜY m. 67(6)'nın ±2·YÖA'sı, iki görüntüden YÖA'sı iri olanınki. Arazi noktaları verilirse her görüntü kendi doğruluğuyla da denetlenir (m. 91). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur; CSV kaydet kaymaları yazar. Harita ve CBS'de raster sekmesinde.", "aliases": ["ORTOFOTOKARSILASTIR", "ORTOFOTOKARŞILAŞTIR"], "shortcuts": [], "category": "Raster", "status": "implemented"},
+    {"id": "raster.seamlines", "title": "Mozaik birleşme çizgisi…", "short": "Birleşme çizgisi", "icon": "orthoSeamlines", "description": "İki ortofotonun mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (cad.orthophoto.seamlines; ADR 4700; TUCBS Ortogörüntü'nün mozaik elemanı: görüntünün mozaikte kullanılan bölümü, elemanlar örtüşmez). Eşit uzaklık (Voronoi; Pan ve ark. 2009): çizgi iki görüntünün kendi bölgelerinden eşit uzak. Radyometrik fark: eşit uzaklık çizgisinin uçları arasında en büyük farkı en küçük yol; arama bandı ve geçilmeyecek alanlar (bina, köprü) verilebilir. Mozaik elemanları tek geri alma adımında Mozaik elemanları katmanına yazılır ve seçilir; Ortofoto karşılaştırması'nın Seçili mozaik elemanlarını al'ı onları ölçer. Harita ve CBS'de raster sekmesinde.", "aliases": ["BIRLESMECIZGISI", "BİRLEŞMEÇİZGİSİ", "MOZAIKELEMANLARI", "MOZAİKELEMANLARI", "SEAMLINES"], "shortcuts": [], "category": "Raster", "status": "implemented"},
     {"id": "pointcloud.register", "title": "Tarama kaydı…", "short": "Tarama kaydı", "icon": "cloudRegister", "description": "İkinci taramayı (LiDAR şeridi, oturum) birinciye örtüştükleri yerde nokta-düzlem ICP ile oturtur ve kaydı denetler (cad.pointclouds.register; ADR 1800): dönüşüm tarifi (doğu, kuzey, kot ötelemesi ve ω φ κ), önce ve sonra RMS, eşleşen pay, geometrinin gücü (düz zeminde yatay kayma bilinmez), güvenilir kapsam ve GNSS kontrol noktalarında sabit taramanın ve oturtulanın önce/sonra KOH_Z'si (BÖHHBÜY m. 91). Ağırlık kaba hatalı eşleşmeleri bastırır (ADR 2300); Ayıkla sabit taramanın kenarındaki ve normalleri belirtilen açıdan çok ayrılan eşleşmeleri her adımın dışında bırakır: bir taramanın görüp öbürünün görmediği duvar, bordür arkası gölge (ADR 2700). Bulut taşınmaz; salt okunur. Harita ve CBS'de.", "aliases": ["TARAMAKAYDI", "ICP"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
+    {"id": "pointcloud.network", "title": "Tarama ağı dengelemesi…", "short": "Tarama ağı", "icon": "cloudNetwork", "description": "Üç ve daha çok taramayı birlikte kaydeder (cad.pointclouds.network; ADR 4720), bir GNSS ağının bazlarını dengelemesi gibi: plan kutuları örtüşen her çift bir bağdır ve Tarama kaydı gibi kaydedilir; her bağ kaydın normal matrisiyle ağırlıklanır, sabit tarama yerinde kalır, öbürlerinin düzeltmeleri en küçük karelerle birlikte dengelenir. Taramalar tablosu her taramanın düzeltmesini ve yatay gücünü, Bağlar tablosu eşleşmeyi, örtüşmeyi, kayıt RMS'ini ve ağın bağa verdiği kaymayı, Döngüler tablosu kapanmamaları verir. Salt okunur; Dönüşüm uygula seçilen taramayı matrisiyle taşır. Harita ve CBS'de nokta bulutu sekmesinde.", "aliases": ["TARAMAAGI", "TARAMAAĞI", "AGDENGELEMESI", "AĞDENGELEMESİ"], "shortcuts": [], "category": "Nokta bulutu", "status": "implemented"},
     {"id": "processing.run.pointcloud.transform", "title": "Dönüşüm uygula…", "short": "Dönüşüm uygula", "icon": "cloudTransform", "description": "Nokta bulutunun bütün noktalarını satır satır 16 sayılık afin matrisle taşır ve sonucu kaynağın ızgarasında LAS, LAZ ya da COPC olarak yazar (İşlemler aracı pointcloud.transform; ADR 3100): Tarama kaydı'nın Buluta uygula düğmesi oturtulan taramanın matrisini getirir. Her koordinat kaynağın ölçeğine yarım sıfırdan uzağa yuvarlanır; noktaların öbür alanları aynen kalır, koordinat sistemi değişmez, kaynak dosyaya dokunulmaz. Matris yazılmadan önce denetlenir: 16 sayı, son satır 0 0 0 1, tekil değil, bulut ızgaraya sığar. Özet bulutun ortasının kaymasını ve katı dönüşümde dönüklük açısını söyler; ölçek ya da kayma içeren matris uyarılır. Harita ve CBS'de.", "aliases": ["DONUSUMUYGULA", "BULUTDONUSTUR"], "shortcuts": [], "category": "İşlemler", "status": "implemented"},
     {"id": "terrain.sheetContours", "title": "Pafta eğrileri…", "short": "Pafta eğrileri", "icon": "sheetContours", "description": "Bir arazi yüzeyinin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(g) ve Ek-3'e göre çizer (road.terrains.sheetcontours; ADR 1820): aralık ölçekten, her beşinci eğri kalın (0,25 mm), dik yerde (eğri arası 2 mm'den az) yalnız kalın, düz yerde (20 mm'den çok) yarım aralıkta kesik yardımcı eğri, kalın eğrilere her 200 mm'de bir maskeli kot yazısı (1,4 mm, üstü yokuşa), seçilen detay katmanlarının (bina, yol, şev) içinden eğri geçmez. Tek geri alma adımı. Harita ve Yol'da.", "aliases": ["PAFTAEGRILERI", "PAFTAEĞRİLERİ"], "shortcuts": [], "category": "Arazi", "status": "implemented"},
     {"id": "terrain.stockpile", "title": "Stok hacmi…", "short": "Stok hacmi", "icon": "stockpileVolume", "description": "Bir yığının (stok) hacmini kapalı sınırından çizilen bir tabana göre ölçer (road.terrains.stockpile; ADR 3140, Pix4D'nin hacim tabanları): sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında yatay düzlem, köşelere oturan eğimli düzlem (düşey farkların en küçük kareleri) ya da verilen kot. Tabanın üstü kazı (yığın), altı dolgu; toplam, alanlar, taban, köşe kotları ve yüzeyin örtmediği yer. Çizim değişmez. Harita ve Yol'da.", "aliases": ["STOKHACMI", "YIGINHACMI"], "shortcuts": [], "category": "Arazi", "status": "implemented"}
@@ -5374,6 +5401,10 @@
     "interiorDimensions": "<path d=\"M4 3.5v13M16 3.5v13\" stroke-width=\"3\"/><path d=\"M1.5 12.5h17\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"0.9\"/><path d=\"M1.5 7h17\" stroke-width=\"1\"/><path d=\"M2.6 8.1l1.8-2.2M4.6 8.1l1.8-2.2M14.6 8.1l1.8-2.2M16.6 8.1l1.8-2.2\" stroke-width=\"1.4\"/>",
     "stairCurved": "<path d=\"M10 1.5A8.5 8.5 0 1 1 1.5 10M10 6.5A3.5 3.5 0 1 1 6.5 10M10 1.5L10 6.5M1.5 10L6.5 10\"/><path d=\"M12.47 7.53L16.01 3.99M13.5 10L18.5 10M12.47 12.47L16.01 16.01M10 13.5L10 18.5M7.53 12.47L3.99 16.01\" stroke-width=\"0.9\"/><path d=\"M12.05 4.36A6 6 0 1 1 4.36 12.05M4.03 14.23L4.36 12.05L6.01 13.51\" stroke-width=\"1.2\"/>",
     "beam": "<rect x=\"1.5\" y=\"6.5\" width=\"4\" height=\"7\"/><rect x=\"14.5\" y=\"6.5\" width=\"4\" height=\"7\"/><path d=\"M5.5 8.2h9M5.5 11.8h9\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/>",
+    "roof": "<path d=\"M1.5 12.5h17l-5-7h-7z\" stroke-width=\"1.6\"/><path d=\"M4.5 12.5v5h11v-5\" stroke-width=\"1\"/>",
+    "roofGable": "<path d=\"M1.5 12.5 10 4.5l8.5 8z\" stroke-width=\"1.6\"/><path d=\"M4.5 12.5v5h11v-5\" stroke-width=\"1\"/>",
+    "roofShed": "<path d=\"M1.5 12.5 18.5 5.5v7z\" stroke-width=\"1.6\"/><path d=\"M4.5 12.5v5h11v-5\" stroke-width=\"1\"/>",
+    "roofFlat": "<path d=\"M2.5 12.5h15M2.5 12.5v-3M17.5 12.5v-3\" stroke-width=\"1.6\"/><path d=\"M2.5 11h15\" stroke-width=\"0.9\"/><path d=\"M4.5 12.5v5h11v-5\" stroke-width=\"1\"/>",
     "ramp": "<path d=\"M2.5 15.5 17.5 6.5v9h-15z\"/><path d=\"M5 13.3 14 8M12.3 7.9 14 8l-.6 1.6\" stroke-width=\"1.1\"/>",
     "gridNumber": "<circle cx=\"6\" cy=\"5.5\" r=\"3.3\"/><path d=\"M6 8.8v9.7\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><circle cx=\"14\" cy=\"14.5\" r=\"3.3\"/><path d=\"M14 11.2V1.5\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><path d=\"M5.3 4.6 6.3 3.9v3.3\" stroke-width=\"1\"/><path d=\"M12.9 13.6c.3-.9 2.2-.9 2.2.3 0 .9-2.2 1.5-2.2 2.6h2.3\" stroke-width=\"0.9\"/>",
     "archGrid": "<circle cx=\"10\" cy=\"5\" r=\"3.3\"/><path d=\"M10 8.3v10.2\" stroke-dasharray=\"3 1.4 0.8 1.4\" stroke-width=\"1.2\"/>",
@@ -5561,7 +5592,9 @@
     "gnssFiles": "<path d=\"M4 4.5h6l1.5 1.5H16v9.5H4z\" stroke-width=\"1.2\"/><path d=\"M7 11l2 2 4-4.5\" stroke-width=\"1.3\"/>",
     "gnssSolve": "<circle cx=\"6\" cy=\"7\" r=\"1\"/><circle cx=\"9.5\" cy=\"5.5\" r=\"1\"/><circle cx=\"7.5\" cy=\"10\" r=\"1\"/><circle cx=\"11\" cy=\"9\" r=\"1\"/><path d=\"M13 12.5l2 2 3-3.5\" stroke-width=\"1.3\"/><path d=\"M3 16.5h8\" stroke-width=\"1.2\"/>",
     "gnssSelect": "<path d=\"M10 15.5l-3.6-5.2a4 4 0 1 1 7.2 0z\" stroke-width=\"1.2\"/><circle cx=\"10\" cy=\"8.2\" r=\"1.3\"/><path d=\"M3.5 3.5h3M3.5 3.5v3M16.5 3.5h-3M16.5 3.5v3M3.5 17.5h3M16.5 17.5h-3\" stroke-width=\"1.1\"/>",
-    "gnssAntenna": "<path d=\"M10 17V9\" stroke-width=\"1.3\"/><path d=\"M6.5 9h7l-3.5-5z\" stroke-width=\"1.2\"/><path d=\"M15.5 9v8M14.3 10.2 15.5 9l1.2 1.2M14.3 15.8l1.2 1.2 1.2-1.2\" stroke-width=\"1\"/><path d=\"M4 17h9\" stroke-width=\"1.2\"/>"
+    "gnssAntenna": "<path d=\"M10 17V9\" stroke-width=\"1.3\"/><path d=\"M6.5 9h7l-3.5-5z\" stroke-width=\"1.2\"/><path d=\"M15.5 9v8M14.3 10.2 15.5 9l1.2 1.2M14.3 15.8l1.2 1.2 1.2-1.2\" stroke-width=\"1\"/><path d=\"M4 17h9\" stroke-width=\"1.2\"/>",
+    "orthoSeamlines": "<path d=\"M2.5 4.5h15v11h-15z\" stroke-width=\"1.1\"/><path d=\"M2.5 4.5H10L8.8 8l1.8 3-0.8 4.5H2.5z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M6.5 4.5v11M13.5 4.5v11\" stroke-width=\".8\" stroke-dasharray=\"1.2 1\"/><path d=\"M10 4.5L8.8 8l1.8 3-0.8 4.5\" stroke-width=\"1.5\"/>",
+    "cloudNetwork": "<path d=\"M5.5 13.5L10 5.5l4.5 8z\" stroke-width=\"1\" stroke-dasharray=\"1.5 1.1\"/><circle cx=\"10\" cy=\"5.5\" r=\"2.6\" stroke-width=\"1.1\"/><circle cx=\"5.5\" cy=\"13.5\" r=\"2.6\" stroke-width=\"1.1\"/><circle cx=\"14.5\" cy=\"13.5\" r=\"2.6\" stroke-width=\"1.1\"/><path d=\"M9.2 5.1h.01M10.8 6h.01M4.7 13.1h.01M6.3 14h.01M13.7 13.1h.01M15.3 14h.01\" stroke-width=\"1.4\"/><path d=\"M3.5 17.6h4\" stroke-width=\"1.6\"/>"
   },
   "tabs": [
     {

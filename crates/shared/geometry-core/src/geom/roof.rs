@@ -19,7 +19,7 @@ use crate::Vec2;
 use crate::block::{Piece, PieceStroke};
 use crate::entity::Shape;
 use crate::geom::arch::{HEAD_MM, LABEL_MM, Level};
-use crate::jsmath::{js_hypot, js_max};
+use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::text::TextAlign;
 
 /// Lengths, heights and areas closer than this are one, metres.
@@ -38,6 +38,10 @@ pub struct RoofSpec {
     pub slopes: Vec<Option<f64>>,
     /// The eaves' height over ±0.00, metres: where the ridge's height is counted from.
     pub base: f64,
+    /// Drawn as the plan of its own storey shows it (docs/adr/8044 §3): over the plan's cut, its eaves line alone,
+    /// dashed and narrow, as Mimarlar Odası asks of what lies between the plan's cut and the ceiling ("Saçak … nokta nokta
+    /// işlenir"). A view's, never read from nor written to JSON (as a stair's `upper`, a slab's `overhead`).
+    pub overhead: bool,
 }
 
 /// What a line of a roof's plan is.
@@ -94,7 +98,10 @@ fn area2(pts: &[Vec2]) -> f64 {
 }
 
 /// The eaves counter-clockwise, each edge with its slope and its index as given.
-fn ccw(pts: &[Vec2], slopes: &[Option<f64>]) -> (Vec<Vec2>, Vec<(usize, Option<f64>)>) {
+/// Each edge of the eaves counter-clockwise: its index as given and its slope.
+type Edges = Vec<(usize, Option<f64>)>;
+
+fn ccw(pts: &[Vec2], slopes: &[Option<f64>]) -> (Vec<Vec2>, Edges) {
     let n = pts.len();
     if area2(pts) >= 0.0 {
         return (pts.to_vec(), slopes.iter().copied().enumerate().collect());
@@ -160,10 +167,7 @@ fn clip(ring: &[Vec2], f: impl Fn(Vec2) -> f64) -> Vec<Vec2> {
 
 /// The eaves counter-clockwise with their edges, checked: at least three points, a slope for each edge, an area, no
 /// corner turning in.
-fn checked(
-    pts: &[Vec2],
-    spec: &RoofSpec,
-) -> Result<(Vec<Vec2>, Vec<(usize, Option<f64>)>), Problem> {
+fn checked(pts: &[Vec2], spec: &RoofSpec) -> Result<(Vec<Vec2>, Edges), Problem> {
     if pts.len() < 3 || spec.slopes.len() != pts.len() {
         return Err(Problem::Shape);
     }
@@ -235,7 +239,9 @@ pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem>
                 .filter(|s| *s > 0.0)
                 .map(|s| at(plane(ring[k], ring[(k + 1) % n], s), p))
         })
-        .fold(None, |m: Option<f64>, z| Some(m.map_or(z, |m| m.min(z))))
+        .fold(None, |m: Option<f64>, z| {
+            Some(m.map_or(z, |m| js_min(m, z)))
+        })
         .unwrap_or(0.0))
 }
 
@@ -401,6 +407,15 @@ fn text(p: Vec2, words: String, height: f64, rotation: f64, align: TextAlign) ->
 /// from its middle with its slope beside it; its ridge's height at the highest point of its highest line. A roof that
 /// cannot be had draws its eaves alone.
 pub(crate) fn pieces_at(pts: &[Vec2], spec: &RoofSpec, scale: f64, _level: Level) -> Vec<Piece> {
+    if spec.overhead {
+        let mut p = piece(outline(pts));
+        p.stroke = PieceStroke {
+            line_type: Some("dashed".to_owned()),
+            weight_scale: Some(crate::geom::slab::OVERHEAD_PEN),
+            ..Default::default()
+        };
+        return vec![p];
+    }
     let Ok(lines) = lines(pts, spec) else {
         return vec![piece(Shape::Polyline {
             pts: pts.to_vec(),
@@ -509,6 +524,7 @@ mod tests {
         RoofSpec {
             slopes: slopes.to_vec(),
             base: 6.0,
+            overhead: false,
         }
     }
 
@@ -531,7 +547,7 @@ mod tests {
             [Line::Ridge, Line::Hip, Line::Hip, Line::Hip, Line::Hip]
         );
         let ridge = l.iter().find(|l| l.kind == Line::Ridge).unwrap();
-        let (x0, x1) = (ridge.a.x.min(ridge.b.x), ridge.a.x.max(ridge.b.x));
+        let (x0, x1) = (js_min(ridge.a.x, ridge.b.x), js_max(ridge.a.x, ridge.b.x));
         assert!(
             (x0 - 4.5).abs() < 1e-9 && (x1 - 7.5).abs() < 1e-9 && (ridge.a.y - 4.5).abs() < 1e-9,
             "{ridge:?}"
@@ -593,6 +609,20 @@ mod tests {
     }
 
     #[test]
+    fn over_its_own_storeys_plan_a_roof_is_its_eaves_dashed() {
+        let mut s = spec([Some(33.0); 4]);
+        s.overhead = true;
+        let p = pieces_at(&rect(12.0, 9.0), &s, 100.0, Level::Whole);
+        assert_eq!(p.len(), 1, "the eaves alone: no hips, arrows or words");
+        assert!(matches!(&p[0].shape, Shape::Polygon { pts, .. } if pts.len() == 4));
+        assert_eq!(p[0].stroke.line_type.as_deref(), Some("dashed"));
+        assert_eq!(
+            p[0].stroke.weight_scale,
+            Some(crate::geom::slab::OVERHEAD_PEN)
+        );
+    }
+
+    #[test]
     fn an_eaves_line_turning_in_is_not_drawn_yet() {
         let l = vec![
             Vec2::new(0.0, 0.0),
@@ -605,6 +635,7 @@ mod tests {
         let s = RoofSpec {
             slopes: vec![Some(33.0); 6],
             base: 0.0,
+            overhead: false,
         };
         assert_eq!(faces(&l, &s), Err(Problem::Concave));
         // Its plan draws its eaves alone.

@@ -342,9 +342,11 @@ pub mod readjustment_scope;
 pub mod readjustment_sheets;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
+pub mod orthophoto_seamlines;
 mod orthophoto_mosaic;
 mod orthophoto_seams;
 pub mod pointcloud_overlap;
+pub mod pointcloud_network;
 pub mod pointcloud_register;
 pub mod map_work_edit;
 pub mod map_work_restore;
@@ -499,6 +501,7 @@ pub use wall_distances::distances as walls_distances;
 pub mod spaces;
 pub mod spaces_create;
 // Döşeme ve Döşemeyi düzenle (docs/adr/0722).
+pub mod roofs;
 pub mod slabs;
 pub mod slabs_create;
 pub mod slabs_edit;
@@ -524,7 +527,7 @@ mod standards_install_library;
 pub mod standard_libraries;
 pub mod appearance_origin;
 pub mod revisions;
-pub use arch_elements::{beams_create, columns_create, grids_create, ramps_create, stairs_create};
+pub use arch_elements::{beams_create, columns_create, grids_create, ramps_create, roofs_create, stairs_create};
 pub mod tags;
 pub mod schedules;
 pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
@@ -900,6 +903,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_BEAMS_CREATE,
         kentos_commands::CAD_BEAMS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ROOFS_CREATE,
+        kentos_commands::CAD_ROOFS_CREATE_VERSION,
     ),
     (
         kentos_commands::CAD_ARCH_EDIT,
@@ -1550,8 +1557,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_READJUSTMENT_SHEETS, kentos_commands::CAD_READJUSTMENT_SHEETS_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_CHECK, kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION),
     (kentos_commands::CAD_ORTHOPHOTO_COMPARE, kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION),
+    (kentos_commands::CAD_ORTHOPHOTO_SEAMLINES, kentos_commands::CAD_ORTHOPHOTO_SEAMLINES_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
     (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
+    (kentos_commands::CAD_POINTCLOUDS_NETWORK, kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (kentos_commands::MAP_SURVEY_QUERY, kentos_commands::MAP_SURVEY_QUERY_VERSION),
     (kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION),

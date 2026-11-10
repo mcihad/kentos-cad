@@ -204,7 +204,7 @@ impl Reader<'_> {
     }
 
     fn shape(&mut self, kind: f64) -> Result<Shape, String> {
-        if !(kind >= 0.0 && kind <= 39.0 && kind.fract() == 0.0) {
+        if !(kind >= 0.0 && kind <= 40.0 && kind.fract() == 0.0) {
             return Err(format!(
                 "paketin {}. sayısı bilinmeyen bir nesne türü ({kind})",
                 self.at
@@ -742,7 +742,7 @@ impl Reader<'_> {
             }
             // docs/adr/0343, 0344, 0345, 3041: a grid, a column, a stair, a ramp, a tag, a view mark or a beam as its JSON
             // text.
-            31..=36 | 39 => {
+            31..=36 | 39 | 40 => {
                 let text = self.string()?.unwrap_or_default();
                 let v = Json::parse(&text).map_err(|e| format!("mimari nesne okunamadı: {e}"))?;
                 let shape = <Shape as crate::api::json::FromJson>::from_json(&v)?;
@@ -753,6 +753,7 @@ impl Reader<'_> {
                     34 => matches!(shape, Shape::Ramp { .. }),
                     35 => matches!(shape, Shape::Tag { .. }),
                     39 => matches!(shape, Shape::Beam { .. }),
+                    40 => matches!(shape, Shape::Roof { .. }),
                     _ => matches!(shape, Shape::ViewMark { .. }),
                 };
                 if !want {
@@ -1410,6 +1411,7 @@ impl Packer {
             | Shape::Stair { .. }
             | Shape::Ramp { .. }
             | Shape::Beam { .. }
+            | Shape::Roof { .. }
             | Shape::Tag { .. }
             | Shape::ViewMark { .. } => {
                 let kind = match shape {
@@ -1419,6 +1421,7 @@ impl Packer {
                     Shape::Ramp { .. } => 34.0,
                     Shape::Tag { .. } => 35.0,
                     Shape::Beam { .. } => 39.0,
+                    Shape::Roof { .. } => 40.0,
                     _ => 36.0,
                 };
                 self.put(&[kind]);

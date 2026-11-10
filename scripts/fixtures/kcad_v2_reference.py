@@ -1770,6 +1770,8 @@ KINDS = {
     "slab": {"slab": (opaque, True)},
     # Schema 234 (docs/adr/8041 §1): a beam; its fields as one map.
     "beam": {"beam": (opaque, True)},
+    # Schema 237 (docs/adr/8044 §1): a roof; its fields as one map.
+    "roof": {"roof": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -2122,7 +2124,7 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
-    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark", "slab", "beam"):
+    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark", "slab", "beam", "roof"):
         assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa, etiket, görünüm işareti ya da döşeme olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern")
@@ -2729,6 +2731,15 @@ def document(d):
     if any(e["kind"] == "beam" and ("role" in e or "baseOffset" in e) for e in d["entities"]):
         # A beam's role or its base over its storey's floor (docs/adr/8041 §3).
         schema = max(schema, 236)
+    if any(e["kind"] == "roof" for e in d["entities"]):
+        # A roof (docs/adr/8044 §1).
+        schema = max(schema, 237)
+    kept = d["settings"].get("road", {})
+    if kept.get("rebuildWhole") or any(
+            x.get("command") == "road.terrains.sheetcontours" or any(s.get("kind") == "layer" for s in x.get("sources", []))
+            for x in kept.get("drawings", [])):
+        # A sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing again whole (docs/adr/4740).
+        schema = max(schema, 238)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3633,7 +3644,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-237.kcad"] = container(root(cmap(parts), version=uint(237)))
+    files["schema-version-239.kcad"] = container(root(cmap(parts), version=uint(239)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6719,6 +6730,18 @@ def build():
     assert beams.count(b"\x67version\x18\xea") == 1, "beams are schema 234"
     out["beams.kcad"] = container(beams)
     out["broken/beams-in-schema-233.kcad"] = container(beams.replace(b"\x67version\x18\xea", b"\x67version\x18\xe9"))
+    # Schema 237 (docs/adr/8044 §1): roofs; schema 236 does not know the kind.
+    roofs = document(load("roofs.json"))
+    assert roofs.count(b"\x67version\x18\xed") == 1, "roofs are schema 237"
+    out["roofs.kcad"] = container(roofs)
+    out["broken/roofs-in-schema-236.kcad"] = container(roofs.replace(b"\x67version\x18\xed", b"\x67version\x18\xec"))
+    # Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing with a layer among its sources, and drawing
+    # again whole; schema 237 knows neither.
+    sheeted = document(load("map-sheet-contours.json"))
+    assert sheeted.count(b"\x67version\x18\xee") == 1, "a sheet's contour drawing is schema 238"
+    out["map-sheet-contours.kcad"] = container(sheeted)
+    out["broken/sheet-contour-drawing-in-schema-237.kcad"] = container(
+        sheeted.replace(b"\x67version\x18\xee", b"\x67version\x18\xed"))
     # Schema 235 (docs/adr/8041 §2): a column's material; schema 234 refuses it.
     material = document(load("column-material.json"))
     assert material.count(b"\x67version\x18\xeb") == 1, "a column's material is schema 235"

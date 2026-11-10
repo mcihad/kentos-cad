@@ -13372,6 +13372,216 @@
       ]
     },
     {
+      "id": "cad.roofs.create",
+      "version": 1,
+      "title": "Çatı",
+      "summary": "Çatılar ekler (docs/adr/8044 §1); tek geri alma adımı “Çatı”. Her biri saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi dışa dönük — içe dönen köşeli saçak henüz çizilmez, invalid_roof), her kenarın eğimi (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan — Revit'in roof by footprint'indeki “eğim verir” gibi: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.roofs.create` v1 (“Çatı”, docs/adr/8044 §1): roofs on a named layer, as one undo step.\n\nRefusals, in this order: `no_objects`, `not_finite`, `invalid_roof`, `level_not_found`, `invalid_line_weight`,\n`invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`, `invalid_attribute`,\n`attribute_required`; on the desktop also `slots_exhausted`. Warning: `layer_hidden`.",
+        "properties": {
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layerId": {
+            "type": "string"
+          },
+          "lineWeight": {
+            "format": "double",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          },
+          "roofs": {
+            "items": {
+              "$ref": "#/$defs/NewRoof"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layerId",
+          "roofs"
+        ],
+        "title": "RoofsCreate",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.roofs.create` v1.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": "array",
+            "x-unit": "id"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "ids",
+          "revision"
+        ],
+        "title": "RoofsCreated",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.roofs.create` would write (plan mode): the objects as they would be stored, their `id` 0.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "roofs": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "roofs",
+          "revision"
+        ],
+        "title": "RoofsPlan",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "no_objects",
+          "not_finite",
+          "invalid_roof",
+          "level_not_found",
+          "invalid_line_weight",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_attribute",
+          "attribute_required"
+        ],
+        "warnings": [
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "12 × 9 m binaya 50 cm saçaklı %33 kırma çatı",
+          "input": {
+            "layerId": "cati",
+            "roofs": [
+              {
+                "arch": {
+                  "level": "k1"
+                },
+                "overhang": 0.5,
+                "pts": [
+                  {
+                    "x": -0.5,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 12.5,
+                    "y": -0.5
+                  },
+                  {
+                    "x": 12.5,
+                    "y": 9.5
+                  },
+                  {
+                    "x": -0.5,
+                    "y": 9.5
+                  }
+                ],
+                "slopes": [
+                  33.0,
+                  33.0,
+                  33.0,
+                  33.0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "title": "Beşik çatı: uzun kenarlar %40, kısalar kalkan",
+          "input": {
+            "layerId": "cati",
+            "roofs": [
+              {
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 0.0
+                  },
+                  {
+                    "x": 12.0,
+                    "y": 9.0
+                  },
+                  {
+                    "x": 0.0,
+                    "y": 9.0
+                  }
+                ],
+                "slopes": [
+                  40.0,
+                  null,
+                  40.0,
+                  null
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.arch.edit",
       "version": 1,
       "title": "Mimari nesneyi düzenle",
@@ -26570,6 +26780,7 @@
               "grid",
               "column",
               "beam",
+              "roof",
               "stair",
               "ramp",
               "slab",
@@ -37950,7 +38161,7 @@
       "id": "road.terrains.sheetcontours",
       "version": 1,
       "title": "Pafta eş yükselti eğrileri",
-      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR 3520). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
+      "summary": "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR 3520). Kendi kotu olan, yüzeyde ve yüzeyin köşesi olmayan seçilen noktalarda ölçülen kotla yüzeyin kotu arasındaki farkların karesel ortalaması paketin sınırıyla (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre) karşılaştırılır (check); aşarsa uyarı section_check_exceeded (ADR 4740). İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden (ADR 4740). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Çizim projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev, seçilen nokta, yerleşik alan, yol) damgasıyla tutulur (ADR 4740): biri değişince eskir, road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.",
       "aliases": [
         "paftaegrileri",
         "esyukseltipafta"
@@ -37969,7 +38180,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the\nscale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base\n(none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,\nthe auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written\n(`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot\nheights (`slopes`, none: no such heights; docs/adr/3120), the rule package (none: KentOS's BÖHHBÜY 2018).\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none\nthe package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without\ntheir text height), `layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`,\n`slopes.top`, `slopes.bottom`, `points`), `invalid_revision`, `revision_conflict`, `unknown_terrain`, `terrain_unbuildable`,\n`invalid_contours` (more than 10 000 levels), `no_contours`.",
+        "description": "Input of `road.terrains.sheetcontours` v1: the surface (its id or name), the layer the lines and labels go on, the\nscale's denominator (none: the project's plot scale), the interval (none: the package's for the scale) and the base\n(none: 0), the detail layers whose closed objects no line crosses (none: no such rule), whether the steep rule,\nthe auxiliary lines and the labels apply (none: they do), whether the summits' and pits' spot heights are written\n(`spots`, none: not; docs/adr/2320), the layers of the slopes' tops and bottoms whose lines' corners take spot\nheights (`slopes`, none: no such heights; docs/adr/3120), the built-up areas' and roads' heights (`builtUp`, none:\nnone; docs/adr/4740), the rule package (none: KentOS's BÖHHBÜY 2018).\n\nDrawn, its drawing is kept with the surface and every layer it reads (docs/adr/4740): it goes stale when they\nchange and `road.project.rebuild` draws it again.\n\nRefusals, in this order: `not_a_road_project`, `invalid_contours` (a scale of 0, an interval not above zero or none\nthe package gives for the scale, a base not finite, a package not whole, spot heights asked of a package without\ntheir text height, built-up heights asked without a spacing above nought or with neither areas nor roads),\n`layer_not_found`, `not_a_layer`, `layer_locked` (`layerId`), `layer_not_found` (`details`, `slopes.top`,\n`slopes.bottom`, `points`, `builtUp.areas`, `builtUp.roads`), `invalid_revision`, `revision_conflict`,\n`unknown_terrain`, `terrain_unbuildable`, `invalid_contours` (more than 10 000 levels), `no_contours`. Warning\n`section_check_exceeded`: the chosen points' RMS is not under the package's limit.",
         "properties": {
           "auxiliary": {
             "type": [
@@ -37984,6 +38195,17 @@
               "null"
             ],
             "x-unit": "elevation"
+          },
+          "builtUp": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetBuiltUp"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The heights of built-up areas and roads (BÖHHBÜY m. 63(2), docs/adr/4740)."
           },
           "details": {
             "items": {
@@ -38077,6 +38299,16 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as\n“Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo\nleaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:\nnone), the revision after it and notes.",
         "properties": {
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetHeightCheck"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cut": {
             "format": "double",
             "type": "number",
@@ -38172,6 +38404,16 @@
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `road.terrains.sheetcontours` v1, and its plan: the package (id, source), the scale and the interval used,\nthe lines (by level, auxiliary ones at theirs, then by their first places) and the labels (along each major line in\nits order), the triangles where only major lines are drawn and where an auxiliary one is, the length of line left\nout inside the details (metres), the project line type the auxiliary lines are drawn with (the package's pattern as\n“Yardımcı eğri (‹package›)”, added to the project's types when it has none of the name, a project setting that undo\nleaves (docs/adr/0313); none without auxiliary lines or a pattern; docs/adr/2720), the objects written (a plan:\nnone), the revision after it and notes.",
         "properties": {
+          "check": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SheetHeightCheck"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "cut": {
             "format": "double",
             "type": "number",
@@ -38277,7 +38519,8 @@
           "no_contours"
         ],
         "warnings": [
-          "layer_hidden"
+          "layer_hidden",
+          "section_check_exceeded"
         ]
       },
       "examples": [
@@ -56155,7 +56398,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.",
+        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again\nwrites only what changed (docs/adr/4740), and the revision read.",
         "properties": {
           "autoRebuild": {
             "type": "boolean"
@@ -56181,6 +56424,9 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "regional": {
+            "type": "boolean"
+          },
           "revision": {
             "type": "string"
           },
@@ -56198,6 +56444,7 @@
           "rebuildable",
           "deep",
           "autoRebuild",
+          "regional",
           "revision"
         ],
         "title": "RoadProjectTree",
@@ -56205,7 +56452,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.",
+        "description": "Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are\nstale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be\ndrawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again\nwrites only what changed (docs/adr/4740), and the revision read.",
         "properties": {
           "autoRebuild": {
             "type": "boolean"
@@ -56231,6 +56478,9 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "regional": {
+            "type": "boolean"
+          },
           "revision": {
             "type": "string"
           },
@@ -56248,6 +56498,7 @@
           "rebuildable",
           "deep",
           "autoRebuild",
+          "regional",
           "revision"
         ],
         "title": "RoadProjectTree",
@@ -56488,7 +56739,7 @@
       "id": "road.project.rebuild",
       "version": 1,
       "title": "Yol çizimlerini yeniden üret",
-      "summary": "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri.",
+      "summary": "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); değişen çizimde komutun sırasıyla her yeni nesne tıpatıp aynı, alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız sırada önündeki bir nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve ikisi öbür sırada başka bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk ve saydamlıktaki yazısız çizgi ve çoklu çizgiler her sırada aynı resmi çizer; maskeli yazı, nokta, dolgu sırasını korur); kalan eskiler silinir, kalan yeniler çizimin sırasıyla sona yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri yazılınca ondan sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve region (silinen ve yazılan nesnelerin kutusu, yazı ekleme noktasıyla: değişen bölge). Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri.",
       "aliases": [
         "yenidenuret"
       ],
@@ -56505,7 +56756,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that\nis stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its\nchanges are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on\nits layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.\n\n`regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy\nfirst; one whose objects come out as they are is not written (its record takes its sources' stamps now); a line\ndrawing (lines and polylines of one colour and transparency, nothing filled or written, so their drawing order\ndraws the same picture) keeps its unchanged lines where they are and writes the changed ones; any other drawing that\nchanged is drawn whole, so its objects keep the command's drawing order.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,\n`drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand\nwithout `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).",
+        "description": "Input of `road.project.rebuild` v1 (docs/adr/0911 §3): the drawings by id to draw again; absent, every drawing that\nis stale or missing objects. A drawing changed by hand is drawn again only when named and `edited` says so (its\nchanges are lost). Each is drawn again with the input it was drawn with: its objects removed, new ones written on\nits layer, its sources' stamps and objects kept anew; one undo step “Yeniden üret”.\n\n`regional` (docs/adr/4320; plan/map-cad.md MAP-14) writes only what changed: each drawing is made again on a copy\nfirst; one whose objects come out as they are is not written (its record takes its sources' stamps now). Otherwise,\nin the command's order, a new object takes the first old one exactly alike not taken yet and stays where that is,\nunless an object before it in the order is written, or stays from a later place, and the two could draw another\npicture in the other order (docs/adr/4740): only lines and polylines without a label and of one colour and\ntransparency draw the same picture in any order. The old objects left are removed, the new ones left written at the\ndrawing's end in its order.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_drawing`,\n`drawing_source_gone` (a named drawing whose main source is gone), `drawing_edited` (a named drawing changed by hand\nwithout `edited`), and the drawing commands' own (a layer gone or locked, a source that no longer draws).",
         "properties": {
           "drawings": {
             "items": {
@@ -56774,7 +57025,7 @@
       "id": "road.project.edit",
       "version": 1,
       "title": "Kendiliğinden yeniden üret",
-      "summary": "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set.",
+      "summary": "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer (false). Tek geri alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden “Yeniden üretim”. Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set.",
       "aliases": [
         "otouret"
       ],
@@ -56791,7 +57042,7 @@
       "cost": "instant",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in\nthe step of the write that left them stale, on or off; one undo step “Kendiliğinden yeniden üret”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set`.",
+        "description": "Input of `road.project.edit` v1 (docs/adr/0911 §3): `autoRebuild` turns drawing the stale drawings again by itself, in\nthe step of the write that left them stale, on or off; `regional` (docs/adr/4740) chooses whether drawing again, by\nitself or from the project tree, writes only what changed (docs/adr/4320; the project's first choice) or draws each\ndrawing whole. One undo step: “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” or, both changed, “Yeniden üretim”.\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `nothing_to_set` (neither\ngiven, or what is given is already so: at `autoRebuild` when it is given, else at `regional`).",
         "properties": {
           "autoRebuild": {
             "type": [
@@ -56804,6 +57055,12 @@
               "string",
               "null"
             ]
+          },
+          "regional": {
+            "type": [
+              "boolean",
+              "null"
+            ]
           }
         },
         "title": "RoadProjectEdit",
@@ -56811,9 +57068,12 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.project.edit` v1: drawing again by itself now, and the revision after.",
+        "description": "Output of `road.project.edit` v1: drawing again by itself now, whether drawing again writes only what changed\n(docs/adr/4740), and the revision after.",
         "properties": {
           "autoRebuild": {
+            "type": "boolean"
+          },
+          "regional": {
             "type": "boolean"
           },
           "revision": {
@@ -56822,6 +57082,7 @@
         },
         "required": [
           "autoRebuild",
+          "regional",
           "revision"
         ],
         "title": "RoadProjectEdited",
@@ -56829,9 +57090,12 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `road.project.edit` v1: drawing again by itself now, and the revision after.",
+        "description": "Output of `road.project.edit` v1: drawing again by itself now, whether drawing again writes only what changed\n(docs/adr/4740), and the revision after.",
         "properties": {
           "autoRebuild": {
+            "type": "boolean"
+          },
+          "regional": {
             "type": "boolean"
           },
           "revision": {
@@ -56840,6 +57104,7 @@
         },
         "required": [
           "autoRebuild",
+          "regional",
           "revision"
         ],
         "title": "RoadProjectEdited",
@@ -58038,6 +58303,270 @@
       ]
     },
     {
+      "id": "cad.pointclouds.network",
+      "version": 1,
+      "title": "Tarama ağı dengelemesi",
+      "summary": "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur. Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable.",
+      "aliases": [
+        "taramaagi",
+        "agdengelemesi",
+        "coklutarama",
+        "bundleregistration"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.network` v1 (plan/map-cad.md MAP-13, docs/adr/4720): the scans (point clouds' persistent\nids, at least three), those held where they are (at least one, not all), the links (pairs of scans; none: every\npair whose plan boxes overlap, in the scans' order), and the pairwise registration's own options (docs/adr/1800:\n`spacing`, `reach`, `iterations`, `tolerance`, `neighbours`; docs/adr/2300 `robust`; docs/adr/2700 `reject`), the\nsame for every link. `drawing`: where a cloud's relative file is looked for.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud` (`uids[i]`); `invalid_input` (fewer than three scans,\none twice; no fixed scan, every scan fixed, a fixed scan not among the scans; a link twice, of one scan, of a scan not\namong them; a scan joined to no fixed scan by the links; a link whose registration found fewer than six pairs; a\nnetwork that does not fix every scan's position, as flat ground leaves a horizontal shift free); the registration's\nown refusals at its option (`spacing` …); the files' (`file_not_found`, `import_unreadable`).",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fixed": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "iterations": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "links": {
+            "description": "The links, each two scans' ids (the first the one the second is registered to); none: every pair whose plan\nboxes overlap.",
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "neighbours": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "reach": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "reject": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterReject"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "robust": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RegisterRobust"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "spacing": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "uids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "uids",
+          "fixed"
+        ],
+        "title": "PointCloudsNetwork",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'\nmean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's\npairs, metres), and notes.",
+        "properties": {
+          "centre": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/$defs/NetworkLink"
+            },
+            "type": "array"
+          },
+          "loops": {
+            "items": {
+              "$ref": "#/$defs/NetworkLoop"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scans": {
+            "items": {
+              "$ref": "#/$defs/NetworkScan"
+            },
+            "type": "array"
+          },
+          "shift": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "centre",
+          "scans",
+          "links",
+          "loops",
+          "shift",
+          "notes"
+        ],
+        "title": "PointCloudsNetworked",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.network` v1: the network's centre (the scans' plan boxes' middles' mean, their heights'\nmean), the scans, the links, the loops, the network's RMS shift (the square root of Σ rᵀ·N·r over every link's\npairs, metres), and notes.",
+        "properties": {
+          "centre": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/$defs/NetworkLink"
+            },
+            "type": "array"
+          },
+          "loops": {
+            "items": {
+              "$ref": "#/$defs/NetworkLoop"
+            },
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scans": {
+            "items": {
+              "$ref": "#/$defs/NetworkScan"
+            },
+            "type": "array"
+          },
+          "shift": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "centre",
+          "scans",
+          "links",
+          "loops",
+          "shift",
+          "notes"
+        ],
+        "title": "PointCloudsNetworked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_input"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç tarama, birincisi sabit, bağlar örtüşmeden",
+          "input": {
+            "fixed": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"
+            ],
+            "uids": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.pointclouds.register",
       "version": 1,
       "title": "Tarama kaydı denetimi",
@@ -59030,7 +59559,7 @@
       "id": "cad.orthophoto.compare",
       "version": 1,
       "title": "Ortofoto karşılaştırması",
-      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).",
+      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı mozaik elemanı, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).",
       "aliases": [
         "ortofotokarsilastir",
         "mozaikkayiklik",
@@ -59330,6 +59859,350 @@
             "known": "gnss",
             "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
             "secondPoints": "okuma-2026"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.orthophoto.seamlines",
+      "version": 1,
+      "title": "Mozaik birleşme çizgisi",
+      "summary": "İki ortofotonun (raster; first, second) mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (TUCBS Ortogörüntü: mozaik elemanı görüntünün mozaikte kullanılan bölümüdür, elemanlar örtüşmez; ArcGIS Pro'nun Build Seamlines'ı gibi). Ayak izleri rasterlerin sınırı ya da verilen alanlardır (footprints: alan ya da düz kenarlı kapalı çoklu çizgi, dışbükey). method voronoi, eşit uzaklık (ilk değer; Pan ve ark. 2009, örtüşmeli alan Voronoi diyagramı): örtüşmenin bir noktası kendi bölgesi (ayak izinin öbürününkinin dışında kalan bölümü) daha yakın olan görüntüye düşer; birleşme çizgisi iki bölgeden eşit uzak noktalardır: en yakın öğeleri iki kenar (ya da iki köşe, ya da kenarın doğrusundaki köşe) olan parçası düz (açıortay) ve yalnız dönüm noktaları yazılır; köşe ile kenar arasındaki eğri parçasının noktaları kirişe dik doğrularda step metrede bir (ilk değer 1). Uçlar iki sınırın kesiştiği yerler ya da ortak sınırın iki bölgeden eşit uzak noktasıdır (ends: crossing, shared). method radiometry, radyometrik fark (Chon, Kim, Lin 2010): ızgara birinci görüntünün cell × cell pikselidir (ilk değer 1); pikselin farkı ortak bantların mutlak farklarının en büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik evrişimiyle birincinin piksel merkezinde okunur); hücrenin farkı piksellerininkilerin en büyüğü. Hücre bütün pikselleri örtüşmede ve okunur, merkezi eşit uzaklık çizgisine corridor (arama bandı) metreden yakın (verilirse) ve hiçbir pikseli avoid katmanının alanlarında (geçilmeyecek alanlar: bina, köprü; USGS) değilse aranır. Eşit uzaklık çizgisinin uçlarına en yakın aranan hücreler arasında önce en büyük farkı en küçük yol, sonra onu aşmayan hücrelerde en az maliyetli yol (hareketin boyu × (1 + iki hücrenin farklarının ortalaması); 8 komşu); çizgi başlangıç, yolun dönen hücrelerinin merkezleri ve bitiştir. difference: en büyük fark, yolun ve aranan hücrelerin ortalaması, hücre sayıları, hücrenin yerdeki boyu. Mozaik elemanlarının halkaları: birincininki kendi sınırında bitişten başlangıca, sonra birleşme çizgisi; ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat yönünün tersine); ikisi de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı (öznitelikleri Görüntü: rasterin kimliği, Yöntem) layer katmanına tek geri alma adımında (“Mozaik elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik elemanları”) aynı adımda açılır (opened). Sonuç Ortofoto karşılaştırması'nın seam.polygons'ına doğrudan verilir (ADR 4460). BÖHHBÜY birleşme çizgisinin yerine kural koymaz; m. 67(6) ortak alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (first, second); invalid_input (aynı raster iki kez; step, cell (1..64), corridor; voronoi ile cell, corridor ya da avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi değil, yaylı, delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün içinde, sınır ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok piksel, iki uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found (layer, avoid), layer_locked; invalid_revision, revision_conflict; invalid_file_path, file_not_found, import_unreadable (görüntünün dosyası).",
+      "aliases": [
+        "birlesmecizgisi",
+        "mozaikelemani",
+        "seamline",
+        "buildseamlines"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.orthophoto.seamlines` v1 (plan/map-cad.md MAP-12, docs/adr/4700): two orthophotos (rasters'\npersistent ids; the first's polygon is written first), their footprints (areas or closed polylines of straight\nedges, convex; none: each raster's extent), the method, and for Voronoi the spacing of a curved stretch's points\n(metres; none: 1), for radiometry the cell's side in the first image's pixels (none: 1) and the corridor round the\nVoronoi seam the path keeps to (metres; none: the whole overlap). `folder`: where a raster's relative file is looked\nfor (radiometry reads the pixels). `avoid` (radiometry): a layer whose areas the seam keeps out of. `layer`: the\nlayer's id the polygons are written on; none: `mozaik-elemanlari` (“Mozaik elemanları”), made in the same undo step\nwhen missing.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_raster`, `crs_mismatch` (`first`, `second`); `invalid_input`\n(one raster twice; `step` not above zero; `cell` outside 1..=64; `corridor` not above zero; `cell`, `corridor` or\n`avoid` with Voronoi; a footprint twice, not in the drawing, not an area or a closed polyline, of arcs, holes or parts, not\nconvex; no overlap, one footprint inside the other, an overlap whose boundary changes hands more than twice; for\nradiometry no cell to search, too many pixels, no path between the ends); `layer_not_found` (`layer`, `avoid`),\n`layer_locked`;\n`invalid_revision`, `revision_conflict`; the files' (`invalid_file_path`, `file_not_found`, `import_unreadable`).",
+        "properties": {
+          "avoid": {
+            "description": "Radiometry: a layer whose areas (and closed polylines) the seam keeps out of, as buildings and bridges (USGS:\na seam does not cut a roof): a cell with a pixel centre inside one is not searched.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cell": {
+            "description": "Radiometry: a cell's side in the first image's pixels.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "corridor": {
+            "description": "Radiometry: how far from the Voronoi seam a searched cell's centre may lie.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "first": {
+            "type": "string"
+          },
+          "folder": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "footprints": {
+            "description": "The two images' footprints' persistent ids, in the images' order; none: each raster's extent.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod",
+            "default": "voronoi"
+          },
+          "second": {
+            "type": "string"
+          },
+          "step": {
+            "description": "Voronoi: a curved stretch's points every `step` metres along the line from the seam's start to its end.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "first",
+          "second"
+        ],
+        "title": "OrthophotoSeamlines",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its\nend (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for\nradiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.",
+        "properties": {
+          "difference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeamDifference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ends": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamEnd"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "overlap": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          },
+          "overlapArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "polygons": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamPolygon"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "seam": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          }
+        },
+        "required": [
+          "method",
+          "overlap",
+          "overlapArea",
+          "seam",
+          "length",
+          "ends",
+          "polygons",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoSeamlinesBuilt",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.orthophoto.seamlines` v1: the method, the overlap (its ring and area), the seam from its start to its\nend (east, north) and its length, its two ends, the two polygons (the first image's, then the second's), for\nradiometry the differences, the layer written on (and whether it was made), notes and the drawing's revision.",
+        "properties": {
+          "difference": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/OrthoSeamDifference"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ends": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamEnd"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "length": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "method": {
+            "$ref": "#/$defs/OrthoSeamMethod"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened": {
+            "type": "boolean"
+          },
+          "overlap": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          },
+          "overlapArea": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "polygons": {
+            "items": {
+              "$ref": "#/$defs/OrthoSeamPolygon"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "seam": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "system"
+          }
+        },
+        "required": [
+          "method",
+          "overlap",
+          "overlapArea",
+          "seam",
+          "length",
+          "ends",
+          "polygons",
+          "layer",
+          "notes",
+          "revision"
+        ],
+        "title": "OrthophotoSeamlinesBuilt",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_raster",
+          "crs_mismatch",
+          "invalid_input",
+          "layer_not_found",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict",
+          "file_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "İki ortofotonun sınırlarından eşit uzaklık (Voronoi) birleşme çizgisi",
+          "input": {
+            "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+            "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
+          }
+        },
+        {
+          "title": "Radyometrik fark, binalardan geçmeden, eşit uzaklık çizgisinden en çok 5 m",
+          "input": {
+            "avoid": "bina",
+            "corridor": 5.0,
+            "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+            "method": "radiometry",
+            "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12"
           }
         }
       ]
@@ -94525,6 +95398,7 @@
               "grid",
               "column",
               "beam",
+              "roof",
               "stair",
               "ramp",
               "slab",
@@ -94534,7 +95408,7 @@
               "viewmark"
             ],
             "refusedWith": "no_straight_edge",
-            "note": "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz."
+            "note": "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, kirişin, merdivenin ve rampanın çevresi, çatının saçak çizgisi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz."
           }
         ],
         "refusals": [
@@ -105419,6 +106293,12 @@
       "meaning": "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok."
     },
     {
+      "code": "section_check_exceeded",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ölçülen kotlarla yüzeyin kotu arasındaki farkların karesel ortalaması m. 93(1)(c)'nin sınırını aşıyor."
+    },
+    {
       "code": "no_zero_line",
       "kind": "failed",
       "retryable": false,
@@ -110987,6 +111867,12 @@
       "meaning": "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı."
     },
     {
+      "code": "invalid_roof",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çatının alanları bir çatı tanımlamıyor: en az üç noktalı saçak çizgisi, her kenara bir eğim ya da kalkan, sınırları içinde kalınlık, saçak ve kot farkı."
+    },
+    {
       "code": "not_a_grid",
       "kind": "failed",
       "retryable": false,
@@ -112540,7 +113426,10 @@
     "constraints_relaxed",
     "subnetwork_dirty",
     "events_dirty",
-    "casework_owned"
+    "casework_owned",
+    "drawings_rebuilt",
+    "drawing_edited",
+    "drawing_not_rebuilt"
   ],
   "units": [
     {
@@ -126902,7 +127791,7 @@
     },
     "ContourRules": {
       "additionalProperties": false,
-      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'\ntext height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and\nthe auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:\nthe built-in dashed type, docs/adr/2720).",
+      "description": "A sheet contour rule package: who issues it, the document, when it holds, its release; the interval by scale,\nevery how many lines a major one, the lines' weights (paper mm), the sheet spacing (mm) under which only major\nlines are drawn and over which an auxiliary one is, the labels' spacing and height (paper mm), the spot heights'\ntext height (paper mm, Ek-3 0004; none: the package gives none, and spot heights are refused, docs/adr/2320) and\nthe auxiliary line's pattern on paper (mm: a dash positive, a gap negative; Ek-3 0003's 5 mm dash and 1 mm gap; none:\nthe built-in dashed type, docs/adr/2720); docs/adr/4740: the spacing of the heights in built-up areas and along\nroads (paper mm, m. 63(2)'s about 2 cm; none: such heights are refused) and the section check's limit (m. 91(2),\nm. 93(1)(c); none: no comparison).",
       "properties": {
         "auxiliaryAbove": {
           "format": "double",
@@ -126924,6 +127813,14 @@
         },
         "effective": {
           "type": "string"
+        },
+        "heightEvery": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
         },
         "id": {
           "type": "string"
@@ -126968,6 +127865,16 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "count"
+        },
+        "sectionCheck": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SectionCheck"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "source": {
           "type": "string"
@@ -136886,6 +137793,20 @@
           "properties": {
             "kind": {
               "const": "beam",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/RoofEntity",
+          "description": "A roof (docs/adr/8044 §1): its eaves line and each edge's slope; drawn by its faces' lines in a plan.",
+          "properties": {
+            "kind": {
+              "const": "roof",
               "type": "string"
             }
           },
@@ -159679,6 +160600,103 @@
       ],
       "type": "object"
     },
+    "NetworkLink": {
+      "description": "A link (docs/adr/4720): its two scans, its registration's pairs, overlap share, RMS after and strength\n(`cad.pointclouds.register`'s), the second's correction relative to the first it observed (rotation, then\ntranslation about the network's centre), the network's residual of it (adjusted − observed, the same order), and the\nshift that residual makes along the pairs' normals (the square root of rᵀ·N·r over the pairs, metres).",
+      "properties": {
+        "observed": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "overlap": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "pairs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "residual": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 6,
+          "minItems": 6,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "rmsAfter": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "scans": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "shift": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "strength": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "scans",
+        "pairs",
+        "overlap",
+        "rmsAfter",
+        "strength",
+        "observed",
+        "residual",
+        "shift"
+      ],
+      "type": "object"
+    },
+    "NetworkLoop": {
+      "description": "A loop of links (docs/adr/4720): the scans it passes through in order (a held scan stands for every held one, which\ndo not move against each other), and how far its observations fail to close: the rotation's length (radians) and\nthe translation's (metres) of the sum round it.",
+      "properties": {
+        "rotation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "rad"
+        },
+        "scans": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "translation": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "scans",
+        "rotation",
+        "translation"
+      ],
+      "type": "object"
+    },
     "NetworkPeriod": {
       "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
       "properties": {
@@ -159813,6 +160831,63 @@
         "passed",
         "baselines",
         "stations"
+      ],
+      "type": "object"
+    },
+    "NetworkScan": {
+      "description": "A scan adjusted (docs/adr/4720): its id, whether it was held, its correction about the network's centre — the\nrotation (ω, φ, κ; R = Rz(κ)·Ry(φ)·Rx(ω)) and the translation — and the matrix taking its points where they belong\n(row by row, p ↦ R(p − centre) + centre + translation), for Dönüşüm uygula; for a free scan its horizontal strength in\nthe network: √(σz² / σh²) of its translation's covariance (σh² the larger plan eigenvalue), Tarama kaydı's\n`horizontal` for the network — under 0.1 the network barely fixes it in plan (flat ground).",
+      "properties": {
+        "fixed": {
+          "type": "boolean"
+        },
+        "horizontal": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "matrix": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 16,
+          "minItems": 16,
+          "type": "array",
+          "x-unit": "value"
+        },
+        "rotation": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "rad"
+        },
+        "translation": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "uid": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "uid",
+        "fixed",
+        "rotation",
+        "translation",
+        "matrix"
       ],
       "type": "object"
     },
@@ -161006,6 +162081,90 @@
         "pts",
         "width",
         "rise"
+      ],
+      "type": "object"
+    },
+    "NewRoof": {
+      "additionalProperties": false,
+      "description": "One roof to draw (docs/adr/8044 §1): its fields, and its attributes.",
+      "properties": {
+        "arch": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArchInfo"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "material": {
+          "description": "Its covering; absent: Kiremit.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its eaves' height over its storey's top (the next storey's floor); absent: 0.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "elevation"
+        },
+        "overhang": {
+          "description": "How far its eaves stand past the walls' outer faces (saçak).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "pts": {
+          "description": "Its eaves line (saçak çizgisi), closed: at least three points, either way round, turning out at every corner.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "slopes": {
+          "description": "Each edge's slope from its eaves, per cent (the edge from `pts[i]` to the next point); null: a gable end.",
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "percent"
+        },
+        "thickness": {
+          "description": "Its build-up's thickness, measured upright; absent: 0.25 m.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "pts",
+        "slopes"
       ],
       "type": "object"
     },
@@ -166130,6 +167289,75 @@
       ],
       "type": "object"
     },
+    "OrthoSeamDifference": {
+      "description": "The radiometric seam's differences (docs/adr/4700), in the images' values: the largest along the path (the\nbottleneck no path between the ends goes under), the mean along it and over every searched cell; the path's cells,\nthe searched cells and a cell's side on the ground (metres).",
+      "properties": {
+        "bottleneck": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "cells": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "searched": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "searchedMean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "size": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        }
+      },
+      "required": [
+        "bottleneck",
+        "mean",
+        "searchedMean",
+        "cells",
+        "searched",
+        "size"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamEnd": {
+      "description": "A seam's end (docs/adr/4700): where the two footprints' boundaries cross (`crossing`), or on a stretch the two\nshare (`shared`: the union's outer boundary), the point of it equally far from the two images' own parts.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "system"
+        },
+        "kind": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "at",
+        "kind"
+      ],
+      "type": "object"
+    },
     "OrthoSeamLine": {
       "description": "The seam line measured along (docs/adr/2860): its persistent id and length, how many places it has every step and\nhow many of them lie outside the overlap (not measured).",
       "properties": {
@@ -166159,6 +167387,65 @@
         "length",
         "places",
         "outside"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamMethod": {
+      "description": "How the seam is drawn through the overlap (docs/adr/4700).",
+      "oneOf": [
+        {
+          "const": "voronoi",
+          "description": "Equally far from the two images' own parts (the area Voronoi diagram with overlap).",
+          "type": "string"
+        },
+        {
+          "const": "radiometry",
+          "description": "The least-difference path between the Voronoi seam's ends (the bottleneck, then the least cost).",
+          "type": "string"
+        }
+      ]
+    },
+    "OrthoSeamPolygon": {
+      "description": "An image's seamline polygon: the raster's persistent id, its ring (east, north; counter-clockwise, closed back to\nits start by its last edge), its area, the part of the overlap it keeps (m²), and the object written (execute).",
+      "properties": {
+        "area": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "image": {
+          "type": "string"
+        },
+        "kept": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "area"
+        },
+        "ring": {
+          "items": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "system"
+        },
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "image",
+        "ring",
+        "area",
+        "kept"
       ],
       "type": "object"
     },
@@ -188606,6 +189893,10 @@
           },
           "type": "array"
         },
+        "rebuildWhole": {
+          "description": "Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless\nchosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.",
+          "type": "boolean"
+        },
         "sections": {
           "description": "The sample line sets (docs/adr/0903 §2), in the order the project tree shows them.",
           "items": {
@@ -188898,6 +190189,11 @@
           "const": "network",
           "description": "A utility network (docs/adr/3560): its definition and the objects of its layers.",
           "type": "string"
+        },
+        {
+          "const": "layer",
+          "description": "A layer of the drawing (docs/adr/4740): the geometries of its objects in the drawing's order. A sheet's\ncontour lines read their details, slopes, chosen points, built-up areas and roads from layers.",
+          "type": "string"
         }
       ]
     },
@@ -189038,6 +190334,199 @@
           "type": "object"
         }
       ]
+    },
+    "RoofEntity": {
+      "description": "A roof (docs/adr/8044 §1).",
+      "properties": {
+        "arch": {
+          "$ref": "#/$defs/ArchInfo"
+        },
+        "attachments": {
+          "description": "The photos and documents it carries, in their order (docs/adr/0225\n§1); none on a block's objects.",
+          "items": {
+            "$ref": "#/$defs/Attachment"
+          },
+          "type": "array"
+        },
+        "attrs": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).",
+          "type": "object"
+        },
+        "byLayer": {
+          "description": "On a block's object, the parts without a value of their own that\nfollow the object's layer instead of the insert; in order, once each,\nnever one with a value of its own.",
+          "items": {
+            "$ref": "#/$defs/LookPart"
+          },
+          "type": "array"
+        },
+        "color": {
+          "description": "Colour override; absent = the layer's colour (\"katmana göre\").",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "id": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "id"
+        },
+        "label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labelPins": {
+          "description": "Its labels moved, turned, pinned or hidden by hand (docs/adr/0212\n§3.7), one a class at most.",
+          "items": {
+            "$ref": "#/$defs/LabelPin"
+          },
+          "type": "array"
+        },
+        "layerId": {
+          "type": "string"
+        },
+        "linePattern": {
+          "description": "Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:\n`line_type`.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "lineType": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LineType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its own line type; absent: its source's (the layer's, or the insert's in a block)."
+        },
+        "lineTypeScale": {
+          "description": "Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "lineWeight": {
+          "description": "Its own line weight, paper millimetres as the layer's\n(`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's\n(\"katmana göre\"). What a DXF's group 370 and an NCZ's pen give an\nobject (docs/adr/0139).",
+          "format": "double",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "material": {
+          "description": "Its covering (çatı kaplaması); absent: Kiremit.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "offset": {
+          "description": "Its eaves' height over its storey's top (the next storey's floor), else over ±0.00, metres; absent: 0.",
+          "format": "double",
+          "type": "number",
+          "x-unit": "elevation"
+        },
+        "order": {
+          "description": "Its place in its layer's drawing order: lower first, equals in the\ndocument's order; absent: 0; a 32-bit integer. Only a drawing's object has it.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
+        },
+        "overhang": {
+          "description": "How far its eaves were drawn past the walls' outer faces (saçak), metres.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "pts": {
+          "description": "Its eaves line, closed: at least three points, either way round.",
+          "items": {
+            "$ref": "#/$defs/Vec2"
+          },
+          "type": "array",
+          "x-unit": "length"
+        },
+        "slopes": {
+          "description": "Each edge's slope from its eaves, per cent (rise ÷ run × 100), the edge from `pts[i]` to the next point (the last\nback to the first); none: a gable end (kalkan). As many as the points.",
+          "items": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "type": "array",
+          "x-unit": "percent"
+        },
+        "symbol": {
+          "description": "Library symbol overriding the layer's style.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "thickness": {
+          "description": "Its build-up's thickness (kaplama, çıta, tahta, mertek), metres, measured upright; absent: 0.25.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "length"
+        },
+        "transparency": {
+          "description": "How transparent it is, 0 to 0.9; absent: its source's (none for a layer).",
+          "format": "double",
+          "maximum": 0.9,
+          "minimum": 0.0,
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "wipeout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Wipeout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers\nwhat is drawn before it; only an area has it."
+        }
+      },
+      "required": [
+        "id",
+        "layerId",
+        "attrs",
+        "pts",
+        "slopes"
+      ],
+      "type": "object"
     },
     "RouteFound": {
       "description": "Output of `road.routes.find` v1: the route's points (the start and the end where asked, the grid's nodes\nbetween, simplified within the tolerance), its plan length, the height it rises and falls in all, its steepest\nstretch (a grade, between the points kept), its cost, the grid's nodes and those settled.",
@@ -190006,6 +191495,39 @@
       ],
       "type": "object"
     },
+    "SectionCheck": {
+      "additionalProperties": false,
+      "description": "The section check's limit (BÖHHBÜY m. 91(2) and m. 93(1)(c), docs/adr/4740): at the scale's denominator S,\nKOH_X,Y in centimetres is `xy[0]·S² + xy[1]·S + xy[2]`, KOH_Z is `zFactor` times it, and the RMS of the differences\nbetween measured heights and the heights read from the contour lines is under `factor` times KOH_Z.",
+      "properties": {
+        "factor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "xy": {
+          "description": "The formula's coefficients of S², S and 1, giving centimetres.",
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "type": "array",
+          "x-unit": "1"
+        },
+        "zFactor": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "xy",
+        "zFactor",
+        "factor"
+      ],
+      "type": "object"
+    },
     "SectionCrossing": {
       "description": "Two lines of a set meeting within both swaths (docs/adr/0933 §1): their stations, the side (left true) and how far\nout on each.",
       "properties": {
@@ -190812,6 +192334,11 @@
         {
           "const": "beam",
           "description": "Kiriş (docs/adr/8041 §1); after it for the same reason.",
+          "type": "string"
+        },
+        {
+          "const": "roof",
+          "description": "Çatı (docs/adr/8044 §1); after it for the same reason.",
           "type": "string"
         }
       ]
@@ -192164,6 +193691,33 @@
         }
       ]
     },
+    "SheetBuiltUp": {
+      "additionalProperties": false,
+      "description": "The heights of built-up areas and roads (BÖHHBÜY m. 63(2): “yerleşik alanlar ve yollarda harita üzerinde yaklaşık 2\ncm'de bir”, docs/adr/4740): the layers of the built-up areas' closed boundaries and of the roads' lines, and the\nspacing on the sheet (paper mm; none: the package's `heightEvery`). Along each road line from its start a height\nevery spacing, the first at half of it; then on the grid of the spacing (multiples of it east and north) inside the\nbuilt-up areas (even-odd over their rings), outside the details and farther than half the spacing from every height\nalready placed. Heights are the surface's, written as the summits' are; a place off the surface is counted.",
+      "properties": {
+        "areas": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "every": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "paper-mm"
+        },
+        "roads": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "type": "object"
+    },
     "SheetContourLabel": {
       "description": "A height written on a major line: its level, its text, where its middle is and its turn (degrees counter-clockwise\nfrom east, its top uphill).",
       "properties": {
@@ -192287,6 +193841,67 @@
         "project",
         "files",
         "bytes"
+      ],
+      "type": "object"
+    },
+    "SheetHeightCheck": {
+      "description": "The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)'s limit): the points\ncompared (an own height, on the surface, not one of the surface's corners: a corner's difference is nought), the\ncorners left out, the RMS of the differences and the largest one with its place (metres), KOH_Z for the scale by\nm. 91(2) and the limit, `factor` times it (metres), and whether the RMS is under the limit.",
+      "properties": {
+        "at": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "length"
+        },
+        "compared": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "corners": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "kohZ": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "largest": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "limit": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "rms": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "within": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "compared",
+        "corners",
+        "rms",
+        "largest",
+        "at",
+        "kohZ",
+        "limit",
+        "within"
       ],
       "type": "object"
     },
@@ -192950,7 +194565,7 @@
       "type": "object"
     },
     "SheetSpot": {
-      "description": "A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex\nwith the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`\n(docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point\n(docs/adr/3520), the surveyor's, with its own height (the surface's when it has none); its place and height, the\nheight to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).",
+      "description": "A characteristic point's height (BÖHHBÜY m. 78(1)(ğ)): a `summit` or a `pit` (docs/adr/2320), the surface's vertex\nwith the highest (lowest) height inside an innermost closed major or minor line, or a `slopeTop` or `slopeBottom`\n(docs/adr/3120), a corner of a slope's top or bottom line with the surface's height there, or a `chosen` point\n(docs/adr/3520), the surveyor's, with its own height (the surface's when it has none), or (docs/adr/4740, m. 63(2)) a\n`road` height along a road line or a `builtUp` one on the grid of a built-up area; its place and height, the\nheight to the decimetre as written, and for a chosen point with its own height the surface's there (none off it).",
       "properties": {
         "kind": {
           "type": "string"

@@ -867,14 +867,14 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
         assert errs and max(errs) < 0.05, (name, len(errs), max(errs))
     out["seam"] = measured
     where_ = (f"örtüşmede {len(measured['patches'])} yer" if line is None else
-              f"dikiş hattı boyunca ({measured['line']['length']:.2f} m) örtüşmede {len(measured['patches'])} yer, "
+              f"birleşme çizgisi boyunca ({measured['line']['length']:.2f} m) örtüşmede {len(measured['patches'])} yer, "
               f"{measured['line']['outside']} yer örtüşmenin dışında")
     if shared is not None:
         sh = measured["shared"]
-        where_ = (f"dikiş çokgenlerinin ortak sınırı boyunca ({sh['length']:.2f} m, {len(sh['parts'])} parça) örtüşmede "
+        where_ = (f"mozaik elemanlarının ortak sınırı boyunca ({sh['length']:.2f} m, {len(sh['parts'])} parça) örtüşmede "
                   f"{len(measured['patches'])} yer, {sh['outside']} yer örtüşmenin dışında")
     out["notes"].append(
-        f"Dikiş ölçümü: {where_}; {measured['ok']} sayıldı, {measured['low']} "
+        f"Kayıklık ölçümü: {where_}; {measured['ok']} sayıldı, {measured['low']} "
         f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
         f"kendisinden normalize çapraz korelasyonla ölçüldü (piksel altı, "
         f"{'görüntünün çift kübik ara değeriyle' if ask.get('subpixel') == 'bicubic' else 'parabolle'}).")
@@ -1086,7 +1086,7 @@ def seam_cases():
     polys = two(area(P_FIRST), area(P_SECOND))
     pair = [uid(3), uid(4)]
     return [c1, c2, c3, c4, c5, c6, c7, c8, c9, r1, r2, r3, r4, r5, r7, r6, p1, p2, p3, p4,
-            refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
+            refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Kayıklık ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
                     "seam.step", ss),
             refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
                     "seam.window", ss),
@@ -1096,10 +1096,10 @@ def seam_cases():
                     "En az korelasyon 0'dan büyük, en çok 1 olmalı; her yer sayılacaksa boş bırakın.", "seam.correlation",
                     ss),
             refused("dikiş: pikseller farklı boyda", seam_in(), bad,
-                    "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini "
+                    "Kayıklık ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini "
                     "birincinin ızgarasına yeniden örneklemek için resample verin.", "seam", seam_setup(pixel=0.08)),
             refused("dikiş: dönük birinci görüntü, yeniden örnekleme istenmeden", seam_in(), bad,
-                    "Dikiş ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini "
+                    "Kayıklık ölçümü pikselleri aynı boyda ve kuzeye bakan (dönüksüz) iki görüntüde yapılır; ikincisini "
                     "birincinin ızgarasına yeniden örneklemek için resample verin.", "seam",
                     seam_setup(first=resampled_raster("dikis-e.tif"))),
             refused("dikiş: örtüşme yok", seam_in(), bad,
@@ -1108,34 +1108,34 @@ def seam_cases():
             refused("dikiş: dosyası olmayan görüntü", seam_in(), "file_not_found", "$any", "second",
                     seam_setup(second="yok.tif")),
             refused("dikiş hattı: çizimde yok", seam_in(line=uid(9)), bad,
-                    f"“{uid(9)}” kimlikli dikiş hattı çizimde yok.", "seam.line", ss),
-            refused("dikiş hattı: nokta", seam_in(line=uid(3)), bad, "Dikiş hattı bir çizgi ya da çoklu çizgi olmalı.",
+                    f"“{uid(9)}” kimlikli birleşme çizgisi çizimde yok.", "seam.line", ss),
+            refused("dikiş hattı: nokta", seam_in(line=uid(3)), bad, "Birleşme çizgisi bir çizgi ya da çoklu çizgi olmalı.",
                     "seam.line", lined(point(3, "0", 515.0, 114.0, None, "N"))),
             refused("dikiş hattı: örtüşmeden geçmiyor", seam_in(line=uid(3)), bad,
-                    "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı "
+                    "Birleşme çizgisinin hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); çizgiyi "
                     "örtüşmeden geçirin ya da adımı küçültün.", "seam.line",
                     lined(polyline([(502.0, 119.0), (504.0, 110.0)]))),
             refused("dikiş çokgenleri: çizilmiş hatla birlikte", seam_in(line=uid(3), polygons=pair), bad,
-                    "Dikişi ya çizilmiş bir hatla (line) ya da iki dikiş çokgeniyle (polygons) verin; ikisi birden "
+                    "Ölçüyü ya çizilmiş bir birleşme çizgisi (line) ya da iki mozaik elemanı (polygons) boyunca isteyin; ikisi birden "
                     "olmaz.", "seam.polygons", polys),
             refused("dikiş çokgeni iki kez", seam_in(polygons=[uid(3), f" {uid(3)}"]), bad,
-                    "İki dikiş çokgeni aynı nesne; iki görüntünün ayrı dikiş çokgenlerini verin.", "seam.polygons",
+                    "İki mozaik elemanı aynı nesne; iki görüntünün ayrı mozaik elemanlarını verin.", "seam.polygons",
                     polys),
             refused("dikiş çokgeni çizimde yok", seam_in(polygons=[uid(3), uid(9)]), bad,
-                    f"“{uid(9)}” kimlikli dikiş çokgeni çizimde yok.", "seam.polygons[1]", polys),
+                    f"“{uid(9)}” kimlikli mozaik elemanı çizimde yok.", "seam.polygons[1]", polys),
             refused("dikiş çokgeni alan değil", seam_in(polygons=pair), bad,
-                    f"“{uid(3)}” bir alan ya da kapalı çoklu çizgi değil; dikiş çokgeni olamaz.", "seam.polygons[0]",
+                    f"“{uid(3)}” bir alan ya da kapalı çoklu çizgi değil; mozaik elemanı olamaz.", "seam.polygons[0]",
                     two(polyline(SEAM_LINE), area(P_SECOND))),
             refused("dikiş çokgeni yaylı", seam_in(polygons=pair), bad,
-                    f"“{uid(4)}” dikiş çokgeninin yaylı kenarı var; kenarları düz olmalı.", "seam.polygons[1]",
+                    f"“{uid(4)}” mozaik elemanının yaylı kenarı var; kenarları düz olmalı.", "seam.polygons[1]",
                     two(area(P_FIRST), closed(P_SECOND, [0.0, 0.0, 0.0, 0.0, 0.3]))),
             refused("dikiş çokgenleri 2 mm ayrık: ortak sınır yok", seam_in(polygons=pair), bad,
-                    "İki dikiş çokgeninin ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki "
-                    "görüntünün dikiş çokgenlerini verin.", "seam.polygons",
+                    "İki mozaik elemanının ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki "
+                    "görüntünün mozaik elemanlarını verin.", "seam.polygons",
                     two(area(P_FIRST), area([(x + 0.002, y) for x, y in P_SECOND]))),
             refused("dikiş çokgenlerinin ortak sınırı örtüşmede değil", seam_in(polygons=pair), bad,
-                    "Dikiş çokgenlerinin ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama "
-                    "payıyla); örtüşmede buluşan dikiş çokgenlerini verin ya da adımı küçültün.", "seam.polygons",
+                    "Mozaik elemanlarının ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama "
+                    "payıyla); örtüşmede buluşan mozaik elemanlarını verin ya da adımı küçültün.", "seam.polygons",
                     two(area([(500.0, 121.5), (505.0, 121.5), (505.0, 106.5), (500.0, 106.5)]),
                         area([(505.0, 121.5), (530.0, 121.5), (530.0, 106.5), (505.0, 106.5)]))),
             ]

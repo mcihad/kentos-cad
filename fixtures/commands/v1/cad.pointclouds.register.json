@@ -2462,7 +2462,7 @@
       "rules": {
        "id": "deneme-3cm",
        "release": 1,
-       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 4/h yalnız tanımlar)",
+       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 7(1)(h) LİDAR'ı tanımlar, m. 45(1)(a) yöntem olarak sayar; şerit uyumuna sınır koymaz)",
        "source": "Deneme paketi (sentetik): 3 cm",
        "effective": "2018-06-26",
        "interswath": 0.03,
@@ -6625,7 +6625,7 @@
       "rules": {
        "id": "lidar-uyum-ornek",
        "release": 1,
-       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 4/h yalnız tanımlar)",
+       "jurisdiction": "Örnek paket: Türk mevzuatında LiDAR şerit uyumu ölçütü yok (BÖHHBÜY m. 7(1)(h) LİDAR'ı tanımlar, m. 45(1)(a) yöntem olarak sayar; şerit uyumuna sınır koymaz)",
        "source": "",
        "effective": "2018-06-26",
        "interswath": 0.08,

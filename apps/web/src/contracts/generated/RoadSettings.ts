@@ -92,4 +92,9 @@ drawings?: Array<RoadDrawingDef>,
 /**
  * A write that leaves drawings stale draws them again in its step (docs/adr/0911 §3); off unless chosen.
  */
-autoRebuild?: boolean, };
+autoRebuild?: boolean, 
+/**
+ * Drawing again, by hand from the project tree or by itself, draws each drawing whole (docs/adr/4740); unless
+ * chosen, only what changed is written (docs/adr/4320). Since `.kcad` schema 238.
+ */
+rebuildWhole?: boolean, };

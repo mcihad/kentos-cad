@@ -352,4 +352,22 @@ impl Document {
         });
         true
     }
+
+    /// Whether drawing again draws each drawing whole (docs/adr/4740); otherwise only what changed is written.
+    pub fn road_rebuild_whole(&self) -> bool {
+        self.settings.road.as_ref().is_some_and(|r| r.rebuild_whole)
+    }
+
+    /// Chooses drawing again whole or only what changed, as one change named `label`.
+    pub fn set_road_rebuild_whole(&mut self, whole: bool, label: &str) -> bool {
+        let before = self.road_rebuild_whole();
+        if before == whole {
+            return false;
+        }
+        let _ = self.transact(label, |doc| -> Result<(), Refusal> {
+            doc.record(vec![Op::RoadRebuildWhole { before, after: whole }], label);
+            Ok(())
+        });
+        true
+    }
 }

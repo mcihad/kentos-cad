@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `236`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-237.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `238`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-239.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -992,6 +992,16 @@ seçer; 216 ve öncesi alanı `unknown_field` sayar (`broken/plan-cut-in-schema-
 başkası `bad_value`, `broken/line-groups-unknown.kcad`). Yoksa her nesne kendi kalemindedir; yeni Mimari projesi
 `byScale` yazar. Yazıcı 218'i ayar `lineGroups` taşıyınca seçer; 217 ve öncesi alanı `unknown_field` sayar
 (`broken/line-groups-in-schema-217.kcad`). Örnek `line-groups.json/.kcad`.
+
+**Şema 238** (ADR 4740; MAP-14): pafta eğrilerinin çizimi (`road.terrains.sheetcontours`), yol ya da harita projesinin
+`road.drawings`'inde kaynaklarının damgalarıyla. Kaynak türlerine `layer` eklenir: ana kaynak yüzeydir; eğrilerin okuduğu
+katmanlar (detay, şev üstü ve dibi, seçilen noktalar, yerleşik alan, yol) öbür kaynaklardır, kimlikleri katmanın
+kimliğidir (boşluk taşıyabilir, en çok 256 karakter). Katmanın damgası, katmandaki nesnelerin çizim sırasıyla, her birinin
+tabanının alanları çıkarılmış JSON'unun (türü ve geometrisi) listesinin kanonik JSON'unun (sayılar kayan noktalı)
+SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true` yazılır): yeniden üretim, elle de
+kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 238'i böyle bir çizim,
+`layer` kaynağı ya da `rebuildWhole` varken seçer; 237 ve öncesi üçünü de `bad_value` sayar
+(`broken/sheet-contour-drawing-in-schema-237.kcad`). Örnek `map-sheet-contours.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

@@ -355,8 +355,8 @@ impl App {
             .menu(menu)
             .tip(match self.level_view {
                 LevelView::All => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı; mahal ve ölçü araçları o kattaki duvarlara bakar. Kat görünümü: Bütün katlar. Başka kat ya da görünüm için tıklayın.",
-                LevelView::Active => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: yalnız etkin kat; öbür katlar gizli, üst katın döşemeleri kesikli. Başka kat ya da görünüm için tıklayın.",
-                LevelView::Below => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: etkin kat ve alt kat soluk (kenetlenir, seçilmez), üst katın döşemeleri kesikli. Başka kat ya da görünüm için tıklayın.",
+                LevelView::Active => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: yalnız etkin kat; öbür katlar gizli, üst katın döşemeleri ve bu katın çatıları kesikli. Başka kat ya da görünüm için tıklayın.",
+                LevelView::Below => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: etkin kat ve alt kat soluk (kenetlenir, seçilmez), üst katın döşemeleri ve bu katın çatıları kesikli. Başka kat ya da görünüm için tıklayın.",
             })
             .into(),
         )
@@ -543,6 +543,58 @@ mod tests {
         assert!(dashed(&app));
         let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
         assert!(!dashed(&app), "on its own level");
+    }
+
+    /// docs/adr/8044 §3: a roof of Zemin kat (its eaves at 1. kat's floor) is its eaves dashed on Zemin kat's plan alone,
+    /// still picked there; whole in Bütün katlar. The words are placed again when the view changes: the real window kept
+    /// the roof's slopes and the hidden level's room numbers on the screen after Yalnız etkin kat.
+    #[test]
+    fn a_roof_is_its_eaves_dashed_on_its_own_plan_and_the_words_follow_the_view() {
+        use kentos_geometry_core::entity::Shape;
+        let (mut app, _) = App::boot(None);
+        crate::wall_scenes::opened(&mut app, crate::tools_scenes::Objects::new(), 100.0);
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+            iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+        )));
+        crate::wall_scenes::fit(&mut app, 8.0, 6.0);
+        with_levels(&mut app);
+        let p = |x: f64, y: f64| serde_json::json!({"x": crate::tools_scenes::E + x, "y": crate::tools_scenes::N + y});
+        crate::program_scenes::command(
+            &mut app,
+            "cad.roofs.create",
+            serde_json::json!({"layerId": "cizim", "roofs": [{
+                "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0), p(0.0, 4.0)],
+                "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "zemin"}
+            }]}),
+        );
+        let roof = {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            doc.entities()
+                .find(|e| matches!(e, kentos_commands::Entity::Roof(_)))
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("the roof")
+        };
+        let dashed = |app: &App| {
+            app.spatial
+                .store()
+                .get(f64::from(roof.0))
+                .is_some_and(|it| matches!(&it.shape, Shape::Roof { roof, .. } if roof.overhead))
+        };
+        let _ = app.update(Message::ActiveLevel(Some("zemin".into())));
+        let _ = app.update(Message::Run("view.levels.all"));
+        let _ = app.view();
+        let all = app.label_spots.key().expect("placed");
+        assert!(!dashed(&app), "Bütün katlar: whole");
+        let _ = app.update(Message::LevelView(LevelView::Active));
+        assert!(dashed(&app), "Zemin kat alone: its eaves dashed");
+        assert_eq!(app.spatial.level_looks().1.roofs, vec![roof.0]);
+        let at = kentos_interaction::Vec2::new(crate::tools_scenes::E, crate::tools_scenes::N + 2.0);
+        assert_eq!(app.spatial.hits(at, 0.2), vec![roof], "still Zemin kat's own: picked");
+        let _ = app.view();
+        assert_ne!(app.label_spots.key(), Some(all), "the words placed again for the view");
+        // On 1. kat, whose floor its eaves stand at: whole, its roof plan.
+        let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
+        assert!(!dashed(&app));
     }
 
     #[test]

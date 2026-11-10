@@ -345,6 +345,17 @@
   - **Cephe kaplaması (M43 2. bölüm, ADR 8043 §10):** görünüşte cephe 25 cm aralıkla taranır (`geom::section::seen_at`:
     en önde görünen prizma yüzü), açıklıklar atlanır; 0,25 m²'den çok görünen her kaplama (`Solid.finish` → proje
     malzemesinin adı) bir kez, kat yüksekliklerinin sağında, `MM-XXXX-ETIKET`'te; çizgisi yazıya en yakın noktasından.
+  - **Çatı (M44 1. bölüm, [ADR 8044](../adr/8044-roof-and-roof-plan.md) §1–§4):**
+    - `Entity::Roof`: saçak çizgisi ve her kenarın eğimi (yüzde; `null` kalkan, Revit'in "Defines slope"u); tür adı
+      eğimlerden okunur (Kırma, Beşik, Tek eğimli, Düz). Saçak katının üstünde (yükseklik ya da bir üst katın tabanı;
+      üstünde kat yoksa kendi tabanı) + kot farkı. `.kcad` şema 237, tür 32; `cad.roofs.create`; `MM-CATI-<kaplama>`.
+    - Çekirdek `geom::roof`: yüzler eğimli düzlemlerin alt zarfı (dışbükey saçakta düz iskelet); hatlar saçak, kalkan,
+      mahya, kırma, dere; içe dönen saçak henüz reddedilir. Planda her yüze ok ve `%33`, mahyaya `+4.65`.
+    - Araç (Yerleştir › Çatı, `CT`): Binadan (duvarların dış yüzü + Saçak, çatı katında duvar yoksa alttaki kat) ya da
+      Köşeleri çiz; ön kenar tıklanana en yakın ya da ilk kenar. Harfler: Eğim M, Saçak A, Kalınlık E, Kot farkı F,
+      Kaplama P, Kat L. Mahya 5,00 m'yi aşınca önizleme PAİY 40'ı söyler. Rampa Merdiven ▾'ye alındı (30 düğme sınırı).
+    - Kendi katının planında yalnız saçak kesikli (MO 14.5.3 u "Saçak … nokta nokta"), seçilir; bütünü saçağın durduğu
+      üst katın planında ve Bütün katlar'da (`level_view::LevelLooks::roofs`).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
@@ -656,6 +667,23 @@
 - **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
   `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
   sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
+- **Pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması (10 Kasım 2026; MAP-14, [ADR 4740](../../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
+  `road.terrains.sheetcontours` çizimi yüzeyin ve okuduğu katmanların damgasıyla tutulur (yeni kaynak türü `layer`),
+  eskir ve yeniden üretilir. Yalnız değişeni yaz sırayı korur: aynı renkli yazısız çizgiler kalır, maskeli yazı ve nokta
+  bir çizgi yazılınca yeniden yazılır; Proje ağacı'ndaki kutu projenin ayarıdır (`road.rebuildWhole`, `road.project.edit`
+  `regional`; kendiliğinden yeniden üretim de uyar; `.kcad` şema 238). `builtUp`: yollarda ve yerleşik alanda paftada
+  2 cm'de bir kot; `check`: seçilen noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin sınırına göre (uyarı
+  `section_check_exceeded`). Pafta eğrileri › Yerleşik alan (63/2). Harita + Yol.
+- **Tarama ağı dengelemesi (10 Kasım 2026; MAP-13, [ADR 4720](../../docs/adr/4720-scan-network-adjustment.md)).**
+  Yeni `cad.pointclouds.network`: üç ve daha çok tarama bir GNSS ağı gibi birlikte dengelenir; bağlar Tarama kaydı gibi
+  kaydedilip normal matrisleriyle ağırlıklanır, sabit taramalar yerinde kalır; döngü kapanmaları ve her taramanın yatay
+  gücü söylenir. Nokta bulutu › Tarama ağı; Dönüşüm uygula taramayı matrisiyle taşır. Harita + CBS.
+- **Birleşme çizgisi ve mozaik elemanlarının KentOS'ta kurulması (10 Kasım 2026; MAP-12, [ADR 4700](../../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
+  Yeni `cad.orthophoto.seamlines`: iki ortofotonun birleşme çizgisi ve mozaik elemanları (TUCBS Ortogörüntü), eşit uzaklık
+  (Voronoi; Pan ve ark. 2009, düz kesimler kesin) ya da radyometrik fark (en büyük farkın en küçüğü, sonra en az maliyet;
+  arama bandı, geçilmeyecek alanlar); tek geri alma adımında Mozaik elemanları katmanına. Raster › Birleşme çizgisi.
+  Terimler: birleşme çizgisi, mozaik elemanı, ayak izi (TUCBS “ayakizi”), kayıklık; Ortofoto karşılaştırması'nın “dikiş”
+  sözleri de değişti. Mevzuat çizginin yerine kural koymaz (BÖHHBÜY m. 67(6)). CAD + CBS.
 - **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
   İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
   eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.

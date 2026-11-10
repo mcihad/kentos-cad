@@ -248,6 +248,15 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-12 / ADR 4460: web'in `cad.orthophoto.compare` işleyicisinde dikiş çokgenlerinin ortak sınırı boyunca ölçüm
   (`seam.polygons`, `seam.shared`; cad.orthophoto.compare.json'un 11 yeni durumu) ve web Ortofoto karşılaştırması'nda
   Seçili çokgenleri al.
+- MAP-14 / ADR 4740: web'in `road.terrains.sheetcontours` işleyicisinde `builtUp` (m. 63(2)) ve `check` (m. 93(1)(c)),
+  çizimin `layer` kaynaklarıyla tutulması; `road.project.rebuild`'in sıra kuralı; `road.project.edit` `regional` ve
+  ağacın `regional`'ı; `.kcad` şema 238 (sheetcontours.json'un 22, project.edit'in 6 yeni durumu); web Pafta eğrileri'nde
+  Yerleşik alan satırı ve Proje ağacı'nda Yalnız değişeni yaz.
+- MAP-13 / ADR 4720: web'de `cad.pointclouds.network` işleyicisi (cad.pointclouds.network.json'un 22 durumu; çekirdek
+  `kentos_pointcloud::ops::network` WASM'den) ve Nokta bulutu › Tarama ağı penceresi.
+- MAP-12 / ADR 4700: web'de `cad.orthophoto.seamlines` işleyicisi (cad.orthophoto.seamlines.json'un 44 durumu; çekirdek
+  `ops::seamlines` WASM'den), Raster › Birleşme çizgisi penceresi ve web Ortofoto karşılaştırması'nın yeni sözleri
+  (Kayıklık ölçümü, Birleşme çizgisi, Seçili mozaik elemanlarını al).
 - MAP-20 / ADR 4440: web'in `road.project.graph` ve `road.project.produce` işleyicilerinde tarifin katmanının
   saydamlığı, karışım kipi, türü ve Yazdır'ı; türün tutmadığı nesnenin planda reddi (graph'ın 23, produce'un 64 ortak
   durumu) ve web İş grafiği'nin Tariften üret'i.

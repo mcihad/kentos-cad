@@ -700,6 +700,15 @@ pub(crate) fn road_has_cloud_heights(road: &kentos_contracts::RoadSettings) -> b
     road.surfaces.iter().any(|s| s.clouds.iter().any(|c| c.vertical.is_some()))
 }
 
+/// Whether a road project's settings hold what schema 238 brought (docs/adr/4740): a sheet's contour lines kept as a
+/// drawing, a layer as a drawing's source, drawing again whole.
+pub(crate) fn road_has_sheet_contour_drawings(r: &kentos_contracts::RoadSettings) -> bool {
+    r.rebuild_whole
+        || r.drawings.iter().any(|d| {
+            d.command == "road.terrains.sheetcontours" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Layer)
+        })
+}
+
 /// Whether road settings carry schema 201's fields: an alignment's places beyond its ends (docs/adr/1028).
 pub(crate) fn road_has_places(road: &kentos_contracts::RoadSettings) -> bool {
     road.alignments.iter().any(|a| a.start_place.is_some() || a.end_place.is_some())
@@ -2028,6 +2037,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             && v.drawings.iter().any(|d| d.command == "cad.pipes.profile" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Network))
         {
             return Err(relation("road", "hat profili çizimi ve ağ kaynağı şema 212'den önce yazılmaz (cad.pipes.profile)", r));
+        }
+        // A sheet's contour lines kept as a drawing, a layer as a drawing's source and drawing again whole
+        // (docs/adr/4740) are schema 238's, in any project.
+        if !has.sheet_contour_drawings && road_has_sheet_contour_drawings(v) {
+            return Err(relation(
+                "road",
+                "pafta eğrileri çizimi, katman kaynağı ve bütün yeniden üretim şema 238'den önce yazılmaz (road.terrains.sheetcontours)",
+                r,
+            ));
         }
         // A drawing record's version and revision (docs/adr/2840) are schema 209's.
         if !has.drawing_provenance && v.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some()) {

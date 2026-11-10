@@ -288,6 +288,10 @@ fn build<'a>(
     spatial.store().ghost_count(None).hash(&mut key);
     // A twisted view lays its text out upright and turns it as a picture (docs/adr/0285 §2).
     camera.twist.to_bits().hash(&mut key);
+    // Kat görünümü (docs/adr/0715): what it hides, and what it draws otherwise (a roof its eaves alone, docs/adr/8044 §3),
+    // changes the words placed. Before, a switch to Yalnız etkin kat kept the hidden level's room numbers and a roof's
+    // slopes on the screen until the drawing changed.
+    spatial.level_looks().0.hash(&mut key);
     // A view with a theme places the labels of the layers it shows (docs/adr/0523 §2).
     if let Some(tree) = shows {
         for leaf in tree.leaves() {

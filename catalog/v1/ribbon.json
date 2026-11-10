@@ -557,6 +557,10 @@
         "size": "small"
        },
        {
+        "command": "pointcloud.network",
+        "size": "small"
+       },
+       {
         "command": "pointcloud.profile",
         "size": "small"
        }
@@ -1753,7 +1757,8 @@
            "edit.selectFilter.ramp",
            "edit.selectFilter.tag",
            "edit.selectFilter.viewmark",
-           "edit.selectFilter.slab"
+           "edit.selectFilter.slab",
+           "edit.selectFilter.roof"
           ],
           "works": [
            "architecture"
@@ -2021,6 +2026,10 @@
         "size": "small"
        },
        {
+        "command": "tool.roof",
+        "size": "small"
+       },
+       {
         "key": "archGrids",
         "size": "small",
         "split": [
@@ -2049,12 +2058,13 @@
           "command": "tool.stairCurved",
           "title": "Merdiven",
           "label": "Döner merdiven"
+         },
+         {
+          "command": "tool.ramp",
+          "title": "Merdiven",
+          "label": "Rampa"
          }
         ]
-       },
-       {
-        "command": "tool.ramp",
-        "size": "small"
        }
       ]
      },
@@ -4003,6 +4013,10 @@
        },
        {
         "command": "pointcloud.register",
+        "size": "small"
+       },
+       {
+        "command": "pointcloud.network",
         "size": "small"
        },
        {
@@ -6363,6 +6377,10 @@
        "size": "small"
       },
       {
+       "command": "raster.seamlines",
+       "size": "small"
+      },
+      {
        "command": "processing.run.raster.cog",
        "size": "small"
       },
@@ -6700,6 +6718,10 @@
       },
       {
        "command": "pointcloud.register",
+       "size": "small"
+      },
+      {
+       "command": "pointcloud.network",
        "size": "small"
       },
       {

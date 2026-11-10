@@ -1,0 +1,44 @@
+# M44 1. bölüm (docs/adr/8044 §1, §3, §4), on fixtures/arch/v1/facade-building.kcad ("Görünüş binası", opened with
+# --modul mimari): 1. kat active (Ctrl+Up). Çatı from the menu search: Binadan, the click inside the walls near the
+# south one: the preview's tag "Kırma çatı · %33", "Mahya +7.69 · 1.691 m yüksek", "Saçak 0.500 m"; written: "Kırma çatı
+# çizildi; mahya +7.69. Kat planında saçağı kesikli; bütünü Bütün katlar'da." Bütün katlar draws it whole; Yalnız etkin
+# kat: on 1. kat's plan its eaves alone, dashed, 50 cm out of the walls, and the words placed again (no "%33", the room
+# "105", not Zemin kat's "005").
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+shot s1-arama
+key Return
+wait 1500
+move 765 735
+wait 1800
+shot s2-onizleme
+click 765 735
+wait 2500
+key Escape
+wait 800
+move 1400 120
+wait 800
+shot s3-butun-katlar
+key alt+q
+wait 600
+type Yalnız etkin kat
+wait 1500
+key Return
+wait 1800
+move 1400 120
+wait 800
+shot s4-yalniz-etkin-kat
+wheel 1040 360 4
+wait 1500
+move 1400 120
+wait 800
+shot s5-sacak-yakin

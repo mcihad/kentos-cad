@@ -43,9 +43,9 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260, 4660 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıflarının haritada gösterimi | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280, 4680 | dışarıdaki numaranın çakışma denetimi; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
-| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
-| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460, 4700 | ikiden çok görüntünün birleşme çizgisi ağı (üçlü düğüm); kenar algılama ve NoData'dan ayak izi | türeyen nesnenin kaynağa izi (MAP-01 sahip kararı); DSM/DTM için gerçek veri |
+| MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300, 4720 | dönüşümün dosyasız nesnede tutulması; Euler açılarıyla giriş (kaynak bulundu: OGC GeoPose, CloudCompare); ağda dış döngü ve kontrol noktaları | gerçek veri ölçümü (süre, bellek, yoğunluk) |
+| MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320, 4740 | katman damgasının katman dizininden okunması; m. 63(2) ızgarasının taban noktası ve dönmesi; kesit kontrolünün kendisi (iki kontrol noktası arasında kesit, m. 93(1)) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
@@ -1585,6 +1585,23 @@ parçanın başından adım aralıklı, her yer parçasıyla; cevapta `seam.shar
 ortak sınır çizilmiş hattın kendisiyken yerler hat durumununki, öbür sıra, iki parça, 0,4 mm; ortak kenarlar ve
 santimetrelik örneklemeyle okuyan Python testi, MCP; Ortofoto karşılaştırması'nda Seçili çokgenleri al. Açık: türeyen
 nesnenin izi (MAP-01 kararı), dikiş çokgenlerinin KentOS'ta kurulması.
+
+**10 Kasım 2026, dokuzuncu tur — birleşme çizgisinin ve mozaik elemanlarının KentOS'ta kurulması ([ADR 4700](../docs/adr/4700-orthophoto-seamline-polygons-built.md)).**
+Kapsam: **CAD + CBS** (raster). Terimler TUCBS Ortogörüntü'den (RG 09.07.2020) ve BÖHHBÜY m. 67(6)'dan: birleşme çizgisi
+(seamline), mozaik elemanı (görüntünün mozaikte kullanılan bölümü), ayak izi (TUCBS'de “ayakizi”; kapsama alanı sınırlayıcı
+dikdörtgendir), radyometrik fark, kayıklık; sahibin düzeltmesiyle Ortofoto karşılaştırması'nın “dikiş” sözleri de değişti
+(Kayıklık ölçümü, Birleşme çizgisi, Seçili mozaik elemanlarını al). Dayanak: ArcGIS Pro Build Seamlines, Pan ve ark. 2009
+(örtüşmeli alan Voronoi diyagramı, dörtgen örtüşmede AEFC), Chon ve ark. 2010 (önce en büyük farkın en küçüğü, sonra
+Dijkstra); mevzuat: BÖHHBÜY m. 67(6) ortak alanda radyometrik düzeltme ister, çizginin yerine kural koymaz; TUCBS'nin mozaik
+elemanları örtüşmez ve görüntü kaynaklıdır; USGS/ASPRS: çizgi çatıyı kesmez. Kanıtlanan: yeni `cad.orthophoto.seamlines`
+iki ortofotonun birleşme çizgisini ve mozaik elemanlarını kurar (ayak izleri raster sınırları ya da dışbükey alanlar):
+eşit uzaklık (Voronoi) çizgisi iki görüntünün kendi bölgelerinden eşit uzak (düz kesimler kesin, parabol kesimi aralıkla;
+uçlar sınırların kesiştiği ya da ortak sınırdaki eşit uzak nokta); radyometrik fark çizgisi eşit uzaklık uçları arasında
+en büyük farkı en küçük, sonra en az maliyetli hücre yolu (hücre, arama bandı, geçilmeyecek alanlar: bina); iki eleman tek
+geri alma adımında Mozaik elemanları katmanına, `Görüntü` özniteliğiyle. 44 bağımsız durum (dönüm yerleri başvuruda yoğun
+tarama ve ikiye bölmeyle, KentOS'ta doğruların kesişimiyle), çekirdek testleri, Python (yazılan elemanlar Ortofoto
+karşılaştırması'nın ortak sınırında çizginin kendisi), MCP, masaüstü Raster › Birleşme çizgisi. Açık: ikiden çok görüntünün
+birleşme çizgisi ağı, kenar algılama, NoData'dan ayak izi; türeyen nesnenin izi sahip kararını bekler.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].
@@ -1626,7 +1643,7 @@ sınıfları korunsun, düzeltme geri alınsın; kayıt ve nesne çıkarımı ba
 kontrolle değerlendirilsin. Gerçek veri/süre/bellek raporu olmadan “milyar nokta hızlı” denmesin.
 
 **6 Kasım 2026 — Tarama uyumu denetimi ([ADR 1500](../docs/adr/1500-scan-overlap-check.md)).** Kapsam işareti:
-**Harita + CBS**. Araştırma: BÖHHBÜY LiDAR'a ölçüt vermiyor (yalnız m. 4/h tanım; m. 91(2) KOH_Z ürün için); USGS LBS
+**Harita + CBS**. Araştırma: BÖHHBÜY LiDAR'a ölçüt vermiyor (yalnız m. 7(1)(h) tanım; m. 91(2) KOH_Z ürün için); USGS LBS
 QL2 şeritler arası RMSDz ≤ 8 cm (örnek, bağlayıcı değil); TBC/Cyclone/TerraMatch'te kayıt ve şerit uyumu ayrı iş.
 Kanıtlanan: iki taramanın tam çözünürlükte, hücre düzlemleriyle (eğim fark sayılmaz) RMSDz, sistematik kayma, en kötü
 hücreler; GNSS kontrol noktalarında her taramanın KOH_Z'si; kontrolsüz bulut “ölçüye kesin hazır” sayılmaz
@@ -1700,6 +1717,17 @@ kaydı'nın tarifiyle tek matrise çevirir, geçmişe matris yazılır; üç ret
 bayt), Python (kuaterniyonla), MCP, masaüstü ve resimler. Açık: çoklu tarama demeti, dönüşümün dosyasız nesnede
 tutulması, gerçek veri ölçümü, Euler açıları (kaynak).
 
+**10 Kasım 2026, dokuzuncu tur — tarama ağı dengelemesi ([ADR 4720](../docs/adr/4720-scan-network-adjustment.md)).**
+Kapsam: **Harita + CBS** (nokta bulutu). Dayanak: Leica Cyclone REGISTER 360'ın demeti (bağların hatası ve örtüşmesi,
+Constraint List), FARO/E57'nin nesnedeki konumu, KentOS'un GNSS ağ dengelemesi (bazlar ölçü, noktalar bilinmeyen);
+mevzuat: TKGM yersel LİDAR esasları (oturumda iki kontrol noktası, m. 46(4) ±15 cm); çok taramalı kaydın artığına resmî
+sınır yok. Kanıtlanan: yeni `cad.pointclouds.network` üç ve daha çok taramayı birlikte kaydeder: her bağ Tarama kaydı gibi
+kaydedilir, ölçüsü ve normal matrisi ağın merkezine taşınır, sabit olmayan taramaların düzeltmeleri en küçük karelerle
+(Cholesky) dengelenir; her taramanın matrisi ve yatay gücü, bağların artığı ve kayması, döngülerin kapanmaması. Huber
+ağırlığıyla bilinen kaymalar 1 cm içinde (ağırlıksızda çatı kenarları 2,5 cm saptırır). 22 bağımsız durum, çekirdek
+testleri, Python (döngüde artıklar kapanmamayı siler), MCP, masaüstü Nokta bulutu › Tarama ağı. Açık: dönüşümün dosyasız
+nesnede tutulması, dış döngü ve kontrol noktalarının ağa girmesi; Euler açıları artık kaynaklı.
+
 ### MAP-14 — Kırık hatlı ve kaynağı izlenen mühendislik yüzeyi geliştir [ ]
 
 **Öncelik:** P1, MAP-02/03/07 üzerine. **Kod:** [K28]–[K30], [K03].
@@ -1731,7 +1759,7 @@ GIS'te de tüketilir. UGRID/NetCDF mesh okuyucusu korunur; düzenlenebilir
 mühendislik yüzeyiyle aynı sözleşmeymiş gibi genişletilmez.
 
 **6 Kasım 2026 — Harita projesinde arazi yüzeyi ([ADR 1520](../docs/adr/1520-map-project-terrain-surfaces.md)).**
-Kapsam işareti: **Harita + Yol** (CBS yüzeyi analiz sekmesinden tüketir). Araştırma: BÖHHBÜY m. 4(1)(l) SAM'ı üçgensel
+Kapsam işareti: **Harita + Yol** (CBS yüzeyi analiz sekmesinden tüketir). Araştırma: BÖHHBÜY m. 6(1)(l) SAM'ı üçgensel
 biçimde tanımlar, m. 45(1)(c) ≥ 25 nokta/ha, m. 63 ve m. 78(1)(c–g) eş yükseklik eğrisi (aralık ölçeğe bağlı, her
 beşinci kalın); NetSURF yüzeyi harita üretiminin kaynağı yapar; Civil 3D yüzeyi tanım listesidir. Kanıtlanan: yol'un
 yüzey tarifi ve bütün `road.terrains.*` komutları Harita projesinde çalışır, Arazi sekmesinin Yüzey/Analiz/İşlemler
@@ -1821,6 +1849,19 @@ kutusu); sonuç bütün yeniden çizimle nesne nesne aynı (kayıt özeti ve dam
 kesirli eğriler, belgenin nesne sırası), Python, MCP; masaüstünde Proje ağacı'nda **Yalnız değişeni yaz** (öntanımlı
 açık). Açık: pafta eğrilerinin kayıtlı çizim olması, kendiliğinden yeniden üretimin yalnız değişeni yazması, karolu
 hesap (gerçek veri), fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir).
+
+**10 Kasım 2026, dokuzuncu tur — pafta eğrileri kayıtlı çizim; m. 63(2) kotları ve m. 93(1)(c) karşılaştırması ([ADR 4740](../docs/adr/4740-kept-sheet-contours-and-built-up-heights.md)).**
+Kapsam: **Harita + Yol**. Dayanak: BÖHHBÜY m. 63(2), 91(2), 93(1) (10 Kasım 2026'da okundu; 2025 değişikliği bu
+maddeleri değiştirmedi); Civil 3D'nin Spot Levels On Grid ve Create Points – Surface › On Grid'i, OpenRoads'un kurallı
+arazi modeli, ArcGIS Pro'nun canlı ve bağsız eğrisi. Kanıtlanan: pafta eğrileri yüzeyin ve okuduğu katmanların (yeni
+`layer` kaynağı: geometrinin damgası) damgasıyla kayıtlı çizimdir, eskir ve yeniden üretilir; yalnız değişeni yaz
+kuralı sırayı korur (aynı renkli yazısız çizgiler serbest, maskeli yazı ve nokta sırasını korur) ve elle de
+kendiliğinden de projenin ayarıdır (`rebuildWhole`, `road.project.edit`'in `regional`'ı, `.kcad` şema 238);
+`builtUp` ile yollarda ve yerleşik alanın ızgarasında paftada 2 cm'de bir kot (paketin `heightEvery`'si); seçilen
+noktaların ölçülen kotu yüzeyle m. 93(1)(c)'nin 1,5 · KOH_Z sınırına göre karşılaştırılır (`check`, uyarı
+`section_check_exceeded`); 71 bağımsız durum (22 yeni), regional ve proje durumları, `.kcad` örneği, Python, MCP,
+masaüstünde Yerleşik alan (63/2) satırı ve özet. Açık: katman damgasının dizinden okunması, ızgaranın taban noktası,
+kesit kontrolünün kendisi, karolu hesap (gerçek veri).
 
 ### MAP-15 — Saha kotlandırması, profil ve kazı/dolguyu aynı tasarıma bağla [ ]
 

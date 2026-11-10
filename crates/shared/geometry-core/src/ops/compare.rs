@@ -572,6 +572,14 @@ fn defs(shape: &Shape) -> Defs {
                 others.push(Other::Text(t.clone()));
             }
         }
+        // Its eaves, its eaves' height and each edge's slope (docs/adr/8044 §1).
+        Shape::Roof { pts, roof } => {
+            comps.push(path(pts, None));
+            lengths.push(roof.base);
+            for s in &roof.slopes {
+                others.push(Other::Num(s.unwrap_or(-1.0)));
+            }
+        }
         // Its jambs, its place along its wall, its width and what it is (docs/adr/0341).
         Shape::Opening {
             at,

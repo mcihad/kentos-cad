@@ -206,6 +206,7 @@ pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
         Shape::Grid { .. }
         | Shape::Column { .. }
         | Shape::Beam { .. }
+        | Shape::Roof { .. }
         | Shape::Stair { .. }
         | Shape::Ramp { .. }
         | Shape::Tag { .. }

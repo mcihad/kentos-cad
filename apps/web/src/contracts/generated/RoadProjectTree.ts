@@ -4,6 +4,7 @@ import type { RoadNode } from "./RoadNode";
 /**
  * Output of `road.project.query` v1: the rows in the tree's order (a parent before its children), how many rows are
  * stale, how many have a problem (unbuildable, unsolved, changed, missing, edited, gone), how many drawings could be
- * drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, and the revision read.
+ * drawn again (stale or missing), whether it was deep, whether drawing again by itself is on, whether drawing again
+ * writes only what changed (docs/adr/4740), and the revision read.
  */
-export type RoadProjectTree = { nodes: Array<RoadNode>, stale: number, problems: number, rebuildable: number, deep: boolean, autoRebuild: boolean, revision: string, };
+export type RoadProjectTree = { nodes: Array<RoadNode>, stale: number, problems: number, rebuildable: number, deep: boolean, autoRebuild: boolean, regional: boolean, revision: string, };

@@ -574,7 +574,25 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("beam", Val::Json(serde_json::to_value(&e.beam).unwrap_or_default())));
+                f.push((
+                    "beam",
+                    Val::Json(serde_json::to_value(&e.beam).unwrap_or_default()),
+                ));
+            }
+            // A roof (docs/adr/8044 §1): its fields as one map; only the drawing's.
+            Entity::Roof(e) => {
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, "blok tanımında çatı olamaz"));
+                }
+                if let Some((_, problem)) = e.roof.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push((
+                    "roof",
+                    Val::Json(serde_json::to_value(&e.roof).unwrap_or_default()),
+                ));
             }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {

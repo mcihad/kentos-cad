@@ -46,6 +46,7 @@ pub fn record_at<'a>(
     let represented = entity_at(entity, scale)?;
     let shape = match represented.as_ref() {
         Entity::Table(t) if t.table_style.is_some() => crate::geometry::styled_table(t, settings),
+        Entity::Roof(r) => crate::geometry::roof_shape(r, settings),
         e => crate::geometry::shape(e),
     };
     Some((

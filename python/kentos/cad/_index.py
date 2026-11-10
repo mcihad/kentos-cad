@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, field, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs, zoning
+from . import addresses, annotations, arc, arch, areas, arrays, asbuilt, assets, attachments, beams, blocks, casework, changeset, circle, columns, constraints, constructions, crs, curves, datasets, dimensions, dimensionsets, domains, donut, drawing, elevations, entities, extract, field, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, legends, levels, library, line, linearref, linetypes, map, materials, meshes, modules, navigator, network, north, nurbs, objects, openings, openingtypes, options, orthophoto, parameters, parcels, pipes, plotstyles, point, pointclouds, points, polygon, polyline, processing, profiles, program, project, ramps, rasters, readjustment, records, rectangle, relations, revcloud, review, revisions, road, roads, roofs, scenarios, schedules, schema, sections, sector, sensors, settings, shapes, sheets, slabs, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, survey, tables, tags, templates, texts, time, topology, ucs, units, viewmarks, views, walls, xrefs, zoning
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.check": addresses.check,
@@ -187,6 +187,7 @@ COMMANDS: dict[str, Any] = {
     "cad.options.query": options.query,
     "cad.orthophoto.check": orthophoto.check,
     "cad.orthophoto.compare": orthophoto.compare,
+    "cad.orthophoto.seamlines": orthophoto.seamlines,
     "cad.parameters.edit": parameters.edit,
     "cad.parcels.boundaries": parcels.boundaries,
     "cad.parcels.check": parcels.check,
@@ -198,6 +199,7 @@ COMMANDS: dict[str, Any] = {
     "cad.plotstyles.import": plotstyles.import_,
     "cad.point.create": point.create,
     "cad.pointclouds.describe": pointclouds.describe,
+    "cad.pointclouds.network": pointclouds.network,
     "cad.pointclouds.overlap": pointclouds.overlap,
     "cad.pointclouds.profile": pointclouds.profile,
     "cad.pointclouds.query": pointclouds.query,
@@ -237,6 +239,7 @@ COMMANDS: dict[str, Any] = {
     "cad.review.notes.list": review.notes.list,
     "cad.revisions.mark": revisions.mark,
     "cad.roads.edit": roads.edit,
+    "cad.roofs.create": roofs.create,
     "cad.scenarios.edit": scenarios.edit,
     "cad.scenarios.impact": scenarios.impact,
     "cad.schedules.create": schedules.create,
@@ -497,4 +500,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "asbuilt", "assets", "attachments", "beams", "blocks", "casework", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "datasets", "dimensions", "dimensionsets", "domains", "donut", "drawing", "elevations", "entities", "extract", "field", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "legends", "levels", "library", "line", "linearref", "linetypes", "map", "materials", "meshes", "modules", "navigator", "network", "north", "nurbs", "objects", "openings", "openingtypes", "options", "orthophoto", "parameters", "parcels", "pipes", "plotstyles", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "program", "project", "ramps", "rasters", "readjustment", "records", "rectangle", "relations", "revcloud", "review", "revisions", "road", "roads", "scenarios", "schedules", "schema", "sections", "sector", "sensors", "settings", "shapes", "sheets", "slabs", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "survey", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs", "zoning",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "areas", "arrays", "asbuilt", "assets", "attachments", "beams", "blocks", "casework", "changeset", "circle", "columns", "constraints", "constructions", "crs", "curves", "datasets", "dimensions", "dimensionsets", "domains", "donut", "drawing", "elevations", "entities", "extract", "field", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "legends", "levels", "library", "line", "linearref", "linetypes", "map", "materials", "meshes", "modules", "navigator", "network", "north", "nurbs", "objects", "openings", "openingtypes", "options", "orthophoto", "parameters", "parcels", "pipes", "plotstyles", "point", "pointclouds", "points", "polygon", "polyline", "processing", "profiles", "program", "project", "ramps", "rasters", "readjustment", "records", "rectangle", "relations", "revcloud", "review", "revisions", "road", "roads", "roofs", "scenarios", "schedules", "schema", "sections", "sector", "sensors", "settings", "shapes", "sheets", "slabs", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "subnetworks", "survey", "tables", "tags", "templates", "texts", "time", "topology", "ucs", "units", "viewmarks", "views", "walls", "xrefs", "zoning",)

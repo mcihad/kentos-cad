@@ -2766,6 +2766,37 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_ROOFS_CREATE.into(),
+            version: crate::CAD_ROOFS_CREATE_VERSION,
+            title: "Çatı".into(),
+            summary: "Çatılar ekler (docs/adr/8044 §1); tek geri alma adımı “Çatı”. Her biri saçak çizgisi (pts: en az 3, en çok 1000 nokta, kapalı, iki yönde de; her köşesi dışa dönük — içe dönen köşeli saçak henüz çizilmez, invalid_roof), her kenarın eğimi (slopes: pts[i]'den sonrakine kenarın yüzde eğimi, sıfırdan büyük, en çok %500; null kalkan — Revit'in roof by footprint'indeki “eğim verir” gibi: hepsi eğimli kırma, karşılıklı ikisi beşik, biri tek eğimli, hiçbiri düz çatı), kot farkı (offset: saçağın katının tepesinden — üstündeki katın döşemesinden — farkı; en çok ±10 m), kalınlık (thickness: düşey ölçülen çatı katmanları; yoksa 0,25 m), saçak (overhang: saçağın duvarların dış yüzünden uzaklığı, 0–5 m; PAİY 42 1,00 m), kaplama (material; yoksa Kiremit), kat ve tadilat durumu (arch). Planda saçak ve kalkanlar nesnenin kalemiyle, mahya, kırma ve dereler ince, her yüzde aşağı bakan eğim oku ve yüzdesi (%33), mahyanın kotu (+7.49) çizilir (Mimarlar Odası Mimarlık Hizmetleri Şartnamesi 14.3.3 u, 14.5.3 w). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::RoofsCreate>(),
+            output: schema::<crate::RoofsCreated>(),
+            plan: Some(schema::<crate::RoofsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "12 × 9 m binaya 50 cm saçaklı %33 kırma çatı".into(),
+                    input: json!({ "layerId": "cati", "roofs": [{ "pts": [{ "x": -0.5, "y": -0.5 }, { "x": 12.5, "y": -0.5 }, { "x": 12.5, "y": 9.5 }, { "x": -0.5, "y": 9.5 }], "slopes": [33.0, 33.0, 33.0, 33.0], "overhang": 0.5, "arch": { "level": "k1" } }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Beşik çatı: uzun kenarlar %40, kısalar kalkan".into(),
+                    input: json!({ "layerId": "cati", "roofs": [{ "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 12.0, "y": 0.0 }, { "x": 12.0, "y": 9.0 }, { "x": 0.0, "y": 9.0 }], "slopes": [40.0, null, 40.0, null] }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ARCH_EDIT.into(),
             version: crate::CAD_ARCH_EDIT_VERSION,
             title: "Mimari nesneyi düzenle".into(),
@@ -7104,8 +7135,9 @@ pub fn catalog() -> CommandCatalog {
             version: crate::ROAD_TERRAINS_SHEET_CONTOURS_VERSION,
             title: "Pafta eş yükselti eğrileri".into(),
             summary: "Bir yüzeyin eş yükselti eğrilerini paftaya BÖHHBÜY m. 78(1)(c)–(ğ) ve Ek-3 0001–0005'e göre çizer; değerler kural paketinindir (rules; ilk değer bohhbuy-2018-m78): aralık ölçekten (c: 1/500 ve 1/1000 1 m, 1/2000 2 m, 1/5000 5 m; interval ile değişir), her beşinci eğri kalın 0,25 mm, öbürleri 0,13 mm (d). \
-                      (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR 3520). \
-                      3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
+                      (e) Bir üçgende eğri arası paftada 2 mm'den azsa yalnız kalın eğriler, 20 mm'yi aşıyorsa yarım aralıkta kesik yardımcı eğri çizilir (steep, auxiliary). (f) Kalın eğrilere her 200 mm'de bir eğrinin kotu yazılır: 1,4 mm, eğri boyunca, üstü artan eğime dönük, kutusu maskeli (eğri bölünmez; labels). (g) Detay katmanlarının (details) kapalı nesnelerinin (bina, alan olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR 3520). Kendi kotu olan, yüzeyde ve yüzeyin köşesi olmayan seçilen noktalarda ölçülen kotla yüzeyin kotu arasındaki farkların karesel ortalaması paketin sınırıyla (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre) karşılaştırılır (check); aşarsa uyarı section_check_exceeded (ADR 4740). \
+                      İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden (ADR 4740). \
+                      3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Çizim projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev, seçilen nokta, yerleşik alan, yol) damgasıyla tutulur (ADR 4740): biri değişince eskir, road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Yardımcı eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable, no_contours."
                 .into(),
             aliases: vec!["paftaegrileri".into(), "esyukseltipafta".into()],
             effect: CommandEffect::Document,
@@ -9478,7 +9510,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_PROJECT_REBUILD.into(),
             version: crate::ROAD_PROJECT_REBUILD_VERSION,
             title: "Yol çizimlerini yeniden üret".into(),
-            summary: "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); çizgi çizimi (tek renk ve saydamlıkta, yazısız çizgi ve çoklu çizgiler: çizim sırası resmi değiştirmez) aynı çıkan çizgilerini yerinde bırakır, yalnız değişenleri siler ve yazar; değişen başka çizim bütün yeniden çizilir (çizim sırası komutunki kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve çizgi çiziminde region (silinen ve yazılan çizgilerin kutusu: değişen bölge). \
+            summary: "Yol ve harita projesinde (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); değişen çizimde komutun sırasıyla her yeni nesne tıpatıp aynı, alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız sırada önündeki bir nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve ikisi öbür sırada başka bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk ve saydamlıktaki yazısız çizgi ve çoklu çizgiler her sırada aynı resmi çizer; maskeli yazı, nokta, dolgu sırasını korur); kalan eskiler silinir, kalan yeniler çizimin sırasıyla sona yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri yazılınca ondan sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve region (silinen ve yazılan nesnelerin kutusu, yazı ekleme noktasıyla: değişen bölge). \
                       Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim komutlarının retleri."
                 .into(),
             aliases: vec!["yenidenuret".into()],
@@ -9536,7 +9568,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::ROAD_PROJECT_EDIT.into(),
             version: crate::ROAD_PROJECT_EDIT_VERSION,
             title: "Kendiliğinden yeniden üret".into(),
-            summary: "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. Tek geri alma adımı “Kendiliğinden yeniden üret”. \
+            summary: "autoRebuild açıkken bir yazma, eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir. regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer (false). Tek geri alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden “Yeniden üretim”. \
                       Retler: invalid_revision, revision_conflict, not_a_road_project, nothing_to_set."
                 .into(),
             aliases: vec!["otouret".into()],
@@ -9683,6 +9715,33 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720).
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_NETWORK.into(),
+            version: crate::CAD_POINTCLOUDS_NETWORK_VERSION,
+            title: "Tarama ağı dengelemesi".into(),
+            summary: "Üç ve daha çok taramayı (nokta bulutu; uids) birlikte kaydeder, bir GNSS ağının bazlarını dengelemesi gibi: her bağ (iki tarama) cad.pointclouds.register'ın iki taramayı kaydettiği gibi kaydedilir (birincisi sabit, ikincisi hareketli; spacing, reach, iterations, tolerance, neighbours, robust, reject her bağda aynı), sonucu ikincinin birinciye göre düzeltmesinin ölçüsüdür ve kaydın son normal matrisiyle ağırlıklandırılır. Ölçü ve ağırlık ağın merkezine (taramaların kutularının ortalarının ortalaması) taşınır. Sabit olmayan taramaların düzeltmeleri (ω, φ, κ, öteleme) en küçük karelerle birlikte dengelenir (birinci derece: küçük açılar; Cholesky). \
+                      links verilmezse taramaların sırasıyla plan kutuları örtüşen her çift bir bağdır. Cevap: her taramanın düzeltmesi ve Dönüşüm uygula'ya verilecek matrisi (p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω)); her bağın eşleşmesi, örtüşmesi, kayıt sonrası RMS'i, gücü, ölçüsü, dengeleme artığı ve artığın eşleşmelerin normalleri boyunca kayması (√(rᵀ·N·r / eşleşme)); her döngünün (sabit taramalar tek düğüm sayılır) kapanmaması (dönme ve öteleme uzunluğu); ağın RMS kayması. Salt okunur: taramalar yerinde durur. \
+                      Retler: invalid_uid, entity_not_found, not_a_pointcloud (uids[i]); invalid_input (üçten az tarama, aynı tarama iki kez; sabit tarama yok, hepsi sabit, sabit tarama ağda değil; bağ iki kez, bir taramayı kendine bağlıyor, taraması ağda değil; bir tarama hiçbir sabit taramaya bağlanmıyor; bağın kaydında altıdan az eşleşme; ağın bir taramanın konumunu belirlememesi, düz zeminde yatay öteleme gibi); kaydın kendi seçeneklerinin retleri; file_not_found, import_unreadable."
+                .into(),
+            aliases: vec!["taramaagi".into(), "agdengelemesi".into(), "coklutarama".into(), "bundleregistration".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::PointCloudsNetwork>(),
+            output: schema::<crate::PointCloudsNetworked>(),
+            plan: Some(schema::<crate::PointCloudsNetworked>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Üç tarama, birincisi sabit, bağlar örtüşmeden".into(),
+                input: json!({ "uids": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13"], "fixed": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11"] }),
+                output: None,
+            }],
+        },
         // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
         CommandDescriptor {
             id: crate::CAD_POINTCLOUDS_REGISTER.into(),
@@ -9746,8 +9805,8 @@ pub fn catalog() -> CommandCatalog {
             title: "Ortofoto karşılaştırması".into(),
             summary: "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. \
                       Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. \
-                      İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. \
-                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok)."
+                      İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı mozaik elemanı, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok)."
                 .into(),
             aliases: vec!["ortofotokarsilastir".into(), "mozaikkayiklik".into(), "dikishatti".into()],
             effect: CommandEffect::Query,
@@ -9766,6 +9825,42 @@ pub fn catalog() -> CommandCatalog {
                 input: json!({ "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "firstPoints": "okuma-2024", "secondPoints": "okuma-2026", "known": "gnss" }),
                 output: None,
             }],
+        },
+        // Mozaik birleşme çizgisi (plan/map-cad.md MAP-12, docs/adr/4700).
+        CommandDescriptor {
+            id: crate::CAD_ORTHOPHOTO_SEAMLINES.into(),
+            version: crate::CAD_ORTHOPHOTO_SEAMLINES_VERSION,
+            title: "Mozaik birleşme çizgisi".into(),
+            summary: "İki ortofotonun (raster; first, second) mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (TUCBS Ortogörüntü: mozaik elemanı görüntünün mozaikte kullanılan bölümüdür, elemanlar örtüşmez; ArcGIS Pro'nun Build Seamlines'ı gibi). Ayak izleri rasterlerin sınırı ya da verilen alanlardır (footprints: alan ya da düz kenarlı kapalı çoklu çizgi, dışbükey). \
+                      method voronoi, eşit uzaklık (ilk değer; Pan ve ark. 2009, örtüşmeli alan Voronoi diyagramı): örtüşmenin bir noktası kendi bölgesi (ayak izinin öbürününkinin dışında kalan bölümü) daha yakın olan görüntüye düşer; birleşme çizgisi iki bölgeden eşit uzak noktalardır: en yakın öğeleri iki kenar (ya da iki köşe, ya da kenarın doğrusundaki köşe) olan parçası düz (açıortay) ve yalnız dönüm noktaları yazılır; köşe ile kenar arasındaki eğri parçasının noktaları kirişe dik doğrularda step metrede bir (ilk değer 1). Uçlar iki sınırın kesiştiği yerler ya da ortak sınırın iki bölgeden eşit uzak noktasıdır (ends: crossing, shared). \
+                      method radiometry, radyometrik fark (Chon, Kim, Lin 2010): ızgara birinci görüntünün cell × cell pikselidir (ilk değer 1); pikselin farkı ortak bantların mutlak farklarının en büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik evrişimiyle birincinin piksel merkezinde okunur); hücrenin farkı piksellerininkilerin en büyüğü. Hücre bütün pikselleri örtüşmede ve okunur, merkezi eşit uzaklık çizgisine corridor (arama bandı) metreden yakın (verilirse) ve hiçbir pikseli avoid katmanının alanlarında (geçilmeyecek alanlar: bina, köprü; USGS) değilse aranır. Eşit uzaklık çizgisinin uçlarına en yakın aranan hücreler arasında önce en büyük farkı en küçük yol, sonra onu aşmayan hücrelerde en az maliyetli yol (hareketin boyu × (1 + iki hücrenin farklarının ortalaması); 8 komşu); çizgi başlangıç, yolun dönen hücrelerinin merkezleri ve bitiştir. difference: en büyük fark, yolun ve aranan hücrelerin ortalaması, hücre sayıları, hücrenin yerdeki boyu. \
+                      Mozaik elemanlarının halkaları: birincininki kendi sınırında bitişten başlangıca, sonra birleşme çizgisi; ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat yönünün tersine); ikisi de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı (öznitelikleri Görüntü: rasterin kimliği, Yöntem) layer katmanına tek geri alma adımında (“Mozaik elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik elemanları”) aynı adımda açılır (opened). Sonuç Ortofoto karşılaştırması'nın seam.polygons'ına doğrudan verilir (ADR 4460). BÖHHBÜY birleşme çizgisinin yerine kural koymaz; m. 67(6) ortak alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister. \
+                      Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (first, second); invalid_input (aynı raster iki kez; step, cell (1..64), corridor; voronoi ile cell, corridor ya da avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi değil, yaylı, delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün içinde, sınır ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok piksel, iki uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found (layer, avoid), layer_locked; invalid_revision, revision_conflict; invalid_file_path, file_not_found, import_unreadable (görüntünün dosyası)."
+                .into(),
+            aliases: vec!["birlesmecizgisi".into(), "mozaikelemani".into(), "seamline".into(), "buildseamlines".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::OrthophotoSeamlines>(),
+            output: schema::<crate::OrthophotoSeamlinesBuilt>(),
+            plan: Some(schema::<crate::OrthophotoSeamlinesBuilt>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "İki ortofotonun sınırlarından eşit uzaklık (Voronoi) birleşme çizgisi".into(),
+                    input: json!({ "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Radyometrik fark, binalardan geçmeden, eşit uzaklık çizgisinden en çok 5 m".into(),
+                    input: json!({ "first": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11", "second": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12", "method": "radiometry", "corridor": 5.0, "avoid": "bina" }),
+                    output: None,
+                },
+            ],
         },
         // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
         CommandDescriptor {
@@ -16291,6 +16386,9 @@ mod tests {
                     crate::CAD_BEAMS_CREATE => {
                         serde_json::from_value::<crate::BeamsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_ROOFS_CREATE => {
+                        serde_json::from_value::<crate::RoofsCreate>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ARCH_EDIT => {
                         serde_json::from_value::<crate::ArchEdit>(e.input.clone()).map(|_| ())
                     }
@@ -16919,7 +17017,9 @@ mod tests {
                     crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheets>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoCheck>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegister>(e.input.clone()).map(|_| ()),
+                    crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetwork>(e.input.clone()).map(|_| ()),
                     crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompare>(e.input.clone()).map(|_| ()),
+                    crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlines>(e.input.clone()).map(|_| ()),
                     crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlap>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyQuery>(e.input.clone()).map(|_| ()),
                     crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetwork>(e.input.clone()).map(|_| ()),
@@ -17900,7 +18000,9 @@ mod tests {
                         crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
+                        crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetworked>(output.clone()).map(|_| ()),
                         crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlinesBuilt>(output.clone()).map(|_| ()),
                         crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
                         crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),
