@@ -2,7 +2,7 @@
 //! changes at the passages (docs/adr/0722 §5), ramps (docs/adr/0723 §3) and stairs (docs/adr/0724 §5) measured by
 //! `cad.spaces.quantities`, a level's or all, each row with the rule its numbers come from, and the totals; a room's
 //! baseboard in its own column. Panoya kopyala copies the table shown as tab-separated text; Dışa aktar ▾ writes the
-//! shown table as CSV or all seven tables as a workbook's
+//! shown table as CSV or every table as a workbook's
 //! sheets (table_write.rs). Mahalleri birleştir (`arch.spaceMerge`) is here too: the spaces selected, made one by
 //! `cad.spaces.edit`.
 
@@ -47,6 +47,8 @@ pub enum Tab {
     Ramps,
     /// The stairs (docs/adr/0724 §5).
     Stairs,
+    /// The beams, lintels and bond beams (docs/adr/8041 §3).
+    Beams,
     /// The materials (docs/adr/0785 §4), when the project keeps materials.
     Materials,
 }
@@ -61,6 +63,7 @@ impl std::fmt::Display for Tab {
             Tab::Transitions => "Geçişler",
             Tab::Ramps => "Rampalar",
             Tab::Stairs => "Merdivenler",
+            Tab::Beams => "Kirişler",
             Tab::Materials => "Malzemeler",
         })
     }
@@ -265,7 +268,7 @@ impl App {
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 8] {
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9] {
         let f = self
             .document
             .as_ref()
@@ -302,17 +305,20 @@ impl App {
                 "Çevre",
                 // A room's baseboard (docs/adr/0722 §5); a void has none.
                 "Süpürgelik",
-                "Yükseklik",
+                // Its finished floor to its ceiling (PAİY 4(1)(ıı)) and its asma tavan's area (docs/adr/8040 §3).
+                "İç yükseklik",
                 "Hacim",
+                "Asma tavan",
                 "Net",
                 "Eksen",
                 "Brüt",
             ],
             numbers: vec![
                 false, false, false, false, false, true, true, true, true, true, true, true, true,
+                true,
             ],
             widths: vec![
-                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 72.0, 64.0, 64.0, 60.0, 60.0, 60.0,
+                56.0, 96.0, 80.0, 78.0, 48.0, 64.0, 64.0, 72.0, 72.0, 64.0, 64.0, 60.0, 60.0, 60.0,
             ],
             shown: q
                 .spaces
@@ -329,6 +335,7 @@ impl App {
                         r.baseboard.map_or_else(String::new, len),
                         r.height.map_or_else(String::new, len),
                         opt(r.volume, 2),
+                        r.suspended_ceiling_area.map_or_else(String::new, area),
                         by(r, "net"),
                         by(r, "centerline"),
                         by(r, "gross"),
@@ -353,6 +360,7 @@ impl App {
                         o(r.baseboard),
                         o(r.height),
                         o(r.volume),
+                        o(r.suspended_ceiling_area),
                         b("net"),
                         b("centerline"),
                         b("gross"),
@@ -524,6 +532,12 @@ impl App {
                 })
                 .collect(),
         };
+        // A slab's layers of a kind (docs/adr/8040 §2): their area (the slab's net area once) and their volume summed.
+        use kentos_commands::SlabLayerKind;
+        let layer = |r: &kentos_commands::SlabRow, kind: SlabLayerKind| -> Option<(f64, f64)> {
+            let of: Vec<_> = r.layers.iter().filter(|l| l.kind == kind).collect();
+            (!of.is_empty()).then(|| (of[0].area, of.iter().map(|l| l.volume).sum()))
+        };
         let slabs = Table {
             name: "Döşemeler",
             heading: vec![
@@ -537,15 +551,23 @@ impl App {
                 "Net alan",
                 "Çevre",
                 "Hacim",
+                // Its layers (docs/adr/8040 §2): the screed by volume as the concrete, the rest by area.
+                "Kaplama",
+                "Şap",
+                "Isı yalıtımı",
+                "Su yalıtımı",
+                "Sıva",
                 "Kenar",
                 "Kenar uzunluğu",
                 "Metraj",
             ],
             numbers: vec![
-                false, false, false, true, true, true, true, true, true, true, false, true, false,
+                false, false, false, true, true, true, true, true, true, true, true, true, true,
+                true, true, false, true, false,
             ],
             widths: vec![
-                72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 80.0, 96.0, 72.0,
+                72.0, 80.0, 110.0, 72.0, 72.0, 72.0, 64.0, 72.0, 64.0, 64.0, 72.0, 64.0, 80.0,
+                80.0, 64.0, 80.0, 96.0, 72.0,
             ],
             shown: q
                 .slabs
@@ -566,6 +588,14 @@ impl App {
                         area(r.net_area),
                         len(r.perimeter),
                         fixed(r.volume, 3),
+                        layer(r, SlabLayerKind::Finish).map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Screed)
+                            .map_or_else(String::new, |(_, v)| fixed(v, 3)),
+                        layer(r, SlabLayerKind::Insulation)
+                            .map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Waterproofing)
+                            .map_or_else(String::new, |(a, _)| area(a)),
+                        layer(r, SlabLayerKind::Plaster).map_or_else(String::new, |(a, _)| area(a)),
                         r.edge.map_or_else(String::new, |e| e.label().to_owned()),
                         if r.edge_length > 0.0 {
                             len(r.edge_length)
@@ -592,6 +622,12 @@ impl App {
                         n(r.net_area),
                         n(r.perimeter),
                         n(r.volume),
+                        layer(r, SlabLayerKind::Finish).map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Screed).map_or_else(String::new, |(_, v)| n(v)),
+                        layer(r, SlabLayerKind::Insulation).map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Waterproofing)
+                            .map_or_else(String::new, |(a, _)| n(a)),
+                        layer(r, SlabLayerKind::Plaster).map_or_else(String::new, |(a, _)| n(a)),
                         r.edge.map_or_else(String::new, |e| e.label().to_owned()),
                         n(r.edge_length),
                         if r.excluded { "Dışında" } else { "Toplamda" }.to_owned(),
@@ -793,6 +829,49 @@ impl App {
                 })
                 .collect(),
         };
+        // Kiriş, lento, hatıl (docs/adr/8041 §3): a beam's concrete under the slab it carries, the others' whole.
+        let beams = Table {
+            name: "Kirişler",
+            heading: vec!["Numara", "Tür", "Kat", "Ölçü", "Uzunluk", "Döşeme", "Hacim"],
+            numbers: vec![false, false, false, false, true, true, true],
+            widths: vec![72.0, 64.0, 80.0, 64.0, 72.0, 72.0, 72.0],
+            shown: q
+                .beams
+                .iter()
+                .map(|b| {
+                    vec![
+                        words(&b.tag),
+                        b.role.label().to_owned(),
+                        level_name(&b.level),
+                        kentos_commands::BeamFields {
+                            width: b.width,
+                            height: b.height,
+                            ..Default::default()
+                        }
+                        .size_text(),
+                        len(b.length),
+                        b.slab.map_or_else(String::new, len),
+                        fixed(b.volume, 3),
+                    ]
+                })
+                .collect(),
+            cells: q
+                .beams
+                .iter()
+                .map(|b| {
+                    let n = |v: f64| format!("{v}");
+                    vec![
+                        words(&b.tag),
+                        b.role.label().to_owned(),
+                        level_name(&b.level),
+                        format!("{}/{}", n(b.width), n(b.height)),
+                        n(b.length),
+                        b.slab.map_or_else(String::new, n),
+                        n(b.volume),
+                    ]
+                })
+                .collect(),
+        };
         // By material (docs/adr/0785 §4): its walls and slabs, area, volume and the amount by its way of counting.
         let materials = Table {
             name: "Malzemeler",
@@ -836,10 +915,10 @@ impl App {
                 })
                 .collect(),
         };
-        [spaces, walls, openings, slabs, transitions, ramps, stairs, materials]
+        [spaces, walls, openings, slabs, transitions, ramps, stairs, beams, materials]
     }
 
-    /// CSV has one table: the one shown. Workbooks keep all seven sheets,
+    /// CSV has one table: the one shown. Workbooks keep every sheet,
     /// including empty headings, under the same selected level filter. A number column's cells as the window shows
     /// them (the project's decimals), or with Sayılar: Tam to 15 significant digits (docs/adr/0733 §7); the words as
     /// they are.
@@ -989,6 +1068,7 @@ impl App {
             Tab::Transitions,
             Tab::Ramps,
             Tab::Stairs,
+            Tab::Beams,
         ];
         if w.answer.as_ref().is_ok_and(|q| !q.materials.is_empty()) {
             shown_tabs.push(Tab::Materials);
@@ -1201,7 +1281,7 @@ impl App {
             .push(table)
             .push(words::text_line(Kind::Info,
                 if q.materials.is_empty() {
-                    "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki yedi tablo ayrı sayfalarda."
+                    "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki bütün tablolar ayrı sayfalarda."
                 } else {
                     "CSV: gösterilen tablo. Excel ve ODS: bu kat süzgecindeki sekiz tablo (Malzemeler de) ayrı sayfalarda."
                 }))
@@ -1218,7 +1298,7 @@ impl App {
     fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String {
         match tab {
             Tab::Spaces => q.spaces.first().map_or_else(
-                || "Alan: halkaların alanı, delikler düşülür; hacim: alan × yükseklik.".to_owned(),
+                || "Alan: halkaların alanı, delikler düşülür; hacim: alan × iç yükseklik (bitmiş döşemeden tavana).".to_owned(),
                 |r| format!("Kural: {}.", r.rule.trim_end_matches('.')),
             ),
             Tab::Walls => q.walls.first().map_or_else(
@@ -1246,6 +1326,7 @@ impl App {
                 || "Alan: yürüme çizgisi boyunca dönüşlerde gönyeli şeridin plan alanı; döner merdivende iki yayın arası; yükseklik: rıht sayısı × rıht yüksekliği.".to_owned(),
                 |s| format!("Kural: {}; yükseklik: rıht sayısı × rıht yüksekliği.", s.rule.trim_end_matches('.')),
             ),
+            Tab::Beams => "Kural: uzunluk eksenin boyu; kirişin hacmi taşıdığı döşemenin altında kalan kısmıdır (genişlik × (yükseklik − döşemenin taşıyıcısı) × uzunluk), döşemenin içindeki kısmı döşemenin hacmindedir; lento ve hatılın hacmi genişlik × yükseklik × uzunluk.".to_owned(),
         }
     }
 
@@ -1267,6 +1348,7 @@ impl App {
             Control::Press("Geçişler") => Some(msg(Event::Tab(Tab::Transitions))),
             Control::Press("Rampalar") => Some(msg(Event::Tab(Tab::Ramps))),
             Control::Press("Merdivenler") => Some(msg(Event::Tab(Tab::Stairs))),
+            Control::Press("Kirişler") => Some(msg(Event::Tab(Tab::Beams))),
             Control::Press("Malzemeler") => Some(msg(Event::Tab(Tab::Materials))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
@@ -1349,6 +1431,7 @@ mod tests {
             transitions: vec![],
             ramps: vec![],
             stairs: vec![],
+            beams: vec![],
             materials: vec![],
             totals: Default::default(),
         };
@@ -1375,15 +1458,16 @@ mod tests {
                 "Alan",
                 "Çevre",
                 "Süpürgelik",
-                "Yükseklik",
+                "İç yükseklik",
                 "Hacim",
+                "Asma tavan",
                 "Net",
                 "Eksen",
                 "Brüt"
             ]
         );
         assert!(
-            valid.cells.iter().all(|r| r.len() == 13),
+            valid.cells.iter().all(|r| r.len() == 14),
             "valid export shape changed"
         );
     }

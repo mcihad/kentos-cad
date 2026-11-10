@@ -5864,7 +5864,7 @@
       ]
     },
     {
-      "name": "Şablon Yeni durum evresiyle: yıkılacak kolon gösterilmez",
+      "name": "Şablon Yeni durum görünümüyle: iptal edilen kolon gösterilmez",
       "steps": [
         {
           "op": "execute",
@@ -14786,7 +14786,7 @@
       ]
     },
     {
-      "name": "Şablonla: Evresi olan kolonlar şablonun evresizliğiyle",
+      "name": "Şablonla: Tadilat durumu olan kolonlar, tadilat görünümü olmayan şablonla",
       "steps": [
         {
           "op": "execute",

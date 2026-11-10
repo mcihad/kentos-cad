@@ -50,14 +50,17 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
     geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
     coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
-    sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre,
-    isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı
-    spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç
-    içe yama değildir. Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez,
-    önek yalnız açık seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri
-    alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar)
-    projenin değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve
-    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    sistem ister). arch bütün mimari tercihtir: katlar, ayrıntı, alan yöntemi, tadilat
+    görünümü, planın kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa
+    1,10), çizgi kalınlıkları (lineGroups: byScale TS 88-23 çizgi grubu ölçeğe göre, own
+    ya da yoksa her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages
+    listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes. Liste değişiminde
+    mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir. Listeler öneridir;
+    mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca
+    alınır. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve
+    cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
+    reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+    yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -109,14 +112,17 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name,
         sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch
         (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). arch
-        bütün mimari tercihtir: katlar, ayrıntı/alan yöntemi/evre, isteğe bağlı
-        spaceNames/spaceUsages listeleri ve kalıcı kat kimliğine bağlı spaceNumberPrefixes.
-        Liste değişiminde mevcut kat ve tercihleri kopyalayın; arch iç içe yama değildir.
-        Listeler öneridir; mevcut mahal adı/numarası/kullanımı değişmez, önek yalnız açık
-        seçimle başlangıca alınır. Ayarlar projenin düzenlemesidir, geri alma adımı
-        değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin
-        değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        bütün mimari tercihtir: katlar, ayrıntı, alan yöntemi, tadilat görünümü, planın
+        kesme yüksekliği (cutHeight, katın döşemesinden metre, 0,3–3; yoksa 1,10), çizgi
+        kalınlıkları (lineGroups: byScale TS 88-23 çizgi grubu ölçeğe göre, own ya da yoksa
+        her nesne kendi kaleminde), isteğe bağlı spaceNames/spaceUsages listeleri ve kalıcı
+        kat kimliğine bağlı spaceNumberPrefixes. Liste değişiminde mevcut kat ve tercihleri
+        kopyalayın; arch iç içe yama değildir. Listeler öneridir; mevcut mahal
+        adı/numarası/kullanımı değişmez, önek yalnız açık seçimle başlangıca alınır. Ayarlar
+        projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları
+        (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

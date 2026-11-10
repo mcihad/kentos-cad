@@ -97,6 +97,12 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = c.height {
         f.height = v;
     }
+    if let Some(v) = c.floor_offset {
+        f.floor_offset = v;
+    }
+    if let Some(v) = c.suspended_ceiling {
+        f.suspended_ceiling = v;
+    }
     if let Some(v) = &c.floor {
         f.finishes.floor.clone_from(v);
     }
@@ -105,6 +111,19 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     }
     if let Some(v) = &c.ceiling {
         f.finishes.ceiling.clone_from(v);
+    }
+    if let Some(v) = &c.base {
+        f.finishes.base.clone_from(v);
+    }
+    // The room list's finishes (docs/adr/8038).
+    if let Some(v) = &c.sill {
+        f.finishes.sill.clone_from(v);
+    }
+    if let Some(v) = &c.stair {
+        f.finishes.stair.clone_from(v);
+    }
+    if let Some(v) = &c.railing {
+        f.finishes.railing.clone_from(v);
     }
     if let Some(v) = c.void {
         f.void = v;
@@ -137,12 +156,28 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             if c == &SpaceChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik, döşeme kot farkı, asma tavan ya da kaplamalardan birini verin.".into(),
                     "operation",
                 ));
             }
             if let Some(Some(h)) = c.height {
                 checks::finite(h, "Yükseklik", "Sonlu bir sayı verin.", "operation.height")?;
+            }
+            if let Some(Some(v)) = c.floor_offset {
+                checks::finite(
+                    v,
+                    "Döşeme kot farkı",
+                    "Sonlu bir sayı verin.",
+                    "operation.floorOffset",
+                )?;
+            }
+            if let Some(Some(v)) = c.suspended_ceiling {
+                checks::finite(
+                    v,
+                    "Asma tavan",
+                    "Sonlu bir sayı verin.",
+                    "operation.suspendedCeiling",
+                )?;
             }
             if let Some(u) = &c.unit {
                 unit_known(doc, u.as_deref(), "operation.unit")?;
@@ -152,7 +187,7 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 spaces::scope_valid(&f,&format!("uids[{at}]"))?;
                 if (f.scope != s.space.scope || f.sources != s.space.sources) && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f) {
                     return Err(fail(codes::INVALID_SPACE,
-                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. İç nokta seç aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
+                        "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. Mahali yeniden sınırla aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
                         if c.sources.is_some() { "operation.sources" } else { "operation.scope" }));
                 }
                 if (c.method.is_some() || c.level.is_some() || c.columns.is_some() || c.scope.is_some() || c.sources.is_some()) && f.seed.is_some() {

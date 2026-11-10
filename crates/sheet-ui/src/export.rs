@@ -160,6 +160,7 @@ impl Designer {
             sheets: self.pdf_sheets(),
             geo: self.pdf.geo && self.pdf_geo_ready(),
             layers: self.pdf.layers,
+            pdfa: false,
         }
     }
     /// Keep a host failure visible in the output window, above its controls.
@@ -281,6 +282,7 @@ impl Designer {
             sheets,
             geo,
             layers: self.pdf.layers,
+            pdfa: false,
         };
         // The SVG pictures as PNGs at the window's resolution, each at its largest frame's size.
         let sizes = kentos_sheet::pdf::svg_sizes(&self.book, &inputs, &options, self.export_dpi)

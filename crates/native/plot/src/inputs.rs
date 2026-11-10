@@ -102,6 +102,31 @@ pub fn sheet_variable(v: &kentos_contracts::ProjectVariable) -> kentos_sheet::mo
     }
 }
 
+/// The drawing's own variables and, after them, what it says of itself for a title block (docs/adr/8037: arsa alanı,
+/// emsale konu alan, yapı inşaat alanı, kat adedi, bağımsız bölüm sayısı, kullanım amacı …): a sheet reads them after
+/// its book's, a drawing variable of the same name first.
+pub fn drawing_variables(doc: &kentos_domain::Document) -> Vec<kentos_sheet::model::Variable> {
+    use kentos_sheet::model::{VarKind, Variable};
+    let mut out: Vec<Variable> = doc
+        .settings()
+        .variables
+        .iter()
+        .map(sheet_variable)
+        .collect();
+    let fold = |s: &str| kentos_sheet::expr::fold(s);
+    for f in doc.title_facts() {
+        if !out.iter().any(|v| fold(&v.name) == fold(f.name)) {
+            out.push(Variable {
+                name: f.name.to_owned(),
+                label: f.label.to_owned(),
+                kind: VarKind::Text,
+                value: VarValue::Text(f.value),
+            });
+        }
+    }
+    out
+}
+
 /// The project's system for a sheet PDF's GeoPDF: its WKT (the core's `tm_wkt` from the
 /// registry's values) and its EPSG code; none for a system the core cannot invert (not TM).
 pub fn pdf_crs(srid: u32) -> Option<kentos_sheet::pdf::PdfCrs> {

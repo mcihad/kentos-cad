@@ -21,7 +21,7 @@ use kentos_sheet::preflight::Finding;
 use kentos_sheet::profile::Capabilities;
 use kentos_sheet::project::read_project_sheets;
 
-use crate::inputs::{crs_info, pdf_crs, sheet_data, sheet_variable};
+use crate::inputs::{crs_info, pdf_crs, sheet_data};
 use crate::maps::MapSource;
 
 /// A PDF of the book, the sheets it holds in order, and what it writes
@@ -103,8 +103,9 @@ pub fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
             height_accuracy: survey.height,
             network_adjustment: survey.network,
             survey_quality: survey.note,
-            // The drawing's own variables, read after the book's (docs/adr/0214 §2.3).
-            variables: settings.variables.iter().map(sheet_variable).collect(),
+            // The drawing's own variables, read after the book's (docs/adr/0214 §2.3), and what the drawing says of
+            // itself for a title block (docs/adr/8037).
+            variables: crate::inputs::drawing_variables(doc),
         },
         capabilities: Capabilities {
             georeferenced: name.is_some(),
@@ -156,6 +157,9 @@ type ScaledKey = (
     kentos_sheet::units::Mdeg,
     // A road's map: its centre and size, which keep the curves' data inside it (docs/adr/0984).
     Option<(u64, u64, i32, i32)>,
+    // A map showing a phase other than the drawing's (docs/adr/8039 §2): its walls joined and cut as it stands; the
+    // view's name.
+    Option<&'static str>,
 );
 
 /// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
@@ -251,11 +255,21 @@ impl<'a> MapDrawer<'a> {
         let origin = kentos_geometry_core::Vec2::new(center.x, center.y);
         let at = m.view.scale.max(1e-6);
         let annotation = m.view.annotation_denominator();
-        // A level's plan showing the stairs under it from above (docs/adr/0724 §4) wants a store of its own.
+        // A level's plan showing the stairs under it from above (docs/adr/0724 §4) or the slabs over it dashed
+        // (docs/adr/8012, step 3) wants a store of its own.
         let upper = m
             .level
             .as_ref()
             .filter(|l| crate::layers::shows_from_above(doc, l));
+        // A map showing a phase other than the drawing's (docs/adr/0774 §3) joins and cuts its walls as that phase
+        // stands (docs/adr/8039 §2): a new door in an existing wall is no hole in the existing plan.
+        let drawn = doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default();
+        let phased = m.phase.filter(|v| *v != drawn);
         let key = (
             at.to_bits(),
             annotation.to_bits(),
@@ -267,17 +281,23 @@ impl<'a> MapDrawer<'a> {
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             m.view.rotation,
             self.axes.then(|| (center.x.to_bits(), center.y.to_bits(), m.clip.width, m.clip.height)),
+            phased.map(kentos_contracts::PhaseView::name),
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
         let walls = Spatial::walls_differ_with(doc, at, m.wall_detail);
         let options = !m.options.is_empty();
         let axes = self.axes;
-        if (self.annotative || walls || axes || upper.is_some() || options) && !self.scaled.contains_key(&key) {
+        let copied = walls || axes || upper.is_some() || options || phased.is_some();
+        if (self.annotative || copied) && !self.scaled.contains_key(&key) {
             let copy = self
                 .annotative
                 .then(|| doc.at_scale(annotation))
                 .flatten()
-                .or_else(|| (walls || axes || upper.is_some() || options).then(|| doc.reading_copy()))
+                .or_else(|| copied.then(|| doc.reading_copy()))
+                .map(|copy| match phased {
+                    Some(view) => copy.with_phase_view(view),
+                    None => copy,
+                })
                 // A road project's alignments on a layer of their own (docs/adr/0982): the model has no object for them.
                 .map(|copy| {
                     if !axes {
@@ -663,6 +683,7 @@ pub(crate) fn prepare_captured(
         sheets: chosen.clone(),
         geo: inputs.crs.is_some(),
         layers: true,
+        pdfa: false,
     };
     Ok((book, inputs, options, notes))
 }
@@ -682,4 +703,234 @@ pub fn current_user() -> String {
     std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod phase_tests {
+    use super::*;
+
+    /// The holes in the wall's face (y = +0.15) as `store` draws it, metres from its start, to the centimetre.
+    fn holes(store: &kentos_geometry_core::store::Store, wall: f64) -> Vec<(f64, f64)> {
+        use kentos_geometry_core::entity::Shape;
+        let x = store
+            .get(wall)
+            .and_then(|it| it.expanded.clone())
+            .expect("the wall's pieces");
+        let mut runs: Vec<(f64, f64)> = x
+            .shapes
+            .iter()
+            .filter_map(|s| match s {
+                Shape::Polyline { pts, .. }
+                    if pts.len() == 2 && pts.iter().all(|p| (p.y - 0.15).abs() < 1e-6) =>
+                {
+                    Some((pts[0].x.min(pts[1].x), pts[0].x.max(pts[1].x)))
+                }
+                _ => None,
+            })
+            .collect();
+        runs.sort_by(|a, b| a.0.total_cmp(&b.0));
+        let cm = |v: f64| (v * 100.0).round() / 100.0;
+        runs.windows(2)
+            .filter(|w| w[1].0 - w[0].1 > 1e-6)
+            .map(|w| (cm(w[0].1), cm(w[1].0)))
+            .collect()
+    }
+
+    /// A map showing a phase other than the drawing's (docs/adr/0774 §3) draws from a copy of its own whose walls are
+    /// joined and cut as that phase stands (docs/adr/8039 §2): the drawing shows Mevcut durum (the window's hole, not
+    /// the new door's), the map Yeni durum (the door's hole, the window closed up).
+    #[test]
+    fn a_map_with_its_own_phase_cuts_its_walls_as_that_phase_stands() {
+        let snapshot: kentos_contracts::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/opening-phases.json"
+        ))
+        .unwrap();
+        let doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let spatial = Spatial::of(&doc);
+        let wall = 1.0;
+        // The window's and the passage's holes (the passage is its wall's, Mevcut); not the new door's.
+        assert_eq!(
+            holes(spatial.store(), wall),
+            vec![(3.4, 4.6), (5.1, 5.7)],
+            "the drawing: Mevcut durum"
+        );
+        let library = library_of(&doc);
+        let mut maps = MapDrawer::new(&doc, &spatial, &library, None);
+        let map = |phase: Option<&str>| -> kentos_sheet::display::MapPrim {
+            let mut m = serde_json::json!({
+                "item": "m1",
+                "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+                "rotation": 0,
+                "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+                "layers": {"type": "all"},
+                "extent": [-1.0, -2.0, 7.0, 2.0]
+            });
+            if let Some(p) = phase {
+                m["phase"] = serde_json::json!(p);
+            }
+            serde_json::from_value(m).unwrap()
+        };
+        let book = SheetBook::default();
+        let _ = maps.draw(&book, &map(Some("proposed")), "page");
+        let copies: Vec<&(Document, Spatial)> =
+            maps.scaled.values().filter_map(Option::as_ref).collect();
+        assert_eq!(copies.len(), 1, "the map's own copy");
+        let (copy, copied) = copies[0];
+        assert_eq!(
+            copy.settings().arch.as_ref().and_then(|a| a.phase_view),
+            Some(kentos_contracts::PhaseView::Proposed)
+        );
+        assert_eq!(
+            holes(copied.store(), wall),
+            vec![(1.05, 1.95), (5.1, 5.7)],
+            "the map: Yeni durum"
+        );
+        // A map showing the drawing's own phase, or none, draws from the drawing.
+        let _ = maps.draw(&book, &map(Some("existing")), "page");
+        let _ = maps.draw(&book, &map(None), "page");
+        assert_eq!(
+            maps.scaled.values().filter(|v| v.is_some()).count(),
+            1,
+            "no other copy"
+        );
+        // The drawing itself is untouched.
+        assert_eq!(holes(spatial.store(), wall), vec![(3.4, 4.6), (5.1, 5.7)]);
+    }
+
+    /// A map showing a view other than the drawing's leaves out on paper what that view hides (docs/adr/8039 §6): the
+    /// drawing in Tümü, a new wall (layer `yeni`) is not drawn in Mevcut durum, a wall pulled down (layer `iptal`) not in
+    /// Yeni durum; in Tümü both are.
+    #[test]
+    fn a_map_with_its_own_phase_leaves_out_what_its_view_hides() {
+        let mut snapshot: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/opening-phases.json"
+        ))
+        .unwrap();
+        snapshot["settings"]["arch"] = serde_json::json!({});
+        for (id, name) in [("yeni", "Yeni"), ("iptal", "İptal")] {
+            snapshot["layers"].as_array_mut().unwrap().push(serde_json::json!({
+                "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
+                "style": {"color": "#404040", "lineType": "continuous", "lineWeight": 0.5}, "children": []
+            }));
+        }
+        for (id, layer, y, phase) in [(5, "yeni", 1.5, "new"), (6, "iptal", -1.5, "demolish")] {
+            snapshot["entities"].as_array_mut().unwrap().push(serde_json::json!({
+                "kind": "wall", "id": id, "layerId": layer, "attrs": {},
+                "pts": [{"x": 0.0, "y": y}, {"x": 6.0, "y": y}], "width": 0.2, "justify": "center",
+                "arch": {"phase": phase}
+            }));
+            snapshot["uids"]
+                .as_array_mut()
+                .unwrap()
+                .push(serde_json::json!(format!(
+                    "0192f5a1-2590-7000-8000-00000000007{id}"
+                )));
+        }
+        // A room pulled down with its wall (İptal), drawn round its own outline.
+        snapshot["entities"].as_array_mut().unwrap().push(serde_json::json!({
+            "kind": "space", "id": 7, "layerId": "iptal", "attrs": {},
+            "parts": [{"outer": {"pts": [
+                {"x": 0.5, "y": -2.5}, {"x": 5.5, "y": -2.5}, {"x": 5.5, "y": -1.6}, {"x": 0.5, "y": -1.6}
+            ]}}],
+            "name": "Depo", "arch": {"phase": "demolish"}
+        }));
+        snapshot["uids"]
+            .as_array_mut()
+            .unwrap()
+            .push(serde_json::json!("0192f5a1-2590-7000-8000-000000000077"));
+        let doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
+        let spatial = Spatial::of(&doc);
+        let library = library_of(&doc);
+        let mut maps = MapDrawer::new(&doc, &spatial, &library, None);
+        let book = SheetBook::default();
+        // The layers a map of `phase` draws something on.
+        let mut drawn = |phase: Option<&str>| -> Vec<String> {
+            let mut m = serde_json::json!({
+                "item": "m1",
+                "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+                "rotation": 0,
+                "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+                "layers": {"type": "all"},
+                "extent": [-1.0, -3.0, 7.0, 3.0]
+            });
+            if let Some(p) = phase {
+                m["phase"] = serde_json::json!(p);
+            }
+            let m: kentos_sheet::display::MapPrim = serde_json::from_value(m).unwrap();
+            match maps.draw(&book, &m, "page").map(|p| p.content) {
+                Some(kentos_sheet::pdf::MapContent::Vector(v)) => v
+                    .layers
+                    .into_iter()
+                    .filter(|l| !l.paths.is_empty())
+                    .map(|l| l.id)
+                    .collect(),
+                other => panic!("a vector map: {other:?}"),
+            }
+        };
+        let all = drawn(None);
+        assert!(
+            all.contains(&"yeni".to_owned()) && all.contains(&"iptal".to_owned()),
+            "Tümü: {all:?}"
+        );
+        let existing = drawn(Some("existing"));
+        assert!(
+            !existing.contains(&"yeni".to_owned()),
+            "Mevcut durum: {existing:?}"
+        );
+        assert!(
+            existing.contains(&"iptal".to_owned()),
+            "Mevcut durum: {existing:?}"
+        );
+        let proposed = drawn(Some("proposed"));
+        assert!(
+            !proposed.contains(&"iptal".to_owned()),
+            "Yeni durum: {proposed:?}"
+        );
+        assert!(
+            proposed.contains(&"yeni".to_owned()),
+            "Yeni durum: {proposed:?}"
+        );
+        // Tadilat projesi (docs/adr/8039 §5): the wall pulled down dashed on paper too, the others not.
+        let m: kentos_sheet::display::MapPrim = serde_json::from_value(serde_json::json!({
+            "item": "m1",
+            "clip": {"left": 0, "top": 0, "width": 200000, "height": 100000},
+            "rotation": 0,
+            "view": {"scale": 50.0, "rotation": 0, "center": {"x": 3.0, "y": 0.0}},
+            "layers": {"type": "all"},
+            "extent": [-1.0, -3.0, 7.0, 3.0],
+            "phase": "renovation"
+        }))
+        .unwrap();
+        let Some(kentos_sheet::pdf::MapContent::Vector(v)) =
+            maps.draw(&book, &m, "page").map(|p| p.content)
+        else {
+            panic!("a vector map");
+        };
+        let dashed = |layer: &str| -> (usize, usize) {
+            let paths = v
+                .layers
+                .iter()
+                .filter(|l| l.id == layer)
+                .flat_map(|l| &l.paths);
+            let stroked: Vec<_> = paths.filter_map(|p| p.stroke.as_ref()).collect();
+            (
+                stroked.iter().filter(|s| !s.dash.is_empty()).count(),
+                stroked.len(),
+            )
+        };
+        // The wall's lines dashed; the room pulled down left out (docs/adr/8039 §6): the plan names the rooms as they
+        // will be, and its outline over the wall's faces drew them as one solid line (two dashes out of step).
+        let (d, n) = dashed("iptal");
+        assert!(n > 0 && d == n, "İptal dashed: {d} of {n}");
+        assert!(
+            !v.layers
+                .iter()
+                .filter(|l| l.id == "iptal")
+                .flat_map(|l| &l.paths)
+                .any(|p| p.closed),
+            "the room pulled down is not drawn"
+        );
+        let (d, n) = dashed("yeni");
+        assert!(n > 0 && d == 0, "İlave not dashed: {d} of {n}");
+    }
 }

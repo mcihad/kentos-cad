@@ -1,0 +1,51 @@
+# M36 (docs/adr/8036), 1920 × 1080: ten flats of 100 m² and a 60 m² shop (otopark-siginak.kcad from provisions_tests).
+# Metraj ▾ › Otopark hesabı and Sığınak hesabı placed at the cursor: Ek-1 asks 7 places, the 100 m² Otopark gives 5
+# (red); 33 people ask 33 m², the Sığınak is 25 m² (red). Then Denetim › Mevzuat says both.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+click 1003 110  # Metraj ▾
+wait 1000
+click 1065 256  # Otopark hesabı
+wait 1200
+click 420 300  # its place
+wait 1500
+key Escape
+wait 600
+click 1640 20  # Menülerde ara
+wait 600
+type sığınak hesabı
+wait 1200
+key Return
+wait 1200
+click 760 300  # its place
+wait 1500
+move 1300 950
+wait 600
+shot m36-tablolar-genel
+wheel 590 290 3
+wait 1500
+move 1300 950
+wait 600
+shot m36-tablolar
+key Escape
+wait 500
+key Escape
+wait 800
+click 1162 111  # Denetim
+wait 3000
+drag 760 663 760 330  # the panel taller
+wait 1200
+drag 849 447 1290 447  # Bulgu wider
+wait 800
+click 196 414  # Bütün gruplar
+wait 1000
+type mevzuat
+wait 800
+click 180 481  # Mevzuat
+wait 1200
+move 1300 250
+wait 600
+shot m36-mevzuat

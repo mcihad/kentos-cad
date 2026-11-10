@@ -46,7 +46,7 @@ SCREATE, SEDIT, SQUERY = "cad.schedules.create", "cad.schedules.edit", "cad.sche
 KIND_LABEL = {"unit": "Bağımsız bölüm", "common": "Ortak alan", "outdoor": "Dış alan"}
 TITLES = {"number": "No", "name": "Ad", "unitKind": "Bölüm türü", "building": "Bina", "wing": "Kanat", "level": "Kat",
           "area": "Alan", "recordedArea": "Kayıtlı alan", "shareWeight": "Pay ağırlığı", "share": "Pay",
-          "gross": "Brüt", "target": "Tasarım hedefi", "targetDiff": "Hedef farkı", "count": "Adet", "phase": "Evre",
+          "gross": "Net + pay", "target": "Tasarım hedefi", "targetDiff": "Hedef farkı", "count": "Adet", "phase": "Tadilat durumu",
           "usage": "Kullanım"}
 AREAS = {"area", "recordedArea", "share", "gross"}
 SUMMED = {"count", "area", "share", "gross", "recordedArea"}
@@ -512,12 +512,12 @@ def create_cases():
         total=True))])
     case("Plan yazmaz", [create_step(BASE, inp_of(), op="plan")])
     case("Doğrulama yazmaz", [create_step(BASE, inp_of(columns=cols("number")), op="validate")])
-    case("Ret: bölüm çizelgesi evre okumaz", [refused(SCREATE, inp_of(columns=cols("number", "phase")),
-         "invalid_schedule", "“Evre” bölüm çizelgesinde okunmaz.", "columns[1].field")])
+    case("Ret: bölüm çizelgesi tadilat durumu okumaz", [refused(SCREATE, inp_of(columns=cols("number", "phase")),
+         "invalid_schedule", "“Tadilat durumu” bölüm çizelgesinde okunmaz.", "columns[1].field")])
     case("Ret: mahal çizelgesi bölüm türü okumaz", [refused(SCREATE, inp_of("spaces", columns=cols("unitKind")),
          "invalid_schedule", "“Bölüm türü” mahal çizelgesinde okunmaz.", "columns[0].field")])
-    case("Ret: bölüm çizelgesinde evre süzgeci", [refused(SCREATE, inp_of(filter={"phases": ["new"]}),
-         "invalid_schedule", "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; evre, biçim, katman ve tür "
+    case("Ret: bölüm çizelgesinde tadilat süzgeci", [refused(SCREATE, inp_of(filter={"phases": ["new"]}),
+         "invalid_schedule", "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; tadilat durumu, biçim, katman ve tür "
          "adı süzgeci nesne çizelgelerindedir.", "filter.phases")])
     case("Ret: mahal çizelgesinde bina süzgeci", [refused(SCREATE, inp_of("spaces", filter={"buildings": ["a"]}),
          "invalid_schedule", "Bina, kanat ve bölüm türü süzgeci yalnız bölüm çizelgesindedir.", "filter.buildings")])

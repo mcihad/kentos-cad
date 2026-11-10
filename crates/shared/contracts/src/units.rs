@@ -171,6 +171,10 @@ pub const UNITS: &[(&str, &str)] = &[
     ("L/h", "Litre bölü saat: rölantide yakıt."),
     ("kg/L", "Kilogram bölü litre: yakıtın litresinin salımı."),
     ("volume/h", "Saatte hacim: üretim."),
+    (
+        "W/m2K",
+        "Isıl geçirgenlik: watt bölü metrekare kelvin (TS 825'in U değeri, docs/adr/8038).",
+    ),
 ];
 
 /// Whether `unit` is one of [`UNITS`].
@@ -536,6 +540,16 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
             if let Some(d) = &mut c.depth {
                 *d = s.apply(*d);
             }
+        }
+        // Its axis and sizes are lengths, its top a height (docs/adr/8041 §1).
+        Entity::Beam(e) => {
+            let f = &mut e.beam;
+            s.points(&mut f.pts);
+            f.width = s.apply(f.width);
+            f.height = s.apply(f.height);
+            let mut offset = Some(f.offset);
+            s.height(&mut offset);
+            f.offset = offset.unwrap_or(f.offset);
         }
         Entity::Stair(e) => {
             let f = &mut e.stair;

@@ -1364,6 +1364,9 @@ impl App {
                         _ => "scheduleOpenings",
                     },
                     kentos_commands::TableSource::Extraction(_) => "dataExtraction",
+                    kentos_commands::TableSource::Zoning {} => "zoningTable",
+                    kentos_commands::TableSource::Parking {} => "parkingTable",
+                    kentos_commands::TableSource::Shelter {} => "shelterTable",
                 };
                 let head = row![
                     icon(crate::icons::from_web(Some(name))).size(16.0),

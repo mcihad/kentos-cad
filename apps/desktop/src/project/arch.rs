@@ -1,7 +1,8 @@
 //! Proje ayarları › Mimari (docs/adr/0339 §3, §6): the project's levels, a row each (Ad, Kot, Kat yüksekliği; up,
-//! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Standart, Ayrıntılı). What
+//! down, delete; Kat ekle), and the detail the walls are drawn at (Ölçeğe göre, Şematik, Uygulama, Ayrıntılı). What
 //! does not hold is said under the rows and Kaydet waits; Kaydet writes them through `cad.settings.set`'s `arch`,
-//! which keeps a level a wall names.
+//! which keeps a level a wall names. A level's height changed moves the levels above by as much (docs/adr/8040 §1): the
+//! storeys sit on each other, and the walls under the slab of the one above follow.
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Length};
@@ -43,6 +44,9 @@ pub struct Row {
     pub elevation: String,
     pub height: String,
     pub prefix: String,
+    /// Its last height that read as a number: what a new one moves the levels above by (typed away and again, the
+    /// move is from it).
+    pub stacked: Option<f64>,
 }
 
 #[derive(Debug, Clone)]
@@ -71,11 +75,174 @@ const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
 ];
 
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
-    (None, "Otomatik"),
+    (None, "Ölçeğe göre"),
     (Some(WallDetail::Schematic), "Şematik"),
-    (Some(WallDetail::Standard), "Standart"),
+    (Some(WallDetail::Standard), "Uygulama"),
     (Some(WallDetail::Detailed), "Ayrıntılı"),
 ];
+
+/// Çizgi kalınlıkları (docs/adr/8013): the line groups by the scale, or every object its own pen (written as nothing).
+const LINES: [(Option<kentos_commands::LineGroups>, &str); 2] = [
+    (Some(kentos_commands::LineGroups::ByScale), "Ölçeğe göre"),
+    (None, "Nesnenin kendi kalınlığı"),
+];
+
+/// İmar durumu as typed (docs/adr/8030): the parcel's area, m², the plan's emsal (KAKS) and TAKS; ±0.00's absolute
+/// elevation, m (the site plan's, docs/adr/8032); the municipality's regulation chosen (docs/adr/8034); whether the
+/// building has a sprinkler system (Yangın güvenliği, docs/adr/8035).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ZoningTexts {
+    pub parcel: String,
+    pub far: String,
+    pub coverage: String,
+    pub datum: String,
+    pub local: Option<kentos_commands::LocalRules>,
+    pub sprinklers: bool,
+}
+
+/// Yerel imar yönetmeliği's choices (docs/adr/8034): none, or a municipality's.
+const LOCAL_RULES: [(Option<kentos_commands::LocalRules>, &str); 2] = [
+    (None, "Yok (yalnız Planlı Alanlar İmar Yönetmeliği)"),
+    (
+        Some(kentos_commands::LocalRules::Sivas),
+        "Sivas Belediyesi İmar Yönetmeliği (10.11.2022)",
+    ),
+];
+
+/// One of İmar durumu's fields.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ZoningField {
+    Parcel,
+    Far,
+    Coverage,
+    Datum,
+}
+
+impl ZoningTexts {
+    /// The project's zoning as the form shows it.
+    pub fn of(arch: Option<&ArchSettings>) -> Self {
+        let z = arch.and_then(|a| a.zoning);
+        let t = |v: Option<f64>| {
+            v.map(kentos_processing::text::js_number)
+                .unwrap_or_default()
+        };
+        Self {
+            parcel: t(z.map(|z| z.parcel_area)),
+            far: t(z.and_then(|z| z.far)),
+            coverage: t(z.and_then(|z| z.coverage)),
+            datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
+            local: arch.and_then(|a| a.local_rules),
+            sprinklers: arch.is_some_and(|a| a.sprinklers),
+        }
+    }
+
+    pub fn edit(&mut self, field: ZoningField, text: String) {
+        match field {
+            ZoningField::Parcel => self.parcel = text,
+            ZoningField::Far => self.far = text,
+            ZoningField::Coverage => self.coverage = text,
+            ZoningField::Datum => self.datum = text,
+        }
+    }
+
+    /// The zoning typed: none when all three are empty; the parcel's area when any is given.
+    pub fn read(&self) -> Result<Option<kentos_commands::Zoning>, String> {
+        let parcel =
+            number(&self.parcel).map_err(|()| "Parsel alanı bir sayı olmalı.".to_owned())?;
+        let far = number(&self.far).map_err(|()| "Emsal bir sayı olmalı.".to_owned())?;
+        let coverage = number(&self.coverage).map_err(|()| "TAKS bir sayı olmalı.".to_owned())?;
+        match parcel {
+            None if far.is_none() && coverage.is_none() => Ok(None),
+            None => Err("Emsal ya da TAKS için parsel alanı da verilmeli.".into()),
+            Some(parcel_area) => Ok(Some(kentos_commands::Zoning {
+                parcel_area,
+                far,
+                coverage,
+            })),
+        }
+    }
+}
+
+/// İmar durumu (docs/adr/8030): the three fields and, when the drawing has a zoning, its ratios: each line's words,
+/// value and whether it passes its limit.
+pub(super) fn zoning_view<'a>(
+    t: &'a ZoningTexts,
+    on: impl Fn(ZoningField, String) -> Message + Copy + 'a,
+    on_local: impl Fn(Option<kentos_commands::LocalRules>) -> Message + 'a,
+    summary: Vec<(String, String, bool)>,
+) -> Element<'a, Message> {
+    let wrong = |s: &str| number(s).is_err();
+    let line = |name: &'static str, holder: &'static str, value: &'a str, f: ZoningField| {
+        row![
+            container(label::body(name)).width(typography::scaled(140.0)),
+            container(field(holder, value, wrong(value), move |v| on(f, v)))
+                .width(typography::scaled(120.0)),
+        ]
+        .spacing(8)
+        .align_y(Center)
+    };
+    let mut body = Column::new()
+        .spacing(6)
+        .push(line("Parsel alanı (m²)", "450", &t.parcel, ZoningField::Parcel))
+        .push(line("Emsal (KAKS)", "1,50", &t.far, ZoningField::Far))
+        .push(line("TAKS", "0,40", &t.coverage, ZoningField::Coverage))
+        .push(line("±0,00 kotu (m)", "1285,40", &t.datum, ZoningField::Datum))
+        .push(
+            row![
+                container(label::body("Yerel imar yönetmeliği")).width(typography::scaled(140.0)),
+                container(
+                    Select::new(
+                        LOCAL_RULES.iter().map(|(_, l)| Choice::new(*l)),
+                        LOCAL_RULES.iter().position(|(r, _)| *r == t.local),
+                        move |i| on_local(LOCAL_RULES.get(i).and_then(|(r, _)| *r)),
+                    )
+                    .searchable(false)
+                )
+                .width(typography::scaled(330.0)),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        )
+        .push(label::caption(
+            "İmar durumundan. Emsal, emsale dahil mahallerin brüt alanının (katlar alanı) parsel alanına oranıdır; \
+             emsal harici mahaller (otopark, sığınak, kazan dairesi, balkon …) parselin emsal alanının %30'unu \
+             geçerse fazlası katlar alanına eklenir (Planlı Alanlar İmar Yönetmeliği 5/8, 22). TAKS, zemin katın \
+             brüt alanının parsel alanına oranıdır. ±0,00 kotu, projenin ±0,00'ının röperden okunan mutlak kotudur. \
+             Parsel ve bahçe mesafeleri Mimari › Proje ▾ › Parsel ve bahçe mesafeleri ile verilir. Yerel imar \
+             yönetmeliği seçilince Denetim › Mevzuat belediyenin değerlerini de okur: sıkı olan bağlar, ölçünün \
+             belediyeye uyup Planlı Alanlar İmar Yönetmeliği'ne uymadığı yer çelişki olarak söylenir (idare karar \
+             verir). KentOS bir onay vermez; planın kendi notları ayrıca okunur.",
+        ));
+    for (words, value, over) in summary {
+        body = body.push(
+            row![
+                container(label::body(words)).width(typography::scaled(220.0)),
+                label::strong(value).style(move |theme: &iced::Theme| iced::widget::text::Style {
+                    color: over.then(|| kentos_ui::theme::Tokens::of(theme).danger),
+                }),
+            ]
+            .spacing(8),
+        );
+    }
+    super::group::<Message>("İmar durumu", body)
+}
+
+/// Yangın güvenliği (docs/adr/8035): whether the building has a sprinkler system, the fire regulation's escape
+/// distances read by it.
+pub(super) fn fire_view<'a>(
+    t: &'a ZoningTexts,
+    on: impl Fn(bool) -> Message + 'a,
+) -> Element<'a, Message> {
+    let body = Column::new()
+        .spacing(6)
+        .push(kentos_ui::widget::Switch::new(t.sprinklers, on).label("Yağmurlama (sprinkler) sistemi var"))
+        .push(label::caption(
+            "Denetim › Mevzuat kaçış uzaklıklarını Binaların Yangından Korunması Hakkında Yönetmelik'e göre ölçer: \
+             en uzak nokta duvardan 40 cm içeride alınır (32/6), sınırlar Ek-5/B'den ve konutta 48/2'den gelir \
+             (yağmurlamalı binada daha uzun). Korunumlu merdiven, yangın kapısı ve güvenlik holü çizimden okunmaz.",
+        ));
+    super::group::<Message>("Yangın güvenliği", body)
+}
 
 fn shown(n: Option<f64>) -> String {
     n.map(|v| format!("{v}")).unwrap_or_default()
@@ -103,6 +270,7 @@ pub fn rows(arch: Option<&ArchSettings>) -> Vec<Row> {
                 name: l.name.clone(),
                 elevation: shown(Some(l.elevation)),
                 height: shown(l.height),
+                stacked: l.height,
                 prefix: a
                     .space_number_prefixes
                     .get(&l.id)
@@ -132,6 +300,7 @@ pub fn new_row(rows: &[Row]) -> Row {
         elevation: shown(Some(elevation)),
         height: "3".to_owned(),
         prefix: String::new(),
+        stacked: Some(3.0),
     }
 }
 
@@ -141,7 +310,10 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
     match e {
         Edit::Name(t) => r.name = t,
         Edit::Elevation(t) => r.elevation = t,
-        Edit::Height(t) => r.height = t,
+        Edit::Height(t) => {
+            r.height = t;
+            stack(rows, i);
+        }
         Edit::Prefix(t) => r.prefix = t,
         Edit::Up if i > 0 => rows.swap(i, i - 1),
         Edit::Down if i + 1 < n => rows.swap(i, i + 1),
@@ -152,13 +324,59 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
     }
 }
 
+/// Row `i`'s height now read as a number moves the levels at or above its top by the change (docs/adr/8040 §1): a
+/// storey's height and the elevations above it stay one stack, as Türkiye's sections give them (±0.00, +3.00, +6.00).
+/// A level whose elevation does not read stays; a height that does not read moves nothing until it does.
+fn stack(rows: &mut [Row], i: usize) {
+    let Some(r) = rows.get(i) else { return };
+    let (Ok(Some(new)), Some(old)) = (number(&r.height), r.stacked) else {
+        return;
+    };
+    let Ok(Some(foot)) = number(&r.elevation) else {
+        rows[i].stacked = Some(new);
+        return;
+    };
+    let delta = new - old;
+    rows[i].stacked = Some(new);
+    if delta.abs() < 1e-9 {
+        return;
+    }
+    let top = foot + old;
+    for (j, above) in rows.iter_mut().enumerate() {
+        if j == i {
+            continue;
+        }
+        if let Ok(Some(e)) = number(&above.elevation)
+            && e >= top - 1e-6
+        {
+            // To the millimetre: 3.0 + 0.2 + 0.04 reads 3.24, not 3.2400000000000002.
+            above.elevation = shown(Some(((e + delta) * 1000.0).round() / 1000.0));
+        }
+    }
+}
+
 /// The rows and the detail read as the settings, or what does not hold.
 pub fn read(
     rows: &[Row],
     detail: Option<WallDetail>,
     space_method: Option<kentos_commands::SpaceMethod>,
+    cut: &str,
+    lines: Option<kentos_commands::LineGroups>,
+    zoning: &ZoningTexts,
     choices: Option<&ArchSettings>,
 ) -> Result<ArchSettings, String> {
+    let cut_height = number(cut).map_err(|()| "Kesme yüksekliği bir sayı olmalı.".to_owned())?;
+    // ±0.00's elevation (docs/adr/8032): the site plan's, the rest of it kept as the project has it.
+    let datum = number(&zoning.datum).map_err(|()| "±0,00 kotu bir sayı olmalı.".to_owned())?;
+    // The municipality's regulation the audit reads (docs/adr/8034) and the sprinkler system (docs/adr/8035).
+    let local_rules = zoning.local;
+    let sprinklers = zoning.sprinklers;
+    let site = {
+        let mut s = choices.and_then(|a| a.site.clone()).unwrap_or_default();
+        s.datum = datum;
+        (s != kentos_commands::SitePlan::default()).then_some(s)
+    };
+    let zoning = zoning.read()?;
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
         let elevation = match number(&r.elevation) {
@@ -177,6 +395,10 @@ pub fn read(
     let arch = ArchSettings {
         levels,
         detail,
+        // The plan's cut height (docs/adr/8012); empty: 1.10.
+        cut_height,
+        // How its lines are weighted (docs/adr/8013); none: every object its own pen.
+        line_groups: lines,
         space_method,
         phase_view: None,
         // The level and view the drawing opens with are not this form's (docs/adr/0720 §1).
@@ -209,6 +431,12 @@ pub fn read(
         options: choices.map_or_else(Vec::new, |a| a.options.clone()),
         // And their combinations (docs/adr/0808).
         option_combos: choices.map_or_else(Vec::new, |a| a.option_combos.clone()),
+        // The parcel's zoning (docs/adr/8030).
+        zoning,
+        // The site plan (docs/adr/8032): its parcel and edges are Parsel's, ±0.00 this form's.
+        site,
+        local_rules,
+        sprinklers,
     };
     match arch.problem() {
         Some((_, why)) => Err(why),
@@ -237,7 +465,8 @@ fn field<'a>(
         .into()
 }
 
-/// The section.
+/// The section: each of its fields with the message it sends (the other sections' views take theirs the same way).
+#[allow(clippy::too_many_arguments)]
 pub(super) fn view<'a>(
     rows: &'a [Row],
     detail: Option<WallDetail>,
@@ -246,6 +475,10 @@ pub(super) fn view<'a>(
     on_detail: impl Fn(Option<WallDetail>) -> Message + 'a,
     method: Option<kentos_commands::SpaceMethod>,
     on_method: impl Fn(Option<kentos_commands::SpaceMethod>) -> Message + 'a,
+    cut: &'a str,
+    on_cut: impl Fn(String) -> Message + 'a,
+    lines: Option<kentos_commands::LineGroups>,
+    on_lines: impl Fn(Option<kentos_commands::LineGroups>) -> Message + 'a,
 ) -> Element<'a, Message> {
     let methods = Select::new(
         METHODS.iter().map(|(_, l)| Choice::new(*l)),
@@ -274,10 +507,51 @@ pub(super) fn view<'a>(
             .spacing(6)
             .push(container(details).width(typography::scaled(200.0)))
             .push(label::caption(
-                "Otomatik: modelde yaklaştıkça duvar bileşenleri görünür. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek standart, daha küçükte şematik gösterilir. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
+                "Ölçeğe göre: modelde yaklaştıkça ayrıntı artar. 1:30 ve daha büyükte ayrıntılı, 1:75'e dek uygulama, daha küçükte şematik çizilir; 1:150'den küçük paftada kapı kanadıyla, merdiven korkuluksuz, mobilya dış çizgisiyle en sade hâlini alır. Pafta ve PDF kendi ölçeğini kullanır; taramaların çizim ölçeği değişmez.",
             )),
     );
-    let read_now = read(rows, detail, method, None);
+    let (low, high) = kentos_commands::CUT_HEIGHT_RANGE;
+    let cut_wrong = !matches!(number(cut), Ok(None))
+        && !matches!(number(cut), Ok(Some(h)) if (low..=high).contains(&h));
+    let cut_box = super::group::<Message>(
+        "Planın kesme yüksekliği",
+        Column::new()
+            .spacing(6)
+            .push(container(field("1.10", cut, cut_wrong, on_cut)).width(typography::scaled(200.0)))
+            .push(label::caption(format!(
+                "Kat döşemesinden metre; boş: 1,10. Bu yüksekliği geçen pencere, boşluk ve niş planda kesilir; bütünüyle \
+                 üstünde kalan yüksek pencere duvarı kesmez, kesikli çizilir. İTÜ'nün teknik çizim notu 1,20–1,50 m \
+                 der; yeni Mimari projesi 1,20 ile açılır. {}–{} m arası.",
+                format!("{low:.2}").replace('.', ","),
+                format!("{high:.2}").replace('.', ",")
+            ))),
+    );
+    let line_choice = Select::new(
+        LINES.iter().map(|(_, l)| Choice::new(*l)),
+        LINES.iter().position(|(g, _)| *g == lines),
+        move |i| on_lines(LINES.get(i).and_then(|(g, _)| *g)),
+    )
+    .searchable(false);
+    let lines_box = super::group::<Message>(
+        "Çizgi kalınlıkları",
+        Column::new()
+            .spacing(6)
+            .push(container(line_choice).width(typography::scaled(200.0)))
+            .push(label::caption(
+                "Ölçeğe göre: TS 88-23 / ISO 128-23 çizgi grupları. Duvar 1:200'de 0,25, 1:100'de 0,35, 1:50'de 0,5, \
+                 1:20'de 0,7 mm; kapı, pencere ve ince çizgiler yarısı. Nesnenin kalınlığı 1:50'deki genişliği sayılır; \
+                 ölçü, yazı ve akslar kendi kalınlığında kalır. Yeni Mimari projesi böyle açılır.",
+            )),
+    );
+    let read_now = read(
+        rows,
+        detail,
+        method,
+        cut,
+        lines,
+        &ZoningTexts::default(),
+        None,
+    );
     let head = kentos_ui::widget::table::band(
         row![
             container(kentos_ui::widget::table::title("Kat"))
@@ -378,6 +652,8 @@ pub(super) fn view<'a>(
     Column::new()
         .spacing(14)
         .push(detail_box)
+        .push(cut_box)
+        .push(lines_box)
         .push(method_box)
         .push(super::group::<Message>(
             "Katlar",
@@ -515,24 +791,187 @@ mod tests {
         .unwrap()
     }
 
+    /// A storey's height changed moves the levels above by as much (docs/adr/8040 §1), typed away and again too; a
+    /// level below stays.
+    #[test]
+    fn a_storey_s_height_moves_the_levels_above() {
+        let a: ArchSettings = serde_json::from_value(serde_json::json!({"levels":[
+            {"id":"bodrum","name":"Bodrum kat","elevation":-3.0,"height":3.0},
+            {"id":"zemin","name":"Zemin kat","elevation":0.0,"height":3.0},
+            {"id":"k1","name":"1. kat","elevation":3.0,"height":3.0},
+            {"id":"k2","name":"2. kat","elevation":6.0,"height":3.0}
+        ]}))
+        .unwrap();
+        let mut form = rows(Some(&a));
+        let elevations =
+            |form: &[Row]| -> Vec<String> { form.iter().map(|r| r.elevation.clone()).collect() };
+        let before = elevations(&form);
+        for t in ["3.", "3.2", "3.24"] {
+            edit(&mut form, 1, Edit::Height(t.to_owned()));
+        }
+        let after = elevations(&form);
+        assert_eq!(after[0], before[0], "the level below stays");
+        assert_eq!(after[1], before[1], "its own elevation stays");
+        assert_eq!(
+            [number(&after[2]).unwrap(), number(&after[3]).unwrap()],
+            [Some(3.24), Some(6.24)]
+        );
+        // Typed away and again: from the last height that read.
+        edit(&mut form, 1, Edit::Height(String::new()));
+        edit(&mut form, 1, Edit::Height("3".to_owned()));
+        let back = elevations(&form);
+        assert_eq!(
+            [number(&back[2]).unwrap(), number(&back[3]).unwrap()],
+            [Some(3.0), Some(6.0)]
+        );
+    }
+
+    /// Planın kesme yüksekliği as typed (docs/adr/8012): a comma or a point, empty the default, outside 0.30–3.00 m or
+    /// not a number Kaydet waits.
+    #[test]
+    fn the_cut_height_is_read_as_typed_and_held_to_its_range() {
+        let a = project();
+        let form = rows(Some(&a));
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                "1,25",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .cut_height,
+            Some(1.25)
+        );
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                " ",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .cut_height,
+            None
+        );
+        for bad in ["5", "0.1", "bir"] {
+            assert!(
+                read(
+                    &form,
+                    None,
+                    None,
+                    bad,
+                    None,
+                    &ZoningTexts::default(),
+                    Some(&a)
+                )
+                .is_err(),
+                "{bad}"
+            );
+        }
+    }
+
+    /// Çizgi kalınlıkları (docs/adr/8013): Ölçeğe göre writes the line groups, Nesnenin kendi kalınlığı nothing (an old
+    /// drawing stays as it was).
+    #[test]
+    fn the_line_groups_are_written_only_by_the_scale() {
+        let a = project();
+        let form = rows(Some(&a));
+        let by_scale = Some(kentos_commands::LineGroups::ByScale);
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                "",
+                by_scale,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .line_groups,
+            by_scale
+        );
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap()
+            .line_groups,
+            None
+        );
+        assert_eq!(LINES.map(|(g, _)| g), [by_scale, None]);
+    }
+
     #[test]
     fn project_form_preserves_exact_choices_and_only_an_explicit_prefix_edit_changes_the_start() {
         let a = project();
         let mut form = rows(Some(&a));
-        assert_eq!(read(&form, None, None, Some(&a)).unwrap(), a);
+        assert_eq!(
+            read(
+                &form,
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .unwrap(),
+            a
+        );
         edit(&mut form, 0, Edit::Name("Giriş katı".into()));
-        let before = read(&form, None, None, Some(&a)).unwrap();
+        let before = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert_eq!(before.space_first_number("zemin").as_deref(), Some("Z-001"));
         assert_eq!(before.space_names, a.space_names);
         edit(&mut form, 0, Edit::Prefix(" G- ".into()));
-        let changed = read(&form, None, None, Some(&a)).unwrap();
+        let changed = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert_eq!(
             changed.space_first_number("zemin").as_deref(),
             Some("G-001")
         );
         assert_eq!(changed.space_usages, a.space_usages);
         edit(&mut form, 0, Edit::Delete);
-        let cleared = read(&form, None, None, Some(&a)).unwrap();
+        let cleared = read(
+            &form,
+            None,
+            None,
+            "",
+            None,
+            &ZoningTexts::default(),
+            Some(&a),
+        )
+        .unwrap();
         assert!(cleared.space_number_prefixes.is_empty());
         assert_eq!(cleared.space_names, a.space_names);
     }
@@ -559,12 +998,34 @@ mod tests {
             assert_eq!(a, project());
         }
         change(&mut a, ChoiceEdit::Add);
-        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        assert!(
+            read(
+                &rows(Some(&a)),
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .is_err()
+        );
         change(&mut a, ChoiceEdit::Value(2, "Çalışma".into()));
         change(&mut a, ChoiceEdit::Up(2));
         assert_eq!(a.space_names, ["Mutfak", "Çalışma", "mutfak"]);
         change(&mut a, ChoiceEdit::Value(1, " Mutfak ".into()));
-        assert!(read(&rows(Some(&a)), None, None, Some(&a)).is_err());
+        assert!(
+            read(
+                &rows(Some(&a)),
+                None,
+                None,
+                "",
+                None,
+                &ZoningTexts::default(),
+                Some(&a)
+            )
+            .is_err()
+        );
         change(&mut a, ChoiceEdit::Delete(1));
         assert_eq!(a, project());
     }

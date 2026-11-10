@@ -68,7 +68,7 @@ fn balcony_preview(app: &mut App) {
     tool(app);
     click(app, [2.0, 6.0]);
     setting(app, "T", "balcony");
-    setting(app, "E", "railing");
+    setting(app, "N", "railing");
     setting(app, "S", "draw");
     corner(app, [4.5, 9.25]);
     corner(app, [10.5, 9.25]);
@@ -82,7 +82,7 @@ fn hole(app: &mut App) {
     corner(app, [4.5, 10.75]);
     typed(app, "");
     setting(app, "T", "floor");
-    setting(app, "E", "none");
+    setting(app, "N", "none");
     setting(app, "S", "room");
     setting(app, "D", "yes");
     hover(app, [8.0, 7.0]);
@@ -171,7 +171,7 @@ fn quantities_transitions(app: &mut App) {
 }
 
 /// The balcony selected, Öznitelikler scrolled to its slab rows: Tür, Kalınlık, Kot farkı, Üst kot, Kenar, Kenar eni,
-/// Kenar uzunluğu, Malzeme, Kat, Evre, Metraj, Alan, Çevre, Hacim.
+/// Kenar uzunluğu, Malzeme, Kat, Tadilat durumu, Metraj, Alan, Çevre, Hacim.
 pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
     vec![("doseme-oznitelik", written, |s, app| {
         let mut update = |app: &mut App, message: Message| {

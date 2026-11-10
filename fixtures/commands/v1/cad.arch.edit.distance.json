@@ -2497,7 +2497,7 @@
             "status": "failed",
             "error": {
               "code": "not_arch_element",
-              "message": "Nesne aks, kolon, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
+              "message": "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.",
               "path": "uids[0]"
             }
           },

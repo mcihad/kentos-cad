@@ -199,7 +199,8 @@ impl GridTool {
     fn made(&self, cx: &Context<'_>) -> Option<GridsCreate> {
         let at = self.hover?;
         let mut input = GridsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The axes' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Grid, cx),
             grids: Vec::new(),
             series: None,
             system: None,
@@ -260,8 +261,16 @@ impl GridTool {
 
     fn write(&mut self, input: GridsCreate, cx: &mut Context<'_>) {
         let n = input.grids.len() + input.series.as_ref().map_or(0, |s| s.spacings.len() + 1);
-        let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_some() {
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Grid, cx, |layer, cx| {
+                let input = GridsCreate {
+                    layer_id: layer.to_owned(),
+                    ..input
+                };
+                let result = grids_create::execute(&mut ExecutionContext::new(cx.doc), input);
+                points::written(result, cx).is_some()
+            });
+        if written {
             cx.say(Level::Success, format!("{n} aks çizildi."));
             self.label = None;
             self.pts.clear();
@@ -277,6 +286,10 @@ impl GridTool {
 }
 
 impl Tool for GridTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Grid)
+    }
+
     fn id(&self) -> &'static str {
         GRID_ID
     }
@@ -321,7 +334,7 @@ impl Tool for GridTool {
                 self.label.clone().unwrap_or_else(|| "Sıradaki".into()),
             )
             .option_with(
-                "Seri",
+                "Seri aralıkları",
                 "S",
                 self.spacings.as_ref().map_or_else(
                     || "Yok".into(),
@@ -333,7 +346,7 @@ impl Tool for GridTool {
                     },
                 ),
             )
-            .option_with("Kesik", "C", ends_words(self.ends))
+            .option_with("Kesik uçlar", "C", ends_words(self.ends))
             .option("Bitir", "Enter")
     }
 
@@ -609,8 +622,11 @@ impl ColumnTool {
             anchor: (self.anchor != ColumnAnchor::Center).then_some(self.anchor),
             rotation: (self.turn != 0.0).then_some(self.turn),
             tag: None,
+            // Its inside darkened, as Mimarlar Odası asks of a bearing element on a plan (§14.5.3 i); at 1:20 its
+            // concrete is TS 5319's SN46 instead (docs/adr/8014).
+            fill: Some(true),
             // Etkin kat (docs/adr/0713).
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             ..NewColumn::default()
         }
     }
@@ -622,7 +638,8 @@ impl ColumnTool {
         cx: &Context<'_>,
     ) -> ColumnsCreate {
         ColumnsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The columns' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Column, cx),
             columns,
             crossings,
             tag_start: self.tag.clone(),
@@ -648,8 +665,17 @@ impl ColumnTool {
     }
 
     fn write(&mut self, input: ColumnsCreate, cx: &mut Context<'_>) {
-        let result = columns_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Column, cx, |layer, cx| {
+            let input = ColumnsCreate {
+                layer_id: layer.to_owned(),
+                ..input
+            };
+            let result = columns_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             let n = out.ids.len();
             cx.say(Level::Success, format!("{n} kolon konuldu."));
             if let Some(t) = &self.tag {
@@ -664,6 +690,10 @@ impl ColumnTool {
 }
 
 impl Tool for ColumnTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Column)
+    }
+
     fn point_count(&self) -> usize {
         0
     }
@@ -698,14 +728,14 @@ impl Tool for ColumnTool {
         if !self.round() {
             p = p
                 .option_with("Boy", "Y", self.depth.map_or_else(|| fmt(self.width), fmt))
-                .option_with("Döndür", "D", fmt(self.turn.to_degrees()));
+                .option_with("Açı", "D", fmt(self.turn.to_degrees()));
         }
         if let Some([a, b]) = self.legs_now() {
             p = p.option_with("L kolları", "L", format!("{} {}", fmt(a), fmt(b)));
         }
         p.option_with("Hiza", "H", self.anchor.label())
         .option_with(
-            "Etiket",
+            "İlk etiket",
             "K",
             self.tag.clone().unwrap_or_else(|| "Yok".into()),
         )
@@ -802,7 +832,7 @@ impl Tool for ColumnTool {
                     rotation: (self.turn != 0.0).then_some(self.turn),
                     kind: None,
                     fill: None,
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                 };
                 let input = self.made(Vec::new(), Some(crossings), cx);
                 self.write(input, cx);
@@ -857,7 +887,7 @@ impl Tool for ColumnTool {
             ));
         }
         if !self.round() {
-            rows.push(Setting::text("D", "Dönüş", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
+            rows.push(Setting::text("D", "Açı", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
         }
         rows.push(Setting::choice(
             "H",
@@ -1017,6 +1047,8 @@ pub struct FlightTool {
     risers: u32,
     tread: f64,
     cut: Option<f64>,
+    /// Whether Kesme yüksekliği was given (K): else the tool takes the project's plan cut height (docs/adr/8012).
+    cut_given: bool,
     numbering: bool,
     /// The last flight ends at the last riser, a ramp's where its slope says (else where it was clicked).
     fit: bool,
@@ -1106,7 +1138,8 @@ impl FlightTool {
             max_riser: kentos_commands::DEFAULT_MAX_RISER,
             risers: 0,
             tread: 0.28,
-            cut: Some(1.1),
+            cut: Some(kentos_commands::PLAN_CUT_HEIGHT),
+            cut_given: false,
             numbering: false,
             fit: true,
             railings: None,
@@ -1280,7 +1313,7 @@ impl FlightTool {
     fn write_arc(&mut self, cx: &mut Context<'_>) {
         match self.arc_line() {
             Some((pts, bulges)) => {
-                self.run(&pts, Some(bulges), cx, true);
+                self.write_run(&pts, Some(bulges), cx);
                 self.pts.clear();
                 self.turned = 0.0;
                 self.seen_at = None;
@@ -1303,6 +1336,25 @@ impl FlightTool {
         pts
     }
 
+    /// A stair's or a ramp's layer kind (docs/adr/8008).
+    fn layer_kind(&self) -> crate::arch_layer::Kind {
+        if self.ramp {
+            crate::arch_layer::Kind::Ramp
+        } else {
+            crate::arch_layer::Kind::Stair
+        }
+    }
+
+    /// Writes the walking line `pts` on its layer, opened with it when missing (docs/adr/8008): written when the
+    /// drawing changed.
+    fn write_run(&self, pts: &[Vec2], bulges: Option<Vec<f64>>, cx: &mut Context<'_>) {
+        crate::arch_layer::writing(&self.layer_kind(), cx, |_, cx| {
+            let generation = cx.doc.generation();
+            self.run(pts, bulges, cx, true);
+            cx.doc.generation() != generation
+        });
+    }
+
     /// The plan or the write for the walking line `pts`.
     fn run(
         &self,
@@ -1311,7 +1363,8 @@ impl FlightTool {
         cx: &mut Context<'_>,
         write: bool,
     ) -> (Vec<Entity>, Option<String>, Vec<String>) {
-        let layer_id = cx.doc.layers().active().to_owned();
+        // The stair's or ramp's layer (docs/adr/8008).
+        let layer_id = crate::arch_layer::planned(&self.layer_kind(), cx);
         let color = cx.draft.color_text();
         let line_weight = cx.draft.line_weight;
         if self.ramp {
@@ -1330,7 +1383,7 @@ impl FlightTool {
                     fit: self.fit.then_some(true),
                     railings: self.railings,
                     // Etkin kat (docs/adr/0713).
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                     ..NewRamp::default()
                 }],
                 color,
@@ -1372,7 +1425,7 @@ impl FlightTool {
                     railings: self.railings,
                     post: self.post.filter(|_| self.spiralling()),
                     // Etkin kat (docs/adr/0713).
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                     ..NewStair::default()
                 }],
                 color,
@@ -1523,7 +1576,8 @@ impl FlightTool {
         let words = upper_tr(js_trim(value));
         let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
-            "G" => length(cx).map(|v| self.width = v).is_some(),
+            // Genişlik is E in every Mimari tool (docs/adr/8003); G is Geri.
+            "E" => length(cx).map(|v| self.width = v).is_some(),
             "H" if words.is_empty() || words.starts_with("GEN") => {
                 self.landing = None;
                 true
@@ -1548,11 +1602,11 @@ impl FlightTool {
             }
             "Z" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.ramp_base = Some(v)).is_some(),
             "Y" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.rise = v).is_some(),
-            "E" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
+            "M" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
                 self.slope = None;
                 true
             }
-            "E" if self.ramp => parse_number(value)
+            "M" if self.ramp => parse_number(value)
                 .filter(|v| *v > 0.0)
                 .map(|v| self.slope = Some(v))
                 .is_some(),
@@ -1579,9 +1633,15 @@ impl FlightTool {
             "D" => length(cx).map(|v| self.tread = v).is_some(),
             "K" if words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0) => {
                 self.cut = None;
+                self.cut_given = true;
                 true
             }
-            "K" => length(cx).map(|v| self.cut = Some(v)).is_some(),
+            "K" => length(cx)
+                .map(|v| {
+                    self.cut = Some(v);
+                    self.cut_given = true;
+                })
+                .is_some(),
             // Merkez direği (docs/adr/0724 §3): empty, Yok or 0 none.
             "M" if !self.ramp && (words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0)) => {
                 self.post = None;
@@ -1658,6 +1718,10 @@ impl FlightTool {
 }
 
 impl Tool for FlightTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(FlightTool::layer_kind(self))
+    }
+
     fn id(&self) -> &'static str {
         match (self.ramp, self.spiral) {
             (true, _) => RAMP_ID,
@@ -1683,6 +1747,10 @@ impl Tool for FlightTool {
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        // A stair's cut line where the project's plan is cut (docs/adr/8012), unless one was given.
+        if !self.ramp && !self.cut_given {
+            self.cut = Some(cx.doc.settings().plan_cut());
+        }
         self.see_level(cx);
         Flow::Stay
     }
@@ -1728,12 +1796,12 @@ impl Tool for FlightTool {
                     if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
                 )
                 .option_with("Basamak", "D", n(self.tread))
-                .option_with("Genişlik", "G", n(self.width))
-                .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
+                .option_with("Genişlik", "E", n(self.width))
+                .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
                 .option_with("Merkez direği", "M", self.post.map_or_else(|| "Yok".into(), n))
-                .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+                .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
-                .option_with("Yay", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
+                .option_with("Yay boyu", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
         }
         let n = |v: f64| v.to_string();
         if self.ramp {
@@ -1744,16 +1812,16 @@ impl Tool for FlightTool {
                 _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
             };
             return Prompt::new(self.name(), step)
-                .option_with("Yükseklik", "Y", n(self.rise))
+                .option_with("Yükseklik farkı", "Y", n(self.rise))
                 .option_with(
                     "Eğim",
-                    "E",
+                    "M",
                     self.slope.map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
                 )
-                .option_with("Genişlik", "G", n(self.width))
+                .option_with("Genişlik", "E", n(self.width))
                 .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
                 .option_with("En uzun kol", "L", self.max_run.map_or_else(|| "Yok".into(), n))
-                .option_with("Başlangıç", "Z", self.base_option())
+                .option_with("Başlangıç kotu", "Z", self.base_option())
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
                 .option_with("Son kol", "U", if self.fit { "Eğime göre" } else { "Tıklanan yerde" })
                 .option("Bitir", "Enter");
@@ -1778,10 +1846,10 @@ impl Tool for FlightTool {
                 if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
             )
             .option_with("Basamak", "D", n(self.tread))
-            .option_with("Genişlik", "G", n(self.width))
+            .option_with("Genişlik", "E", n(self.width))
             .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
-            .option_with("Kesme", "K", self.cut.map_or_else(|| "Yok".into(), n))
-            .option_with("Numaralar", "N", if self.numbering { "Açık" } else { "Kapalı" })
+            .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
+            .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
             .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
             .option_with("Son kol", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" })
             .option("Bitir", "Enter")
@@ -1823,7 +1891,7 @@ impl Tool for FlightTool {
         self.pts.push(p);
         if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, None, cx, true);
+            self.write_run(&pts, None, cx);
         }
         self.see(cx);
         true
@@ -1837,12 +1905,12 @@ impl Tool for FlightTool {
                 return true;
             }
             let field = match ask {
-                Ask::Width => "G",
+                Ask::Width => "E",
                 Ask::Landing => "H",
                 Ask::RampRun => "L",
                 Ask::RampBase => "Z",
                 Ask::Rise | Ask::Height => "Y",
-                Ask::Slope => "E",
+                Ask::Slope => "M",
                 Ask::MaxRiser => "R",
                 Ask::Risers => "S",
                 Ask::Tread => "D",
@@ -1862,12 +1930,12 @@ impl Tool for FlightTool {
             return true;
         }
         self.ask = match key.as_str() {
-            "G" => Some(Ask::Width),
+            "E" => Some(Ask::Width),
             "H" => Some(Ask::Landing),
             "L" if self.ramp => Some(Ask::RampRun),
             "Z" if self.ramp => Some(Ask::RampBase),
             "Y" if self.ramp => Some(Ask::Rise),
-            "E" if self.ramp => Some(Ask::Slope),
+            "M" if self.ramp => Some(Ask::Slope),
             "Y" => Some(Ask::Height),
             "R" if !self.ramp => Some(Ask::MaxRiser),
             "S" if !self.ramp => Some(Ask::Risers),
@@ -1927,11 +1995,11 @@ impl Tool for FlightTool {
             let mut rows = vec![
                 Setting::text("Y", "Yükseklik farkı", f.length(self.rise)),
                 Setting::text(
-                    "E",
+                    "M",
                     "Eğim (%)",
                     self.slope.map_or_else(|| "Hesaplanır".into(), |s| s.to_string()),
                 ),
-                Setting::text("G", "Genişlik", f.length(self.width)),
+                Setting::text("E", "Genişlik", f.length(self.width)),
                 Setting::text("H", "Sahanlık", landing),
                 Setting::text("L", "En uzun kol", self.max_run.map_or_else(|| "Yok".into(), |v| f.length(v))),
                 Setting::text("Z", "Başlangıç kotu", self.base_words(f)),
@@ -1973,7 +2041,7 @@ impl Tool for FlightTool {
                 if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
             ),
             Setting::text("D", "Basamak", f.length(self.tread)),
-            Setting::text("G", "Genişlik", f.length(self.width)),
+            Setting::text("E", "Genişlik", f.length(self.width)),
             Setting::text("H", "Sahanlık", landing),
             Setting::text("M", "Merkez direği", self.post.map_or_else(|| "Yok".into(), |v| f.length(v))),
             Setting::text("K", "Kesme yüksekliği", self.cut.map_or_else(|| "Yok".into(), |v| f.length(v))),
@@ -1981,7 +2049,7 @@ impl Tool for FlightTool {
             railings_setting(self.railings),
             Setting::choice(
                 "U",
-                if self.curved { "Yay" } else { "Son kol" },
+                if self.curved { "Yay boyu" } else { "Son kol" },
                 crate::tool_settings::choices(
                     &[("fit", "Rıhtlara göre biter"), ("clicked", "Tıklanan yerde biter")],
                     if self.fit { "fit" } else { "clicked" },
@@ -2061,7 +2129,7 @@ impl Tool for FlightTool {
         }
         if self.pts.len() >= 2 {
             let pts = std::mem::take(&mut self.pts);
-            self.run(&pts, None, cx, true);
+            self.write_run(&pts, None, cx);
             self.see(cx);
             return Flow::Stay;
         }

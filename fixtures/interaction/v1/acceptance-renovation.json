@@ -62,7 +62,8 @@
    "focus": "commandLine"
   },
   {
-   "text": "M"
+   "text": "B",
+   "note": "Yöntem B (ADR 8003): Çiftler"
   },
   {
    "key": "Enter"

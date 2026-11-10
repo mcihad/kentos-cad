@@ -15,6 +15,11 @@ pub struct Phasing {
     looks: HashMap<u32, PhaseLook>,
     pens: Vec<RecipePen>,
     mono: bool,
+    /// The objects the store draws as another level's plan shows them (docs/adr/0724 §4, docs/adr/8012 step 3): a
+    /// stair of the level under the active one from above, a slab of the level over it dashed. The store holds that
+    /// look; it is only noted here, so a level view that changes it and no hidden or faint object still builds the
+    /// drawing again (Bütün katlar once kept a balcony dashed on the screen). It changes nothing drawn here.
+    across: Vec<u32>,
 }
 
 impl Phasing {
@@ -30,7 +35,15 @@ impl Phasing {
             return Self { looks, ..Self::default() };
         }
         for e in entities {
-            let look = view.look(e.phase(&by_uid));
+            // Tadilat projesi (docs/adr/8039 §5): a door or window closed up in a wall that stays is drawn by the store
+            // as that wall's infill, not dashed.
+            let infill = view == PhaseView::Renovation
+                && e.renovation_mark(&by_uid) == kentos_contracts::RenovationMark::Infill;
+            let look = if infill {
+                PhaseLook::Shown
+            } else {
+                e.look_in(view, &by_uid)
+            };
             if look != PhaseLook::Shown {
                 looks.insert(e.base().id, look);
             }
@@ -72,6 +85,11 @@ impl Phasing {
     /// Object `id` left out (a PDF underlay that is not plotted, docs/adr/0351 §2).
     pub fn hide(&mut self, id: u32) {
         self.looks.insert(id, PhaseLook::Hidden);
+    }
+
+    /// Object `id` drawn by the store as another level's plan shows it (docs/adr/0724 §4, docs/adr/8012 step 3).
+    pub fn drawn_across(&mut self, id: u32) {
+        self.across.push(id);
     }
 
     /// Object `id` drawn faint (the level under the active one, docs/adr/0715 §2) unless it is left out.

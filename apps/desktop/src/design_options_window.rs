@@ -29,6 +29,7 @@ use crate::traces::Control;
 pub const TITLE: &str = "Tasarım seçenekleri";
 const CLOSE: &str = "Kapat";
 const DEFINE: &str = "Seçimden tanımla";
+const PICK: &str = "Çizimden seç";
 const COPY: &str = "Seçeneği kopyala";
 const PRIMARY: &str = "Birincil yap";
 const ACCEPT: &str = "Kabul et";
@@ -80,6 +81,8 @@ pub enum Event {
     ComboDelete,
     Versus(usize),
     Close,
+    /// Çizimden seç: the window steps aside for a pick (docs/adr/8006).
+    PickFromDrawing,
 }
 
 fn msg(e: Event) -> Message {
@@ -629,6 +632,9 @@ impl App {
                 self.design_options = None;
                 self.dialog = None;
             }
+            Event::PickFromDrawing => {
+                self.pick_for_window(crate::app::Dialog::DesignOptions, "Tasarım seçeneğinin nesneleri")
+            }
         }
         Task::none()
     }
@@ -763,6 +769,7 @@ impl App {
         let is_primary = option.is_some_and(|o| o.primary);
         Frame::new(TITLE)
             .scroll_fill(body)
+            .aside(words::ghost(PICK, Some(msg(Event::PickFromDrawing))))
             .action(words::secondary(DEFINE, Some(msg(Event::Define))))
             .action(words::secondary(COPY, option.map(|_| msg(Event::Copy))))
             .action(words::secondary(

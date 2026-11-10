@@ -370,7 +370,8 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
         out.push(explain_part(
             Part {
                 part: "lineWeight",
-                label: "Kalınlık",
+                // Çizgi kalınlığı, as Öznitelikler names it: a wall's Kalınlık is its width (docs/adr/8003).
+                label: "Çizgi kalınlığı",
                 own: base.line_weight.map(weight),
                 layer: weight(node.style.line_weight),
                 viewport: &|s: &LayerStyle| weight(s.line_weight),
@@ -467,7 +468,7 @@ fn block_parts(
         }
     }
     let n = u32::try_from(def.entities.len()).unwrap_or(u32::MAX);
-    let names = ["Renk", "Çizgi tipi", "Kalınlık"];
+    let names = ["Renk", "Çizgi tipi", "Çizgi kalınlığı"];
     let origins = [Origin::Object, Origin::Block, Origin::Layer];
     let words = ["kendi değeri", "bloktan (ByBlock)", "katmandan (ByLayer)"];
     let mut chain = Vec::new();

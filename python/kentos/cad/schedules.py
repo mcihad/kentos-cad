@@ -39,12 +39,12 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
     sütunlardır (field: number, type, form, width, height, sill, head, wall, level,
     phase, count, area, perimeter, volume, name, usage, tag, place, length, thickness,
     attr; title başlık, attr öznitelik adı); verilmezse türün sütunları. filter kat,
-    evre, biçim (yalnız açıklıkta) ve katmanla süzer; sort sütunlara göre sıralar (yoksa
-    çizimin sırası); group aynı satırları birleştirir (adet, alan, çevre, hacim ve
-    uzunluk toplanır); total toplam satırı ekler. Çizelgenin satırları her adımda
-    belgece yeniden yazılır: kapı değişince satırı da değişir. Uzunluklar projenin
-    biriminde ve basamağında, alanlar alan biriminde. height yazı yüksekliği (m;
-    verilmezse projenin tablo yüksekliği çizim ölçeğinde). Katman açıkça verilir.
+    tadilat durumu, biçim (yalnız açıklıkta) ve katmanla süzer; sort sütunlara göre
+    sıralar (yoksa çizimin sırası); group aynı satırları birleştirir (adet, alan, çevre,
+    hacim ve uzunluk toplanır); total toplam satırı ekler. Çizelgenin satırları her
+    adımda belgece yeniden yazılır: kapı değişince satırı da değişir. Uzunluklar
+    projenin biriminde ve basamağında, alanlar alan biriminde. height yazı yüksekliği
+    (m; verilmezse projenin tablo yüksekliği çizim ölçeğinde). Katman açıkça verilir.
     """
     __slots__ = ()
     id = "cad.schedules.create"
@@ -63,6 +63,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -80,19 +81,20 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         köşesi at. Tek geri alma adımı “Çizelge”. columns sütunlardır (field: number, type,
         form, width, height, sill, head, wall, level, phase, count, area, perimeter, volume,
         name, usage, tag, place, length, thickness, attr; title başlık, attr öznitelik adı);
-        verilmezse türün sütunları. filter kat, evre, biçim (yalnız açıklıkta) ve katmanla
-        süzer; sort sütunlara göre sıralar (yoksa çizimin sırası); group aynı satırları
-        birleştirir (adet, alan, çevre, hacim ve uzunluk toplanır); total toplam satırı
-        ekler. Çizelgenin satırları her adımda belgece yeniden yazılır: kapı değişince
-        satırı da değişir. Uzunluklar projenin biriminde ve basamağında, alanlar alan
-        biriminde. height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği çizim
-        ölçeğinde). Katman açıkça verilir.
+        verilmezse türün sütunları. filter kat, tadilat durumu, biçim (yalnız açıklıkta) ve
+        katmanla süzer; sort sütunlara göre sıralar (yoksa çizimin sırası); group aynı
+        satırları birleştirir (adet, alan, çevre, hacim ve uzunluk toplanır); total toplam
+        satırı ekler. Çizelgenin satırları her adımda belgece yeniden yazılır: kapı
+        değişince satırı da değişir. Uzunluklar projenin biriminde ve basamağında, alanlar
+        alan biriminde. height yazı yüksekliği (m; verilmezse projenin tablo yüksekliği
+        çizim ölçeğinde). Katman açıkça verilir.
 
         Args:
             doc: The drawing it works on.
             layer_id:
             at: Unit: length.
             of:
+            by_level: Kat kat (docs/adr/8029): a units schedule's rows storey by storey, each group's areas the storey's part.
             color:
             columns: Absent: the kind's columns.
             expected_revision:
@@ -118,6 +120,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -137,6 +140,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -154,6 +158,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -173,6 +178,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -190,6 +196,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -209,6 +216,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
         layer_id: str,
         at: Vec2Like,
         of: ScheduleOf | ScheduleOfName,
+        by_level: bool | None | Unset = UNSET,
         color: str | None | Unset = UNSET,
         columns: Sequence[ScheduleColumn] | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -231,6 +239,7 @@ class _SchedulesCreate(LocalCommand[SchedulesCreate, SchedulesCreated, Schedules
             layer_id=layer_id,
             at=Vec2.of(at),
             of=of,
+            by_level=by_level,
             color=color,
             columns=_opt(columns, lambda x: list(x)),
             expected_revision=expected_revision,
@@ -253,11 +262,11 @@ class _SchedulesEdit(LocalCommand[SchedulesEdit, SchedulesEdited, SchedulesEdite
     column sütun; value hücrenin yazısı) satırın nesnelerinin kendi alanına yazılır:
     numara, tür, genişlik, denizlik, lento, ad, kullanım, etiket, kalınlık ve öznitelik
     düzenlenir, uzunluk projenin biriminde okunur, boş yazı isteğe bağlı alanı kaldırır;
-    adet, alan, çevre, hacim, yükseklik, uzunluk, duvar, kat, evre, konum ve biçim
-    hesaplanır (cell_computed); birden çok nesneli gruplu satırın numarası yazılmaz
-    (schedule_group_number). set sütunları, süzgeci (null kaldırır), sıralamayı, grubu
-    ve toplamı değiştirir. Satırın nesnelerinden biri kilitli katmandaysa hiçbir şey
-    yazılmaz. Plan yazmadan çizelgeyi olacağı gibi gösterir.
+    adet, alan, çevre, hacim, yükseklik, uzunluk, duvar, kat, tadilat durumu, konum ve
+    biçim hesaplanır (cell_computed); birden çok nesneli gruplu satırın numarası
+    yazılmaz (schedule_group_number). set sütunları, süzgeci (null kaldırır),
+    sıralamayı, grubu ve toplamı değiştirir. Satırın nesnelerinden biri kilitli
+    katmandaysa hiçbir şey yazılmaz. Plan yazmadan çizelgeyi olacağı gibi gösterir.
     """
     __slots__ = ()
     id = "cad.schedules.edit"
@@ -284,7 +293,7 @@ class _SchedulesEdit(LocalCommand[SchedulesEdit, SchedulesEdited, SchedulesEdite
         hücrenin yazısı) satırın nesnelerinin kendi alanına yazılır: numara, tür, genişlik,
         denizlik, lento, ad, kullanım, etiket, kalınlık ve öznitelik düzenlenir, uzunluk
         projenin biriminde okunur, boş yazı isteğe bağlı alanı kaldırır; adet, alan, çevre,
-        hacim, yükseklik, uzunluk, duvar, kat, evre, konum ve biçim hesaplanır
+        hacim, yükseklik, uzunluk, duvar, kat, tadilat durumu, konum ve biçim hesaplanır
         (cell_computed); birden çok nesneli gruplu satırın numarası yazılmaz
         (schedule_group_number). set sütunları, süzgeci (null kaldırır), sıralamayı, grubu
         ve toplamı değiştirir. Satırın nesnelerinden biri kilitli katmandaysa hiçbir şey

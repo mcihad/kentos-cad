@@ -398,3 +398,46 @@ fn tip_screens() {
     snapshot.settle(&mut app, App::view, &mut update);
     save(&mut snapshot, &app, "3-menu");
 }
+
+/// A drop-down's rows do not say its name again (docs/adr/8039 §0): under Tadilat ▾ “Mevcut durum”, not “Tadilat:
+/// Mevcut durum”; the same under Kat görünümü ▾. The words that are left are never empty, and a title that only
+/// starts with the name's letters keeps them.
+#[test]
+fn a_menu_s_rows_do_not_repeat_its_name() {
+    use crate::view::row_title;
+    assert_eq!(
+        row_title("Tadilat: Mevcut durum", Some("Tadilat")),
+        "Mevcut durum"
+    );
+    assert_eq!(
+        row_title("Kat görünümü: Bütün katlar", Some("Kat görünümü")),
+        "Bütün katlar"
+    );
+    assert_eq!(
+        row_title("Tadilat: Mevcut durum", None),
+        "Tadilat: Mevcut durum"
+    );
+    assert_eq!(row_title("Tadilatlar", Some("Tadilat")), "Tadilatlar");
+    assert_eq!(row_title("Tadilat: ", Some("Tadilat")), "Tadilat: ");
+    // Every menu of the ribbon: no row repeats its menu's name.
+    let mut seen = 0;
+    for tab in catalog().every_tab() {
+        for item in tab.panels.iter().flat_map(|p| p.items.iter()) {
+            let crate::catalog::Item::Menu { label, ids, .. } = item else {
+                continue;
+            };
+            for id in ids {
+                let Some(command) = catalog().get(id) else {
+                    continue;
+                };
+                let row = row_title(command.title, Some(label));
+                assert!(!row.starts_with(&format!("{label}: ")), "{label} ▾: {row}");
+                if row != command.title {
+                    seen += 1;
+                }
+            }
+        }
+    }
+    // Tadilat's four and Kat görünümü's three.
+    assert!(seen >= 7, "{seen}");
+}

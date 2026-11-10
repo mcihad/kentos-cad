@@ -556,6 +556,8 @@ pub enum Message {
     Run(&'static str),
     /// Etkin kat chosen on the status bar (docs/adr/0713): a level by its id; none, Katsız.
     ActiveLevel(Option<String>),
+    /// Katman anahtarı on or off (arch_start.rs, docs/adr/8008).
+    LayerKeys(bool),
     /// Kat görünümü chosen (docs/adr/0715).
     LevelView(kentos_interaction::level_view::LevelView),
     /// Run a command ticked on a menu that stays open (a checklist's row:
@@ -1603,6 +1605,8 @@ pub struct App {
     pub(crate) table_insert: crate::tables::insert::Insert,
     /// Tabloyu düzenle's window (tables/editor.rs).
     pub(crate) table_editor: Option<crate::tables::editor::Editor>,
+    /// Çizimden seç: the window stepped aside and the selection before the pick (window_pick.rs, docs/adr/8006).
+    pub(crate) window_pick: Option<(Dialog, Vec<kentos_domain::Slot>)>,
     /// Veri çıkarımı's recipe, kept while the program runs (docs/adr/1030 §8).
     pub(crate) extract: Option<crate::tables::extract::Extract>,
     /// Detay paftaları' window (docs/adr/1112).
@@ -1711,7 +1715,11 @@ pub struct App {
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
     pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
     /// The box of the objects on the project's levels, the ground of Kat planı paftaları (docs/adr/0718).
-    pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64;4]>>,
+    pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64; 4]>>,
+    /// The drawing's variables and what it says of itself for a title block (docs/adr/8037), with the drawing's
+    /// session and generation they were read at: read again only when the drawing changes.
+    pub(crate) sheet_drawing_variables:
+        std::cell::RefCell<(Option<(u64, u64)>, Vec<kentos_sheet::model::Variable>)>,
     /// The sheet templates' cloud library (sheet_library.rs, docs/sheet/design.md §13).
     pub(crate) sheet_library: crate::sheet_library::SheetLibrary,
     /// What the sheet mode's tables, coordinate lists and legends were last given for (sheet_inputs.rs).
@@ -1894,6 +1902,7 @@ impl App {
             sheet_attributes: std::cell::Cell::new(false),
             sheet_extent: std::cell::Cell::new(None),
             sheet_level_extent: std::cell::Cell::new(None),
+            sheet_drawing_variables: std::cell::RefCell::new((None, Vec::new())),
             sheet_library: crate::sheet_library::SheetLibrary::default(),
             sheet_data_key: None,
             toasts: kentos_ui::widget::Toasts::new(),
@@ -2068,6 +2077,7 @@ impl App {
             cogo: None,
             table_insert: Default::default(),
             table_editor: None,
+            window_pick: None,
             extract: None,
             sheet_details: None,
             plot_styles: None,
@@ -2116,6 +2126,8 @@ impl App {
             server_quiet: false,
             server_health: None,
         };
+        // KentOS Mimari's wall tools start on a hatched style (docs/adr/8007).
+        app.start_architecture_tools();
         // A module's program offers its own module's copies and those of no module (docs/adr/0802).
         app.recovery.offer_only(program);
         if !app.recovery.offers.is_empty() {
@@ -2506,7 +2518,20 @@ impl App {
                 self.refresh_value_preview();
                 return crate::input::release_keyboard();
             }
-            if matches!(self.dialog, Some(Dialog::AttributeValues | Dialog::BlockDefine)) {
+            // Esc in a window's text box closes the window, as Esc beside it does (DESIGN.md §7.9): F1 stayed open over
+            // its search box (plan G11), and the editors with their own save ask first (docs/adr/8006).
+            if matches!(
+                self.dialog,
+                Some(
+                    Dialog::AttributeValues
+                        | Dialog::BlockDefine
+                        | Dialog::Shortcuts
+                        | Dialog::WallStyles
+                        | Dialog::Program
+                        | Dialog::OpeningTypes
+                        | Dialog::Materials
+                )
+            ) {
                 self.close_dialog();
             }
             return Task::none();
@@ -2574,6 +2599,7 @@ impl App {
             Message::DrawTemplate(id) => return self.draw_template(&id),
             Message::ApplyTemplate(id) => self.apply_template(&id),
             Message::ActiveLevel(level) => self.choose_level(level),
+            Message::LayerKeys(on) => self.choose_layer_keys(on),
             Message::LevelView(view) => self.choose_level_view(view),
             Message::RunMethod { id, option, label } => {
                 return self.run_method(id, option, label);
@@ -3642,6 +3668,17 @@ impl App {
             "arch.quantities" => self.open_quantities(),
             // Revizyon listesi (docs/adr/0721 §4).
             "arch.revisionList" => self.place_revision_list(),
+            // Emsal ve TAKS tablosu (docs/adr/8030).
+            "arch.zoningTable" => self.place_zoning_table(),
+            // Otopark and Sığınak hesabı (docs/adr/8036).
+            "arch.parkingTable" => {
+                self.place_provision_table(kentos_commands::TableSource::Parking {})
+            }
+            // Ruhsat takımı (docs/adr/8037): the particulars, the set and its publication.
+            "arch.permitSet" => return self.permit_set_open(),
+            "arch.shelterTable" => {
+                self.place_provision_table(kentos_commands::TableSource::Shelter {})
+            }
             "arch.spaceMerge" => self.space_merge(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)
@@ -4365,6 +4402,10 @@ impl App {
     pub(crate) fn run_typed(&mut self, text: &str) -> Task<Message> {
         if text.is_empty() {
             return Task::none();
+        }
+        // The program's own names first (module_names.rs, docs/adr/8002): in KentOS Mimari, PENCERE is the window.
+        if let Some(task) = self.run_module_name(text) {
+            return task;
         }
         // AutoCAD takma adları, when the preference is on (alias_profile.rs, docs/adr/0282):
         // the profile holds no name of KentOS's, which keep their meaning.

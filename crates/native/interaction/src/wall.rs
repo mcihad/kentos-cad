@@ -62,6 +62,13 @@ pub fn offered(settings: &kentos_commands::ProjectSettings) -> Vec<WallStyleDef>
     all
 }
 
+/// The wall tools take `style`, as choosing it under Stil does: its key and its new walls' thickness. KentOS Mimari
+/// starts its tools on one this way (docs/adr/8007).
+pub fn take_style(memory: &mut Memory, style: &WallStyleDef) {
+    memory.wall_style = Some(style_key(&style.id));
+    memory.wall_width = style.new_width();
+}
+
 /// The style the session chose, when one of [`offered`] still has its id.
 pub fn chosen(
     memory: &Memory,
@@ -100,7 +107,7 @@ pub fn chips(
     style: Option<&WallStyleDef>,
 ) -> Prompt {
     prompt
-        .option_with("Genişlik", "E", format.length(width(memory, style)))
+        .option_with("Kalınlık", "E", format.length(width(memory, style)))
         .option_with("Hiza", "H", memory.wall_justify.label())
         .option_with("Öteleme", "Ö", format.length(memory.wall_offset))
         .option_with(
@@ -113,7 +120,7 @@ pub fn chips(
 /// The prompt while a value is waited for.
 pub fn asked(ask: Ask) -> Prompt {
     match ask {
-        Ask::Width => Prompt::new(LABEL, "duvarın genişliğini yazın"),
+        Ask::Width => Prompt::new(LABEL, "duvarın kalınlığını yazın"),
         Ask::Offset => Prompt::new(
             LABEL,
             "taban çizgisinin ötelemesini yazın (artı: yolun solu, eksi: sağı)",
@@ -221,10 +228,7 @@ pub fn choose(key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
                 .into_iter()
                 .find(|s| s.name.to_lowercase() == folded || s.id == typed.trim());
             match found {
-                Some(s) => {
-                    cx.memory.wall_style = Some(style_key(&s.id));
-                    cx.memory.wall_width = s.new_width();
-                }
+                Some(s) => take_style(cx.memory, &s),
                 None => cx.say(
                     Level::Warn,
                     format!(
@@ -239,8 +243,13 @@ pub fn choose(key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
     }
 }
 
+/// The layer kind of a wall the session would draw now: its chosen style's core material (docs/adr/8008).
+pub fn layer_kind(cx: &Context<'_>) -> crate::arch_layer::Kind {
+    crate::arch_layer::Kind::wall(chosen(cx.memory, cx.doc.settings()).as_ref())
+}
+
 /// The command's input: the path as drawn (one bulge per edge, `closed` with the closing one) and the session's
-/// options, on the active layer.
+/// options, on the wall's layer (docs/adr/8008; the active one with the key off or until the layer opens).
 pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> WallsCreate {
     let style = chosen(cx.memory, cx.doc.settings());
     let fixed = style
@@ -249,7 +258,7 @@ pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Wa
         .is_some();
     let m = *cx.memory;
     WallsCreate {
-        layer_id: cx.doc.layers().active().to_owned(),
+        layer_id: crate::arch_layer::planned(&layer_kind(cx), cx),
         walls: vec![NewWall {
             pts: pts.iter().copied().map(wire).collect(),
             bulges: bulges.iter().any(|b| *b != 0.0).then(|| bulges.to_vec()),
@@ -261,7 +270,7 @@ pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Wa
             caps: None,
             height: None,
             // Etkin kat (docs/adr/0713).
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
         }],
@@ -419,8 +428,13 @@ pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
     }
 }
 
-/// Writes the wall through `cad.walls.create`; whether it was written.
+/// Writes the wall through `cad.walls.create` on its layer (docs/adr/8008); whether it was written.
 pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
+    let kind = layer_kind(cx);
+    crate::arch_layer::writing(&kind, cx, |_, cx| write_on(pts, bulges, closed, cx))
+}
+
+fn write_on(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &mut Context<'_>) -> bool {
     let input = input(pts, bulges, closed, cx);
     let result = walls_create::execute(&mut ExecutionContext::new(cx.doc), input);
     match points::written(result, cx) {

@@ -4658,7 +4658,7 @@
       ]
     },
     {
-      "name": "Yükseklik, kat/evre/durum, etiket, öznitelik ve nesnenin görünüşü saklanır",
+      "name": "Yükseklik, kat, tadilat ve yapım durumu, etiket, öznitelik ve nesnenin görünüşü saklanır",
       "note": "Bağımsız fiziksel alan kontrolü: {\"referenceArea\": 12.0, \"clearArea\": 12.0, \"outerArea\": 15.75}",
       "steps": [
         {

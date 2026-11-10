@@ -1860,6 +1860,8 @@ pub enum Entity {
     Grid(crate::GridEntity),
     /// A column (docs/adr/0343): its centre, outline and the grids it stands on.
     Column(crate::ColumnEntity),
+    /// A beam (docs/adr/8041 §1): its axis, its web's width and height, its top; drawn dashed in a plan.
+    Beam(crate::BeamEntity),
     /// A stair (docs/adr/0343): its walking line and its risers, treads and landings.
     Stair(crate::StairEntity),
     /// A ramp (docs/adr/0343): its centre line, width, rise and landings.
@@ -1925,6 +1927,7 @@ impl Entity {
             Entity::Space(e) => &e.base,
             Entity::Grid(e) => &e.base,
             Entity::Column(e) => &e.base,
+            Entity::Beam(e) => &e.base,
             Entity::Stair(e) => &e.base,
             Entity::Ramp(e) => &e.base,
             Entity::Tag(e) => &e.base,
@@ -1961,6 +1964,7 @@ impl Entity {
             Entity::Space(e) => &mut e.base,
             Entity::Grid(e) => &mut e.base,
             Entity::Column(e) => &mut e.base,
+            Entity::Beam(e) => &mut e.base,
             Entity::Stair(e) => &mut e.base,
             Entity::Ramp(e) => &mut e.base,
             Entity::Tag(e) => &mut e.base,
@@ -1989,23 +1993,81 @@ impl Entity {
             Entity::Space(x) => x.space.arch.phase,
             Entity::Grid(x) => x.grid.arch.phase,
             Entity::Column(x) => x.column.arch.phase,
+            Entity::Beam(x) => x.beam.arch.phase,
             Entity::Stair(x) => x.stair.arch.phase,
             Entity::Ramp(x) => x.ramp.arch.phase,
             Entity::Insert(x) => x.arch.phase,
+            Entity::Opening(x) => x.opening.phase,
+            // A slab's and a room separator's (docs/adr/8039 §4: they were left out, a slab İptal was drawn in Yeni durum).
+            Entity::Slab(x) => x.slab.arch.phase,
+            Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.phase),
             _ => None,
         }
     }
 
-    /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening's its wall's, a tag's its object's
-    /// (`by_uid` finds an object by its persistent id).
-    pub fn phase<'a>(&'a self, by_uid: impl Fn(&str) -> Option<&'a Entity>) -> Option<crate::ArchPhase> {
+    /// Its phase as a phase view reads it (docs/adr/0346 §2): its own, an opening without one its wall's
+    /// (docs/adr/8039 §1), a tag's its object's (`by_uid` finds an object by its persistent id).
+    pub fn phase<'a>(
+        &'a self,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> Option<crate::ArchPhase> {
+        let opening = |o: &crate::OpeningEntity| {
+            o.opening
+                .phase
+                .or_else(|| by_uid(&o.opening.host).and_then(|w| w.own_phase()))
+        };
         match self {
-            Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+            Entity::Opening(o) => opening(o),
             Entity::Tag(t) => by_uid(&t.tag.of).and_then(|e| match e {
-                Entity::Opening(o) => by_uid(&o.opening.host).and_then(|w| w.own_phase()),
+                Entity::Opening(o) => opening(o),
                 other => other.own_phase(),
             }),
             other => other.own_phase(),
+        }
+    }
+
+    /// How `view` draws it (docs/adr/0346 §2): its tadilat durumu's look, except that Tadilat projesi leaves out a room
+    /// pulled down (İptal) and its label (docs/adr/8039 §6): the plan names the rooms as they will be, its walls and
+    /// openings carry the Mimarlar Odası's three techniques; drawn too, the old rooms' names and areas lay over the new
+    /// ones' in the same place.
+    pub fn look_in<'a>(
+        &'a self,
+        view: crate::PhaseView,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> crate::PhaseLook {
+        let phase = self.phase(&by_uid);
+        if view == crate::PhaseView::Renovation && phase == Some(crate::ArchPhase::Demolish) {
+            let room = match self {
+                Entity::Space(_) => true,
+                Entity::Tag(t) => matches!(by_uid(&t.tag.of), Some(Entity::Space(_))),
+                _ => false,
+            };
+            if room {
+                return crate::PhaseLook::Hidden;
+            }
+        }
+        view.look(phase)
+    }
+
+    /// How the Tadilat projesi view marks it (docs/adr/8039 §5): a door or window of its own state other than its wall's
+    /// is that wall's infill (closed up, iptal) or cut into it (ilave); otherwise by its state, none a plain outline.
+    pub fn renovation_mark<'a>(
+        &'a self,
+        by_uid: impl Fn(&str) -> Option<&'a Entity>,
+    ) -> crate::RenovationMark {
+        use crate::{ArchPhase as P, RenovationMark as M};
+        if let Entity::Opening(o) = self {
+            let wall = by_uid(&o.opening.host).and_then(|w| w.own_phase());
+            match o.opening.phase {
+                Some(P::Demolish) if wall != Some(P::Demolish) => return M::Infill,
+                Some(P::New) if wall != Some(P::New) => return M::CutIn,
+                _ => {}
+            }
+        }
+        match self.phase(&by_uid) {
+            None | Some(P::Existing) => M::Plain,
+            Some(P::New) => M::Added,
+            Some(P::Demolish | P::Temporary) => M::Removed,
         }
     }
 
@@ -2019,6 +2081,7 @@ impl Entity {
             Entity::Slab(x) => x.slab.arch.level.as_deref(),
             Entity::Grid(x) => x.grid.arch.level.as_deref(),
             Entity::Column(x) => x.column.arch.level.as_deref(),
+            Entity::Beam(x) => x.beam.arch.level.as_deref(),
             Entity::Stair(x) => x.stair.arch.level.as_deref(),
             Entity::Ramp(x) => x.ramp.arch.level.as_deref(),
             Entity::Polyline(p) => p.space_separator.as_ref().and_then(|a| a.level.as_deref()),
@@ -2074,6 +2137,7 @@ impl Entity {
             Entity::Slab(_) => "slab",
             Entity::Grid(_) => "grid",
             Entity::Column(_) => "column",
+            Entity::Beam(_) => "beam",
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
             Entity::Tag(_) => "tag",

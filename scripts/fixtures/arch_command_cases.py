@@ -64,6 +64,7 @@ import arch_cases as ac  # noqa: E402  (the stair's risers, the ramp's run)
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "fixtures/commands/v1"
 GRIDS, COLUMNS, STAIRS, RAMPS, EDIT = "cad.grids.create", "cad.columns.create", "cad.stairs.create", "cad.ramps.create", "cad.arch.edit"
+BEAMS = "cad.beams.create"
 
 
 def refusal(code, message, path, status="failed"):
@@ -422,7 +423,8 @@ def column_problem(c, path):
     g = c.get("grids")
     if g is not None and (len(g) != 2 or g[0] == g[1]):
         return refusal(code, "Kolon iki ayrı aksın kesişimine bağlanır.", f"{path}.grids")
-    return blank(c.get("type"), "type", code, path) or blank(c.get("tag"), "tag", code, path)
+    return (blank(c.get("type"), "type", code, path) or blank(c.get("tag"), "tag", code, path)
+            or blank(c.get("material"), "material", code, path))
 
 
 def flight_problem(pts, what, code, path):
@@ -983,6 +985,9 @@ def column_fields(n, tag, at):
         c["tag"] = tag
     if n.get("fill"):
         c["fill"] = True
+    # Its material (docs/adr/8041 §2); absent: Betonarme.
+    if n.get("material") is not None:
+        c["material"] = n["material"]
     if n.get("grids") is not None:
         c["grids"] = n["grids"]
     if n.get("arch"):
@@ -1426,8 +1431,76 @@ def ramps_create(d, inp, conflict=False):
     return finish(inp, conflict, made, warnings)
 
 
+def beam_fields(n):
+    """A beam as the document keeps it (docs/adr/8041 §1): its axis and sizes; its justification, offset, number,
+    material and level only when not their defaults."""
+    f = {"pts": n["pts"], "width": n["width"], "height": n["height"]}
+    if n.get("justify", "center") != "center":
+        f["justify"] = n["justify"]
+    if n.get("offset") is not None and n["offset"] != 0.0:
+        f["offset"] = n["offset"]
+    # Its role and its base over its storey's floor (docs/adr/8041 §3).
+    if n.get("role", "beam") != "beam":
+        f["role"] = n["role"]
+    if n.get("baseOffset") is not None:
+        f["baseOffset"] = n["baseOffset"]
+    for k in ("tag", "material"):
+        if n.get(k) is not None:
+            f[k] = n[k]
+    if n.get("arch"):
+        f["arch"] = n["arch"]
+    return f
+
+
+def beam_problem(f, path):
+    """BeamFields::problem's rule and words, in its order."""
+    pts = f["pts"]
+    if not 2 <= len(pts) <= 1000:
+        return refusal("invalid_beam", f"Kirişin ekseni en az iki, en çok 1000 noktadır; {len(pts)} verildi.", f"{path}.pts")
+    if any(a == b for a, b in zip(pts, pts[1:])):
+        return refusal("invalid_beam", "Kirişin ekseninde art arda iki aynı nokta var; birini kaldırın.", f"{path}.pts")
+    w, h, o = f["width"], f["height"], f.get("offset", 0.0)
+    if not (math.isfinite(w) and 0 < w <= 3.0):
+        return refusal("invalid_beam", f"Kirişin genişliği {num(w)}; sıfırdan büyük, en çok 3 m olmalı.", f"{path}.width")
+    if not (math.isfinite(h) and 0 < h <= 5.0):
+        return refusal("invalid_beam", f"Kirişin yüksekliği {num(h)}; sıfırdan büyük, en çok 5 m olmalı.", f"{path}.height")
+    b = f.get("baseOffset")
+    if b is not None:
+        if not (math.isfinite(b) and abs(b) <= 10.0):
+            return refusal("invalid_beam", f"Kirişin kattan yüksekliği {num(b)}; en çok ±10 m olmalı.", f"{path}.baseOffset")
+        if o != 0.0:
+            return refusal("invalid_beam", "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.", f"{path}.offset")
+    if not (math.isfinite(o) and abs(o) <= 10.0):
+        return refusal("invalid_beam", f"Kirişin kot farkı {num(o)}; en çok ±10 m olmalı.", f"{path}.offset")
+    for k in ("tag", "material"):
+        v = f.get(k)
+        if v is not None and (not v.strip() or v.strip() != v or any(ord(ch) < 32 or 127 <= ord(ch) < 160 for ch in v) or len(v) > 120):
+            return refusal("invalid_beam", "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok 120 karakter.", f"{path}.{k}")
+    return None
+
+
+def beams_create(d, inp, conflict=False):
+    if not inp["beams"]:
+        return refusal("no_objects", "Yazılacak kiriş verilmedi. En az bir kirişin eksenini ve ölçülerini verin.", "beams"), None
+    made = []
+    for i, n in enumerate(inp["beams"]):
+        at = f"beams[{i}]"
+        r = points_not_finite(n["pts"], at) or finite_each(
+            [(n["width"], "width", "Genişlik"), (n["height"], "height", "Yükseklik"), (n.get("offset"), "offset", "Kot farkı"),
+             (n.get("baseOffset"), "baseOffset", "Kattan yükseklik")], at)
+        if r:
+            return r, None
+        f = beam_fields(n)
+        r = beam_problem(f, at) or level_check(f.get("arch"), f"{at}.arch.level")
+        if r:
+            return r, None
+        made.append(f)
+    return finish(inp, conflict, made, [])
+
+
 CREATES = {GRIDS: ("grid", "grids", grids_create, "Aks"), COLUMNS: ("column", "columns", columns_create, "Kolon"),
-           STAIRS: ("stair", "stairs", stairs_create, "Merdiven"), RAMPS: ("ramp", "ramps", ramps_create, "Rampa")}
+           STAIRS: ("stair", "stairs", stairs_create, "Merdiven"), RAMPS: ("ramp", "ramps", ramps_create, "Rampa"),
+           BEAMS: ("beam", "beams", beams_create, "Kiriş")}
 
 
 def extra_of(inp):
@@ -1535,7 +1608,7 @@ def grid_cases():
         ("seri Z'den AA'ya geçer", {"layerId": "aks", "series": {"from": P(40, 0), "to": P(40, 10), "spacings": [5.0], "start": "Z"}}),
         ("başında balonlu, 10 mm balonlu aks", {"layerId": "aks", "grids": [{"pts": [P(0, 30), P(10, 30)], "label": "X1", "bubbles": "start", "bubbleSize": 10.0}]}),
         ("yaylı aks (büküm 0.5)", {"layerId": "aks", "grids": [{"pts": [P(-5, 40), P(5, 40)], "bulges": [0.5, 0.0], "label": "R"}]}),
-        ("katı ve evresiyle aks, rengi ve kalınlığıyla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "grids": [{"pts": [P(0, 50), P(10, 50)], "label": "Z1", "arch": {"level": "zemin", "phase": "new"}}]}),
+        ("katı ve tadilat durumuyla aks, rengi ve kalınlığıyla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "grids": [{"pts": [P(0, 50), P(10, 50)], "label": "Z1", "arch": {"level": "zemin", "phase": "new"}}]}),
         ("aksla seri birlikte: seri aksın ardından sürer", {"layerId": "aks", "grids": [{"pts": [P(50, 0), P(50, 10)], "label": "M"}], "series": {"from": P(52, 0), "to": P(52, 10), "spacings": [2.0]}}),
     ]:
         c.add(name, [create_step(Drawing(), GRIDS, "execute", inp)])
@@ -1574,7 +1647,7 @@ def system_cases():
         ("tek akslı iki aile: iki uzatma boyu aks", {"layerId": "aks", "system": {"origin": P(40, 30), "extension": 2.0}}),
         ("uzatma 0.5, başında balon, 10 mm balon", {"layerId": "aks", "system": {**base, "extension": 0.5, "bubbles": "start", "bubbleSize": 10.0}}),
         ("uzatma sıfırken akslar en dış akslarda biter", {"layerId": "aks", "system": {**base, "extension": 0.0}}),
-        ("katı ve evresiyle ağ, renk ve kalınlıkla; kolonlar katla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "system": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"width": 0.3}}}),
+        ("katı ve tadilat durumuyla ağ, renk ve kalınlıkla; kolonlar katla", {"layerId": "aks", "color": "#c03030", "lineWeight": 0.18, "system": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"width": 0.3}}}),
         ("aks ve seriyle birlikte: ağ en sonda", {"layerId": "aks", "grids": [{"pts": [P(50, 0), P(50, 10)], "label": "M"}], "series": {"from": P(52, 0), "to": P(52, 10), "spacings": [2.0]}, "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}}),
         ("y ailesi H'den: I harfi atlanır", {"layerId": "aks", "system": {"origin": P(0, 60), "x": [5.0], "y": [3.0, 3.0, 3.0], "yStart": "H"}}),
         ("eğik başlangıç ve -90° dönüş", {"layerId": "aks", "system": {"origin": P(7.25, -3.5), "angle": -math.pi / 2, "x": [4.0], "y": [2.5, 2.5]}}),
@@ -1617,7 +1690,7 @@ def radial_cases():
         ("ilk adlar verilir, başında balon, 10 mm balon", {"layerId": "aks", "radial": {**base, "radialStart": "R1", "arcStart": "H", "bubbles": "start", "bubbleSize": 10.0}}),
         ("kesik eğrisel ağ: akslar uçlarında 12 mm", {"layerId": "aks", "radial": {**base, "ends": 12.0}}),
         ("kolonlar radyal aksın yönüyle, üstüne verilen dönüşle", {"layerId": "kolon", "radial": {**base, "columns": {"width": 0.4, "rotation": 0.25}}}),
-        ("yuvarlak kolonlar, katı ve evresiyle ağ", {"layerId": "aks", "radial": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"shape": "round", "width": 0.5}}}),
+        ("yuvarlak kolonlar, katı ve tadilat durumuyla ağ", {"layerId": "aks", "radial": {**base, "arch": {"level": "zemin", "phase": "new"}, "columns": {"shape": "round", "width": 0.5}}}),
         ("L kolonlar sol alt köşeleriyle kesişimde", {"layerId": "kolon", "radial": {**base, "columns": {"shape": "lShape", "width": 0.6, "depth": 0.6, "legs": [0.25, 0.25], "anchor": "bottomLeft"}}}),
         ("aks ağıyla birlikte: eğrisel ağ en sonda", {"layerId": "aks", "system": {"origin": P(60, 0), "x": [3.0], "y": [3.0]}, "radial": {"center": P(80, 0), "turns": [0.4], "radius": 5.0}}),
         ("kesik aks: uçlarında 15 mm, ortası boş", {"layerId": "aks", "grids": [{"pts": [P(0, 60), P(20, 60)], "label": "K1", "ends": 15.0}]}),
@@ -1802,6 +1875,8 @@ def column_cases():
         ("aks kesişimlerinin hepsine kolon (paralel akslar atlanır)", {"layerId": "kolon", "crossings": {"grids": [uid_of(1), uid_of(2), uid_of(3), uid_of(4)], "width": 0.3, "depth": 0.5, "fill": True}, "tagStart": "S1"}),
         ("kesişimlerde yuvarlak kolon, aksın dışındaki kesişim atlanır", {"layerId": "kolon", "crossings": {"grids": [uid_of(7), uid_of(3), uid_of(5)], "shape": "round", "width": 0.5}}),
         ("tek kolon ve kesişimler birlikte", {"layerId": "kolon", "columns": [{"at": P(9, 9), "width": 0.25}], "crossings": {"grids": [uid_of(2), uid_of(4)], "width": 0.3}}),
+        # Its material (docs/adr/8041 §2).
+        ("çelik kolon", col([{"at": P(4, 4), "width": 0.3, "material": "Çelik"}])),
     ]:
         c.add(name, [create_step(Drawing(), COLUMNS, "execute", inp)])
     refusals(c, COLUMNS, [
@@ -1813,6 +1888,7 @@ def column_cases():
         ("tek aksa bağlanan kolon reddedilir", col([{"grids": [uid_of(1)], "width": 0.3}]), {}),
         ("aynı aksa iki kez bağlanan kolon reddedilir", col([{"grids": [uid_of(1), uid_of(1)], "width": 0.3}]), {}),
         ("boş etiketli kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "tag": " "}]), {}),
+        ("boş malzemeli kolon reddedilir", col([{"at": P(0, 0), "width": 0.3, "material": ""}]), {}),
         ("kimlik olmayan aks reddedilir", col([{"grids": ["aks-a", uid_of(3)], "width": 0.3}]), {}),
         ("olmayan aks reddedilir", col([{"grids": [MISSING, uid_of(3)], "width": 0.3}]), {}),
         ("aks olmayan nesne reddedilir", col([{"grids": [uid_of(1), uid_of(6)], "width": 0.3}]), {}),
@@ -2078,6 +2154,51 @@ def ramp_cases():
     common_refusals(c, RAMPS, ramp())
     return c.cases
 
+def beam(**kw):
+    b = {"pts": [P(0, 50), P(5, 50)], "width": 0.25, "height": 0.5}
+    b.update(kw)
+    return {"layerId": "cizim", "beams": [b]}
+
+
+def beam_cases():
+    """docs/adr/8041 §1: beams written as given, their defaults left out; their refusals."""
+    c = Cases()
+    life(c, BEAMS, beam(tag="K101", arch={"level": "zemin"}), "Zemin katın tavanında 25/50 kiriş")
+    for name, inp in [
+        ("L kiriş, sol yüzü eksende, kot farkıyla", beam(pts=[P(0, 50), P(5, 50), P(5, 54)], width=0.3, height=0.6, justify="left",
+                                                        offset=-0.05, tag="K102")),
+        ("sağ yüzü eksende kiriş, malzemesiyle", beam(justify="right", material="Betonarme C30")),
+        ("ortada hiza ve sıfır kot farkı yazılmaz", beam(justify="center", offset=0.0)),
+        ("tadilatta ilave kiriş", beam(arch={"level": "kat-1", "phase": "new"})),
+        ("iki kiriş tek adımda", {"layerId": "cizim", "beams": [beam()["beams"][0], beam(pts=[P(5, 50), P(5, 55)], tag="K103")["beams"][0]]}),
+        ("renkli ve kalın kiriş", {**beam(), "color": "#cc3300", "lineWeight": 0.35}),
+        # Lintels and bond beams (docs/adr/8041 §3).
+        ("kapının başında lento: kattan yüksekliğiyle", beam(width=0.2, height=0.2, role="lintel", baseOffset=2.1, tag="L101")),
+        ("duvarın içinde hatıl", beam(width=0.2, height=0.2, role="bondBeam", baseOffset=1.0, tag="H101")),
+        ("kirişin varsayılan türü yazılmaz", beam(role="beam")),
+    ]:
+        c.add(name, [create_step(Drawing(), BEAMS, "execute", inp)])
+    refusals(c, BEAMS, [
+        ("kiriş verilmezse reddedilir", {"layerId": "cizim", "beams": []}, {}),
+        ("sonsuz genişlik reddedilir", beam(), {"non_finite": {"beams[0].width": "NaN"}}),
+        ("sonsuz köşe reddedilir", beam(), {"non_finite": {"beams[0].pts[1].x": "Infinity"}}),
+        ("sonsuz kot farkı reddedilir", beam(offset=0.1), {"non_finite": {"beams[0].offset": "-Infinity"}}),
+        ("tek noktalı eksen reddedilir", beam(pts=[P(0, 50)]), {}),
+        ("art arda aynı nokta reddedilir", beam(pts=[P(0, 50), P(0, 50), P(5, 50)]), {}),
+        ("sıfır genişlik reddedilir", beam(width=0.0), {}),
+        ("3 m'den geniş kiriş reddedilir", beam(width=3.5), {}),
+        ("6 m yükseklik reddedilir", beam(height=6.0), {}),
+        ("12 m kot farkı reddedilir", beam(offset=12.0), {}),
+        ("kattan yükseklik ve kot farkı birlikte reddedilir", beam(role="lintel", baseOffset=2.1, offset=0.1), {}),
+        ("12 m kattan yükseklik reddedilir", beam(baseOffset=12.0), {}),
+        ("sonsuz kattan yükseklik reddedilir", beam(baseOffset=1.0), {"non_finite": {"beams[0].baseOffset": "NaN"}}),
+        ("boşluklu numara reddedilir", beam(tag=" K1"), {}),
+        ("olmayan kat reddedilir", beam(arch={"level": "yok"}), {}),
+    ])
+    common_refusals(c, BEAMS, beam())
+    return c.cases
+
+
 def ramp_level_cases():
     """docs/adr/0723 §2: a ramp's start bound to its level: written, followed when the level rises, set and freed."""
     c = Cases()
@@ -2263,22 +2384,27 @@ def stair_level_cases():
 
 FIELDS = [  # wire name, kinds, nullable
     ("label", ("grid",), False), ("bubbles", ("grid",), False), ("bubbleSize", ("grid",), True), ("ends", ("grid",), True),
-    ("shape", ("column",), False), ("width", ("column", "stair", "ramp"), False), ("depth", ("column",), True),
-    ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column",), True), ("fill", ("column",), False),
+    ("shape", ("column",), False), ("width", ("column", "stair", "ramp", "beam"), False), ("depth", ("column",), True),
+    ("legs", ("column",), False), ("anchor", ("column",), False), ("rotation", ("column",), False), ("type", ("column",), True), ("tag", ("column", "beam"), True), ("fill", ("column",), False),
     ("risers", ("stair",), False), ("riserHeight", ("stair",), False), ("heightFromLevel", ("stair",), False),
     ("post", ("stair",), True), ("tread", ("stair",), False),
     ("landing", ("stair", "ramp"), True), ("cut", ("stair",), True), ("numbering", ("stair",), False),
     ("railings", ("stair", "ramp"), True),
-    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp",), True),
-    ("level", ("grid", "column", "stair", "ramp"), True), ("phase", ("grid", "column", "stair", "ramp"), True),
+    ("rise", ("ramp",), False), ("slope", ("ramp",), True), ("base", ("ramp",), True), ("baseOffset", ("ramp", "beam"), True),
+    # A beam's (docs/adr/8041 §1).
+    ("height", ("beam",), False), ("justify", ("beam",), False), ("offset", ("beam",), False), ("role", ("beam",), False),
+    # A column's or a beam's (docs/adr/8041 §2).
+    ("material", ("column", "beam"), True),
+    ("level", ("grid", "column", "stair", "ramp", "beam"), True), ("phase", ("grid", "column", "stair", "ramp", "beam"), True),
 ]
-KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa"}
+KIND_NAME = {"grid": "aks", "column": "kolon", "stair": "merdiven", "ramp": "rampa", "beam": "kiriş"}
 DEFAULTS = {"bubbles": "both", "shape": "rect", "rotation": 0.0, "fill": False, "numbering": False, "heightFromLevel": False,
-            "anchor": "center"}
+            "anchor": "center", "justify": "center", "offset": 0.0, "role": "beam"}
 NUMBERS = [("bubbleSize", "Balon çapı"), ("ends", "Kesik aksın ucu"), ("width", "Genişlik"), ("depth", "Boy"),
            ("legs[0]", "L kolonun kolu"), ("legs[1]", "L kolonun kolu"), ("rotation", "Dönüş"),
            ("riserHeight", "Rıht yüksekliği"), ("post", "Merkez direği"), ("tread", "Basamak derinliği"), ("landing", "Sahanlık"),
-           ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu")]
+           ("rise", "Yükseklik"), ("slope", "Eğim"), ("base", "Başlangıç kotu"), ("baseOffset", "Kata göre başlangıç kotu"),
+           ("height", "Yükseklik"), ("offset", "Kot farkı")]
 
 
 def set_field(f, name, value):
@@ -2311,13 +2437,14 @@ def set_field(f, name, value):
 
 
 def problem_of(kind, f, path):
-    return {"grid": grid_problem, "column": column_problem, "stair": stair_problem, "ramp": ramp_problem}[kind](f, path)
+    return {"grid": grid_problem, "column": column_problem, "stair": stair_problem, "ramp": ramp_problem,
+            "beam": beam_problem}[kind](f, path)
 
 
 def edit(d, inp, conflict=False):
     uids = inp["uids"]
     if not uids:
-        return refusal("no_entities", "Düzenlenecek aks, kolon, merdiven ya da rampa verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
+        return refusal("no_entities", "Düzenlenecek aks, kolon, kiriş, merdiven ya da rampa verilmedi. En az bir nesnenin kalıcı kimliğini verin.", "uids"), None
     for i, u in enumerate(uids):
         if not is_uid(u):
             return refusal("invalid_uid", f"“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.", f"uids[{i}]"), None
@@ -2332,7 +2459,7 @@ def edit(d, inp, conflict=False):
         found.append((i, oid))
     for i, oid in found:
         if d.objs[oid][0] not in KIND_NAME:
-            return refusal("not_arch_element", "Nesne aks, kolon, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
+            return refusal("not_arch_element", "Nesne aks, kolon, kiriş, merdiven ya da rampa değil; Mimari nesneyi düzenle yalnız bunları değiştirir.", f"uids[{i}]"), None
     op = inp["operation"]
     out, warnings = [], []
     if op["kind"] == "set":
@@ -2484,12 +2611,47 @@ def edit_cases():
     c.add("Değiştir: kolonun biçimi, ölçüleri, dönüşü, türü, etiketi ve dolgusu", [made, one(d, [uid_of(k)], {"kind": "set", "shape": "round", "width": 0.45, "rotation": 0.3, "type": "Çelik", "tag": "S4", "fill": True})])
     d, made, k = with_column(depth=0.6, type="Betonarme")
     c.add("Değiştir: null kolonun boyunu ve türünü kaldırır", [made, one(d, [uid_of(k)], {"kind": "set", "depth": None, "type": None})])
+    # A column's material (docs/adr/8041 §2): null back to Betonarme.
+    d, made, k = with_column(material="Çelik")
+    c.add("Değiştir: kolonun malzemesi; null Betonarme'ye döndürür", [made, one(d, [uid_of(k)], {"kind": "set", "material": "Ahşap"}),
+                                                                       one(d, [uid_of(k)], {"kind": "set", "material": None})])
     d = Drawing()
     c.add("Değiştir: merdivenin rıhtları uyarılarıyla", [one(d, [uid_of(8)], {"kind": "set", "risers": 17, "riserHeight": 0.18})])
     d = Drawing()
     c.add("Değiştir: merdivenin sahanlığı, kesmesi ve numaraları", [one(d, [uid_of(8)], {"kind": "set", "landing": 1.0, "cut": 8, "numbering": True})])
     d = Drawing()
     c.add("Değiştir: rampanın eğimi uymayınca uyarı", [one(d, [uid_of(9)], {"kind": "set", "slope": 8.0})])
+
+    # A beam's fields (docs/adr/8041 §1).
+    def with_beam(**kw):
+        d = Drawing()
+        made = create_step(d, BEAMS, "execute", beam(**kw), with_command=True)
+        return d, made, d.next - 1
+
+    d, made, k = with_beam(tag="K101")
+    c.add("Değiştir: kirişin ölçüleri, hizası, kot farkı, numarası ve malzemesi",
+          [made, one(d, [uid_of(k)], {"kind": "set", "width": 0.3, "height": 0.6, "justify": "left", "offset": -0.05,
+                                      "tag": "K201", "material": "Betonarme C30"})])
+    d, made, k = with_beam(tag="K101", material="Çelik", justify="right", offset=0.1)
+    c.add("Değiştir: kirişin varsayılana dönen alanları yazılmaz, null numarayı ve malzemeyi kaldırır",
+          [made, one(d, [uid_of(k)], {"kind": "set", "justify": "center", "offset": 0.0, "tag": None, "material": None})])
+    d, made, k = with_beam()
+    c.add("Değiştir: kirişin katı ve tadilat durumu", [made, one(d, [uid_of(k)], {"kind": "set", "level": "zemin", "phase": "existing"})])
+    # Its role and base (docs/adr/8041 §3): a beam made a lintel at 2.10; null base and the beam's role back.
+    d, made, k = with_beam()
+    c.add("Değiştir: kirişi lentoya çevirir, kattan yüksekliğiyle",
+          [made, one(d, [uid_of(k)], {"kind": "set", "role": "lintel", "baseOffset": 2.1, "height": 0.2})])
+    d, made, k = with_beam(role="bondBeam", baseOffset=1.0)
+    c.add("Değiştir: null kattan yükseklik ve kiriş türü varsayılana döner",
+          [made, one(d, [uid_of(k)], {"kind": "set", "role": "beam", "baseOffset": None})])
+    d, made, k = with_beam()
+    c.add("Değiştir: kirişe 6 m yükseklik reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "height": 6.0})])
+    d, made, k = with_beam()
+    c.add("Değiştir: sonsuz kot farkı reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "offset": 0.2}, non_finite={"operation.offset": "NaN"})])
+    d = Drawing()
+    c.add("Değiştir: kolona kirişin yüksekliği reddedilir", [one(d, [uid_of(9)], {"kind": "set", "height": 0.5})])
+    d, made, k = with_beam()
+    c.add("Değiştir: kirişe kolonun dolgusu reddedilir", [made, one(d, [uid_of(k)], {"kind": "set", "fill": True})])
     d = Drawing()
     c.add("Değiştir: null rampanın eğimini kaldırır, başlangıç kotu", [one(d, [uid_of(9)], {"kind": "set", "slope": None, "base": 0.45})])
     d = Drawing()
@@ -2502,7 +2664,7 @@ def edit_cases():
     d = Drawing()
     c.add("Değiştir: aksa korkuluk reddedilir", [one(d, [uid_of(1)], {"kind": "set", "railings": "right"})])
     d = Drawing()
-    c.add("Değiştir: kat ve evre her türde, null kaldırır", [one(d, [uid_of(1), uid_of(8)], {"kind": "set", "level": "kat-1", "phase": "new"}),
+    c.add("Değiştir: kat ve tadilat durumu her türde, null kaldırır", [one(d, [uid_of(1), uid_of(8)], {"kind": "set", "level": "kat-1", "phase": "new"}),
                                                              one(d, [uid_of(1)], {"kind": "set", "level": None})])
     d = Drawing()
     c.add("Numarala: akslar verilen sırayla", [one(d, [uid_of(2), uid_of(1), uid_of(7)], {"kind": "renumber", "start": "1"})])
@@ -2584,6 +2746,7 @@ def files():
         "cad.stairs.create.design.json": document(STAIRS, "Merdiven yükseklikten: rıht sayısı ve yüksekliği, kesme yüksekliği, yola sığdırma, tek sahanlıklı U; retler (ADR 0704)", design_cases()),
         "cad.stairs.create.curved.json": document(STAIRS, "Döner merdiven: yaylı yürüme çizgisi, yükseklikten rıhtlara göre biten yay, iki yön, kesme ve korkuluk, ayna; retler (ADR 0709)", curved_cases()),
         "cad.ramps.create.json": document(RAMPS, "Rampa: düz, L, U; eğim, başlangıç kotu, sahanlık; denetimlerin uyarıları; retler", ramp_cases()),
+        "cad.beams.create.json": document(BEAMS, "Kiriş: eksen, genişlik, yükseklik, hiza, kot farkı, numara, malzeme; doğrulama, plan, yazma, geri alma; retler (ADR 8041 §1)", beam_cases()),
         "cad.ramps.create.design.json": document(RAMPS, "Rampa eğimden: son kol eğime göre, üst üste sahanlık bir kez, korkuluk; retler (ADR 0705)", ramp_design_cases()),
         "cad.ramps.create.levels.json": document(RAMPS, "Rampa katına bağlı: başlangıcı katın kotu artı fark, kat yükselince izler; değiştir, bağı kaldır; retler (ADR 0723 §2)", ramp_level_cases()),
         "cad.stairs.create.levels.json": document(STAIRS, "Merdiven katın yüksekliğine bağlı: rıhtları katın yüksekliğinden, kat değişince izler; değiştir, bağı kaldır; döner merdivenin merkez direği; retler (ADR 0724 §1, §3)", stair_level_cases()),

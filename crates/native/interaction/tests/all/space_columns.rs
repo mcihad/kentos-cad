@@ -19,7 +19,7 @@ fn visible_policy_is_preview_only_then_one_click_or_confirm_writes_net_deduction
     for tool in ["space", "spaceDiscover"] {
         let mut b = setup(tool);
         let rows = b.session.settings(&Default::default());
-        assert!(rows.iter().any(|r| r.key == "D" && r.value == "Yalnız net"));
+        assert!(rows.iter().any(|r| r.key == "D" && r.value == "Yalnız netten düşülür"));
         let before = b.doc.to_snapshot_v2();
         assert!(b.run(|s, cx| s.configure("D", "ignore", cx)));
         b.move_to(6., 6.);
@@ -55,7 +55,7 @@ fn drawn_mode_explains_and_disables_following_then_restores_the_find_preference(
         b.session
             .settings(&Default::default())
             .iter()
-            .any(|r| r.key == "D" && r.value == "Düşme" && !r.editable)
+            .any(|r| r.key == "D" && r.value == "Düşülmez" && !r.editable)
     );
     let before = b.doc.to_snapshot_v2();
     assert!(!b.run(|s, cx| s.configure("D", "net", cx)));
@@ -65,7 +65,7 @@ fn drawn_mode_explains_and_disables_following_then_restores_the_find_preference(
         b.session
             .settings(&Default::default())
             .iter()
-            .any(|r| r.key == "D" && r.value == "Her yöntemde")
+            .any(|r| r.key == "D" && r.value == "Her yöntemde düşülür")
     );
 }
 

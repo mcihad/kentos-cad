@@ -3309,6 +3309,272 @@
       ]
     },
     {
+      "name": "ara kat dizilişi: kaplama, şap ve sıva; metrajda her katman net alanla",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02,
+                      "material": "Seramik"
+                    },
+                    {
+                      "kind": "screed",
+                      "thickness": 0.05
+                    }
+                  ],
+                  "under": [
+                    {
+                      "kind": "plaster",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                8
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8
+            ],
+            "entities": {
+              "8": {
+                "kind": "slab",
+                "id": 8,
+                "layerId": "doseme",
+                "attrs": {},
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "thickness": 0.15,
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "finish",
+                      "thickness": 0.02,
+                      "material": "Seramik"
+                    },
+                    {
+                      "kind": "screed",
+                      "thickness": 0.05
+                    }
+                  ],
+                  "under": [
+                    {
+                      "kind": "plaster",
+                      "thickness": 0.02
+                    }
+                  ]
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.quantities",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "spaces": [],
+              "walls": [
+                {
+                  "uid": "$uidOf:1",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:2",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:3",
+                  "level": "zemin",
+                  "length": 8.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 24.0,
+                  "openingsArea": 0.0,
+                  "netArea": 24.0,
+                  "volume": 4.800000000000001,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:4",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.2,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 3.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:5",
+                  "level": "zemin",
+                  "length": 5.0,
+                  "width": 0.15,
+                  "height": 3.0,
+                  "grossArea": 15.0,
+                  "openingsArea": 0.0,
+                  "netArea": 15.0,
+                  "volume": 2.25,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                },
+                {
+                  "uid": "$uidOf:7",
+                  "length": 4.0,
+                  "width": 0.2,
+                  "openingsArea": 0.0,
+                  "rule": "yüzey: taban çizgisinin uzunluğu × yükseklik, açıklıkların alanı düşülür; hacim: net yüzey × kalınlık"
+                }
+              ],
+              "openings": [],
+              "totals": {
+                "spaceArea": 0.0,
+                "wallLength": 35.0,
+                "wallNetArea": 93.0,
+                "openings": 0,
+                "openingArea": 0.0,
+                "slabArea": 12.0,
+                "slabVolume": 1.7999999999999998
+              },
+              "slabs": [
+                {
+                  "uid": "$uidOf:8",
+                  "role": "floor",
+                  "thickness": 0.15,
+                  "area": 12.0,
+                  "netArea": 12.0,
+                  "perimeter": 14.0,
+                  "volume": 1.7999999999999998,
+                  "rule": "alan: halkaların alanı, delikler düşülür; boşluk: aynı kattaki boşluk mahallerinin örttüğü alan düşülür; hacim: net alan × kalınlık",
+                  "layers": [
+                    {
+                      "kind": "finish",
+                      "material": "Seramik",
+                      "thickness": 0.02,
+                      "area": 12.0,
+                      "volume": 0.24
+                    },
+                    {
+                      "kind": "screed",
+                      "thickness": 0.05,
+                      "area": 12.0,
+                      "volume": 0.6000000000000001
+                    },
+                    {
+                      "kind": "plaster",
+                      "thickness": 0.02,
+                      "area": 12.0,
+                      "volume": 0.24
+                    }
+                  ]
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "şaft boşluğu döşemenin net alanından düşülür",
       "steps": [
         {
@@ -3475,7 +3741,7 @@
                   "void": true,
                   "area": 1.0,
                   "perimeter": 4.0,
-                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × yükseklik; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
+                  "rule": "alan: halkaların alanı, delikler düşülür (Net (iç yüzler)); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
                 }
               ],
               "walls": [
@@ -4551,6 +4817,73 @@
               "code": "invalid_slab",
               "message": "Korkuluğun eni sıfırdan büyük, en çok 2 m olmalı; 3 verildi.",
               "path": "slabs[0].edge.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır kalınlıklı katman reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "doseme",
+            "slabs": [
+              {
+                "parts": [
+                  {
+                    "outer": {
+                      "pts": [
+                        {
+                          "x": 20.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 0.0
+                        },
+                        {
+                          "x": 24.0,
+                          "y": 3.0
+                        },
+                        {
+                          "x": 20.0,
+                          "y": 3.0
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "layers": {
+                  "over": [
+                    {
+                      "kind": "screed",
+                      "thickness": 0
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_slab",
+              "message": "Şap katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; 0 verildi.",
+              "path": "slabs[0].layers.over[0].thickness"
             }
           },
           "expect": {

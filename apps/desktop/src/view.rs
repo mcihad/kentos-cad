@@ -244,13 +244,21 @@ impl App {
         } else {
             self.shown_tab()
         };
-        if architecture_tab(shown) && self.window_size.width < typography::scaled(1200.0) {
+        // A narrow window fits its tabs to the strip, whatever tab is open: the tabs that do not fit go into a ⋯ menu,
+        // the open, contextual and the program's own tab stay in sight (docs/adr/8005). Only an architecture tab did,
+        // so kentos-cad's fourteen tabs ran off the window at 1100 px with the selection's Duvar out of sight.
+        if self.window_size.width < typography::scaled(1200.0) {
             ribbon = ribbon.scrolling_tabs(typography::scaled(160.0));
         }
+        let own_tab = self.program.and_then(program_tab);
         let mut tab_tips = Vec::new();
         for tab in self.ribbon_tabs() {
             tab_tips.push(self.key_tip(&TipKey::Tab(tab.id)));
-            ribbon = ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id));
+            ribbon = if own_tab == Some(tab.id) {
+                ribbon.pinned_tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
+            } else {
+                ribbon.tab(tab.label, tab.id == shown, Message::RibbonTab(tab.id))
+            };
         }
         // The selection's tab, by its objects' kind, with the count (docs/adr/0622 §4).
         if let Some(tab) = self.selection_tab() {
@@ -450,7 +458,7 @@ impl App {
                 let ids = panel.overflow.clone();
                 let checked = self.checks(&ids);
                 let heads = self.overflow_heads(&ids);
-                group = group.more(move || headed_menu_of(&ids, &checked, &heads));
+                group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
             }
             return Some(group);
         }
@@ -506,7 +514,7 @@ impl App {
             let ids = panel.overflow.clone();
             let checked = self.checks(&ids);
             let heads = self.overflow_heads(&ids);
-            group = group.more(move || headed_menu_of(&ids, &checked, &heads));
+            group = group.more(move || headed_menu_of(&ids, &checked, &heads, None));
         }
         if let Some(launcher) = &panel.launcher
             && let Some(message) = launch(launcher)
@@ -702,7 +710,8 @@ impl App {
                     let menu = move || checklist_of(&blocks, &checked);
                     return Some(with_family(button, ids, label, menu));
                 }
-                let menu = move || menu_of(&members, &checked);
+                let name = *label;
+                let menu = move || menu_of(&members, &checked, Some(name));
                 Some(with_family(button, ids, label, menu))
             }
             Item::Builtin(_) => None,
@@ -724,16 +733,38 @@ impl App {
         ids.iter().map(|id| self.checked(id)).collect()
     }
 
-    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips.
+    /// The selected dynamic blocks' parameter grips (docs/adr/0319 §1), as many objects' as the other grips; and the
+    /// selected rooms' edge grips (Odayı büyüt, docs/adr/8023), drawn as a linear parameter's pair of arrowheads square
+    /// to the edge.
     fn param_grip_marks(&self) -> Vec<kentos_geometry_core::block_dynamic::ParamGrip> {
+        use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
         if self.selection.len() > kentos_interaction::select::GRIP_LIMIT {
             return Vec::new();
         }
-        self.spatial
+        let mut marks: Vec<ParamGrip> = self
+            .spatial
             .param_grips(self.selection.ids())
             .into_iter()
             .map(|(_, g)| g)
-            .collect()
+            .collect();
+        if let Some(doc) = self.document.as_ref() {
+            marks.extend(
+                kentos_interaction::room_grip::grips(
+                    &doc.model,
+                    &self.spatial,
+                    self.selection.ids(),
+                )
+                .into_iter()
+                .map(|g| ParamGrip {
+                    name: kentos_interaction::room_grip::LABEL.to_owned(),
+                    kind: GripKind::Linear,
+                    at: g.at,
+                    from: None,
+                    along: Some(g.outward),
+                }),
+            );
+        }
+        marks
     }
 
     fn drawing_area(&self) -> Element<'_, Message> {
@@ -786,17 +817,41 @@ impl App {
                         text: f.text.as_str(),
                         token: f.token,
                         at: f.at,
-                        hint: match f.mode {
-                            Some(_) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
-                            None if self.session.tool_id() == "chamfer" => {
+                        hint: match (&f.setting, f.mode) {
+                            // A setting's field (docs/adr/8018): what it holds now, a choice's words.
+                            (Some(s), _) if s.choices.is_empty() && s.value.trim().is_empty() => {
+                                "Enter uygular · Tab sonraki · Esc kapatır".to_owned()
+                            }
+                            (Some(s), _) if s.choices.is_empty() => {
+                                format!("Şimdi {} · Enter uygular · Tab sonraki · Esc kapatır", s.value)
+                            }
+                            (Some(s), _) => format!(
+                                "{} · şimdi {} · baş harfi ya da ↑↓ · Enter uygular · Tab sonraki",
+                                s.choices.join(" · "),
+                                s.value
+                            ),
+                            (None, Some(_)) => "Enter kilitler · Tab öbür değere geçer · Esc kapatır".to_owned(),
+                            (None, None) if self.session.tool_id() == "chamfer" => {
                                 "1. kenar; 2. kenar · Enter uygular".to_owned()
                             },
-                            None if self.session.tool_id() == "fillet" => {
+                            (None, None) if self.session.tool_id() == "fillet" => {
                                 "Yarıçap · ör. 25cm · Enter uygular".to_owned()
                             },
-                            None => format.input_hint(),
+                            // The tool's settings beside the cursor are a Tab away (docs/adr/8018).
+                            (None, None) => {
+                                let settings: Vec<String> = self.field_settings().into_iter().map(|s| s.label).collect();
+                                if settings.is_empty() {
+                                    format.input_hint()
+                                } else {
+                                    format!("{} · Tab: {}", format.input_hint(), settings.join(", "))
+                                }
+                            },
                         },
-                        label: f.mode.map(|m| self.lock_name(m)),
+                        label: f
+                            .setting
+                            .as_ref()
+                            .map(|s| s.label.as_str())
+                            .or_else(|| f.mode.map(|m| self.lock_name(m))),
                         locks: self.lock_chips(&format),
                         length_first: self.locks.length.is_some(),
                     }),
@@ -1343,7 +1398,7 @@ impl App {
         // A module's program lists only its own commands (docs/adr/0802).
         let mut commands: Vec<LineCommand<'_>> = all_line_commands(self.autocad_names())
             .filter(|(id, _)| self.offers(id))
-            .map(|(_, line)| line)
+            .map(|(id, line)| self.module_line(id, line))
             .collect::<Vec<_>>();
         commands.extend(self.model_line_commands());
         let line = line
@@ -1654,6 +1709,11 @@ impl App {
             if let Some(cell) = self.level_cell(fit < 7) {
                 bar = bar.separator().push(cell);
             }
+            // Emsal ve TAKS (docs/adr/8030): while the project has a zoning; the limits while there is room, the
+            // ratios alone until the lamps go compact, then its icon (and “!” past a limit) as Kat's.
+            if let Some(cell) = crate::zoning_badge::cell(self, (fit < 7).then_some(fit < 2)) {
+                bar = bar.separator().push(cell);
+            }
             bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second
@@ -1863,6 +1923,15 @@ impl App {
             // Kat (docs/adr/0713), as Senaryo, its words kept until the lamps fold.
             if let Some(words) = self.level_words() {
                 width += SEPARATOR + if fit < 7 { cell(&words, true) } else { 35.0 };
+            }
+            // Emsal ve TAKS (docs/adr/8030), its limits while there is room, its icon and a “!” once tight.
+            if let Some((words, _)) = crate::zoning_badge::words(&doc.model, fit < 2) {
+                width += SEPARATOR
+                    + if fit < 7 {
+                        cell(&words, true)
+                    } else {
+                        35.0 + text("!")
+                    };
             }
             let mode = crate::catalog::effective_mode(Some(self.work_mode())).label;
             // Its icon, its name and the menu's chevron.
@@ -2229,15 +2298,27 @@ fn is_choice(id: &str) -> bool {
 /// A drop-down's commands (the web's `commandItem`): a toggle shows its
 /// check instead of its icon, a choice its dot beside its icon, a tool and a
 /// plain command their icon.
-fn menu_of(ids: &[&'static str], checked: &[Option<bool>]) -> Menu<Message> {
-    headed_menu_of(ids, checked, &[])
+fn menu_of(ids: &[&'static str], checked: &[Option<bool>], menu: Option<&str>) -> Menu<Message> {
+    headed_menu_of(ids, checked, &[], menu)
 }
 
-/// [`menu_of`] with a header (a category's name) before the rows `heads` names (docs/adr/0221 §9).
+/// A menu row's words: its command's title without the menu's own name before it. Under Tadilat ▾ “Tadilat: Mevcut
+/// durum” is “Mevcut durum”, under Kat görünümü ▾ “Kat görünümü: Bütün katlar” is “Bütün katlar”; Menülerde ara still
+/// finds and shows the whole title.
+pub(crate) fn row_title<'a>(title: &'a str, menu: Option<&str>) -> &'a str {
+    menu.and_then(|m| title.strip_prefix(m))
+        .and_then(|rest| rest.strip_prefix(": "))
+        .filter(|rest| !rest.is_empty())
+        .unwrap_or(title)
+}
+
+/// [`menu_of`] with a header (a category's name) before the rows `heads` names (docs/adr/0221 §9); `menu`: the
+/// drop-down's own name, which its rows do not say again ([`row_title`]).
 fn headed_menu_of(
     ids: &[&'static str],
     checked: &[Option<bool>],
     heads: &[Option<&'static str>],
+    menu_name: Option<&str>,
 ) -> Menu<Message> {
     let mut menu = Menu::new();
     let ticks = checked.iter().copied().chain(std::iter::repeat(None));
@@ -2248,16 +2329,13 @@ fn headed_menu_of(
         let Some(command) = catalog().get(id) else {
             continue;
         };
+        let title = row_title(command.title, menu_name);
         menu = match checked {
-            Some(on) if is_choice(command.id) => menu
-                .radio(command.title, on, enabled(command))
-                .icon(command.icon),
-            Some(on) if !command.id.starts_with("tool.") => {
-                menu.check(command.title, on, enabled(command))
+            Some(on) if is_choice(command.id) => {
+                menu.radio(title, on, enabled(command)).icon(command.icon)
             }
-            _ => menu
-                .item(command.title, enabled(command))
-                .icon(command.icon),
+            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, enabled(command)),
+            _ => menu.item(title, enabled(command)).icon(command.icon),
         };
         if let Some(keys) = command.shortcuts.first() {
             menu = menu.shortcut(*keys);
@@ -2360,8 +2438,16 @@ impl App {
         }
         all_line_commands(self.autocad_names())
             .filter(|(id, _)| self.offers(id))
-            .map(|(_, line)| line)
+            .map(|(id, line)| self.module_line(id, line))
             .collect()
+    }
+
+    /// A row of the command line's list with this program's own names (module_names.rs, docs/adr/8002).
+    fn module_line(&self, id: &'static str, line: LineCommand<'static>) -> LineCommand<'static> {
+        match self.module_names() {
+            Some(names) => names.line(id, line),
+            None => line,
+        }
     }
 }
 
@@ -2443,6 +2529,7 @@ pub(crate) fn kind_name(kind: &str) -> &'static str {
         "space" => "mahal",
         "grid" => "aks",
         "column" => "kolon",
+        "beam" => "kiriş",
         "stair" => "merdiven",
         "ramp" => "rampa",
         "tag" => "etiket",
@@ -2575,11 +2662,11 @@ pub(crate) fn hex_color(text: &str) -> Color {
     Color::from_rgb8(0x9a, 0xa0, 0xa6)
 }
 
-/// The architecture tabs: their tab row scrolls in a narrow window. Every tab, these as the others, keeps its buttons'
-/// names at every width (DESIGN.md §7.3.1, 7 November 2026).
-fn architecture_tab(tab: &str) -> bool {
-    matches!(
-        tab,
-        "arch" | "ctx.wall" | "ctx.opening" | "ctx.space" | "ctx.arch"
-    )
+/// A module program's own ribbon tab: kept in sight on a narrow strip (docs/adr/8005), and the one a new project opens
+/// on (docs/adr/8007). KentOS Mimari's Mimari.
+pub(crate) fn program_tab(module: kentos_launch::Module) -> Option<&'static str> {
+    match module {
+        kentos_launch::Module::Architecture => Some("arch"),
+        _ => None,
+    }
 }

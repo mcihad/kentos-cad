@@ -1,0 +1,38 @@
+# M35 (docs/adr/8035), 1920 × 1080 (KENTOS_REAL_SIZE): Mimari › Denetim › Mevzuat on an eight-storey dwelling building
+# (konut-yangin.kcad from fire_escape_tests): BYKHY 48/2 (22.00 m inside flat “1”), 48/4 (26.15 m from its door),
+# 48/5-b (one stair at 24 m) and 33/2 (a high building's 1.15 m corridor). Then Proje ayarları › Mimari › Yangın
+# güvenliği › Yağmurlama (sprinkler) sistemi var; Denetle again: the walks may be 30 m, the stairs and corridor stay.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 1162 111  # Denetim
+wait 3000
+drag 760 663 760 330  # the panel taller
+wait 1200
+drag 849 447 1290 447  # Bulgu wider
+wait 800
+click 760 240 middle
+click 760 240 middle
+wait 1500
+click 196 414  # Bütün gruplar
+wait 1000
+type mevzuat
+wait 800
+click 180 481  # Mevzuat
+wait 1200
+move 1300 250
+wait 600
+shot m35-konut
+click 1258 57  # Mimari ayarları
+wait 2500
+wheel 960 590 -9
+wait 1000
+click 712 612  # Yağmurlama (sprinkler) sistemi var
+wait 800
+shot m35-yagmurlama
+click 1395 919  # Kaydet
+wait 2500
+click 65 414  # Denetle
+wait 3000
+move 1300 250
+wait 800
+shot m35-yagmurlamali

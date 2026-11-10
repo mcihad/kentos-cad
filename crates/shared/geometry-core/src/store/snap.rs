@@ -483,13 +483,13 @@ impl Store {
                     ch.consider(SnapKind::Endpoint, *q, id);
                 }
             }
-            for e in it.shapes() {
+            for e in it.snap_shapes() {
                 shape_snaps(&mut ch, &mut nearby, e, id, from, &reach);
             }
             // Ağırlık merkezi (docs/adr/0163 §1): a closed area's, holes and parts weighed; inside a block each
             // closed piece's (docs/adr/0274).
             if kinds & SnapKind::Centroid.bit() != 0 {
-                for e in it.shapes() {
+                for e in it.snap_shapes() {
                     if matches!(e, Shape::Polygon { .. } | Shape::Polyline { .. })
                         && let Some(c) = areas_centroid(&areas_of_entity(e))
                     {
@@ -533,7 +533,7 @@ impl Store {
             return out;
         };
         let near = |q: Vec2| js_hypot(q.x - at.x, q.y - at.y) <= SAME;
-        for e in it.shapes() {
+        for e in it.snap_shapes() {
             for ed in entity_edges(e) {
                 match ed {
                     Edge::Seg { a, b } => {
@@ -592,7 +592,7 @@ impl Store {
         };
         let mut best: Option<(f64, Vec2)> = None;
         for it in self.near(p, tol) {
-            for e in it.shapes() {
+            for e in it.snap_shapes() {
                 for ed in entity_edges_in(e, &reach) {
                     let Edge::Seg { a, b } = ed else {
                         continue;
@@ -1101,6 +1101,7 @@ fn shape_snaps(
         | Shape::Column { .. }
         | Shape::Stair { .. }
         | Shape::Ramp { .. }
+        | Shape::Beam { .. }
         | Shape::Tag { .. }
         | Shape::ViewMark { .. } => {}
         // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's

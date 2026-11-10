@@ -247,11 +247,13 @@ impl App {
     }
 
     /// The tools that draw on Etkin kat: their settings show it first (docs/adr/0713).
-    const ON_LEVEL: [&str; 9] = [
+    const ON_LEVEL: [&str; 10] = [
         // A fixture goes on Etkin kat too (docs/adr/0733 §1).
         "blockInsert",
         "wall",
         "wallRectangle",
+        // Oda (docs/adr/8021): its walls and room on Etkin kat.
+        "room",
         "wallPartition",
         "column",
         "stair",
@@ -353,8 +355,8 @@ impl App {
             .menu(menu)
             .tip(match self.level_view {
                 LevelView::All => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı; mahal ve ölçü araçları o kattaki duvarlara bakar. Kat görünümü: Bütün katlar. Başka kat ya da görünüm için tıklayın.",
-                LevelView::Active => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: yalnız etkin kat; öbür katlar gizli. Başka kat ya da görünüm için tıklayın.",
-                LevelView::Below => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: etkin kat ve alt kat soluk (kenetlenir, seçilmez). Başka kat ya da görünüm için tıklayın.",
+                LevelView::Active => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: yalnız etkin kat; öbür katlar gizli, üst katın döşemeleri kesikli. Başka kat ya da görünüm için tıklayın.",
+                LevelView::Below => "Etkin kat: yeni duvar, kolon, merdiven ve rampaların katı. Kat görünümü: etkin kat ve alt kat soluk (kenetlenir, seçilmez), üst katın döşemeleri kesikli. Başka kat ya da görünüm için tıklayın.",
             })
             .into(),
         )
@@ -500,6 +502,47 @@ mod tests {
         assert!(app.spatial.level_looks().1.is_empty());
         assert_eq!(hits(&app).len(), 2, "Bütün katlar: both again");
         assert_eq!(app.level_words().as_deref(), Some("Kat: Zemin kat"));
+    }
+
+    /// docs/adr/8012, step 3: 1. kat's balcony is dashed on Zemin kat's plan while it is alone, its own plan's again in
+    /// Bütün katlar and on 1. kat. The real window once kept it dashed after Bütün katlar.
+    #[test]
+    fn a_slab_of_the_level_above_is_dashed_until_every_level_shows() {
+        use kentos_geometry_core::entity::Shape;
+        let (mut app, _) = App::boot(None);
+        crate::wall_scenes::opened(&mut app, crate::tools_scenes::Objects::new(), 100.0);
+        with_levels(&mut app);
+        let p = |x: f64, y: f64| serde_json::json!({"x": crate::tools_scenes::E + x, "y": crate::tools_scenes::N + y});
+        crate::program_scenes::command(
+            &mut app,
+            "cad.slabs.create",
+            serde_json::json!({"layerId": "cizim", "slabs": [{
+                "parts": [{"outer": {"pts": [p(0.0, -1.5), p(3.0, -1.5), p(3.0, 0.0), p(0.0, 0.0)]}}],
+                "role": "balcony", "edge": {"kind": "railing", "width": 0.05}, "arch": {"level": "kat-1"}
+            }]}),
+        );
+        let slab = {
+            let doc = &app.document.as_ref().expect("a drawing").model;
+            doc.entities()
+                .find(|e| matches!(e, kentos_commands::Entity::Slab(_)))
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("the balcony")
+        };
+        let dashed = |app: &App| {
+            app.spatial.store().get(f64::from(slab.0)).is_some_and(|it| {
+                matches!(&it.shape, Shape::Space { space, .. } if space.slab.as_ref().is_some_and(|l| l.overhead))
+            })
+        };
+        let _ = app.update(Message::ActiveLevel(Some("zemin".into())));
+        let _ = app.update(Message::LevelView(LevelView::Active));
+        assert!(dashed(&app), "Zemin kat alone: 1. kat's balcony dashed");
+        assert_eq!(app.spatial.level_looks().1.overhead, vec![slab.0]);
+        let _ = app.update(Message::Run("view.levels.all"));
+        assert!(!dashed(&app), "Bütün katlar: its own plan's");
+        let _ = app.update(Message::Run("view.levels.active"));
+        assert!(dashed(&app));
+        let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
+        assert!(!dashed(&app), "on its own level");
     }
 
     #[test]

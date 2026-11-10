@@ -54,7 +54,8 @@ fn levelled(app: &mut App) {
 fn tool(app: &mut App) {
     levelled(app);
     run(app, "tool.ramp");
-    for (key, value) in [("Y", "1.2"), ("E", "5"), ("H", "1.5"), ("L", "9"), ("Z", "kat-0.15")] {
+    // Eğim is M since Genişlik took E (docs/adr/8003).
+    for (key, value) in [("Y", "1.2"), ("M", "5"), ("H", "1.5"), ("L", "9"), ("Z", "kat-0.15")] {
         typed(app, key);
         typed(app, value);
     }

@@ -1050,6 +1050,8 @@ impl Document {
                 self.refresh_viewmarks();
                 self.refresh_level_marks();
                 self.refresh_derived_tags();
+                self.refresh_zoning_tables();
+                self.refresh_site();
                 self.refresh_dimension_set_rows();
                 self.mark_changed();
             }
@@ -1098,6 +1100,8 @@ impl Document {
             self.refresh_viewmarks();
             self.refresh_level_marks();
             self.refresh_derived_tags();
+            self.refresh_zoning_tables();
+            self.refresh_site();
             self.refresh_dimension_set_rows();
             self.mark_changed();
         }
@@ -1196,6 +1200,8 @@ impl Document {
         self.refresh_viewmarks();
         self.refresh_level_marks();
         self.refresh_derived_tags();
+        self.refresh_zoning_tables();
+        self.refresh_site();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
@@ -1217,6 +1223,8 @@ impl Document {
         self.refresh_viewmarks();
         self.refresh_level_marks();
         self.refresh_derived_tags();
+        self.refresh_zoning_tables();
+        self.refresh_site();
         self.refresh_dimension_set_rows();
         self.mark_edited();
         Some(label)
@@ -1379,6 +1387,12 @@ impl Document {
         // After the fields: the tables' schedules, fields and formulas (docs/adr/0327).
         let tables = self.follow_tables(ops);
         ops.extend(tables);
+        // And the joinery list's block with its types and openings (docs/adr/8038 §6).
+        let joinery = self.follow_joinery(ops);
+        ops.extend(joinery);
+        // And the site plan's setback line (docs/adr/8032) on its parcel, its storeys and its footprint.
+        let site = self.follow_site(ops);
+        ops.extend(site);
         // Then: the style fields the step set apart by hand (docs/adr/0322 §5).
         let marks = self.mark_overrides(ops);
         ops.extend(marks);

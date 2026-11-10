@@ -1,0 +1,38 @@
+# Yeni tip ▾ (ADR 0772 §8, 9 Kasım eki): the types window asks for the form; Pencere makes a window type from
+# KentOS's first window; Seçili tipin kopyası keeps the chosen type's form. BEFORE (same steps, Yeni tip a button at
+# 971,789): two presses gave “İç kapı 90 kopyası” and “İç kapı 90 kopyası kopyası”, both doors.
+fit KentOS Mimari — Daire
+wait 3000
+click 1640 20
+wait 600
+type doğrama kodları
+wait 1200
+key Return
+wait 1500
+key Return
+wait 2500
+click 1640 20
+wait 600
+type kapı ve pencere tipleri
+wait 1200
+key Return
+wait 2500
+click 975 789  # Yeni tip ▾
+wait 1200
+shot sonra-menu
+key Down
+wait 300
+key Down
+wait 300
+shot sonra-menu-pencere
+key Return
+wait 2000
+shot sonra-yeni-pencere
+click 975 789  # Yeni tip ▾
+wait 1200
+shot sonra-menu-2
+key Up
+wait 300
+key Return
+wait 2000
+shot sonra-kopya

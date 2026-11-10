@@ -79,9 +79,19 @@ impl OpeningForm {
     }
 
     /// Drawn cut in plan only where it crosses the plan's cut height (docs/adr/0719 §2): a bare opening, a niche, a
-    /// flue. A door and a window are drawn cut whatever their heights.
+    /// flue, and a window (docs/adr/8012: a high window over the cut leaves its wall whole and shows dashed, as Revit
+    /// draws a window above its view's cut plane). A door, from the floor, is drawn cut whatever its heights.
     pub fn cut_by_height(self) -> bool {
-        matches!(self, OpeningForm::Opening | OpeningForm::Niche | OpeningForm::Flue)
+        !matches!(self, OpeningForm::Door)
+    }
+
+    /// A bare opening, a niche or a flue: what is placed by its face, its sill and its head in the wall (the opening
+    /// tool's Yüz, Alt and Üst), not by a door's or window's construction.
+    pub fn hole_or_recess(self) -> bool {
+        matches!(
+            self,
+            OpeningForm::Opening | OpeningForm::Niche | OpeningForm::Flue
+        )
     }
 }
 
@@ -375,6 +385,11 @@ pub struct OpeningFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub broken: Option<OpeningBreak>,
+    /// Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up. Absent:
+    /// its wall's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase: Option<crate::ArchPhase>,
 }
 
 /// An opening in a wall (docs/adr/0341).

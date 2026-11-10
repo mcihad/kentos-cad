@@ -63,10 +63,10 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
     bağımsız düşülür; örtüşmeler bir kez sayılır, duvar veya kolon değişince aynı adımda
     yeniden bulunur. Tam kaplanma veya okunamayan kaynak invalid_space; mevcut oda son
     sınırı ve noFreeArea/invalidBoundarySource nedeni ile kalır. number, name, usage,
-    arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve
-    katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür;
-    yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız
-    aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
+    arch (kat, tadilat durumu), height (yoksa katın), finishes (döşeme, duvar, tavan
+    kaplaması) ve katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan
+    ölçülür; yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır
+    yalnız aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
     birleştirmez. Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı
     sürdürür. Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça
     verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan
@@ -107,10 +107,10 @@ class _SpacesCreate(LocalCommand[SpacesCreate, SpacesCreated, SpacesPlan]):
         bağımsız düşülür; örtüşmeler bir kez sayılır, duvar veya kolon değişince aynı adımda
         yeniden bulunur. Tam kaplanma veya okunamayan kaynak invalid_space; mevcut oda son
         sınırı ve noFreeArea/invalidBoundarySource nedeni ile kalır. number, name, usage,
-        arch (kat, evre), height (yoksa katın), finishes (döşeme, duvar, tavan kaplaması) ve
-        katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan ölçülür;
-        yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır yalnız
-        aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
+        arch (kat, tadilat durumu), height (yoksa katın), finishes (döşeme, duvar, tavan
+        kaplaması) ve katmanın tipli alanlarıyla öznitelikler. Alan, çevre ve hacim sınırdan
+        ölçülür; yöntemin bir mevzuata uyduğu söylenmez. arch.level açıkça verilirse sınır
+        yalnız aynı kat kimliğinin duvarlarından bulunur ve izlenir; eşit kot farklı katları
         birleştirmez. Kat belirtilmeyen eski çağrılar bütün çizimdeki duvarları kullanmayı
         sürdürür. Kapanmayan duvarlarda mahal yazılmaz (space_not_enclosed). Katman açıkça
         verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. Plan yazmadan
@@ -426,13 +426,13 @@ discover = _SpacesDiscover()
 class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     """``cad.spaces.edit`` v1. Mahali düzenle: Kalıcı kimlikleri verilen mahalleri
     değiştirir; tek geri alma adımı “Mahali düzenle”, hepsi ya da hiçbiri. operation:
-    set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, evre, yükseklik,
-    kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi değişince
-    sınırı yeniden bulunur), unit bina programının bölümü, null bölümden çıkarır,
-    programda olmayan unit_not_found), merge (mahaller birleşir: keep verilen mahalin,
-    yoksa ilkinin kimliği sürer, numarası ve bölümü onun, number başka numara verir,
-    null kaldırır; öbürleri silinir, numaraları, kaplamaları ve etiketleri onlarla
-    gider, cevabın decisions'ı yazmadan önce söyler; bölümleri farklı mahaller
+    set (numara, ad, kullanım, yöntem, columns kolon tercihi, kat, tadilat durumu,
+    yükseklik, kaplamalar; null alanı kaldırır; duvarlardan bulunan mahalin yöntemi
+    değişince sınırı yeniden bulunur), unit bina programının bölümü, null bölümden
+    çıkarır, programda olmayan unit_not_found), merge (mahaller birleşir: keep verilen
+    mahalin, yoksa ilkinin kimliği sürer, numarası ve bölümü onun, number başka numara
+    verir, null kaldırır; öbürleri silinir, numaraları, kaplamaları ve etiketleri
+    onlarla gider, cevabın decisions'ı yazmadan önce söyler; bölümleri farklı mahaller
     space_units_merged uyarısı; birleşen sınır çizilmiş olur; değmeyen mahaller
     spaces_not_touching; keep birleşenlerden değilse invalid_input), split (line: iki ya
     da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren parça, yoksa en
@@ -473,30 +473,30 @@ class _SpacesEdit(LocalCommand[SpacesEdit, SpacesEdited, SpacesEdited]):
     ) -> SpacesEdited:
         """Mahali düzenle: Kalıcı kimlikleri verilen mahalleri değiştirir; tek geri alma adımı
         “Mahali düzenle”, hepsi ya da hiçbiri. operation: set (numara, ad, kullanım, yöntem,
-        columns kolon tercihi, kat, evre, yükseklik, kaplamalar; null alanı kaldırır;
-        duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur), unit bina
-        programının bölümü, null bölümden çıkarır, programda olmayan unit_not_found), merge
-        (mahaller birleşir: keep verilen mahalin, yoksa ilkinin kimliği sürer, numarası ve
-        bölümü onun, number başka numara verir, null kaldırır; öbürleri silinir, numaraları,
-        kaplamaları ve etiketleri onlarla gider, cevabın decisions'ı yazmadan önce söyler;
-        bölümleri farklı mahaller space_units_merged uyarısı; birleşen sınır çizilmiş olur;
-        değmeyen mahaller spaces_not_touching; keep birleşenlerden değilse invalid_input),
-        split (line: iki ya da daha çok nokta; mahal çizgiyle bölünür, keep noktasını içeren
-        parça, yoksa en büyük kimliğini korur; yeni parçalar büyüklük sırasıyla numbers
-        numaralarını alır, verilmezse numarasız kalır (aynı numara iki kez yazılmaz), bölümü
-        alır, finishes false değilse kaplamaları; decisions her parçanın kimliğini,
-        numarasını, alanını, kaplamalarını ve içinde duran donatıları söyler; bölmeyen çizgi
-        split_missed, parça sayısıyla uymayan numbers ya da hiçbir parçada olmayan keep
-        invalid_input), rebound (sınır duvarlardan yeniden bulunur: seed verilirse ondan,
-        yoksa kendi tohumundan, o da yoksa etiket noktasından; çizilmiş mahal duvarlardan
-        bulunan olur). Kat değişimi de duvar sınırını yeniden bulur; seçilen kat tohumu
-        kapatmıyorsa son sınır korunur ve lostEnclosure gösterilir. Kolon tercihi değişimi
-        de aynı yeniden hesabı yapar; yalnız ilişkili seed mahalda etkin olabilir.
-        Böl/Birleştir sonucu çizilmiş sınır ve kolon tercihi ignore olur; o anki delikler
-        korunur. Plan ve tek geri alma aynı mahal/sınır değişimini kapsar. Cevap kept
-        (kimliği korunanlar), added (yeni mahaller) ve removed (silinenler) ile söyler.
-        Kilitli katmandaki mahal bütün değişikliği reddeder. Plan yazmadan mahalleri
-        olacakları gibi gösterir.
+        columns kolon tercihi, kat, tadilat durumu, yükseklik, kaplamalar; null alanı
+        kaldırır; duvarlardan bulunan mahalin yöntemi değişince sınırı yeniden bulunur),
+        unit bina programının bölümü, null bölümden çıkarır, programda olmayan
+        unit_not_found), merge (mahaller birleşir: keep verilen mahalin, yoksa ilkinin
+        kimliği sürer, numarası ve bölümü onun, number başka numara verir, null kaldırır;
+        öbürleri silinir, numaraları, kaplamaları ve etiketleri onlarla gider, cevabın
+        decisions'ı yazmadan önce söyler; bölümleri farklı mahaller space_units_merged
+        uyarısı; birleşen sınır çizilmiş olur; değmeyen mahaller spaces_not_touching; keep
+        birleşenlerden değilse invalid_input), split (line: iki ya da daha çok nokta; mahal
+        çizgiyle bölünür, keep noktasını içeren parça, yoksa en büyük kimliğini korur; yeni
+        parçalar büyüklük sırasıyla numbers numaralarını alır, verilmezse numarasız kalır
+        (aynı numara iki kez yazılmaz), bölümü alır, finishes false değilse kaplamaları;
+        decisions her parçanın kimliğini, numarasını, alanını, kaplamalarını ve içinde duran
+        donatıları söyler; bölmeyen çizgi split_missed, parça sayısıyla uymayan numbers ya
+        da hiçbir parçada olmayan keep invalid_input), rebound (sınır duvarlardan yeniden
+        bulunur: seed verilirse ondan, yoksa kendi tohumundan, o da yoksa etiket
+        noktasından; çizilmiş mahal duvarlardan bulunan olur). Kat değişimi de duvar
+        sınırını yeniden bulur; seçilen kat tohumu kapatmıyorsa son sınır korunur ve
+        lostEnclosure gösterilir. Kolon tercihi değişimi de aynı yeniden hesabı yapar;
+        yalnız ilişkili seed mahalda etkin olabilir. Böl/Birleştir sonucu çizilmiş sınır ve
+        kolon tercihi ignore olur; o anki delikler korunur. Plan ve tek geri alma aynı
+        mahal/sınır değişimini kapsar. Cevap kept (kimliği korunanlar), added (yeni
+        mahaller) ve removed (silinenler) ile söyler. Kilitli katmandaki mahal bütün
+        değişikliği reddeder. Plan yazmadan mahalleri olacakları gibi gösterir.
 
         Args:
             doc: The drawing it works on.
@@ -928,8 +928,12 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
     yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta çizginin uzunluğu, sahanlık
     sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç ve bitiş kotu, kata
     bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu; toplamlarda rampArea ve
-    rampRailingLength. levels, phases, usages ve layers verilen kat, evre, kullanım ve
-    katmanlarla süzer (usages verilince yalnız mahaller).
+    rampRailingLength. Kiriş (beams, docs/adr/8041 §3): numara, tür (kiriş, lento,
+    hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı döşemenin taşıyıcısı (slab)
+    ve beton hacmi: kirişin döşemenin altında kalan kısmı (genişlik × (yükseklik −
+    döşeme) × boy; döşemenin içindeki kısmı döşemenin hacmindedir), lento ve hatılın
+    tamamı; toplamı beamVolume. levels, phases, usages ve layers verilen kat, tadilat
+    durumu, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
     """
     __slots__ = ()
     id = "cad.spaces.quantities"
@@ -975,8 +979,13 @@ class _SpacesQuantities(LocalCommand[SpacesQuantities, SpacesQuantified, SpacesQ
         uzunluk; eğimli kolu yoksa yok), eğimli uzunluk (orta çizgi eksi sahanlıklar), orta
         çizginin uzunluğu, sahanlık sayısı, plan alanı (dönüşlerde gönyeli şerit), başlangıç
         ve bitiş kotu, kata bağlıysa farkı (baseOffset), korkuluk çizgilerinin uzunluğu;
-        toplamlarda rampArea ve rampRailingLength. levels, phases, usages ve layers verilen
-        kat, evre, kullanım ve katmanlarla süzer (usages verilince yalnız mahaller).
+        toplamlarda rampArea ve rampRailingLength. Kiriş (beams, docs/adr/8041 §3): numara,
+        tür (kiriş, lento, hatıl), kat, genişlik, yükseklik, eksenin boyu, taşıdığı
+        döşemenin taşıyıcısı (slab) ve beton hacmi: kirişin döşemenin altında kalan kısmı
+        (genişlik × (yükseklik − döşeme) × boy; döşemenin içindeki kısmı döşemenin
+        hacmindedir), lento ve hatılın tamamı; toplamı beamVolume. levels, phases, usages ve
+        layers verilen kat, tadilat durumu, kullanım ve katmanlarla süzer (usages verilince
+        yalnız mahaller).
 
         Args:
             doc: The drawing it works on.
@@ -1076,13 +1085,13 @@ quantities = _SpacesQuantities()
 class _SpacesSeparators(LocalCommand[SpacesSeparators, SpaceSeparatorsChanged, SpaceSeparatorsPlan]):
     """``cad.spaces.separators`` v1. Mahal ayırıcı: Sıfır kalınlıklı açık mahal sınırları.
     operation.create: layerId ve paths (pts metre, bulges kenar başına tan(açı/4),
-    closed, arch açık kat/evre); 1–10000 yol, toplam en çok 100000 köşe, yol başına
-    2–10000 köşe. Duvar malzemesi/metrajı oluşturmaz; net/eksen/brüt ayırıcıyı ötelemez.
-    operation.set uygun tek parçalı, düzlemsel, genişliksiz çoklu çizgilere açık
-    spaceSeparator rolü ve tam arch bilgisi verir; clear yalnız rolü kaldırır,
-    geometriyi ve görünüşü korur. Set/clear operation.uids kalıcı nesne kimlikleridir;
-    düz çizgi dahil diğer türler reddedilir. Sıradan çizgi, katman adı, renk veya
-    kesikli görünüş kendiliğinden sınır değildir. Kaynak değişiminde
+    closed, arch açık kat ve tadilat durumu); 1–10000 yol, toplam en çok 100000 köşe,
+    yol başına 2–10000 köşe. Duvar malzemesi/metrajı oluşturmaz; net/eksen/brüt
+    ayırıcıyı ötelemez. operation.set uygun tek parçalı, düzlemsel, genişliksiz çoklu
+    çizgilere açık spaceSeparator rolü ve tam arch bilgisi verir; clear yalnız rolü
+    kaldırır, geometriyi ve görünüşü korur. Set/clear operation.uids kalıcı nesne
+    kimlikleridir; düz çizgi dahil diğer türler reddedilir. Sıradan çizgi, katman adı,
+    renk veya kesikli görünüş kendiliğinden sınır değildir. Kaynak değişiminde
     mahal/etiket/çizelge aynı undo adımında güncellenir; açık kaynak UUID listesi
     ayırıcıyı yalnız listede ise kullanır. Plan yazmaz, execute tek adım,
     expectedRevision eski önizlemenin yazılmasını engeller. KCAD 106 rolü korur; eski
@@ -1108,8 +1117,8 @@ class _SpacesSeparators(LocalCommand[SpacesSeparators, SpaceSeparatorsChanged, S
         expected: Expected | None = None,
     ) -> SpaceSeparatorsChanged:
         """Mahal ayırıcı: Sıfır kalınlıklı açık mahal sınırları. operation.create: layerId ve
-        paths (pts metre, bulges kenar başına tan(açı/4), closed, arch açık kat/evre);
-        1–10000 yol, toplam en çok 100000 köşe, yol başına 2–10000 köşe. Duvar
+        paths (pts metre, bulges kenar başına tan(açı/4), closed, arch açık kat ve tadilat
+        durumu); 1–10000 yol, toplam en çok 100000 köşe, yol başına 2–10000 köşe. Duvar
         malzemesi/metrajı oluşturmaz; net/eksen/brüt ayırıcıyı ötelemez. operation.set uygun
         tek parçalı, düzlemsel, genişliksiz çoklu çizgilere açık spaceSeparator rolü ve tam
         arch bilgisi verir; clear yalnız rolü kaldırır, geometriyi ve görünüşü korur.

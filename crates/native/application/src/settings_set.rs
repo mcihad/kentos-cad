@@ -27,8 +27,8 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// What names a level by its own level, in the order a refusal says them (docs/adr/0720 §3).
-const LEVELLED: [&str; 9] =
-    ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa", "kot işareti", "döşeme"];
+const LEVELLED: [&str; 10] =
+    ["duvar", "mahal", "mahal ayırıcı", "kolon", "aks", "merdiven", "rampa", "kot işareti", "döşeme", "kiriş"];
 
 /// The place of an object that names a level by its own (`Entity::own_level`) in [`LEVELLED`].
 fn levelled_kind(e: &Entity) -> Option<usize> {
@@ -42,6 +42,8 @@ fn levelled_kind(e: &Entity) -> Option<usize> {
         Entity::Ramp(_) => Some(6),
         // A slab names its level as its own (docs/adr/0722 §1); said last so the older refusals read the same.
         Entity::Slab(_) => Some(8),
+        // A beam likewise (docs/adr/8041 §1).
+        Entity::Beam(_) => Some(9),
         _ => None,
     }
 }

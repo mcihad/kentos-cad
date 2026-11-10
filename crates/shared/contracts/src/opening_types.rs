@@ -446,6 +446,12 @@ pub struct OpeningType {
     pub id: String,
     /// What it is called (K01): unique in the project, case aside.
     pub name: String,
+    /// Its joinery code (docs/adr/8028; doğrama kodu, as Mimarlar Odası's and İTÜ's notes write it: K01 a door, GK01 a
+    /// door in the building's outer wall, P01 a window, B01 a bare opening): the same on every opening of the type;
+    /// unique in the project, case aside; at most 16 letters, digits, `-` or `.`. Absent: none (KCAD schema 220).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub code: Option<String>,
     /// Each change gives it the next; an opening that took an older one is behind (eski sürüm).
     #[cfg_attr(feature = "schema", schemars(range(min = 1), extend("x-unit" = "count")))]
     pub version: u32,
@@ -490,7 +496,22 @@ pub struct OpeningType {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<OpeningBuild>,
+    /// Its frame's and leaves' make (kasa ve kanat; docs/adr/8038, Planlı Alanlar İmar Yönetmeliği 57(29)): “PVC, 5
+    /// odacıklı; çift camlı Low-E 4+16+4”, as the joinery list says it. One line, at most 200 letters; absent: not said
+    /// (KCAD schema 229).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    /// Its thermal transmittance, W/m²K (a window's Up; the maker's figure, TS EN ISO 10077): a window's above TS
+    /// 825:2024's 1.8 is a finding (docs/adr/8038). Above 0, at most 10; absent: not said (KCAD schema 229).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "W/m2K")))]
+    pub u_value: Option<f64>,
 }
+
+/// The highest thermal transmittance a type may say, W/m²K (a single glazed metal window is about 6).
+pub const MAX_U_VALUE: f64 = 10.0;
 
 fn one() -> u8 {
     1
@@ -516,6 +537,15 @@ pub fn opening_type_id_ok(id: &str) -> bool {
         && id
             .chars()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+}
+
+/// Whether `code` may be a type's joinery code (docs/adr/8028): a letter first, then letters, digits, `-` or `.`, at
+/// most 16.
+pub fn opening_code_ok(code: &str) -> bool {
+    let mut chars = code.chars();
+    chars.next().is_some_and(char::is_alphabetic)
+        && code.chars().count() <= 16
+        && chars.all(|c| c.is_alphanumeric() || c == '-' || c == '.')
 }
 
 /// A type's id from its name: lower-case ASCII letters and digits, Turkish letters folded, the rest `-`.
@@ -577,6 +607,7 @@ impl OpeningType {
             build: self.build.clone(),
             place: vec![crate::entity::Vec2 { x: 0.0, y: 0.0 }; 4],
             broken: None,
+            phase: None,
         };
         if f.build.as_ref().is_some_and(OpeningBuild::is_empty) {
             f.build = None;
@@ -601,6 +632,16 @@ impl OpeningType {
                 "Tipin sürümü 1 ya da daha büyük olmalı.".into(),
             ));
         }
+        if let Some(c) = &self.code
+            && !opening_code_ok(c)
+        {
+            return Some((
+                "code".into(),
+                format!(
+                    "“{c}” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi)."
+                ),
+            ));
+        }
         if let Some(s) = &self.source
             && (s.trim().is_empty() || s.chars().count() > 128)
         {
@@ -615,9 +656,35 @@ impl OpeningType {
                 "Boş yapı yazılmaz; yapının en az bir alanı olur.".into(),
             ));
         }
+        // Its frame and leaves and its U value (docs/adr/8038).
+        if let Some(m) = &self.material
+            && (m.trim().is_empty()
+                || m.trim() != m
+                || m.chars().count() > 200
+                || m.chars().any(char::is_control))
+        {
+            return Some((
+                "material".into(),
+                "Kasa ve kanat tek satır, boş değil, kenarı boşluksuz ve en çok 200 harftir."
+                    .into(),
+            ));
+        }
+        if let Some(u) = self.u_value
+            && !(u.is_finite() && u > 0.0 && u <= MAX_U_VALUE)
+        {
+            return Some((
+                "uValue".into(),
+                format!("U değeri sıfırdan büyük, en çok {MAX_U_VALUE} W/m²K olur."),
+            ));
+        }
         let mut f = self.fields();
         f.host = "tip".into();
         f.problem()
+    }
+
+    /// Whether it says its frame and leaves or its U value (docs/adr/8038, `.kcad` schema 229).
+    pub fn has_specs(&self) -> bool {
+        self.material.is_some() || self.u_value.is_some()
     }
 
     /// Its value of `field`, as JSON (null: none).
@@ -765,6 +832,23 @@ impl OpeningFields {
     /// Its sizes (docs/adr/0772 §2).
     pub fn sizes(&self) -> OpeningSizes {
         opening_sizes(self)
+    }
+
+    /// Its size in centimetres as Mimarlar Odası writes it on a plan (docs/adr/8028): width over height, 90/210; its
+    /// width alone when it has no head. A whole centimetre is written without decimals, else one.
+    pub fn size_cm(&self) -> String {
+        let cm = |m: f64| {
+            let c = m * 100.0;
+            if (c - c.round()).abs() < 0.05 {
+                format!("{}", c.round() as i64)
+            } else {
+                format!("{c:.1}")
+            }
+        };
+        match self.head {
+            Some(h) => format!("{}/{}", cm(self.width), cm(h - self.sill.unwrap_or(0.0))),
+            None => cm(self.width),
+        }
     }
 }
 
@@ -1237,7 +1321,18 @@ pub fn opening_types_problem(types: &[OpeningType]) -> Option<(String, String)> 
         ));
     }
     let mut seen = std::collections::BTreeSet::new();
+    let mut codes = std::collections::BTreeSet::new();
     for (i, t) in types.iter().enumerate() {
+        if let Some(c) = &t.code
+            && !codes.insert(c.to_lowercase())
+        {
+            return Some((
+                format!("openingTypes[{i}].code"),
+                format!(
+                    "“{c}” doğrama kodu iki tipte var; kod büyük küçük harf ayırmadan tek olmalı."
+                ),
+            ));
+        }
         if !seen.insert(t.name.to_lowercase()) {
             return Some((
                 format!("openingTypes[{i}].name"),
@@ -1277,6 +1372,7 @@ mod tests {
         OpeningType {
             id: "k01".into(),
             name: "K01".into(),
+            code: None,
             version: 1,
             source: None,
             form: OpeningForm::Door,
@@ -1290,6 +1386,8 @@ mod tests {
             head: Some(2.1),
             depth: None,
             build: Some(build),
+            material: None,
+            u_value: None,
         }
         .fields()
     }
@@ -1322,6 +1420,7 @@ mod tests {
         let mut t = OpeningType {
             id: "k01".into(),
             name: "K01".into(),
+            code: None,
             version: 2,
             source: None,
             form: OpeningForm::Door,
@@ -1335,12 +1434,36 @@ mod tests {
             head: Some(2.1),
             depth: None,
             build: None,
+            material: None,
+            u_value: None,
         };
         f.take_type(&t);
         assert_eq!(
             (f.width, f.frame, f.type_version),
             (1.1, Some(0.07), Some(2))
         );
+        // Its frame and leaves and its U value (docs/adr/8038): one line, a U above 0 and at most 10.
+        t.material = Some("PVC, 5 odacıklı".into());
+        t.u_value = Some(1.6);
+        assert_eq!(t.problem(), None);
+        assert!(t.has_specs());
+        for (m, u, field) in [
+            (Some(" PVC"), Some(1.6), "material"),
+            (Some("PVC\nAhşap"), Some(1.6), "material"),
+            (Some("PVC"), Some(0.0), "uValue"),
+            (Some("PVC"), Some(12.0), "uValue"),
+            (Some("PVC"), Some(f64::NAN), "uValue"),
+        ] {
+            t.material = m.map(str::to_owned);
+            t.u_value = u;
+            assert_eq!(
+                t.problem().map(|p| p.0),
+                Some(field.to_owned()),
+                "{m:?} {u:?}"
+            );
+        }
+        t.material = None;
+        t.u_value = None;
         t.version = 0;
         assert!(t.problem().is_some());
         assert_eq!(opening_type_id_of("Kapı K01 / ıslak"), "kapi-k01-islak");

@@ -1,0 +1,29 @@
+# M35 (docs/adr/8035), 1920 × 1080: Mimari › Denetim › Mevzuat on an office storey (buro-yangin.kcad from
+# fire_escape_tests): BYKHY 32/4 and Ek-5/B (offices beyond 15 m one way), 4/i (the corridor's dead end), 33/6-b (an
+# office with no door), 33/1 (a 0.90 m stair for 76 people, a 1.00 m corridor), 39/2 (a meeting room of 63 people with
+# one door, a storey with one exit).
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 1162 111  # Denetim
+wait 3000
+drag 760 663 760 330  # the panel taller
+wait 1200
+drag 849 447 1290 447  # Bulgu wider
+wait 800
+click 760 240 middle
+click 760 240 middle
+wait 1500
+click 196 414  # Bütün gruplar
+wait 1000
+type mevzuat
+wait 800
+click 180 481  # Mevzuat
+wait 1200
+move 1300 250
+wait 600
+shot m35-buro
+wheel 700 760 -60  # the table's end
+wait 800
+move 1300 250
+wait 600
+shot m35-buro-son

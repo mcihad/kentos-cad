@@ -37,6 +37,13 @@ mod address;
 mod address_scenes;
 mod aids;
 mod alias_profile;
+mod module_names;
+mod unsaved_close;
+#[cfg(test)]
+mod unsaved_close_tests;
+mod window_pick;
+#[cfg(test)]
+mod option_contract_tests;
 #[cfg(test)]
 mod alias_profile_scenes;
 mod annotation_scale;
@@ -100,6 +107,7 @@ mod xrefs_review_view;
 mod xrefs_watch;
 mod bond_notice;
 mod arch_project;
+mod arch_start;
 mod architecture_settings;
 mod architecture_ribbon;
 mod architecture_template;
@@ -253,6 +261,8 @@ mod features;
 #[cfg(test)]
 mod files_testing;
 mod find_replace;
+mod fixture_search;
+mod zoning_badge;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;
@@ -792,6 +802,36 @@ mod toasts;
 mod tools_scenes;
 #[cfg(test)]
 mod tools_screens;
+#[cfg(test)]
+mod arch_icons;
+#[cfg(test)]
+mod building_context_tests;
+#[cfg(test)]
+mod fixture_place_tests;
+#[cfg(test)]
+mod opening_codes_tests;
+#[cfg(test)]
+mod paiy_area_tests;
+#[cfg(test)]
+mod site_plan_tests;
+#[cfg(test)]
+mod regulation_audit_tests;
+#[cfg(test)]
+mod fire_escape_tests;
+#[cfg(test)]
+mod provisions_tests;
+#[cfg(test)]
+mod permit_set_tests;
+#[cfg(test)]
+mod room_list_tests;
+#[cfg(test)]
+mod joinery_list_tests;
+#[cfg(test)]
+mod renovation_legend_tests;
+#[cfg(test)]
+mod renovation_set_tests;
+#[cfg(test)]
+mod wall_height_tests;
 mod topology;
 #[cfg(test)]
 mod topology_scenes;

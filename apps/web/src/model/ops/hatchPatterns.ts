@@ -14,7 +14,7 @@ import type { Area } from '../geom/region';
 /** A pattern of the library: its name, group, what it is drawn for and its families in paper millimetres. */
 export interface LibraryPattern {
   readonly name: string;
-  readonly group: 'ansi' | 'iso' | 'general';
+  readonly group: 'ansi' | 'iso' | 'general' | 'ts';
   readonly description: string;
   readonly lines: readonly PatternLine[];
 }

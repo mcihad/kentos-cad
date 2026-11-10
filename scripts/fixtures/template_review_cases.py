@@ -104,12 +104,18 @@ def cases():
             inp['unit'] = 'm'
         rows.append({'name': f'Koordinat sisteminin metre birimi / {mode}', 'setup': doc,
                      'steps': [step(doc, inp, op) for op in ('plan', 'validate', 'execute')]})
+    # The package is metres since docs/adr/8007: a coordinate system takes it with no unit given.
+    doc = T.setup(objects=True)
+    doc['settings']['srid'] = 5256
+    inp = {'name': 'mimari', 'settingsMode': 'template'}
+    rows.append({'name': 'Koordinat sistemine paketin metresi birim verilmeden uygulanır', 'setup': doc,
+                 'steps': [step(doc, inp, op) for op in ('plan', 'validate', 'execute')]})
     for op in ('validate', 'plan', 'execute'):
         doc = T.setup(objects=True)
         doc['settings']['srid'] = 5256
         rows.append({'name': f'Koordinat sistemine cm ofis birimi uygulanamaz / {op}', 'setup': doc, 'steps': [{
             'op': op, 'command': 'cad.templates.apply',
-            'input': {'name': 'mimari', 'settingsMode': 'template'},
+            'input': {'name': 'mimari', 'settingsMode': 'template', 'unit': 'cm'},
             'result': T.refusal('unit_needs_local', 'Koordinat sistemi olan projenin birimi metredir; ofis ayarlarını metre birimiyle uygulayın.', 'unit'),
             'expect': {'revision': 'same'}}]})
     for op in ('validate', 'plan', 'execute'):

@@ -90,7 +90,11 @@ def wall(id, x0, y, x1, level=None, layer_id="duvar"):
 
 def type_json(t):
     """A type as the project keeps it: defaults left out."""
-    out = {"id": t["id"], "name": t["name"], "version": t["version"]}
+    out = {"id": t["id"], "name": t["name"]}
+    if t.get("code") is not None:
+        # Its joinery code (docs/adr/8028), after its name as the contract writes it.
+        out["code"] = t["code"]
+    out["version"] = t["version"]
     if t.get("source") is not None:
         out["source"] = t["source"]
     out["form"] = t["form"]
@@ -109,6 +113,11 @@ def type_json(t):
     b = build_json(t.get("build"))
     if b:
         out["build"] = b
+    # Its frame and leaves and its U value (docs/adr/8038), after its construction as the contract writes them.
+    if t.get("material") is not None:
+        out["material"] = t["material"]
+    if t.get("uValue") is not None:
+        out["uValue"] = float(t["uValue"])
     return out
 
 
@@ -201,6 +210,13 @@ def sizes(f):
 
 def type_problem(t):
     """A type's problem as the ADR orders them: (field, words) or None."""
+    # Its frame and leaves and its U value (docs/adr/8038): one line; a U above 0, at most 10.
+    m = t.get("material")
+    if m is not None and (not m.strip() or m.strip() != m or len(m) > 200 or any(ord(c) < 32 for c in m)):
+        return "material", "Kasa ve kanat tek satır, boş değil, kenarı boşluksuz ve en çok 200 harftir."
+    u = t.get("uValue")
+    if u is not None and not (math.isfinite(u) and 0 < u <= 10):
+        return "uValue", "U değeri sıfırdan büyük, en çok 10 W/m²K olur."
     w = t["width"]
     if not (math.isfinite(w) and 0 < w <= 100):
         return "width", f"Açıklığın genişliği {num(w)}; sıfırdan büyük, en çok 100 m olmalı."
@@ -438,6 +454,18 @@ def changed(t, c, path):
         n["width"] = rough_of(by, v, (n.get("build") or {}).get("fit") or 0.0, n.get("frame") or 0.0)
     if c.get("width") is None and c.get("nominal") is None:
         keep_nominal(t, n)
+    # The type's own (docs/adr/8038): a blank make or a null takes it away.
+    if "material" in c:
+        m = (c["material"] or "").strip()
+        if m:
+            n["material"] = m
+        else:
+            n.pop("material", None)
+    if "uValue" in c:
+        if c["uValue"] is None:
+            n.pop("uValue", None)
+        else:
+            n["uValue"] = c["uValue"]
     p = type_problem(n)
     if p:
         return None, refusal("invalid_opening_type", p[1], f"{path}.{p[0]}")
@@ -729,15 +757,25 @@ def update_step(d, key, change, refused="stop", locked=(), plan=False):
     if bad:
         return types_step(d, "execute", inp, bad), d
     if not change:
-        return types_step(d, "execute", inp, refusal("nothing_to_set", "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik ya da yapı verin.",
+        return types_step(d, "execute", inp, refusal("nothing_to_set", "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik, yapı, kasa ve kanat ya da U değeri verin.",
                                                      "operation.change")), d
     new, bad = changed(old, change, "operation.change")
     if bad:
         return types_step(d, "execute", inp, bad), d
     fields = differs(new, old)
-    if not fields:
+    specs = new.get("material") != old.get("material") or new.get("uValue") != old.get("uValue")
+    if not fields and not specs:
         return types_step(d, "execute", inp, refusal("nothing_to_set", f"“{old['name']}” tipi zaten bu değerlerde; hiçbir şey değişmiyor.",
                                                      "operation.change")), d
+    if not fields:
+        # Its frame and leaves and its U value alone (docs/adr/8038): the type written, its version and the openings
+        # as they were.
+        after = copy.deepcopy(d)
+        after.types = [new if t["id"] == new["id"] else t for t in after.types]
+        result = done(edited(after.types, copy.deepcopy(EMPTY)))
+        if plan:
+            return types_step(d, "plan", inp, result), d
+        return types_step(after, "execute", inp, result), after
     new["version"] = old["version"] + 1
     r = follow(d, new, fields, refused, locked)
     if isinstance(r, dict):
@@ -849,6 +887,11 @@ def types_edit_cases():
         "layer_locked", "Tipi izleyen bir açıklık kilitli katmanda; tipten ayrılamaz. Kilidi açın ya da tipi silmeyin (“$uidOf:26”).",
         "operation.type"))]))
     out.append(edit_case("Ret: tip zaten bu değerlerde", [update_step(copy.deepcopy(BASE), "K01", {"frame": 0.05})[0]]))
+    # Its frame and leaves and its U value (docs/adr/8038): the type's own; the version and its window stay.
+    step, d = update_step(copy.deepcopy(BASE), "P01", {"material": " PVC, 5 odacıklı; çift camlı Low-E ", "uValue": 1.6})
+    step2, _ = update_step(d, "P01", {"material": None, "uValue": None})
+    out.append(edit_case("Kasa ve kanat ile U değeri: yalnız tip yazılır, sürüm aynı", [step, step2]))
+    out.append(edit_case("Ret: U değeri sıfır", [update_step(copy.deepcopy(BASE), "P01", {"uValue": 0.0})[0]]))
     out.append(edit_case("Ret: projede olmayan tip", [update_step(copy.deepcopy(BASE), "K09", {"frame": 0.05})[0]]))
     # A locked layer: the door there stays at the older version.
     d = copy.deepcopy(BASE)
@@ -871,6 +914,20 @@ def types_edit_cases():
     inp = {"operation": {"kind": "rename", "type": "K02", "name": "K02"}}
     out.append(edit_case("Ret: ad aynı", [types_step(d, "execute", inp, refusal("nothing_to_set", "Tipin adı zaten “K02”.",
                                                                                "operation.name"))]))
+    # Doğrama kodu (docs/adr/8028): the type's joinery code; its openings and their tags read it, nothing else changes.
+    after = copy.deepcopy(d)
+    for t in after.types:
+        if t["id"] == "k02":
+            t["code"] = "K02"
+    inp = {"operation": {"kind": "code", "type": "k02", "code": "K02"}}
+    out.append(edit_case("Doğrama kodu: tip kodunu alır, izleyenler aynı", [types_step(after, "execute", inp, done(edited(after.types, EMPTY)))]))
+    inp = {"operation": {"kind": "code", "type": "K02", "code": "1K"}}
+    out.append(edit_case("Ret: rakamla başlayan doğrama kodu", [types_step(d, "execute", inp, refusal(
+        "invalid_opening_type", "“1K” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi).",
+        "operation.code"))]))
+    inp = {"operation": {"kind": "code", "type": "K02", "code": None}}
+    out.append(edit_case("Ret: kodu olmayan tipin kodu kaldırılmaz", [types_step(d, "execute", inp, refusal(
+        "nothing_to_set", "“K02” tipinin kodu yok.", "operation.code"))]))
     inp = {"operation": {"kind": "remove", "type": "K02"}}
     out.append(edit_case("Ret: izlenen tip silinmez", [types_step(d, "execute", inp, refusal(
         "opening_type_in_use", "“K02” tipini 3 açıklık izliyor; silmek için onları tipten ayırın (detach: true) ya da önce başka tip verin.",

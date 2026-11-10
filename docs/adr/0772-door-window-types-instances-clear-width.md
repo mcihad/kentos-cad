@@ -127,8 +127,17 @@ Bağımsız Python okuyucusu ve yazıcısı (`tools/kcad/kcad.py`, `scripts/fixt
 
 - **Kapı ve pencere tipleri** penceresi (Mimari › Proje ▾ ve Açıklık bağlamsal sekmesinin Tip paneli): tipler sayılarıyla
   (açıklık, istisna, eski), seçili tipin değerleri projenin biriminde, ölçü referansı, Açılış; Uygula'dan önce planın
-  sonucu (“Şimdi … Değişince …”, kaç açıklık izler, hangi istisna korunur); Yeni tip, Sil, Kitaplıktan al…, Kitaplığa
+  sonucu (“Şimdi … Değişince …”, kaç açıklık izler, hangi istisna korunur); Yeni tip ▾, Sil, Kitaplıktan al…, Kitaplığa
   yaz…. Kapat yazmaz.
+- **Yeni tip ▾ (9 Kasım 2026 eki, sahibin bildirimi: “tipin kapı mı pencere mi olduğunu nereden seçiyorum anlamadım; yeni
+  tip dediğimde hep aynı tip geliyor”).** Yeni tip bir düğmeydi ve seçili tipi kopyalıyordu; listede hep bir tip seçili
+  olduğundan (çoğu zaman ilk kapı) pencere tipi açmanın yolu önce bir pencereyi seçmekti ve bu hiçbir yerde
+  yazmıyordu. Gerçek pencerede ölçüldü: iki basış “İç kapı 90 kopyası” ve “İç kapı 90 kopyası kopyası” verdi, ikisi de
+  kapı. Artık Yeni tip ▾ bir menü: önce **biçim** (Kapı, Pencere, Boşluk, Niş, Baca; her biri KentOS'un o biçimdeki ilk
+  tipinden başlar ve menü hangisinden başladığını yazar), en altta **Seçili tipin kopyası** (biçimi seçili tipinki).
+  Adlar “Yeni pencere tipi”, “Yeni pencere tipi 2”; kopyanın kopyası “… kopyası 2” olur, “kopyası kopyası” olmaz. İzde
+  `dialog` adımı menünün öğesini adıyla seçer (`Pick("Yeni tip", "Pencere")`). Komut değişmedi: `define`'ın `form`'u ve
+  `copyOf`'u zaten vardı.
 - **Öznitelikler:** Tür listesinde önce projenin tipleri; Tip bölümünde sürüm (eski/güncel), istisnalar ve tip işlemleri,
   dört en.
 - **Denetim:** Kapılar grubu ve Eşikler ▾'de “Net geçiş <” (Yok, 0,80, 0,85, 0,90 m).

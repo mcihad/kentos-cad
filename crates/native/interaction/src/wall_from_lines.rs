@@ -81,7 +81,7 @@ impl WallFromLines {
             .is_some();
         WallsFromLines {
             uids: self.uids.clone(),
-            arch: self.level.arch(),
+            arch: cx.phased(self.level.arch()),
             mode: if m.wall_contours {
                 WallsFromMode::Contours
             } else if m.wall_pairs {
@@ -96,9 +96,15 @@ impl WallFromLines {
             keep_sources: m.wall_keep_sources,
             max_width: m.wall_pairs.then_some(m.wall_pair_max),
             angle: None,
-            // Kept lines are a reference (an underlay, often locked): the walls go to the active layer, as a new
-            // object does (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
-            layer_id: m.wall_keep_sources.then(|| cx.doc.layers().active().to_owned()),
+            // With the layer key on, the walls go on their style's layer (docs/adr/8008). Else kept lines are a
+            // reference (an underlay, often locked): the walls go to the active layer, as a new object does
+            // (docs/adr/0798 §3); lines replaced leave their walls on their own layer, as before.
+            layer_id: if m.layer_keys {
+                Some(crate::arch_layer::planned(&wall::layer_kind(cx), cx))
+            } else {
+                m.wall_keep_sources
+                    .then(|| cx.doc.layers().active().to_owned())
+            },
             expected_revision: if m.wall_contours {
                 self.plan.revision.clone()
             } else {
@@ -177,6 +183,10 @@ impl WallFromLines {
 }
 
 impl Stages for WallFromLines {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(wall::layer_kind(cx))
+    }
+
     fn id(&self) -> &'static str {
         ID
     }
@@ -257,7 +267,7 @@ impl Stages for WallFromLines {
             .into_iter()
             .find(|r| r.justify() == m.wall_justify)
             .unwrap_or_default();
-        let prompt = Prompt::new(LABEL, self.finding()).option_with("Yöntem", "M", method);
+        let prompt = Prompt::new(LABEL, self.finding()).option_with("Yöntem", "B", method);
         let prompt = if m.wall_pairs {
             prompt
                 .option_with("En çok genişlik", "E", self.format.length(m.wall_pair_max))
@@ -268,7 +278,7 @@ impl Stages for WallFromLines {
                 )
         } else {
             prompt
-                .option_with("Genişlik", "E", self.format.length(wall::width(m, style)))
+                .option_with("Kalınlık", "E", self.format.length(wall::width(m, style)))
                 .option_with(
                     if m.wall_contours { "Referans" } else { "Hiza" },
                     "H",
@@ -286,7 +296,7 @@ impl Stages for WallFromLines {
         };
         prompt
             .option_with("Kat", "L", self.level.label())
-            .toggle("Kaynağı koru", "K", m.wall_keep_sources)
+            .option_with("Kaynak çizgiler", "K", if m.wall_keep_sources { "Koru" } else { "Sil" })
             .option("Uygula", "Enter")
     }
 
@@ -337,7 +347,8 @@ impl Stages for WallFromLines {
                 cx.memory.wall_pairs = !cx.memory.wall_pairs;
                 cx.memory.wall_contours = false;
             }
-            "M" => {
+            // Yöntem is B in every Mimari tool (docs/adr/8003).
+            "B" => {
                 let next = if cx.memory.wall_contours {
                     "each"
                 } else if cx.memory.wall_pairs {
@@ -345,7 +356,7 @@ impl Stages for WallFromLines {
                 } else {
                     "pairs"
                 };
-                self.configure("M", next, cx);
+                self.configure("B", next, cx);
             }
             "K" => cx.memory.wall_keep_sources = !cx.memory.wall_keep_sources,
             "L" => self.level.next(),
@@ -373,7 +384,7 @@ impl Stages for WallFromLines {
         if self.ask.is_some() || (key == "H" && self.seen.wall_pairs) {
             return Vec::new();
         }
-        if key == "M" || (key == "H" && self.seen.wall_contours) || key == "K" || key == "L" {
+        if key == "B" || (key == "H" && self.seen.wall_contours) || key == "K" || key == "L" {
             return self
                 .settings(&self.format)
                 .into_iter()
@@ -384,7 +395,7 @@ impl Stages for WallFromLines {
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
-        if key == "M" || key == "K" || key == "L" || (key == "H" && cx.memory.wall_contours) {
+        if key == "B" || key == "K" || key == "L" || (key == "H" && cx.memory.wall_contours) {
             return self.configure(key, typed, cx);
         }
         if !matches!(key, "H" | "S") {
@@ -400,7 +411,7 @@ impl Stages for WallFromLines {
         use crate::tool_settings::{Setting, choices};
         let m = &self.seen;
         let mut rows = vec![Setting::choice(
-            "M",
+            "B",
             "Yöntem",
             choices(
                 &[
@@ -458,7 +469,7 @@ impl Stages for WallFromLines {
         rows.push(self.level.setting());
         rows.push(Setting::choice(
             "K",
-            "Kaynak",
+            "Kaynak çizgiler",
             choices(
                 &[("keep", "Koru"), ("remove", "Sil")],
                 if m.wall_keep_sources {
@@ -498,7 +509,7 @@ impl Stages for WallFromLines {
         self.ask = None;
         let taken = match (key, value) {
             ("L", _) => self.level.choose(value),
-            ("M", "each" | "pairs" | "contours") => {
+            ("B", "each" | "pairs" | "contours") => {
                 cx.memory.wall_pairs = value == "pairs";
                 let was_contours = cx.memory.wall_contours;
                 cx.memory.wall_contours = value == "contours";
@@ -550,9 +561,18 @@ impl Stages for WallFromLines {
             self.ask = None;
             return Flow::Stay;
         }
-        let input = self.request(cx);
-        let result = walls_from_lines::execute(&mut ExecutionContext::new(cx.doc), input);
-        match points::written(result, cx) {
+        let kind = wall::layer_kind(cx);
+        let mut written = None;
+        let before = cx.doc.revision();
+        crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let mut input = self.request(cx);
+            input.expected_revision =
+                crate::arch_layer::carried(input.expected_revision, before, cx);
+            let result = walls_from_lines::execute(&mut ExecutionContext::new(cx.doc), input);
+            written = points::written(result, cx);
+            written.is_some()
+        });
+        match written {
             Some(done) => {
                 let mut said = format!("{LABEL}: {} duvar eklendi", done.uids.len());
                 if !done.removed.is_empty() {

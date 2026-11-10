@@ -255,11 +255,14 @@ pub fn value_start(press: &KeyPress) -> Option<char> {
         .filter(|c| c.is_ascii_digit() || matches!(c, '@' | '.' | '+' | '-' | '#' | '<' | '('))
 }
 
-/// An option letter of the running command: a plain letter, upper-cased the
-/// Turkish way (the web's `CommandLine.intercept`). Shift makes it a chord.
+/// An option letter of the running command: a letter, upper-cased the Turkish
+/// way (the web's `CommandLine.intercept`). Shift and Caps Lock change nothing:
+/// an option reads its letter in either case, as AutoCAD's do (“You can enter
+/// uppercase or lowercase letters”, docs/adr/8003). Shift+E was Uzat's chord
+/// even while the wall waited for E. Ctrl, Alt and the logo key make a chord.
 pub fn option_letter(press: &KeyPress) -> Option<String> {
     let m = press.modifiers;
-    if m.control() || m.alt() || m.logo() || m.shift() {
+    if m.control() || m.alt() || m.logo() {
         return None;
     }
     let c = press.character()?;
@@ -336,6 +339,13 @@ mod tests {
         assert_eq!(option_letter(&dotless).as_deref(), Some("I"));
         let i = press(ch("i"), Code::Quote, Modifiers::empty(), Some("i"));
         assert_eq!(option_letter(&i).as_deref(), Some("İ"));
+        // Shift (or Caps Lock) types the same option (docs/adr/8003): Shift+E is the wall's E, not Uzat.
+        let shift_e = press(ch("E"), Code::KeyE, Modifiers::SHIFT, Some("E"));
+        assert_eq!(option_letter(&shift_e).as_deref(), Some("E"));
+        let shift_i = press(ch("İ"), Code::Quote, Modifiers::SHIFT, Some("İ"));
+        assert_eq!(option_letter(&shift_i).as_deref(), Some("İ"));
+        let ctrl_e = press(ch("e"), Code::KeyE, Modifiers::CTRL, Some("\u{5}"));
+        assert_eq!(option_letter(&ctrl_e), None);
         let s = press(ch("ş"), Code::Semicolon, Modifiers::empty(), Some("ş"));
         assert_eq!(chord(&s), None);
         // + is Shift+4: a + chord (zoom when idle) and a value start, not Shift+4.

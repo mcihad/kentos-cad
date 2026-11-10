@@ -598,7 +598,7 @@ fn komut_ara_the_command_line_and_the_shortcuts_find_only_the_modules_own() {
             .into_iter()
             .filter_map(|h| match h {
                 crate::ribbon_search::Hit::Command(c) => Some(c.id),
-                crate::ribbon_search::Hit::Model { .. } => None,
+                crate::ribbon_search::Hit::Model { .. } | crate::ribbon_search::Hit::Fixture(_) => None,
             })
             .collect()
     };
@@ -653,6 +653,8 @@ fn found(app: &mut App, query: &str) -> Vec<String> {
         .map(|h| match h {
             crate::ribbon_search::Hit::Command(c) => c.id.to_owned(),
             crate::ribbon_search::Hit::Model { id, .. } => format!("processing.model.{id}"),
+            // KentOS's library's furniture and fixtures (docs/adr/8024), by name.
+            crate::ribbon_search::Hit::Fixture(f) => format!("block:{}", f.name),
         })
         .collect()
 }
@@ -819,6 +821,7 @@ fn kentos_harita_offers_a_maps_commands_and_leaves_cbs_analysis_to_kentos_gis() 
             "edit.selectFilter.wall",
             "edit.selectFilter.space",
             "edit.selectFilter.slab",
+            "edit.selectFilter.beam",
             "edit.selectFilter.viewmark",
             // CBS's spatial statistics, sampling, suitability, remote sensing and meshes, its geostatistics, raster
             // analysis, hydrology, distance and generalization.
@@ -973,10 +976,13 @@ fn kentos_cad_offers_every_command_and_a_module_offers_what_its_ribbon_shows() {
 #[test]
 fn komut_ara_finds_no_other_modules_work() {
     let mut mimari = program(Some(Module::Architecture));
-    for query in ["havza", "tesis", "parsel", "altlık", "osm", "raster"] {
+    for query in ["havza", "tesis", "altlık", "osm", "raster"] {
         let hits = found(&mut mimari, query);
         assert!(hits.is_empty(), "Mimari: {query}: {hits:?}");
     }
+    // A parcel is Mimari's own too since the site plan (docs/adr/8032): its Parsel ve bahçe mesafeleri, never KentOS
+    // Harita's parcel drawing (`tool.parcel`).
+    assert_eq!(found(&mut mimari, "parsel"), ["tool.siteParcel"]);
     // An attachment's web address is no address search; Ölçülendirme's slope dimension no terrain slope.
     let hits = found(&mut mimari, "adres");
     assert!(

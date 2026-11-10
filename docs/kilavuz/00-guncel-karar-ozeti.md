@@ -17,6 +17,291 @@
   kabul koşuludur. `plan/architecture.md` yalnız kanıtlanan alt maddelerle
   ilerletilir; bütün görevler bitmiş gibi sunulmaz.
 
+- **Mimari ileri planın ikinci turu (7 Kasım 2026; [plan/architecture-advanced.md](../../plan/architecture-advanced.md), dal `arch-adv-ileri`).**
+  - **Odak:** sahibin hedefi "çok pratik ama AutoCAD kadar ayrıntılı" mimari çizimdir.
+  - **Araştırma:** üç kod denetimi, beş kabul senaryosunun güncel ikiliyle oynatılması ve dört internet araştırması
+    yapıldı; notlar [docs/research/2026-11-07-mimari/](../research/2026-11-07-mimari/) altında.
+  - **Plan:** yeni paketler ADV-08…26, iş sırası M1…M51 (§5), madde talimatı (§6).
+  - **Numaralar:** mimari ileri ADR'leri 3000'den başlar.
+  - **Katman ve mahal numarası:** 2026 Dijital Yönetmeliği'nin EK-4 ve EK-3'üne bağlanır (RG 05.08.2026/33331, yürürlük
+    01.09.2027).
+  - **Tek ad, tek harf (M4, [ADR 8003](../adr/8003-option-letters-and-terms.md)):**
+    - İstem, araç paneli ve Öznitelikler aynı adı kullanır. Duvarın Kalınlık'ı ile çizginin Çizgi kalınlığı ayrıdır.
+    - Sözleşme harfleri: E Kalınlık/Genişlik/En, G Geri, K Kapat, Y Yükseklik, S Stil, T Tür, L Kat, Ö Öteleme, D Açı.
+    - Shift'li harf seçenektir; seçenek olmayan harf çalışan komutu bitirmez.
+    - CAD'de imleç Açı, CBS'de Semt yazar.
+    - Arayüzde kelimesi kelimesine çeviri bırakılmaz (Benimse → Var olanı kullan).
+  - **Komut geçmişi (M5, [ADR 8004](../adr/8004-readable-command-history.md)):**
+    - Mimari komutları satırda kimliksiz Türkçe özetle yazılır.
+    - Komut, alanlar ve Python "Ayrıntı" düğmesinde.
+  - **Dar şerit ve Öznitelikler (M6, [ADR 8005](../adr/8005-narrow-tabs-and-building-first.md)):**
+    - 1200 px altında sığmayan sekmeler ⋯ menüsüne girer; açık, bağlam ve programın kendi sekmesi görünür kalır.
+    - Yapı elemanında Öznitelikler kendi bölümüyle başlar.
+  - **Düzenleyiciler (M7, [ADR 8006](../adr/8006-editors-ask-and-pick-from-drawing.md)):**
+    - Kendi kaydı olan düzenleyici değişiklik varken yan tık, × ve Esc'te `kentos_ui::widget::unsaved` ile sorar.
+    - Seçimle çalışan pencerede "Çizimden seç" pencereyi çeker, Enter geri getirir.
+  - **Başlangıç (M8, [ADR 8007](../adr/8007-mimari-start-ground-floor-hatched-wall.md)):**
+    - İşi Mimari olan yeni proje Zemin kat'la açılır (`ground_floor`: ±0,00, 3,00 m; PAİY 28).
+    - KentOS Mimari'de yeni proje Mimari sekmesinde açılır; duvar araçları Dış duvar 25 ile başlar, ilk duvar poşelidir.
+    - Şablon m ve 1:100'dür. Ayarsız eski `cad.templates.apply` çağrısı cm ve 1:50 yazmayı sürdürür.
+  - **Katman anahtarı (M9, [ADR 8008](../adr/8008-ek4-layer-key.md)):**
+    - Mimari nesne türünün EK-4 katmanına yazılır: `MM-<öğe>-<malzeme/tip/gösterim>` (`kentos_contracts::ek4`,
+      `kentos_interaction::arch_layer`). Katman ilk nesneyle, aynı geri alma adımında açılır.
+    - KentOS Mimari anahtarı açık başlatır; araç panelinin Katman satırı Etkin katman'a çevirir.
+    - DXF'te EK-4 katmanındaki taramalar "-T" katmanına gider (4.14.5).
+  - **Kalem hiyerarşisi (M10, [ADR 8009](../adr/8009-pen-hierarchy-of-parts.md)):**
+    - Açıklık parçaları rollüdür (`opening::Part`); parça mutlak kalınlık değil nesne kaleminin payını taşır
+      (`PieceStroke::weight_scale`).
+    - Kasa ve kanat bütün kalem; yay, cam, denizlik ve duvarın malzeme sınırları yarısı (ISO 128-23 ince = kalın / 2).
+  - **Kapı ve pencere ölçeğe göre (M11, [ADR 8010](../adr/8010-openings-by-scale.md)):**
+    - Parçalar duvarın ayrıntı düzeyiyle çizilir (`opening::pieces_at`, `Part::shown_at`).
+      - 1:200 kanat ve cam; 1:100 ve yay, pencere yüzleri; 1:50 ve 1:20 bütün parçalar.
+      - Kasası çizilmeyen pencere duvar ucundan ucuna uzanır.
+    - Depo açıklığı görünüşe bağlı nesnelerden sayar; DXF düz parçaları aynı görünüşü alır. Yakalama ve Patlat bütün
+      sembolü kullanır.
+  - **Kolon, merdiven, rampa, döşeme kenarı, mobilya ölçeğe göre (M12, [ADR 8011](../adr/8011-elements-by-scale.md)):**
+    - En sade düzey `wall::View::simple` (şematik ve 1:150'den küçük); `arch::pieces_in`, `slab::pieces_in`,
+      `block::outline_pieces` ona göre çizer. `arch::pieces` (önizleme, fikstür) bütündür.
+    - 1:50'de kolonun ölçüsü (30/50) ve merdivenin rıht/basamağı (11 × 17.5/28) yazılır.
+    - Mobilya: kütüphane kartının kategorisi "Mobilya/"; en sade düzeyde bütünü saran kapalı parçalar kalır.
+  - **Kesme yüksekliği (M13, [ADR 8012](../adr/8012-plan-cut-and-overhead.md)):**
+    - Pencere de yüksekliğine göre kesilir (`OpeningForm::cut_by_height`); bütünüyle kesmenin üstündeki pencere duvarı
+      kesmez, kesikli çizilir. Kapı her zaman kesilir.
+    - Kesme yüksekliği projenin Mimari ayarıdır (`arch.cutHeight`, `.kcad` 217; 0,30–3,00 m). Yoksa 1,10; yeni Mimari
+      projesi 1,20 yazar. Okuyan her yer `ProjectSettings::plan_cut()`'ı sorar.
+    - Bir üst katın döşemesi etkin katın planında halkalarıyla, kesikli ve kalemin yarısıyla çizilir
+      (`level_view::shows_below`, `LevelLooks::overhead`, `slab::Look::overhead`); seçilmez, kenetlenir. Başka kattan
+      görünen nesneler `Phasing::drawn_across` ile görünüşe not edilir, yoksa ekran yeniden kurulmaz.
+  - **Ölçeğe göre çizgi grubu ([ADR 8013](../adr/8013-line-groups-by-scale.md)):**
+    - `arch.lineGroups` (`.kcad` 218): `byScale` TS 88-23 / ISO 128-23 grubunu ölçeğe göre seçer (1:20'ye dek 0,7,
+      1:50'ye dek 0,5, 1:100'e dek 0,35, ötesi 0,25); yoksa her nesne kendi kaleminde. Yeni Mimari projesi `byScale`.
+    - Nesnenin kalemi 1:50'deki genişliğidir; pay `wall::View::pens`, depo modelin parçalarında (`takes_line_group`)
+      `weight_scale` ile çarpar. Açıklama öğeleri ve DXF kendi kaleminde.
+  - **TS 5319 taramaları ve yalıtım simgesi (M14, [ADR 8014](../adr/8014-ts-5319-hatches-and-insulation.md)):**
+    - Kitaplıkta `ts` grubu (SN46, SN47, SN48, SN49, SN21, SN22, SN23, SN54, SN55, SN58, SN5).
+    - Duvar katmanının deseni SN55 ise katmanın iki kenarı arasında tek zikzak çizilir (`wall::FITTED_INSULATION`);
+      bağımsız taramada döşenmiş satırlar.
+    - Kolon Ayrıntılı'da SN46 (`arch::CONCRETE`); kolon aracı yeni kolonu dolu yazar.
+  - **Mimari şeridin yeniden düzeni (M15, [ADR 8015](../adr/8015-architecture-ribbon-rearranged.md)):**
+    - Paneller Duvar · Yerleştir · Mahal · Donatı · Düzenle · Belgele · Proje; görünen düğme 37 → 27, en çok 30.
+    - Büyükler Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾ (Mutfak, Kitaplık), Ölçü ▾; Etiket ▾ Hepsini etiketle'yi taşır.
+    - Proje'de Kat ▾ (Üst kat, Alt kat, kat görünümü); `arch.settings`'in adı "Mimari ayarları" (önce "Katlar").
+    - `scripts/ui/ribbon.py` yeniden tek kaynak: Harita ve Yol'un elle yaptığı eklemeler betiğe taşındı, `--check` geçer.
+  - **Mimari ikon seti (M16, [ADR 8016](../adr/8016-architecture-icon-set.md)):**
+    - Mimari sekmesinde iki komut aynı ikonu taşımaz; binanın kendi araçları başka bir çizim aracının ikonunu almaz
+      (`arch_icons.rs`'in üç bekçisi). Yeni mimari komut kendi ikonunu `catalog/v1/additions.json` › `icons`'a çizer.
+    - Çizelgeler solda listelediğinin resmi, sağda liste çizgileriyle çizilir.
+    - İkon tablosu: `cargo test -p kentos-desktop --lib arch_icons::icon_table -- --ignored`.
+  - **Bina nesnesinin bağlamı (M17, [ADR 8017](../adr/8017-building-context-tabs-right-click-card.md)):**
+    - Sağ tıkın ilk bölümü seçimin bina sekmesinin (duvar, açıklık, mahal, döşeme, mimari nesne) Seçim ve Düzenle'den sonraki
+      ilk panelidir, başlığı sekmenin adı (`App::building_tools`); kaynak şeridin kendisi.
+    - Kart bina nesnesinde `Document::arch_value`'yu okur: duvar Stil, Kalınlık, Kat; açıklık Tür, Genişlik, Numara
+      (başlığı biçimi); mahal Numara, Ad, Kat, Alan. Duvarın alanı yazılmaz.
+  - **Aracın seçenekleri imlecin yanında (M18, [ADR 8018](../adr/8018-tool-settings-beside-the-cursor.md)):**
+    - `Tool::cursor_settings` değer kutusunun sunacağı ayar anahtarlarını söyler; yazma `configure` ile, panelin yolundan.
+    - Tab: Uzunluk → Açı → ayarlar; boş alan kilitlenmeden geçilir. ↓ çizimin üstünde kutuyu ilk ayarda açar (Tab kenet
+      adaylarınındır). Seçenekli ayar kelimenin başıyla (so, o, sa) ya da ↑↓ ile.
+  - **Geçici ölçüden kalıcı ölçü (M19, [ADR 8019](../adr/8019-temporary-distance-made-permanent.md)):**
+    - Duvarın yüze olan net mesafesinde sayının kilide göre öbür yanında + (`Switch::Permanent`): tıklanınca
+      `cad.dimensions.interior`'ın iki yüzü kesen çizgisiyle tek ölçü, iki ucu yüzüne bağlı, Mimari'nin ölçü katmanında.
+  - **Kenet bir binanın diliyle (M20, [ADR 8020](../adr/8020-snap-names-in-a-building-s-words.md)):**
+    - `snap_names::name` depodaki şekilden noktanın çizgisini adlandırır: Duvar yüzü, Çekirdek yüzü (öncelik 1'in sınırı),
+      Katman sınırı, Duvar ekseni, Taban çizgisi; Açıklık ortası, Açıklık kenarı. Kenet işareti "{tür} · {ad}" yazar.
+  - **Oda aracı (M21, [ADR 8021](../adr/8021-room-tool.md)):**
+    - `tool.room` = `WallRectangle::room`: duvarlar, ortasından tohumlanan mahal ve etiketi bir `begin_group`'ta; reddedilen
+      parça hepsini geri alır. Mahal adı açık seçimdir (`Setting::open`: liste önerir, her ad alınır).
+  - **Kapanınca mahal ve canlı döngü alanı (M22, [ADR 8022](../adr/8022-room-on-closing-and-live-loop-area.md)):**
+    - Duvar'ın `Memory::wall_room` (M): Kapat kapalı duvarı ve kutup noktasından tohumlanan mahali tek adımda yazar; ilk
+      değeri Kapalı. Çizerken etikette "Döngü alanı" (yol üzerinden, imleçten ilk köşeye kapanan halka).
+  - **Odayı kenarından büyütme (M23, [ADR 8023](../adr/8023-room-edge-grips.md)):**
+    - Mahal döşemesinden seçilir (`store/pick.rs`: net alanıyla alan isabeti; kenarlar ve daha küçük alanlar önce; döşeme
+      hariç). Seçili mahalin duvar yüzündeki her düz kenarında `room_grip` tutamacı: Duvarı kaydır'ın planı, kart iç
+      ölçü + alan; yazılan sayı yeni iç ölçü, +/− ile fark. Sınırı çizilmiş mahalde ve kilitli duvarda tutamaç yok.
+  - **Donatı araması ve duvara yaslı yerleşim (M24, [ADR 8024](../adr/8024-fixture-search-and-wall-placement.md)):**
+    - Komut ara kitaplığın Islak hacim/Mobilya/Mutfak bloklarını bulur (`fixture_search`, eş anlamlılar `WORDS`); Enter
+      yalnız o tanımı alır ve Blok ekle'yi başlatır. Mimari'de `block_to_wall` açık; donatı `fixture_kind` ile
+      MM-TEFR-MOBILYA / VITRIFIYE / MUTFAK katmanına (`Kind::Furniture(tip)`).
+  - **Donatının kullanım alanı denetimde (M25, [ADR 8025](../adr/8025-fixture-use-zones-in-the-audit.md)):**
+    - `ArchAuditCheck::Fixtures` (yalnız adıyla): `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (düzeltme: kapıyı
+      çevir). Alan `Document::fixture_zone` ("Boşluk zarfı") ya da eski bloklarda `fixture_audit::OLDER`; izdüşüm görünüş
+      durumunun gizlediğini saymaz (`hidden_by`). Panel seçili bulgunun alanını kesik kırmızı çizer.
+  - **Planı tek komutla ölçülendirmek (M26, [ADR 8026](../adr/8026-dimension-the-plan-in-one-command.md)):**
+    - `tool.planDimensions`: dış duvarlar duvar gövdelerinin birleşik dış çizgisinden; `around` cephe tarifi, Ön proje
+      [Duvarlar, Akslar, Toplam], Uygulama + Açıklıklar (1:50'de kendiliğinden); iç kesenler `cuts_for` (her mahal %70 ve
+      %30'undan, paylaşılan, ≥ 6 mm); hepsi tek adım, MM-XXXX-OLCU.
+  - **EK-3 mahal numarası ve elips etiket (M27, [ADR 8027](../adr/8027-ek3-room-numbers-and-ellipse-tags.md)):**
+    - Mahal numarala `ek3` (E): ilk numara `ek3_level` (Zemin/kotu 0'a en yakın K00, K01…, B01…, NNN) + bölüm (B, 3
+      karakter, varsayılan 001) + 001; `clockwise` etiket noktalarının ortası çevresinde kuzeyden; tıklamadan Enter katın
+      mahalleri. `TagShape::Ellipse`: yalnız ilk satır elipste (√2 eksen, `ELLIPSE_GAP` 0,2 h), KCAD şema 219.
+  - **Doğrama kodları ve etiketin yeri (M28, [ADR 8028](../adr/8028-joinery-codes-and-tag-places.md)):**
+    - `OpeningType.code` (KCAD 220); `cad.openingtypes.edit` `code` ve `codes` (`opening_codes::plan`: K, GK bir yanı
+      odasız kapı, P, B; tipsiz açıklığa biçim+ölçü tipi). Etiket `{code}`, `{size}` (cm, 90/210). `tool.openingCodes`
+      kodlar + etiketler tek adım. `tags::opening_places`: araçlar etiketin yerini ağırlıkla seçer (duvar, yay, ölçü,
+      etiket, uzaklık, başka duvarın ardı) ve `at` verir; komutun varsayılan yeri ADR 0344'teki gibi.
+    - `ScheduleField::Code` (Kod; araç var olan kapı-pencere çizelgesine ekler, Çizelge hazırında var). Numarala
+      `byRoom` (M): `opening_codes::room_of` hizmet edilen mahal (geçiş mahalli `PASSAGES` ayrılır), -A, -B …; araç
+      türe göre K, P, B önekleriyle tek adımda çalışır.
+  - **Bağımsız bölümün yönetmelik alanları (M29, [ADR 8029](../adr/8029-regulation-areas-of-independent-units.md)):**
+    - `Document::paiy_areas`: brüt = grubun mahallerinin `Gross` çizgileri − öbür mahallerin `Centerline` çizgileri
+      (kat kat; ortak duvar-cephe köşesinin örtüşmesi yarı yarıya); net = iç yüz alanları (boşluk ve dış mahal hariç,
+      sıva stilde); pay `kentos_contracts::shares` brütler üstünden. Sütunlar `PaiyNet`, `PaiyGross`, `PaiyShare`,
+      `GeneralGross` (bölüm çizelgesi, KCAD 221); `Gross`'un başlığı "Net + pay".
+    - Kat kat bölüm çizelgesi `TableSource::Schedule.by_level` (`unit_level_rows`, `PaiyGroup::levels`); hazır
+      `SchedulePreset::AreaTable` = `tool.scheduleAreas` "Metrekare cetveli".
+  - **Emsal ve TAKS (M30, [ADR 8030](../adr/8030-emsal-taks-zoning-badge-and-table.md)):**
+    - `ArchSettings.zoning` (parsel, `far`, `coverage`; KCAD 222), `SpaceBrief.emsal` / `emsal_by_use` (dış mahal %30
+      içinde). `Document::zoning_report`: oda oda M29 konturu; katlar alanı = dahil + %30'u aşan; sınır 0,30 × parsel ×
+      emsal; taban alanı zemin kat (ad "Zemin", yoksa ±0,00'a en yakın); `levels` kat kat.
+    - `zoning_badge` (durum çubuğu: sınırlı, sınırsız, ikon + "!"; sürüm başına önbellek), Öznitelikler › İmar durumu.
+    - `TableSource::Zoning {}` = `arch.zoningTable` "Emsal ve TAKS tablosu" (`zoning_table`: 57/3 satırları, kat kat,
+      aşım `OVER_COLOR`); `follow_tables` mahal değişince, `refresh_zoning_tables` ayar/geri alma sonrasında adımsız.
+  - **Kat irtifakı (M31, [ADR 8031](../adr/8031-condominium-units-annexes-and-land-shares.md)):**
+    - `UnitKind::Annex` + `annexOf`, `nature`, `landFactor`, `BuildingProgram.landTotal` (KCAD 223). `PaiyGroup`
+      `annex_gross/net`, `total()` (4/ğ-4), `general()` = toplam + pay; pay tartısı toplam brüt.
+    - `kentos_contracts::land_shares` (`kentos.land/1`: toplam brüt × katsayı, payda program/parsel/toplam, en büyük
+      kalan); `Document::land_shares`. Sütunlar `Nature`, `AnnexNet`, `AnnexGross`, `Annexes`, `TotalGross`,
+      `LandShare`; hazır `SchedulePreset::LandShares` = `tool.scheduleLandShares` (`land_share_notes`: payda, KMK 12/a
+      numara, niteliksiz bölüm).
+  - **Vaziyet planı (M32, [ADR 8032](../adr/8032-site-plan-parcel-setbacks-and-datum.md)):**
+    - `ArchSettings.site` = `SitePlan` (parsel kimliği, `SiteEdge` tür + mesafe, `datum`, `envelope`; KCAD 224).
+      `SiteEdgeKind::setback(floors)`; `Document::site_floors` (23/1-d), `site_report[_for]`, `footprint()`.
+    - Yaklaşma sınırı = parsel − kenar şeritleri (`band`); `follow_site` adımda, `refresh_site` ayar/geri alma
+      sonrası. `tool.siteParcel` (`parcel_tool.rs`; Harita'nın `tool.parcel`'inden ayrı); rozet/Öznitelikler/tablo.
+    - Ölçüler (Ö): `draw_marks` cephe ortası hizalı ölçüler (`SiteEdgeReport::near`, `facing`), ±0,00 `Elevation` ve
+      kot yazısı; `MARK_ATTR` = `Vaziyet`, yeniden çalışınca eskileri silinir; hepsi tek grupta.
+  - **Mevzuat denetimi (M33, [ADR 8033](../adr/8033-regulation-rules-rooms-storeys-doors.md)):**
+    - `ArchAuditCheck::Regulation` (yalnız adıyla; panel hepsini adıyla ister), `regulation_audit.rs`: `Article` (madde
+      + RG; `named` bulgunun `rule`'u, `short` iletinin sonu, değişiklik tarihli), `kind_of` (ıslak hacim önce),
+      `RoomKind::limits` (29/1, 29/3); kat 28/1-c (yalnız konut projesinde); kapı 39/1 (giriş türü `sides` ile).
+  - **Merdiven, rampa, korkuluk, ışıklık, asansör ve yerel yönetmelik (M34, [ADR 8034](../adr/8034-regulation-stairs-shafts-elevators-local-rules.md)):**
+    - `Article.source` (`Source::Paiy`/`Sivas`); `said()` + `judge()`: sıkı yerel değer bağlar (öbürü iletide), yerel
+      gevşek değerin tuttuğu ölçü `regulation_conflict` (rule "yerel ↔ ulusal"). `ArchSettings.local_rules`
+      (`LocalRules::Sivas`, KCAD 225); Proje ayarları › İmar durumu › Yerel imar yönetmeliği.
+    - `shaft_of` (Asansör, Işıklık/Aydınlık, Hava bacası; asansör holü değil), `technical` (34/1 bodrum sayımı),
+      `storeys()`; merdivenin yeri `StairIn` (durduğu mahalin bölümü). Düzeltme `Fix` → `cad.arch.edit`.
+    - Denetim tablosunun sütunları sürüklenir (`ArchAuditPanel.columns`).
+  - **Yangın kaçışı (M35, [ADR 8035](../adr/8035-fire-escape-routes-distances-load-exits.md)):**
+    - `kentos_domain::escape::escape(doc)`: kat kat yürüme grafiği (kapı/boşluk yan noktaları 10 cm, ayırıcıda metrede
+      bir geçiş, iç köşe 0,40 m), çıkışlar (Merdiven adlı ortak mahal, açık merdiven ayağı/başı, zemin ve altında dış
+      kapı), sahibe göre yürüme (33/6-b); `RoomEscape` (exit: rota + tek yön + çıkış sayısı; entrance: 48/2),
+      `DoorEscape` (48/4). `dwelling_nature`, `stair_name` burada.
+    - `fire_audit.rs` (application): `Use` (Ek-5/B satırı: `walks`, `dead_end`, `per_unit`), `use_of`, `load_of`
+      (Ek-5/A), kurallar `bykhy_*`; Mevzuat grubunun sonunda çağrılır. `ArchSettings.sprinklers` (KCAD 226), Proje
+      ayarları › Yangın güvenliği.
+    - `fire_audit::walks` (ölçülen yollar, sınırlarıyla) → `fire_marks::draw` (çizgi + ok başı + "tek yön 28,07 m >
+      15,00 m"; `MARK_ATTR` = `Kaçış`, yeniden çizimde eskiler silinir) → `tool.escapeRoutes` (`escape_tool.rs`, Proje ▾).
+  - **Otopark ve sığınak (M36, [ADR 8036](../adr/8036-parking-and-shelter-provisions.md)):**
+    - `kentos_domain::room_names`: `RoomKind`, `fold`/`words`/`has`/`kind_of`, `dwelling_nature`, `stair_name` (Mevzuat
+      ve kaçış aynı adları buradan okur).
+    - `kentos_domain::provisions`: `parking_report`/`shelter_report` (program bölümleri + `paiy_areas` brütü; Ek-1
+      `parking_use`, `dwelling_parking`; 8/a `dwelling_persons`, 7/a–c `exempt`), `parking_table`/`shelter_table`
+      (`ZoningTable`). `TableSource::Parking`/`Shelter` (KCAD 227) Emsal tablosu gibi `reads_settings` ile yenilenir.
+    - `provisions_audit.rs` (application): `parking_short`, `shelter_short`, `shelter_exit_count`, `shelter_height_low`;
+      kaçış kurallarından sonra. Masaüstü `place_provision_table` (Metraj ▾ › Otopark hesabı, Sığınak hesabı).
+  - **PDF/A ve Türk pafta takımı (M37, [ADR 8037](../adr/8037-turkish-title-block-sheet-sets-pdfa.md)):**
+    - `kentos_sheet::pdf::archive` (`PdfOptions.pdfa`): XMP (`pdfaid` 2/B), bilgi ↔ XMP aynı, sRGB ICC (kodda
+      üretilir, v2.1 mntr), `GTS_PDFA1`; CMYK JPEG `pdfa_cmyk_picture`.
+    - `kentos_formats::pdf::pdfa::pdfa2_report`: projenin PDF okuyucusuyla PDF/A-2 maddeleri (6.1.2–6.9); yayın her
+      PDF/A dosyasını teslimden önce okur (`pdfa_rule` yayını durdurur). `file.publish.sheets` `pdfa`.
+    - `expr::Scope::lookup`: cevapsız (null) pafta değişkeni kitabın/çizimin aynı adlı değerine, o da yoksa yerleşik
+      değere yol verir. Yerleşik `@pafta_no`, `@pafta_basligi`, `@revizyon` (pafta seti bilgisi).
+    - `Document::title_facts` (domain): `@arsa_alani`, `@emsale_konu_alan`, `@yapi_insaat_alani`, `@kat_adedi`,
+      `@bb_sayisi`, `@kullanim_amaci` …; `kentos_plot::inputs::drawing_variables` çizim değişkenlerinden sonra ekler
+      (masaüstü `sheet_drawing_variables` önbelleği, çizimin kuşağına göre).
+    - `kentos_sheet::permit` (`PARTICULARS`, `level_codes`, `paper_for`, `permit_sheets`, `FILE_NAMING`) +
+      `kentos_native_application::permit_set` (künye → `set_settings`, takım → `cad.sheets.edit`) + masaüstü
+      `exchange/permit_set.rs` (Mimari › Proje › Ruhsat takımı; sonra Paftaları toplu yayınla hazır ve denetlenmiş).
+      Yayın adında `{@ad}` (`naming_value_missing`).
+    - `kentos_interaction::calc_tables::ensure`: hesap tabloları (metrekare cetveli, emsal, kat irtifakı, otopark,
+      sığınak) bulunur ya da çizimin sağına kurulur → `PermitSet.tables` → `PageKind::Tables` (`permit::shelf`, HS/MIR).
+  - **Mahal listesi (M38 1. bölüm, [ADR 8038](../adr/8038-room-list-and-graphic-joinery-list.md)):**
+    - `SpaceFinishes.sill`/`stair`/`railing` (KCAD 228, `needs_room_list`); `SpaceChange.base`/`sill`/`stair`/`railing`;
+      Öznitelikler "Döşeme kaplaması" (eski "Zemin kaplaması") … "Küpeşte ve korkuluk".
+    - `kentos_domain::room_openings`: `opening_sides`, `room_openings()` (ADR 8028'in kuralı; "K01 (2), P02");
+      `room_names::passage`. Çizelge alanları `sillFinish`, `stairFinish`, `railingFinish`, `doors`, `windows`
+      (`is_room_list`); kapı-pencere çizelgesi ve listenin kapı/pencere sütunları `Op::OpeningTypes`'ı izler.
+    - Kat sütununa göre sıralama katların kotuna göredir (bütün çizelgeler).
+    - `tag_tools::ROOM_LIST`, `room_list_sort`, `SchedulePreset::RoomList`, `tool.scheduleRoomList` (Çizelge ▾'de
+      Mahal kaplama çizelgesinin yerinde; menü en çok altı).
+    - Takım: `CalcTable.list` (MHL) → `PermitSet.lists` (`ListSheet`) → `Page::list` (LS/MHL/NNN, kendi kâğıdı,
+      `olcek` "—", başlıksız); `permit::padded`: tablo pencereleri kâğıtta 1,5 mm pay.
+  - **Doğrama listesi (M38 2. bölüm, ADR 8038 §5–§6):**
+    - `OpeningType.material`, `u_value` (KCAD 229, `has_specs`); `OpeningTypeChange.material`/`u_value`; yalnız
+      bunlar değişince tipin sürümü artmaz, açıklıklar değişmez. Birim `W/m2K`.
+    - `joinery_audit.rs` (application): `window_u_high` (TS 825:2024, `Source::Ts825`), Mevzuat'ın sonunda.
+    - `kentos_domain::joinery_list`: `JOINERY_LIST_ID` (sabit), `joinery_rows`, `joinery_list_block` (Türkiye'nin
+      açılım çizgisi: menteşe köşelerinden kol tarafının ortasına), `follow_joinery` (history.rs, tablolardan sonra),
+      `extent`.
+    - `kentos_interaction::joinery_list_tool` (`tool.joineryList`, Etiket ▾), `calc_tables` `Kind::JoineryList`
+      (`CalcTable.scale` 50) → `ListSheet.scaled` → `Page.scaled` (antet ölçeği yazar).
+  - **Tadilat durumu (M39 1. bölüm, [ADR 8039](../adr/8039-renovation-graphic-language.md)):**
+    - Kavramın adı "Evre" değil **Tadilat durumu**; değerler Mimarlar Odası'nın sözcükleriyle Mevcut, İptal, İlave, Geçici;
+      şeritte Tadilat ▾, komutlar "Tadilat: Mevcut durum" … (dosya ve komut adları aynı: `phase`, `phaseView`).
+    - Kapı ve pencerenin kendi tadilat durumu (`phase`, KCAD 230; yoksa duvarınki); Öznitelikler'de satırı.
+    - Tadilat görünümünün gizlediği duvar birleşmez, gizlediği açıklık duvarı kesmez (ekran, PDF ve ekrandaki pafta;
+      kendi görünümlü harita kendi kopyasından). Dayanak PAİY 4(1)(y), 4(1)(dddd), 58; Mimarlar Odası tadilat tekniği.
+    - Araçlar yeni çizileni görünümün durumuyla yazar (`Context::new_arch`, `phased`): Mevcut durum ve Yıkım planında
+      Mevcut, Yeni durumda İlave, Tümü'nde durumsuz; aks yazmaz; kapı duvarınkinden farklıysa kendi durumu
+      (`NewOpening.phase`). Tadilat ▾ "Bundan sonra çizilenler İlave olur" der.
+    - DXF: parçalar durum katmanında (`ek4_state_layer`: MM-DUVA-TUGLA-IPTAL kesikli, -ILAVE, -MEVCUT, -GECICI; taraması
+      onun -T'si); görünümün gizlediği yazılmaz ve söylenir (tasarım seçenekleri gibi), duvarlar o durumdaki gibi kesilir.
+      `Entity::own_phase` döşemeyi ve mahal ayırıcıyı da okur (önce okumuyordu).
+    - Tadilat projesi görünümü (`PhaseView::Renovation`, KCAD 231): Mimarlar Odası'nın üç tekniği tek planda.
+      - Mevcut düz kontur (duvarın düz dolgusu yok), ilave gövdesi ANSI31 taralı, iptal kesikli.
+      - Kalan duvarda kapatılan açıklık taralı dolgu, açılan açıklıkta kaldırılan duvar kesikli.
+      - `Entity::renovation_mark` → `Store::set_renovation`.
+      - Tadilat ▾ › Tadilat lejantı (`tool.renovationLegend`, blok MM-XXXX-TADILATLEJANTI).
+    - Tadilat takımı (ADR 8039 §6): Ruhsat takımı penceresinde Tadilat projesi kutusu (`PermitSet.renovation`; çizim
+      tadilatsa işaretli, `permit_set::renovates`).
+      - Her kat üç pafta: mevcut durum, tadilat projesi, yeni durum (EK-2 sıra 01–03).
+      - Haritalar takımın adlı görünümlerine bağlı (`permit::Page::linked`, `Source::ViewLink`; "Ruhsat takımı · Mevcut
+        durum" …; tarif yalnız tadilat görünümü ve ölçek; kat haritanın). Vaziyet planı tadilat projesi tekniğiyle.
+      - Görünümler ayar olarak yazılır; yeniden kurulumda aynı adla yerinde yenilenir.
+    - Mahal kendi durumundaki duvarlarla sınırlanır (ADR 0798 §3). Tadilatta değişip durumu boş ya da Mevcut kalan oda
+      paftada olmayan duvarı oda sınırı olarak gösterir; pencere ve takım bunları adıyla söyler
+      (`permit_set::rooms_to_restate`). Doğru akış: değişen oda İptal, yenisi Yeni durumda Mahal aracıyla.
+    - Görünüşün tek kuralı `Entity::look_in` (ekran, pafta, PDF, DXF, kapsam): Tadilat projesinde iptal oda ve etiketi
+      gizli, yıkım planında kesikli.
+  - **Düşey model (M40, [ADR 8040](../adr/8040-vertical-model.md)):**
+    - Duvarın yüksekliği tek kuraldan (`Document::wall_height`): kendi yüksekliği; yoksa betonarmeden betonarmeye,
+      altındaki döşemenin taşıyıcı üstünden üstündeki en alçak döşemenin taşıyıcı altına, katın yüksekliğini
+      geçmeden; döşeme yoksa katın yüksekliği. Metraj, değer sütunları ve iç görünüşler okur. Öznitelikler:
+      "Üst döşemenin altı · 2.850" / "Katın · 3.000".
+    - Proje ayarları › Mimari: bir katın yüksekliği değişince üstündeki katların kotu aynı farkla kayar (`stack`).
+    - Döşeme katmanları (`SlabFields.layers`, `.kcad` şema 232): `thickness` taşıyıcının kalınlığı kalır; `over`
+      (kaplama, şap, ısı/su yalıtımı) ve `under` (sıva). Döşemenin üstü bitmiş döşemedir. Öznitelikler'de dört hazır
+      diziliş (`slab_build_ups`); Metraj katman katman (alanla, şap hacimle).
+    - Mahalin iç yüksekliği tek kuraldan (`Document::room_height`, `.kcad` şema 233): döşemesi kendi kot farkı
+      (`floorOffset`), yoksa altındaki döşemenin üstü, yoksa katın kotu; tavanı asma tavan (`suspendedCeiling`), yazılmış
+      iç yükseklik, üst döşemenin sıvalı altı, yoksa katın tepesi (tavan değil, üst sınır). Öznitelikler, Metraj, değer
+      sütunları, etiketler, iç görünüşler ve sığınak denetimi okur. Denetim › Mevzuat: PAİY 28/4 (2,60), 28/5 ve 28/6
+      (2,20), mahal adından sınıflanır (`room_names::height_class`); kod `paiy_inside_height_below`.
+    - Öznitelikler'de yükseklik satırları sayıyı hücrede, nereden geldiğini altındaki notta söyler (ADR 0687): "İç
+      yükseklik 2.760 / Üst döşemenin altına kadar".
+  - **Kiriş (M41 1. bölüm, [ADR 8041](../adr/8041-beams-lintels-column-wall-joins.md) §1):**
+    - `Entity::Beam` (`.kcad` şema 234): ekseni, gövde genişliği, yüksekliği (döşeme içinde, TBDY 2018 7.4.1.1 b), hizası,
+      kot farkı, numarası, malzemesi. Tepesi katın üstündeki döşemenin taşıyıcı üstü (yoksa katın tepesi).
+    - Planda bandı kesikli ve ince (üst kat döşemesinin kalemi); yazısı kolonunki gibi: 1:200'de yok, 1:100'de numarası,
+      1:50'den "K101 25/50", bandın yanında, okunacak yöne dönük. Yazı açısı derecedir (`Shape::Text.rotation`).
+    - Duvar kirişin altında biter (`WallTop::Beam`, "Kirişin altına kadar"); metraj ve iç görünüşler aynı kuralı okur.
+    - Mimari › Yerleştir › Kiriş: varsayılan 25/50, numara her kirişten sonra ilerler; katmanı MM-TASI-KIRIS (EK-2'de
+      Kiriş öğesi yok, Taşıyıcı altında). Seçim süzgecinde Kiriş türü (listenin sonunda, eski süzgeç bitleri korunur).
+  - **Kolon–duvar düğümü (M41 2. bölüm, [ADR 8041](../adr/8041-beams-lintels-column-wall-joins.md) §2):**
+    - `ColumnFields.material` (`.kcad` şema 235; yoksa Betonarme). Depo ve DXF yazıcısı aynı kuralla
+      (`geom::column_join`): aynı kattaki kolon duvarın çizgilerini, kapaklarını ve bantlarını keser (duvarlar
+      birleştikten sonra). Kolon, kendi malzemesindeki (katlanmış ad) bir duvar katmanıyla alan paylaşıyorsa o katmanın
+      görünüşünü alır, dış çizgisi katmanın içinde çizilmez: perde + kolon tek kesit (TS EN ISO 128-3, 7.2).
+    - Depo duvarların kesilmemiş çizimini (`wall_whole`) ve kolonların ayak izini (`column_feet`) tutar; kolon değişince
+      yeri `wall_dirty`'ye düşer. SN46 (1:20) yalnız betonarme kolonda. Etiketin `{size}`'ı kolonda "30/50", "Ø40".
+  - **Lento ve hatıl (M41 3. bölüm, [ADR 8041](../adr/8041-beams-lintels-column-wall-joins.md) §3):**
+    - `BeamFields.role` (kiriş, `lintel`, `bondBeam`) ve `baseOffset` (alt yüzü katın döşemesinden; kot farkıyla birlikte
+      olmaz), `.kcad` şema 236. Duvar yalnız kirişin altında biter.
+    - Lento açıklıktan kurulur (`arch_elements::lintel_over`): sövelerden 20 cm taşar, duvar kalınlığında, 20 cm, alt
+      yüzü açıklığın başı (TBDY 2018 11.5.3'ün en azları 20 cm ve 15 cm). Kiriş aracının Tür'ü (T) Lento iken açıklığa
+      tek tıklama. Katmanlar MM-LENT-GENEL, MM-HATL-GENEL.
+    - Metraj › Kirişler: kirişin hacmi döşemenin altında kalan kısmı (döşemenin hacmiyle iki kez sayılmaz), lento ve
+      hatılınki tamamı; toplam `beamVolume`.
+
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,
   denetim, teslim; katmanları ve varsa dosyası ile SHA-256 revizyonu) ve türetme kayıtları (nesneler, kaynak öğe,
@@ -607,7 +892,7 @@
 - **Oda modülleri ve kontrollü tekrar kullanımı (31 Ekim 2026; [ADR 0775](../../docs/adr/0775-room-modules-and-controlled-reuse.md), ADV-05 [~]).**
   Tek kattaki düz duvarlı oda (duvar, açıklık, mahal, donatı, ölçü, etiket, yazı) modül olur: tanım `settings.arch.modules`'ta
   kendi çerçevesinde (`.kcad` şema 142 opt-in, `FORMATS_VERSION` 102), örnek ayrı kimlik eşlemesiyle sıradan mimari nesneler;
-  bloğa gömülmez. `cad.modules.edit` (define, place: taban, açı, ayna, kat, evre, numara öneki/soneki; update planıyla,
+  bloğa gömülmez. `cad.modules.edit` (define, place: taban, açı, ayna, kat, tadilat durumu, numara öneki/soneki; update planıyla,
   kilitli atlanır, istisna ve silinen çatışma; except, restore, detach, remove: örnekler `sourceGone` ile kalır),
   `cad.modules.query`; her yazma tek adım “Oda modülü”. Güncellemede açıklamanın yeri (etiket, yazı, ölçü yazısı) örneğin
   kalır. Aynalı örnekte kapı aynı yanda, açılışı end. Oda modülleri penceresi, Modül yerleştir aracı, Öznitelikler'de Modül
@@ -744,10 +1029,10 @@
   Ölçülü değişiklik, iki katlı konut, eğrisel/şaftlı örnek ve GDAL'ın DXF altlığında tadilat; her biri senaryo
   (`fixtures/acceptance/v1/<id>.json`, 20–22 adım, beklenenler `acceptance_corpus.py`'de KentOS kodu olmadan), Python, MCP ve
   masaüstünün ajan bağlantısıyla aynı (`--compare` üç çizimi bağımsız okur), gerçek girdiyle iz (`acceptance-<id>.json`,
-  oynatıcıya `clickLock`) ve `perf::corpus`. Düzeltilen: mahalin sınırı evresinde duranlar (`space_follow::phase_bounds`; var
+  oynatıcıya `clickLock`) ve `perf::corpus`. Düzeltilen: mahalin sınırı tadilat durumunda duranlar (`space_follow::phase_bounds`; var
   olan oda yeni duvarla, yeni oda yıkılacakla sınırlanmaz), döşemeden iç noktayla Kes öntanımlı oda, Kaynağı koru'yla kilitli
   altlıktan Çizgiden duvar (araç duvarları etkin katmana yazar), açıklığın boşluğuna tıklamak açıklığı seçer. Açık: araçlarda
-  Evre, duvar genişliğinin araçlar arası paylaşılması, `settings.set`'in `arch`'ı bütün, etiket motorunun artımlı yerleşimi.
+  tadilat durumu, duvar genişliğinin araçlar arası paylaşılması, `settings.set`'in `arch`'ı bütün, etiket motorunun artımlı yerleşimi.
 
 - **Özel kapıların çarpışması, yaylı duvarda cep, cebin metrajı (31 Ekim 2026; [ADR 0787](../../docs/adr/0787-special-door-clashes-arc-pockets-pocket-quantities.md), ADV-03c [~]).**
   `geom::opening::door_zones` (kanat dilimi, döner tambur, katlanır panellerin alanı, raylı sürmenin yolu); `cad.arch.audit`'in
@@ -816,10 +1101,10 @@
   seç ve göster; seçili nesne bölümü üstte. Şema değişmez. Elle gerçek pencerede denenmedi.
 
 - **Görünüş tarifi (31 Ekim 2026; [ADR 0774](../../docs/adr/0774-architectural-view-recipes.md), ADV-06 [~]).**
-  Adlı görünümün `recipe`'i (`.kcad` şema 141 opt-in): kat (alt kat soluk), evre, katman durumu, gizlenen türler (ölçü, etiket,
+  Adlı görünümün `recipe`'i (`.kcad` şema 141 opt-in): kat (alt kat soluk), tadilat görünümü, katman durumu, gizlenen türler (ölçü, etiket,
   yazı, tarama, blok, mahal, aks, görünüm işareti) ve ölçek; sürümlü, `cad.views.edit`'in `recipe`'i yazar ya da kaldırır
   (`invalid_recipe`, `level_not_found`, `state_not_found`). Görünüme bağlı paftanın haritası (ADR 0599) tarifle çizer: ölçeği,
-  katı, katman durumu, evresi ve gizlenenleri (ekran, başsız kitap, PDF; `linked_recipe`, `map_phasing_of`); model ve ekranın kat
+  katı, katman durumu, tadilat görünümü ve gizlenenleri (ekran, başsız kitap, PDF; `linked_recipe`, `map_phasing_of`); model ve ekranın kat
   görünümü değişmez. `cad.sheets.set`'in çerçevesi `view`, `missing`, `level`, `recipe` söyler, `shows` haritanın çizdiğini sayar.
   Görünümler penceresinde Görünüş tarifi ve beş hazır tarif. Proje gezgini ADR 0778; kalem seti, türetilmiş çizim açık. 25 + 22 ortak durum
   (`view_recipe_cases.py`, `view_recipe_sheet_cases.py`).
@@ -867,7 +1152,8 @@
   eşik, pervaz, denizlik, kayıtlar, kesikli kullanım alanı. `cad.arch.audit`'in Kapılar grubu (fiziksel, net geçiş, proje
   kuralı; `minClearWidth`), mutfak dizisi kapının dilimini söyler. Masaüstünde Kapı ve pencere tipleri penceresi, Açıklık
   sekmesinde Tip paneli, Öznitelikler'de Tip bölümü. Döner, cebe giren, katlanır kapı ve yatay kaydın çizimi açık; elle gerçek
-  pencerede denenmedi.
+  pencerede denenmedi. 9 Kasım eki: Yeni tip ▾ önce biçimi sorar (Kapı, Pencere, Boşluk, Niş, Baca) ya da seçili tipi
+  kopyalar; önceden hep seçili tipin kopyasıydı ve pencere tipi açmanın yolu görünmüyordu.
 
 - **Malzeme kitaplığı, Duvar stilleri'nde malzeme seçicisi, döşemenin mahale bağlanması (31 Ekim 2026; [ADR 0791](../../docs/adr/0791-material-library-style-picker-space-binding.md), ADV-02c [~]).**
   Çizimin dışında malzeme kitaplığı `kentos.materials` 1 (`.kmalzeme`; KentOS'un `catalog/v1/materials/kentos-temel.json`,
@@ -1183,8 +1469,8 @@
   çizildiği yerden seçer, yanı içte/dışta izler. 22 bağımsız yay durumu (50 basamak) + 90 düz, gerçek GUI.
 
 - **Çizelgenin kalanı: donatı, kaplama, gruplar, ayarlar, dosya (29 Ekim 2026; [ADR0733](../../docs/adr/0733-schedules-fixtures-finishes-groups-export.md)).**
-  Blok yerleştirmesinin `arch`'ı (kat, evre; KCAD 131 opt-in, tipli sütunlarda 5. alan): Blok ekle etkin katı yazar,
-  mutfak modülü duvarının katını alır, `cad.levels.assign` yerleştirmeyi kabul eder, kat ve evre görünümü izler.
+  Blok yerleştirmesinin `arch`'ı (kat, tadilat durumu; KCAD 131 opt-in, tipli sütunlarda 5. alan): Blok ekle etkin katı yazar,
+  mutfak modülü duvarının katını alır, `cad.levels.assign` yerleştirmeyi kabul eder, kat ve tadilat görünümü izler.
   Çizelgenin `of: fixtures`'ı (Tür, Kategori: kartın, Mahal: bloğun çiziminin ortası, Kat, Adet; dış başvuru blokları
   sayılmaz), mahalin kaplama alanları ve `finishes.base`, Süpürgelik boyu (`kentos_domain::passages`, Metraj'la aynı),
   `filter.types`, `sort[].header`/`footer` (grup başlığı satır boyunca, ara toplam “‹değer› toplamı”); `members` başlıktan
@@ -1576,7 +1862,7 @@
   Projeyle sıralı ad/kullanım listeleri ve kata bağlı önek; ayrı öneri
   alanları serbest metni korur, kat değişimi taslak numarayı değiştirmez.
   Liste kaydı kaynakları yeniden adlandırmaz/numaralandırmaz; mevcut ayar
-  geçmişi/tek mahal undo korunur. Opt-in KCAD107; eski 1170 dosya baytı aynı.
+  geçmişi/tek mahal undo korunur. Opt-in KCAD 112; eski 1170 dosya baytı aynı.
   DXF'in tercih kaybı yazmadan önce ve ortak raporda uyarılır.
   [Kabul](../../docs/baseline/2026-10-26-architecture-room-choices/README.md):
   385 ortak durum/329 Python/dört MCP/iki desktop; native takımlar,
@@ -1609,7 +1895,8 @@
   ölçek/renderer yoktur.
 
 - **Mahal kotu etiketleri (26 Ekim 2026; [ADR 0687](../../docs/adr/0687-room-tag-elevations.md)).**
-  Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan;
+  Mevcut şablonda bilinen kat kotu ve yalnız açık mahal yüksekliğinden tavan
+  (M40'tan beri bitmiş döşeme ve tavan: ADR 8040 §3);
   bilinmeyen boş, katlar arası yükseklik tavan sayılmaz. Ayar/geçmiş/dış
   değişiklikte yazı yenilenir, elle konum korunur. Gerçek GUI sayısal
   yükseklik taşmasını yakalayıp düzeltti. [Kabul](../../docs/baseline/2026-10-26-architecture-tag-elevations/README.md):
@@ -1682,10 +1969,10 @@
   ARCH-SPACE-01/PERF-01 [~]; genel araçlar ve tam matris açık. Yeni TS yoktur.
 
 - **Kalıcı mahal ayırıcı ve güvenilir metraj uyarısı (25 Ekim 2026; [ADR 0679](../../docs/adr/0679-virtual-room-separators.md)).**
-  Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat/evre/kaynak
+  Görünür Mahal ayırıcı fiziksel kalınlıksız analitik sınırdır; kat, tadilat durumu, kaynak
   UUID'si, mahal→etiket→çizelge tek undo'da korunur. Genel destekli edit/kopya
   rolü taşır, desteklenmeyen temsil ve blok içine alma atomik reddir.
-  `cad.spaces.separators`/Python/MCP, opt-in KCAD 106 ve DXF ortaktır.
+  `cad.spaces.separators`/Python/MCP, opt-in KCAD 111 ve DXF ortaktır.
   Her kopuk mahal Metraj/API/CSV'de son sınır uyarısı taşır; geçerli raporun
   eski sütunları korunur. [Kabul](../../docs/baseline/2026-10-25-architecture-space-separators/README.md):
   105 bağımsız durum, 300 Python, 35 GUI kaydı ve 76 ham görüntü.
@@ -1697,7 +1984,7 @@
   kaybı son sınırı/uyarıyı korur. Görünür tek/toplu kaynak tercihi ve mevcut
   mahal listesi önizleme/tek onay/undo yolunu kullanır. Tam kopya grupları
   UUID'lere yeniden bağlanır, kısmi gruplar bağımsız çizilmiş sınıra dönüşür
-  ve uyarılır. Python/MCP, opt-in KCAD 105 ve DXF kimlik eşlemesi ortaktır.
+  ve uyarılır. Python/MCP, opt-in KCAD 110 ve DXF kimlik eşlemesi ortaktır.
   [Kabul](../../docs/baseline/2026-10-25-architecture-space-sources/README.md):
   63 bağımsız ortak durum, 30 GUI kaydı, 53 ham görüntü; yeni TS/TSX kaynağı yok.
   ARCH-SPACE-01 [~]: sanal ayırıcı, uçtan uca performans ve tam matris açık.
@@ -1729,7 +2016,7 @@
 - **Atanmamış mahal kaynakları ve iç nokta (25 Ekim 2026; [ADR 0674](../../docs/adr/0674-unassigned-space-sources.md)).**
   Yeni açık `unassigned` kapsamı yalnız kat atanmamış duvar/kolonları kullanır;
   eski boş Kat/Tüm katlar davranışı aynıdır. Tek/toplu araç, Öznitelikler,
-  follower, Python/MCP ve opt-in KCAD 104 aynı kapsamı korur. Yeni İç nokta seç
+  follower, Python/MCP ve opt-in KCAD 109 aynı kapsamı korur. Yeni İç nokta seç
   görünür önizleme ve tek onayla mevcut rebound komutunu kullanır; duvar gövdesi
   oda değildir. Güvenli olmayan kapsam değişimi atomik ret, kaynak kaybı son
   sınır/uyarı, undo/redo aynı UUID'dir. [Kabul](../../docs/baseline/2026-10-25-architecture-space-scope/README.md):
@@ -2626,7 +2913,7 @@
   çelişenler işaretli; `cad.parameters.edit` ve `cad.constraints.edit` ile); başka ilişkinin taşıdığı nesneye kısıt konmaz
   (`constraint_governed`, `Document::governed`); DXF'te AutoCAD'in kısıt grupları okunmaz ve KentOS'unkiler yazılmaz, raporda
   söylenir (ADR 0338);
-  duvar: `wall` türü (taban çizgisi, genişlik, hiza, öteleme, stil, bileşenler, uçlar, dolgu, yükseklik, kat ve evre; `.kcad` şema
+  duvar: `wall` türü (taban çizgisi, genişlik, hiza, öteleme, stil, bileşenler, uçlar, dolgu, yükseklik, kat ve tadilat durumu; `.kcad` şema
   75, `FORMATS_VERSION` 82), yüzler ve bileşen sınırları çekirdekten türer (`geom::wall`), depo onu yerleştirme gibi açar; projenin
   duvar stilleri (`settings.wallStyles`, KentOS'un beş stili kullanılınca projeye alınır, `cad.styles.edit`'in `wall` türü ve izleyen
   duvarlar) ve katları (`settings.arch`, `cad.settings.set`'in `arch`'ı); görünüş şematik, standart ya da ayrıntılı (ayardan ya da
@@ -2650,11 +2937,11 @@
   süzgecinde Açıklık, duvarsız açıklığın uyarı üçgeni; Patlat ve DXF simgenin düz parçalarıyla; Python `kentos.cad.openings`, MCP
   (ADR 0341);
   mahal ve metraj: `space` türü (halkalar ve delikler `parts`, duvarlardan bulunanın tohumu `seed`, yöntem `method`: net, duvar ekseni,
-  brüt; numara, ad, kullanım, kat ve evre, yükseklik, kaplamalar, `broken`: lostEnclosure; `.kcad` şema 78, `FORMATS_VERSION` 85, sunucuda
+  brüt; numara, ad, kullanım, kat ve tadilat durumu, yükseklik, kaplamalar, `broken`: lostEnclosure; `.kcad` şema 78, `FORMATS_VERSION` 85, sunucuda
   göç 0025), projenin yöntemi `settings.arch.spaceMethod`; çekirdeğin `geom::space`'i (duvarların birleşmiş yüzleri, tohumun yüzü, yönteme
   göre kenar kenar kaydırma, alan, çevre, kutup, tek çok satırlı etiket); belge duvarı değişen mahali aynı adımda yeniden bulur
   (`kentos_domain::space_follow`), kapanmayan nedeniyle kalır; `cad.spaces.create`, `.edit` (set, merge, split, rebound) ve salt okunur
-  `.quantities` (mahaller, duvarlar, açıklıklar; kat, evre, kullanım, katman; kurallarıyla); Mimari › Mahal: Mahal (Yöntem, Numara, Ad,
+  `.quantities` (mahaller, duvarlar, açıklıklar; kat, tadilat durumu, kullanım, katman; kurallarıyla); Mimari › Mahal: Mahal (Yöntem, Numara, Ad,
   Kullanım, Çiz), Metraj (pano, XLSX, ODS, CSV), Mahali böl, Mahalleri birleştir; Öznitelikler'in mahal satırları, seçim süzgecinde
   Mahal, kapanmayan mahalin uyarı üçgeni; Python `kentos.cad.spaces`, MCP (ADR 0342);
   aks, kolon, merdiven ve rampa: `grid` (iki nokta, büküm, etiket telde `name`, balonlar ve çapı), `column` (merkez, dikdörtgen ya da daire,
@@ -2686,11 +2973,11 @@
   ya da tavan ızgarası, aynı yüzün eskisinin yerine; tarama izleyicisi mahali dış sınır alır); Mimari › Görünüm (Kesit, Görünüş, Detay,
   Başvurular), Mahal'de Döşeme deseni ve Tavan ızgarası, Donatı (KentOS blok kitaplığı, Blok ekle); Öznitelikler'in işaret satırları,
   seçim süzgecinde Görünüm işareti, kopuk işaretin uyarı üçgeni; Python `kentos.cad.viewmarks`, MCP (ADR 0345);
-  mimari şablonu ve evreler: çalışma şablonu veri olarak (`catalog/v1/templates/mimari.json`: cm, 1:50, katlar, mimari ofis standardı,
+  mimari şablonu ve tadilat durumları: çalışma şablonu veri olarak (`catalog/v1/templates/mimari.json`: cm, 1:50, katlar, mimari ofis standardı,
   KentOS blok kitaplığı, duvar stilleri, A3 paftalar) ve `cad.templates.apply` (eksik parçaları, var olanı koruyarak; katmanlar,
   stiller ve bloklar tek adım); projenin `arch.phaseView`'u (Tümü, Mevcut durum, Yıkım planı, Yeni durum; `.kcad` şema 82, `FORMATS_VERSION`
-  89), görünüş kuralı `PhaseView::look` (gizli, kesikli, soluk; açıklık duvarının, etiket nesnesinin evresiyle), çizimde ve paftada
-  `kentos_native_style::phases`, deponun `set_phase_hidden`'ı; etiketin `phases` süzgeci; Mimari › Proje'de Mimari şablonu ve Evre (ADR 0346);
+  89), görünüş kuralı `PhaseView::look` (gizli, kesikli, soluk; açıklık duvarının, etiket nesnesinin tadilat durumuyla), çizimde ve paftada
+  `kentos_native_style::phases`, deponun `set_phase_hidden`'ı; etiketin `phases` süzgeci; Mimari › Proje'de Mimari şablonu ve Tadilat ▾ (ADR 0346);
   pafta seti ve mimari DXF: salt okunur `cad.sheets.set` (paftalar adlarının numarasıyla serilerde: A-1 Planlar … Diğer; harita
   çerçevesinin zemini sabit görünümünden, `kentos_sheet::display::fixed_corners`; ona bakan işaretler; `uids` ile etkilenen
   çerçeveler: kutusu kesişen `shows`, işaretin hedefi `marked`, zemini bilinmeyen `unknown`), Pafta seti penceresi (Mimari › Görünüm,

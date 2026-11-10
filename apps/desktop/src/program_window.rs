@@ -7,7 +7,8 @@
 //! │ Binalar: Ad [A Blok] Katlar ☑ Zemin ☑ 1. kat [Kanat ekle] [Sil]; kanatlar altında         │
 //! │ No [1 ] Ad [Daire 1     ] Tür [Bağımsız bölüm ▾] Kayıtlı alan [60   ] 2 kat · 5 mahal … │
 //! │ … [Seçilenleri ver] [Sil]                                                                │
-//! │   Bina [A Blok ▾] Kanat [Doğu ▾] Pay ağırlığı [120]                                     │
+//! │   Bina [A Blok ▾] Kanat [Doğu ▾] Niteliği [Daire] Değer katsayısı [1] Pay ağırlığı [120]  │
+//! │   (an annex: Bölümü [1 Daire 1 ▾] in place of Değer katsayısı)                           │
 //! │ [Bölüm ekle]                                                                             │
 //! │ Hedefler: Kullanım, En az, En çok, Net en, Geçiş, Komşu, Ulaşım, Dış                     │
 //! │ Durum: Paylar (net, pay, brüt; ortak alanlar); mahaller (alan, hedef, fark, …); bulgular  │
@@ -23,6 +24,10 @@
 //! Binalar (docs/adr/0784 §1) lists the buildings and their wings with the levels each spans; a building or a wing a
 //! group still names is not removed (the window says which, and so does the command). Ortak alan payı picks the rule the
 //! common areas are shared out by (`kentos.share/1`); Durum shows each unit's net, share and gross after Denetle.
+//!
+//! Kat irtifakı (docs/adr/8031): a group's nature (Niteliği: daire, dükkân, iş bürosu …), an annex's unit (Bölümü), an
+//! independent unit's value factor in the land shares (Değer katsayısı) and the land shares' whole (Arsa payı paydası,
+//! empty: the parcel's area).
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -77,13 +82,15 @@ impl std::fmt::Display for Tab {
     }
 }
 
-/// A group being edited: its number and recorded area as typed.
+/// A group being edited: its number and recorded area as typed; its nature and value factor too (docs/adr/8031).
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnitRow {
     unit: ProgramUnit,
     name: String,
     area: String,
     weight: String,
+    nature: String,
+    factor: String,
 }
 
 /// A brief being edited: its numbers and lists as typed.
@@ -129,12 +136,19 @@ pub struct Window {
     units: Vec<UnitRow>,
     briefs: Vec<BriefRow>,
     version: String,
+    /// Arsa payı paydası as typed (docs/adr/8031); empty: the parcel's area.
+    land_total: String,
     /// The rest of the program as the project has it (buildings, clearances).
     kept: BuildingProgram,
     checked: Option<Arc<ProgramChecked>>,
     running: Option<Running>,
     next: u64,
     said: Option<(Kind, String)>,
+    /// The program as this window would write it untouched: what closing compares with (docs/adr/8006). The rows
+    /// keep numbers as text, so the project's own program may not come back byte for byte.
+    opened: Option<Result<BuildingProgram, String>>,
+    /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks.
+    closing: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -157,6 +171,11 @@ pub enum Event {
     UnitName(usize, String),
     UnitKind(usize, UnitKind),
     UnitArea(usize, String),
+    /// Kat irtifakı (docs/adr/8031): a group's nature, an annex's unit, a unit's value factor, the land shares' whole.
+    UnitNature(usize, String),
+    UnitAnnexOf(usize, Option<String>),
+    UnitFactor(usize, String),
+    LandTotal(String),
     AddUnit,
     RemoveUnit(usize),
     Give(usize),
@@ -171,6 +190,9 @@ pub enum Event {
     Checked(u64, Arc<CommandResult<ProgramChecked>>),
     Cancel,
     Save,
+    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/8006).
+    Close,
+    Answer(crate::unsaved_close::Answer),
 }
 
 fn msg(event: Event) -> Message {
@@ -191,7 +213,7 @@ fn usages(t: &str) -> Vec<String> {
 
 impl Window {
     fn of(program: &BuildingProgram) -> Self {
-        Self {
+        let mut w = Self {
             units: program
                 .units
                 .iter()
@@ -200,15 +222,33 @@ impl Window {
                     name: u.name.clone().unwrap_or_default(),
                     area: number_text(u.recorded_area),
                     weight: u.share_weight.clone().unwrap_or_default(),
+                    nature: u.nature.clone().unwrap_or_default(),
+                    factor: u.land_factor.clone().unwrap_or_default(),
                 })
                 .collect(),
+            land_total: program
+                .land_total
+                .map(|t| t.to_string())
+                .unwrap_or_default(),
             buildings: program.buildings.clone(),
             share_rule: program.share_rule,
             briefs: program.briefs.iter().cloned().map(BriefRow::of).collect(),
             version: program.version.clone().unwrap_or_default(),
             kept: program.clone(),
             ..Self::default()
-        }
+        };
+        w.opened = Some(w.program());
+        w
+    }
+
+    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/8006).
+    pub(crate) fn closing(&self) -> bool {
+        self.closing
+    }
+
+    /// Whether the window holds a change Kaydet has not written (docs/adr/8006).
+    fn unsaved(&self) -> bool {
+        self.opened.as_ref().is_some_and(|opened| *opened != self.program())
     }
 
     /// The program as typed; the words of what does not read.
@@ -238,8 +278,25 @@ impl Window {
             u.recorded_area = number(&r.area, "Kayıtlı alan")?;
             let weight = r.weight.trim().replace(',', ".");
             u.share_weight = (!weight.is_empty()).then_some(weight);
+            let nature = r.nature.trim();
+            u.nature = (!nature.is_empty()).then(|| nature.to_owned());
+            let factor = r.factor.trim().replace(',', ".");
+            u.land_factor = (!factor.is_empty() && u.kind == UnitKind::Unit).then_some(factor);
+            if u.kind != UnitKind::Annex {
+                u.annex_of = None;
+            }
             p.units.push(u);
         }
+        let total = self.land_total.trim().replace(['.', ' '], "");
+        p.land_total = if total.is_empty() {
+            None
+        } else {
+            Some(
+                total
+                    .parse::<u64>()
+                    .map_err(|_| format!("Arsa payı paydası bir tam sayı olmalı: “{total}”."))?,
+            )
+        };
         p.briefs = Vec::with_capacity(self.briefs.len());
         for r in &self.briefs {
             let mut b = r.brief.clone();
@@ -403,10 +460,38 @@ impl App {
                 }
             }
             Event::UnitKind(i, k) => {
+                // An annex belongs to a unit (docs/adr/8031): the first independent unit until another is chosen.
+                let first = w
+                    .units
+                    .iter()
+                    .enumerate()
+                    .find(|(j, x)| *j != i && x.unit.kind == UnitKind::Unit)
+                    .map(|(_, x)| x.unit.id.clone());
                 if let Some(r) = w.units.get_mut(i) {
                     r.unit.kind = k;
+                    r.unit.annex_of = if k == UnitKind::Annex {
+                        r.unit.annex_of.clone().or(first)
+                    } else {
+                        None
+                    };
                 }
             }
+            Event::UnitNature(i, t) => {
+                if let Some(r) = w.units.get_mut(i) {
+                    r.nature = t;
+                }
+            }
+            Event::UnitAnnexOf(i, of) => {
+                if let Some(r) = w.units.get_mut(i) {
+                    r.unit.annex_of = of;
+                }
+            }
+            Event::UnitFactor(i, t) => {
+                if let Some(r) = w.units.get_mut(i) {
+                    r.factor = t;
+                }
+            }
+            Event::LandTotal(t) => w.land_total = t,
             Event::UnitArea(i, t) => {
                 if let Some(r) = w.units.get_mut(i) {
                     r.area = t;
@@ -422,6 +507,8 @@ impl App {
                     name: String::new(),
                     area: String::new(),
                     weight: String::new(),
+                    nature: String::new(),
+                    factor: String::new(),
                 });
             }
             Event::RemoveUnit(i) => {
@@ -488,12 +575,35 @@ impl App {
                     CommandResult::Queued { .. } => {}
                 }
             }
-            Event::Cancel => {
+            Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 if let Some(r) = w.running.take() {
                     r.stop.store(true, Ordering::Relaxed);
                 }
                 self.program_window = None;
                 self.dialog = None;
+            }
+            Event::Close => {
+                if w.unsaved() {
+                    w.closing = true;
+                } else {
+                    if let Some(r) = w.running.take() {
+                        r.stop.store(true, Ordering::Relaxed);
+                    }
+                    self.program_window = None;
+                    self.dialog = None;
+                }
+            }
+            Event::Answer(crate::unsaved_close::Answer::Stay) => w.closing = false,
+            Event::Answer(crate::unsaved_close::Answer::Save) => {
+                let task = self.save_program();
+                // Written: the window is the saved program again and closes; refused, it stays and says why.
+                if self.program_window.as_ref().is_some_and(|w| !w.unsaved()) {
+                    self.program_window = None;
+                    self.dialog = None;
+                } else if let Some(w) = self.program_window.as_mut() {
+                    w.closing = false;
+                }
+                return task;
             }
             Event::Save => return self.save_program(),
         }
@@ -630,10 +740,14 @@ impl App {
             move |k| msg(Event::Rule(rules[k])),
         )
         .searchable(false);
+        let land_total = kentos_ui::widget::text_field("Parsel alanı", &w.land_total)
+            .on_input(|t| msg(Event::LandTotal(t)))
+            .width(120);
         let head = row![
             words::field("Gösterilen", tabs, None),
             space::horizontal().width(Fill),
             words::field("Ortak alan payı", container(rule).width(170), None),
+            words::field("Arsa payı paydası", land_total, None),
             words::field("Hedeflerin sürümü", version, None),
         ]
         .spacing(16)
@@ -664,12 +778,23 @@ impl App {
             .push(words::secondary(CANCEL, Some(msg(Event::Cancel))))
             .push(words::primary(SAVE, Some(msg(Event::Save))));
         // The body scrolls with the window and grows resized or full screen; the buttons are the footer (ADR 0746 eki).
-        Frame::new(TITLE)
+        let window = Frame::new(TITLE)
             .push(head)
             .scroll(container(body).padding(iced::Padding::ZERO.right(14)))
             .footer(foot)
             .width(1000.0)
-            .modal(msg(Event::Cancel))
+            .modal(msg(Event::Close));
+        if !w.closing {
+            return window;
+        }
+        use crate::unsaved_close::Answer;
+        let question = kentos_ui::widget::unsaved(
+            TITLE,
+            msg(Event::Answer(Answer::Discard)),
+            msg(Event::Answer(Answer::Stay)),
+            Some(msg(Event::Answer(Answer::Save))),
+        );
+        iced::widget::stack![window, question].into()
     }
 
     fn program_units_view<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
@@ -866,6 +991,57 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::Bottom);
+        // Niteliği (KMK 12/a: "kat, daire, iş bürosu gibi nevi") is a unit's and an annex's, not a common area's.
+        if matches!(r.unit.kind, UnitKind::Unit | UnitKind::Annex) {
+            line = line.push(words::field(
+                "Niteliği",
+                kentos_ui::widget::text_field(
+                    if r.unit.kind == UnitKind::Annex {
+                        "Depo"
+                    } else {
+                        "Daire"
+                    },
+                    &r.nature,
+                )
+                .on_input(move |t| msg(Event::UnitNature(i, t)))
+                .width(140),
+                None,
+            ));
+        }
+        // Kat irtifakı (docs/adr/8031): an annex's unit; an independent unit's value factor in the land shares.
+        if r.unit.kind == UnitKind::Annex {
+            let units: Vec<&UnitRow> = w
+                .units
+                .iter()
+                .filter(|x| x.unit.kind == UnitKind::Unit)
+                .collect();
+            let ids: Vec<String> = units.iter().map(|x| x.unit.id.clone()).collect();
+            let names: Vec<String> = units
+                .iter()
+                .map(|x| {
+                    if x.name.trim().is_empty() {
+                        x.unit.number.clone()
+                    } else {
+                        format!("{} {}", x.unit.number, x.name.trim())
+                    }
+                })
+                .collect();
+            let at = ids.iter().position(|x| Some(x) == r.unit.annex_of.as_ref());
+            let of = Select::new(names.into_iter().map(Choice::new), at, move |k| {
+                msg(Event::UnitAnnexOf(i, ids.get(k).cloned()))
+            })
+            .searchable(false);
+            line = line.push(words::field("Bölümü", container(of).width(170), None));
+        }
+        if r.unit.kind == UnitKind::Unit {
+            line = line.push(words::field(
+                "Değer katsayısı",
+                kentos_ui::widget::text_field("1", &r.factor)
+                    .on_input(move |t| msg(Event::UnitFactor(i, t)))
+                    .width(110),
+                None,
+            ));
+        }
         if w.share_rule == Some(ShareRule::Weight) && r.unit.kind == UnitKind::Unit {
             line = line.push(words::field(
                 "Pay ağırlığı",

@@ -85,10 +85,39 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let before_options = entities.len();
     entities.retain(|e| !option_out.contains(&kentos_domain::Slot(e.base().id)));
     let left_out_options = before_options - entities.len();
+    // The tadilat görünümü (docs/adr/8039 §4), as design options: DXF gets the drawing as it shows. What the view hides
+    // is not written and is said; an opening not written cuts no wall, a wall not written joins none, so the walls are
+    // as that state stands. Tümü writes everything, each object on its state's layer.
+    let view = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.phase_view)
+        .unwrap_or_default();
+    let phase_hidden: std::collections::HashSet<u32> = if view == kentos_commands::PhaseView::All {
+        std::collections::HashSet::new()
+    } else {
+        let by_uid = |u: &str| {
+            kentos_domain::Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+        };
+        doc.entities()
+            .filter(|e| e.look_in(view, by_uid) == kentos_commands::PhaseLook::Hidden)
+            .map(|e| e.base().id)
+            .collect()
+    };
+    let before_phase = entities.len();
+    entities.retain(|e| !phase_hidden.contains(&e.base().id));
+    let left_out_phase = before_phase - entities.len();
     // The document's draw order crosses layer boundaries. Grouping is only
     // for the layer chooser, never a reason to repaint one whole layer on top.
-    let order: std::collections::HashMap<_, _> = doc.entities().enumerate()
-        .map(|(i, e)| (e.base().id, i)).collect();
+    let order: std::collections::HashMap<_, _> = doc
+        .entities()
+        .enumerate()
+        .map(|(i, e)| (e.base().id, i))
+        .collect();
     entities.sort_by_key(|e| order.get(&e.base().id).copied().unwrap_or(usize::MAX));
     // A dynamic block's inserts as the plain blocks they draw (docs/adr/0319 §5): DXF has no place for KentOS's
     // parameters and actions.
@@ -111,6 +140,19 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             what: "İlişkili duvar ölçü grubu".into(),
             count: u32::try_from(recipe_count).unwrap_or(u32::MAX),
             reason: "Ölçülerin mevcut geometrisi yazıldı; duvar ölçü grubunun kaynak tarifi ve otomatik üye ekleme/kaldırma davranışı DXF'e yazılmaz. Grubu korumak için KCAD olarak kaydedin.".into(),
+            lines: Vec::new(),
+        });
+    }
+    if left_out_phase > 0 {
+        notes.push(kentos_commands::ReportItem {
+            severity: Some(kentos_commands::ReportSeverity::Warning),
+            details: Vec::new(),
+            what: "Tadilat görünümünün gizlediği nesne".into(),
+            count: u32::try_from(left_out_phase).unwrap_or(u32::MAX),
+            reason: format!(
+                "Çizim {} görünümünde; bu görünümün gizlediği nesneler DXF'e yazılmadı, duvarlar o durumdaki gibi kesildi. Bütün durumları kendi katmanlarıyla yazmak için Tadilat ▾ › Tümü'nde dışa aktarın.",
+                view.label()
+            ),
             lines: Vec::new(),
         });
     }
@@ -273,6 +315,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         layouts,
         // The project's own detail for its walls (docs/adr/0339 §4); absent: by the scale.
         wall_detail: settings.arch.as_ref().and_then(|a| a.detail),
+        // The project's plan cut height (docs/adr/8012); absent: 1.10.
+        cut_height: settings.arch.as_ref().and_then(|a| a.cut_height),
         uids,
         annotations: Default::default(),
         notes,

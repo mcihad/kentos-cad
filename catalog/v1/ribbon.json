@@ -488,24 +488,20 @@
      },
      {
       "label": "Tesviye",
-      "works": [
-       "map",
-       "road"
-      ],
       "icon": "platformEditor",
       "items": [
        {
         "command": "platform.editor",
         "size": "large"
        }
+      ],
+      "works": [
+       "map",
+       "road"
       ]
      },
      {
       "label": "Drenaj",
-      "works": [
-       "map",
-       "road"
-      ],
       "icon": "drainageEditor",
       "items": [
        {
@@ -516,6 +512,10 @@
         "command": "pipes.check",
         "size": "large"
        }
+      ],
+      "works": [
+       "map",
+       "road"
       ]
      },
      {
@@ -538,9 +538,6 @@
      },
      {
       "label": "Arazi",
-      "works": [
-       "road"
-      ],
       "icon": "contours",
       "items": [
        {
@@ -566,6 +563,9 @@
       ],
       "overflow": [
        "mesh.query"
+      ],
+      "works": [
+       "road"
       ]
      }
     ],
@@ -1077,9 +1077,6 @@
      {
       "label": "GNSS arşivi",
       "icon": "gnssArchive",
-      "works": [
-       "map"
-      ],
       "items": [
        {
         "command": "map.survey",
@@ -1097,6 +1094,9 @@
         "command": "map.survey.adjustment",
         "size": "small"
        }
+      ],
+      "works": [
+       "map"
       ]
      },
      {
@@ -1748,6 +1748,7 @@
            "edit.selectFilter.space",
            "edit.selectFilter.grid",
            "edit.selectFilter.column",
+           "edit.selectFilter.beam",
            "edit.selectFilter.stair",
            "edit.selectFilter.ramp",
            "edit.selectFilter.tag",
@@ -1943,40 +1944,38 @@
     "label": "Mimari",
     "panels": [
      {
-      "label": "Çiz",
+      "label": "Duvar",
       "icon": "wall",
       "items": [
        {
-        "command": "tool.wall",
+        "key": "archWalls",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.wall",
+          "title": "Duvar",
+          "label": "Duvar"
+         },
+         {
+          "command": "tool.wallRectangle",
+          "title": "Duvar",
+          "label": "Dikdörtgen duvar"
+         },
+         {
+          "command": "tool.wallPartition",
+          "title": "Duvar",
+          "label": "Ölçülü bölme"
+         },
+         {
+          "command": "tool.wallFromLines",
+          "title": "Duvar",
+          "label": "Çizgiden duvar"
+         }
+        ]
+       },
+       {
+        "command": "tool.room",
         "size": "large"
-       },
-       {
-        "command": "tool.wallRectangle",
-        "size": "large"
-       },
-       {
-        "command": "tool.wallPartition",
-        "size": "small"
-       },
-       {
-        "command": "tool.wallFromLines",
-        "size": "small"
-       },
-       {
-        "command": "tool.space",
-        "size": "small"
-       },
-       {
-        "command": "tool.slab",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceDiscover",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceSeparator",
-        "size": "small"
        }
       ]
      },
@@ -2018,6 +2017,10 @@
         "size": "small"
        },
        {
+        "command": "tool.beam",
+        "size": "small"
+       },
+       {
         "key": "archGrids",
         "size": "small",
         "split": [
@@ -2052,16 +2055,65 @@
        {
         "command": "tool.ramp",
         "size": "small"
+       }
+      ]
+     },
+     {
+      "label": "Mahal",
+      "icon": "space",
+      "items": [
+       {
+        "key": "archSpaces",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.space",
+          "title": "Mahal",
+          "label": "Mahal"
+         },
+         {
+          "command": "tool.spaceDiscover",
+          "title": "Mahal",
+          "label": "Toplu mahal bul"
+         },
+         {
+          "command": "tool.spaceSeparator",
+          "title": "Mahal",
+          "label": "Mahal ayırıcı"
+         }
+        ]
        },
        {
-        "command": "tool.casework",
+        "command": "tool.slab",
         "size": "small"
        }
       ]
      },
      {
+      "label": "Donatı",
+      "icon": "casework",
+      "items": [
+       {
+        "key": "archFixtures",
+        "size": "large",
+        "split": [
+         {
+          "command": "tool.casework",
+          "title": "Donatı",
+          "label": "Mutfak"
+         },
+         {
+          "command": "block.library",
+          "title": "Donatı",
+          "label": "Kitaplık"
+         }
+        ]
+       }
+      ]
+     },
+     {
       "label": "Düzenle",
-      "icon": "wall",
+      "icon": "wallJoins",
       "items": [
        {
         "command": "tool.wallJoins",
@@ -2080,27 +2132,18 @@
         "size": "small"
        },
        {
-        "command": "tool.spaceRebound",
-        "size": "small"
-       },
-       {
-        "command": "tool.spaceSources",
-        "size": "small"
-       },
-       {
         "command": "tool.gridNumber",
         "size": "small"
        },
        {
         "command": "tool.openingNumber",
         "size": "small"
-       },
-       {
-        "command": "tool.openingArray",
-        "size": "small"
        }
       ],
       "overflow": [
+       "tool.spaceRebound",
+       "tool.spaceSources",
+       "tool.openingArray",
        "tool.wallShift",
        "tool.spaceNumber",
        "tool.wallJoin",
@@ -2116,12 +2159,17 @@
      },
      {
       "label": "Belgele",
-      "icon": "tag",
+      "icon": "wallDimensions",
       "items": [
        {
         "key": "archDimensions",
-        "size": "large",
+        "size": "small",
         "split": [
+         {
+          "command": "tool.planDimensions",
+          "title": "Ölçü",
+          "label": "Planı ölçülendir"
+         },
          {
           "command": "tool.wallDimensions",
           "title": "Ölçü",
@@ -2135,12 +2183,66 @@
         ]
        },
        {
-        "command": "tool.tag",
-        "size": "small"
+        "key": "archTags",
+        "size": "small",
+        "split": [
+         {
+          "command": "tool.tag",
+          "title": "Etiket",
+          "label": "Etiket"
+         },
+         {
+          "command": "tool.tagAll",
+          "title": "Etiket",
+          "label": "Hepsini etiketle"
+         },
+         {
+          "command": "tool.openingCodes",
+          "title": "Etiket",
+          "label": "Doğrama kodları"
+         },
+         {
+          "command": "tool.joineryList",
+          "title": "Etiket",
+          "label": "Doğrama listesi"
+         }
+        ]
        },
        {
-        "command": "arch.quantities",
-        "size": "small"
+        "key": "archQuantities",
+        "size": "small",
+        "split": [
+         {
+          "command": "arch.quantities",
+          "title": "Metraj",
+          "label": "Metraj"
+         },
+         {
+          "command": "tool.scheduleAreas",
+          "title": "Metraj",
+          "label": "Metrekare cetveli"
+         },
+         {
+          "command": "arch.zoningTable",
+          "title": "Metraj",
+          "label": "Emsal ve TAKS tablosu"
+         },
+         {
+          "command": "tool.scheduleLandShares",
+          "title": "Metraj",
+          "label": "Kat irtifakı tablosu"
+         },
+         {
+          "command": "arch.parkingTable",
+          "title": "Metraj",
+          "label": "Otopark hesabı"
+         },
+         {
+          "command": "arch.shelterTable",
+          "title": "Metraj",
+          "label": "Sığınak hesabı"
+         }
+        ]
        },
        {
         "key": "archSchedules",
@@ -2157,9 +2259,9 @@
           "label": "Mahal çizelgesi"
          },
          {
-          "command": "tool.scheduleFinishes",
+          "command": "tool.scheduleRoomList",
           "title": "Çizelge",
-          "label": "Mahal kaplama çizelgesi"
+          "label": "Mahal listesi"
          },
          {
           "command": "tool.scheduleFixtures",
@@ -2203,30 +2305,15 @@
           "label": "Kuzey oku"
          }
         ]
-       },
-       {
-        "key": "archRevisions",
-        "size": "small",
-        "split": [
-         {
-          "command": "tool.revisionMark",
-          "title": "Revizyon",
-          "label": "Revizyon işaretle"
-         },
-         {
-          "command": "arch.revisionList",
-          "title": "Revizyon",
-          "label": "Revizyon listesi"
-         }
-        ]
        }
       ],
       "overflow": [
-       "tool.tagAll",
        "arch.tagsCheck",
        "arch.wallJoinCheck",
        "arch.viewRefs",
-       "tool.roomElevation"
+       "tool.roomElevation",
+       "tool.revisionMark",
+       "arch.revisionList"
       ]
      },
      {
@@ -2234,11 +2321,50 @@
       "icon": "archSettings",
       "items": [
        {
-        "command": "arch.audit",
-        "size": "small"
+        "menu": "Kat",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "view.levels.up",
+           "view.levels.down"
+          ]
+         },
+         {
+          "label": "Kat görünümü",
+          "items": [
+           "view.levels.all",
+           "view.levels.active",
+           "view.levels.below"
+          ]
+         }
+        ]
        },
        {
-        "command": "arch.program",
+        "menu": "Tadilat",
+        "size": "small",
+        "blocks": [
+         {
+          "label": "",
+          "items": [
+           "arch.phase.all",
+           "arch.phase.existing",
+           "arch.phase.demolition",
+           "arch.phase.proposed",
+           "arch.phase.renovation"
+          ]
+         },
+         {
+          "label": "",
+          "items": [
+           "tool.renovationLegend"
+          ]
+         }
+        ]
+       },
+       {
+        "command": "arch.audit",
         "size": "small"
        },
        {
@@ -2250,26 +2376,15 @@
         "size": "small"
        },
        {
-        "command": "arch.template",
+        "command": "arch.permitSet",
         "size": "small"
-       },
-       {
-        "menu": "Evre",
-        "size": "small",
-        "blocks": [
-         {
-          "label": "",
-          "items": [
-           "arch.phase.all",
-           "arch.phase.existing",
-           "arch.phase.demolition",
-           "arch.phase.proposed"
-          ]
-         }
-        ]
        }
       ],
       "overflow": [
+       "arch.program",
+       "tool.siteParcel",
+       "tool.escapeRoutes",
+       "arch.template",
        "arch.sheetSet",
        "arch.navigator",
        "tool.viewCrop",
@@ -4413,9 +4528,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -4425,6 +4537,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -4727,9 +4842,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -4739,6 +4851,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -5058,9 +5173,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -5070,6 +5182,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -5432,9 +5547,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -5444,6 +5556,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -6500,9 +6615,6 @@
     {
      "label": "Harita işi",
      "icon": "workSource",
-     "works": [
-      "map"
-     ],
      "items": [
       {
        "command": "map.workSource",
@@ -6512,6 +6624,9 @@
        "command": "map.workRelease",
        "size": "small"
       }
+     ],
+     "works": [
+      "map"
      ],
      "modes": [
       "cad"
@@ -6700,14 +6815,10 @@
     },
     {
      "label": "Duvar",
-     "icon": "wall",
+     "icon": "wallShift",
      "items": [
       {
-       "command": "tool.wallDimensions",
-       "size": "large"
-      },
-      {
-       "command": "view.properties",
+       "command": "tool.wallShift",
        "size": "large"
       },
       {
@@ -6735,11 +6846,45 @@
        "size": "small"
       },
       {
+       "command": "view.properties",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Stil",
+     "icon": "wallRestyle",
+     "items": [
+      {
        "command": "tool.wallRestyle",
        "size": "small"
       },
       {
-       "command": "arch.wallJoinCheck",
+       "command": "arch.wallStyles",
+       "size": "small"
+      },
+      {
+       "command": "arch.materials",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Bağ",
+     "icon": "constraintShow",
+     "items": [
+      {
+       "command": "constraint.show",
+       "size": "small"
+      },
+      {
+       "command": "constraint.relaxNext",
        "size": "small"
       }
      ],
@@ -6779,9 +6924,26 @@
          "label": "Baca"
         }
        ]
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Belgele",
+     "icon": "wallDimensions",
+     "items": [
+      {
+       "command": "tool.wallDimensions",
+       "size": "large"
       },
       {
        "command": "tool.tag",
+       "size": "small"
+      },
+      {
+       "command": "arch.wallJoinCheck",
        "size": "small"
       }
      ],
@@ -6962,10 +7124,6 @@
        "size": "large"
       },
       {
-       "command": "arch.quantities",
-       "size": "small"
-      },
-      {
        "command": "tool.spaceSplit",
        "size": "small"
       },
@@ -6984,13 +7142,35 @@
       {
        "command": "arch.spaceMerge",
        "size": "small"
-      },
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Kaplama",
+     "icon": "spaceFloor",
+     "items": [
       {
        "command": "tool.spaceFloor",
        "size": "small"
       },
       {
        "command": "tool.spaceCeiling",
+       "size": "small"
+      }
+     ],
+     "works": [
+      "architecture"
+     ]
+    },
+    {
+     "label": "Belgele",
+     "icon": "quantities",
+     "items": [
+      {
+       "command": "arch.quantities",
        "size": "small"
       },
       {
@@ -7171,6 +7351,10 @@
      "icon": "archGrid",
      "items": [
       {
+       "command": "view.properties",
+       "size": "large"
+      },
+      {
        "command": "tool.gridNumber",
        "size": "small"
       },
@@ -7297,6 +7481,9 @@
    "workspace.gis": [],
    "workspace.plan3d": [],
    "workspace.disaster": [],
+   "tool.scheduleFinishes": [
+    "mimari"
+   ],
    "map.survey": [
     "harita"
    ],

@@ -1747,6 +1747,88 @@
       ]
     },
     {
+      "name": "kendi tadilat durumuyla: ilave kapı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "phase": "new"
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ],
+                "phase": "new"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "açıklık verilmezse ret",
       "steps": [
         {
@@ -10629,7 +10711,7 @@
       ]
     },
     {
-      "name": "yüksek pencerenin altında kesmeyi kesen niş: ikisi de kesilir, reddedilir",
+      "name": "yüksek pencerenin altında kesmeyi kesen niş: pencere kesmenin üstünde kalır, kesilmez; niş eklenir",
       "steps": [
         {
           "op": "execute",
@@ -10726,13 +10808,19 @@
             ]
           },
           "result": {
-            "status": "failed",
-            "error": {
-              "code": "openings_overlap",
-              "message": "Açıklık (4.700–5.300 m) aynı duvardaki başka bir açıklığın (4.400–5.600 m) altında ya da üstünde ama ikisi de planda kesilir. Birinin alt ya da üst kotunu kesme yüksekliğinin (1.10 m) dışına alın ya da açıklığı kaydırın.",
-              "path": "openings[0]"
-            }
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                10
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
           },
+          "within": 1e-09,
           "expect": {
             "ids": [
               1,
@@ -10743,9 +10831,47 @@
               6,
               7,
               8,
-              9
+              9,
+              10
             ],
-            "revision": "same"
+            "entities": {
+              "10": {
+                "kind": "opening",
+                "id": 10,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 5.0,
+                "width": 0.6,
+                "form": "niche",
+                "operation": "fixed",
+                "sill": 0.3,
+                "head": 1.2,
+                "depth": 0.1,
+                "style": "kentos-nis-60",
+                "place": [
+                  {
+                    "x": 4.7,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 4.7,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 5.300000000000001,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 5.300000000000001,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
           }
         }
       ]

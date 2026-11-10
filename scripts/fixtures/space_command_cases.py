@@ -229,6 +229,13 @@ def problem(s, prefix):
     h = s.get("height")
     if h is not None and not (math.isfinite(h) and 0 < h <= 1000):
         return refusal("invalid_space", f"Mahalin yüksekliği {num(h)}; sıfırdan büyük, en çok 1000 m olmalı.", f"{prefix}.height")
+    # Its floor offset and asma tavan (docs/adr/8040 §3).
+    v = s.get("floorOffset")
+    if v is not None and not (math.isfinite(v) and abs(v) <= 10.0):
+        return refusal("invalid_space", f"Mahalin döşeme kot farkı {num(v)}; katın kotuna göre en çok ±10 m olmalı.", f"{prefix}.floorOffset")
+    c = s.get("suspendedCeiling")
+    if c is not None and not (math.isfinite(c) and 0 < c <= 1000):
+        return refusal("invalid_space", f"Asma tavanın yüksekliği {num(c)}; döşemeden sıfırdan büyük, en çok 1000 m olmalı.", f"{prefix}.suspendedCeiling")
     for key in ("number", "name", "usage"):
         if s.get(key) is not None and s[key].strip() == "":
             return refusal("invalid_space", "Boş metin yazılmaz; alanı kaldırın ya da bir değer yazın.", f"{prefix}.{key}")
@@ -256,6 +263,9 @@ def stored(s, exact):
         out["arch"] = s["arch"]
     if s.get("height") is not None:
         out["height"] = s["height"]
+    for k in ("floorOffset", "suspendedCeiling"):
+        if s.get(k) is not None:
+            out[k] = s[k]
     fin = {k: v for k, v in s.get("finishes", {}).items() if v is not None}
     if fin:
         out["finishes"] = fin
@@ -285,8 +295,12 @@ def create(d, inp, conflict=False):
                 return r, None
         if "height" in n and not math.isfinite(n["height"]):
             return not_finite("Yükseklik", f"{at}.height"), None
+        for key, name in (("floorOffset", "Döşeme kot farkı"), ("suspendedCeiling", "Asma tavan")):
+            if key in n and not math.isfinite(n[key]):
+                return not_finite(name, f"{at}.{key}"), None
         s = {"seed": n.get("seed"), "method": n.get("method", "net"), "number": n.get("number"), "name": n.get("name"),
              "usage": n.get("usage"), "arch": n.get("arch", {}), "height": n.get("height"),
+             "floorOffset": n.get("floorOffset"), "suspendedCeiling": n.get("suspendedCeiling"),
              "finishes": n.get("finishes", {}), "attrs": n.get("attrs", {}), "void": n.get("void", False)}
         if "seed" in n:
             r = level_check(s, f"{at}.arch.level")
@@ -364,6 +378,55 @@ def create_step(d, op, inp, non_finite=None, conflict=False, command=None):
 def level_height(arch):
     lv = next((x for x in LEVELS if x["id"] == arch.get("level")), None) if arch else None
     return None if lv is None else lv.get("height")
+
+
+def room_inside(d, s):
+    """A room's inside height (docs/adr/8040 §3), in the core's order of operations: its floor its own offset over its
+    storey's floor, else the top of the floor slab under it (half a metre under the storey's floor to 10 cm over it,
+    the highest), else the storey's floor; its asma tavan's or its own height as written, else the lowest slab ceiling
+    more than 10 cm over its floor within its storey, else its storey's top less its floor. The slabs are looked for at
+    its seed, else at its outer ring's centroid: the cases' rooms lie whole under a slab or out of it, so any inner
+    point answers as the core's label point does."""
+    arch = s.get("arch", {})
+    lv = next((x for x in LEVELS if x["id"] == arch.get("level")), None) if arch else None
+    storey_floor = lv["elevation"] if lv else 0.0
+    storey = lv.get("height") if lv else None
+    if s.get("seed") is not None:
+        at = (F(s["seed"]["x"]), F(s["seed"]["y"]))
+    else:
+        o = max(s["parts"], key=lambda p: abs(sp.area2(p[0])))[0]
+        a2 = sp.area2(o)
+        at = (sum((o[i][0] + o[(i + 1) % len(o)][0]) * sp.cross(o[i], o[(i + 1) % len(o)]) for i in range(len(o))) / (3 * a2),
+              sum((o[i][1] + o[(i + 1) % len(o)][1]) * sp.cross(o[i], o[(i + 1) % len(o)]) for i in range(len(o))) / (3 * a2))
+    holding = []
+    for _, (ly, sl, _) in sorted(d.slabs.items()):
+        parts = sl.get("parts")
+        if parts is None or not any(sp.inside(o, at) and not any(sp.inside(h, at) for h in hs) for o, hs in parts):
+            continue
+        slv = next((x for x in LEVELS if x["id"] == sl.get("arch", {}).get("level")), None)
+        holding.append((sl, slv["elevation"] if slv else 0.0))
+    if s.get("floorOffset") is not None:
+        floor = storey_floor + s["floorOffset"]
+    else:
+        tops = [f + sl.get("offset", 0.0) for sl, f in holding
+                if storey_floor - 0.5 <= f + sl.get("offset", 0.0) <= storey_floor + 0.1]
+        floor = max(tops) if tops else storey_floor
+    if s.get("suspendedCeiling") is not None:
+        return s["suspendedCeiling"]
+    if s.get("height") is not None:
+        return s["height"]
+    top = None if storey is None else storey_floor + storey
+
+    def ceiling(sl, f):
+        lay = sl.get("layers") or {}
+        over = sum(x["thickness"] for x in lay.get("over", []))
+        under = sum(x["thickness"] for x in lay.get("under", []))
+        return f + sl.get("offset", 0.0) - over - sl.get("thickness", 0.15) - under
+    over = [c for c in (ceiling(sl, f) for sl, f in holding) if c > floor + 0.1]
+    c = min(over) if over else None
+    if c is not None and (top is None or c <= top + 1e-9):
+        return c - floor
+    return None if top is None else top - floor
 
 
 # ── A room's baseboard, the passages and the slabs (ADR 0722 §5) ─────────────────────────────────────────────
@@ -556,6 +619,12 @@ def slab_row(d, i, s):
            "perimeter": float(perimeter_of(parts) if parts is not None else s["measure"][1]), "volume": float(net * thickness),
            "edge": edge["kind"] if edge else None, "edgeLength": float(edge_len) or None,
            "excluded": True if s.get("excluded") else None, "rule": rule}
+    # Its layers on its net area (docs/adr/8040 §2), over the structure then under it.
+    layers = s.get("layers") or {}
+    rows = [{"kind": lay["kind"], **({"material": lay["material"]} if lay.get("material") is not None else {}),
+             "thickness": lay["thickness"], "area": float(net), "volume": float(net * F(lay["thickness"]))}
+            for lay in layers.get("over", []) + layers.get("under", [])]
+    row["layers"] = rows or None
     return {k: v for k, v in row.items() if v is not None}
 
 
@@ -600,7 +669,7 @@ def quantities(d, inp):
             if inp.get("usages") is not None and s.get("usage") not in inp["usages"]:
                 continue
             area = float(area_of(s["parts"]))
-            height = s.get("height") if s.get("height") is not None else level_height(arch)
+            height = room_inside(d, s)
             row = {"uid": uid_of(i), "number": s.get("number"), "name": s.get("name"), "usage": s.get("usage"),
                    "level": arch.get("level"), "method": s.get("method", "net"), "void": True if s.get("void") else None,
                    "area": area,
@@ -613,7 +682,12 @@ def quantities(d, inp):
                     if p is not None:
                         by[m] = float(area_of(p))
                 row["byMethod"] = by
-            row["rule"] = f"alan: halkaların alanı, delikler düşülür ({METHOD_LABEL[s.get('method', 'net')]}); hacim: alan × yükseklik"
+            if s.get("suspendedCeiling") is not None:
+                # Its asma tavan covers its net floor (docs/adr/8040 §3): a drawn net room's own, a seeded one's found
+                # again by its inner faces, else its rings'.
+                net = area if s.get("seed") is None and s.get("method", "net") == "net" else row.get("byMethod", {}).get("net", area)
+                row["suspendedCeilingArea"] = net
+            row["rule"] = f"alan: halkaların alanı, delikler düşülür ({METHOD_LABEL[s.get('method', 'net')]}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana)"
             if s.get("void"):
                 row["rule"] += "; boşluk: alanı mahal toplamına katılmaz, boşluk toplamındadır"
             else:
@@ -731,13 +805,16 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, evre, yükseklik ya da kaplamalardan birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: numara, ad, kullanım, yöntem, kat, tadilat durumu, yükseklik, döşeme kot farkı, asma tavan ya da kaplamalardan birini verin.", "operation"), None
         if ch.get("height") is not None and not math.isfinite(ch["height"]):
             return not_finite("Yükseklik", "operation.height"), None
+        for key, name in (("floorOffset", "Döşeme kot farkı"), ("suspendedCeiling", "Asma tavan")):
+            if ch.get(key) is not None and not math.isfinite(ch[key]):
+                return not_finite(name, f"operation.{key}"), None
         for at, i in found:
             layer_id, s, extra = d.spaces[i]
             s = copy.deepcopy(s)
-            for k in ("number", "name", "usage", "height"):
+            for k in ("number", "name", "usage", "height", "floorOffset", "suspendedCeiling"):
                 if k in ch:
                     s[k] = ch[k]
             if "method" in ch:
@@ -920,7 +997,7 @@ def create_cases():
     for name, inp in [
         ("sağ oda duvar ekseninden", one(seed=RIGHT, method="centerline")),
         ("sağ oda dış yüzlerden (brüt)", one(seed=RIGHT, method="gross")),
-        ("sol oda kat, evre, yükseklik, kaplamalar ve kullanımla", one(seed=LEFT, usage="Oturma", arch={"level": "zemin", "phase": "new"},
+        ("sol oda kat, tadilat durumu, yükseklik, kaplamalar ve kullanımla", one(seed=LEFT, usage="Oturma", arch={"level": "zemin", "phase": "new"},
                                                                      height=2.8, finishes={"floor": "Parke", "ceiling": "Alçı"})),
         ("başka katın duvarları açık kat seçiminin mahali kapatmaz", one(seed=LEFT, arch={"level":"kat-1"})),
         ("çizilmiş sınır olduğu gibi saklanır", one(parts=[box_json(20, 0, 24, 3)], name="Depo")),
@@ -934,6 +1011,12 @@ def create_cases():
         ("çizilmiş şaft boşluk olarak; metraj alanını boşluk toplamına yazar", one(parts=[box_json(20, 0, 20.8, 0.6)], name="Şaft", usage="Tesisat şaftı", void=True)),
         ("duvarlarla çevrili sağ oda boşluk (asansör); oda ile boşluk ayrı toplanır", {"layerId": "mahal", "spaces": [{"seed": LEFT, "name": "Salon"}, {"seed": RIGHT, "name": "Asansör", "void": True}]}),
         ("boşluk false yazılmaz: oda olarak kalır", one(seed=LEFT, void=False)),
+        # A room's floor offset and asma tavan (docs/adr/8040 §3): its inside height and its asma tavan's area.
+        ("ıslak hacim döşeme kot farkı ve asma tavanla; metraj iç yüksekliği asma tavandan, alanını asma tavana yazar",
+         one(seed=LEFT, name="Banyo", floorOffset=-0.02, suspendedCeiling=2.4, arch={"level": "zemin"})),
+        ("döşemesi 2 cm aşağıda, asma tavansız: iç yükseklik kattan kata 3.02",
+         one(seed=LEFT, name="Banyo", floorOffset=-0.02, arch={"level": "zemin"})),
+        ("çizilmiş net mahalin asma tavanı kendi alanını örter", one(parts=[box_json(20, 0, 24, 3)], name="Ofis", suspendedCeiling=2.7)),
     ]:
         dd = Drawing()
         c.add(name, [create_step(dd, "execute", inp), quant_step(dd, command=QUANT)])
@@ -949,6 +1032,10 @@ def create_cases():
         ("yeri verilmeyen mahal reddedilir", one(name="Boş"), {}),
         ("iki köşeli halka reddedilir", one(parts=[{"outer": {"pts": [P(0, 0), P(1, 0)]}}]), {}),
         ("sıfır yükseklik reddedilir", one(seed=LEFT, height=0.0), {}),
+        ("sonsuz asma tavan reddedilir", one(seed=LEFT, suspendedCeiling=2.0), {"non_finite": {"spaces[0].suspendedCeiling": "Infinity"}}),
+        ("sonsuz döşeme kot farkı reddedilir", one(seed=LEFT, floorOffset=0.1), {"non_finite": {"spaces[0].floorOffset": "NaN"}}),
+        ("sıfır asma tavan reddedilir", one(seed=LEFT, suspendedCeiling=0.0), {}),
+        ("katından 12 m aşağıdaki döşeme reddedilir", one(seed=LEFT, floorOffset=-12.0), {}),
         ("boş ad reddedilir", one(seed=LEFT, name=" "), {}),
         ("projede olmayan kat reddedilir", one(seed=LEFT, arch={"level": "bodrum"}), {}),
         ("kalınlık 100 mm'yi aşarsa ret", {"layerId": "mahal", "lineWeight": 120.0, "spaces": [{"seed": LEFT}]}, {}),
@@ -975,8 +1062,9 @@ def edit_cases():
     first = NEW
     for name, op in [
         ("Değiştir: numara, ad ve kullanım", {"kind": "set", "number": "Z-02", "name": "Yatak odası", "usage": "Yatak"}),
-        ("Değiştir: kat, evre ve yükseklik", {"kind": "set", "level": "zemin", "phase": "existing", "height": 2.7}),
+        ("Değiştir: kat, tadilat durumu ve yükseklik", {"kind": "set", "level": "zemin", "phase": "existing", "height": 2.7}),
         ("Değiştir: kaplamalar", {"kind": "set", "floor": "Seramik", "wall": "Fayans", "ceiling": "Asma tavan"}),
+        ("Değiştir: döşeme kot farkı ve asma tavan", {"kind": "set", "floorOffset": -0.05, "suspendedCeiling": 2.6}),
         ("Değiştir: yöntem duvar ekseni, sınır duvarlardan yeniden", {"kind": "set", "method": "centerline"}),
         ("Değiştir: yöntem brüt", {"kind": "set", "method": "gross"}),
     ]:
@@ -992,6 +1080,10 @@ def edit_cases():
           [made, edit_step(d, "execute", {"uids": [uid_of(first), uid_of(first + 1)], "operation": {"kind": "merge"}}), quant_step(d, command=QUANT)])
     d, made = fresh({"seed": LEFT, "height": 2.5, "name": "Oda"})
     c.add("Değiştir: yüksekliği kaldırmak katınkini verir", [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "height": None}})])
+    d, made = fresh({"seed": LEFT, "name": "Banyo", "floorOffset": -0.02, "suspendedCeiling": 2.4})
+    c.add("Değiştir: asma tavanı ve kot farkını kaldırmak katlar arasını verir",
+          [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "floorOffset": None, "suspendedCeiling": None}}),
+           quant_step(d, command=QUANT)])
     d, made = fresh({"parts": [box_json(20, 0, 23, 4)], "number": "A"}, {"parts": [box_json(23, 0, 26, 4)], "number": "B"})
     c.add("Birleştir: değen iki mahal, ilki kimliğini korur, öbürü silinir; sınır çizilmiş olur",
           [made, edit_step(d, "execute", {"uids": [uid_of(first), uid_of(first + 1)], "operation": {"kind": "merge"}}), quant_step(d, command=QUANT)])
@@ -1050,6 +1142,9 @@ def edit_cases():
         ("boş Değiştir reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set"}}, {}, [{"seed": LEFT}]),
         ("sonsuz yükseklik reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "height": 2.0}}, {"non_finite": {"operation.height": "NaN"}}, [{"seed": LEFT}]),
         ("sıfır yükseklik reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "height": 0.0}}, {}, [{"seed": LEFT}]),
+        ("sonsuz asma tavan reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "suspendedCeiling": 2.0}}, {"non_finite": {"operation.suspendedCeiling": "NaN"}}, [{"seed": LEFT}]),
+        ("eksi asma tavan reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "suspendedCeiling": -1.0}}, {}, [{"seed": LEFT}]),
+        ("katından 11 m yukarıdaki döşeme reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "floorOffset": 11.0}}, {}, [{"seed": LEFT}]),
         ("projede olmayan kat reddedilir", {"uids": [uid_of(first)], "operation": {"kind": "set", "level": "bodrum"}}, {}, [{"seed": LEFT}]),
         ("tek mahal birleştirilmez", {"uids": [uid_of(first)], "operation": {"kind": "merge"}}, {}, [{"seed": LEFT}]),
         ("değmeyen mahaller birleştirilmez", {"uids": [uid_of(first), uid_of(first + 1)], "operation": {"kind": "merge"}}, {},
@@ -1089,13 +1184,13 @@ def quantities_cases():
         ("bütün çizim: mahaller, duvarlar, toplamlar", {}),
         ("zemin katı süzgeci", {"levels": ["zemin"]}),
         ("1. kat süzgeci", {"levels": ["kat-1"]}),
-        ("evre süzgeci: yeni", {"phases": ["new"]}),
+        ("tadilat süzgeci: ilave", {"phases": ["new"]}),
         ("kullanım süzgeci yalnız mahalleri verir", {"usages": ["Islak", "Depo"]}),
         ("katman süzgeci: yalnız duvar katmanı", {"layers": ["duvar"]}),
         ("katman süzgeci: kilitli katmanın duvarı yüksekliksiz", {"layers": ["kilitli"]}),
         ("katman süzgeci: yalnız mahaller", {"layers": ["mahal"]}),
         ("iki kat birden", {"levels": ["zemin", "kat-1"]}),
-        ("evre süzgeci: var olan (hiçbiri)", {"phases": ["existing"]}),
+        ("tadilat süzgeci: mevcut (hiçbiri)", {"phases": ["existing"]}),
         ("kullanım süzgeci: tek kullanım", {"usages": ["Oturma"]}),
         ("kat ve kullanım birlikte", {"levels": ["zemin"], "usages": ["Islak", "Oturma"]}),
         ("boş katman: hiçbir satır, toplamlar sıfır", {"layers": ["sinir"]}),
@@ -1126,7 +1221,7 @@ def quantities_cases():
     c.add("bir duvarda kapı ve pencere: ikisi de düşülür, toplamda iki açıklık",
           [made, opening(d, 1, 1.5), opening(d, 1, 6.5, "window"), quant_step(d)])
     d, made = drawn()
-    c.add("ara duvarın kapısı: evre süzgeciyle açıklık da süzülür",
+    c.add("ara duvarın kapısı: tadilat süzgeciyle açıklık da süzülür",
           [made, opening(d, 5, 2.5), opening(d, 1, 6.5), quant_step(d, {"phases": ["new"]})])
     d, made = drawn()
     c.add("kullanım süzgecinde açıklık yok", [made, opening(d, 1, 2.0), quant_step(d, {"usages": ["Oturma"]})])
@@ -1164,7 +1259,7 @@ def files():
     return {
         "cad.spaces.create.json": document(CREATE, "Mahal oluştur: duvarlardan ya da çizilmiş sınır, yöntem, bilgiler; doğrulama, plan, yazma, geri alma, retler", note, create_cases()),
         "cad.spaces.edit.json": document(EDIT, "Mahali düzenle ve duvarla güncellenmek: değiştir, birleştir, böl, duvarlardan bul; retler", note, edit_cases()),
-        "cad.spaces.quantities.json": document(QUANT, "Metraj: mahaller, duvarlar, açıklıklar; kat, evre, kullanım ve katman süzgeçleri; retler", note, quantities_cases()),
+        "cad.spaces.quantities.json": document(QUANT, "Metraj: mahaller, duvarlar, açıklıklar; kat, tadilat, kullanım ve katman süzgeçleri; retler", note, quantities_cases()),
     }
 
 

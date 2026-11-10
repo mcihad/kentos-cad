@@ -1,0 +1,144 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "İmar durumu",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "arch": {
+      "levels": [
+        {
+          "id": "zemin",
+          "name": "Zemin kat",
+          "elevation": 0.0,
+          "height": 3.0
+        },
+        {
+          "id": "kat-1",
+          "name": "1. kat",
+          "elevation": 3.0,
+          "height": 3.0
+        }
+      ],
+      "zoning": {
+        "parcelArea": 450.0,
+        "far": 1.5,
+        "coverage": 0.4
+      }
+    }
+  },
+  "origin": {
+    "x": 500000.0,
+    "y": 4400000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "0",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {
+        "Ad": "P1"
+      },
+      "p": {
+        "x": 500001.25,
+        "y": 4400002.5
+      }
+    },
+    {
+      "kind": "table",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "p": {
+        "x": 500010.0,
+        "y": 4400000.0
+      },
+      "rotation": 0.0,
+      "height": 2.5,
+      "rows": [
+        5.0,
+        5.0,
+        5.0,
+        5.0,
+        5.0
+      ],
+      "columns": [
+        40.0,
+        25.0,
+        25.0,
+        25.0
+      ],
+      "cells": [
+        [
+          "Emsal ve TAKS",
+          "İmar durumu",
+          "Proje",
+          "Kalan"
+        ],
+        [
+          "Parsel alanı (m²)",
+          "450.00",
+          "",
+          ""
+        ],
+        [
+          "Emsal (KAKS)",
+          "1.50",
+          "0.00",
+          ""
+        ],
+        [
+          "Kat",
+          "Emsale dahil (m²)",
+          "Emsal harici (m²)",
+          "Kat alanı (m²)"
+        ],
+        [
+          "Toplam",
+          "0.00",
+          "0.00",
+          "0.00"
+        ]
+      ],
+      "aligns": [
+        "left",
+        "right",
+        "right",
+        "right"
+      ],
+      "header": true,
+      "source": {
+        "kind": "zoning"
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e21",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e22"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

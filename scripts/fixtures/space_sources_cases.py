@@ -34,7 +34,7 @@ def case(unit,method,partition,far):
     if method!='net':e['method']=method
     row=dict(uid='$uidOf:5',method=method,columns='all',sources=members,area=by[method],
         perimeter=float(2*(width+D(8)+2*delta)+8),byMethod=by,
-        rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik; kolon alanı: Her yöntemde'+BASEBOARD_RULE)
+        rule=f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana); kolon alanı: Her yöntemde'+BASEBOARD_RULE)
     row['baseboard']=row['perimeter']
     state=dict(ids=[1,2,3,4,5],entities={'5':e},canUndo=True,dirty=True,revision='changed')
     return dict(name=f'{unit}/{method}/{"left"if partition else "whole"}/{"far"if far else "local"}',setup=d,steps=[

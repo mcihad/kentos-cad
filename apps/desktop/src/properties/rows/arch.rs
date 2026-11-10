@@ -75,7 +75,7 @@ fn railings_row(
     Row::text("Korkuluk", words).editor(edit(select(words.to_owned(), items)))
 }
 
-/// Kat and Evre, as a wall's and a space's.
+/// Kat and Tadilat durumu, as a wall's and a space's.
 pub(super) fn arch_rows(
     doc: &Document,
     slot: Slot,
@@ -126,7 +126,7 @@ pub(super) fn arch_rows(
     }));
     items.push(Choice::Separator);
     items.push(Choice::Command {
-        label: "Katlar…",
+        label: "Katları düzenle…",
         icon: crate::icons::from_web(Some("archSettings")),
         id: "arch.settings",
     });
@@ -159,7 +159,7 @@ pub(super) fn arch_rows(
     }));
     vec![
         Row::text("Kat", level_name.clone()).editor(edit(select(level_name, items))),
-        Row::text("Evre", phase).editor(edit(select(phase.to_owned(), phases))),
+        Row::text("Tadilat durumu", phase).editor(edit(select(phase.to_owned(), phases))),
     ]
 }
 
@@ -358,6 +358,8 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     pick("Boş".into(), !x.fill, fill(false), None),
                 ],
             ))));
+            // Its material (docs/adr/8041 §2): one section with a wall's layer of the same material.
+            out.push(text("Malzeme", x.material_name().to_owned(), ArchField::Material));
             let tied = if x.grids.is_some() {
                 x.place.clone().unwrap_or_else(|| "Bağlı".into())
             } else {
@@ -501,6 +503,92 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.extend(checks(
                 kentos_native_application::arch_elements::ramp_warnings(x, ""),
             ));
+        }
+        // A beam (docs/adr/8041 §1): its number and sizes, how it lies on its axis, its top and underside where it
+        // hangs, its material and length.
+        Entity::Beam(b) => {
+            let x = &b.beam;
+            out.push(text(
+                "Numara",
+                x.tag.clone().unwrap_or_default(),
+                ArchField::Tag,
+            ));
+            // Kiriş, lento ya da hatıl (docs/adr/8041 §3).
+            let roles = kentos_commands::BeamRole::ALL
+                .iter()
+                .map(|&r| {
+                    pick(
+                        r.label().to_owned(),
+                        r == x.role,
+                        set(
+                            slot,
+                            ArchChange {
+                                role: Some(r),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(
+                Row::text("Tür", x.role.label())
+                    .editor(edit(select(x.role.label().to_owned(), roles))),
+            );
+            out.push(length("Genişlik", x.width, ArchField::Width));
+            out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
+            let justify = kentos_commands::WallJustify::ALL
+                .iter()
+                .map(|&j| {
+                    pick(
+                        j.label().to_owned(),
+                        j == x.justify,
+                        set(
+                            slot,
+                            ArchChange {
+                                justify: Some(j),
+                                ..Default::default()
+                            },
+                        ),
+                        None,
+                    )
+                })
+                .collect();
+            out.push(
+                Row::text("Hiza", x.justify.label())
+                    .editor(edit(select(x.justify.label().to_owned(), justify))),
+            );
+            // A lintel or a bond beam sits at its height over its storey's floor; a beam hangs, its offset from its slab.
+            if x.role == kentos_commands::BeamRole::Beam && x.base_offset.is_none() {
+                out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
+            } else {
+                out.push(
+                    Row::figure(
+                        "Kattan yükseklik",
+                        x.base_offset.map_or_else(String::new, |v| f.length_bare(v)),
+                    )
+                    .unit(f.length_unit_label())
+                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::BeamBase)))),
+                );
+                out.push(Row::note(if x.base_offset.is_some() {
+                    "Alt yüzü katın döşemesinden"
+                } else {
+                    "Boş: üst döşemeden asılır"
+                }));
+            }
+            if let Some(top) = doc.model.beam_top(x) {
+                out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
+                out.push(
+                    Row::figure("Alt kot", f.length_bare(top - x.height)).unit(f.length_unit_label()),
+                );
+            }
+            out.push(text(
+                "Malzeme",
+                x.material_name().to_owned(),
+                ArchField::Material,
+            ));
+            out.push(Row::figure("Uzunluk", f.length_bare(x.length())).unit(f.length_unit_label()));
+            out.extend(arch_rows(doc, slot, &x.arch, &edit));
         }
         Entity::Tag(t) => {
             let x = &t.tag;

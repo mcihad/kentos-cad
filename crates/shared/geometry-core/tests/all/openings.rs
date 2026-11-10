@@ -413,3 +413,170 @@ fn same_piece_in(name: &str, got: &opening::Mark, want: &Value) {
         (kind, got) => panic!("{name}: başvuru {kind}, çekirdek {got:?}"),
     }
 }
+
+/// What each piece of an opening is (docs/adr/8009): in every door and window of the reference's cases a swing is an
+/// arc at half the pen (ISO 128-23's narrow line), only the frame and the leaves take the whole pen, and a flue's cross
+/// and a recess's outline the narrow line.
+/// Every opening of the reference cases (openings, special doors, multi-leaf slides) with its jambs.
+fn reference_openings() -> Vec<([Vec2; 4], OpeningSpec)> {
+    let mut out = Vec::new();
+    for text in [CASES, SPECIAL, MULTI] {
+        let cases: Value = serde_json::from_str(text).unwrap();
+        for c in cases["cases"].as_array().unwrap() {
+            let walls: Vec<(Vec<Vec2>, Spec)> = c["walls"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|w| {
+                    let pts = w["pts"].as_array().unwrap().iter().map(pt).collect();
+                    (
+                        pts,
+                        Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap(),
+                    )
+                })
+                .collect();
+            for o in c["openings"].as_array().unwrap() {
+                let (pts, wall) = &walls[o["wall"].as_u64().unwrap() as usize];
+                let spec = OpeningSpec::read_flat(&Json::parse(&o.to_string()).unwrap()).unwrap();
+                let (at, width) = (o["at"].as_f64().unwrap(), o["width"].as_f64().unwrap());
+                let (s0, s1) = opening::span(at, spec.anchor, width);
+                let path = opening::wall_path(pts, None, wall.closed).unwrap();
+                if let Some(j) = opening::jambs(&path, wall, s0, s1) {
+                    out.push((j, spec));
+                }
+            }
+        }
+    }
+    out
+}
+
+#[test]
+fn an_openings_pieces_say_what_they_are_and_their_pen() {
+    use opening::Part;
+    let (mut swings, mut whole) = (0, 0);
+    for (j, spec) in reference_openings() {
+        for m in opening::pieces(&j, &spec) {
+            match m.part {
+                Part::Swing => {
+                    assert!(matches!(m.shape, Shape::Arc { .. }), "{m:?}");
+                    swings += 1;
+                }
+                Part::Frame | Part::Face | Part::Leaf => whole += 1,
+                _ => {}
+            }
+            let want = if matches!(m.part, Part::Frame | Part::Face | Part::Leaf) {
+                1.0
+            } else {
+                0.5
+            };
+            assert_eq!(m.part.pen(), want, "{m:?}");
+            if matches!(m.shape, Shape::Arc { .. }) && matches!(spec.form, opening::Form::Door) {
+                assert_ne!(m.part, Part::Leaf, "a door's arc is its swing: {m:?}");
+            }
+        }
+    }
+    assert!(
+        swings > 10 && whole > 20,
+        "{swings} swings, {whole} frame and leaf pieces"
+    );
+}
+
+/// Every reference door and window (docs/adr/8010) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls
+/// take it: a larger scale draws every part a smaller one does and more (a door the very pieces; a window without its
+/// frame's sides spans the hole); 1:50 and 1:20 every piece; the leaves at all four; the swing from 1:100, the frame's
+/// sides from 1:50.
+#[test]
+fn a_larger_scale_draws_every_piece_a_smaller_one_does_and_more() {
+    use kentos_geometry_core::geom::wall::{Detail, View};
+    use opening::Part;
+    let views = [
+        View::new(Detail::Schematic, 200.0),
+        View::new(Detail::Schematic, 100.0),
+        View::new(Detail::Standard, 50.0),
+        View::new(Detail::Detailed, 20.0),
+    ];
+    let (mut doors, mut fewer) = (0, 0);
+    for (j, spec) in reference_openings() {
+        if !matches!(spec.form, opening::Form::Door | opening::Form::Window) {
+            // The other forms are drawn whole at every scale.
+            for v in views {
+                assert_eq!(opening::pieces_at(&j, &spec, v), opening::pieces(&j, &spec));
+            }
+            continue;
+        }
+        doors += 1;
+        let at: Vec<Vec<opening::Mark>> = views
+            .iter()
+            .map(|v| opening::pieces_at(&j, &spec, *v))
+            .collect();
+        assert_eq!(at[3], opening::pieces(&j, &spec), "1:20 draws every piece");
+        assert_eq!(at[2], at[3], "1:50 draws every piece");
+        let count = |k: usize, part: Part| at[k].iter().filter(|m| m.part == part).count();
+        for k in 0..3 {
+            for m in &at[k] {
+                assert!(
+                    count(k, m.part) <= count(k + 1, m.part),
+                    "{:?} at 1:{} not at 1:{}",
+                    m.part,
+                    views[k].scale,
+                    views[k + 1].scale
+                );
+                if spec.form == opening::Form::Door {
+                    assert!(
+                        at[k + 1].contains(m),
+                        "{m:?} at 1:{} not at 1:{}",
+                        views[k].scale,
+                        views[k + 1].scale
+                    );
+                }
+            }
+        }
+        for (k, v) in views.iter().enumerate() {
+            assert_eq!(
+                count(k, Part::Leaf),
+                count(3, Part::Leaf),
+                "the leaves at 1:{}",
+                v.scale
+            );
+            assert_eq!(
+                count(k, Part::Glass),
+                count(3, Part::Glass),
+                "the glass at 1:{}",
+                v.scale
+            );
+        }
+        assert_eq!(
+            count(0, Part::Swing) + count(0, Part::Face) + count(0, Part::Frame),
+            0,
+            "1:200"
+        );
+        assert_eq!(
+            count(1, Part::Swing),
+            count(3, Part::Swing),
+            "the swing at 1:100"
+        );
+        assert_eq!(count(1, Part::Frame), 0, "no frame's sides at 1:100");
+        assert_eq!(
+            count(1, Part::Casing) + count(1, Part::Sill) + count(1, Part::Threshold),
+            0,
+            "1:100"
+        );
+        // A frameless sliding, pocket or folding door is its leaves at every scale; any other has fewer at 1:200.
+        let more = at[3]
+            .iter()
+            .any(|m| !matches!(m.part, Part::Leaf | Part::Glass | Part::Zone));
+        assert_eq!(
+            at[0].len() < at[3].len(),
+            more,
+            "{:?}",
+            at[3].iter().map(|m| m.part).collect::<Vec<_>>()
+        );
+        if more {
+            fewer += 1;
+        }
+    }
+    assert!(
+        doors > 60 && fewer > 30,
+        "{fewer} of {doors} doors and windows fewer at 1:200"
+    );
+}

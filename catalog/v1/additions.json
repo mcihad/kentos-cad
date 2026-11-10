@@ -2170,7 +2170,7 @@
       "id": "tool.wall",
       "title": "Duvar",
       "icon": "wall",
-      "description": "Yol gibi çizilen tabanı boyunca bir duvar çizer: Genişlik (E), Hiza (H: sol, orta, sağ), Öteleme (Ö) ve Stil (S) seçilir; yay (Y), uzunluk (U) ve yazılan noktalar çoklu çizgideki gibidir, Kapat (K) duvarı kapatır. Önizleme komutun planından çizilir; Enter duvarı tek adımda yazar.",
+      "description": "Yol gibi çizilen tabanı boyunca bir duvar çizer: Kalınlık (E), Hiza (H: sol, orta, sağ), Öteleme (Ö) ve Stil (S) seçilir; yay (Y), uzunluk (U) ve yazılan noktalar çoklu çizgideki gibidir, Kapat (K) duvarı kapatır. Önizleme komutun planından çizilir; Enter duvarı tek adımda yazar.",
       "aliases": [
         "DUVAR",
         "WALL"
@@ -2182,7 +2182,7 @@
     {
       "id": "tool.spaceDiscover",
       "title": "Toplu mahal bul",
-      "icon": "space",
+      "icon": "spaceDiscover",
       "description": "Katın veya seçilen bölgenin kapalı odalarını önizler. Mevcut mahalleri korur; elle çizilmiş sınırla kısmi çakışmayı gösterir ve yazmayı engeller. Enter yeni mahalleri tek geri alma adımında ekler.",
       "aliases": [
         "TOPLUMAHAL",
@@ -2196,8 +2196,8 @@
     {
       "id": "tool.wallRectangle",
       "title": "Dikdörtgen duvar",
-      "icon": "wall",
-      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Döndür (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
+      "icon": "wallRectangle",
+      "description": "İki karşı köşeyle ya da Boyutlar (B) ile kapalı dikdörtgen duvar çizer. Boy referansı (R): İç net, Dış ölçü veya Eksen; Kalınlık (E), Stil (S) ve Açı (D) çizmeden önce seçilir. İç net 4×3 m, duvarlar arasında 4×3 m boşluk bırakır. Sonuca kapı ve pencere ekleyebilirsiniz.",
       "aliases": [
         "DIKDORTGENDUVAR",
         "DUVARDIKDORTGEN",
@@ -2208,10 +2208,22 @@
       "status": "implemented"
     },
     {
+      "id": "tool.room",
+      "title": "Oda",
+      "icon": "room",
+      "description": "Bir odayı tek adımda çizer: dikdörtgen duvarları, içindeki mahal ve mahalin etiketi birlikte yazılır, tek geri almayla gider. İki karşı köşeyle ya da Boyutlar (B) ile; mahalin adı (A) projenin mahal adlarından seçilir ya da yazılır. Bitişik odanın duvarı Ortak duvar ile yeniden çizilmez, paylaşılır. Boy referansı (R), Kalınlık (E) ve Stil (S) Dikdörtgen duvardakidir.",
+      "aliases": [
+        "ODACIZ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.wallPartition",
       "title": "Ölçülü bölme duvar",
       "short": "Ölçülü bölme",
-      "icon": "wall",
+      "icon": "wallPartition",
       "description": "Düz ya da yaylı bir duvarın yüzünden net uzaklıkla veya eksen aralığıyla bölme çizer: düz kenara paralel, yaylı kenara aynı merkezli yay. Kaynak uçlarını, iki sınır duvarını veya boy ve yönü seçin; önizlemeyi kontrol edip yerleştirin. Kaynak duvar korunur.",
       "aliases": [
         "BOLMEDUVAR",
@@ -2225,7 +2237,7 @@
       "id": "tool.wallShift",
       "title": "Duvarı kaydır",
       "short": "Kaydır",
-      "icon": "edgeShift",
+      "icon": "wallShift",
       "description": "Duvarın tıklanan düz kenarını imleçle kendine dik kaydırır: önizleme iki yanın net mesafesini, mahallerin alanını ve izleyen duvarları söyler. Mimari bağlar düzenlemeyi izleyemezse yoldaki bağlar imleç hareket ederken yerinde işaretlenir ve hangisinin (ya da hangi iki bağın birlikte) kaldırılınca geçeceği yazılır. Tıklama ya da yazılan uzaklık tek adımda yazar.",
       "aliases": [
         "DUVARKAYDIR",
@@ -2238,11 +2250,40 @@
     {
       "id": "tool.wallDimensions",
       "title": "Duvar ölçüleri",
-      "icon": "dimension",
+      "icon": "wallDimensions",
       "description": "Seçilen duvarın imlece en yakın düz kenarına (Kenarlar → Bütün kenarlar ile her düz kenarına) açıklık aralıklarını ve toplam boyu ölçü sıraları olarak yerleştirir; açıklığı olmayan kenara tek ölçü yazılır, aynı boy iki kez yazılmaz. İmleçle yüzü ve konumu seçin; katman, stil, açıklık uçları veya merkezleri ve kağıt üzerindeki sıra aralığı görünür ayarlardan değişir. Duvara yeni açıklık eklenince ölçü dizisi de güncellenir. Yaylı kenar henüz desteklenmez.",
       "aliases": [
         "DUVAROLCU",
         "WALLDIMENSIONS"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.planDimensions",
+      "title": "Planı ölçülendir",
+      "icon": "planDimensions",
+      "description": "Etkin katın planını tek komutla ölçülendirir (Mimarlar Odası çizim ve sunuş standartları): dış duvarları kendisi bulur, dört cepheye ön projede 3 (cephe hareketleri, taşıyıcı akslar, blok), uygulamada 4 (doluluk ve boşluklar da) ölçü zinciri koyar; her mahali enine ve boyuna ikişer kez kesen, binayı baştan başa geçen iç ölçü zincirleri ekler. Önizlemeye bakın, Enter ya da tıkla tek geri alma adımında yazın. Boş zincir üretilmez.",
+      "aliases": [
+        "PLANOLCU",
+        "PLANÖLÇÜ",
+        "PLANDIMENSIONS"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.openingCodes",
+      "title": "Doğrama kodları",
+      "icon": "openingCodes",
+      "description": "Kapı, pencere ve boşluklara Mimarlar Odası'nın doğrama kodlarını verir: aynı tipteki açıklıklar aynı kodu alır (K01 iç kapı, GK01 bir yanında oda olmayan dış kapı, P01 pencere, B01 boşluk). Tipi olmayan açıklıklara her biçim ve ölçü için bir tip açılır. Önizlemede her açıklığın kodu görünür; Enter ya da tıkla kodlar yazılır ve Etiketle açıksa açıklıklar kod ve 90/210 ölçüsüyle etiketlenir, hepsi tek geri alma adımı. Etiket duvarın, kapı yayının ve öbür etiketlerin üstüne binmeyen yere konur.",
+      "aliases": [
+        "DOGRAMAKODU",
+        "DOĞRAMAKODU",
+        "KAPIKODU",
+        "OPENINGCODES"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -2266,7 +2307,7 @@
       "id": "tool.wallFromLines",
       "title": "Çizgiden duvar",
       "icon": "wallFromLines",
-      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynak çizgiler (K) Sil iken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda. Kapalı kontur yöntemi dış halka ve avlu/delikleri İç net, Dış ölçü veya Eksen referansıyla dönüştürür; görünür kaynak koru/sil ve yazmasız önizleme. Geçersiz kaynakta kısmi yazmaz. Eksen referansında zıt taraflı ortak sınırları tek duvar ağına dönüştürür; eşleme toleransı ve ilk kaynak öznitelik/görünümü önizlemede söylenir. Çakışan ölçü referansı veya asimetrik stil açıkça reddedilir. Açık Kat (L) seçimi bütün yeni duvarlara gider; katsız varsayılan korunur. Farklı semantik katlar birleşmez, tekrar denetimi aynı katmanda ve aynı kattadır (ADR 0668).",
       "aliases": [
         "CIZGIDENDUVAR",
         "DUVARCEVIR"
@@ -2317,7 +2358,7 @@
     },
     {
       "id": "tool.wallJoin",
-      "title": "Duvarları birleştir",
+      "title": "Tek duvara çevir",
       "icon": "wallJoin",
       "description": "Uç uca duvarları tek duvar yapar: seçili duvarlar hemen, yoksa tıklananlar Enter ile. Alanları aynı olmalı; ters yöndeki duvar gövdesi yerinde çevrilir.",
       "aliases": [
@@ -2395,9 +2436,9 @@
     },
     {
       "id": "arch.settings",
-      "title": "Katlar",
+      "title": "Mimari ayarları",
       "icon": "archSettings",
-      "description": "Proje ayarları'nın Mimari bölümünü açar: projenin katları (ad, kot, kat yüksekliği) ve duvarların çizim ayrıntısı (ölçeğe göre, şematik, standart, ayrıntılı).",
+      "description": "Proje ayarları'nın Mimari bölümünü açar: projenin katları (ad, kot, kat yüksekliği), duvarların görünüşü (ölçeğe göre, şematik, uygulama, ayrıntılı), planın kesme yüksekliği ve çizgi kalınlıkları.",
       "aliases": [
         "KATLAR",
         "MIMARI",
@@ -2433,7 +2474,7 @@
       "id": "tool.door",
       "title": "Kapı",
       "icon": "door",
-      "description": "Duvara kapı koyar: imleç duvarın yanındayken kapı komutun planından çizilir, tıklama yazar ve araç açık kalır. Tür (T) Kapı 90, Kapı 80, İki kanatlı kapı 140 ya da Sürme kapı 160; Genişlik (E) türünkinin yerine; Yan (Y) kanadın açıldığı yan (Otomatik: imlecin yanı); Menteşe (M) Baş ya da Son; Uzaklık (U) yakın pervazın duvarın yakın ucuna uzaklığı; Orta (O) kenarın ortası.",
+      "description": "Duvara kapı koyar: imleç duvarın yanındayken kapı komutun planından çizilir, tıklama yazar ve araç açık kalır. Tür (T) Kapı 90, Kapı 80, İki kanatlı kapı 140 ya da Sürme kapı 160; Genişlik (E) türünkinin yerine; Açılma yanı (Y) kanadın açıldığı yan (Otomatik: imlecin yanı); Menteşe (M) Baş ya da Son; Uçtan uzaklık (U) yakın pervazın duvarın yakın ucuna uzaklığı; Yerleştirme (O) Ortala ile kenarın ortası.",
       "aliases": [
         "KAPI",
         "DOOR"
@@ -2446,7 +2487,7 @@
       "id": "tool.window",
       "title": "Pencere",
       "icon": "window",
-      "description": "Duvara pencere koyar: imleç duvarın yanındayken pencere komutun planından çizilir, tıklama yazar. Tür (T) Pencere 120 ya da Sabit pencere 100 (kasa, denizlik ve lento türden); Genişlik (E), Uzaklık (U: yakın pervazın duvarın ucuna uzaklığı) ve Orta (O).",
+      "description": "Duvara pencere koyar: imleç duvarın yanındayken pencere komutun planından çizilir, tıklama yazar. Tür (T) Pencere 120 ya da Sabit pencere 100 (kasa, denizlik ve lento türden); Genişlik (E), Uçtan uzaklık (U: yakın pervazın duvarın ucuna uzaklığı) ve Yerleştirme (O: Ortala ile kenarın ortası).",
       "aliases": [
         "PENCEREKOY",
         "WINDOW"
@@ -2459,7 +2500,7 @@
       "id": "tool.opening",
       "title": "Boşluk",
       "icon": "wallOpening",
-      "description": "Duvarda kapısız, penceresiz bir boşluk açar: duvarın çizgileri pervazlarda kesilir. Genişlik (E), Uzaklık (U) ve Orta (O).",
+      "description": "Duvarda kapısız, penceresiz bir boşluk açar: duvarın çizgileri pervazlarda kesilir. Genişlik (E), Uçtan uzaklık (U) ve Yerleştirme (O).",
       "aliases": [
         "BOSLUK",
         "WALLOPENING"
@@ -2472,7 +2513,7 @@
       "id": "tool.niche",
       "title": "Niş",
       "icon": "wallNiche",
-      "description": "Duvarın bir yüzünden içeri oyulan niş koyar: imleç duvarın hangi yanındaysa o yüzden. Tür (T), Genişlik (E), Derinlik (D), Yüz (Y), Alt (L) ve Üst (Ü) kot. Planın kesme yüksekliğini (1,10 m) kesen niş duvarı oyar, kesmeyen kesik çizgiyle görünür; duvarı geçecek kadar derin niş yazılmaz.",
+      "description": "Duvarın bir yüzünden içeri oyulan niş koyar: imleç duvarın hangi yanındaysa o yüzden. Tür (T), Genişlik (E), Derinlik (D), Yüz (Y), Alt kot (L) ve Üst kot (Ü). Planın kesme yüksekliğini (1,10 m) kesen niş duvarı oyar, kesmeyen kesik çizgiyle görünür; duvarı geçecek kadar derin niş yazılmaz.",
       "aliases": [
         "NIS",
         "NICHE"
@@ -2485,7 +2526,7 @@
       "id": "tool.flue",
       "title": "Baca",
       "icon": "wallFlue",
-      "description": "Duvarın içinde, iki yüzüne de varmayan baca koyar: Genişlik (E) duvar boyunca, Derinlik (D) duvarın enine; Yüzden uzaklık (Z; Ortada) ve Yüz (Y). Planda boşluğu çapraz çizgiyle; Alt (L) ve Üst (Ü) kotla kesme yüksekliği dışında kalan kesik çizgiyle.",
+      "description": "Duvarın içinde, iki yüzüne de varmayan baca koyar: Genişlik (E) duvar boyunca, Derinlik (D) duvarın enine; Yüzden uzaklık (Z; Ortada) ve Yüz (Y). Planda boşluğu çapraz çizgiyle; Alt kot (L) ve Üst kot (Ü) ile kesme yüksekliği dışında kalan kesik çizgiyle.",
       "aliases": [
         "BACA",
         "FLUE"
@@ -2523,7 +2564,7 @@
     {
       "id": "tool.openingArray",
       "title": "Açıklık dağıt",
-      "icon": "array",
+      "icon": "openingArray",
       "description": "Bir kaynak kapı, pencere veya boşluğu aynı duvar boyunca çoğaltır. Kopya adedi kaynağı içermez; net/merkez aralığı, yön, uç payları ve isteğe bağlı numaralar görünür ayarlardadır. Önizlemeyi Enter ile tek adımda uygular; çakışma varsa hiçbir kopya eklemez.",
       "aliases": [
         "ACIKLIKDAGIT",
@@ -2550,7 +2591,7 @@
       "id": "tool.space",
       "title": "Mahal",
       "icon": "space",
-      "description": "Duvarlarla çevrili bir yere tıklayınca mahali komutun planından bulur ve alanını gösterir; tıklama yazar, araç açık kalır, numara bir artar. Yöntem (Y) Net (iç yüzler), Duvar ekseni ya da Brüt (dış yüzler); Numara (N), Ad (A), Kullanım (K); Çiz (Ç) sınırı köşelerle çizdirir, Enter kapatır.",
+      "description": "Duvarlarla çevrili bir yere tıklayınca mahali komutun planından bulur ve alanını gösterir; tıklama yazar, araç açık kalır, numara bir artar. Alan yöntemi (Y) Net (iç yüzler), Duvar ekseni ya da Brüt (dış yüzler); Numara (N), Ad (A), Kullanım (K); Sınır (S) Duvarlardan bul ya da Köşeleri çiz, çizilen sınırı Enter kapatır; Döşeme boşluğu (V) şaft, asansör ya da galeri boşluğu yazar.",
       "aliases": [
         "MAHAL",
         "SPACE",
@@ -2564,7 +2605,7 @@
       "id": "tool.slab",
       "title": "Döşeme",
       "icon": "slab",
-      "description": "Döşeme, balkon ya da teras çizer: Sınır (S) Dış yüzler (tıklanan yerin duvarlarının dış konturu), Oda (odanın iç yüzleri) ya da Köşeleri çiz; Tür (T), Kalınlık (K), Kot farkı (F), Kenar ötelemesi (Ö), Kenar (E: Yok, Korkuluk, Parapet; serbest kenarlar boyunca), Malzeme (M), Metraj (X) ve Kat (L). Delik (D) açıkken tıklanan oda ya da çizilen alan altındaki döşemeden kesilir. Önizleme komutun planından; tıklama ya da Enter tek adımda yazar.",
+      "description": "Döşeme, balkon ya da teras çizer: Sınır (S) Dış yüzler (tıklanan yerin duvarlarının dış konturu), Oda (odanın iç yüzleri) ya da Köşeleri çiz; Tür (T), Kalınlık (E), Kot farkı (F), Kenar ötelemesi (Ö), Kenar (N: Yok, Korkuluk, Parapet; serbest kenarlar boyunca), Malzeme (M), Metraj (X) ve Kat (L). Delik (D) açıkken tıklanan oda ya da çizilen alan altındaki döşemeden kesilir. Önizleme komutun planından; tıklama ya da Enter tek adımda yazar.",
       "aliases": [
         "DOSEME",
         "DÖŞEME",
@@ -2579,8 +2620,9 @@
     },
     {
       "id": "tool.spaceRebound",
-      "title": "İç nokta seç",
-      "icon": "space",
+      "title": "Mahali yeniden sınırla",
+      "short": "Yeniden sınırla",
+      "icon": "spaceRebound",
       "description": "Seçili mahal için yeni bir oda iç noktası seçin; yoksa önce mahalin içine tıklayın. Yeni sınırı önizleyin; tıklama veya tek onay uygular, Escape vazgeçer. Mahalın kimliği, numarası, katı ve kaynak kapsamı korunur; duvar gövdesi oda noktası seçilemez.",
       "aliases": [
         "MAHALICNOKTA",
@@ -2593,7 +2635,7 @@
     {
       "id": "tool.spaceSources",
       "title": "Mahal kaynakları",
-      "icon": "space",
+      "icon": "spaceSources",
       "description": "Mahal için kalıcı duvar, kolon ve mahal ayırıcı kaynaklarını sahneden seçin. Her tıklama kaynağı ekler veya çıkarır; sınır önizlenir, Enter tek adımda uygular, Escape vazgeçer. Tüm uygun kaynaklar açık tercihle geri yüklenebilir.",
       "aliases": [
         "MAHALKAYNAK",
@@ -2657,7 +2699,7 @@
       "id": "tool.grid",
       "title": "Aks",
       "icon": "archGrid",
-      "description": "İki tıklama bir aks çizer; etiketi sıradakidir (A, B … H, J … ya da 1, 2 …; I ve O atlanır), Etiket (E) yazdırır. Seri (S) aralıkları yazdırır (6 6 4.5 gibi): ilk aksın iki noktası, sonra diğerlerinin gideceği yana tıklama bütün akslarını tek adımda çizer. Uçlarda balon ve etiket.",
+      "description": "İki tıklama bir aks çizer; etiketi sıradakidir (A, B … H, J … ya da 1, 2 …; I ve O atlanır), Etiket (E) yazdırır. Seri aralıkları (S) yazdırır (6 6 4.5 gibi): ilk aksın iki noktası, sonra diğerlerinin gideceği yana tıklama bütün akslarını tek adımda çizer. Uçlarda balon ve etiket.",
       "aliases": [
         "AKS",
         "AKSCIZ",
@@ -2685,7 +2727,7 @@
       "id": "tool.column",
       "title": "Kolon",
       "icon": "column",
-      "description": "Tıklanan yere kolon koyar; iki aksın kesişimine yakın tıklama onu kesişime koyar ve akslara bağlar: aks taşınınca kolon izler, konum yazısı “B-3” olur. Biçim (B) dikdörtgen ya da daire, En (E), Boy (Y), Döndür (D), Etiket (K: S1'den artar); Aks kesişimleri (A) görünen bütün aksların kesişimlerine birer kolon koyar.",
+      "description": "Tıklanan yere kolon koyar; iki aksın kesişimine yakın tıklama onu kesişime koyar ve akslara bağlar: aks taşınınca kolon izler, konum yazısı “B-3” olur. Biçim (B) dikdörtgen ya da daire, En (E), Boy (Y), Açı (D), İlk etiket (K: S1'den artar); Aks kesişimleri (A) görünen bütün aksların kesişimlerine birer kolon koyar.",
       "aliases": [
         "KOLON",
         "COLUMN"
@@ -2698,7 +2740,7 @@
       "id": "tool.stair",
       "title": "Merdiven",
       "icon": "stair",
-      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Yükseklik (Y) ve En fazla rıht (R) rıht sayısını verir (S ile elle de); Basamak (D), Genişlik (G), Sahanlık (H), Kesme (K), Numaralar (N), Korkuluk (O); Son kol (U) son rıhtta ya da tıklanan yerde biter. Kesmenin üstü kesikli çizilir; 2 × rıht + basamak 0,60–0,65 m dışındaysa söylenir, yönetmelik denetimi değildir.",
+      "description": "Yürüme çizgisinin noktaları (2 nokta düz, 3 L, 4 U), Enter yazar. Yükseklik (Y) ve En fazla rıht (R) rıht sayısını verir (S ile elle de); Basamak (D), Genişlik (E), Sahanlık (H), Kesme yüksekliği (K), Basamak numaraları (N), Korkuluk (O); Son kol (U) son rıhtta ya da tıklanan yerde biter. Kesmenin üstü kesikli çizilir; 2 × rıht + basamak 0,60–0,65 m dışındaysa söylenir, yönetmelik denetimi değildir.",
       "aliases": [
         "MERDIVEN",
         "STAIR"
@@ -2711,7 +2753,7 @@
       "id": "tool.stairCurved",
       "title": "Döner merdiven",
       "icon": "stairCurved",
-      "description": "Döner (spiral) merdiven: merkeze, sonra yürüme çizgisinin başına tıklanır (merkeze uzaklığı yarıçap); imleç merkezin çevresinde merdivenin döneceği yana götürülüp tıklanır. Yay son rıhtta biter (Yay: tıklanan yerde de olur, dönüş derece yazılır). Rıhtlar yürüme çizgisi boyunca basamak aralığıyla, radyal; iç kenardaki basamak etikette söylenir. Yükseklik, en fazla rıht, genişlik, kesme, numaralar ve korkuluk Merdiven'inkilerdir; yönetmelik denetimi değildir.",
+      "description": "Döner (spiral) merdiven: merkeze, sonra yürüme çizgisinin başına tıklanır (merkeze uzaklığı yarıçap); imleç merkezin çevresinde merdivenin döneceği yana götürülüp tıklanır. Yay boyu (U) son rıhtta biter ya da tıklanan yerde (dönüş derece yazılır). Rıhtlar yürüme çizgisi boyunca basamak aralığıyla, radyal; iç kenardaki basamak etikette söylenir. Yükseklik, en fazla rıht, genişlik, kesme, numaralar ve korkuluk Merdiven'inkilerdir; yönetmelik denetimi değildir.",
       "aliases": [
         "DONERMERDIVEN",
         "DÖNERMERDİVEN",
@@ -2725,11 +2767,25 @@
       "id": "tool.ramp",
       "title": "Rampa",
       "icon": "ramp",
-      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik (Y), Eğim (E, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (G), Sahanlık (H), En uzun kol (L: aşan kola ara sahanlık), Başlangıç kotu (Z: boş ya da kat etkin katın kotunu izler, kat+0.15 kattan fark, sayı kendi kotu), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; erişilebilirliği Mimari denetim'in TS 9111 özeti sınar.",
+      "description": "Orta çizginin noktaları (2–4), Enter yazar. Yükseklik farkı (Y), Eğim (M, yüzde; öntanımlı %6, Hesaplanır çizgiden bulur), Genişlik (E), Sahanlık (H), En uzun kol (L: aşan kola ara sahanlık), Başlangıç kotu (Z: boş ya da kat etkin katın kotunu izler, kat+0.15 kattan fark, sayı kendi kotu), Korkuluk (O); Son kol (U) eğime göre ya da tıklanan yerde biter. Uçlarında kot yazısı; erişilebilirliği Mimari denetim'in TS 9111 özeti sınar.",
       "aliases": [
         "RAMP",
         "RAMPACIZ",
         "RAMPAÇİZ"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.beam",
+      "title": "Kiriş",
+      "icon": "beam",
+      "description": "Tür (T): Kiriş, Lento ya da Hatıl (docs/adr/8041 §1, §3). Kiriş ve hatıl: eksenin noktaları, Enter yazar; Genişlik (E), Yükseklik (Y: kirişte döşeme dahil), Hiza (H: orta, sol, sağ), kirişte Kot farkı (F: tepesi katın üstündeki döşemenin betonarmesinde, yoksa katın tepesinde; fark ondan), hatılda Kattan yükseklik (A: alt yüzünün katın döşemesinden yüksekliği). Lento: kapıya ya da pencereye tıklanır; açıklığın başında, duvar kalınlığında, iki yanda Oturma (O) kadar uzanır (TBDY 2018 11.5.3: en az 20 cm; yüksekliği en az 15 cm). Numara (N: K101, L101, H101 gibi; her birinden sonra ilerler). Planda kesikli ve ince çizilir; 1:100'de numarası, 1:50'den numarası ve ölçüsü (K101 25/50) yanına yazılır. Kirişin altındaki duvar kirişin altında biter; lento ve hatıl duvarın içindedir. Etkin kata, kendi katmanına yazılır: MM-TASI-KIRIS, MM-LENT-GENEL, MM-HATL-GENEL.",
+      "aliases": [
+        "BEAM",
+        "KIRIS",
+        "KİRİŞ"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -2812,7 +2868,7 @@
       "id": "tool.tag",
       "title": "Etiket",
       "icon": "tag",
-      "description": "Bir açıklığa, mahale, kolona, aksa, duvara, merdivene, rampaya ya da bloğa tıklayın, sonra etiketin yerine (Enter: nesnenin yanına). Etiketin yazısı nesnenin değerlerinden yazılır ve nesne değişince değişir; nesne taşınınca etiket de taşınır. Şablon (Ş: {number}, {type}, {name}, {area} …), Biçim (B: daire, altıgen, dikdörtgen, yuvarlak köşeli, çerçevesiz), Kol (K).",
+      "description": "Bir açıklığa, mahale, kolona, aksa, duvara, merdivene, rampaya ya da bloğa tıklayın, sonra etiketin yerine (Enter: nesnenin yanına). Etiketin yazısı nesnenin değerlerinden yazılır ve nesne değişince değişir; nesne taşınınca etiket de taşınır. Şablon (Ş: {number}, {type}, {name}, {area} …), Çerçeve (B: daire, altıgen, dikdörtgen, yuvarlak köşeli, çerçevesiz), Kol (K).",
       "aliases": [
         "ETIKET",
         "ETİKET",
@@ -2839,7 +2895,6 @@
     {
       "id": "arch.tagsCheck",
       "title": "Etiketleri denetle",
-      "short": "Denetle",
       "icon": "tagsCheck",
       "description": "Yinelenen numaraları, türü olmayan ve duvarı kopuk açıklıkları, nesnesi olmayan etiketleri, etiketsiz açıklık ve mahalleri bulur; bulgular alt panelin Uyarılar sekmesinde, satır nesneye gider. Çizimi değiştirmez.",
       "aliases": [
@@ -2881,7 +2936,6 @@
     {
       "id": "tool.scheduleSpaces",
       "title": "Mahal çizelgesi",
-      "short": "Mahal",
       "icon": "scheduleSpaces",
       "description": "Çizimin mahallerinin çizelgesini imleçten yerleştirir: numara, ad, kullanım, kat, alan, çevre, yükseklik; toplamıyla. Tür (T), Grup (G), Toplam (O), Sırala (S). Satırları her adımda yeniden yazılır; ad ve kullanım hücreleri mahallere yazılır.",
       "aliases": [
@@ -2901,6 +2955,53 @@
       "aliases": [
         "KAPLAMACIZELGESI",
         "FINISHSCHEDULE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.scheduleRoomList",
+      "title": "Mahal listesi",
+      "short": "Mahal listesi",
+      "icon": "scheduleRoomList",
+      "description": "Projenin mahal listesini imleçten yerleştirir (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): kat kat, en alttan başlayarak, katın başlığı altında her mahalin numarası ve adı; döşeme, süpürgelik, duvar ve tavan kaplaması; mahale hizmet eden kapılar ve pencereler doğrama kodlarıyla (K01, P01 (2)); denizlik ve parapet, merdiven basamak ve rıht, küpeşte ve korkuluk. Kaplama hücreleri mahallere yazılır; liste çizimi izler.",
+      "aliases": [
+        "MAHALLISTESI",
+        "MAHALLİSTESİ",
+        "ROOMLIST",
+        "ROOMFINISHLIST"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.renovationLegend",
+      "title": "Tadilat lejantı",
+      "short": "Tadilat lejantı",
+      "icon": "renovationLegend",
+      "description": "Mimarlar Odası'nın tadilat lejantını imleçten yerleştirir (docs/adr/8039): başlık ve üç kutu; mevcut düz kontur, ilave 45° taralı, iptal kesikli. Ölçüleri pafta ölçeğinde kâğıt milimetresi: yazı 2,5 mm, kutu 15 × 6 mm. Blok MM-XXXX-TADILATLEJANTI, lejant katmanında.",
+      "aliases": [
+        "TADILATLEJANTI",
+        "RENOVATIONLEGEND"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.joineryList",
+      "title": "Doğrama listesi",
+      "short": "Doğrama listesi",
+      "icon": "joineryList",
+      "description": "Grafik doğrama listesini imleçten yerleştirir (docs/adr/8038): çizimin kullandığı her kapı ve pencere tipi bir sütunda; doğrama kodu, Türkiye'deki çizimle görünüşü (açılım çizgileri menteşe tarafının köşelerinden kol tarafının ortasına iner), kaba ölçü, denizlik yüksekliği, açılım, kasa ve kanat, U değeri, adet. Liste bir bloktur (MM-XXXX-DOGRAMALISTESI); tipler ya da açıklıklar değişince aynı adımda yeniden yazılır. 1/50 için 2,5 mm yazı.",
+      "aliases": [
+        "DOGRAMALISTESI",
+        "DOĞRAMALISTESİ",
+        "KAPIPENCERELISTESI",
+        "JOINERYLIST",
+        "DOORWINDOWLEGEND"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -2929,6 +3030,132 @@
       "aliases": [
         "BOLUMCIZELGESI",
         "UNITSCHEDULE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.scheduleAreas",
+      "title": "Metrekare cetveli",
+      "icon": "scheduleAreas",
+      "description": "Bina programının bağımsız bölümlerini ve ortak alanlarını kat kat listeleyen metrekare cetveli (Planlı Alanlar İmar Yönetmeliği 57/2-a): her katta bölümler ve ortak alanların o kattaki brüt ve net alanı (Madde 4), altında binanın toplamı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
+      "aliases": [
+        "METREKARE",
+        "METREKARECETVELI",
+        "ALANCETVELI",
+        "AREATABLE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.siteParcel",
+      "title": "Parsel ve bahçe mesafeleri",
+      "short": "Parsel",
+      "icon": "siteParcel",
+      "description": "Vaziyet planı (docs/adr/8032; Planlı Alanlar İmar Yönetmeliği 23): kapalı bir çizgiyi ya da alanı parsel yapar; kenarına tıklandıkça türü değişir (yan bahçe, ön bahçe, arka bahçe, kamusal alan), her kenar bahçe mesafesini (yolda ve kamusal alanda 5 m, yanda ve arkada 3 m, dört kattan sonra her kat için 0,50 m daha) ve binanın ona uzaklığını söyler. Enter kaydeder ve yapı yaklaşma sınırını kesikli kırmızı çizgiyle çizer; sınır parsel, kat ve bina değişince kendini yeniler. Ölçüler (Ö) açıkken binadan her kenara cephe ortasında bir ölçü, ±0,00 kot işareti ve ±0,00 kotunun yazısı da çizilir. Dar kenar durum çubuğunda, Öznitelikler'de ve Emsal ve TAKS tablosunda görünür.",
+      "aliases": [
+        "VAZIYET",
+        "VAZİYET",
+        "VAZIYETPLANI",
+        "VAZİYETPLANI",
+        "BAHCEMESAFESI",
+        "BAHÇEMESAFESİ",
+        "YAKLASMASINIRI",
+        "YAKLAŞMASINIRI",
+        "SETBACK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.escapeRoutes",
+      "title": "Kaçış yolları",
+      "short": "Kaçış yolları",
+      "icon": "escapeRoutes",
+      "description": "Yangın kaçışı (docs/adr/8035; Binaların Yangından Korunması Hakkında Yönetmelik): etkin katın kaçış yollarını çizer — her mahalin duvardan 40 cm içerideki en uzak noktasından (32/6) en yakın kat çıkışına (Merdiven adlı ortak mahal, açık merdiven ya da zemin katta dışarı açılan kapı); dairede en uzak noktadan daire kapısına (48/2) ve daire kapısından kat çıkışına (48/4). Her yol ölçtüğünü sınırıyla yazar (tek yön 28,07 m > 15,00 m); sınırı aşan kırmızı, uyan yeşil, yönetmeliğin aramadığı (48/1) gri çizilir. Yeniden çalışınca eski yolları siler; tek geri alma adımıdır. Yağmurlama sistemi Proje ayarları › Mimari › Yangın güvenliği'nden okunur; bulgular Denetim › Mevzuat'tadır.",
+      "aliases": [
+        "KACIS",
+        "KAÇIŞ",
+        "KACISYOLU",
+        "KAÇIŞYOLU",
+        "YANGINKACISI",
+        "YANGINKAÇIŞI",
+        "EGRESS"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.zoningTable",
+      "title": "Emsal ve TAKS tablosu",
+      "short": "Emsal tablosu",
+      "icon": "zoningTable",
+      "description": "Parselin imar durumunu çizimle karşılaştıran canlı tabloyu imleçten yerleştirir (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 57/3): parsel alanı, emsal ve TAKS ile izin verdikleri alanların yanında projenin değerleri ve kalanı, emsal harici payı (%30), yapı inşaat alanı ve her katın emsale dahil ve harici alanı. Sınırı aşan değer kırmızı yazılır. Mahal, duvar, program ya da Proje ayarları › Mimari › İmar durumu değişince yeniden yazılır.",
+      "aliases": [
+        "EMSAL",
+        "EMSALTABLOSU",
+        "TAKS",
+        "KAKS",
+        "IMARTABLOSU",
+        "İMARTABLOSU",
+        "ZONINGTABLE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.parkingTable",
+      "title": "Otopark hesabı",
+      "short": "Otopark hesabı",
+      "icon": "parkingTable",
+      "description": "Bağımsız bölümlerin otopark ihtiyacını Otopark Yönetmeliği'ne göre hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konutta bölümün brüt alanına göre 80 m²'den küçükse 3 daireye 1, 80–120 m² 2 daireye 1, 120–180 m² daireye 1, 180 m²'den büyükse daireye 2 (Ek-1, RG 25.3.2021); dükkân, mağaza ve bankada 50 m²'ye 1, bölüm başına en az 1 (RG 16.6.2022); büroda 50 m²'ye 1. Toplam bir üste yuvarlanır (8/4). Adı Otopark ya da Garaj olan mahallerin net alanı 20 m²'ye bölünerek çizimdeki yer sayısı bulunur (4/1-ç); az ise kırmızı yazılır. 20 ve daha fazla yerde %5 (en az 1) elektrikli araç şarj yeri (5/1-j). Program, mahal ya da ayar değişince yeniden yazılır.",
+      "aliases": [
+        "OTOPARK",
+        "OTOPARKHESABI",
+        "PARKYERI",
+        "PARKİNG",
+        "PARKING"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.shelterTable",
+      "title": "Sığınak hesabı",
+      "short": "Sığınak hesabı",
+      "icon": "shelterTable",
+      "description": "Sığınak Yönetmeliği'ne göre (7, 8; RG 7.11.2025 değişikliği) gereken sığınağı hesaplayan canlı tabloyu imleçten yerleştirir (docs/adr/8036): konut bölümünde oda sayısına göre 1 oda 2, 2 oda 3, 3 ve daha fazla oda 4 kişi; öbür bölümlerde brüt alan ÷ 20 kişi; kişi başına 1 m² net. 10'dan az bağımsız bölümlü yalnız konut yapısında, 1500 m²'den az konut dışı yapıda ve 10'dan az konutlu, 1500 m²'den az karma yapıda sığınak aranmaz (7/a–c). Adı Sığınak olan mahallerin net alanı karşılaştırılır; az ise kırmızı yazılır. Her 100 kişiye kadın ve erkek için birer tuvalet ve lavabo, 100 m²'yi aşan sığınakta 2 çıkış yazılır. Program, mahal ya da ayar değişince yeniden yazılır.",
+      "aliases": [
+        "SIGINAK",
+        "SIĞINAK",
+        "SIGINAKHESABI",
+        "SIĞINAKHESABI",
+        "SHELTER"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.scheduleLandShares",
+      "title": "Kat irtifakı tablosu",
+      "short": "Kat irtifakı",
+      "icon": "scheduleLandShares",
+      "description": "Tapuya verilecek projenin paylaşım tablosunu imleçten yerleştirir (docs/adr/8031; Kat Mülkiyeti Kanunu 12/a, Planlı Alanlar İmar Yönetmeliği 57/2-a): her bağımsız bölümün numarası, katı, niteliği, BB net ve brüt alanı, eklentileri, BB toplam ve genel brüt alanı ve arsa payı. Arsa payı bölümlerin toplam brütü ve değer katsayılarıyla oranlıdır; payda programın paydası, yoksa parsel alanı. Çizelge çizimi izler: mahal, duvar ya da program değişince yeniden yazılır.",
+      "aliases": [
+        "KATIRTIFAKI",
+        "KATİRTİFAKI",
+        "ARSAPAYI",
+        "PAYLASIMTABLOSU",
+        "PAYLAŞIMTABLOSU",
+        "LANDSHARES"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3075,6 +3302,23 @@
       "status": "implemented"
     },
     {
+      "id": "arch.permitSet",
+      "title": "Ruhsat takımı",
+      "short": "Ruhsat takımı",
+      "icon": "permitSet",
+      "description": "Projenin künyesini bir kez sorar (il, ilçe, mahalle, ada, parsel, yapı sahibi, müellif mimar, sicil ve BTB no, taşıyıcı sistem, proje kodu …) ve çizimin değişkenlerine yazar; seçilen aşamanın pafta takımını Mimarlar Odası'nın sırasıyla tek geri alma adımında kurar: proje bilgileri (PAİY 57/10 bilgi tablosu ve canlı pafta listesi), vaziyet planı, en alttan en üste kat planları. Paftalar MO antetlidir (sys:mimari-ruhsat), UP-01… numaralıdır, hepsinin haritasının sığdığı en küçük A kâğıdındadır. Ardından Paftaları toplu yayınla'yı takım seçili, her pafta ayrı PDF/A-2 dosyası ve dijital proje yönetmeliğinin EK-2 dosya adlarıyla denetlenmiş açar (ADR 8037).",
+      "aliases": [
+        "RUHSAT",
+        "RUHSATTAKIMI",
+        "RUHSATTAKİMİ",
+        "PAFTATAKIMI",
+        "PERMITSET"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "arch.sheetSet",
       "title": "Pafta seti",
       "icon": "sheetSet",
@@ -3091,7 +3335,6 @@
     {
       "id": "tool.spaceFloor",
       "title": "Döşeme deseni",
-      "short": "Döşeme",
       "icon": "spaceFloor",
       "description": "Mahallerin içine tıklayın: her birine mahale bağlı döşeme taraması yazılır, mahal duvarlarıyla değişince tarama da değişir. Desen (D) kitaplığın ya da projenin desen adı; verilmezse mahalin döşeme kaplamasının adıyla aynı adlı desen, o da yoksa ANSI31. Aynı mahalin eski döşeme deseni yerine geçer. Katman A-ZEMN-DSN.",
       "aliases": [
@@ -3105,7 +3348,6 @@
     {
       "id": "tool.spaceCeiling",
       "title": "Tavan ızgarası",
-      "short": "Tavan",
       "icon": "spaceCeiling",
       "description": "Mahallerin içine tıklayın: her birine mahale bağlı asma tavan ızgarası yazılır. Aralık (A: 0.6 ya da 0.6x1.2), Başlangıç (B: mahalin ortası, karşılıklı duvarlarda eşit kesik; ya da sol alt köşe). Katman A-TAVN-IZG.",
       "aliases": [
@@ -3139,11 +3381,22 @@
       "status": "implemented"
     },
     {
+      "id": "edit.selectFilter.beam",
+      "title": "Seçim süzgecinde Kiriş",
+      "short": "Kiriş",
+      "icon": "beam",
+      "description": "Seçim süzgecinde kirişleri seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
+    },
+    {
       "id": "arch.template",
       "title": "Mimari şablonu",
       "short": "Şablon",
       "icon": "archTemplate",
-      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse cm / 1:50 paket ayarı açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
+      "description": "Mimari ofis paketini önce farkıyla gösterir. Mevcut birim ve çizim ölçeği varsayılan olarak korunur; eksik katman, stil, blok, kat ve paftalar tek geri alma adımında eklenir. İstenirse paketin m / 1:100 ayarı (yeni Mimari projesiyle aynı) açıkça seçilir; model geometrisi yeniden ölçeklenmez.",
       "aliases": [
         "MIMARISABLON",
         "ARCHTEMPLATE"
@@ -3168,12 +3421,12 @@
     },
     {
       "id": "arch.phase.all",
-      "title": "Evre: Tümü",
+      "title": "Tadilat: Tümü",
       "short": "Tümü",
       "icon": "phaseAll",
-      "description": "Bütün evreler olduğu gibi çizilir.",
+      "description": "Bütün tadilat durumları olduğu gibi çizilir.",
       "aliases": [
-        "EVRETUMU"
+        "TADILATTUMU"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3181,12 +3434,12 @@
     },
     {
       "id": "arch.phase.existing",
-      "title": "Evre: Mevcut durum",
+      "title": "Tadilat: Mevcut durum",
       "short": "Mevcut",
       "icon": "phaseExisting",
-      "description": "Mevcut ve yıkılacak nesneler çizilir; yeni ve geçici olanlar gizlenir (seçilmez, kenetlenmez, paftada da).",
+      "description": "Mevcut ve iptal edilecek nesneler çizilir; ilave ve geçici olanlar gizlenir (seçilmez, kenetlenmez, paftada da).",
       "aliases": [
-        "EVREMEVCUT"
+        "TADILATMEVCUT"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3194,12 +3447,12 @@
     },
     {
       "id": "arch.phase.demolition",
-      "title": "Evre: Yıkım planı",
+      "title": "Tadilat: Yıkım planı",
       "short": "Yıkım",
       "icon": "phaseDemolition",
-      "description": "Mevcut nesneler olduğu gibi, yıkılacaklar kesikli çizilir; yeni ve geçici olanlar gizlenir.",
+      "description": "Mevcut nesneler olduğu gibi, iptal edilecekler kesikli çizilir; ilave ve geçici olanlar gizlenir.",
       "aliases": [
-        "EVREYIKIM"
+        "TADILATYIKIM"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -3207,12 +3460,25 @@
     },
     {
       "id": "arch.phase.proposed",
-      "title": "Evre: Yeni durum",
+      "title": "Tadilat: Yeni durum",
       "short": "Yeni",
       "icon": "phaseProposed",
-      "description": "Yeni nesneler olduğu gibi, mevcutlar soluk, geçiciler kesikli çizilir; yıkılacaklar gizlenir.",
+      "description": "İlave nesneler olduğu gibi, mevcutlar soluk, geçiciler kesikli çizilir; iptal edilecekler gizlenir.",
       "aliases": [
-        "EVREYENI"
+        "TADILATYENI"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.phase.renovation",
+      "title": "Tadilat: Tadilat projesi",
+      "short": "Tadilat projesi",
+      "icon": "phaseRenovation",
+      "description": "Mimarlar Odası'nın tekniğiyle bütün durumlar tek planda: mevcut düz kontur (dolgusuz), ilave taralı, iptal kesikli. Kalan duvarda kapatılan pencerenin yeri ilave taramayla dolar; mevcut duvara açılan kapının kaldırdığı duvar kesikli görünür. Bundan sonra çizilenler İlave olur.",
+      "aliases": [
+        "TADILATPROJESI"
       ],
       "shortcuts": [],
       "category": "Mimari",
@@ -4595,7 +4861,7 @@
     {
       "id": "tool.spaceSeparator",
       "title": "Mahal ayırıcı",
-      "icon": "space",
+      "icon": "spaceSeparator",
       "description": "Sıfır kalınlıklı kalıcı mahal sınırı çizin. Düz veya yaylı çoklu çizgi; Kat görünürdür, Enter tek adımda uygular, Escape yazmaz. Sıradan çizgiler sınır olmaz; fiziksel duvar metrajı oluşmaz.",
       "aliases": [
         "MAHALAYIR",
@@ -4608,7 +4874,7 @@
     {
       "id": "tool.spaceNumber",
       "title": "Mahal numarala",
-      "icon": "tag",
+      "icon": "spaceNumber",
       "description": "Mahallere sırayla tıklayın veya önseçimi kullanın. İlk numara Z-001 gibi tam önekli olabilir. Yön sırası iki noktayla belirlenir; önizlemeyi tek Enter ile uygulayın. UUID, etiket konumu ve çizelge bağları korunur; çakışan numarada hiçbir şey yazılmaz.",
       "aliases": [
         "MAHALNUMARALA",
@@ -4726,7 +4992,7 @@
       "id": "tool.modulePlace",
       "title": "Modül yerleştir",
       "icon": "modulePlace",
-      "description": "Oda modülünü bağlı yeni örnek olarak yerleştirir: modül, açı, aynalı, kat, evre ve numara öneki/soneki görünür ayarlardadır; örnek imleçle gelir, tıklama tek geri alma adımında yerleştirir. Kapının duvarı, mahalin duvarları, etiketin mahali ve ölçünün duvarı örneğin kendi nesneleridir.",
+      "description": "Oda modülünü bağlı yeni örnek olarak yerleştirir: modül, açı, aynalı, kat, tadilat durumu ve numara öneki/soneki görünür ayarlardadır; örnek imleçle gelir, tıklama tek geri alma adımında yerleştirir. Kapının duvarı, mahalin duvarları, etiketin mahali ve ölçünün duvarı örneğin kendi nesneleridir.",
       "aliases": [
         "MODULYERLESTIR",
         "MODULEPLACE"
@@ -4801,7 +5067,7 @@
       "id": "tool.roomElevation",
       "title": "Oda iç görünüşü",
       "icon": "roomElevation",
-      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Kesit/görünüş işareti yalnız başvurudur, çizim üretmez. Yanlar (Y), Aralık (R).",
+      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Kesit/görünüş işareti yalnız başvurudur, çizim üretmez. Yanlar (Y), Aralık (A).",
       "aliases": [
         "ICGORUNUS",
         "İÇGÖRÜNÜŞ",
@@ -5027,6 +5293,17 @@
     "sourceReconcile": "<ellipse cx=\"7\" cy=\"5\" rx=\"4.5\" ry=\"1.8\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1 2 1.8 4.5 1.8s4.5-.8 4.5-1.8V5M2.5 9.6c0 1 2 1.8 4.5 1.8s4.5-.8 4.5-1.8\" stroke-width=\"1.2\"/><path d=\"M13.2 4.5c0 3 2.6 3.6 2.6 6.6M18.4 4.5c0 3-2.6 3.6-2.6 6.6v6\" stroke-width=\"1.3\"/><path d=\"m14.2 15.9 1.6 1.6 1.6-1.6\" stroke-width=\"1.3\"/>",
     "sourceUnlink": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/><path d=\"M12.4 12.4l6.1 6.1\" stroke-width=\"1.3\"/>",
     "wall": "<path d=\"M3 16.5V3.5h14\"/><path d=\"M6.5 16.5V7h10.5\"/><path d=\"M3 16.5h3.5M17 3.5V7\"/><path d=\"m3.6 10.4 2.3-2.3m-2.3 6.2 2.3-2.3m1.6-4 2.3-2.3m1.6 2.3 2.3-2.3m1.6 2.3 2.1-2.1\" stroke-width=\"1\"/>",
+    "wallRectangle": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\"/><rect x=\"5.5\" y=\"7\" width=\"9\" height=\"6\" stroke-width=\"1\"/><rect x=\"1\" y=\"14.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"16\" y=\"2.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "room": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\"/><rect x=\"5\" y=\"6\" width=\"10\" height=\"8\" stroke-width=\"1\"/><path d=\"M7.3 9.2h5.4M8.3 11.3h3.4\" stroke-width=\"1\"/>",
+    "wallPartition": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" stroke-width=\"1\"/><path d=\"M11.5 3.5v13M14 3.5v13\"/><path d=\"M3 10h8.5\" stroke-width=\"1\"/><path d=\"m4.9 8.5-1.9 1.5 1.9 1.5M9.6 8.5l1.9 1.5-1.9 1.5\" stroke-width=\"1\"/>",
+    "spaceDiscover": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M9.5 3.5v13M9.5 10h8\"/><path d=\"M4.3 10h3.4M11.6 6.8h3.8M11.6 13.3h3.8\" stroke-width=\"1.1\"/>",
+    "spaceSeparator": "<path d=\"M2.5 3.5h15v13h-15zM10 3.5V5M10 15v1.5\"/><path d=\"M10 6.9v6.2\" stroke-dasharray=\"1.3 1.2\" stroke-width=\"1.2\"/><rect x=\"8.5\" y=\"3.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><rect x=\"8.5\" y=\"13.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/>",
+    "spaceRebound": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\" stroke-dasharray=\"2 1.4\"/><rect x=\"8.5\" y=\"8.5\" width=\"3\" height=\"3\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M10 7.2V5.6M10 12.8v1.6M7.2 10H5.6M12.8 10h1.6\" stroke-width=\"1.1\"/>",
+    "spaceSources": "<path d=\"M3 16.5V3.5h14\" stroke-width=\"2.4\"/><path d=\"M17 5.5v8M5 16.5h8\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1\"/><rect x=\"14.5\" y=\"14\" width=\"3.5\" height=\"3.5\" fill=\"currentColor\" stroke=\"none\"/><path d=\"m7.6 9.8 1.8 1.8 3.4-3.8\" stroke-width=\"1.3\"/>",
+    "spaceNumber": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><ellipse cx=\"7.8\" cy=\"10\" rx=\"1.8\" ry=\"2.7\" stroke-width=\"1.1\"/><path d=\"M11.4 8.2 13 7.3v5.4\" stroke-width=\"1.1\"/>",
+    "wallDimensions": "<path d=\"M2 12h6M12 12h6M2 16.5h6M12 16.5h6\"/><path d=\"M2 6.5h16\" stroke-width=\"1\"/><path d=\"M3 10.5V4.5M8 10.5V4.5M12 10.5V4.5M17 10.5V4.5\" stroke-width=\"0.8\"/><path d=\"M2.3 7.7 3.7 5.3M7.3 7.7 8.7 5.3M11.3 7.7 12.7 5.3M16.3 7.7 17.7 5.3\" stroke-width=\"1.3\"/>",
+    "openingArray": "<path d=\"M1.5 6.5h2.5M6.5 6.5h2.25M11.25 6.5h2.25M16 6.5h2.5M1.5 10.5h2.5M6.5 10.5h2.25M11.25 10.5h2.25M16 10.5h2.5\"/><path d=\"M4 8.5h2.5M8.75 8.5h2.5M13.5 8.5h2.5\" stroke-width=\"1\"/><path d=\"M5.25 15h9.5M5.25 13.6v2.8M10 13.6v2.8M14.75 13.6v2.8\" stroke-width=\"1\"/>",
+    "wallShift": "<path d=\"M2 3.5h16M2 7h16\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"1\"/><path d=\"M2 12.5h16M2 16h16\"/><path d=\"M10 8.4v2.8m-1.6-1.6 1.6 1.6 1.6-1.6\" stroke-width=\"1.1\"/>",
     "wallFromLines": "<path d=\"M3.5 4v12\"/><path d=\"M6.5 10h4.5m-2-2 2 2-2 2\"/><path d=\"M13.5 4v12M17 4v12M13.5 4H17M13.5 16H17\"/>",
     "wallStyles": "<rect x=\"3\" y=\"4\" width=\"14\" height=\"12\" rx=\"1\"/><path d=\"M6.5 4v12M13.5 4v12\"/><path d=\"m7.4 8.2 2.6-2.6m-2.6 6.6 5.2-5.2m-2.6 7.2 2.6-2.6\" stroke-width=\"1\"/>",
     "wallLeft": "<rect x=\"7\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M7 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
@@ -5058,6 +5335,7 @@
     "wallOpening": "<path d=\"M2 7.5h5v8H2M18 7.5h-5v8h5\"/><path d=\"M7 11.5h6\" stroke-dasharray=\"1.5 1.5\" stroke-width=\"1\"/>",
     "openingFlip": "<path d=\"M1.5 11H5M15 11h3.5\"/><path d=\"M5 11V3.5a7.5 7.5 0 0 1 7.5 7.5\"/><path d=\"M5 11v5.5M5 16.5a5.5 5.5 0 0 0 5.5-5.5\" stroke-dasharray=\"1.5 1.2\" stroke-width=\"1\"/>",
     "openingMove": "<path d=\"M1.5 16H4.5M12.5 16h6\"/><path d=\"M4.5 16V8a8 8 0 0 1 8 8\" stroke-width=\"1\"/><path d=\"M10.5 4h7.5m-2-2 2 2-2 2\"/>",
+    "openingCodes": "<path d=\"M2.5 16.5h3.5M14 16.5h3.5\"/><path d=\"M6 16.5V8.5\" stroke-width=\"1.6\"/><path d=\"M6 8.5a8 8 0 0 1 8 8\" stroke-width=\"1\"/><path d=\"M11.8 2.5h5.4l1.4 2.5-1.4 2.5h-5.4l-1.4-2.5z\" stroke-width=\"1.2\"/><path d=\"M12.9 4.3h3.2M12.9 5.9h3.2\" stroke-width=\"1\"/>",
     "openingNumber": "<path d=\"M2.5 16.5h15\"/><rect x=\"5\" y=\"3\" width=\"10\" height=\"8.5\" rx=\"1.5\"/><path d=\"M8.3 5.3v4M11.5 5.3 8.6 7.5l2.9 1.8\" stroke-width=\"1.2\"/>",
     "openingSideAuto": "<path d=\"M2 10h3.5M14.5 10H18\"/><path d=\"M5.5 10V3.5a6.5 6.5 0 0 1 6.5 6.5M5.5 10v6.5a6.5 6.5 0 0 0 6.5-6.5\" stroke-dasharray=\"1.5 1.2\" stroke-width=\"1\"/>",
     "openingSideLeft": "<path d=\"M2 10h3.5M14.5 10H18\"/><path d=\"M5.5 10V3.5\"/><path d=\"M5.5 3.5a6.5 6.5 0 0 1 6.5 6.5\" stroke-width=\"1\"/>",
@@ -5065,30 +5343,43 @@
     "space": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M7 9.2h6M8.2 12h3.6\" stroke-width=\"1.2\"/>",
     "spaceSplit": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M11.5 1.5v17\" stroke-dasharray=\"2 1.4\" stroke-width=\"1.2\"/><path d=\"M5 7.5v5\" stroke-width=\"1\"/>",
     "spaceMerge": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"1\"/><path d=\"M10 4.5v11\" stroke-dasharray=\"1.4 1.4\" stroke-width=\"1\"/><path d=\"M5 10h3.2M6.8 8.4 8.4 10l-1.6 1.6M15 10h-3.2M13.2 8.4 11.6 10l1.6 1.6\" stroke-width=\"1.1\"/>",
-    "quantities": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"1.5\"/><path d=\"M2.5 7h15M2.5 11.5h15M8 7v10.5\"/><path d=\"M12.6 3.9H9.8l1.3 0.9-1.3 0.9h2.8\" stroke-width=\"0.9\"/>",
+    "quantities": "<path d=\"M8.5 4.5H2.8L6.3 10l-3.5 5.5h5.7\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "spaceMethod": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"1\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"1\"/><path d=\"M10 7.5v5M7.5 10h5\" stroke-width=\"1.2\"/>",
     "spaceNet": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"0.9\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"2\"/>",
     "spaceCenterline": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"0.9\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/><rect x=\"4\" y=\"4\" width=\"12\" height=\"12\" stroke-width=\"1.8\" stroke-dasharray=\"2 1.2\"/>",
     "spaceGross": "<rect x=\"2.5\" y=\"2.5\" width=\"15\" height=\"15\" rx=\"0.5\" stroke-width=\"2\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\" stroke-width=\"0.9\"/>",
     "column": "<path d=\"M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3\" stroke-dasharray=\"1.6 1\" stroke-width=\"1\"/><rect x=\"5.5\" y=\"5.5\" width=\"9\" height=\"9\"/><path d=\"M5.5 5.5l9 9M14.5 5.5l-9 9\" stroke-width=\"0.9\"/>",
     "stair": "<rect x=\"5\" y=\"2.5\" width=\"10\" height=\"15\"/><path d=\"M5 6.2h10M5 9.4h10M5 12.6h10\" stroke-width=\"0.9\"/><path d=\"M10 16V4.6M8.4 6.2 10 4.6l1.6 1.6\" stroke-width=\"1.2\"/>",
+    "planDimensions": "<path d=\"M3 3h10v10H3z\" stroke-width=\"1.6\"/><path d=\"M8 3v10\" stroke-width=\"1\"/><path d=\"M3 16.5h10M16.5 3v10\" stroke-width=\"1\"/><path d=\"M2.3 17.2 3.7 15.8M7.3 17.2 8.7 15.8M12.3 17.2 13.7 15.8M15.8 3.7 17.2 2.3M15.8 13.7 17.2 12.3\" stroke-width=\"1.3\"/>",
     "interiorDimensions": "<path d=\"M4 3.5v13M16 3.5v13\" stroke-width=\"3\"/><path d=\"M1.5 12.5h17\" stroke-dasharray=\"1.6 1.2\" stroke-width=\"0.9\"/><path d=\"M1.5 7h17\" stroke-width=\"1\"/><path d=\"M2.6 8.1l1.8-2.2M4.6 8.1l1.8-2.2M14.6 8.1l1.8-2.2M16.6 8.1l1.8-2.2\" stroke-width=\"1.4\"/>",
     "stairCurved": "<path d=\"M10 1.5A8.5 8.5 0 1 1 1.5 10M10 6.5A3.5 3.5 0 1 1 6.5 10M10 1.5L10 6.5M1.5 10L6.5 10\"/><path d=\"M12.47 7.53L16.01 3.99M13.5 10L18.5 10M12.47 12.47L16.01 16.01M10 13.5L10 18.5M7.53 12.47L3.99 16.01\" stroke-width=\"0.9\"/><path d=\"M12.05 4.36A6 6 0 1 1 4.36 12.05M4.03 14.23L4.36 12.05L6.01 13.51\" stroke-width=\"1.2\"/>",
+    "beam": "<rect x=\"1.5\" y=\"6.5\" width=\"4\" height=\"7\"/><rect x=\"14.5\" y=\"6.5\" width=\"4\" height=\"7\"/><path d=\"M5.5 8.2h9M5.5 11.8h9\" stroke-dasharray=\"1.8 1.2\" stroke-width=\"1.1\"/>",
     "ramp": "<path d=\"M2.5 15.5 17.5 6.5v9h-15z\"/><path d=\"M5 13.3 14 8M12.3 7.9 14 8l-.6 1.6\" stroke-width=\"1.1\"/>",
     "gridNumber": "<circle cx=\"6\" cy=\"5.5\" r=\"3.3\"/><path d=\"M6 8.8v9.7\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><circle cx=\"14\" cy=\"14.5\" r=\"3.3\"/><path d=\"M14 11.2V1.5\" stroke-dasharray=\"2 1.2\" stroke-width=\"1\"/><path d=\"M5.3 4.6 6.3 3.9v3.3\" stroke-width=\"1\"/><path d=\"M12.9 13.6c.3-.9 2.2-.9 2.2.3 0 .9-2.2 1.5-2.2 2.6h2.3\" stroke-width=\"0.9\"/>",
     "archGrid": "<circle cx=\"10\" cy=\"5\" r=\"3.3\"/><path d=\"M10 8.3v10.2\" stroke-dasharray=\"3 1.4 0.8 1.4\" stroke-width=\"1.2\"/>",
     "tag": "<path d=\"M2.5 10 6.3 3.8h7.4l3.8 6.2-3.8 6.2H6.3z\"/><path d=\"M8.4 8.4 10.2 7v6.2M8.6 13.2h3.2\" stroke-width=\"1.1\"/>",
     "tagAll": "<path d=\"M1.5 6.5 3.7 2.8H8l2.2 3.7L8 10.2H3.7z\"/><path d=\"M9.8 13.5 12 9.8h4.3l2.2 3.7-2.2 3.7H12z\"/><path d=\"M1.5 14.5h5M4 12v5\" stroke-width=\"1.1\"/>",
     "tagsCheck": "<path d=\"M1.5 9 4.6 3.8h6l3.1 5.2-3.1 5.2h-6z\"/><path d=\"M10.8 15.2l2.4 2.3 4.8-5.3\" stroke-width=\"1.5\"/>",
-    "scheduleOpenings": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 5.5V1.5M3 1.5a4 4 0 0 1 4 4\" stroke-width=\"1\"/>",
-    "scheduleFinishes": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M2.5 4.5l2-3h11l2 3\" stroke-width=\"1\"/>",
-    "scheduleFixtures": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 4.8v-2.6h4.5v2.6M3 3.6h4.5\" stroke-width=\"1\"/>",
-    "scheduleUnits": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M2.5 4.8V2.2h3.6v2.6M7.6 4.8V2.2h3.6v2.6\" stroke-width=\"1\"/>",
-    "scheduleSpaces": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><rect x=\"2.5\" y=\"1.5\" width=\"5.5\" height=\"3.5\" stroke-width=\"1\"/><path d=\"M4 3.3h2.5\" stroke-width=\"0.8\"/>",
+    "scheduleOpenings": "<path d=\"M1.5 15.5h1.8M3.3 15.5V8.7\"/><path d=\"M3.3 8.7a6.8 6.8 0 0 1 6.8 6.8\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleFinishes": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"3.6\" rx=\"0.8\"/><path d=\"M9.5 5.3h.6v3.4H5.75v2.3\"/><path d=\"M5.75 11v5\" stroke-width=\"2\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleFixtures": "<rect x=\"2.2\" y=\"3.5\" width=\"7.1\" height=\"3\" rx=\"0.7\"/><ellipse cx=\"5.75\" cy=\"11.6\" rx=\"3.1\" ry=\"4.4\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleAreas": "<path d=\"M2 4h6.5v12H2z\"/><path d=\"M2 8h6.5M2 12h6.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8h6.5M11.5 11.5h6.5\" stroke-width=\"1\"/><path d=\"M11.5 15.8h6.5\" stroke-width=\"2\"/>",
+    "zoningTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 5.5h6v7H5z\"/><path d=\"M13 6.5h2.5M13 9.5h2.5M13 12.5h2.5\" stroke-width=\"1\"/>",
+    "parkingTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 14.5v-9h3.5a2.5 2.5 0 0 1 0 5H7\"/>",
+    "shelterTable": "<path d=\"M2.5 2.5h15v15h-15z\" stroke-width=\"1\" stroke-dasharray=\"2 1.5\"/><path d=\"M5 14.5V9l5-3.5L15 9v5.5z\"/><path d=\"M8.5 14.5v-3h3v3\" stroke-width=\"1\"/>",
+    "siteParcel": "<path d=\"M2.5 3.5h15v13h-15z\"/><path d=\"M5.5 6.5h9v7h-9z\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M8 8.75h4v2.5H8z\"/>",
+    "escapeRoutes": "<path d=\"M17.5 7.5v-5h-15v15h15v-5\"/><path d=\"M5.5 14.5V10h8\" stroke-width=\"1\" stroke-dasharray=\"1.6 1.4\"/><path d=\"M12 7.5l2.5 2.5-2.5 2.5\"/>",
+    "regulation": "<path d=\"M5 2.5h7l3 3v12H5z\"/><path d=\"M12 2.5v3h3\" stroke-width=\"1\"/><path d=\"M7.5 11.5l2 2 3.5-4.5\"/>",
+    "joineryList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"12.5\" rx=\"0.6\"/><path d=\"M9.5 3.5 2 9.75 9.5 16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleRoomList": "<rect x=\"2\" y=\"3.5\" width=\"7.5\" height=\"7\" rx=\"0.6\"/><path d=\"M2 8a2.5 2.5 0 0 1 2.5 2.5\" stroke-width=\"1\"/><path d=\"M2 13.4h7.5\" stroke-width=\"1.5\"/><path d=\"M2 16h7.5\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleLandShares": "<circle cx=\"6.5\" cy=\"9\" r=\"4.5\"/><path d=\"M6.5 9V4.5M6.5 9l3.9 2.25\" stroke-width=\"1\"/><path d=\"M13 5.5h5M13 9h5M13 12.5h5\" stroke-width=\"1\"/><path d=\"M2 16h16\" stroke-width=\"2\"/>",
+    "scheduleUnits": "<path d=\"M1.8 9.2 5.75 5l3.95 4.2v6.8H1.8z\"/><path d=\"M5.75 9.2V16\" stroke-width=\"1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
+    "scheduleSpaces": "<rect x=\"2\" y=\"4.5\" width=\"7.5\" height=\"11\" rx=\"0.8\"/><path d=\"M4 10h3.5\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "viewSection": "<path d=\"M2.5 12.5h15\" stroke-dasharray=\"3.2 1.4 0.8 1.4\"/><circle cx=\"4\" cy=\"7\" r=\"2.3\"/><circle cx=\"16\" cy=\"7\" r=\"2.3\"/><path d=\"M1.7 7h4.6M13.7 7h4.6\" stroke-width=\"0.9\"/><path d=\"M4 9.3v3.2M16 9.3v3.2\" stroke-width=\"1.6\"/>",
     "viewElevation": "<circle cx=\"9\" cy=\"11\" r=\"4.2\"/><path d=\"M4.8 11h8.4\" stroke-width=\"0.9\"/><path d=\"m13 7.8 4.7-1.6-1.6 4.7z\" fill=\"currentColor\" stroke=\"none\"/>",
     "viewDetail": "<circle cx=\"7\" cy=\"12\" r=\"4.8\" stroke-dasharray=\"2 1.3\"/><circle cx=\"15\" cy=\"5\" r=\"3\"/><path d=\"M12 5h6\" stroke-width=\"0.9\"/><path d=\"m10.4 8.6 2.3-1.6\" stroke-width=\"1.1\"/>",
     "navigator": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"4\" rx=\"0.8\"/><path d=\"M5.5 6.5v9.5M5.5 10.5h3.5M5.5 15.5h3.5\" stroke-width=\"1\"/><rect x=\"9.5\" y=\"8.5\" width=\"8\" height=\"4\" rx=\"0.8\"/><rect x=\"9.5\" y=\"13.5\" width=\"8\" height=\"4\" rx=\"0.8\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.35\"/><rect x=\"9.5\" y=\"13.5\" width=\"8\" height=\"4\" rx=\"0.8\"/>",
+    "permitSet": "<path d=\"M5 2.5h12.5v10\" stroke-width=\"1\"/><rect x=\"2\" y=\"4.5\" width=\"13.5\" height=\"13\" rx=\"0.8\"/><path d=\"M8.5 12.5h7M8.5 12.5v5M12 12.5v5M8.5 15h7\" stroke-width=\"1\"/><path d=\"M4.5 7.5h4M4.5 9.5h6\" stroke-width=\"0.8\"/>",
     "sheetSet": "<rect x=\"6.5\" y=\"2.5\" width=\"11\" height=\"8\" rx=\"0.8\"/><path d=\"M4.5 5v7.5H15\" stroke-width=\"1\"/><path d=\"M2.5 7.5v7.5H13\" stroke-width=\"1\"/><path d=\"M8.5 5h3M8.5 7h5\" stroke-width=\"0.8\"/><circle cx=\"16\" cy=\"16\" r=\"2.6\" fill=\"currentColor\" stroke=\"none\" opacity=\"0.35\"/><path d=\"M16 14.6v1.6l1 .8\" stroke-width=\"1\"/>",
     "viewRefs": "<circle cx=\"5\" cy=\"5.5\" r=\"3\"/><path d=\"M2 5.5h6\" stroke-width=\"0.9\"/><rect x=\"11\" y=\"10.5\" width=\"7\" height=\"7\" rx=\"0.8\"/><path d=\"M8 7.5c3 0 4.5 1 4.5 3\" stroke-width=\"1.1\"/><path d=\"m11 9.6 1.5 1.2 1.3-1.4\" stroke-width=\"1.1\"/><path d=\"M12.5 13h3M12.5 15h3\" stroke-width=\"0.8\"/>",
     "spaceFloor": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 9.8h15M7.5 3.5v6.3M12.5 9.8v6.7\" stroke-width=\"0.9\"/>",
@@ -5097,6 +5388,8 @@
     "phaseAll": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M7.5 4v12\" stroke-width=\"1\"/>",
     "phaseExisting": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h9\" stroke-width=\"2\"/>",
     "phaseDemolition": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"2\" stroke-dasharray=\"2.5 1.8\"/>",
+    "renovationLegend": "<rect x=\"2.5\" y=\"2.5\" width=\"6\" height=\"4\" rx=\"0.6\"/><path d=\"M11 4.5h6.5\" stroke-width=\"1\"/><rect x=\"2.5\" y=\"8\" width=\"6\" height=\"4\" rx=\"0.6\"/><path d=\"M3.3 12 7.3 8M2.5 10.3 4.8 8M5.6 12 8.5 9.1\" stroke-width=\"0.8\"/><path d=\"M11 10h6.5\" stroke-width=\"1\"/><rect x=\"2.5\" y=\"13.5\" width=\"6\" height=\"4\" rx=\"0.6\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M11 15.5h6.5\" stroke-width=\"1\"/>",
+    "phaseRenovation": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M7.5 4v12M12.5 4v12\" stroke-width=\"1\"/><path d=\"M7.5 8.5 11.5 4.5M7.5 12.5 12.5 7.5M8.5 15.5 12.5 11.5\" stroke-width=\"0.9\"/><path d=\"M13.6 7v1.6M13.6 10.2v1.6M13.6 13.4v1.6M16.4 7v1.6M16.4 10.2v1.6M16.4 13.4v1.6\" stroke-width=\"1.1\"/>",
     "phaseProposed": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\" opacity=\"0.45\"/><path d=\"M10 6.5v7M6.5 10h7\" stroke-width=\"1.8\"/>",
     "xrefAttach": "<path d=\"M4.5 2.5h7l4 4v4\"/><path d=\"M11.5 2.5v4h4\" stroke-width=\"1\"/><path d=\"M4.5 2.5v15h5\"/><path d=\"M12.6 12.6l-1.3 1.3a1.9 1.9 0 0 0 2.7 2.7l1.3-1.3\" stroke-width=\"1.2\"/><path d=\"M15.4 15.4l1.3-1.3a1.9 1.9 0 0 0-2.7-2.7l-1.3 1.3\" stroke-width=\"1.2\"/><path d=\"M13.3 15.1l1.8-1.8\" stroke-width=\"1.2\"/>",
     "xrefManager": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15\" stroke-width=\"1\"/><path d=\"M9 10.5h6M9 13.5h6\" stroke-width=\"1\"/><path d=\"M4.6 10.8l.7-.7a.9.9 0 0 1 1.3 1.3l-.7.7M5.9 13.2l-.7.7a.9.9 0 0 1-1.3-1.3l.7-.7M5 12.6l1-1\" stroke-width=\"0.9\"/>",
@@ -5172,7 +5465,7 @@
     "wallFlue": "<path d=\"M2 5.5h16M2 14.5h16\"/><path d=\"M7.5 7.5h5v5h-5z\"/><path d=\"M7.5 7.5l5 5M12.5 7.5l-5 5\" stroke-width=\"1\"/>",
     "northArrow": "<path d=\"M10 2.5 5.5 17 10 13.5 14.5 17z\"/><path d=\"M10 2.5 5.5 17 10 13.5z\" fill=\"currentColor\" stroke=\"none\"/>",
     "revisionMark": "<path d=\"M3 9.5a1.6 1.6 0 0 1 2.4-1.4 1.6 1.6 0 0 1 2.4 0 1.6 1.6 0 0 1 2.4 0 1.6 1.6 0 0 1 2.4 1.4 1.6 1.6 0 0 1 0 2.8 1.6 1.6 0 0 1 0 2.8 1.6 1.6 0 0 1-2.4 1.4 1.6 1.6 0 0 1-2.4 0 1.6 1.6 0 0 1-2.4 0A1.6 1.6 0 0 1 3 15.1a1.6 1.6 0 0 1 0-2.8 1.6 1.6 0 0 1 0-2.8z\"/><path d=\"M15.5 1.8 18.8 7.6h-6.6z\" stroke-width=\"1.3\"/>",
-    "revisionList": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7.5h15M2.5 11.5h15M8 3.5v13\"/><path d=\"M5.2 8.5l1.4 2.2H3.8z\" fill=\"currentColor\" stroke=\"none\"/><path d=\"M5.2 12.5l1.4 2.2H3.8z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "revisionList": "<path d=\"M5.75 4.8 9.6 11.5H1.9z\"/><path d=\"M4.2 14.5h3.1\" stroke-width=\"1.1\"/><path d=\"M11.5 4.5h6.5M11.5 8.3h6.5M11.5 12.1h6.5M11.5 15.9h6.5\" stroke-width=\"1\"/>",
     "materialLegend": "<rect x=\"2.5\" y=\"3\" width=\"7\" height=\"5.5\"/><path d=\"M3 8.5l5-5.5M5.5 8.5l4-4.4\" stroke-width=\".9\"/><rect x=\"2.5\" y=\"11.5\" width=\"7\" height=\"5.5\" fill=\"currentColor\" fill-opacity=\".35\"/><path d=\"M12 5.8h6M12 14.2h6\"/>",
     "slab": "<path d=\"M2.5 8.5 10 4.5l7.5 4-7.5 4z\"/><path d=\"M2.5 8.5v2.5l7.5 4 7.5-4V8.5M10 12.5V15\"/>",
     "slabRailing": "<path d=\"M2.5 16.5h15\"/><path d=\"M4 9.5h12M5 16.5v-7M10 16.5v-7M15 16.5v-7\"/>",
@@ -6490,7 +6783,7 @@
         "cad"
       ],
       "tab": "arch",
-      "label": "Evre",
+      "label": "Tadilat",
       "icon": "phaseDemolition",
       "items": [
         {

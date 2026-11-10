@@ -13,7 +13,8 @@ use kentos_commands::{
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::{
-    ExecutionContext, arch_bonds, constraints_edit, parameters_edit, wall_distances, walls_edit,
+    ExecutionContext, arch_bonds, constraints_edit, dimensions_interior, parameters_edit,
+    wall_distances, walls_edit,
 };
 
 use crate::prompt::Prompt;
@@ -362,6 +363,15 @@ impl Overlay {
                         bond: bond.as_ref().map(|b| b.id),
                     },
                 ));
+                // Across from the padlock, the + that makes it a permanent dimension bound to both faces (docs/adr/8019).
+                let keep = Vec2::new(text_at.x - nx * height * 1.9, text_at.y - ny * height * 1.9);
+                self.preview.markers.push(Marker {
+                    at: keep,
+                    shape: MarkerShape::Plus(4.5),
+                    tone: Tone::Accent,
+                });
+                self.squares
+                    .push((keep, Switch::Permanent { from, to: at }));
             }
             self.sides.push(Side {
                 left,
@@ -880,25 +890,38 @@ pub fn effect_lines(
             ));
         }
     }
-    for space in &e.spaces {
-        let name = [space.number.as_str(), space.name.as_str()]
-            .iter()
-            .filter(|t| !t.is_empty())
-            .copied()
-            .collect::<Vec<_>>()
-            .join(" ");
-        let name = if name.is_empty() {
-            "Mahal".to_owned()
-        } else {
-            format!("Mahal {name}")
-        };
-        let broken = if space.broken { " (kapanmıyor)" } else { "" };
-        lines.push(format!(
-            "{name}: {} → {}{broken}",
-            f.area(space.before),
-            f.area(space.after)
-        ));
+    lines.extend(e.spaces.iter().map(|space| space_line(space, f)));
+    lines.extend(count_lines(e, joined));
+    if lines.is_empty() {
+        lines.push("Başka bir şey değişmez.".to_owned());
     }
+    lines
+}
+
+/// A room's area before and after a move: “Mahal 1 Salon: 12,00 m² → 14,00 m²” (Odayı büyüt's card too,
+/// docs/adr/8023).
+pub(crate) fn space_line(space: &kentos_commands::SpaceAreaChange, f: &Format) -> String {
+    let name = [space.number.as_str(), space.name.as_str()]
+        .iter()
+        .filter(|t| !t.is_empty())
+        .copied()
+        .collect::<Vec<_>>()
+        .join(" ");
+    let name = if name.is_empty() {
+        "Mahal".to_owned()
+    } else {
+        format!("Mahal {name}")
+    };
+    let broken = if space.broken { " (kapanmıyor)" } else { "" };
+    format!(
+        "{name}: {} → {}{broken}",
+        f.area(space.before),
+        f.area(space.after)
+    )
+}
+
+/// How many walls, openings, dimensions and fixtures follow a move.
+pub(crate) fn count_lines(e: &kentos_commands::WallEffects, joined: usize) -> Vec<String> {
     let counts = [
         (joined, "bitişik duvar izler"),
         (e.bonded.len(), "bağlı duvar kayar"),
@@ -906,15 +929,68 @@ pub fn effect_lines(
         (e.dimensions.len(), "ölçü yenilenir"),
         (e.fixtures.len(), "donatı izler"),
     ];
-    for (n, what) in counts {
-        if n > 0 {
-            lines.push(format!("{n} {what}"));
-        }
+    counts
+        .into_iter()
+        .filter(|(n, _)| *n > 0)
+        .map(|(n, what)| format!("{n} {what}"))
+        .collect()
+}
+
+/// The + beside a wall's clear distance (docs/adr/8019): the distance written as a permanent dimension, one undo step,
+/// on the drawing's dimension layer (KentOS Mimari's MM-XXXX-OLCU, opened with it, docs/adr/8008). It is
+/// `cad.dimensions.interior`'s cut (ADR 0711) from just inside the wall's face to just inside the face it meets: one
+/// dimension, each end bound to its face by the cut rule, so moving either wall changes its value.
+pub fn make_permanent(switch: crate::temporary_refs::Switch, cx: &mut Context<'_>) {
+    use crate::arch_layer::Kind;
+    let crate::temporary_refs::Switch::Permanent { from, to } = switch else {
+        return;
+    };
+    let length = (to.x - from.x).hypot(to.y - from.y);
+    if length <= 1e-9 {
+        return;
     }
-    if lines.is_empty() {
-        lines.push("Başka bir şey değişmez.".to_owned());
+    // Into each wall, well short of its other face: the thinnest wall KentOS draws is 5 cm.
+    let into = (length * 0.25).min(0.005);
+    let (dx, dy) = ((to.x - from.x) / length, (to.y - from.y) / length);
+    let cut_from = Vec2::new(from.x - dx * into, from.y - dy * into);
+    let cut_to = Vec2::new(to.x + dx * into, to.y + dy * into);
+    let at = Vec2::new((from.x + to.x) / 2.0, (from.y + to.y) / 2.0);
+    let point = |p: Vec2| kentos_commands::Vec2 { x: p.x, y: p.y };
+    let layer = crate::arch_layer::chosen_at_start(&Kind::Dimension, cx);
+    let mut written = None;
+    crate::arch_layer::writing_on(&Kind::Dimension, &layer, cx, |_, cx| {
+        let input = kentos_commands::DimensionsInterior {
+            from: point(cut_from),
+            to: point(cut_to),
+            at: Some(point(at)),
+            faces: Some(kentos_commands::InteriorFaces::Outer),
+            columns: Some(kentos_commands::InteriorColumns::None),
+            total: Some(false),
+            level: None,
+            layer_id: if cx.doc.layers().get(&layer).is_some() {
+                layer.clone()
+            } else {
+                cx.doc.layers().active().to_owned()
+            },
+            dimension_style: None,
+            height: None,
+            mask: None,
+            look: kentos_commands::NewLook::default(),
+            expected_revision: None,
+        };
+        let result = dimensions_interior::execute(&mut ExecutionContext::new(cx.doc), input);
+        written = crate::points::written(result, cx);
+        written.is_some()
+    });
+    if written.is_some() {
+        cx.say(
+            Level::Success,
+            format!(
+                "Kalıcı ölçü yazıldı ({}); iki yüze bağlı: duvarlar kayınca değeri güncellenir.",
+                cx.format().length(length)
+            ),
+        );
     }
-    lines
 }
 
 /// A padlock's click (docs/adr/0770 §3): the side's distance kept as a bond (`cad.walls.edit`'s `keep`, nothing moving),

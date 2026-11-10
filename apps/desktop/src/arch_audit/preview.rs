@@ -19,6 +19,53 @@ impl App {
         if !(self.command_expanded && self.bottom_tab == BottomTab::Audit) || self.arch_audit_stale() {
             return None;
         }
+        // A chosen fixture finding's use zone (docs/adr/8025), dashed in the danger colour: what is taken.
+        let zones = self.arch_audit_zones();
+        let fixes = self.arch_audit_fix_preview();
+        match (fixes, zones.is_empty()) {
+            (Some(mut p), _) => {
+                p.strokes.extend(zones);
+                Some(p)
+            }
+            (None, false) => Some(kentos_interaction::Preview {
+                strokes: zones,
+                ..kentos_interaction::Preview::default()
+            }),
+            (None, true) => None,
+        }
+    }
+
+    /// The chosen fixtures findings' use zones (docs/adr/8025): each its fixture's zone, outlined dashed in the danger
+    /// colour.
+    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke> {
+        use kentos_commands::ArchAuditCheck;
+        use kentos_interaction::{Stroke, Tone, Vec2};
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let wanted: Vec<Slot> = self
+            .arch_audit_chosen()
+            .iter()
+            .filter(|f| f.check == ArchAuditCheck::Fixtures)
+            .filter_map(|f| f.uids.first())
+            .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect();
+        if wanted.is_empty() {
+            return Vec::new();
+        }
+        kentos_native_application::fixture_audit::fixtures(&doc.model)
+            .into_iter()
+            .filter(|f| wanted.contains(&f.slot))
+            .map(|f| {
+                let pts = f.zone.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+                Stroke::dashed(pts, true, [6.0, 4.0]).width(2.0).tone(Tone::Danger)
+            })
+            .collect()
+    }
+
+    /// The chosen findings' fixes as they would draw (docs/adr/0732 §5).
+    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview> {
         let doc = self.document.as_ref()?;
         let keys = self
             .arch_audit_chosen()

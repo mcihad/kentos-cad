@@ -43,6 +43,12 @@ pub const SCHEDULE_FINISHES_ID: &str = "scheduleFinishes";
 pub const SCHEDULE_FIXTURES_ID: &str = "scheduleFixtures";
 /// Bölüm çizelgesi (docs/adr/0795): the building program's units.
 pub const SCHEDULE_UNITS_ID: &str = "scheduleUnits";
+/// Metrekare cetveli (docs/adr/8029): a units schedule storey by storey with the regulation's gross.
+pub const SCHEDULE_AREAS_ID: &str = "scheduleAreas";
+/// Kat irtifakı tablosu (docs/adr/8031): the independent units with their natures, areas, annexes and land shares.
+pub const SCHEDULE_LAND_SHARES_ID: &str = "scheduleLandShares";
+/// Mahal listesi (docs/adr/8038).
+pub const SCHEDULE_ROOM_LIST_ID: &str = "scheduleRoomList";
 
 /// The object a tag can be put on under the cursor.
 fn taggable_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
@@ -120,7 +126,8 @@ impl TagTool {
     fn made(&self, at: Option<Vec2>, cx: &Context<'_>) -> Option<TagsCreate> {
         let of = cx.doc.uid(self.target?)?.to_string();
         Some(TagsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The tags' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx),
             tags: vec![NewTag {
                 of,
                 at: at.map(points::wire),
@@ -153,12 +160,17 @@ impl TagTool {
     }
 
     fn write(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
-        let Some(input) = self.made(at, cx) else {
+        if self.made(at, cx).is_none() {
             return;
-        };
-        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        said_after(result, cx, |_| {
-            "Etiket yazıldı; nesnesi değişince etiketi de değişir.".into()
+        }
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Tag, cx, |_, cx| {
+            let Some(input) = self.made(at, cx) else {
+                return false;
+            };
+            let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            said_after(result, cx, |_| {
+                "Etiket yazıldı; nesnesi değişince etiketi de değişir.".into()
+            })
         });
         self.target = None;
         self.drawn = Preview::default();
@@ -166,6 +178,10 @@ impl TagTool {
 }
 
 impl Tool for TagTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Tag)
+    }
+
     fn id(&self) -> &'static str {
         TAG_ID
     }
@@ -206,7 +222,7 @@ impl Tool for TagTool {
         };
         Prompt::new("Etiket", step)
             .option_with(
-                "İçerik",
+                "Hazır içerik",
                 "İ",
                 settings::content_label(self.content.as_deref(), false).to_owned(),
             )
@@ -215,7 +231,7 @@ impl Tool for TagTool {
                 "Ş",
                 if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
             )
-            .option_with("Biçim", "B", shape.to_owned())
+            .option_with("Çerçeve", "B", shape.to_owned())
             .option_with(
                 "Kol",
                 "K",
@@ -393,10 +409,70 @@ impl TagAllTool {
     pub fn new() -> Self {
         Self::default()
     }
+    /// The untagged openings' tags, each placed beside its wall clear of the walls, the swings and the tags
+    /// (docs/adr/8028); the command's own place sits them on the wall line or on a room's tag. The source level's
+    /// openings only, as `all` takes them; none past 500 (the command's place then).
+    fn opening_tags(&self, cx: &Context<'_>) -> Vec<NewTag> {
+        if !self.kinds.contains(&TaggedKind::Opening) {
+            return Vec::new();
+        }
+        let doc: &kentos_domain::Document = cx.doc;
+        let tagged: std::collections::BTreeSet<&str> = doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Tag(t) => Some(t.tag.of.as_str()),
+                _ => None,
+            })
+            .collect();
+        let level_of = |o: &kentos_commands::OpeningEntity| {
+            kentos_domain::Uuid::parse_str(&o.opening.host)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
+                .map(|w| w.own_level().map(str::to_owned))
+        };
+        let wanted =
+            |o: &kentos_commands::OpeningEntity| match (self.source.scope(), self.source.id()) {
+                (kentos_commands::SpaceScope::Unassigned, _) => level_of(o) == Some(None),
+                (_, Some(id)) => level_of(o) == Some(Some(id)),
+                _ => true,
+            };
+        let untagged: Vec<String> = doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Opening(o) if doc.layers().is_visible(&o.base.layer_id) && wanted(o) => {
+                    doc.uid(Slot(o.base.id)).map(|u| u.to_string())
+                }
+                _ => None,
+            })
+            .filter(|u| !tagged.contains(u.as_str()))
+            .collect();
+        if untagged.is_empty() || untagged.len() > 500 {
+            return Vec::new();
+        }
+        kentos_native_application::tags::opening_places(
+            doc,
+            &untagged,
+            self.content.as_deref(),
+            self.shape,
+            self.size,
+        )
+        .into_iter()
+        .map(|(of, at)| NewTag {
+            of,
+            at: Some(at),
+            content: self.content.clone(),
+            shape: self.shape,
+            size: self.size,
+            leader: None,
+        })
+        .collect()
+    }
     fn made(&self, cx: &Context<'_>) -> TagsCreate {
         TagsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
-            tags: vec![],
+            // The tags' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx),
+            tags: self.opening_tags(cx),
             all: Some(TagAll {
                 kinds: self.kinds.clone(),
                 refresh: self.refresh.then_some(true),
@@ -419,12 +495,9 @@ impl TagAllTool {
     fn see(&mut self, cx: &Context<'_>) {
         self.source.see(cx.doc.settings());
         self.revision = Some(cx.doc.revision());
-        self.layer = cx.doc.layers().active().to_owned();
-        self.layer_label = cx
-            .doc
-            .layers()
-            .get(&self.layer)
-            .map_or_else(|| self.layer.clone(), |l| l.name.clone());
+        // MM-XXXX-ETIKET with the layer key on (docs/adr/8008), else the active layer.
+        self.layer = crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx);
+        self.layer_label = crate::arch_layer::shown(&crate::arch_layer::Kind::Tag, cx);
         self.drawn = Preview::default();
         self.problem = None;
         match plan_words(tags_create::plan_in(cx.doc, &self.made(cx))) {
@@ -483,7 +556,7 @@ impl TagAllTool {
                 if self.refresh { "refresh" } else { "keep" },
             ),
             "B" => {
-                let mut items = vec![("default", "Mevcut / Tür")];
+                let mut items = vec![("default", "Mevcut ya da türün")];
                 items.extend(TagShape::ALL.iter().map(|s| (s.name(), s.label())));
                 choices(&items, self.shape.map_or("default", TagShape::name))
             }
@@ -583,7 +656,9 @@ impl Tool for TagAllTool {
         Flow::Stay
     }
     fn pointer_move(&mut self, _p: &Pointer, cx: &mut Context<'_>) {
-        if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
+        if self.revision != Some(cx.doc.revision())
+            || self.layer != crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx)
+        {
             self.see(cx);
         }
     }
@@ -609,13 +684,21 @@ impl Tool for TagAllTool {
             "ayarları ve önizlemeyi kontrol edin; Enter bir kez uygular",
         );
         p = p.option_with(
-            "Mevcut",
+            "Mevcut etiket",
             "E",
             if self.refresh { "Yenile" } else { "Koru" }.to_owned(),
         );
         p = p.option_with("Kaynak katı", "F", self.source.label());
+        // The frame from the keyboard too (docs/adr/8027): Elips içinde numara for Mimarlar Odası's room tag.
         p = p.option_with(
-            "İçerik",
+            "Çerçeve",
+            "B",
+            self.shape
+                .map_or("Mevcut ya da türün", TagShape::label)
+                .to_owned(),
+        );
+        p = p.option_with(
+            "Hazır içerik",
             "İ",
             settings::content_label(self.content.as_deref(), true).to_owned(),
         );
@@ -645,6 +728,17 @@ impl Tool for TagAllTool {
             true
         } else if key == "E" {
             self.refresh = !self.refresh;
+            self.see(cx);
+            true
+        } else if key == "B" {
+            self.shape = match self.shape {
+                None => Some(TagShape::Circle),
+                Some(s) => TagShape::ALL
+                    .iter()
+                    .skip_while(|x| **x != s)
+                    .nth(1)
+                    .copied(),
+            };
             self.see(cx);
             true
         } else if matches!(key.as_str(), "İ" | "I") {
@@ -689,7 +783,7 @@ impl Tool for TagAllTool {
                 .map(|(key, k)| Setting::choice(key, k.label(), self.choices(key))),
         );
         out.push(Setting::notice("H", "Kapsam", "Kaynak katı görünür kaynakları süzer; kapı/pencere duvarının katını kullanır. Duvarı kayıp açıklığın katı bilinmez. Yenile yalnız etkin etiket katmanını değiştirir; başka katlar/etiket katmanları ve elle konumlar korunur."));
-        out.push(Setting::notice("V", "Boş ayarlar", "Hazır içerik şablon alanını doldurur; alanı ayrıca düzenleyebilirsiniz. Tür / Koru şablonu boşaltır: Yenile'de mevcut içerik korunur, yeni etikette tür varsayılanı kullanılır. Boş boy mevcut değeri korur; \\n yeni satırdır. Kaynak numaraları değişmez."));
+        out.push(Setting::notice("V", "Boş ayarlar", "Hazır içerik şablon alanını doldurur; alanı ayrıca düzenleyebilirsiniz. Mevcut ya da türün şablonu boşaltır: Yenile'de mevcut içerik korunur, yeni etikette tür varsayılanı kullanılır. Boş boy mevcut değeri korur; \\n yeni satırdır. Kaynak numaraları değişmez."));
         out
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
@@ -704,7 +798,7 @@ impl Tool for TagAllTool {
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
         // Keyboard layer changes need not pass through pointer_move, and the
         // active layer alone does not advance the document revision.
-        if self.layer != cx.doc.layers().active() {
+        if self.layer != crate::arch_layer::planned(&crate::arch_layer::Kind::Tag, cx) {
             self.see(cx);
             cx.say(
                 Level::Warn,
@@ -712,15 +806,20 @@ impl Tool for TagAllTool {
             );
             return Flow::Stay;
         }
-        let mut input = self.made(cx);
-        input.expected_revision = self.revision.map(|r| r.to_string());
-        let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        let written = said_after(result, cx, |out| {
-            format!(
-                "{} yeni etiket · {} etiket yenilendi.",
-                out.uids.len(),
-                out.refreshed.len()
-            )
+        let before = cx.doc.revision();
+        let revision = self.revision;
+        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Tag, cx, |_, cx| {
+            let mut input = self.made(cx);
+            input.expected_revision =
+                crate::arch_layer::carried(revision.map(|r| r.to_string()), before, cx);
+            let result = tags_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            said_after(result, cx, |out| {
+                format!(
+                    "{} yeni etiket · {} etiket yenilendi.",
+                    out.uids.len(),
+                    out.refreshed.len()
+                )
+            })
         });
         if written {
             Flow::Exit
@@ -764,10 +863,20 @@ pub enum SchedulePreset {
     Fixtures,
     /// The building program's units (docs/adr/0795).
     Units,
+    /// Metrekare cetveli (docs/adr/8029; PAİY 57/2-a): the units storey by storey, each with the storey's part of its
+    /// regulation gross and net, the total the building's.
+    AreaTable,
+    /// Kat irtifakı tablosu (docs/adr/8031; Kat Mülkiyeti Kanunu 12/a, PAİY 57/2-a, 57/3): the independent units alone,
+    /// each with its storey, nature, net and gross areas, annexes, total and general gross and land share.
+    LandShares,
+    /// Mahal listesi (docs/adr/8038; Planlı Alanlar İmar Yönetmeliği 57(29)): every room storey by storey, the lowest
+    /// first, under its storey's heading: its number and name, its floor's, skirting's, walls' and ceiling's finishes,
+    /// the doors and windows serving it by their codes, its sills', stair's and railings' finishes.
+    RoomList,
 }
 
 impl SchedulePreset {
-    pub const ALL: [SchedulePreset; 7] = [
+    pub const ALL: [SchedulePreset; 10] = [
         SchedulePreset::Openings,
         SchedulePreset::Spaces,
         SchedulePreset::Finishes,
@@ -775,22 +884,32 @@ impl SchedulePreset {
         SchedulePreset::Walls,
         SchedulePreset::Fixtures,
         SchedulePreset::Units,
+        SchedulePreset::AreaTable,
+        SchedulePreset::LandShares,
+        SchedulePreset::RoomList,
     ];
 
     pub fn of(self) -> ScheduleOf {
         match self {
             SchedulePreset::Openings => ScheduleOf::Openings,
-            SchedulePreset::Spaces | SchedulePreset::Finishes => ScheduleOf::Spaces,
+            SchedulePreset::Spaces | SchedulePreset::Finishes | SchedulePreset::RoomList => {
+                ScheduleOf::Spaces
+            }
             SchedulePreset::Columns => ScheduleOf::Columns,
             SchedulePreset::Walls => ScheduleOf::Walls,
             SchedulePreset::Fixtures => ScheduleOf::Fixtures,
-            SchedulePreset::Units => ScheduleOf::Units,
+            SchedulePreset::Units | SchedulePreset::AreaTable | SchedulePreset::LandShares => {
+                ScheduleOf::Units
+            }
         }
     }
 
     pub fn label(self) -> &'static str {
         match self {
             SchedulePreset::Finishes => "Mahal kaplama çizelgesi",
+            SchedulePreset::AreaTable => "Metrekare cetveli",
+            SchedulePreset::LandShares => "Kat irtifakı tablosu",
+            SchedulePreset::RoomList => "Mahal listesi",
             other => other.of().label(),
         }
     }
@@ -804,6 +923,9 @@ impl SchedulePreset {
             SchedulePreset::Walls => "walls",
             SchedulePreset::Fixtures => "fixtures",
             SchedulePreset::Units => "units",
+            SchedulePreset::AreaTable => "areas",
+            SchedulePreset::LandShares => "landShares",
+            SchedulePreset::RoomList => "roomList",
         }
     }
 
@@ -811,17 +933,64 @@ impl SchedulePreset {
     fn columns(self, group: bool) -> Option<Vec<kentos_commands::ScheduleColumn>> {
         use kentos_commands::ScheduleField::*;
         let fields: &[kentos_commands::ScheduleField] = match (self, group) {
-            (SchedulePreset::Finishes, _) => {
-                &[Number, Name, FloorFinish, BaseFinish, WallFinish, CeilingFinish, Area, Baseboard]
+            (SchedulePreset::Finishes, _) => &[
+                Number,
+                Name,
+                FloorFinish,
+                BaseFinish,
+                WallFinish,
+                CeilingFinish,
+                Area,
+                Baseboard,
+            ],
+            (SchedulePreset::RoomList, _) => &ROOM_LIST,
+            // The metrekare cetveli: storey, unit, its kind, the storey's part of its gross and net.
+            (SchedulePreset::AreaTable, _) => &[Level, Number, Name, UnitKind, PaiyGross, PaiyNet],
+            // Kat irtifakı tablosu (KMK 12/a: number and nature, the areas, annexes, land share; PAİY 57/3's areas).
+            (SchedulePreset::LandShares, _) => &[
+                Number,
+                Level,
+                Nature,
+                PaiyNet,
+                PaiyGross,
+                Annexes,
+                AnnexNet,
+                TotalGross,
+                GeneralGross,
+                LandShare,
+            ],
+            // A door and window schedule starts with its number and its type's joinery code (docs/adr/8028);
+            // grouped, by code: the joinery list.
+            (SchedulePreset::Openings, false) => {
+                &[Number, Code, Form, Type, Width, Height, Sill, Wall]
             }
+            // A units schedule: Planlı Alanlar İmar Yönetmeliği 4's areas of each unit (docs/adr/8029).
+            (SchedulePreset::Units, false) => &[
+                Number,
+                Name,
+                UnitKind,
+                Level,
+                PaiyNet,
+                PaiyGross,
+                PaiyShare,
+                GeneralGross,
+            ],
             (_, false) => return None,
-            (SchedulePreset::Openings, true) => &[Type, Form, Width, Height, Count],
+            (SchedulePreset::Openings, true) => &[Code, Type, Form, Width, Height, Count],
             (SchedulePreset::Spaces, true) => &[Usage, Count, Area],
             (SchedulePreset::Columns, true) => &[Type, Width, Count],
             (SchedulePreset::Walls, true) => &[Type, Thickness, Count, Length, Area],
             (SchedulePreset::Fixtures, true) => &[Type, Category, Count],
-            // Alike units by kind and building: their count of spaces, areas, shares and gross summed.
-            (SchedulePreset::Units, true) => &[UnitKind, Building, Count, Area, Share, Gross],
+            // Alike units by kind and building: their count of spaces and the regulation's areas summed (docs/adr/8029).
+            (SchedulePreset::Units, true) => &[
+                UnitKind,
+                Building,
+                Count,
+                PaiyNet,
+                PaiyGross,
+                PaiyShare,
+                GeneralGross,
+            ],
         };
         Some(
             fields
@@ -834,6 +1003,90 @@ impl SchedulePreset {
                 .collect(),
         )
     }
+}
+
+/// Mahal listesi's columns (docs/adr/8038): the storey (its heading), the room's number and name, its finishes as
+/// Planlı Alanlar İmar Yönetmeliği 57(29) lists them, and the doors and windows serving it.
+pub const ROOM_LIST: [kentos_commands::ScheduleField; 12] = {
+    use kentos_commands::ScheduleField::*;
+    [
+        Level,
+        Number,
+        Name,
+        FloorFinish,
+        BaseFinish,
+        WallFinish,
+        CeilingFinish,
+        Doors,
+        Windows,
+        SillFinish,
+        StairFinish,
+        RailingFinish,
+    ]
+};
+
+/// Mahal listesi's order: storey by storey (the lowest first) under each storey's heading, then by number.
+pub fn room_list_sort() -> Vec<ScheduleSort> {
+    vec![
+        ScheduleSort {
+            column: 0,
+            descending: false,
+            header: true,
+            footer: false,
+        },
+        ScheduleSort {
+            column: 1,
+            descending: false,
+            header: false,
+            footer: false,
+        },
+    ]
+}
+
+/// What Kat irtifakı tablosu's message adds (docs/adr/8031): the land shares' whole, why they could not be given, the
+/// units numbered otherwise than 1, 2, 3 … (Kat Mülkiyeti Kanunu 12/a: "birden başlayıp sırayla giden numarası") and the
+/// units without a nature; each a sentence after a space, none when all hold.
+pub fn land_share_notes(doc: &kentos_domain::Document) -> String {
+    let program = doc.program();
+    let units: Vec<&kentos_commands::ProgramUnit> = program
+        .units
+        .iter()
+        .filter(|u| u.kind == kentos_commands::UnitKind::Unit)
+        .collect();
+    let mut out = String::new();
+    match doc.land_shares() {
+        Ok(Some(l)) => out.push_str(&format!(" Arsa payı paydası {}.", l.total)),
+        Ok(None) => out.push_str(" Bina programında bağımsız bölüm yok: arsa payı yazılmadı."),
+        Err(why) => out.push_str(&format!(" {why}")),
+    }
+    let mut numbers: Vec<u64> = units.iter().filter_map(|u| u.number.parse().ok()).collect();
+    numbers.sort_unstable();
+    let ordinal =
+        numbers.len() == units.len() && numbers.iter().enumerate().all(|(i, n)| *n == i as u64 + 1);
+    if !units.is_empty() && !ordinal {
+        let said: Vec<&str> = units.iter().take(4).map(|u| u.number.as_str()).collect();
+        out.push_str(&format!(
+            " Bölüm numaraları ({}{}) 1'den başlayıp sırayla gitmiyor; Kat Mülkiyeti Kanunu 12/a böyle ister: Bina \
+             programında 1, 2, 3 … yapın.",
+            said.join(", "),
+            if units.len() > 4 { ", …" } else { "" }
+        ));
+    }
+    let bare: Vec<&str> = units
+        .iter()
+        .filter(|u| u.nature.is_none())
+        .map(|u| u.number.as_str())
+        .collect();
+    if !bare.is_empty() {
+        out.push_str(&format!(
+            " {} bölümünün niteliği yok (daire, dükkân, iş bürosu …): Bina programında yazın.",
+            bare.iter()
+                .map(|n| format!("“{n}”"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
+    }
+    out
 }
 
 /// Çizelge: a schedule placed from the cursor; its settings visible (docs/adr/0733 §5).
@@ -876,9 +1129,17 @@ impl ScheduleTool {
             preset,
             // A fixtures schedule counts alike ones on one row.
             group: preset == SchedulePreset::Fixtures,
-            total: preset != SchedulePreset::Openings,
-            // A units schedule keeps the program's order (docs/adr/0795).
-            sorted: preset != SchedulePreset::Units,
+            // A units schedule keeps the program's order (docs/adr/0795), a metrekare cetveli the storeys'; the room
+            // list sorts storey by storey itself (docs/adr/8038).
+            sorted: !matches!(
+                preset,
+                SchedulePreset::Units
+                    | SchedulePreset::AreaTable
+                    | SchedulePreset::LandShares
+                    | SchedulePreset::RoomList
+            ),
+            // The room list has no total row: it adds nothing up.
+            total: !matches!(preset, SchedulePreset::Openings | SchedulePreset::RoomList),
             subtotals: false,
             active_level: false,
             table: None,
@@ -892,15 +1153,23 @@ impl ScheduleTool {
     fn input_at(&self, at: Vec2, cx: &Context<'_>) -> SchedulesCreate {
         let level = cx.level.filter(|_| self.active_level);
         SchedulesCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The schedules' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Schedule, cx),
             at: points::wire(at),
             of: self.preset.of(),
             columns: self.preset.columns(self.group),
-            filter: level.map(|l| kentos_commands::ScheduleFilter {
-                levels: Some(vec![l.to_owned()]),
-                ..Default::default()
+            // Kat irtifakı tablosu lists the independent units alone; their annexes are in their rows.
+            filter: (level.is_some() || self.preset == SchedulePreset::LandShares).then(|| {
+                kentos_commands::ScheduleFilter {
+                    levels: level.map(|l| vec![l.to_owned()]),
+                    kinds: (self.preset == SchedulePreset::LandShares)
+                        .then(|| vec![kentos_commands::UnitKind::Unit]),
+                    ..Default::default()
+                }
             }),
-            sort: if self.sorted || self.subtotals {
+            sort: if self.preset == SchedulePreset::RoomList {
+                room_list_sort()
+            } else if self.sorted || self.subtotals {
                 vec![ScheduleSort {
                     column: 0,
                     descending: false,
@@ -912,6 +1181,7 @@ impl ScheduleTool {
             },
             group: self.group.then_some(true),
             total: self.total.then_some(true),
+            by_level: (self.preset == SchedulePreset::AreaTable).then_some(true),
             height: None,
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
@@ -983,16 +1253,26 @@ impl ScheduleTool {
     }
 
     fn write(&mut self, at: Vec2, cx: &mut Context<'_>) {
-        let input = self.input_at(at, cx);
-        let result = schedules_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Schedule, cx, |_, cx| {
+            let input = self.input_at(at, cx);
+            let result = schedules_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             self.done = true;
             self.ghost = Preview::default();
             cx.selection.set([Slot(out.id)]);
+            let notes = if self.preset == SchedulePreset::LandShares {
+                land_share_notes(cx.doc)
+            } else {
+                String::new()
+            };
             cx.say(
                 Level::Success,
                 format!(
-                    "{}: {} satır. Kaynakları değişince satırları da değişir.",
+                    "{}: {} satır. Kaynakları değişince satırları da değişir.{notes}",
                     self.preset.label(),
                     out.rows
                 ),
@@ -1002,6 +1282,10 @@ impl ScheduleTool {
 }
 
 impl Tool for ScheduleTool {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Schedule)
+    }
+
     fn point_count(&self) -> usize {
         0
     }
@@ -1016,6 +1300,9 @@ impl Tool for ScheduleTool {
             SchedulePreset::Finishes => SCHEDULE_FINISHES_ID,
             SchedulePreset::Fixtures => SCHEDULE_FIXTURES_ID,
             SchedulePreset::Units => SCHEDULE_UNITS_ID,
+            SchedulePreset::AreaTable => SCHEDULE_AREAS_ID,
+            SchedulePreset::LandShares => SCHEDULE_LAND_SHARES_ID,
+            SchedulePreset::RoomList => SCHEDULE_ROOM_LIST_ID,
             _ => SCHEDULE_ID,
         }
     }

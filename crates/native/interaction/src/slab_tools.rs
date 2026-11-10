@@ -211,12 +211,25 @@ impl SlabTool {
             attrs: None,
             bound: (self.bind && seed.is_some()).then_some(true),
             space: None,
+            // Its layers are picked in Öznitelikler (docs/adr/8040 §2).
+            layers: None,
         }
     }
 
+    /// The layer kind of the slab the tool writes: by its material (docs/adr/8008).
+    fn layer_kind(&self) -> crate::arch_layer::Kind {
+        crate::arch_layer::Kind::Slab(self.material.clone())
+    }
+
     fn create_input(&self, slab: NewSlab, cx: &Context<'_>) -> SlabsCreate {
+        // The view's tadilat durumu (docs/adr/8039 §3).
+        let slab = NewSlab {
+            arch: cx.phased(slab.arch.clone()),
+            ..slab
+        };
         SlabsCreate {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The slab's layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&self.layer_kind(), cx),
             slabs: vec![slab],
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
@@ -369,10 +382,14 @@ impl SlabTool {
             self.pts.clear();
             return true;
         }
-        let input = self.create_input(self.new_slab(seed, corners), cx);
         let area = self.area;
-        let result = slabs_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        if points::written(result, cx).is_none() {
+        let kind = self.layer_kind();
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let input = self.create_input(self.new_slab(seed, corners), cx);
+            let result = slabs_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            points::written(result, cx).is_some()
+        });
+        if !written {
             return false;
         }
         let format = cx.format();
@@ -466,6 +483,11 @@ impl SlabTool {
 }
 
 impl Tool for SlabTool {
+    /// A slab's layer; cutting a hole writes no new object.
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        (!self.hole).then(|| self.layer_kind())
+    }
+
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         self.see(cx);
         Flow::Stay
@@ -530,10 +552,10 @@ impl Tool for SlabTool {
         let mut p = Prompt::new("Döşeme", step)
             .option_with("Sınır", "S", if self.hole && self.bound == Bound::Outline { "Oda" } else { self.bound.label() })
             .option_with("Tür", "T", self.role.label())
-            .option_with("Kalınlık", "K", f.length(self.thickness))
+            .option_with("Kalınlık", "E", f.length(self.thickness))
             .option_with("Kot farkı", "F", f.length(self.offset))
             .option_with("Kenar ötelemesi", "Ö", f.length(self.edge_offset))
-            .option_with("Kenar", "E", self.edge.map_or("Yok", SlabEdgeKind::label))
+            .option_with("Kenar", "N", self.edge.map_or("Yok", SlabEdgeKind::label))
             .option_with("Kat", "L", self.level.label())
             .toggle("Metraj dışı", "X", self.excluded)
             .toggle("Delik", "D", self.hole)
@@ -603,7 +625,7 @@ impl Tool for SlabTool {
                     SlabRole::Terrace => SlabRole::Floor,
                 }
             }
-            "E" => {
+            "N" => {
                 self.edge = match self.edge {
                     None => Some(SlabEdgeKind::Railing),
                     Some(SlabEdgeKind::Railing) => Some(SlabEdgeKind::Parapet),
@@ -611,7 +633,8 @@ impl Tool for SlabTool {
                 };
                 self.edge_width = None;
             }
-            "K" => self.ask = Some(Ask::Thickness),
+            // Kalınlık is E in every Mimari tool (docs/adr/8003); Kenar moved to N.
+            "E" => self.ask = Some(Ask::Thickness),
             "F" => self.ask = Some(Ask::Offset),
             "Ö" => self.ask = Some(Ask::EdgeOffset),
             "W" if self.edge.is_some() => self.ask = Some(Ask::EdgeWidth),
@@ -638,7 +661,7 @@ impl Tool for SlabTool {
         match key {
             "S" => self.bound_choices(),
             "T" => self.role_choices(),
-            "E" => self.edge_choices(),
+            "N" => self.edge_choices(),
             "L" => self.level.setting().choices,
             _ => Vec::new(),
         }
@@ -649,10 +672,10 @@ impl Tool for SlabTool {
         let mut rows = vec![
             Setting::choice("S", "Sınır", self.bound_choices()),
             Setting::choice("T", "Tür", self.role_choices()),
-            Setting::text("K", "Kalınlık", f.length(self.thickness)),
+            Setting::text("E", "Kalınlık", f.length(self.thickness)),
             Setting::text("F", "Kot farkı", f.length(self.offset)),
             Setting::text("Ö", "Kenar ötelemesi", f.length(self.edge_offset)),
-            Setting::choice("E", "Kenar", self.edge_choices()),
+            Setting::choice("N", "Kenar", self.edge_choices()),
         ];
         if self.edge.is_some() {
             rows.push(Setting::text("W", "Kenar eni", f.length(self.edge_width())));
@@ -675,13 +698,13 @@ impl Tool for SlabTool {
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if matches!(key, "S" | "T" | "E" | "L") {
+        if matches!(key, "S" | "T" | "N" | "L") {
             return self.choose_option(key, value, cx);
         }
         match key {
-            "K" | "F" | "Ö" | "W" => {
+            "E" | "F" | "Ö" | "W" => {
                 let ask = match key {
-                    "K" => Ask::Thickness,
+                    "E" => Ask::Thickness,
                     "F" => Ask::Offset,
                     "Ö" => Ask::EdgeOffset,
                     _ => Ask::EdgeWidth,
@@ -721,7 +744,7 @@ impl Tool for SlabTool {
                 };
                 self.role = r;
             }
-            "E" => {
+            "N" => {
                 self.edge = match typed {
                     "none" | "Yok" => None,
                     _ => match SlabEdgeKind::ALL.into_iter().find(|k| k.name() == typed || k.label() == typed) {

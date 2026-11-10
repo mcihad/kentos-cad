@@ -89,6 +89,14 @@ impl App {
         let hit = self.snap?;
         let object = (hit.id >= 0.0)
             .then(|| {
+                // A building object's line in its words (docs/adr/8020): Duvar yüzü, Çekirdek yüzü, Açıklık ortası.
+                let named =
+                    self.spatial.store().get(hit.id).and_then(|item| {
+                        kentos_interaction::snap_names::name(&item.shape, hit.point)
+                    });
+                if named.is_some() {
+                    return named;
+                }
                 let doc = self.document.as_ref()?;
                 let slot = kentos_domain::Slot(u32::try_from(hit.id as i64).ok()?);
                 doc.model

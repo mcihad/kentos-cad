@@ -558,6 +558,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         allow_polyline_loss: false,
         layouts: Vec::new(),
         wall_detail: None,
+        cut_height: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -1074,6 +1075,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         allow_polyline_loss: false,
         layouts: Vec::new(),
         wall_detail: None,
+        cut_height: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -1140,6 +1142,7 @@ fn nothing_to_write_is_still_a_file_autocad_opens() {
         allow_polyline_loss: false,
         layouts: Vec::new(),
         wall_detail: None,
+        cut_height: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -3952,4 +3955,207 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
     let (r, schematic) = kinds(WallDetail::Schematic);
     assert!(r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.kind == HatchPatternType::Solid)), "{schematic:?}");
     assert!(!r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31"))));
+}
+
+/// Walls with a tadilat durumu (docs/adr/8039 §4): each wall's lines on its layer's state layer, the iptal one dashed
+/// (Mimarlar Odası's technique), its hatch on that layer's "-T" (EK-4 4.14.5 after the state); a wall without a state
+/// stays on its layer, its hatch on the layer's "-T", as before. The report says how many.
+#[test]
+fn walls_with_a_renovation_state_go_on_their_state_layers() {
+    use kentos_contracts::{
+        ArchInfo, ArchPhase, ComponentHatch, WallComponent, WallDetail, WallEntity, WallFields,
+    };
+    let wall = |id: u32, y: f64, phase: Option<ArchPhase>| {
+        let mut b = base("mm-duva-tugla");
+        b.id = id;
+        let o = tm(0.0, y);
+        Entity::Wall(WallEntity {
+            base: b,
+            wall: WallFields {
+                pts: vec![o, v(o.x + 6.0, o.y)],
+                bulges: None,
+                closed: false,
+                width: 0.25,
+                justify: Default::default(),
+                offset: 0.0,
+                style: None,
+                components: vec![WallComponent {
+                    name: "Tuğla".into(),
+                    material: None,
+                    material_id: None,
+                    thickness: None,
+                    edge: None,
+                    hatch: Some(ComponentHatch {
+                        pattern: "ANSI31".into(),
+                        scale: 1.0,
+                        angle: 0.0,
+                        color: None,
+                    }),
+                    detail: WallDetail::Standard,
+                    priority: Some(1),
+                    wrap: false,
+                }],
+                caps: Default::default(),
+                fill: Some("#5A5A5A".into()),
+                height: None,
+                arch: ArchInfo {
+                    phase,
+                    ..Default::default()
+                },
+                joins: Default::default(),
+                cleanup: true,
+            },
+        })
+    };
+    let mut i = input(vec![
+        wall(1, 0.0, Some(ArchPhase::Demolish)),
+        wall(2, 10.0, Some(ArchPhase::New)),
+        wall(3, 20.0, None),
+    ]);
+    i.layers.push(layer(
+        "mm-duva-tugla",
+        "MM-DUVA-TUGLA",
+        &[],
+        "ink",
+        LineType::Continuous,
+        0.5,
+    ));
+    i.wall_detail = Some(WallDetail::Standard);
+    i.annotations.metadata = false;
+    let (text, report) = write(&i);
+    let r = read(&text);
+    // Each wall's lines and hatches by its place along y.
+    let layers_at = |y: f64, hatch: bool| -> Vec<String> {
+        let mut out: Vec<String> = r
+            .entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Hatch(_)) == hatch)
+            .filter(|e| {
+                // A point of the piece: a line's end, a polyline's or a hatch's first corner.
+                let at = match e {
+                    Entity::Line(l) => Some(l.a.y),
+                    Entity::Polyline(p) => p.pts.first().map(|p| p.y),
+                    Entity::Hatch(h) => h.ring.first().map(|p| p.y),
+                    _ => None,
+                };
+                at.is_some_and(|at| (at - tm(0.0, y).y).abs() <= 0.2)
+            })
+            .map(|e| e.base().layer_id.clone())
+            .collect();
+        out.sort();
+        out.dedup();
+        out
+    };
+    assert_eq!(layers_at(0.0, false), ["MM-DUVA-TUGLA-IPTAL"]);
+    assert_eq!(layers_at(0.0, true), ["MM-DUVA-TUGLA-IPTAL-T"]);
+    assert_eq!(layers_at(10.0, false), ["MM-DUVA-TUGLA-ILAVE"]);
+    assert_eq!(layers_at(10.0, true), ["MM-DUVA-TUGLA-ILAVE-T"]);
+    assert_eq!(layers_at(20.0, false), ["MM-DUVA-TUGLA"]);
+    assert_eq!(layers_at(20.0, true), ["MM-DUVA-TUGLA-T"]);
+    // The iptal layer is dashed; the others as their layer.
+    let line_type = |name: &str| {
+        r.layers
+            .iter()
+            .find(|l| l.name == name)
+            .map(|l| l.line_type)
+    };
+    assert_eq!(line_type("MM-DUVA-TUGLA-IPTAL"), Some(LineType::Dashed));
+    assert_eq!(line_type("MM-DUVA-TUGLA-ILAVE"), Some(LineType::Continuous));
+    assert!(
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Tadilat durumu" && n.count == 2),
+        "{:?}",
+        report.notes
+    );
+}
+
+/// A wall on an EK-4 layer (docs/adr/8008): its hatches go on the layer's "-T" (the 2026 Dijital Hazırlama
+/// Yönetmeliği's EK-4 4.14.5), its lines stay on the layer; the file has both layers. A wall on another layer keeps its
+/// hatch with it.
+#[test]
+fn an_ek4_walls_hatches_go_on_its_t_layer() {
+    use kentos_contracts::{ComponentHatch, WallComponent, WallDetail, WallEntity, WallFields};
+    let o = tm(0.0, 0.0);
+    let wall = |layer: &str| {
+        Entity::Wall(WallEntity {
+            base: base(layer),
+            wall: WallFields {
+                pts: vec![o, v(o.x + 6.0, o.y)],
+                bulges: None,
+                closed: false,
+                width: 0.25,
+                justify: Default::default(),
+                offset: 0.0,
+                style: None,
+                components: vec![WallComponent {
+                    name: "Tuğla".into(),
+                    material: None,
+                    material_id: None,
+                    thickness: None,
+                    edge: None,
+                    hatch: Some(ComponentHatch {
+                        pattern: "ANSI31".into(),
+                        scale: 1.0,
+                        angle: 0.0,
+                        color: None,
+                    }),
+                    detail: WallDetail::Standard,
+                    priority: Some(1),
+                    wrap: false,
+                }],
+                caps: Default::default(),
+                fill: Some("#5A5A5A".into()),
+                height: None,
+                arch: Default::default(),
+                joins: Default::default(),
+                cleanup: true,
+            },
+        })
+    };
+    let mut i = input(vec![wall("mm-duva-tugla")]);
+    i.layers.push(layer(
+        "mm-duva-tugla",
+        "MM-DUVA-TUGLA",
+        &[],
+        "ink",
+        LineType::Continuous,
+        0.5,
+    ));
+    i.wall_detail = Some(WallDetail::Standard);
+    i.annotations.metadata = false;
+    let (text, _) = write(&i);
+    assert!(
+        text.contains("\nMM-DUVA-TUGLA-T\n") || text.contains("\r\nMM-DUVA-TUGLA-T\r\n"),
+        "the hatch layer in the table"
+    );
+    let r = read(&text);
+    let hatch_layers: Vec<&str> = r
+        .entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Hatch(_)))
+        .map(|e| e.base().layer_id.as_str())
+        .collect();
+    assert_eq!(hatch_layers, ["MM-DUVA-TUGLA-T"]);
+    assert!(
+        r.entities
+            .iter()
+            .filter(|e| !matches!(e, Entity::Hatch(_)))
+            .all(|e| e.base().layer_id == "MM-DUVA-TUGLA")
+    );
+    // A wall on another layer keeps its hatch with it.
+    let mut i = input(vec![wall("yapi")]);
+    i.wall_detail = Some(WallDetail::Standard);
+    i.annotations.metadata = false;
+    let (text, _) = write(&i);
+    assert!(!text.contains("-T\n"));
+    let r = read(&text);
+    let yapi = layer_name("yapi");
+    assert!(
+        r.entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Hatch(_)))
+            .all(|e| e.base().layer_id == yapi)
+    );
 }

@@ -239,8 +239,9 @@ def heights(f):
 
 
 def cut_in_plan(f):
-    """Plan cuts a door or window always; a bare opening, niche or flue where it crosses the cut height (ADR 0719 §2)."""
-    if f["form"] in ("door", "window"):
+    """Plan cuts a door always; a window (ADR 8012), a bare opening, a niche or a flue where it crosses the cut height
+    (ADR 0719 §2)."""
+    if f["form"] == "door":
         return True
     s0, s1 = heights(f)
     return s0 < CUT and s1 > CUT
@@ -388,6 +389,9 @@ def stored(f):
     out["place"] = f["place"]
     if f.get("broken"):
         out["broken"] = f["broken"]
+    # Its own phase (docs/adr/8039 §1); none: its wall's.
+    if f.get("phase") is not None:
+        out["phase"] = f["phase"]
     return out
 
 
@@ -536,7 +540,7 @@ def create(d, inp, conflict=False):
             t = first_type(n.get("form", "door"))
         f = {"host": n["host"], "at": 0.0, "anchor": "center", "hand": "start", "side": "left", "showSwing": True}
         apply_type(f, t)
-        for key in ("form", "width", "leaves", "operation", "hand", "swing", "sill", "head", "depth", "inset"):
+        for key in ("form", "width", "leaves", "operation", "hand", "swing", "sill", "head", "depth", "inset", "phase"):
             if key in n:
                 f[key] = n[key]
         recess_follows_form(f, "depth" in n, "inset" in n)
@@ -716,6 +720,8 @@ def create_cases():
         "layerId": "kapi", "openings": [{"host": uid_of(1), "at": 2.0}, {"host": uid_of(1), "at": 6.0, "type": "Pencere 120"}]})])
     c.add("plan yazmadan açıklığı pervazlarıyla gösterir", [create_step(Drawing(), "plan", one(at=2.0))])
     c.add("doğrulama yazmaz", [create_step(Drawing(), "validate", one(at=2.0))])
+    # Its own tadilat durumu (docs/adr/8039 §3): a door drawn in Yeni durum into an existing wall.
+    c.add("kendi tadilat durumuyla: ilave kapı", [create_step(Drawing(), "execute", one(at=2.0, phase="new"))])
     for name, inp, kw in [
         ("açıklık verilmezse ret", {"layerId": "kapi", "openings": []}, {}),
         ("sonsuz konum reddedilir, yeriyle", one(at=2.0), {"non_finite": {"openings[0].at": "NaN"}}),
@@ -829,7 +835,7 @@ def create_cases():
           [made, create_step(d, "execute", one(at=5.0, type="Tesisat boşluğu 20"))])
     d = Drawing()
     made = create_step(d, "execute", one(at=5.0, form="window", sill=1.3, head=2.2))
-    c.add("yüksek pencerenin altında kesmeyi kesen niş: ikisi de kesilir, reddedilir",
+    c.add("yüksek pencerenin altında kesmeyi kesen niş: pencere kesmenin üstünde kalır, kesilmez; niş eklenir",
           [made, create_step(d, "execute", one(at=5.0, form="niche", sill=0.3, head=1.2))])
     d = Drawing()
     made = create_step(d, "execute", one(at=5.0, type="Pencere 120"))
@@ -894,7 +900,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.", "operation"), None, None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da tadilat durumu verin.", "operation"), None, None
         for key, name in (("width", "Genişlik"), ("swing", "Açılma açısı"), ("frame", "Kasa"), ("sill", "Denizlik"), ("head", "Lento"),
                           ("depth", "Derinlik"), ("inset", "Yüzden uzaklık")):
             if ch.get(key) is not None and not math.isfinite(ch[key]):
@@ -1099,6 +1105,8 @@ def edit_cases():
         ("Değiştir: genişlik ortası yerinde kalarak büyür, numara yazılır", {"kind": "set", "width": 1.0, "number": "K2"}),
         ("Değiştir: açı, açılım yayı kapalı, kasa kaldırılır", {"kind": "set", "swing": 110.0, "showSwing": False, "frame": None}),
         ("Değiştir: biçim pencere, iki kanat, denizlik ve lento", {"kind": "set", "form": "window", "leaves": 2, "sill": 1.0, "head": 2.3}),
+        # Its own phase (docs/adr/8039 §1): a new door cut into an existing wall.
+        ("Değiştir: kendi tadilat durumu ilave (mevcut duvara açılan kapı)", {"kind": "set", "phase": "new"}),
         ("Taşı: duvar boyunca 1,5 m", {"kind": "move", "by": 1.5}),
         ("Taşı: yeni konumu 6 m", {"kind": "move", "at": 6.0}),
         ("Çevir: açılış yanı", {"kind": "flip", "what": "side"}),
@@ -1111,6 +1119,13 @@ def edit_cases():
     ]:
         d, made = fresh(door)
         c.add(name, [made, edit_step(d, "execute", {"uids": [uid_of(first)], "operation": op})])
+    # Its own phase taken away: its wall's again (docs/adr/8039 §1).
+    d, made = fresh(door)
+    c.add("Değiştir: kendi tadilat durumu iptal, sonra kaldırılır ve duvarınkini alır", [
+        made,
+        edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "phase": "demolish"}}),
+        edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "set", "phase": None}}),
+    ])
     d, made = fresh(door)
     step = edit_step(d, "execute", {"uids": [uid_of(first)], "operation": {"kind": "move", "by": 1.0}})
     c.add("tek adım “Açıklığı düzenle”, geri alınır", [made, step,

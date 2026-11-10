@@ -134,10 +134,23 @@ pub struct NewSpace {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub arch: Option<ArchInfo>,
+    /// Its inside height typed (PAİY 4(1)(ıı)); absent: up to the slab over it, else its storey's top (docs/adr/8040
+    /// §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<f64>,
+    /// Döşeme kot farkı: its finished floor over its storey's elevation (docs/adr/8040 §3); absent: the top of the floor
+    /// slab under it, else its storey's floor.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub floor_offset: Option<f64>,
+    /// Asma tavan: its suspended ceiling's underside over its finished floor (docs/adr/8040 §3); absent: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub finishes: Option<SpaceFinishes>,
@@ -280,6 +293,26 @@ pub struct SpaceChange {
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub height: Option<Option<f64>>,
+    /// Döşeme kot farkı (docs/adr/8040 §3); null: the floor slab under it, else its storey's floor.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub floor_offset: Option<Option<f64>>,
+    /// Asma tavan: its height over the finished floor (docs/adr/8040 §3); null: none.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
+    pub suspended_ceiling: Option<Option<f64>>,
     #[serde(
         default,
         with = "crate::cad_properties::nullable",
@@ -304,6 +337,40 @@ pub struct SpaceChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub ceiling: Option<Option<String>>,
+    /// The skirting's finish (Süpürgelik, docs/adr/0733 §3).
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub base: Option<Option<String>>,
+    /// The room list's finishes (docs/adr/8038): Denizlik ve parapet, Merdiven basamak ve rıht, Küpeşte ve korkuluk.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub sill: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub stair: Option<Option<String>>,
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub railing: Option<Option<String>>,
     /// A void or a room again (docs/adr/0708).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -565,6 +632,8 @@ pub struct SpaceRow {
     pub area: f64,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub perimeter: f64,
+    /// Its inside height (PAİY 4(1)(ıı), docs/adr/8040 §3): its finished floor to its ceiling (its asma tavan, its
+    /// height typed, the slab over it); without one, its storey's top.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
@@ -573,6 +642,11 @@ pub struct SpaceRow {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub volume: Option<f64>,
+    /// Its asma tavan's area, m² (docs/adr/8040 §3): its net area; none without one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub suspended_ceiling_area: Option<f64>,
     /// A room's baseboard (süpürgelik, docs/adr/0722 §5): its rings' length less the widths of the passages (doors,
     /// gaps to the floor) its sides run along, metres; none for a void.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -771,6 +845,32 @@ pub struct SlabRow {
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub excluded: bool,
     pub rule: String,
+    /// Its layers besides its structure (docs/adr/8040 §2), over it then under it, each measured on its net area;
+    /// `volume` is the structure's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SlabLayerRow>>", optional))]
+    pub layers: Vec<SlabLayerRow>,
+}
+
+/// A slab's layer measured (docs/adr/8040 §2): its kind, its thickness, its net area (the slab's) and its volume.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SlabLayerRow {
+    pub kind: crate::SlabLayerKind,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub material: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub thickness: f64,
+    /// The slab's net area, m².
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "area")))]
+    pub area: f64,
+    /// `area` × thickness, m³.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
 }
 
 /// A ramp measured (docs/adr/0723 §3).
@@ -971,6 +1071,46 @@ pub struct QuantityTotals {
     #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stair_risers: u32,
+    /// The beams', lintels' and bond beams' concrete (docs/adr/8041 §3).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub beam_volume: f64,
+}
+
+/// A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length and its concrete's volume. A beam's
+/// volume is what hangs under the slab it carries (its width × its height less the slab's structure × its length): the
+/// slab's own volume holds the rest, and summed with it the concrete is not counted twice. A lintel's and a bond beam's,
+/// in their wall, is the whole.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BeamRow {
+    pub uid: String,
+    pub role: crate::BeamRole,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub tag: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub level: Option<String>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub width: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub height: f64,
+    /// Its axis's length.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub length: f64,
+    /// The slab's structure it hangs from, within its height; none: none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub slab: Option<f64>,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
+    pub volume: f64,
+    pub rule: String,
 }
 
 /// Output of `cad.spaces.quantities` v1 (its plan's too).
@@ -999,6 +1139,10 @@ pub struct SpacesQuantified {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<StairRow>>", optional))]
     pub stairs: Vec<StairRow>,
+    /// The beams, lintels and bond beams (docs/adr/8041 §3).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<BeamRow>>", optional))]
+    pub beams: Vec<BeamRow>,
     /// The materials (docs/adr/0785 §4): given when the project keeps materials, project ones first in the table's
     /// order, then the text ones in the drawing's.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

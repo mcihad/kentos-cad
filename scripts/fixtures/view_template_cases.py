@@ -34,7 +34,7 @@ E0, N0 = 487000, 4420000
 style = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
 PENS = ["walls", "openings", "columns", "stairs", "slabs", "spaces", "dimensions", "tags", "texts", "hatches", "blocks",
         "grids", "viewmarks", "others"]
-PEN_LABELS = {"walls": "Duvarlar", "openings": "Kapı ve pencereler", "columns": "Kolonlar", "stairs": "Merdiven ve rampalar",
+PEN_LABELS = {"walls": "Duvarlar", "openings": "Kapı ve pencereler", "columns": "Kolon ve kirişler", "stairs": "Merdiven ve rampalar",
               "slabs": "Döşemeler", "spaces": "Mahaller", "dimensions": "Ölçüler", "tags": "Etiketler", "texts": "Yazılar",
               "hatches": "Taramalar", "blocks": "Bloklar ve donatı", "grids": "Akslar", "viewmarks": "Görünüm işaretleri",
               "others": "Öbür çizgiler"}
@@ -106,7 +106,7 @@ def pen_problem(pens):
 def problem(r):
     """The recipe's own rule (docs/adr/0774, 0781, 0783): the words of the first thing wrong, or none."""
     if not any(k in r for k in CONTENT) and not r.get("hidden") and not r.get("crop") and not r.get("pens") and not r.get("mono"):
-        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin."
+        return "Görünüş tarifi boş: kat, tadilat görünümü, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin."
     lvl = r.get("level")
     if lvl is not None and not lvl["id"].strip():
         return "Görünüş tarifinin katı bir kat kimliği olmalı."
@@ -438,7 +438,7 @@ sheet_case("Görünümün katı: zemin kolonu gösterilir, 1. kat kolonu göster
 for i, (label, tpl) in enumerate([
     ("Şablon taramayı göstermeye dönünce harita taramayı gösterir", {"version": 2, "scale": 100}),
     ("Şablonun ölçeği 1:20 olunca bağlı harita küçülür, uzaktaki çizgi dışarıda kalabilir", {"version": 2, "hidden": ["hatches"], "scale": 20}),
-    ("Şablon Yeni durum evresiyle: yıkılacak kolon gösterilmez", {"version": 2, "hidden": ["hatches"], "scale": 100, "phase": "proposed"}),
+    ("Şablon Yeni durum görünümüyle: iptal edilen kolon gösterilmez", {"version": 2, "hidden": ["hatches"], "scale": 100, "phase": "proposed"}),
     ("Şablonun kalemleri ve siyah beyazı neyin gösterildiğini değiştirmez", {"version": 2, "hidden": ["hatches"], "scale": 100,
                                                                              "pens": [{"of": "walls", "weight": 0.7}], "mono": True}),
 ]):
@@ -453,7 +453,7 @@ for uids, label in [([2], "1. kat kolonu Zemin şablonlu haritada yok, Kat 1 har
                     ([3], "Katsız çizgi bütün haritalarda"),
                     ([5], "Görünümün alanının dışındaki zemin kolonu"),
                     ([6], "Projede olmayan kattaki kolon"),
-                    ([7, 8], "Evresi olan kolonlar şablonun evresizliğiyle")]:
+                    ([7, 8], "Tadilat durumu olan kolonlar, tadilat görünümü olmayan şablonla")]:
     sheet_case(f"Şablonla: {label}", [vrs.step(vrs.Book(draw), uids)])
 # A second view follows the same template: both maps draw by it, each its own level.
 both = copy(SHEET_VIEWS)

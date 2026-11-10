@@ -1,0 +1,134 @@
+# M38 part 2 AFTER: codes; Pencere 120's frame, glass and U 2,4 typed in Kapı ve pencere tipleri; Etiket ▾ ›
+# Doğrama listesi placed at 0,-12; Ruhsat takımı (UP-01 left out: no İmar durumu here) published; Denetim › Mevzuat
+# says TS 825's U.
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+click 1640 20
+wait 600
+type doğrama kodları
+wait 1200
+key Return
+wait 1500
+key Return
+wait 2500
+click 1640 20
+wait 600
+type kapı ve pencere tipleri
+wait 1200
+key Return
+wait 2500
+click 560 446   # Pencere 120
+wait 1500
+click 1090 531  # Kasa ve kanat
+wait 500
+type PVC, 3 odacıklı; çift camlı
+click 1310 555  # U değeri (the summary grew a line: the fields moved 24 px down)
+wait 500
+type 2,4
+wait 1200
+shot sonra-d-tipler
+click 1395 789  # Uygula
+wait 2000
+click 1326 789  # Kapat
+wait 1200
+key Escape
+wait 600
+click 998 83    # Etiket ▾
+wait 1000
+shot sonra-d-etiket
+key Escape
+wait 500
+click 1640 20
+wait 600
+type doğrama listesi
+wait 1200
+key Return
+wait 1500
+type 0,-12
+key Return
+wait 2500
+key Escape
+wait 600
+click 800 500 middle
+click 800 500 middle
+wait 1500
+move 1300 1010
+wait 600
+shot sonra-d-genel
+wheel 553 850 4
+wait 1500
+move 1300 1010
+wait 600
+shot sonra-d-liste
+click 800 500 middle
+click 800 500 middle
+wait 1200
+click 1258 111   # Proje › Ruhsat takımı
+wait 2000
+click 778 390
+type Sivas
+click 1127 390
+type Merkez
+click 778 443
+type Kardeşler
+click 778 497
+type 1234
+click 1127 497
+type 7
+click 1127 629
+type Ayşe Yılmaz
+click 1127 683
+type Betonarme karkas
+click 778 815
+type Cihad Gündoğdu
+wait 300
+wheel 950 600 -10
+wait 600
+click 778 540
+type 41234
+click 1127 540
+type 58-2026-0012
+click 778 594
+type İstasyon Cad. 12, Merkez / Sivas
+click 778 726
+key ctrl+a
+type 260457
+wait 400
+click 1250 897   # Paftaları oluştur
+wait 9000
+wheel 950 500 40
+wait 1000
+click 647 366    # UP-01 out (no İmar durumu in this drawing)
+wait 1000
+click 935 781    # Denetle (the dialog shrank)
+wait 9000
+click 1254 854   # Yayınla
+wait 15000
+shot sonra-d-yayin
+click 661 854    # Kapat
+wait 800
+click 1110 1000  # UP-05 Doğrama listesi
+wait 3500
+move 1300 1010
+wait 600
+shot sonra-d-pafta
+click 50 1036    # Model (in sheet mode the tabs are at y 1036)
+wait 2000
+click 1162 111   # Denetim
+wait 3000
+drag 760 663 760 330
+wait 1200
+drag 849 447 1290 447
+wait 800
+click 196 414    # Bütün gruplar
+wait 1000
+type mevzuat
+wait 800
+click 180 481    # Mevzuat
+wait 1500
+move 1300 250
+wait 600
+shot sonra-d-mevzuat

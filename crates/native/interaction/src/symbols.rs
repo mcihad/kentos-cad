@@ -134,7 +134,8 @@ impl NorthArrow {
     fn request(&self, at: Vec2, cx: &Context<'_>) -> NorthCreate {
         NorthCreate {
             at: wire(at),
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The symbols' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Symbol, cx),
             north: self.north(),
             size: (self.size != NORTH_SIZE).then_some(self.size),
             color: cx.draft.color_text(),
@@ -156,9 +157,17 @@ impl NorthArrow {
     }
 
     fn place(&mut self, at: Vec2, cx: &mut Context<'_>) {
-        let input = self.request(at, cx);
-        let result = north::execute(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Symbol, cx, |_, cx| {
+            let input = self.request(at, cx);
+            let result = north::execute(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input,
+            );
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             let words = match out.convergence {
                 Some(c) => format!(
                     "Kuzey oku yerleşti: coğrafi kuzey, planın kuzeyinden {}° (meridyen yakınsaması).",
@@ -201,6 +210,10 @@ fn fixed_degrees(radians: f64) -> f64 {
 }
 
 impl Tool for NorthArrow {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Symbol)
+    }
+
     fn id(&self) -> &'static str {
         NORTH_ID
     }
@@ -398,7 +411,8 @@ impl MaterialLegend {
     fn request(&self, at: Option<Vec2>, cx: &Context<'_>) -> LegendsMaterials {
         LegendsMaterials {
             at: at.map(wire),
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The legends' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&crate::arch_layer::Kind::Legend, cx),
             height: (self.height != legends::HEIGHT).then_some(self.height),
             expected_revision: None,
         }
@@ -416,9 +430,17 @@ impl MaterialLegend {
     }
 
     fn make(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
-        let input = self.request(at, cx);
-        let result = legends::execute(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input);
-        if let Some(out) = points::written(result, cx) {
+        let mut out = None;
+        crate::arch_layer::writing(&crate::arch_layer::Kind::Legend, cx, |_, cx| {
+            let input = self.request(at, cx);
+            let result = legends::execute(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input,
+            );
+            out = points::written(result, cx);
+            out.is_some()
+        });
+        if let Some(out) = out {
             let n = out.materials.len();
             cx.say(
                 Level::Success,
@@ -434,6 +456,10 @@ impl MaterialLegend {
 }
 
 impl Tool for MaterialLegend {
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(crate::arch_layer::Kind::Legend)
+    }
+
     fn id(&self) -> &'static str {
         LEGEND_ID
     }
@@ -447,7 +473,7 @@ impl Tool for MaterialLegend {
             return Prompt::new(LEGEND_LABEL, "yazının kâğıttaki yüksekliğini milimetre olarak yazın");
         }
         let prompt = Prompt::new(LEGEND_LABEL, "lejandın sol üst köşesini belirtin")
-            .option_with("Yükseklik", "H", format!("{} mm", js_number(self.height)));
+            .option_with("Yazı yüksekliği", "H", format!("{} mm", js_number(self.height)));
         if self.has { prompt.option("Yenile", "Y") } else { prompt }
     }
 
@@ -472,7 +498,8 @@ impl Tool for MaterialLegend {
     }
 
     fn settings(&self, _f: &Format) -> Vec<Setting> {
-        vec![Setting::text("H", "Yükseklik", format!("{} mm", js_number(self.height)))]
+        // Its text's height: Yükseklik alone is a building's, Y in the contract (docs/adr/8003).
+        vec![Setting::text("H", "Yazı yüksekliği", format!("{} mm", js_number(self.height)))]
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {

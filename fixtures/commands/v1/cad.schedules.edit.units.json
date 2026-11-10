@@ -793,7 +793,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1210,7 +1210,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1356,7 +1356,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1773,7 +1773,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -1919,7 +1919,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -2335,7 +2335,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -2481,7 +2481,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -2899,7 +2899,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -3045,7 +3045,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -3461,7 +3461,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -3607,7 +3607,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -4025,7 +4025,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -4276,7 +4276,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -4422,7 +4422,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -4750,7 +4750,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -5073,7 +5073,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -5937,7 +5937,7 @@
           "No",
           "Pay ağırlığı",
           "Pay (m²)",
-          "Brüt (m²)"
+          "Net + pay (m²)"
          ],
          [
           "1",
@@ -6918,7 +6918,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -7239,7 +7239,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -7560,7 +7560,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -7881,7 +7881,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -8202,7 +8202,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -8523,7 +8523,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -12839,7 +12839,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -13128,7 +13128,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -13274,7 +13274,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -13666,7 +13666,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -13812,7 +13812,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -14096,7 +14096,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -14242,7 +14242,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -14565,7 +14565,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [
@@ -14856,7 +14856,7 @@
           "Kat",
           "Alan (m²)",
           "Pay (m²)",
-          "Brüt (m²)",
+          "Net + pay (m²)",
           "Kayıtlı alan (m²)"
          ],
          [

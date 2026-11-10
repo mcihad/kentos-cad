@@ -7,4 +7,4 @@ import type { OpeningTypesFile } from "./OpeningTypesFile";
 /**
  * What `cad.openingtypes.edit` does.
  */
-export type OpeningTypesOperation = { "kind": "define", name: string, id?: string, copyOf?: string, form?: OpeningForm, change: OpeningTypeChange, } | { "kind": "update", type: string, change: OpeningTypeChange, } | { "kind": "rename", type: string, name: string, } | { "kind": "remove", type: string, detach?: boolean, } | { "kind": "import", library: OpeningTypesFile, onConflict: OpeningTypeConflict, } | { "kind": "export", library: string, types?: Array<string>, };
+export type OpeningTypesOperation = { "kind": "define", name: string, id?: string, copyOf?: string, form?: OpeningForm, change: OpeningTypeChange, } | { "kind": "update", type: string, change: OpeningTypeChange, } | { "kind": "rename", type: string, name: string, } | { "kind": "code", type: string, code: string | null, } | { "kind": "codes", } | { "kind": "remove", type: string, detach?: boolean, } | { "kind": "import", library: OpeningTypesFile, onConflict: OpeningTypeConflict, } | { "kind": "export", library: string, types?: Array<string>, };

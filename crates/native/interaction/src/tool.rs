@@ -857,6 +857,11 @@ pub struct Memory {
     pub wall_justify: kentos_commands::WallJustify,
     pub wall_offset: f64,
     pub wall_style: Option<u64>,
+    /// Duvar's Kapanınca mahal (docs/adr/8022): a loop closed with Kapat writes its room's space too, one undo step.
+    pub wall_room: bool,
+    /// Katman anahtarı (docs/adr/8008): Mimari objects go on their kinds' EK-4 layers instead of the active one.
+    /// KentOS Mimari turns it on at start.
+    pub layer_keys: bool,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
     pub wall_pairs: bool,
     /// Opt-in closed contour conversion; never changes Each/Pairs defaults.
@@ -1289,7 +1294,9 @@ impl Default for Memory {
             wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
             wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
+            wall_room: false,
             wall_style: None,
+            layer_keys: false,
             wall_pairs: false,
             wall_contours: false,
             wall_keep_sources: false,
@@ -1447,12 +1454,52 @@ impl Context<'_> {
         Format::of(self.doc.settings())
     }
 
-    /// Etkin kat as a new architectural object's input takes it (docs/adr/0713, CMD-07); none without one.
+    /// Etkin kat as a new architectural object's input takes it (docs/adr/0713, CMD-07); none without one. An axis's:
+    /// an axis has no tadilat durumu (a building element's is [`Self::new_arch`]).
     pub fn level_arch(&self) -> Option<kentos_commands::ArchInfo> {
         self.level.map(|id| kentos_commands::ArchInfo {
             level: Some(id.to_owned()),
             ..Default::default()
         })
+    }
+
+    /// The tadilat durumu a new building element takes (docs/adr/8039 §3): the state of the view it is drawn in.
+    /// Mevcut durum and Yıkım planı draw the building as it stands (Mevcut), Yeni durum and Tadilat projesi the works
+    /// (İlave); Tümü none.
+    pub fn drawn_phase(&self) -> Option<kentos_commands::ArchPhase> {
+        use kentos_commands::{ArchPhase, PhaseView};
+        match self
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.phase_view)
+            .unwrap_or_default()
+        {
+            PhaseView::All => None,
+            PhaseView::Existing | PhaseView::Demolition => Some(ArchPhase::Existing),
+            PhaseView::Proposed | PhaseView::Renovation => Some(ArchPhase::New),
+        }
+    }
+
+    /// `arch` with [`Self::drawn_phase`] (docs/adr/8039 §3): what a tool that chooses its own level writes.
+    pub fn phased(
+        &self,
+        arch: Option<kentos_commands::ArchInfo>,
+    ) -> Option<kentos_commands::ArchInfo> {
+        let Some(phase) = self.drawn_phase() else {
+            return arch;
+        };
+        Some(kentos_commands::ArchInfo {
+            phase: Some(phase),
+            ..arch.unwrap_or_default()
+        })
+    }
+
+    /// Etkin kat and the view's tadilat durumu as a new building element's input takes them (docs/adr/0713, 3039
+    /// §3): a wall, column, stair, ramp, room, block drawn in Yeni durum is İlave; none without either.
+    pub fn new_arch(&self) -> Option<kentos_commands::ArchInfo> {
+        self.phased(self.level_arch())
     }
 
     /// A new annotation's height of `kind` on paper, mm: what its tool was
@@ -1832,6 +1879,16 @@ pub trait Tool {
     /// Values for the active tool's separate settings pane, never the selection's properties.
     fn settings(&self, _format: &Format) -> Vec<crate::tool_settings::Setting> {
         Vec::new()
+    }
+    /// The keys of its `settings` the value field beside the cursor offers after the locks, in Tab's order
+    /// (docs/adr/8018): Duvar's Kalınlık and Hiza. Each is written as the pane writes it (`configure`).
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        &[]
+    }
+    /// The layer kind of what the tool writes (docs/adr/8008): the panel's Katman says its layer. None for a tool that
+    /// writes no Mimari object, or keeps a layer choice of its own (Duvar ölçüleri's Ölçü katmanı).
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        None
     }
     /// An explicit field commit (Enter/blur); typing a draft in the host writes nothing.
     fn configure(&mut self, _key: &str, _value: &str, _cx: &mut Context<'_>) -> bool {

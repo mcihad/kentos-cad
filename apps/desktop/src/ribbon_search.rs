@@ -33,22 +33,38 @@ const FLASH: Duration = Duration::from_millis(1600);
 /// models (the web registers each as `processing.model.<id>`, “<label>…”).
 pub enum Hit {
     Command(&'static Command),
-    Model { id: String, title: String },
+    Model {
+        id: String,
+        title: String,
+    },
+    /// A furniture or fixture of KentOS's library (Donatı araması, docs/adr/8024).
+    Fixture(&'static crate::fixture_search::Fixture),
 }
 
 /// The commands `query` finds, best first (the web's `CommandRegistry.search`;
 /// the app ranks the user's models with them, `App::hits`).
 #[cfg(test)]
 pub fn search(query: &str) -> Vec<&'static Command> {
-    scored_commands(&fold_turkish(query))
+    scored_commands(&fold_turkish(query), None)
         .into_iter()
         .take(LIMIT)
         .map(|(_, c)| c)
         .collect()
 }
 
-/// Every command the folded text finds, with its rank (lower is better).
-fn scored_commands(q: &str) -> Vec<(f64, &'static Command)> {
+/// `search` as a module's program ranks (its own names, docs/adr/8002).
+#[cfg(test)]
+pub fn search_in(query: &str, names: Option<&crate::module_names::Names>) -> Vec<&'static Command> {
+    scored_commands(&fold_turkish(query), names)
+        .into_iter()
+        .take(LIMIT)
+        .map(|(_, c)| c)
+        .collect()
+}
+
+/// Every command the folded text finds, with its rank (lower is better); a module's program reads a command's
+/// names as its own names say (module_names.rs, docs/adr/8002: PENCERE is the window in KentOS Mimari).
+fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(f64, &'static Command)> {
     if q.is_empty() {
         return Vec::new();
     }
@@ -57,7 +73,10 @@ fn scored_commands(q: &str) -> Vec<(f64, &'static Command)> {
         .iter()
         .filter_map(|command| {
             let mut score = f64::INFINITY;
-            for alias in command.aliases {
+            let aliases = names
+                .and_then(|n| n.aliases_of(command.id, command.aliases))
+                .unwrap_or_else(|| command.aliases.to_vec());
+            for alias in aliases {
                 let alias = fold_turkish(alias);
                 if alias == q {
                     score = score.min(0.0);
@@ -112,7 +131,7 @@ impl App {
     pub(crate) fn hits(&self) -> Vec<Hit> {
         let q = fold_turkish(&self.ribbon_search);
         // A module's program finds only its own commands (docs/adr/0802).
-        let mut scored: Vec<(f64, Hit)> = scored_commands(&q)
+        let mut scored: Vec<(f64, Hit)> = scored_commands(&q, self.module_names())
             .into_iter()
             .filter(|(_, c)| self.offers(c.id))
             .map(|(score, c)| (score, Hit::Command(c)))
@@ -138,6 +157,14 @@ impl App {
                 ));
             }
         }
+        // KentOS's library's furniture and fixtures where blocks are placed (docs/adr/8024).
+        if self.offers("tool.blockInsert") {
+            scored.extend(
+                crate::fixture_search::search(&self.ribbon_search)
+                    .into_iter()
+                    .map(|(score, f)| (score, Hit::Fixture(f))),
+            );
+        }
         scored.sort_by(|a, b| a.0.total_cmp(&b.0));
         scored.into_iter().take(LIMIT).map(|(_, h)| h).collect()
     }
@@ -150,6 +177,18 @@ impl App {
             .map(|hit| {
                 let command = match hit {
                     Hit::Command(command) => command,
+                    Hit::Fixture(f) => {
+                        return Found {
+                            icon: catalog()
+                                .get("tool.blockInsert")
+                                .map_or_else(|| crate::icons::from_web(None), |c| c.icon),
+                            title: f.name.clone().into(),
+                            detail: crate::fixture_search::detail(f).into(),
+                            shortcut: None,
+                            enabled: self.document.is_some(),
+                            revealable: self.home_of("block.library").is_some(),
+                        };
+                    }
                     Hit::Model { title, .. } => {
                         let home = self.home_of("processing.newModel");
                         return Found {
@@ -202,6 +241,14 @@ impl App {
     pub(crate) fn search_run(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            Some(Hit::Fixture(f)) => {
+                if self.document.is_none() {
+                    return Task::none();
+                }
+                self.ribbon_search.clear();
+                let place = self.place_fixture(&f.name);
+                return Task::batch([release_keyboard(), place]);
+            }
             Some(Hit::Model { id, .. }) => {
                 self.ribbon_search.clear();
                 let open = self.processing_command(&format!("processing.model.{id}"));
@@ -221,6 +268,11 @@ impl App {
     pub(crate) fn search_reveal(&mut self, index: usize) -> Task<Message> {
         let command = match self.hits().into_iter().nth(index) {
             Some(Hit::Command(command)) => command,
+            // A fixture's place: Donatı ▾'s Kitaplık (docs/adr/8024).
+            Some(Hit::Fixture(_)) => match catalog().get("block.library") {
+                Some(command) => command,
+                None => return Task::none(),
+            },
             // A model's button in the model library's panel.
             Some(Hit::Model { id, .. }) => {
                 let Some((tab, ..)) = self.home_of("processing.newModel") else {

@@ -72,7 +72,7 @@ def failed(code, message, path):
 def problem(r):
     """The recipe's own rule (no project): the words of the first thing wrong, or none."""
     if not any(k in r for k in ("level", "phase", "layerState", "scale", "detail")) and not r.get("hidden") and not r.get("crop"):
-        return "Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin."
+        return "Görünüş tarifi boş: kat, tadilat görünümü, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin."
     lvl = r.get("level")
     if lvl is not None and not lvl["id"].strip():
         return "Görünüş tarifinin katı bir kat kimliği olmalı."
@@ -224,7 +224,7 @@ case("Üzerine kaydedilen görünüm tarifini korur", [save("A"), recipe("A", FU
 case("Yeniden adlandırılan görünüm tarifini ve kimliğini korur", [save("A"), recipe("A", APP), {"kind": "rename", "name": "A", "to": "B"}])
 case("Tarifli görünüm silinir", [save("A"), recipe("A", APP), {"kind": "delete", "name": "A"}])
 case("Girdinin sürümü yok sayılır", [save("A"), recipe("A", {**APP, "version": 7})])
-case("Yalnız evre: yıkım planı", [save("Yıkım"), recipe("Yıkım", {"phase": "demolition"})])
+case("Yalnız tadilat görünümü: yıkım planı", [save("Yıkım"), recipe("Yıkım", {"phase": "demolition"})])
 case("Alt kat soluk", [save("Kat 1"), recipe("Kat 1", {"level": {"id": "kat-1", "below": True}, "scale": 100})])
 case("Katman durumu adıyla", [save("Sunum"), recipe("Sunum", {"layerState": "Sunum", "scale": 200})])
 case("Sekiz tür gizli, verildiği sırayla", [save("Boş"), recipe("Boş", {"hidden": list(reversed(CATEGORIES))})])
@@ -256,7 +256,7 @@ case("Ayrıntılı ve kırpık tarif yeniden adlandırmada kalır",
 def write():
     doc = {
         "format": "kentos.command-cases", "version": 1, "command": "cad.views.edit", "commandVersion": 1,
-        "title": "Görünüş tarifi: adlı görünümün kat, evre, katman durumu, gizlenen türler, ölçeği, duvar ayrıntısı ve kırpması (ADR 0774, 0781)",
+        "title": "Görünüş tarifi: adlı görünümün kat, tadilat görünümü, katman durumu, gizlenen türler, ölçeği, duvar ayrıntısı ve kırpması (ADR 0774, 0781)",
         "note": "Kural ve beklenenler scripts/fixtures/view_recipe_cases.py'de ADR 0774 ve 0781'dan, KentOS kodu olmadan yazılmıştır.",
         "setup": SETUP, "cases": cases,
     }

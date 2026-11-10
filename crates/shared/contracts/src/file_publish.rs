@@ -61,7 +61,9 @@ pub struct PublishSheets {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub name: Option<String>,
-    /// Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}. Collisions get a stable numeric suffix.
+    /// Separate PDF leaf names: {index} (001...), {sheet}, {id}, {number}, {title}, {revision}, {status}, {subset}, and
+    /// {@name}: a variable's value, the sheet's, else its book's, else the drawing's (docs/adr/8037; one without a value
+    /// refuses with naming_value_missing). Collisions get a stable numeric suffix.
     #[serde(default = "naming")]
     pub naming: String,
     /// None preserves each page's own physical raster setting.
@@ -73,6 +75,11 @@ pub struct PublishSheets {
     pub geo: bool,
     #[serde(default = "yes")]
     pub layers: bool,
+    /// PDF/A-2b (ISO 19005-2; docs/adr/8037): every file archival, as the 2026 digital project regulation asks a
+    /// drawing (RG 5.8.2026/33331 Md. 4/2): XMP metadata and an sRGB output intent; a CMYK JPEG picture is refused.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub pdfa: bool,
     /// A plan's immutable document pin; changed source refuses publication before any file is exposed.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

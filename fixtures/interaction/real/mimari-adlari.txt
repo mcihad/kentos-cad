@@ -1,0 +1,37 @@
+# M3: Mimari adları (docs/adr/8002). Komut satırına "pencere" ve "du", F1 ve Komut ara.
+# Oynatma: scripts/usage/real/session.sh fixtures/interaction/real/mimari-adlari.txt .run/gui-evidence/mimari-m3/sonra --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 400 852   # komut satırı
+type pencere
+wait 400
+shot m3-1-pencere-yaziliyor
+key Return
+wait 500
+shot m3-2-pencere-araci
+key Escape
+key Escape
+click 400 852   # komut satırı
+type du
+key Return
+wait 500
+shot m3-3-du-duvar
+key Escape
+key Escape
+key F1
+wait 800
+click 720 162   # F1: arama alanı
+type mimari
+wait 500
+shot m3-4-f1
+click 1143 828  # F1: Kapat (Esc pencereyi kapatmadı: ayrı bulgu)
+wait 300
+key alt+q
+wait 300
+type pencere
+wait 600
+shot m3-5-komut-ara

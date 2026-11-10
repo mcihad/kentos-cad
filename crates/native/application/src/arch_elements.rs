@@ -1,4 +1,5 @@
-//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create` and `cad.ramps.create` v1 (docs/adr/0343 §4, plan/cad.md
+//! `cad.grids.create`, `cad.columns.create`, `cad.stairs.create`, `cad.ramps.create` and `cad.beams.create` (docs/adr/8041
+//! §1) v1 (docs/adr/0343 §4, plan/cad.md
 //! `CAD-ARCH-31`–`36`): grids, columns, stairs and ramps on a named layer, each call one undo step named for its kind
 //! (“Aks”, “Kolon”, “Merdiven”, “Rampa”). The tools preview the plan's objects and write through `execute`; Python and
 //! an agent give the same points and values and get the same objects. The shared cases are
@@ -21,7 +22,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    ArchInfo, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated, ColumnsPlan,
+    ArchInfo, BeamsCreate, BeamsCreated, BeamsPlan, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated,
+    ColumnsPlan,
     CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridSystem,
     GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RampEntity, RampFields, RampsCreate, RampsCreated,
     RampsPlan, SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, SystemColumns, Vec2,
@@ -38,6 +40,8 @@ pub const GRID_STEP: &str = "Aks";
 pub const COLUMN_STEP: &str = "Kolon";
 pub const STAIR_STEP: &str = "Merdiven";
 pub const RAMP_STEP: &str = "Rampa";
+/// A beam's undo step (docs/adr/8041 §1).
+pub const BEAM_STEP: &str = "Kiriş";
 
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
@@ -586,6 +590,7 @@ fn system_made(
                 kind: c.kind.clone(),
                 tag: own_tag,
                 fill: c.fill.unwrap_or(false),
+                material: None,
                 grids: Some(vec![
                     grid_ids[i].to_string(),
                     grid_ids[across_x.len() + j].to_string(),
@@ -804,6 +809,7 @@ fn radial_made(
                 kind: cols.kind.clone(),
                 tag: own_tag,
                 fill: cols.fill.unwrap_or(false),
+                material: None,
                 grids: Some(vec![grid_ids[i].to_string(), grid_ids[radial.len() + k].to_string()]),
                 place: Some(arch_follow::place_of(&gr.label, &ga.label)),
                 broken: None,
@@ -879,6 +885,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
             kind: n.kind.clone(),
             tag: next_tag(&n.tag),
             fill: n.fill.unwrap_or(false),
+            material: n.material.clone(),
             grids: n.grids.clone(),
             place: None,
             broken: None,
@@ -935,6 +942,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
                         kind: x.kind.clone(),
                         tag: next_tag(&None),
                         fill: x.fill.unwrap_or(false),
+                        material: None,
                         grids: Some(vec![ua.clone(), ub.clone()]),
                         place: Some(arch_follow::place_of(&ga.label, &gb.label)),
                         broken: None,
@@ -1335,6 +1343,120 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
     )
 }
 
+/// A lintel's height when its tool is not told (docs/adr/8041 §3): 20 cm, over TBDY 2018 11.5.3's least 150 mm.
+pub const LINTEL_HEIGHT: f64 = 0.20;
+/// How far a lintel sits on the wall beyond each jamb (docs/adr/8041 §3): TBDY 2018 11.5.3's least, 200 mm.
+pub const LINTEL_BEARING: f64 = 0.20;
+
+/// A lintel over opening `o` (docs/adr/8041 §3): on its wall's axis across its jambs and `bearing` beyond each, as wide
+/// as the wall is thick at its jambs, `height` high, its underside at the opening's head over its storey's floor (its
+/// own, else a door's 2.10 and a window's 2.20, the joinery list's), on its wall's level. None for an opening without
+/// its jambs (broken) or a host.
+pub fn lintel_over(
+    doc: &Document,
+    o: &kentos_commands::OpeningFields,
+    height: f64,
+    bearing: f64,
+) -> Option<kentos_commands::NewBeam> {
+    let [l0, r0, l1, r1] = <[Vec2; 4]>::try_from(o.place.clone()).ok()?;
+    let mid = |a: Vec2, b: Vec2| Vec2 {
+        x: (a.x + b.x) / 2.0,
+        y: (a.y + b.y) / 2.0,
+    };
+    let (a, b) = (mid(l0, r0), mid(l1, r1));
+    let len = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
+    if len.is_nan() || len <= 0.0 {
+        return None;
+    }
+    let u = Vec2 {
+        x: (b.x - a.x) / len,
+        y: (b.y - a.y) / len,
+    };
+    let width = kentos_geometry_core::jsmath::js_hypot(l0.x - r0.x, l0.y - r0.y);
+    let head = o.head.unwrap_or(match o.form {
+        kentos_commands::OpeningForm::Window => 2.2,
+        _ => 2.1,
+    });
+    let wall = doc.wall_of(&o.host)?;
+    Some(kentos_commands::NewBeam {
+        pts: vec![
+            Vec2 {
+                x: a.x - u.x * bearing,
+                y: a.y - u.y * bearing,
+            },
+            Vec2 {
+                x: b.x + u.x * bearing,
+                y: b.y + u.y * bearing,
+            },
+        ],
+        width,
+        height,
+        role: Some(kentos_commands::BeamRole::Lintel),
+        base_offset: Some(head),
+        arch: Some(kentos_commands::ArchInfo {
+            level: wall.arch.level.clone(),
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+}
+
+/// `cad.beams.create`'s check (docs/adr/8041 §1): each beam's numbers, its fields, its level.
+fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<Checked, Stop> {
+    if input.beams.is_empty() {
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak kiriş verilmedi. En az bir kirişin eksenini ve ölçülerini verin.".into(),
+            "beams",
+        ));
+    }
+    too_many(input.beams.len(), codes::INVALID_BEAM, "kiriş", "beams")?;
+    let mut made: Vec<Made> = Vec::new();
+    for (i, n) in input.beams.iter().enumerate() {
+        let at = format!("beams[{i}]");
+        points(&n.pts, &at)?;
+        finite_each(
+            &[
+                (Some(n.width), "width", "Genişlik"),
+                (Some(n.height), "height", "Yükseklik"),
+                (n.offset, "offset", "Kot farkı"),
+                (n.base_offset, "baseOffset", "Kattan yükseklik"),
+            ],
+            &at,
+        )?;
+        let b = kentos_commands::BeamFields {
+            pts: n.pts.clone(),
+            width: n.width,
+            height: n.height,
+            justify: n.justify.unwrap_or_default(),
+            offset: n.offset.unwrap_or(0.0),
+            role: n.role.unwrap_or_default(),
+            base_offset: n.base_offset,
+            tag: n.tag.clone(),
+            material: n.material.clone(),
+            arch: n.arch.clone().unwrap_or_default(),
+        };
+        if let Some((field, words)) = b.problem() {
+            return Err(fail(codes::INVALID_BEAM, words, &format!("{at}.{field}")));
+        }
+        crate::walls::level_known(doc, &b.arch, &format!("{at}.arch.level"))?;
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| Entity::Beam(kentos_commands::BeamEntity { base, beam: b })),
+        ));
+    }
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
+}
+
 fn validated(checked: Result<Checked, Stop>) -> CommandResult<()> {
     match checked {
         Ok((warnings, _)) => CommandResult::Completed {
@@ -1534,6 +1656,17 @@ create_command!(
     CAD_RAMPS_CREATE,
     CAD_RAMPS_CREATE_VERSION
 );
+create_command!(
+    beams_create,
+    BeamsCreate,
+    BeamsPlan,
+    beams,
+    BeamsCreated,
+    beams_check,
+    BEAM_STEP,
+    CAD_BEAMS_CREATE,
+    CAD_BEAMS_CREATE_VERSION
+);
 
 /// The architectural information an object of these kinds carries; none for another.
 pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
@@ -1542,6 +1675,7 @@ pub fn arch_of(e: &Entity) -> Option<&ArchInfo> {
         Entity::Column(c) => Some(&c.column.arch),
         Entity::Stair(s) => Some(&s.stair.arch),
         Entity::Ramp(r) => Some(&r.ramp.arch),
+        Entity::Beam(b) => Some(&b.beam.arch),
         _ => None,
     }
 }

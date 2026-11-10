@@ -29,17 +29,6 @@ use crate::checks::Stop;
 use crate::codes;
 use crate::spaces::{self, fail};
 
-fn level_height(doc: &Document, arch: &ArchInfo) -> Option<f64> {
-    let id = arch.level.as_deref()?;
-    doc.settings()
-        .arch
-        .as_ref()?
-        .levels
-        .iter()
-        .find(|l| l.id == id)?
-        .height
-}
-
 fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, Stop> {
     let known: Vec<String> = doc
         .settings()
@@ -94,6 +83,7 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         transitions: Vec::new(),
         ramps: Vec::new(),
         stairs: Vec::new(),
+        beams: Vec::new(),
         materials: Vec::new(),
         totals: QuantityTotals::default(),
     };
@@ -175,9 +165,19 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     continue;
                 }
                 let area = spaces::area_of(&f.parts);
-                let height = f.height.or_else(|| level_height(doc, &f.arch));
+                // Its inside height: its finished floor to its ceiling (docs/adr/8040 §3).
+                let height = doc.room_height(f).map(|h| h.inside());
+                // Its asma tavan covers its net floor (its inner faces'), else its rings'.
+                let suspended_ceiling_area = f
+                    .suspended_ceiling
+                    .map(|_| source_search.net_area(f).unwrap_or(area));
                 if !f.void {
-                    rooms.push((uid(e), f.arch.level.clone(), &f.parts, f.finishes.floor.clone()));
+                    rooms.push((
+                        uid(e),
+                        f.arch.level.clone(),
+                        &f.parts,
+                        f.finishes.floor.clone(),
+                    ));
                 }
                 let by_method = f.seed.map(|_| {
                     SpaceMethod::ALL
@@ -208,11 +208,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     perimeter: spaces::perimeter_of(&f.parts),
                     height,
                     volume: height.map(|h| area * h),
+                    suspended_ceiling_area,
                     baseboard: (!f.void)
                         .then(|| crate::slab_quantities::baseboard(&f.parts, f.arch.level.as_deref(), &passages)),
                     by_method,
                     rule: {
-                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × yükseklik",f.method.label());
+                        let mut rule = format!("alan: halkaların alanı, delikler düşülür ({}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana)",f.method.label());
                         if !f.columns.is_ignore() {
                             rule.push_str(&format!("; kolon alanı: {}",f.columns.label()));
                         }
@@ -246,6 +247,12 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     out.stairs.push(stair_row(uid(e), &s.stair));
                 }
             }
+            // Docs/adr/8041 §3.
+            Entity::Beam(b) if input.usages.is_none() => {
+                if takes(e, &b.beam.arch) {
+                    out.beams.push(beam_row(doc, uid(e), &b.beam));
+                }
+            }
             Entity::Wall(w) if input.usages.is_none() => {
                 let x = &w.wall;
                 if !takes(e, &x.arch) {
@@ -256,7 +263,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                     x.bulges.as_deref(),
                     x.closed,
                 );
-                let height = x.height.or_else(|| level_height(doc, &x.arch));
+                // Up to the slab over it within its storey (docs/adr/8040 §1): the wall as built.
+                let height = doc.wall_height(x);
                 let id = uid(e);
                 let openings = on_wall.get(&id).cloned().unwrap_or_default();
                 let openings_area = total(openings.iter().map(|(_, a)| *a));
@@ -321,8 +329,35 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         stair_area: out.stairs.iter().map(|s| s.area).sum::<f64>() + 0.0,
         stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum::<f64>() + 0.0,
         stair_risers: out.stairs.iter().map(|s| s.risers).fold(0u32, u32::saturating_add),
+        beam_volume: total(out.beams.iter().map(|b| b.volume)),
     };
     Ok(out)
+}
+
+/// A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length; a beam's volume under the slab it
+/// hangs from, a lintel's and a bond beam's whole.
+pub(crate) fn beam_row(doc: &Document, uid: String, b: &kentos_commands::BeamFields) -> kentos_commands::BeamRow {
+    let length = b.length();
+    let slab = doc.beam_slab(b);
+    let below = b.height - slab.unwrap_or(0.0);
+    kentos_commands::BeamRow {
+        uid,
+        role: b.role,
+        tag: b.tag.clone(),
+        level: b.arch.level.clone(),
+        width: b.width,
+        height: b.height,
+        length,
+        slab,
+        volume: b.width * below * length,
+        rule: match (b.role, slab) {
+            (kentos_commands::BeamRole::Beam, Some(_)) => {
+                "hacim: genişlik × (yükseklik − taşıdığı döşemenin taşıyıcısı) × eksenin boyu: döşemenin altında kalan;                  döşemenin içindeki kısmı döşemenin hacmindedir"
+            }
+            _ => "hacim: genişlik × yükseklik × eksenin boyu",
+        }
+        .into(),
+    }
 }
 
 /// A sum that is +0 when empty: Rust's f64 `Sum` starts from -0 (+0 added makes it +0), so an empty column said “-0.0” in the API's JSON

@@ -1,0 +1,35 @@
+# M13 step 3 (docs/adr/8012): 1. kat's balcony on Zemin kat's plan. The drawing is the one headless scales.rs keeps
+# with KENTOS_SCALE_PDF_DIR (cikma.kcad: a 8 × 6 m ring of 25 cm walls on Zemin kat, a 3 × 1.5 m balcony with a railing
+# on 1. kat, saved on Zemin kat with Yalnız etkin kat), opened with the file: "KentOS Mimari — Çıkma". Zemin kat
+# alone draws the balcony dashed (Mimarlar Odası §14.5.3 u); the status bar's Kat cell turns the view to Bütün katlar
+# (solid, its railing), then back to Yalnız etkin kat on 1. kat (its own plan's). A click on the dashed edge picks
+# nothing; in Bütün katlar the same click picks the balcony. The cell and its menu were measured on 8 November 2026.
+fit KentOS Mimari — Çıkma
+wait 2500
+key Home
+wait 1000
+shot m13-11-zemin
+click 526 757   # balkonun kesikli kenarı: seçilmez
+wait 600
+shot m13-11-tik
+key Escape
+wait 300
+click 1259 885   # Kat hücresi
+wait 800
+click 1168 759   # Kat görünümü: Bütün katlar
+wait 1200
+shot m13-12-butun-katlar
+click 526 757   # balkonun kenarı: seçilir
+wait 600
+shot m13-12-tik
+key Escape
+wait 300
+click 1259 885   # Kat hücresi
+wait 800
+click 1177 787   # Kat görünümü: Yalnız etkin kat
+wait 800
+click 1259 885   # Kat hücresi
+wait 800
+click 1147 603   # Etkin kat: 1. kat
+wait 1200
+shot m13-13-kat-1

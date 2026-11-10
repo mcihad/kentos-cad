@@ -245,13 +245,13 @@ def cases():
     add("Tarifin ölçeği 1:20: zemin küçülür, uzaktaki kolon dışarıda kalır",
         [views_edit({"kind": "recipe", "name": "Kat 1", "recipe": {"level": {"id": "kat-1"}, "scale": 20}}), step(Book(up3), [2, 3])])
     add("Katsız tarif: harita kendi katını (1. kat) çizer", [step(Book(), [1, 2])])
-    add("Yeni durum tarifi yıkılacak kolonu çizmez, yeniyi çizer", [step(Book(), [7, 8])])
+    add("Yeni durum tarifi iptal edilen kolonu çizmez, ilaveyi çizer", [step(Book(), [7, 8])])
     add("Yıkım planı tarifi yeni kolonu çizmez, yıkılacağı çizer", [step(Book(), [7, 8])])
-    add("Evresiz nesne her evre tarifinde", [step(Book(), [1])])
+    add("Tadilat durumu olmayan nesne her tadilat tarifinde", [step(Book(), [1])])
     add("Bütün nesneler birlikte", [step(Book(), IDS)])
     up5 = copy.deepcopy(VIEWS)
     up5[3]["recipe"] = {"version": 2, "level": {"id": "zemin"}, "phase": "existing", "scale": 100}
-    add("Evre tarifi Mevcut duruma dönünce yeni kolon gizlenir, yıkılacak görünür",
+    add("Tadilat tarifi Mevcut duruma dönünce ilave kolon gizlenir, iptal edilen görünür",
         [views_edit({"kind": "recipe", "name": "Yeni",
                      "recipe": {"level": {"id": "zemin"}, "phase": "existing", "scale": 100}}), step(Book(up5), [7, 8])])
     add("Boş nesne listesi hiçbir haritayı etkilemez", [step(Book(), [])])

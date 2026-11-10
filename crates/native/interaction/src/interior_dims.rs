@@ -71,6 +71,22 @@ impl InteriorDimensions {
                 command: None,
             })
             .collect();
+        // The key's Ölçü layer, opened with the first chain (docs/adr/8008).
+        if let Some((typed, label)) =
+            crate::arch_layer::missing_choice(&crate::arch_layer::Kind::Dimension, cx)
+        {
+            self.layer_choices.insert(
+                0,
+                OptionChoice {
+                    checked: typed == self.layer,
+                    typed,
+                    label,
+                    icon: None,
+                    preview: None,
+                    command: None,
+                },
+            );
+        }
         let choice = |typed: &str, label: &str, checked: bool| OptionChoice {
             typed: typed.into(),
             label: label.into(),
@@ -112,7 +128,11 @@ impl InteriorDimensions {
     }
 
     /// The command's input for the cut so far (its end the pointer while it is drawn) and the chain at `at`.
-    fn request(&self, at: Option<Vec2>) -> Option<DimensionsInterior> {
+    fn request(
+        &self,
+        at: Option<Vec2>,
+        doc: &kentos_domain::Document,
+    ) -> Option<DimensionsInterior> {
         let (from, to) = (self.from?, self.to.or(self.hover)?);
         Some(DimensionsInterior {
             from: point(from),
@@ -126,7 +146,12 @@ impl InteriorDimensions {
             columns: Some(self.columns),
             total: Some(self.total),
             level: self.level.clone(),
-            layer_id: self.layer.clone(),
+            // The key's Ölçü layer still to open is planned on the active one (docs/adr/8008).
+            layer_id: if doc.layers().get(&self.layer).is_some() {
+                self.layer.clone()
+            } else {
+                doc.layers().active().to_owned()
+            },
             dimension_style: self.style.clone(),
             height: None,
             mask: None,
@@ -146,7 +171,7 @@ impl InteriorDimensions {
         self.count = 0;
         self.curved = 0;
         self.error = None;
-        let Some(input) = self.request(self.place()) else {
+        let Some(input) = self.request(self.place(), cx.doc) else {
             return;
         };
         let (from, to) = (
@@ -214,11 +239,20 @@ impl InteriorDimensions {
 
     /// Writes the chain at `at` (none: on the cut) and starts over for the next one.
     fn write(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) -> bool {
-        let Some(input) = self.request(at) else {
+        if self.request(at, cx.doc).is_none() {
             return false;
-        };
-        let result = dimensions_interior::execute(&mut ExecutionContext::new(cx.doc), input);
-        match points::written(result, cx) {
+        }
+        let layer = self.layer.clone();
+        let mut written = None;
+        crate::arch_layer::writing_on(&crate::arch_layer::Kind::Dimension, &layer, cx, |_, cx| {
+            let Some(input) = self.request(at, cx.doc) else {
+                return false;
+            };
+            let result = dimensions_interior::execute(&mut ExecutionContext::new(cx.doc), input);
+            written = points::written(result, cx);
+            written.is_some()
+        });
+        match written {
             Some(output) => {
                 let ids: Vec<Slot> = output.ids.iter().map(|&id| Slot(id)).collect();
                 let n = ids.len();
@@ -309,7 +343,8 @@ impl Tool for InteriorDimensions {
         self.from.filter(|_| self.to.is_none())
     }
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
-        self.layer = cx.doc.layers().active().into();
+        // MM-XXXX-OLCU with the layer key on (docs/adr/8008), else the active layer.
+        self.layer = crate::arch_layer::chosen_at_start(&crate::arch_layer::Kind::Dimension, cx);
         self.style = styles::dimension_style(cx.memory, cx.doc.settings()).map(|s| s.name.clone());
         self.skins = cx.memory.interior_skins;
         self.columns = match cx.memory.interior_columns {
@@ -432,7 +467,7 @@ impl Tool for InteriorDimensions {
                     &[
                         ("ends", "Kenarlar"),
                         ("centers", "Merkezler"),
-                        ("none", "Ölçme"),
+                        ("none", "Ölçülmez"),
                     ],
                     match self.columns {
                         InteriorColumns::Ends => "ends",
@@ -442,7 +477,7 @@ impl Tool for InteriorDimensions {
                 ),
             ),
             Setting::toggle("T", "Toplam ölçü", self.total),
-            Setting::choice("V", "Kat", self.level_choices.clone()),
+            Setting::choice("V", "Ölçülen kat", self.level_choices.clone()),
             Setting::hint(
                 "H",
                 LABEL,

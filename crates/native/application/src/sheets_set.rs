@@ -125,10 +125,12 @@ pub(crate) fn recipe_draws<'a>(
             (Some(map), Some(own)) => own == map.as_str() || !known(own),
             _ => true,
         };
-        let phased = phase.is_none_or(|v| v.look(e.phase(by_uid)) != kentos_commands::PhaseLook::Hidden);
+        let phased =
+            phase.is_none_or(|v| e.look_in(v, by_uid) != kentos_commands::PhaseLook::Hidden);
         on_level
             && phased
-            && !kentos_commands::ViewCategory::of_kind(e.kind()).is_some_and(|c| hidden.contains(&c))
+            && !kentos_commands::ViewCategory::of_kind(e.kind())
+                .is_some_and(|c| hidden.contains(&c))
     }
 }
 

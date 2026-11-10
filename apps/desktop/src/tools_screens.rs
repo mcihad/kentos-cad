@@ -59,6 +59,11 @@ pub(crate) fn open_ribbon_menu(snapshot: &mut Snapshot, app: &mut App, label: &s
     open_menu_id(snapshot, app, crate::ribbon_keys::menu_id(label));
 }
 
+/// A panel's ▾ menu of its seldom used commands opened, as its key tip opens it: by the panel's title.
+pub(crate) fn open_more(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
+    open_menu_id(snapshot, app, crate::ribbon_keys::more_id(panel));
+}
+
 /// A folded panel's menu opened (a narrow window), as its key tip opens it: by the panel's title.
 pub(crate) fn open_folded(snapshot: &mut Snapshot, app: &mut App, panel: &str) {
     open_menu_id(snapshot, app, crate::ribbon_keys::folded_id(panel));

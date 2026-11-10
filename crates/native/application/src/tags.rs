@@ -10,7 +10,8 @@
 //! (`no_objects`); 4. the line weight; 5. the expected revision; 6. the layer.
 //!
 //! A tag's words and the point it ties to are written as the document writes them; its place, when not given, is its
-//! object's point for a space, else 4 times its words' height above it.
+//! object's point for a space, else 4 times its words' height above it. The interactive tools give an opening's tag
+//! its place clear of the walls, the swings and the other tags (`opening_places`, docs/adr/8028).
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -84,6 +85,338 @@ fn tag_of(
         anchor,
         broken: None,
     })
+}
+
+/// Where the tags of the openings `of` go (docs/adr/8028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): each
+/// beside its wall, clear of the walls, columns and fixtures, the doors' swings, the drawing's tags and the ones placed
+/// before it; with `content`, `shape` and `size` as the tags will have them. The interactive tools give these to
+/// `cad.tags.create` as the tags' `at`; the command's own place, for Python and agents, stays docs/adr/0344's.
+pub fn opening_places(
+    doc: &Document,
+    of: &[String],
+    content: Option<&str>,
+    shape: Option<TagShape>,
+    size: Option<f64>,
+) -> Vec<(String, Vec2)> {
+    let read = kentos_domain::tag_read::TagRead::new(doc);
+    let mut places = Places::default();
+    let mut out = Vec::new();
+    for uid in of {
+        let Some(target) = doc.tag_target(uid) else {
+            continue;
+        };
+        let Entity::Opening(o) = &target else {
+            continue;
+        };
+        let mut t = TagFields {
+            of: uid.clone(),
+            at: Vec2 { x: 0.0, y: 0.0 },
+            content: content.map(str::to_owned),
+            shape: shape.unwrap_or_else(|| kentos_commands::default_shape("opening")),
+            size,
+            leader: false,
+            text: read.text(&target, content),
+            anchor: doc.tag_anchor(&target),
+            broken: None,
+        };
+        let Some(at) = places.opening_place(doc, &o.opening, tag_half(doc, &t)) else {
+            continue;
+        };
+        t.at = at;
+        places.take(doc, &t);
+        out.push((uid.clone(), at));
+    }
+    out
+}
+
+/// A tag's frame's half width and half height on the drawing at the project's scale (docs/adr/8028): its words' box
+/// and pad, a hexagon's points, a circle's radius, an ellipse round its first line.
+fn tag_half(doc: &Document, t: &TagFields) -> (f64, f64) {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::tag::{Frame, PAD, half_box, height, radius};
+    let Shape::Tag { tag: spec, .. } = kentos_formats::arch_elements::core_tag(t) else {
+        return (0.0, 0.0);
+    };
+    let scale = doc.settings().plot_scale;
+    let h = height(&spec, scale);
+    let (w, b) = half_box(&spec, scale);
+    let pad = PAD * h;
+    match spec.frame {
+        Frame::Circle => {
+            let r = radius(&spec, scale);
+            (r, r)
+        }
+        Frame::Hexagon => (w + pad + (b + pad) * 0.577_350_269_189_625_8, b + pad),
+        Frame::Ellipse => (std::f64::consts::SQRT_2 * (w + pad), b + pad + h),
+        _ => (w + pad, b + pad),
+    }
+}
+
+/// What an opening's tag must keep clear of (docs/adr/8028; ADV-16's “etiketler hiçbir çizginin üstüne binmez”): the
+/// walls, columns and fixtures, the doors' swings, the dimensions' lines and values and the tags' frames, the drawing's
+/// and those placed before. Read once, when the first opening's tag asks.
+#[derive(Default)]
+struct Places {
+    read: bool,
+    obstacles: Vec<crate::door_audit::Obstacle>,
+    doors: Vec<crate::door_audit::Door>,
+    rooms: crate::opening_codes::Rooms,
+    /// The dimensions' lines, each with what crossing it costs: an extension line little, a dimension line more.
+    lines: Vec<([kentos_geometry_core::Vec2; 2], f64)>,
+    /// The tags' frames and the dimensions' values: x0, y0, x1, y1.
+    taken: Vec<[f64; 4]>,
+}
+
+/// Whether the segment `a`–`b` crosses the box `[x0, y0, x1, y1]` (Liang–Barsky).
+fn crosses(a: kentos_geometry_core::Vec2, b: kentos_geometry_core::Vec2, r: [f64; 4]) -> bool {
+    let (dx, dy) = (b.x - a.x, b.y - a.y);
+    let (mut t0, mut t1) = (0.0_f64, 1.0_f64);
+    for (p, q) in [
+        (-dx, a.x - r[0]),
+        (dx, r[2] - a.x),
+        (-dy, a.y - r[1]),
+        (dy, r[3] - a.y),
+    ] {
+        if p.abs() < 1e-12 {
+            if q < 0.0 {
+                return false;
+            }
+        } else {
+            let t = q / p;
+            if p < 0.0 {
+                t0 = t0.max(t);
+            } else {
+                t1 = t1.min(t);
+            }
+            if t0 > t1 {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+/// Whether the segments `a`–`b` and `c`–`d` cross.
+fn segments_cross(
+    a: kentos_geometry_core::Vec2,
+    b: kentos_geometry_core::Vec2,
+    c: kentos_geometry_core::Vec2,
+    d: kentos_geometry_core::Vec2,
+) -> bool {
+    let side = |p: kentos_geometry_core::Vec2,
+                q: kentos_geometry_core::Vec2,
+                r: kentos_geometry_core::Vec2| {
+        (q.x - p.x) * (r.y - p.y) - (q.y - p.y) * (r.x - p.x)
+    };
+    let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));
+    d1 * d2 < 0.0 && d3 * d4 < 0.0
+}
+
+impl Places {
+    fn ready(&mut self, doc: &Document) {
+        if self.read {
+            return;
+        }
+        self.read = true;
+        self.obstacles = crate::door_audit::obstacles(doc);
+        self.doors = crate::door_audit::doors(doc);
+        self.rooms = crate::opening_codes::rooms(doc);
+        for e in doc.entities() {
+            match e {
+                Entity::Tag(t) => {
+                    let (hw, hh) = tag_half(doc, &t.tag);
+                    self.taken.push([
+                        t.tag.at.x - hw,
+                        t.tag.at.y - hh,
+                        t.tag.at.x + hw,
+                        t.tag.at.y + hh,
+                    ]);
+                }
+                Entity::Dimension(_) => {
+                    let shape = crate::geometry::shape(e);
+                    let Some(g) = kentos_geometry_core::entity::dimension_geom(&shape) else {
+                        continue;
+                    };
+                    let Some(l) = kentos_geometry_core::geom::dimension::layout_dimension(&g)
+                    else {
+                        continue;
+                    };
+                    self.lines.extend(
+                        l.lines
+                            .iter()
+                            .enumerate()
+                            .map(|(i, line)| (*line, if l.ext.contains(&i) { 0.05 } else { 0.5 })),
+                    );
+                    // Its value: a few figures wide, one high, standing on its baseline (`text_at`) toward the
+                    // reader's above.
+                    let r = l.rotation.to_radians();
+                    let (along, across) = (2.0 * g.height, 0.6 * g.height);
+                    let c = kentos_geometry_core::Vec2::new(
+                        l.text_at.x - r.sin() * g.height / 2.0,
+                        l.text_at.y + r.cos() * g.height / 2.0,
+                    );
+                    let hw = r.cos().abs() * along + r.sin().abs() * across;
+                    let hh = r.sin().abs() * along + r.cos().abs() * across;
+                    self.taken.push([c.x - hw, c.y - hh, c.x + hw, c.y + hh]);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// A tag made in this call: later ones keep clear of it.
+    fn take(&mut self, doc: &Document, t: &TagFields) {
+        let (hw, hh) = tag_half(doc, t);
+        self.taken
+            .push([t.at.x - hw, t.at.y - hh, t.at.x + hw, t.at.y + hh]);
+    }
+
+    /// How much a tag's frame `b` on `level` runs into: a wall, column, fixture or swing 1 each, a dimension line ½
+    /// and an extension line 0.05, a tag's or a value's frame ten times its overlap's area (m²: a tenth of a square
+    /// metre as much as a wall); 0: clear.
+    fn cost(&self, b: [f64; 4], level: &Option<String>) -> f64 {
+        use kentos_geometry_core::Vec2 as V;
+        let ring = vec![
+            V::new(b[0], b[1]),
+            V::new(b[2], b[1]),
+            V::new(b[2], b[3]),
+            V::new(b[0], b[3]),
+        ];
+        let mut cost = 0.0;
+        for o in &self.taken {
+            let (w, h) = (
+                b[2].min(o[2]) - b[0].max(o[0]),
+                b[3].min(o[3]) - b[1].max(o[1]),
+            );
+            if w > 0.0 && h > 0.0 {
+                cost += 10.0 * w * h;
+            }
+        }
+        cost += self
+            .obstacles
+            .iter()
+            .filter(|o| o.level == *level && crate::door_audit::overlaps(&ring, o))
+            .count() as f64;
+        cost += self
+            .doors
+            .iter()
+            .filter(|d| {
+                d.level == *level
+                    && d.sweeps
+                        .iter()
+                        .any(|s| crate::door_audit::zones_meet(&ring, s))
+            })
+            .count() as f64;
+        cost += self
+            .lines
+            .iter()
+            .filter(|([a, c], _)| crosses(*a, *c, b))
+            .map(|(_, w)| w)
+            .sum::<f64>();
+        cost
+    }
+
+    /// Where an opening's tag of half size `half` goes: beside its wall on the face a door does not open to (a
+    /// window's: the face its room is on), its middle across from the opening's; else the other face, a door's beyond
+    /// its swing; else beside the opening along the wall, then a frame's height farther out, each face in turn. Each
+    /// place is weighed by what it runs into (`cost`), how far it went and whether it is seen across another wall; the
+    /// lightest wins: a tag near its opening over a clear place far from it.
+    fn opening_place(
+        &mut self,
+        doc: &Document,
+        f: &kentos_commands::OpeningFields,
+        half: (f64, f64),
+    ) -> Option<Vec2> {
+        use kentos_geometry_core::Vec2 as V;
+        self.ready(doc);
+        let (c, left, right) = crate::opening_codes::sides(f)?;
+        let unit = |a: V, b: V| {
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let l = dx.hypot(dy).max(1e-12);
+            V::new(dx / l, dy / l)
+        };
+        let n_left = unit(c, left);
+        let n_right = V::new(-n_left.x, -n_left.y);
+        let u = V::new(-n_left.y, n_left.x);
+        // Half the wall: from the middle to a face (the side points are 0.3 m beyond).
+        let t = (c.x - left.x).hypot(c.y - left.y) - 0.3;
+        let level = crate::opening_types::level_of(doc, f);
+        let swing_left = f.side == kentos_commands::OpeningSide::Left;
+        let (first, second) = match f.form {
+            kentos_commands::OpeningForm::Door => {
+                if swing_left {
+                    (n_right, n_left)
+                } else {
+                    (n_left, n_right)
+                }
+            }
+            _ => {
+                let (l, r) = (
+                    crate::opening_codes::in_room(&self.rooms, &level, left),
+                    crate::opening_codes::in_room(&self.rooms, &level, right),
+                );
+                match (l, r) {
+                    (true, false) => (n_left, n_right),
+                    (false, true) => (n_right, n_left),
+                    _ if swing_left => (n_right, n_left),
+                    _ => (n_left, n_right),
+                }
+            }
+        };
+        let (hw, hh) = half;
+        let reach = |n: V| hw * n.x.abs() + hh * n.y.abs();
+        let gap = 0.5 * words_height(doc, None);
+        let base = |n: V| {
+            let swing = f.form == kentos_commands::OpeningForm::Door
+                && (n.x * n_left.x + n.y * n_left.y > 0.0) == swing_left;
+            t + gap + reach(n) + if swing { f.width } else { 0.0 }
+        };
+        let along = f.width / 2.0 + gap + reach(u);
+        // A tag seen across another wall is read as that room's: the line from its opening's face to it crosses only
+        // its own wall.
+        let host = kentos_domain::Uuid::parse_str(&f.host)
+            .ok()
+            .and_then(|u| doc.slot_of(u));
+        let behind = |from: V, to: V| {
+            self.obstacles.iter().any(|o| {
+                o.level == level
+                    && Some(o.slot) != host
+                    && std::iter::once(&o.outer).chain(&o.holes).any(|ring| {
+                        (0..ring.len())
+                            .any(|i| segments_cross(from, to, ring[i], ring[(i + 1) % ring.len()]))
+                    })
+            })
+        };
+        let mut best: Option<(f64, V)> = None;
+        for k in 0..3 {
+            for n in [first, second] {
+                let d = base(n) + k as f64 * (2.0 * reach(n) + gap);
+                let face = V::new(c.x + n.x * t, c.y + n.y * t);
+                // Along the wall a quarter step at a time, nearest first, out to two steps.
+                for q in [
+                    0_i32, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7, 8, -8,
+                ] {
+                    let s = along * f64::from(q) / 4.0;
+                    let p = V::new(c.x + n.x * d + u.x * s, c.y + n.y * d + u.y * s);
+                    // What it runs into, then how far it went: a step along the wall as much as a little
+                    // overlap, a frame farther out twice that.
+                    let mut cost = self.cost([p.x - hw, p.y - hh, p.x + hw, p.y + hh], &level)
+                        + 0.15 * f64::from(q.abs()) / 4.0
+                        + 0.3 * f64::from(k);
+                    if behind(face, p) {
+                        cost += 2.0;
+                    }
+                    if cost <= 0.0 {
+                        return Some(Vec2 { x: p.x, y: p.y });
+                    }
+                    if best.is_none_or(|(b, _)| cost < b - 1e-9) {
+                        best = Some((cost, p));
+                    }
+                }
+            }
+        }
+        best.map(|(_, p)| Vec2 { x: p.x, y: p.y })
+    }
 }
 
 fn invalid(words: String, path: &str) -> Stop {

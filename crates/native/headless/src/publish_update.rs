@@ -112,6 +112,8 @@ impl Previous {
         let o = &self.options;
         o["geo"].as_bool().unwrap_or(true) == input.geo
             && o["layers"].as_bool().unwrap_or(true) == input.layers
+            // An archival file has its own metadata and output intent (docs/adr/8037).
+            && o["pdfa"].as_bool().unwrap_or(false) == input.pdfa
             && o["dpi"] == serde_json::json!(input.dpi)
             && self.report.source.resources_sha256 == source.resources_sha256
     }

@@ -207,8 +207,10 @@ fn across(pdf: &std::path::Path, page: usize, scale: f64) -> Across {
 /// ink across between them; anything else is said as it is.
 fn detail_of(a: &Across, scale: f64) -> &'static str {
     let wall = 0.25 * 1000.0 / scale * DPI / 25.4;
-    // Lines of half a millimetre at most, and ink only on them (a row of a line's soft edge at most).
-    let bare = a.lines.iter().all(|&r| (r as f64) <= 0.5 * DPI / 25.4)
+    // Lines no wider than the scale's line group's wide line (docs/adr/8013: 0.7 mm at 1:20, 0.5 at 1:50), and ink
+    // only on them (a row of a line's soft edge at most).
+    let widest = kentos_commands::line_group(scale);
+    let bare = a.lines.iter().all(|&r| (r as f64) <= widest * DPI / 25.4)
         && a.ink.len() == a.lines.len()
         && a.ink.iter().zip(&a.lines).all(|(&i, &l)| i <= l + 2);
     match (a.lines.len(), a.ink.as_slice()) {
@@ -311,20 +313,22 @@ fn each_maps_walls_are_drawn_at_its_own_scales_detail_on_paper() {
     let detailed = dir.join("duvar-ayrinti-ayrintili.pdf");
     print(&mut app, &detailed);
     let got = details(&detailed);
-    // At 1:20 and 1:50 the five lines print apart. At 1:100 and 1:200 a plaster's side stands within a line's width
-    // of its face (2 and 3 cm: 0.2 and 0.3 mm at 1:100) and prints on it: no more runs than Uygulama's three lines but
-    // more ink along the wall, still no body.
+    // At 1:20, 1:50 and 1:100 the five lines print apart: since docs/adr/8013 the 1:100 group's lines (0.35 and
+    // 0.175 mm) leave the 2 and 3 cm plasters' sides (0.2 and 0.3 mm on paper) clear of their faces; before, a 0.5 mm
+    // face swallowed them. At 1:200 a plaster's side stands within a line's width of its face (0.1 and 0.15 mm): since
+    // docs/adr/8009 a boundary between materials is the narrow line, so it can print as a thin run beside its face: at
+    // most one run more than Uygulama's three lines, more ink along the wall, still no body.
     assert_eq!(
-        [got[0].0, got[1].0],
-        ["detailed"; 2],
+        [got[0].0, got[1].0, got[2].0],
+        ["detailed"; 3],
         "Ayrıntılı: {} → {got:?}",
         detailed.display()
     );
-    for page in [2, 3] {
+    for page in [3] {
         let ((_, a), (_, s)) = (&got[page], &three[page]);
         let ink = |x: &Across| x.lines.iter().sum::<usize>();
         assert!(
-            a.lines.len() <= s.lines.len() && a.ink.len() == a.lines.len() && ink(a) >= ink(s) + 4,
+            a.lines.len() <= s.lines.len() + 1 && a.ink.len() == a.lines.len() && ink(a) > ink(s),
             "Ayrıntılı, page {}: {a:?} against Uygulama's {s:?}",
             page + 1
         );

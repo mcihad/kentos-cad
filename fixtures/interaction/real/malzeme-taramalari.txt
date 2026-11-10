@@ -1,0 +1,30 @@
+# M14 (docs/adr/8014): TS 5319's symbols on the 1:20 sheet of the drawing headless scales.rs keeps with
+# KENTOS_SCALE_PDF_DIR (malzeme.kcad: Bölme duvar 10, Betonarme perde 25, Gazbeton 20 and Dış duvar 25, 3 m each, and
+# a 30/50 column), opened with the file: "KentOS Mimari — Malzeme". The A-101 tab opens the 1:20 sheet; seven wheel
+# turns in at (735, 540) bring the walls' right ends and the column close: the insulations' SN55 zigzag fitted to their
+# layer, Gazbeton's SN48, the column's SN46. Then on the model (1:50) the column tool draws a new column: filled
+# (Mimarlar Odası §14.5.3 i). Measured on 8 November 2026.
+fit KentOS Mimari — Malzeme
+wait 2500
+click 170 820   # A-101 Zemin kat planı (1:20)
+wait 2500
+wheel 735 540 7   # duvarların ucuna ve kolona yaklaş
+wait 1500
+shot m14-01-1-20
+click 50 856   # Model
+wait 2000
+click 589 20   # Mimari sekmesi
+wait 600
+click 575 84   # araç: Kolon
+wait 600
+click 880 420   # kolon
+wait 600
+key Escape
+wait 400
+key Escape
+wait 600
+wheel 880 420 7   # yeni kolona yaklaş
+wait 1200
+move 1000 250
+wait 400
+shot m14-02-kolon

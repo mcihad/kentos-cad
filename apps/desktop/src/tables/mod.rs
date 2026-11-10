@@ -41,6 +41,13 @@ pub fn source_words(t: &TableEntity) -> String {
         Some(TableSource::Schedule { of, members, .. }) => {
             format!("{}: {} satır, nesnelerinden", of.label(), members.len())
         }
+        // Emsal ve TAKS tablosu (docs/adr/8030).
+        Some(TableSource::Zoning {}) => {
+            "Emsal ve TAKS tablosu: imar durumundan ve mahallerden".to_owned()
+        }
+        // Otopark and Sığınak hesabı (docs/adr/8036).
+        Some(TableSource::Parking {}) => "Otopark hesabı: bina programından ve otopark mahallerinden".to_owned(),
+        Some(TableSource::Shelter {}) => "Sığınak hesabı: bina programından ve sığınak mahallerinden".to_owned(),
         // Veri çıkarımı (docs/adr/1030 §6): its recipe, the drawings it reads besides this one.
         Some(TableSource::Extraction(x)) => {
             let others = x.recipe.drawings.len();
@@ -139,6 +146,87 @@ impl crate::app::App {
             Some(kentos_commands::TableSource::Blocks { names, by, columns }),
         );
         self.place_table(geometry, "Revizyon listesi");
+    }
+
+    /// Emsal ve TAKS tablosu (`arch.zoningTable`, docs/adr/8030): the parcel's zoning against the drawing as PAİY 57/3
+    /// asks the approved project to show it, placed from the cursor; the document keeps it at every step and when
+    /// Proje ayarları change. Without a zoning, where it is typed, and Proje ayarları open on Mimari.
+    pub(crate) fn place_zoning_table(&mut self) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = &doc.model;
+        if model
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning)
+            .is_none()
+        {
+            self.say(
+                kentos_interaction::Level::Info,
+                "Projede imar durumu yok: Proje ayarları › Mimari › İmar durumu'na parsel alanını, emsali ve TAKS'ı \
+                 yazın; tablo onlarla yazılır.",
+            );
+            let _ = self.project_command("arch.settings");
+            return;
+        }
+        let written = model.zoning_table();
+        let scale = model.settings().plot_scale;
+        let look = kentos_interaction::table::Look {
+            header: true,
+            height: 2.5 / 1000.0 * scale,
+            ..Default::default()
+        };
+        let cells = kentos_geometry_core::ops::table::from_rows(written.rows, true);
+        let geometry = kentos_interaction::table::new_table(
+            model,
+            &cells,
+            &look,
+            kentos_interaction::Vec2::new(0.0, 0.0),
+            Some(kentos_commands::TableSource::Zoning {}),
+        );
+        self.place_table(geometry, "Emsal ve TAKS tablosu");
+    }
+
+    /// Otopark hesabı and Sığınak hesabı (docs/adr/8036): a live table from the building program's units, placed at the
+    /// cursor; a project without units is told where they are given.
+    pub(crate) fn place_provision_table(&mut self, source: kentos_commands::TableSource) {
+        let Some(doc) = &self.document else {
+            return;
+        };
+        let model = &doc.model;
+        let (written, label) = match source {
+            kentos_commands::TableSource::Shelter {} => (model.shelter_table(), "Sığınak hesabı"),
+            _ => (model.parking_table(), "Otopark hesabı"),
+        };
+        let has_units = model
+            .program()
+            .units
+            .iter()
+            .any(|u| u.kind == kentos_commands::UnitKind::Unit);
+        let scale = model.settings().plot_scale;
+        let look = kentos_interaction::table::Look {
+            header: true,
+            height: 2.5 / 1000.0 * scale,
+            ..Default::default()
+        };
+        let cells = kentos_geometry_core::ops::table::from_rows(written.rows, true);
+        let geometry = kentos_interaction::table::new_table(
+            model,
+            &cells,
+            &look,
+            kentos_interaction::Vec2::new(0.0, 0.0),
+            Some(source),
+        );
+        if !has_units {
+            self.say(
+                kentos_interaction::Level::Info,
+                "Bina programında bağımsız bölüm yok: tablo bölümlerden hesaplanır (Mimari › Proje ▾ › Bina programı; \
+                 mahallere bölüm verin).",
+            );
+        }
+        self.place_table(geometry, label);
     }
 
     pub(crate) fn place_table(

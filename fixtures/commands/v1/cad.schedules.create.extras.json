@@ -222,7 +222,8 @@
           "floor": "Parke",
           "wall": "Boya",
           "ceiling": "Alçı",
-          "base": "Ahşap"
+          "base": "Ahşap",
+          "sill": "Mermer denizlik"
         },
         "usage": "Oturma"
       },
@@ -399,6 +400,46 @@
         "rotation": 0,
         "arch": {
           "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 10,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 8.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 11.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 11.0,
+                  "y": 4.0
+                },
+                {
+                  "x": 8.0,
+                  "y": 4.0
+                }
+              ]
+            }
+          }
+        ],
+        "number": "103",
+        "name": "Merdiven",
+        "arch": {
+          "level": "zemin"
+        },
+        "finishes": {
+          "floor": "Granit",
+          "stair": "Granit basamak",
+          "railing": "Ahşap küpeşte"
         }
       }
     ]
@@ -912,6 +953,349 @@
       ]
     },
     {
+      "name": "Mahal listesi: kat kat, en alttan; kaplamalar, denizlik, basamak ve rıht, küpeşte ve korkuluk",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.schedules.create",
+          "input": {
+            "layerId": "cizelge",
+            "at": {
+              "x": 30.0,
+              "y": 0.0
+            },
+            "of": "spaces",
+            "columns": [
+              {
+                "field": "level"
+              },
+              {
+                "field": "number"
+              },
+              {
+                "field": "name"
+              },
+              {
+                "field": "floorFinish"
+              },
+              {
+                "field": "baseFinish"
+              },
+              {
+                "field": "wallFinish"
+              },
+              {
+                "field": "ceilingFinish"
+              },
+              {
+                "field": "doors"
+              },
+              {
+                "field": "windows"
+              },
+              {
+                "field": "sillFinish"
+              },
+              {
+                "field": "stairFinish"
+              },
+              {
+                "field": "railingFinish"
+              }
+            ],
+            "sort": [
+              {
+                "column": 0,
+                "header": true
+              },
+              {
+                "column": 1
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "table": {
+                "kind": "table",
+                "id": 0,
+                "layerId": "cizelge",
+                "attrs": {},
+                "p": {
+                  "x": 30.0,
+                  "y": 0.0
+                },
+                "rotation": 0.0,
+                "height": 0.125,
+                "rows": "$any",
+                "columns": "$any",
+                "cells": [
+                  [
+                    "Kat",
+                    "No",
+                    "Ad",
+                    "Döşeme",
+                    "Süpürgelik",
+                    "Duvar kaplaması",
+                    "Tavan",
+                    "Kapı",
+                    "Pencere",
+                    "Denizlik ve parapet",
+                    "Basamak ve rıht",
+                    "Küpeşte ve korkuluk"
+                  ],
+                  [
+                    "Zemin kat",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "Zemin kat",
+                    "101",
+                    "Salon",
+                    "Parke",
+                    "Ahşap",
+                    "Boya",
+                    "Alçı",
+                    "",
+                    "",
+                    "Mermer denizlik",
+                    "",
+                    ""
+                  ],
+                  [
+                    "Zemin kat",
+                    "102",
+                    "Banyo",
+                    "Seramik",
+                    "",
+                    "Seramik",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "Zemin kat",
+                    "103",
+                    "Merdiven",
+                    "Granit",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Granit basamak",
+                    "Ahşap küpeşte"
+                  ],
+                  [
+                    "1. kat",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "1. kat",
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ]
+                ],
+                "header": true,
+                "aligns": [
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left",
+                  "left"
+                ],
+                "source": {
+                  "kind": "schedule",
+                  "of": "spaces",
+                  "columns": [
+                    {
+                      "field": "level"
+                    },
+                    {
+                      "field": "number"
+                    },
+                    {
+                      "field": "name"
+                    },
+                    {
+                      "field": "floorFinish"
+                    },
+                    {
+                      "field": "baseFinish"
+                    },
+                    {
+                      "field": "wallFinish"
+                    },
+                    {
+                      "field": "ceilingFinish"
+                    },
+                    {
+                      "field": "doors"
+                    },
+                    {
+                      "field": "windows"
+                    },
+                    {
+                      "field": "sillFinish"
+                    },
+                    {
+                      "field": "stairFinish"
+                    },
+                    {
+                      "field": "railingFinish"
+                    }
+                  ],
+                  "sort": [
+                    {
+                      "column": 0,
+                      "header": true
+                    },
+                    {
+                      "column": 1
+                    }
+                  ],
+                  "members": [
+                    [],
+                    [
+                      "$uidOf:1"
+                    ],
+                    [
+                      "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:10"
+                    ],
+                    [],
+                    [
+                      "$uidOf:3"
+                    ]
+                  ]
+                },
+                "merges": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 12
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 12
+                  }
+                ],
+                "styles": [
+                  {
+                    "row": 1,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 12,
+                    "bold": true
+                  },
+                  {
+                    "row": 5,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 12,
+                    "bold": true
+                  },
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 7,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 8,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 7,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 6,
+                    "col": 8,
+                    "rows": 1,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  }
+                ]
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "Donatı çizelgesi: tür süzgeci Koltuk",
       "steps": [
         {
@@ -1232,7 +1616,7 @@
       ]
     },
     {
-      "name": "Donatı çizelgesi: evre Yeni",
+      "name": "Donatı çizelgesi: tadilat durumu İlave",
       "steps": [
         {
           "op": "plan",
@@ -2406,21 +2790,6 @@
                     "Adet"
                   ],
                   [
-                    "1. kat",
-                    "Koltuk",
-                    "1"
-                  ],
-                  [
-                    "",
-                    "Koltuk toplamı",
-                    "1"
-                  ],
-                  [
-                    "1. kat toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Zemin kat",
                     "Koltuk",
                     "1"
@@ -2454,6 +2823,21 @@
                     "Zemin kat toplamı",
                     "",
                     "4"
+                  ],
+                  [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "",
+                    "Koltuk toplamı",
+                    "1"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "1"
                   ],
                   [
                     "",
@@ -2509,11 +2893,6 @@
                   "total": true,
                   "members": [
                     [
-                      "$uidOf:7"
-                    ],
-                    [],
-                    [],
-                    [
                       "$uidOf:4"
                     ],
                     [
@@ -2529,6 +2908,11 @@
                     [],
                     [],
                     [
+                      "$uidOf:7"
+                    ],
+                    [],
+                    [],
+                    [
                       "$uidOf:8"
                     ],
                     [],
@@ -2536,13 +2920,6 @@
                   ]
                 },
                 "styles": [
-                  {
-                    "row": 2,
-                    "col": 0,
-                    "rows": 1,
-                    "cols": 3,
-                    "bold": true
-                  },
                   {
                     "row": 3,
                     "col": 0,
@@ -2552,6 +2929,13 @@
                   },
                   {
                     "row": 6,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 3,
+                    "bold": true
+                  },
+                  {
+                    "row": 7,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -2588,21 +2972,21 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 1,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 2,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
@@ -2628,23 +3012,23 @@
                     "color": "#7f8790"
                   },
                   {
-                    "row": 7,
+                    "row": 8,
                     "col": 0,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 7,
+                    "row": 8,
                     "col": 1,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 7,
+                    "row": 8,
                     "col": 2,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
@@ -2748,16 +3132,6 @@
                     "Adet"
                   ],
                   [
-                    "1. kat",
-                    "Koltuk",
-                    "1"
-                  ],
-                  [
-                    "1. kat toplamı",
-                    "",
-                    "1"
-                  ],
-                  [
                     "Zemin kat",
                     "Koltuk",
                     "2"
@@ -2771,6 +3145,16 @@
                     "Zemin kat toplamı",
                     "",
                     "4"
+                  ],
+                  [
+                    "1. kat",
+                    "Koltuk",
+                    "1"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "1"
                   ],
                   [
                     "",
@@ -2821,16 +3205,16 @@
                   "total": true,
                   "members": [
                     [
-                      "$uidOf:7"
-                    ],
-                    [],
-                    [
                       "$uidOf:4",
                       "$uidOf:5"
                     ],
                     [
                       "$uidOf:6",
                       "$uidOf:9"
+                    ],
+                    [],
+                    [
+                      "$uidOf:7"
                     ],
                     [],
                     [
@@ -2841,7 +3225,7 @@
                 },
                 "styles": [
                   {
-                    "row": 2,
+                    "row": 3,
                     "col": 0,
                     "rows": 1,
                     "cols": 3,
@@ -2864,42 +3248,42 @@
                   {
                     "row": 1,
                     "col": 0,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 1,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 2,
-                    "rows": 1,
+                    "rows": 2,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 3,
+                    "row": 4,
                     "col": 0,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 3,
+                    "row": 4,
                     "col": 1,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 3,
+                    "row": 4,
                     "col": 2,
-                    "rows": 2,
+                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
@@ -3481,7 +3865,7 @@
             "status": "completed",
             "output": {
               "uid": "$uid",
-              "id": 10,
+              "id": 11,
               "rows": 6,
               "revision": "$current"
             },
@@ -3592,14 +3976,24 @@
                     "18.000"
                   ],
                   [
+                    "103",
+                    "Merdiven",
+                    "Granit",
+                    "",
+                    "",
+                    "",
+                    "12.00",
+                    "14.000"
+                  ],
+                  [
                     "Toplam",
                     "",
                     "",
                     "",
                     "",
                     "",
-                    "52.00",
-                    "50.000"
+                    "64.00",
+                    "64.000"
                   ]
                 ],
                 "header": true,
@@ -3652,6 +4046,9 @@
                     ],
                     [
                       "$uidOf:3"
+                    ],
+                    [
+                      "$uidOf:10"
                     ]
                   ]
                 },
@@ -3659,19 +4056,19 @@
                   {
                     "row": 1,
                     "col": 6,
-                    "rows": 3,
+                    "rows": 4,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
                     "row": 1,
                     "col": 7,
-                    "rows": 3,
+                    "rows": 4,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 4,
+                    "row": 5,
                     "col": 0,
                     "rows": 1,
                     "cols": 8,
@@ -3931,27 +4328,6 @@
                     "Alan (m²)"
                   ],
                   [
-                    "1. kat",
-                    "",
-                    "",
-                    "",
-                    ""
-                  ],
-                  [
-                    "1. kat",
-                    "201",
-                    "Oda",
-                    "Laminat",
-                    "20.00"
-                  ],
-                  [
-                    "1. kat toplamı",
-                    "",
-                    "",
-                    "",
-                    "20.00"
-                  ],
-                  [
                     "Zemin kat",
                     "",
                     "",
@@ -3973,18 +4349,46 @@
                     "12.00"
                   ],
                   [
+                    "Zemin kat",
+                    "103",
+                    "Merdiven",
+                    "Granit",
+                    "12.00"
+                  ],
+                  [
                     "Zemin kat toplamı",
                     "",
                     "",
                     "",
-                    "32.00"
+                    "44.00"
+                  ],
+                  [
+                    "1. kat",
+                    "",
+                    "",
+                    "",
+                    ""
+                  ],
+                  [
+                    "1. kat",
+                    "201",
+                    "Oda",
+                    "Laminat",
+                    "20.00"
+                  ],
+                  [
+                    "1. kat toplamı",
+                    "",
+                    "",
+                    "",
+                    "20.00"
                   ],
                   [
                     "Toplam",
                     "",
                     "",
                     "",
-                    "52.00"
+                    "64.00"
                   ]
                 ],
                 "header": true,
@@ -4026,15 +4430,18 @@
                   "members": [
                     [],
                     [
-                      "$uidOf:3"
-                    ],
-                    [],
-                    [],
-                    [
                       "$uidOf:1"
                     ],
                     [
                       "$uidOf:2"
+                    ],
+                    [
+                      "$uidOf:10"
+                    ],
+                    [],
+                    [],
+                    [
+                      "$uidOf:3"
                     ],
                     []
                   ]
@@ -4047,7 +4454,7 @@
                     "cols": 5
                   },
                   {
-                    "row": 4,
+                    "row": 6,
                     "col": 0,
                     "rows": 1,
                     "cols": 5
@@ -4062,56 +4469,56 @@
                     "bold": true
                   },
                   {
-                    "row": 3,
+                    "row": 5,
                     "col": 0,
                     "rows": 1,
                     "cols": 5,
                     "bold": true
                   },
                   {
-                    "row": 4,
+                    "row": 6,
                     "col": 0,
                     "rows": 1,
                     "cols": 5,
                     "bold": true
+                  },
+                  {
+                    "row": 8,
+                    "col": 0,
+                    "rows": 1,
+                    "cols": 5,
+                    "bold": true
+                  },
+                  {
+                    "row": 2,
+                    "col": 0,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
+                  },
+                  {
+                    "row": 2,
+                    "col": 4,
+                    "rows": 3,
+                    "cols": 1,
+                    "color": "#7f8790"
                   },
                   {
                     "row": 7,
                     "col": 0,
                     "rows": 1,
-                    "cols": 5,
-                    "bold": true
-                  },
-                  {
-                    "row": 2,
-                    "col": 0,
-                    "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 2,
+                    "row": 7,
                     "col": 4,
                     "rows": 1,
                     "cols": 1,
                     "color": "#7f8790"
                   },
                   {
-                    "row": 5,
-                    "col": 0,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 5,
-                    "col": 4,
-                    "rows": 2,
-                    "cols": 1,
-                    "color": "#7f8790"
-                  },
-                  {
-                    "row": 8,
+                    "row": 9,
                     "col": 0,
                     "rows": 1,
                     "cols": 5,
@@ -4196,8 +4603,12 @@
                     "20.00"
                   ],
                   [
+                    "",
+                    "12.00"
+                  ],
+                  [
                     "(boş) toplamı",
-                    "32.00"
+                    "44.00"
                   ]
                 ],
                 "header": true,
@@ -4233,6 +4644,9 @@
                     [
                       "$uidOf:3"
                     ],
+                    [
+                      "$uidOf:10"
+                    ],
                     []
                   ]
                 },
@@ -4245,7 +4659,7 @@
                     "bold": true
                   },
                   {
-                    "row": 5,
+                    "row": 6,
                     "col": 0,
                     "rows": 1,
                     "cols": 2,
@@ -4261,7 +4675,7 @@
                   {
                     "row": 3,
                     "col": 1,
-                    "rows": 2,
+                    "rows": 3,
                     "cols": 1,
                     "color": "#7f8790"
                   }

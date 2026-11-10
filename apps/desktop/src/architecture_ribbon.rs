@@ -74,7 +74,18 @@ mod tests {
             .iter()
             .map(|p| p.label)
             .collect();
-        assert_eq!(names, ["Çiz", "Yerleştir", "Düzenle", "Belgele", "Proje"]);
+        assert_eq!(
+            names,
+            [
+                "Duvar",
+                "Yerleştir",
+                "Mahal",
+                "Donatı",
+                "Düzenle",
+                "Belgele",
+                "Proje"
+            ]
+        );
         for size in [13, 18] {
             let _ = app
                 .settings
@@ -108,6 +119,64 @@ mod tests {
             }
         }
         typography::set(Typography::DEFAULT);
+    }
+
+    /// docs/adr/8015 (M15, ADV-09): Mimari's tab counted. At most 30 buttons show, a family or a menu holds at most six,
+    /// a panel at most four large ones (DESIGN.md §7.3.1); the large ones are Duvar ▾, Kapı, Pencere, Mahal ▾, Donatı ▾
+    /// and Ölçü ▾; Kat ▾ carries Üst kat, Alt kat and Kat görünümü.
+    #[test]
+    fn mimari_s_tab_shows_at_most_thirty_buttons_and_its_main_tools_large() {
+        use crate::catalog::{Item, Size};
+        let tab = catalog()
+            .tabs_in(kentos_commands::Workspace::Cad)
+            .find(|t| t.id == "arch")
+            .unwrap();
+        let shown: usize = tab.panels.iter().map(|p| p.items.len()).sum();
+        assert!(shown <= 30, "{shown} buttons");
+        let mut large = Vec::new();
+        for p in &tab.panels {
+            let mut big = 0;
+            for item in &p.items {
+                let (size, entries, face) = match item {
+                    Item::Command { id, size } => (*size, 1, catalog().get(id).unwrap().title),
+                    Item::Split { entries, size, .. } => (*size, entries.len(), entries[0].title),
+                    Item::Menu {
+                        ids, size, label, ..
+                    } => (*size, ids.len(), *label),
+                    Item::Builtin(_) => continue,
+                };
+                assert!(entries <= 6, "{} › {face}: {entries}", p.label);
+                if size == Size::Large {
+                    big += 1;
+                    large.push(face);
+                }
+            }
+            assert!(big <= 4, "{}: {big} large", p.label);
+        }
+        assert_eq!(
+            large,
+            ["Duvar", "Oda", "Kapı", "Pencere", "Mahal", "Donatı"],
+            "{large:?}"
+        );
+        let kat = tab
+            .panels
+            .iter()
+            .flat_map(|p| &p.items)
+            .find_map(|i| match i {
+                Item::Menu {
+                    label: "Kat", ids, ..
+                } => Some(ids.clone()),
+                _ => None,
+            })
+            .expect("Kat ▾");
+        for id in [
+            "view.levels.up",
+            "view.levels.down",
+            "view.levels.active",
+            "view.levels.below",
+        ] {
+            assert!(kat.contains(&id), "{id} in {kat:?}");
+        }
     }
 
     #[test]
@@ -442,13 +511,13 @@ mod tests {
                         found: moved.clone(),
                     }),
                 );
-                if width == 1100. {
-                    let (at, viewport) = moved.lock().unwrap().expect("manually scrolled context");
-                    assert!(
-                        at.x + at.width > viewport.x + viewport.width,
-                        "manual scroll really moved {kind} out of view: {at:?}/{viewport:?}"
-                    );
-                }
+                // The narrow strip fits its tabs, a ⋯ menu holding those that do not (docs/adr/8005): nothing
+                // scrolls, so no scroll takes the context out of view.
+                let (at, viewport) = moved.lock().unwrap().expect("the context after a scroll");
+                assert!(
+                    at.x >= viewport.x && at.x + at.width <= viewport.x + viewport.width,
+                    "{kind}/{width}: a scroll moved the context out of view: {at:?}/{viewport:?}"
+                );
                 app.selection.clear();
                 app.ribbon_context = false;
                 app.tab = "arch";

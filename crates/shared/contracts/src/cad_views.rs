@@ -301,7 +301,8 @@ impl PenCategory {
         match self {
             PenCategory::Walls => "Duvarlar",
             PenCategory::Openings => "Kapı ve pencereler",
-            PenCategory::Columns => "Kolonlar",
+            // Beams too (docs/adr/8041 §1): the bearing frame draws with one pen.
+            PenCategory::Columns => "Kolon ve kirişler",
             PenCategory::Stairs => "Merdiven ve rampalar",
             PenCategory::Slabs => "Döşemeler",
             PenCategory::Spaces => "Mahaller",
@@ -321,7 +322,7 @@ impl PenCategory {
         match kind {
             "wall" => PenCategory::Walls,
             "opening" => PenCategory::Openings,
-            "column" => PenCategory::Columns,
+            "column" | "beam" => PenCategory::Columns,
             "stair" | "ramp" => PenCategory::Stairs,
             "slab" => PenCategory::Slabs,
             "space" => PenCategory::Spaces,
@@ -485,7 +486,7 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         return Some("Görünüş tarifinin sürümü en az 1 olur.".into());
     }
     if r.is_empty() {
-        return Some("Görünüş tarifi boş: kat, evre, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
+        return Some("Görünüş tarifi boş: kat, tadilat görünümü, katman durumu, gizli tür, ölçek, duvar ayrıntısı, kırpma, kalem, şablon ya da siyah beyazdan birini verin.".into());
     }
     if let Some(why) = crate::option_choices_problem(&r.options) {
         return Some(why);

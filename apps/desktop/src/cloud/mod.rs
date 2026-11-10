@@ -1077,11 +1077,50 @@ impl App {
                 let _ = self.wall_styles_event(crate::wall_styles::Event::RemoveDropped);
                 self.dialog = Some(Dialog::WallStyles);
             }
-            Some(Dialog::WallStyles) => self.wall_styles = None,
+            // An editor with its own save: Esc is its Kapat, which asks when changes would go; over the question, Esc
+            // is Vazgeç (docs/adr/8006). It threw the changes away.
+            Some(Dialog::WallStyles) => {
+                use crate::wall_styles::Event;
+                self.dialog = Some(Dialog::WallStyles);
+                let closing = self.wall_styles.as_ref().is_some_and(|w| w.closing());
+                let _ = self.wall_styles_event(if closing {
+                    Event::Answer(crate::unsaved_close::Answer::Stay)
+                } else {
+                    Event::Close
+                });
+            }
+            Some(Dialog::Program) => {
+                use crate::program_window::Event;
+                self.dialog = Some(Dialog::Program);
+                let closing = self.program_window.as_ref().is_some_and(|w| w.closing());
+                let _ = self.program_event(if closing {
+                    Event::Answer(crate::unsaved_close::Answer::Stay)
+                } else {
+                    Event::Close
+                });
+            }
             Some(Dialog::TableStyleDefs) => self.table_style_window = None,
             Some(Dialog::WallJoins) => self.wall_joins = None,
-            Some(Dialog::OpeningTypes) => self.opening_types = None,
-            Some(Dialog::Materials) => self.materials = None,
+            Some(Dialog::OpeningTypes) => {
+                use crate::opening_types_window::Event;
+                self.dialog = Some(Dialog::OpeningTypes);
+                let closing = self.opening_types.as_ref().is_some_and(|w| w.closing);
+                let _ = self.opening_types_event(if closing {
+                    Event::Answer(crate::unsaved_close::Answer::Stay)
+                } else {
+                    Event::Close
+                });
+            }
+            Some(Dialog::Materials) => {
+                use crate::materials_window::Event;
+                self.dialog = Some(Dialog::Materials);
+                let closing = self.materials.as_ref().is_some_and(|w| w.closing);
+                let _ = self.materials_event(if closing {
+                    Event::Answer(crate::unsaved_close::Answer::Stay)
+                } else {
+                    Event::Close
+                });
+            }
             Some(Dialog::RoomModules) => self.room_modules = None,
             Some(Dialog::DesignOptions) => self.design_options = None,
             Some(Dialog::TagsCheck) => self.tags_check = None,

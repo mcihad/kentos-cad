@@ -6,7 +6,7 @@ use kentos_geometry_core::tools::point_text::parse_number;
 
 // Suggestions only: the chosen text still goes through cad.tags.create's parser.
 // No preset id or display value is stored in the document.
-const CONTENTS: [(&str, &str, &str); 10] = [
+const CONTENTS: [(&str, &str, &str); 11] = [
     ("number", "Numara", "{number}"),
     ("name", "Ad", "{name}"),
     ("net", "Net alan", "{netArea}"),
@@ -27,11 +27,13 @@ const CONTENTS: [(&str, &str, &str); 10] = [
         "Açıklık ve boyut",
         "{number}\n{width} × {height}",
     ),
+    // Mimarlar Odası's door and window tag (docs/adr/8028): the type's joinery code over its size in centimetres.
+    ("code", "Doğrama kodu ve ölçü", "{code}\n{size}"),
 ];
 
 pub(super) fn content_label(content: Option<&str>, bulk: bool) -> &'static str {
     if content.is_none() {
-        return if bulk { "Tür / Koru" } else { "Türe göre" };
+        return if bulk { "Mevcut ya da türün" } else { "Türe göre" };
     }
     CONTENTS
         .iter()
@@ -46,7 +48,7 @@ pub(super) fn content_choices(content: Option<&str>, bulk: bool) -> Vec<OptionCh
             .find(|(_, _, value)| *value == text)
             .map_or("custom", |(id, _, _)| *id)
     });
-    let mut items = vec![("default", if bulk { "Tür / Koru" } else { "Türe göre" })];
+    let mut items = vec![("default", if bulk { "Mevcut ya da türün" } else { "Türe göre" })];
     items.extend(CONTENTS.iter().map(|(id, label, _)| (*id, *label)));
     if selected == "custom" {
         items.push(("custom", "Özel şablonu koru"));
@@ -122,7 +124,7 @@ impl TagTool {
             Setting::notice(
                 "A",
                 "Şablon alanları",
-                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {share}: bölümün ortak alan payı · {gross}: bölümün brütü · {attr:Alan}: öznitelik. {floorElevation}: kat kotu; {ceilingElevation}: kat kotu + açık mahal yüksekliği. Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
+                "{number}: numara · {name}: ad · {area}: seçili yöntem alanı · {netArea}: net alan · {level}: kat · {usage}: kullanım · {unit}: bölüm · {target}: tasarım hedefi · {targetDiff}: hedef farkı · {share}: bölümün ortak alan payı · {gross}: bölümün brütü · {attr:Alan}: öznitelik. {floorElevation}: bitmiş döşemenin kotu; {ceilingElevation}: tavanın kotu (asma tavan, yazılan iç yükseklik ya da üst döşemenin altı). Kotlar çizim birimindedir. Eksik veri, kopuk net sınır ve elle çizilmiş brüt/eksenin neti boş kalır. En çok 200 karakter, 6 satır.",
             ),
         ];
         if let Some(why) = &self.problem {

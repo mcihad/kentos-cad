@@ -1,0 +1,20 @@
+# M35 §2 (docs/adr/8035), 1920 × 1080: the office storey (buro-yangin.kcad), Etkin kat 1. kat from the status bar, then
+# Kaçış yolları: the offices' and the meeting room's walks to the only stair red beyond 15 m, the corridor's dead end red.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 1477 1065  # Kat
+wait 1200
+click 1465 783  # 1. kat
+wait 1500
+click 800 500 middle
+click 800 500 middle
+wait 1500
+click 1640 20  # Menülerde ara
+wait 600
+type kaçış yolları
+wait 1200
+key Return
+wait 2500
+move 1300 950
+wait 600
+shot m35-yollar-buro

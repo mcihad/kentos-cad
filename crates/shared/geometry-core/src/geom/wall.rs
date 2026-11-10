@@ -22,7 +22,7 @@ use crate::geom::bulge::{bulge_path_outline, has_bulges};
 use crate::geom::hatch_pattern::library_pattern;
 use crate::geom::offset::{OffsetResult, offset_bulge_path};
 use crate::geometry::signed_area;
-use crate::jsmath::{PI, atan2};
+use crate::jsmath::{PI, atan2, js_hypot, js_max, js_min};
 use crate::vec2::Vec2;
 
 /// Conservative path box used by the native wall join candidate search.
@@ -386,19 +386,44 @@ impl crate::api::json::Flat for Spec {
     }
 }
 
-/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper.
+/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper; the
+/// plan's cut height above the floor, metres (docs/adr/8012), which decides what of its openings is cut; and the share
+/// of their own pen the model's lines are drawn with at that scale (docs/adr/8013: the project's line groups, 1 when
+/// each object keeps its own).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct View {
     pub detail: Detail,
     pub scale: f64,
+    pub cut: f64,
+    pub pens: f64,
+}
+
+/// Beyond 1:`SIMPLE_BEYOND` a schematic view draws the simplest (docs/adr/8010, 8011): a door its leaf, a window its
+/// glass, a stair and a ramp without railings or numbers, a column without its words, a slab's edge its outer line,
+/// furniture its outline. 1:200 is beyond it, 1:100 and 1:150 are not.
+pub const SIMPLE_BEYOND: f64 = 150.0;
+
+impl View {
+    /// The view at `detail` and 1:`scale`, cut at the plan's usual height ([`crate::geom::opening::PLAN_CUT`]), every
+    /// object at its own pen.
+    pub const fn new(detail: Detail, scale: f64) -> View {
+        View {
+            detail,
+            scale,
+            cut: crate::geom::opening::PLAN_CUT,
+            pens: 1.0,
+        }
+    }
+
+    /// Whether it draws the simplest: schematic beyond 1:[`SIMPLE_BEYOND`].
+    pub fn simple(self) -> bool {
+        self.detail == Detail::Schematic && self.scale > SIMPLE_BEYOND
+    }
 }
 
 impl Default for View {
     fn default() -> Self {
-        Self {
-            detail: Detail::Standard,
-            scale: 100.0,
-        }
+        View::new(Detail::Standard, 100.0)
     }
 }
 
@@ -566,7 +591,7 @@ pub fn area(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Option<f64> {
 }
 
 /// The direction of the path's first edge, degrees counter-clockwise from east (its chord when it is an arc).
-fn first_direction(pts: &[Vec2]) -> f64 {
+pub fn first_direction(pts: &[Vec2]) -> f64 {
     let (a, b) = (pts[0], pts[1]);
     atan2(b.y - a.y, b.x - a.x) * 180.0 / PI
 }
@@ -595,6 +620,115 @@ pub fn component_hatch(pattern: &str, size: f64, angle: f64, scale: f64) -> Opti
     })
 }
 
+/// The pattern a wall's layer draws as TS 5319's insulation symbol fitted to its thickness (docs/adr/8014): SN55, one
+/// zigzag between the layer's two sides, each vee as wide as half the layer is thick, its points on both faces; not a
+/// pattern tiled at a size of its own (Revit's Insulation, Archicad's fills fitted to a skin). Elsewhere (a hatch of its
+/// own) SN55 tiles as the library's rows.
+pub const FITTED_INSULATION: &str = "SN55";
+
+/// At most this many points in one zigzag: a layer longer than that many vees draws its first ones.
+const ZIGZAG_POINTS: usize = 4000;
+
+/// A layer thinner than this on paper (mm) draws no zigzag (docs/adr/8014): at 1:200 a 5 cm insulation is 0.25 mm and
+/// its vees would be a smudge; at 1:50 it is 1 mm. TS 5319's note: the representation goes by the drawing's scale.
+pub const ZIGZAG_MIN_MM: f64 = 1.0;
+
+/// The point of `line` nearest `p`.
+fn nearest_on(line: &[Vec2], p: Vec2) -> Option<Vec2> {
+    let mut best: Option<(f64, Vec2)> = None;
+    for w in line.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let (dx, dy) = (b.x - a.x, b.y - a.y);
+        let len2 = dx * dx + dy * dy;
+        let t = if len2 > 0.0 {
+            js_min(
+                1.0,
+                js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+            )
+        } else {
+            0.0
+        };
+        let q = Vec2::new(a.x + t * dx, a.y + t * dy);
+        let d = js_hypot(q.x - p.x, q.y - p.y);
+        if best.is_none_or(|(e, _)| d < e) {
+            best = Some((d, q));
+        }
+    }
+    best.map(|(_, q)| q)
+}
+
+/// The point `s` along `line` (its chords), and the line's whole length with `s` beyond it.
+fn along(line: &[Vec2], s: f64) -> Option<Vec2> {
+    let mut left = s;
+    for w in line.windows(2) {
+        let (a, b) = (w[0], w[1]);
+        let len = js_hypot(b.x - a.x, b.y - a.y);
+        if left <= len {
+            let k = if len > 0.0 { left / len } else { 0.0 };
+            return Some(Vec2::new(a.x + k * (b.x - a.x), a.y + k * (b.y - a.y)));
+        }
+        left -= len;
+    }
+    None
+}
+
+/// TS 5319's SN55 between a layer's sides (docs/adr/8014): for each stretch of the first side, points every half its
+/// thickness along it, every other one moved to its foot on the second side; the thickness is measured at the stretch's
+/// middle. None for a stretch with no second side beside it, or thinner than `least`.
+fn zigzags(first: &[Stroke], second: &[Stroke], least: f64) -> Vec<Shape> {
+    let others: Vec<Vec<Vec2>> = second.iter().map(|s| s.line.outline(s.closed)).collect();
+    let foot = |p: Vec2| -> Option<Vec2> {
+        others
+            .iter()
+            .filter_map(|o| nearest_on(o, p))
+            .min_by(|a, b| {
+                crate::jsmath::js_cmp(
+                    js_hypot(a.x - p.x, a.y - p.y),
+                    js_hypot(b.x - p.x, b.y - p.y),
+                )
+            })
+    };
+    let mut out = Vec::new();
+    for st in first {
+        let line = st.line.outline(st.closed);
+        let length: f64 = line
+            .windows(2)
+            .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+            .sum();
+        let Some(middle) = along(&line, length / 2.0) else {
+            continue;
+        };
+        let Some(across) = foot(middle) else {
+            continue;
+        };
+        let thick = js_hypot(across.x - middle.x, across.y - middle.y);
+        // At the limit it draws (a 5 cm layer at 1:50), the measured thickness a hair under it.
+        if thick <= 1e-6 || thick < least * (1.0 - 1e-9) || length <= thick / 2.0 {
+            continue;
+        }
+        let step = thick / 2.0;
+        let n = crate::jsmath::js_floor(length / step) as usize;
+        let mut pts = Vec::with_capacity(n.min(ZIGZAG_POINTS) + 1);
+        for k in 0..=n.min(ZIGZAG_POINTS) {
+            let Some(p) = along(&line, k as f64 * step) else {
+                break;
+            };
+            pts.push(if k % 2 == 1 { foot(p).unwrap_or(p) } else { p });
+        }
+        if pts.len() >= 3 {
+            out.push(Shape::Polyline {
+                pts,
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            });
+        }
+    }
+    out
+}
+
 fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> Piece {
     let edge = edge.cloned().unwrap_or_default();
     Piece {
@@ -610,6 +744,16 @@ fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> P
         attribute: None,
         annotation_origin: None,
     }
+}
+
+/// A boundary between two materials (docs/adr/8009): ISO 128-23's narrow line (01.1.1), half the wall's pen, unless its
+/// component's edge gives a weight of its own.
+fn boundary(shape: Shape, edge: Option<&ComponentEdge>) -> Piece {
+    let mut p = piece(shape, None, edge);
+    if p.line_weight.is_none() {
+        p.stroke.weight_scale = Some(0.5);
+    }
+    p
 }
 
 /// A piece of one of the wall's lines: an open stretch, or the whole line of a closed wall.
@@ -729,6 +873,17 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
             let Some(fill) = c.hatch.as_ref().filter(|_| shown(c)) else {
                 continue;
             };
+            // TS 5319's insulation fitted to the layer (docs/adr/8014): a zigzag between its sides, the narrow line.
+            if fill.pattern.eq_ignore_ascii_case(FITTED_INSULATION)
+                && let (Some(first), Some(second)) = (d.lines.get(k), d.lines.get(k + 1))
+            {
+                for z in zigzags(first, second, ZIGZAG_MIN_MM * view.scale / 1000.0) {
+                    let mut symbol = boundary(z, c.edge.as_ref());
+                    symbol.stroke.symbol = true;
+                    out.push(symbol);
+                }
+                continue;
+            }
             let Some(pattern) = hatch_of(fill, turn, view.scale) else {
                 continue;
             };
@@ -751,14 +906,14 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     }
     for (c, line) in &d.closures {
         if comps.get(*c).is_some_and(shown) {
-            out.push(piece(line.shape(false), None, comps[*c].edge.as_ref()));
+            out.push(boundary(line.shape(false), comps[*c].edge.as_ref()));
         }
     }
     for k in 1..comps.len() {
         if shown(&comps[k - 1]) && shown(&comps[k]) {
             let edge = comps[k - 1].edge.as_ref().or(comps[k].edge.as_ref());
             for st in &d.lines[k] {
-                out.push(piece(st.line.shape(st.closed), None, edge));
+                out.push(boundary(st.line.shape(st.closed), edge));
             }
         }
     }
@@ -916,6 +1071,54 @@ mod tests {
     }
 
     #[test]
+    fn the_faces_take_the_whole_pen_and_the_boundaries_between_materials_half() {
+        // docs/adr/8009: ISO 128-23 draws the outline of what is cut wide (01.2.1) and a boundary between materials
+        // narrow (01.1.1), half the wide (Table 2).
+        let p = [v(0.0, 0.0), v(5.0, 0.0)];
+        let got = pieces(
+            &p,
+            None,
+            &layered(),
+            View::new(Detail::Detailed, 20.0),
+        )
+        .unwrap();
+        let lines: Vec<&Piece> = got
+            .iter()
+            .filter(|x| !matches!(x.shape, Shape::Hatch { .. }))
+            .collect();
+        let whole = lines
+            .iter()
+            .filter(|x| x.stroke.weight_scale.is_none())
+            .count();
+        let half = lines
+            .iter()
+            .filter(|x| x.stroke.weight_scale == Some(0.5))
+            .count();
+        assert_eq!(
+            (whole, half),
+            (4, 3),
+            "two faces and two caps whole, three boundaries half"
+        );
+        // A component's edge with a weight of its own keeps it.
+        let mut own = layered();
+        own.components[1].edge = Some(ComponentEdge {
+            line_weight: Some(0.35),
+            ..ComponentEdge::default()
+        });
+        let got = pieces(
+            &p,
+            None,
+            &own,
+            View::new(Detail::Detailed, 20.0),
+        )
+        .unwrap();
+        assert!(
+            got.iter()
+                .any(|x| x.line_weight == Some(0.35) && x.stroke.weight_scale.is_none())
+        );
+    }
+
+    #[test]
     fn a_corner_is_mitred_on_both_faces() {
         let p = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 3.0)];
         let ls = lines(&p, None, &spec(0.2, Justify::Center)).unwrap();
@@ -931,10 +1134,7 @@ mod tests {
                 &p,
                 None,
                 &layered(),
-                View {
-                    detail,
-                    scale: 50.0,
-                },
+                View::new(detail, 50.0),
             )
             .unwrap();
             let hatches = got
@@ -963,10 +1163,7 @@ mod tests {
             &p,
             None,
             &s,
-            View {
-                detail: Detail::Schematic,
-                scale: 100.0,
-            },
+            View::new(Detail::Schematic, 100.0),
         )
         .unwrap();
         assert_eq!(got.len(), 3);

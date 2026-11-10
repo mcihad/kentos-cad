@@ -6,4 +6,8 @@ import type { ScheduleSort } from "./ScheduleSort";
 /**
  * A schedule's spec changed: each field given replaces its own (`filter: null` drops the filter).
  */
-export type ScheduleChange = { columns?: Array<ScheduleColumn>, filter?: ScheduleFilter | null, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, };
+export type ScheduleChange = { columns?: Array<ScheduleColumn>, filter?: ScheduleFilter | null, sort?: Array<ScheduleSort>, group?: boolean, total?: boolean, 
+/**
+ * Kat kat (docs/adr/8029): a units schedule's rows storey by storey.
+ */
+byLevel?: boolean, };

@@ -202,8 +202,14 @@ pub fn outline_paths(s: &Shape, out: &mut Vec<f64>) {
             }
         }
         // Its drawing at 1:100 but its words (docs/adr/0343 §2): a grid's line and bubbles, a column's outline, a
-        // stair's or ramp's band, treads and arrow.
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
+        // beam's band (docs/adr/8041 §1), a stair's or ramp's band, treads and arrow.
+        Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Beam { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. }
+        | Shape::Tag { .. }
+        | Shape::ViewMark { .. } => {
             for piece in crate::geom::arch::pieces(s, 100.0) {
                 if !matches!(piece.shape, Shape::Text { .. }) {
                     outline_paths(&piece.shape, out);

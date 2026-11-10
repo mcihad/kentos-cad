@@ -109,6 +109,24 @@ pub struct OpeningTypeChange {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<OpeningTypeField>>", optional))]
     pub unset: Vec<OpeningTypeField>,
+    /// Its frame's and leaves' make (kasa ve kanat, docs/adr/8038); null: not said.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
+    pub material: Option<Option<String>>,
+    /// Its thermal transmittance, W/m²K (docs/adr/8038); null: not said.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<f64>", extend("x-unit" = "W/m2K")))]
+    pub u_value: Option<Option<f64>>,
 }
 
 impl OpeningTypeChange {
@@ -190,6 +208,20 @@ pub enum OpeningTypesOperation {
         kind: String,
         name: String,
     },
+    /// Doğrama kodu (docs/adr/8028): the type's joinery code set, or taken away (null); every opening of the type and
+    /// its tag read it.
+    Code {
+        #[serde(rename = "type")]
+        kind: String,
+        #[serde(default)]
+        code: Option<String>,
+    },
+    /// Doğrama kodları (docs/adr/8028): each type the drawing's doors, windows and bare openings follow that has no
+    /// code gets the next of its kind, counted from 01 in the order the drawing first has it: K a door, GK a door with
+    /// a room on one side only (the building's outer wall), P a window, B a bare opening. An opening following no
+    /// project type first gets one of its own, one for each make (named by its form and size: Kapı 90/210); one on a
+    /// locked layer is left out. Codes given before stay.
+    Codes {},
     /// Sil: the type; its openings refuse it (`opening_type_in_use`) unless `detach`, which leaves them with their
     /// values, following nothing.
     Remove {

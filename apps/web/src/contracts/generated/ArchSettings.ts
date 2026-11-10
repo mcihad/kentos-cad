@@ -5,18 +5,35 @@ import type { ArchMaterial } from "./ArchMaterial";
 import type { ArchModule } from "./ArchModule";
 import type { BuildingProgram } from "./BuildingProgram";
 import type { LevelView } from "./LevelView";
+import type { LineGroups } from "./LineGroups";
+import type { LocalRules } from "./LocalRules";
 import type { OpeningType } from "./OpeningType";
 import type { OptionCombo } from "./OptionCombo";
 import type { OptionSet } from "./OptionSet";
 import type { PhaseView } from "./PhaseView";
+import type { SitePlan } from "./SitePlan";
 import type { SpaceMethod } from "./SpaceMethod";
 import type { WallDetail } from "./WallDetail";
+import type { Zoning } from "./Zoning";
 
 /**
  * The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
  * by the drawing's scale, `WallDetail::at_scale`).
  */
 export type ArchSettings = { levels?: Array<ArchLevel>, detail?: WallDetail, 
+/**
+ * The plan's cut height above each level's floor, metres (docs/adr/8012, KCAD 217): what crosses it is cut, a
+ * window over it is seen from above, dashed; absent: [`crate::PLAN_CUT_HEIGHT`] (1.10). A new Mimari project
+ * writes 1.20 (İTÜ, Teknik Çizim İlkeleri: 1.20–1.50; Revit's metric templates: 1200 mm).
+ */
+cutHeight?: number, 
+/**
+ * How the plan's lines are weighted (docs/adr/8013, KCAD 218): `byScale` takes the line group of the scale the
+ * plan is drawn at (TS 88-23 / ISO 128-23 Tablo 2: 1:200 0.25, 1:100 0.35, 1:50 0.5, 1:20 0.7 mm for the wide
+ * line, the narrow one half), each object's pen read as its 1:50 width; `own` or absent draws every object at its
+ * own pen whatever the scale. A new Mimari project writes `byScale`.
+ */
+lineGroups?: LineGroups, 
 /**
  * The method new spaces are measured by (docs/adr/0342 §1): the office's profile; absent: net.
  */
@@ -73,4 +90,24 @@ options?: Array<OptionSet>,
 /**
  * The project's combinations of its sets' options (docs/adr/0808, KCAD 154): named proposals a view may show.
  */
-optionCombos?: Array<OptionCombo>, };
+optionCombos?: Array<OptionCombo>, 
+/**
+ * İmar durumu (docs/adr/8030; `.kcad` schema 222): the parcel's area and the plan's coefficients the floor area
+ * ratio and the coverage are read against. Absent: none given.
+ */
+zoning?: Zoning, 
+/**
+ * Vaziyet planı (docs/adr/8032; `.kcad` schema 224): the parcel's boundary, its edges' kinds and setbacks, the
+ * absolute elevation of ±0.00 and the setback line the document keeps. Absent: none given.
+ */
+site?: SitePlan, 
+/**
+ * Yerel imar yönetmeliği (docs/adr/8034; `.kcad` schema 225): the municipality's regulation Mimari denetim's
+ * Mevzuat group reads over Planlı Alanlar İmar Yönetmeliği. Absent: the national regulation alone.
+ */
+localRules?: LocalRules, 
+/**
+ * Yağmurlama sistemi (docs/adr/8035; `.kcad` schema 226): the building has an automatic sprinkler system, so the
+ * fire regulation's sprinklered escape distances are read (BYKHY Ek-5/B, 48/2). Absent: none.
+ */
+sprinklers?: boolean, };

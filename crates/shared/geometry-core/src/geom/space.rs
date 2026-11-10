@@ -176,7 +176,10 @@ fn slab_look(v: &Json) -> Result<Option<crate::geom::slab::Look>, String> {
             })
         }
     };
-    Ok(Some(crate::geom::slab::Look { edge }))
+    Ok(Some(crate::geom::slab::Look {
+        edge,
+        overhead: false,
+    }))
 }
 
 impl ToJson for Spec {
@@ -459,8 +462,31 @@ pub fn pieces(parts: &[Area], spec: &Spec, scale: f64) -> Vec<Shape> {
 /// `pieces`, its label left out when not `label`: a tagged space's tag is its label (docs/adr/0344's 27 October
 /// addendum).
 pub fn pieces_with(parts: &[Area], spec: &Spec, scale: f64, label: bool) -> Vec<Shape> {
+    pieces_in(parts, spec, None, scale, label)
+}
+
+/// [`pieces_with`] as a view draws them (docs/adr/8011): a slab's edge at the view's level.
+pub fn pieces_with_view(
+    parts: &[Area],
+    spec: &Spec,
+    view: crate::geom::wall::View,
+    label: bool,
+) -> Vec<Shape> {
+    pieces_in(parts, spec, Some(view), view.scale, label)
+}
+
+fn pieces_in(
+    parts: &[Area],
+    spec: &Spec,
+    view: Option<crate::geom::wall::View>,
+    scale: f64,
+    label: bool,
+) -> Vec<Shape> {
     if let Some(look) = &spec.slab {
-        return crate::geom::slab::pieces(parts, look);
+        return match view {
+            Some(view) => crate::geom::slab::pieces_in(parts, look, view),
+            None => crate::geom::slab::pieces(parts, look),
+        };
     }
     let mut out: Vec<Shape> = parts
         .iter()

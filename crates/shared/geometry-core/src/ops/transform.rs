@@ -808,6 +808,17 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 ramp: spec,
             }
         }
+        // Its axis maps, its sizes scale; a mirror puts its body on the axis's other side (docs/adr/8041 §1).
+        Shape::Beam { pts, beam } => {
+            let mut spec = beam.clone();
+            spec.width *= s;
+            spec.height *= s;
+            spec.middle *= if is_reflection(m) { -s } else { s };
+            Shape::Beam {
+                pts: pts.iter().map(|q| apply(m, *q)).collect(),
+                beam: spec,
+            }
+        }
         // Its jambs map (the document reads its place along its wall from them, docs/adr/0341 §3); its lengths scale.
         Shape::Opening {
             at,

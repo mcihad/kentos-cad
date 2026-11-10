@@ -8,7 +8,7 @@
    "name": "Betonarme",
    "category": "structure",
    "hatch": {
-    "pattern": "NET3",
+    "pattern": "SN46",
     "scale": 1.0,
     "angle": 0.0
    },
@@ -47,7 +47,7 @@
    "name": "Gazbeton",
    "category": "structure",
    "hatch": {
-    "pattern": "DOTS",
+    "pattern": "SN48",
     "scale": 1.0,
     "angle": 0.0
    },
@@ -86,8 +86,8 @@
    "name": "Ahşap",
    "category": "structure",
    "hatch": {
-    "pattern": "LINE",
-    "scale": 0.5,
+    "pattern": "SN21",
+    "scale": 1.0,
     "angle": 0.0
    },
    "cut": {
@@ -99,8 +99,8 @@
    "name": "Taşyünü",
    "category": "insulation",
    "hatch": {
-    "pattern": "ANSI37",
-    "scale": 0.5,
+    "pattern": "SN55",
+    "scale": 1.0,
     "angle": 0.0
    },
    "cut": {
@@ -112,8 +112,8 @@
    "name": "Camyünü",
    "category": "insulation",
    "hatch": {
-    "pattern": "ANSI37",
-    "scale": 0.8,
+    "pattern": "SN55",
+    "scale": 1.0,
     "angle": 0.0
    },
    "cut": {
@@ -125,8 +125,8 @@
    "name": "EPS ısı yalıtımı",
    "category": "insulation",
    "hatch": {
-    "pattern": "ANSI37",
-    "scale": 0.5,
+    "pattern": "SN55",
+    "scale": 1.0,
     "angle": 0.0
    },
    "cut": {
@@ -138,8 +138,8 @@
    "name": "XPS ısı yalıtımı",
    "category": "insulation",
    "hatch": {
-    "pattern": "NET",
-    "scale": 0.5,
+    "pattern": "SN55",
+    "scale": 1.0,
     "angle": 0.0
    },
    "cut": {

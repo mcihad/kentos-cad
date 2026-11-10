@@ -7,6 +7,8 @@
 //! An opening that would run off its wall or into another, a field that makes none, a wall that is gone where one is
 //! needed: nothing is written. Their jambs follow from their walls in the same step (`kentos_domain::opening_follow`).
 
+use std::collections::BTreeMap;
+
 use kentos_commands::{
     CommandResult, Entity, OpeningChange, OpeningEntity, OpeningFields, OpeningFlip, OpeningsEdit,
     OpeningsEdited, OpeningsOperation, WallEnd,
@@ -97,9 +99,15 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
+    // Its own phase (docs/adr/8039 §1); null: its wall's.
+    if let Some(v) = c.phase {
+        f.phase = v;
+    }
     // Its construction (docs/adr/0772 §3): the fields given set, those unset taken away.
     if let Some(b) = &c.build
-        && let Some(map) = serde_json::to_value(b).ok().and_then(|v| v.as_object().cloned())
+        && let Some(map) = serde_json::to_value(b)
+            .ok()
+            .and_then(|v| v.as_object().cloned())
     {
         for (k, v) in map {
             if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
@@ -239,7 +247,7 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             if c == &OpeningChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da tadilat durumu verin.".into(),
                     "operation",
                 ));
             }
@@ -535,8 +543,55 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
         }
         OpeningsOperation::Renumber {
             prefix,
+            by_room: true,
+            ..
+        } => {
+            // Mahale göre (docs/adr/8028): its room's number; -A, -B … when the room has more than one.
+            let rooms = crate::opening_codes::numbered_rooms(doc);
+            let mut of_room: Vec<(usize, Option<String>, Option<Slot>, f64)> = list
+                .iter()
+                .enumerate()
+                .map(|(k, (_, _, o))| {
+                    let wall = kentos_domain::Uuid::parse_str(&o.opening.host)
+                        .ok()
+                        .and_then(|u| doc.slot_of(u));
+                    let room = crate::opening_codes::room_of(doc, &o.opening, &rooms);
+                    (k, room, wall, opening_follow::span(&o.opening).0)
+                })
+                .collect();
+            of_room.sort_by(|a, b| {
+                (a.2.is_none(), a.2)
+                    .cmp(&(b.2.is_none(), b.2))
+                    .then(a.3.total_cmp(&b.3))
+                    .then(a.0.cmp(&b.0))
+            });
+            let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+            for (_, room, ..) in &of_room {
+                if let Some(r) = room {
+                    *counts.entry(r.clone()).or_default() += 1;
+                }
+            }
+            let mut given: BTreeMap<String, usize> = BTreeMap::new();
+            for (k, room, ..) in of_room {
+                let Some(room) = room else { continue };
+                let (at, slot, o) = list[k];
+                let mut f = o.opening.clone();
+                f.number = Some(if counts[&room] > 1 {
+                    let n = given.entry(room.clone()).or_default();
+                    *n += 1;
+                    format!("{prefix}{room}-{}", crate::opening_codes::letters(*n))
+                } else {
+                    format!("{prefix}{room}")
+                });
+                next.push((at, slot, o, f, false));
+            }
+            next.sort_by_key(|(at, ..)| *at);
+        }
+        OpeningsOperation::Renumber {
+            prefix,
             start,
             form: _,
+            by_room: false,
         } => {
             // In their walls' order (the walls' slots), then along each wall.
             let mut order: Vec<(Option<Slot>, f64, usize)> = list

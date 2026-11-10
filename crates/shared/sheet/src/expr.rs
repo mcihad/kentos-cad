@@ -51,12 +51,21 @@ impl Scope {
             {
                 return Some(v);
             }
+            // A question left unanswered gives way (docs/adr/8037): a sheet's empty `@ada` reads the book's or the
+            // drawing's, and an empty variable a built-in value of its name; with none it stays unanswered.
+            let mut unanswered = None;
             for vars in [&self.sheet, &self.project] {
-                if let Some(v) = vars.iter().find(|v| fold(&v.name) == f) {
-                    return Some(&v.value);
+                for v in vars.iter().filter(|v| fold(&v.name) == f) {
+                    if !v.value.is_null() {
+                        return Some(&v.value);
+                    }
+                    unanswered.get_or_insert(&v.value);
                 }
             }
-            return self.builtins.iter().find(|(n, _)| *n == f).map(|(_, v)| v);
+            return match self.builtins.iter().find(|(n, _)| *n == f).map(|(_, v)| v) {
+                Some(b) if !b.is_null() => Some(b),
+                b => unanswered.or(b),
+            };
         }
         self.fields.iter().find(|(n, _)| n == field).map(|(_, v)| v)
     }
@@ -389,6 +398,28 @@ mod tests {
         );
         assert_eq!(evaluate("@parsel", &s), Eval::Missing("parsel".into()));
         assert_eq!(evaluate("@yok", &s), Eval::Missing("yok".into()));
+        // An unanswered sheet question gives way to the drawing's value, and to a built-in value of its name.
+        let mut s = s;
+        s.project.push(Variable {
+            name: "parsel".into(),
+            label: "Parsel".into(),
+            kind: VarKind::Text,
+            value: VarValue::Text("12".into()),
+        });
+        assert_eq!(
+            evaluate("@parsel", &s),
+            Eval::Value(VarValue::Text("12".into()))
+        );
+        s.sheet.push(Variable {
+            name: "olcek".into(),
+            label: "Ölçek".into(),
+            kind: VarKind::Text,
+            value: VarValue::Null,
+        });
+        assert_eq!(
+            evaluate("@olcek", &s),
+            Eval::Value(VarValue::Text("1/1000".into()))
+        );
         assert!(matches!(evaluate("1 +", &s), Eval::Error(_)));
     }
 

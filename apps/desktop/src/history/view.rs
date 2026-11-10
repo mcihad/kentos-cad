@@ -1,7 +1,9 @@
 //! Komut geçmişi with the calls (docs/adr/0284): the log's lines and the
-//! calls in the order they came; a call is its title and command, its input
-//! in words, what it wrote or why it wrote nothing, its warnings, and its
-//! buttons (Python shown, Python copied, the replay input copied or saved).
+//! calls in the order they came; a call is its title, its input in words (a
+//! Mimari command's said as a designer says it, docs/adr/8004), what it wrote
+//! or why it wrote nothing, its warnings, and its buttons (Ayrıntı: the
+//! command, its fields and its Python; Python copied, the replay input copied
+//! or saved).
 
 use iced::widget::text::{LineHeight, Wrapping};
 use iced::widget::{Column, button, column, container, row, space, text};
@@ -11,6 +13,7 @@ use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Tip, tip};
 
+use super::summary::{self, Names};
 use super::{Call, Entry, Event, text as words};
 use crate::app::{App, Message};
 use crate::cloud::local_time::Zone;
@@ -76,6 +79,10 @@ impl App {
         let size = typography::caption();
         let height = LineHeight::Relative(1.5);
         let row_now = self.row_now(entry);
+        // What a Mimari command did, said without ids; its fields and the command go to Ayrıntı (docs/adr/8004).
+        let said = |command: Option<&str>, input: Option<&serde_json::Value>| -> Option<String> {
+            summary::summary(command?, input?, &self.summary_names())
+        };
         let (title, command, input, outcome, tone, warnings) = match (&entry.call, row_now) {
             (Call::Row(_), Some(r)) => {
                 let tone = match (r.kind, r.status) {
@@ -91,10 +98,13 @@ impl App {
                         (Some(c), Some(v), None) => format!("{c} v{v}"),
                         _ => String::new(),
                     },
-                    r.input
-                        .as_ref()
-                        .map(|i| words::inputs_for(r.command.as_deref(), i, &layer))
-                        .unwrap_or_default(),
+                    (
+                        said(r.command.as_deref(), r.input.as_ref()),
+                        r.input
+                            .as_ref()
+                            .map(|i| words::inputs_for(r.command.as_deref(), i, &layer))
+                            .unwrap_or_default(),
+                    ),
                     words::outcome(r),
                     tone,
                     r.warnings.iter().map(words::warning).collect::<Vec<_>>(),
@@ -105,7 +115,10 @@ impl App {
                 (
                     words::title_of(&r.command).to_owned(),
                     format!("{} v{}", r.command, r.version),
-                    words::inputs_for(Some(&r.command), &r.input, &layer),
+                    (
+                        said(Some(&r.command), Some(&r.input)),
+                        words::inputs_for(Some(&r.command), &r.input, &layer),
+                    ),
                     words::refusal(r),
                     Tone::Refused,
                     Vec::new(),
@@ -150,11 +163,6 @@ impl App {
                 .style(move |theme: &Theme| text::Style {
                     color: Some(tone.text(theme)),
                 }),
-            text(command)
-                .font(typography::mono())
-                .size(size)
-                .line_height(height)
-                .style(faint),
             space::horizontal(),
         ]
         .spacing(10)
@@ -162,16 +170,27 @@ impl App {
         if let Some(buttons) = self.call_buttons(entry, open) {
             head = head.push(buttons);
         }
+        let (summary_line, fields) = input;
         let mut body = Column::new().push(head);
-        if !input.is_empty() {
-            body = body.push(small(input, size, height, Tone::Muted));
+        // The summary when the command has one, else its fields; without Ayrıntı a row says no id.
+        let shown = summary_line.clone().unwrap_or_else(|| fields.clone());
+        if !shown.is_empty() {
+            body = body.push(small(shown, size, height, Tone::Muted));
         }
         body = body.push(small(outcome, size, height, tone));
         for w in warnings {
             body = body.push(small(format!("Uyarı {w}"), size, height, Tone::Warning));
         }
-        if open && let Some(code) = self.python_of(entry) {
-            body = body.push(code_block(code));
+        if open {
+            if !command.is_empty() {
+                body = body.push(small(command, size, height, Tone::Faint));
+            }
+            if summary_line.is_some() && !fields.is_empty() {
+                body = body.push(small(format!("Girdi: {fields}"), size, height, Tone::Faint));
+            }
+            if let Some(code) = self.python_of(entry) {
+                body = body.push(code_block(code));
+            }
         }
         let lead = if grouped { 76.0 } else { 64.0 };
         container(row![
@@ -207,7 +226,7 @@ impl App {
                     Icon::ChevronRight
                 })
                 .size(12.0),
-                text("Python").size(typography::caption()),
+                text("Ayrıntı").size(typography::caption()),
             ]
             .spacing(3)
             .align_y(Center),
@@ -237,6 +256,19 @@ impl App {
         .spacing(2)
         .align_y(Center);
         Some(buttons.into())
+    }
+
+    /// What a row's summary names things by: the open drawing's levels, opening types and wall styles, and its
+    /// format (docs/adr/8004).
+    fn summary_names(&self) -> Names<'_> {
+        let doc = self.document.as_ref();
+        let settings = doc.map(|d| d.model.settings());
+        Names {
+            levels: settings.and_then(|s| s.arch.as_ref()).map_or(&[], |a| a.levels.as_slice()),
+            opening_types: doc.map_or(&[], |d| d.model.opening_types()),
+            wall_styles: settings.map_or(&[], |s| s.wall_styles.as_slice()),
+            format: self.format(),
+        }
     }
 
     /// A layer's name by its id, in the open drawing.

@@ -11,7 +11,7 @@ use std::sync::OnceLock;
 use crate::api::Op;
 use crate::entity::HatchPattern;
 use crate::geom::hatch::MAX_HATCH_LINES;
-use crate::jsmath::{PI, cos, js_cmp, js_max, js_min, sin, stable_sort};
+use crate::jsmath::{PI, atan2, cos, js_cmp, js_hypot, js_max, js_min, sin, stable_sort};
 use crate::op;
 use crate::vec2::Vec2;
 
@@ -104,6 +104,42 @@ fn general(
         description,
         lines,
     }
+}
+
+/// A pattern of TS 5319 (Teknik resim – Taramalar – Kesit yüzeyinin ve malzemenin gösterilişi, 1997; docs/adr/8014):
+/// one of its SN symbols as line families, drawn after the standard's figure (İTÜ, Teknik Çizim İlkeleri, Şekil 3-a).
+fn ts(name: &'static str, description: &'static str, lines: Vec<PatternLine>) -> LibraryPattern {
+    LibraryPattern {
+        name,
+        group: "ts",
+        description,
+        lines,
+    }
+}
+
+/// TS 5319's SN55 tiled (docs/adr/8014): rows of a zigzag `h` mm high, its vees `p` mm wide, a row `h` apart from the
+/// next. Each vee's rising and falling sides are a family of their own; a side's line passes the next row at the start of
+/// a side there, so a dash as long as the side and a gap as long again draw every row. A wall's layer draws the symbol
+/// fitted to its thickness instead (`geom::wall::FITTED_INSULATION`).
+fn zigzag_rows(h: f64, p: f64) -> Vec<PatternLine> {
+    let up = atan2(h, p / 2.0);
+    let side = js_hypot(p / 2.0, h);
+    let (cos_up, sin_up) = (cos(up), sin(up));
+    let degrees = up * 180.0 / PI;
+    vec![
+        family(
+            degrees,
+            [0.0, 0.0],
+            [p * cos_up, -p * sin_up],
+            &[side, -side],
+        ),
+        family(
+            -degrees,
+            [p / 2.0, h],
+            [p * cos_up, p * sin_up],
+            &[side, -side],
+        ),
+    ]
 }
 
 /// The library (docs/adr/0186 §2), in the order the tool offers it.
@@ -297,8 +333,84 @@ pub fn library() -> &'static [LibraryPattern] {
                     ),
                 ],
             ),
+            // TS 5319's symbols (docs/adr/8014), mm on paper.
+            ts(
+                "SN46",
+                "Betonarme (TS 5319 SN46)",
+                vec![
+                    family(45.0, [0.0, 0.0], [0.0, 3.0], &[]),
+                    family(45.0, below_mm(1.5), [0.5, 3.0], &[0.0, -1.0]),
+                ],
+            ),
+            ts(
+                "SN47",
+                "Beton, takviyesiz (TS 5319 SN47)",
+                vec![family(45.0, [0.0, 0.0], [1.0, 2.5], &[2.5, -1.0])],
+            ),
+            ts(
+                "SN48",
+                "Hafif beton, gazbeton (TS 5319 SN48)",
+                vec![
+                    family(45.0, [0.0, 0.0], [0.0, 4.0], &[]),
+                    family(45.0, below_mm(2.0), [1.0, 4.0], &[0.0, -2.0]),
+                ],
+            ),
+            ts(
+                "SN49",
+                "Pomzalı beton (TS 5319 SN49)",
+                vec![family(45.0, [0.0, 0.0], [0.0, 1.5], &[])],
+            ),
+            ts(
+                "SN21",
+                "Ahşap, enine lifli (TS 5319 SN21)",
+                vec![
+                    family(45.0, [0.0, 0.0], [0.0, 3.0], &[]),
+                    family(45.0, below_mm(0.8), [0.0, 3.0], &[]),
+                ],
+            ),
+            ts(
+                "SN22",
+                "Ahşap, lif doğrultusunda (TS 5319 SN22)",
+                vec![family(0.0, [0.0, 0.0], [0.0, 1.5], &[])],
+            ),
+            ts(
+                "SN23",
+                "Ağaç malzeme (TS 5319 SN23)",
+                vec![family(90.0, [0.0, 0.0], [0.0, 2.0], &[])],
+            ),
+            ts(
+                "SN54",
+                "Porselen (TS 5319 SN54)",
+                vec![
+                    family(0.0, [0.0, 0.0], [0.0, 1.5], &[]),
+                    family(90.0, [0.0, 0.0], [0.0, 1.5], &[]),
+                ],
+            ),
+            ts(
+                "SN55",
+                "Yalıtım malzemesi (TS 5319 SN55)",
+                zigzag_rows(2.0, 2.0),
+            ),
+            ts(
+                "SN58",
+                "Tecrit malzemesi (TS 5319 SN58)",
+                vec![
+                    family(45.0, [0.0, 0.0], [0.0, 2.5], &[]),
+                    family(135.0, [0.0, 0.0], [0.0, 2.5], &[]),
+                ],
+            ),
+            ts(
+                "SN5",
+                "Kum (TS 5319 SN5)",
+                vec![family(0.0, [0.0, 0.0], [0.75, 1.5], &[0.0, -1.5])],
+            ),
         ]
     })
+}
+
+/// The origin of a 45° line `d` mm under the one through the origin.
+fn below_mm(d: f64) -> [f64; 2] {
+    [d * std::f64::consts::SQRT_2, 0.0]
 }
 
 /// The library's pattern of this name, its case aside.
@@ -739,7 +851,8 @@ mod tests {
     fn the_library_holds_its_names_once() {
         let names: std::collections::HashSet<&str> = library().iter().map(|p| p.name).collect();
         assert_eq!(names.len(), library().len());
-        assert_eq!(library().len(), 28);
+        // 28 and TS 5319's eleven (docs/adr/8014).
+        assert_eq!(library().len(), 39);
         assert!(library_pattern("ansi31").is_some());
         for p in library() {
             for l in &p.lines {
@@ -751,5 +864,55 @@ mod tests {
                 );
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod ts_5319_tests {
+    use super::*;
+
+    /// docs/adr/8014: TS 5319's symbols are in the library, and SN55 tiled is a zigzag: every rising side's top meets a
+    /// falling side's top, every falling side's foot a rising side's foot (inside the region, its edges aside).
+    #[test]
+    fn the_ts_symbols_are_there_and_sn55_tiles_a_zigzag() {
+        for name in [
+            "SN46", "SN47", "SN48", "SN49", "SN21", "SN22", "SN23", "SN54", "SN55", "SN58", "SN5",
+        ] {
+            let found = library_pattern(name).unwrap_or_else(|| panic!("{name}"));
+            assert_eq!(found.group, "ts", "{name}");
+            assert!(found.description.contains("TS 5319"), "{name}");
+        }
+        let pattern = HatchPattern {
+            kind: "pattern".into(),
+            angle: 0.0,
+            spacing: 1.0,
+            name: Some("SN55".into()),
+            scale: Some(1.0),
+            lines: Some(library_pattern("SN55").expect("SN55").lines.clone()),
+            gradient: None,
+            origin: None,
+        };
+        let ring = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(20.0, 0.0),
+            Vec2::new(20.0, 20.0),
+            Vec2::new(0.0, 20.0),
+        ];
+        let got = pattern_pieces(&ring, &[], &pattern, 100_000);
+        assert!(!got.segments.is_empty() && !got.capped);
+        let ends: Vec<Vec2> = got.segments.iter().flat_map(|[a, b]| [*a, *b]).collect();
+        let inside = |p: &Vec2| p.x > 0.5 && p.x < 19.5 && p.y > 0.5 && p.y < 19.5;
+        let meets = |p: &Vec2| {
+            ends.iter()
+                .filter(|q| (q.x - p.x).abs() < 1e-6 && (q.y - p.y).abs() < 1e-6)
+                .count()
+                >= 2
+        };
+        let lone: Vec<&Vec2> = ends.iter().filter(|p| inside(p) && !meets(p)).collect();
+        assert!(
+            lone.is_empty(),
+            "ends meeting no other side: {:?}",
+            &lone[..lone.len().min(6)]
+        );
     }
 }

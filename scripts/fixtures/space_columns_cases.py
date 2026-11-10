@@ -57,7 +57,7 @@ def case(unit, method, policy, level):
     row = {'uid':'$uidOf:5','method':method,'area':float(area),
            'perimeter':float(PERIM[method]+(boundary if applies(policy,method) else D(0))),
            'byMethod':by,
-           'rule':f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × yükseklik'}
+           'rule':f'alan: halkaların alanı, delikler düşülür ({LABEL[method]}); hacim: alan × iç yükseklik (bitmiş döşemeden tavana)'}
     if policy in POLICY:
         row['columns'] = policy
         row['rule'] += '; kolon alanı: '+POLICY[policy]

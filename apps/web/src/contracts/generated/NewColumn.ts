@@ -45,4 +45,8 @@ type?: string,
 /**
  * Absent: from `tagStart` on, else none.
  */
-tag?: string, fill?: boolean, arch?: ArchInfo, attrs?: { [key in string]: string }, };
+tag?: string, fill?: boolean, 
+/**
+ * Its material (docs/adr/8041 §2); absent: Betonarme.
+ */
+material?: string, arch?: ArchInfo, attrs?: { [key in string]: string }, };

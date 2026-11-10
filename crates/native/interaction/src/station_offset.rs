@@ -277,7 +277,7 @@ impl Tool for StationOffset {
                     at: h,
                     lines: vec![
                         format.length(dist(a, h)),
-                        format!("Semt {}", format.bearing(bearing_grad(a, h))),
+                        format!("{} {}", format.direction_name(), format.direction(bearing_grad(a, h))),
                     ],
                 });
                 preview.tracking = self.tracking;

@@ -225,6 +225,15 @@ def ring_problem(r, at):
     return None
 
 
+LAYER = {"finish": "Kaplama", "screed": "Şap", "insulation": "Isı yalıtımı", "waterproofing": "Su yalıtımı", "plaster": "Sıva"}
+
+
+def layers_of(given):
+    """A slab's layers as the document keeps them (docs/adr/8040 §2): each side only when it has a layer."""
+    given = given or {}
+    return {side: [dict(lay) for lay in given[side]] for side in ("over", "under") if given.get(side)}
+
+
 def problem(s, prefix):
     if "parts" in s:
         for i, (o, hs) in enumerate(s["parts"]):
@@ -241,6 +250,15 @@ def problem(s, prefix):
     m = s.get("material")
     if m is not None and (m.strip() == "" or m.strip() != m or len(m) > 120):
         return refusal("invalid_slab", "Döşemenin malzemesi boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.", f"{prefix}.material")
+    for side in ("over", "under"):
+        lst = (s.get("layers") or {}).get(side, [])
+        if len(lst) > 8:
+            return refusal("invalid_slab", f"Döşemenin bir yanında en çok 8 katman olur; {len(lst)} verildi.", f"{prefix}.layers.{side}")
+        for i, lay in enumerate(lst):
+            t = lay["thickness"]
+            if not (math.isfinite(t) and 0 < t <= 1):
+                return refusal("invalid_slab", f"{LAYER[lay['kind']]} katmanının kalınlığı sıfırdan büyük, en çok 1 m olmalı; {num(t)} verildi.",
+                               f"{prefix}.layers.{side}[{i}].thickness")
     e = s.get("edge")
     if e is not None and not (math.isfinite(e["width"]) and 0 < e["width"] <= 2):
         return refusal("invalid_slab", f"{WHOSE[e['kind']]} eni sıfırdan büyük, en çok 2 m olmalı; {num(e['width'])} verildi.", f"{prefix}.edge.width")
@@ -271,6 +289,8 @@ def stored(d, s):
         out["edge"] = edge
     if s.get("excluded"):
         out["excluded"] = True
+    if s.get("layers"):
+        out["layers"] = s["layers"]
     return out
 
 
@@ -346,7 +366,7 @@ def create(d, inp, conflict=False):
             js = None
         s = {"parts": parts, "json": js, "role": n.get("role", "floor"), "thickness": n.get("thickness", 0.15),
              "offset": n.get("offset", 0.0), "arch": arch, "material": n.get("material"), "excluded": n.get("excluded", False),
-             "attrs": n.get("attrs", {})}
+             "attrs": n.get("attrs", {}), "layers": layers_of(n.get("layers"))}
         if "edge" in n:
             s["edge"] = {"kind": n["edge"]["kind"], "width": n["edge"].get("width", WIDTH[n["edge"]["kind"]])}
         r = problem(s, at)
@@ -425,7 +445,7 @@ def edit(d, inp, conflict=False):
     if kind == "set":
         ch = {k: v for k, v in op.items() if k != "kind"}
         if not ch:
-            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, evre, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.", "operation"), None
+            return refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar ya da metraj dışı seçimlerinden birini verin.", "operation"), None
         for key, name in (("thickness", "Kalınlık"), ("offset", "Kot farkı")):
             if key in ch and not math.isfinite(ch[key]):
                 return not_finite(name, f"operation.{key}"), None
@@ -436,6 +456,8 @@ def edit(d, inp, conflict=False):
             for k in ("role", "thickness", "offset", "material", "excluded"):
                 if k in ch:
                     s[k] = ch[k]
+            if "layers" in ch:
+                s["layers"] = layers_of(ch["layers"])
             arch = dict(s.get("arch", {}))
             for k in ("level", "phase"):
                 if k in ch:
@@ -567,6 +589,10 @@ def create_cases():
         ("teras: dört yanı serbest, parapet 20 cm", {"parts": [box_json(20, 10, 26, 14)], "role": "terrace", "edge": {"kind": "parapet", "width": 0.2}}),
         ("dış konturdan döşemenin korkuluğunun serbest kenarı yok", {"seed": LEFT, "edge": {"kind": "railing"}}),
         ("metraj dışı döşeme listelenir, toplanmaz", {"parts": [box_json(20, 0, 24, 3)], "excluded": True}),
+        ("ara kat dizilişi: kaplama, şap ve sıva; metrajda her katman net alanla",
+         {"parts": [box_json(20, 0, 24, 3)], "layers": {"over": [{"kind": "finish", "thickness": 0.02, "material": "Seramik"},
+                                                                {"kind": "screed", "thickness": 0.05}],
+                                                       "under": [{"kind": "plaster", "thickness": 0.02}]}}),
     ]:
         d = sc.Drawing()
         c.add(name, [create_step(d, "execute", one(**n)), quant(d)])
@@ -594,6 +620,8 @@ def create_cases():
         ("100 metreyi aşan kot farkı reddedilir", one(parts=[box_json(20, 0, 24, 3)], offset=200), {}),
         ("boş malzeme reddedilir", one(parts=[box_json(20, 0, 24, 3)], material="  "), {}),
         ("2 metreyi aşan korkuluk eni reddedilir", one(parts=[BALCONY], edge={"kind": "railing", "width": 3}), {}),
+        ("sıfır kalınlıklı katman reddedilir",
+         one(parts=[box_json(20, 0, 24, 3)], layers={"over": [{"kind": "screed", "thickness": 0}]}), {}),
         ("iki köşeli halka reddedilir", one(parts=[{"outer": {"pts": [P(20, 0), P(24, 0)]}}]), {}),
         ("sonsuz iç nokta reddedilir", one(seed=P(2, 2)), {"non_finite": {"slabs[0].seed.x": "NaN"}}),
         ("sonsuz köşe reddedilir", one(parts=[box_json(20, 0, 24, 3)]), {"non_finite": {"slabs[0].parts[0].outer.pts[2].y": "Infinity"}}),
@@ -644,7 +672,14 @@ def edit_cases():
         ("kenar kaldırılır", {"parts": [BALCONY], "role": "balcony", "edge": {"kind": "railing"}}, {"kind": "set", "edge": None}),
         ("başka kata alınan balkonun korkuluğu dört yanı izler", {"parts": [BALCONY], "edge": {"kind": "railing"}, "arch": {"level": "zemin"}},
          {"kind": "set", "level": "kat-1"}),
-        ("evre verilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "set", "phase": "new"}),
+        ("tadilat durumu verilir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "set", "phase": "new"}),
+        ("katmanlar verilir: teras dizilişi", {"parts": [box_json(20, 0, 24, 3)]},
+         {"kind": "set", "layers": {"over": [{"kind": "finish", "thickness": 0.03}, {"kind": "waterproofing", "thickness": 0.01},
+                                             {"kind": "screed", "thickness": 0.05}, {"kind": "insulation", "thickness": 0.08}],
+                                    "under": [{"kind": "plaster", "thickness": 0.02}]}}),
+        ("katmanlar boş verilince kalkar", {"parts": [box_json(20, 0, 24, 3)],
+                                            "layers": {"over": [{"kind": "finish", "thickness": 0.02}]}},
+         {"kind": "set", "layers": {}}),
         ("kenar 25 cm dışa ötelenir", {"parts": [box_json(20, 0, 24, 3)]}, {"kind": "offset", "distance": 0.25}),
         ("delik açılır", {"parts": [box_json(20, 0, 30, 8)]}, {"kind": "subtract", "parts": [box_json(23, 3, 27, 5)]}),
         ("kenardan girinti kesilir", {"parts": [box_json(20, 0, 30, 8)]}, {"kind": "subtract", "parts": [box_json(24, 6, 26, 9)]}),

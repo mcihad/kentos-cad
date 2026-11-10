@@ -132,6 +132,11 @@ pub const WIPEOUT_LABEL: &str = "Maske";
 /// Dik kapat with the first and the last edge parallel (docs/adr/0166 §4).
 pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar paralel.";
 
+/// What Esc says when it ends a wall chain and keeps it (docs/adr/8001).
+pub fn esc_kept(segments: usize) -> String {
+    format!("Esc zinciri bitirdi: çizilen {segments} parça duvar kaldı. Araçtan çıkmak için yeniden Esc, geri almak için Ctrl+Z.")
+}
+
 /// What the tool draws.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Shape {
@@ -248,6 +253,44 @@ enum Spec {
     CentreChord {
         c: Vec2,
     },
+}
+
+/// Kapanınca mahal (docs/adr/8022): the space of the loop just closed, seeded at the point inside it farthest from its
+/// sides (the pole: an L-shaped room's middle may be outside it), on Etkin kat and the spaces' layer (docs/adr/8008);
+/// its net area, or none (and why, said) when refused.
+fn write_loop_room(pts: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> Option<f64> {
+    use crate::arch_layer::Kind;
+    let ring = bulge_path_outline(pts, Some(bulges), true, DEFAULT_STEP);
+    let (seed, _) = kentos_geometry_core::labels::geom::pole(&[ring], 0.01)?;
+    let space = kentos_commands::NewSpace {
+        seed: Some(points::wire(seed)),
+        scope: Some(kentos_commands::SpaceScope::Project),
+        columns: Some(kentos_commands::SpaceColumns::Net),
+        arch: cx.new_arch(),
+        ..kentos_commands::NewSpace::default()
+    };
+    let mut made = None;
+    let written = crate::arch_layer::writing(&Kind::Space, cx, |layer, cx| {
+        let input = kentos_commands::SpacesCreate {
+            layer_id: layer.to_owned(),
+            spaces: vec![space.clone()],
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            expected_revision: None,
+        };
+        let result = kentos_native_application::spaces_create::execute(
+            &mut kentos_native_application::ExecutionContext::new(cx.doc),
+            input,
+        );
+        made = points::written(result, cx).and_then(|out| out.ids.first().copied());
+        made.is_some()
+    });
+    let slot = made.filter(|_| written)?;
+    let e = cx.doc.get(kentos_domain::Slot(slot))?;
+    match cx.doc.arch_value(e, "area", None) {
+        Some(kentos_domain::arch_values::ArchValue::Area(a)) => Some(a),
+        _ => Some(0.0),
+    }
 }
 
 /// The path tool: a closed area or an open polyline.
@@ -447,10 +490,14 @@ impl Path {
         self.wall_drawn = wall::drawn(&pts, &bulges, false, cx);
     }
 
-    /// Duvar's chips as they stand.
+    /// Duvar's chips as they stand; Kapanınca mahal last (docs/adr/8022).
     fn wall_chips(&self, prompt: Prompt) -> Prompt {
         let style = wall::chosen_in(&self.memory, &self.wall_offer);
-        wall::chips(prompt, &self.memory, &self.format, style)
+        wall::chips(prompt, &self.memory, &self.format, style).option_with(
+            "Kapanınca mahal",
+            "M",
+            if self.memory.wall_room { "Açık" } else { "Kapalı" },
+        )
     }
 
     /// Duvar's Kapat: the wall closed on its first point (an arc tangent to the last edge in arc mode), written.
@@ -465,8 +512,32 @@ impl Path {
         };
         bulges.push(closing);
         let length = bulge_path_length(&pts, Some(&bulges), true);
-        if wall::write(&pts, &bulges, true, cx) {
-            let text = format!("Kapalı duvar eklendi: {}", cx.format().length(length));
+        // Kapanınca mahal (docs/adr/8022): the loop's room written with it, one undo step; a refused room takes the
+        // wall back too.
+        let room = cx.memory.wall_room;
+        let group = room.then(|| cx.doc.begin_group("Duvar ve mahal"));
+        let mut written = wall::write(&pts, &bulges, true, cx);
+        let mut area = None;
+        if written && room {
+            area = write_loop_room(&pts, &bulges, cx);
+            written = area.is_some();
+        }
+        if let Some(group) = group {
+            if written {
+                cx.doc.end_group(group);
+            } else {
+                cx.doc.cancel_group(group);
+            }
+        }
+        if written {
+            let text = match area {
+                Some(a) => format!(
+                    "Kapalı duvar ve mahali eklendi: duvar {}, mahal {}.",
+                    cx.format().length(length),
+                    cx.format().area(a)
+                ),
+                None => format!("Kapalı duvar eklendi: {}", cx.format().length(length)),
+            };
             cx.say(Level::Success, text);
         }
         self.reset();
@@ -1125,6 +1196,12 @@ impl Path {
                     self.redraw_wall(cx);
                     return true;
                 }
+                // Kapanınca mahal on or off (docs/adr/8022).
+                if key == "M" {
+                    cx.memory.wall_room = !cx.memory.wall_room;
+                    self.see(cx);
+                    return true;
+                }
                 if key == "K" && self.pts.len() >= 2 {
                     self.close_wall(cx);
                     return true;
@@ -1581,7 +1658,7 @@ impl Path {
         kentos_commands::SpacesSeparators {expected_revision:None,operation:kentos_commands::SpaceSeparatorOperation::Create {
             layer_id:cx.doc.layers().active().to_owned(),paths:vec![kentos_commands::NewSpaceSeparator {
                 pts:wire_all(pts),bulges:has_bulges(Some(bulges)).then(||bulges.to_vec()),closed,
-                arch:self.separator_level.as_ref().and_then(|level|level.arch()),
+                arch:cx.phased(self.separator_level.as_ref().and_then(|level|level.arch())),
             }],color:cx.draft.color_text(),line_weight:cx.draft.line_weight,line_type:None,attrs:cx.template_attrs(None),
         }}
     }
@@ -1848,6 +1925,12 @@ impl Path {
 }
 
 impl Tool for Path {
+    /// Duvar writes on its style's layer (docs/adr/8008).
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        (self.separator_level.is_none() && self.shape.id() == crate::wall::ID)
+            .then(|| crate::wall::layer_kind(cx))
+    }
+
     /// Mahal ayırıcı's Kat follows the new active level at once while it has walls (docs/adr/0720 §4).
     fn level_changed(&mut self, cx: &mut Context<'_>) {
         self.see(cx);
@@ -2137,7 +2220,14 @@ impl Tool for Path {
             return rows;
         }
         if self.shape != Shape::Wall { return Vec::new(); }
-        crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format)
+        let mut rows = crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format);
+        // Kapanınca mahal (docs/adr/8022): Kapat writes the loop's room too.
+        rows.push(crate::tool_settings::Setting::toggle("M", "Kapanınca mahal", self.memory.wall_room));
+        rows
+    }
+    /// Duvar's Kalınlık and Hiza in the value field after its locks (docs/adr/8018).
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        if self.shape == Shape::Wall && self.separator_level.is_none() { &["E", "H"] } else { &[] }
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         if let Some(level)=&mut self.separator_level {
@@ -2393,6 +2483,29 @@ impl Tool for Path {
         !self.pts.is_empty() && self.option("G", cx)
     }
 
+    /// Esc on a wall chain (docs/adr/8001): a question asked is left first; then the segments already drawn are written
+    /// as Enter writes them and the tool stays for the next chain, as Revit's first Esc ends a chain and AutoCAD keeps
+    /// what was drawn. The next Esc leaves. A chain without a finished segment has nothing to keep.
+    fn cancel(&mut self, cx: &mut Context<'_>) -> bool {
+        if self.shape != Shape::Wall || self.separator_level.is_some() {
+            return false;
+        }
+        if self.wall_ask.take().is_some() {
+            self.see(cx);
+            return true;
+        }
+        if self.pts.len() < Shape::Wall.min() {
+            return false;
+        }
+        let segments = self.pts.len() - 1;
+        let revision = cx.doc.revision();
+        self.finish(cx);
+        if cx.doc.revision() != revision {
+            cx.say(Level::Info, esc_kept(segments));
+        }
+        true
+    }
+
     fn preview(&self, format: &Format) -> Preview {
         if self.inside_mode() {
             return self.inside_preview(format);
@@ -2444,7 +2557,7 @@ impl Tool for Path {
                     ],
                     (None, None) => vec![
                         format.length(dist(last, end)),
-                        format!("Semt {}", format.bearing(bearing_grad(last, end))),
+                        format!("{} {}", format.direction_name(), format.direction(bearing_grad(last, end))),
                     ],
                 };
                 if self.shape == Shape::MeasureLength {
@@ -2454,6 +2567,12 @@ impl Tool for Path {
                 if area_shape {
                     let area = bulge_ring_area(&pts, Some(&bulges)).abs();
                     lines.push(format!("Alan {}", format.area(area)));
+                }
+                // Duvar: the loop so far, to the cursor and back to its first corner, on the walls' path
+                // (docs/adr/8022): what Kapat would close.
+                if self.shape == Shape::Wall && self.separator_level.is_none() && pts.len() >= 3 {
+                    let area = bulge_ring_area(&pts, Some(&bulges)).abs();
+                    lines.push(format!("Döngü alanı {}", format.area(area)));
                 }
                 // Biçim değiştir: the object's size after the line, with the change.
                 if let Some(r) = &self.reshaped {

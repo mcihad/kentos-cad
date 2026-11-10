@@ -83,6 +83,7 @@ pub(crate) fn of_builtin(t: &OpeningTypeDef, id: String, name: String) -> Openin
     OpeningType {
         id,
         name,
+        code: None,
         version: 1,
         source: None,
         form: t.form,
@@ -96,6 +97,8 @@ pub(crate) fn of_builtin(t: &OpeningTypeDef, id: String, name: String) -> Openin
         head: t.head,
         depth: t.depth,
         build: None,
+        material: None,
+        u_value: None,
     }
 }
 
@@ -211,6 +214,24 @@ pub(crate) fn changed(
     n.head = f.head;
     n.depth = f.depth;
     n.build = f.build;
+    // The type's own: its frame and leaves and its U value (docs/adr/8038); the openings do not keep them.
+    if let Some(m) = &c.material {
+        n.material = m
+            .as_ref()
+            .map(|m| m.trim().to_owned())
+            .filter(|m| !m.is_empty());
+    }
+    if let Some(u) = c.u_value {
+        if let Some(x) = u {
+            checks::finite(
+                x,
+                "U değeri",
+                "Sonlu bir sayı verin.",
+                &format!("{path}.uValue"),
+            )?;
+        }
+        n.u_value = u;
+    }
     if let Some((field, words)) = n.problem() {
         return Err(invalid(&format!("{path}.{field}"), words));
     }

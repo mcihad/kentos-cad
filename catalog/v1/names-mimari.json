@@ -1,0 +1,28 @@
+{
+  "format": "kentos.moduleNames/1",
+  "module": "mimari",
+  "title": "Mimari adları (komut satırı)",
+  "source": "KentOS Mimari'nin kendi yazılan adları (docs/adr/8002). Yalnız KentOS Mimari'de geçerlidir ve orada KentOS'un ortak adlarından önce gelir. İki harfli adlar Revit'in en az iki tuşluk kısayol ilkesini Türkçe adlarla uygular; harfleri KentOS'ta başka bir anlamı olmayanlardan seçildi. Uzun adlar bir mimarın söylediği sözcüklerdir.",
+  "names": [
+    { "name": "PENCERE", "command": "tool.window", "overrides": "tool.zoomWindow", "why": "Mimari'de pencere bir yapı elemanıdır; Pencere yakınlaştır Z tuşu ve PENCEREBUYUT adıyla kalır." },
+    { "name": "DU", "command": "tool.wall" },
+    { "name": "DD", "command": "tool.wallRectangle" },
+    { "name": "OB", "command": "tool.wallPartition" },
+    { "name": "KP", "command": "tool.door" },
+    { "name": "PN", "command": "tool.window" },
+    { "name": "MH", "command": "tool.space" },
+    { "name": "DS", "command": "tool.slab" },
+    { "name": "KL", "command": "tool.column" },
+    { "name": "AK", "command": "tool.grid" },
+    { "name": "MR", "command": "tool.stair" },
+    { "name": "RM", "command": "tool.ramp" },
+    { "name": "KR", "command": "tool.beam" },
+    { "name": "MD", "command": "tool.casework" },
+    { "name": "ET", "command": "tool.tag" },
+    { "name": "DONATI", "command": "block.library" },
+    { "name": "MOBİLYA", "command": "block.library" },
+    { "name": "LAVABO", "command": "block.library" },
+    { "name": "KLOZET", "command": "block.library" },
+    { "name": "VİTRİFİYE", "command": "block.library" }
+  ]
+}

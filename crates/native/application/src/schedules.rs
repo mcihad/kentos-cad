@@ -106,6 +106,13 @@ fn create_check(
     input: &SchedulesCreate,
 ) -> Result<(Vec<CommandWarning>, TableEntity), Stop> {
     checks::point(input.at, "Çizelgenin köşesinin", "at")?;
+    if input.by_level == Some(true) && input.of != ScheduleOf::Units {
+        return Err(fail(
+            codes::INVALID_SCHEDULE,
+            "Kat kat satırlar yalnız bölüm çizelgesindedir (of: units).".into(),
+            "byLevel",
+        ));
+    }
     let columns = input
         .columns
         .clone()
@@ -169,6 +176,7 @@ fn create_check(
             total: input.total.unwrap_or(false),
             members: Vec::new(),
             units: Vec::new(),
+            by_level: input.by_level.unwrap_or(false),
         }),
         styles: Vec::new(),
         formulas: Vec::new(),
@@ -370,6 +378,10 @@ fn written(
         (Entity::Space(s), F::BaseFinish) => s.space.finishes.base = text(),
         (Entity::Space(s), F::WallFinish) => s.space.finishes.wall = text(),
         (Entity::Space(s), F::CeilingFinish) => s.space.finishes.ceiling = text(),
+        // The room list's (docs/adr/8038).
+        (Entity::Space(s), F::SillFinish) => s.space.finishes.sill = text(),
+        (Entity::Space(s), F::StairFinish) => s.space.finishes.stair = text(),
+        (Entity::Space(s), F::RailingFinish) => s.space.finishes.railing = text(),
         (Entity::Column(c), F::Tag) => c.column.tag = text(),
         (Entity::Column(c), F::Type) => c.column.kind = text(),
         (Entity::Column(c), F::Width) => c.column.width = length_of(doc, value, true)?,
@@ -396,7 +408,7 @@ fn written(
 }
 
 /// `program` with `value` written to its groups `ids`' field `field` (docs/adr/0795): a number, a name, a recorded area
-/// in the project's area unit, a share weight; refused by the program's own rule.
+/// in the project's area unit, a share weight, a nature (docs/adr/8031); refused by the program's own rule.
 fn program_written(
     doc: &Document,
     mut program: kentos_commands::BuildingProgram,
@@ -427,6 +439,8 @@ fn program_written(
             ScheduleField::Name => u.name = text.clone(),
             ScheduleField::RecordedArea => u.recorded_area = area,
             ScheduleField::ShareWeight => u.share_weight = text.as_ref().map(|t| t.replace(',', ".")),
+            // Niteliği (docs/adr/8031): the program's, written to it.
+            ScheduleField::Nature => u.nature = text.clone(),
             _ => {
                 return Err(fail(
                     codes::CELL_COMPUTED,
@@ -461,6 +475,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
         total,
         members,
         units,
+        by_level,
     }) = t.source.clone()
     else {
         return Err(fail(
@@ -555,6 +570,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 sort: s2,
                 group: g2,
                 total: t2,
+                by_level: b2,
             } = &**change;
             let columns = c2.clone().unwrap_or(columns);
             let filter = match f2 {
@@ -572,6 +588,7 @@ fn edit_check(doc: &Document, input: &SchedulesEdit) -> Result<Edited, Stop> {
                 total: t2.unwrap_or(total),
                 members: Vec::new(),
                 units: Vec::new(),
+                by_level: b2.unwrap_or(by_level),
             });
             next = doc.table_worked_out(&next);
         }

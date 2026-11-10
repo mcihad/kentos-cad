@@ -1,0 +1,93 @@
+# M32 (docs/adr/8032): Parsel ve bahçe mesafeleri in the real window at 1440 × 900, on the building site_plan_tests
+# keeps (parsel.kcad: a 15 × 6 m building of four storeys, a 30 × 18 m parcel drawn round it, 4 m from its south edge).
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 700 600
+wait 500
+shot m32-10-once
+click 1165 20   # Menülerde ara
+wait 500
+type parsel ve bahçe
+wait 1000
+key Return
+wait 1500
+move 526 757    # the parcel's south edge
+wait 800
+shot m32-11-parsel-uzerinde
+click 526 757   # takes the parcel
+wait 800
+click 526 757   # south: Yan → Ön
+wait 600
+click 526 193   # north: Yan → Ön
+wait 600
+click 526 193   # north: Ön → Arka
+wait 800
+move 760 300
+wait 800
+shot m32-12-kenarlar
+key Return
+wait 1500
+move 1040 860
+wait 800
+shot m32-13-yaklasma-siniri
+click 1258 57   # Mimari ayarları
+wait 2000
+wheel 700 500 -10
+wait 1000
+shot m32-14-imar-durumu
+click 680 302   # Emsal (KAKS)
+type 1,5
+click 680 336   # TAKS
+type 0,4
+click 680 370   # ±0,00 kotu
+type 1285,40
+wait 500
+shot m32-15-kot
+click 1155 829  # Kaydet
+wait 2000
+click 1165 20
+wait 500
+type emsal ve taks
+wait 1000
+key Return
+wait 1500
+move 1010 195
+wait 1000
+click 1010 195
+wait 1500
+key Escape
+wait 500
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 1040 860
+wait 800
+shot m32-16-tablo
+wheel 892 357 2 # closer on the table
+wait 1200
+move 1040 860
+wait 600
+shot m32-17-tablo-yakin
+# Again with ±0.00's elevation given: the marks drawn anew, its elevation under ±0.00.
+click 1165 20
+wait 500
+type parsel ve bahçe
+wait 1000
+key Return
+wait 1500
+key Return
+wait 1500
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 1040 860
+wait 800
+shot m32-18-olculer
+wheel 350 520 2 # closer on the building and its distances
+wait 1200
+move 1040 860
+wait 600
+shot m32-19-olculer-yakin

@@ -144,6 +144,8 @@ pub(crate) struct ArchAuditPanel {
     pub note: Option<String>,
     /// The chosen fixes' preview, kept until the drawing or the choice changes.
     pub preview: RefCell<Option<KeptPreview>>,
+    /// The table's columns as dragged wider or narrower (docs/adr/8034), by their place; none: their share.
+    pub columns: [Option<f32>; 5],
 }
 
 impl Default for ArchAuditPanel {
@@ -164,6 +166,7 @@ impl Default for ArchAuditPanel {
             chosen: BTreeSet::new(),
             note: None,
             preview: RefCell::new(None),
+            columns: [None; 5],
         }
     }
 }
@@ -210,6 +213,8 @@ pub enum Event {
     FixRow(usize),
     /// Eski istisnaları temizle: the exceptions whose finding is gone dropped.
     Prune,
+    /// A column dragged to a width (docs/adr/8034): the regulation's findings are long, their article at the end.
+    Column(usize, f32),
 }
 
 fn msg(e: Event) -> Message {
@@ -235,6 +240,9 @@ fn group_icon(check: ArchAuditCheck) -> &'static str {
         ArchAuditCheck::Casework => "casework",
         ArchAuditCheck::Doors => "door",
         ArchAuditCheck::Program => "archProgram",
+        ArchAuditCheck::Fixtures => "blockLibrary",
+        // Mevzuat (docs/adr/8033): a page and a tick.
+        ArchAuditCheck::Regulation => "regulation",
     }
 }
 
@@ -593,6 +601,11 @@ impl App {
             Event::Width(i) => {
                 self.arch_audit.min_width = WIDTHS[i.min(WIDTHS.len() - 1)];
                 self.arch_audit_check();
+            }
+            Event::Column(i, width) => {
+                if let Some(c) = self.arch_audit.columns.get_mut(i) {
+                    *c = Some(width);
+                }
             }
             Event::RampProfile(i) => {
                 self.arch_audit.ramp_profile = RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;

@@ -315,11 +315,27 @@ pub enum TableSource {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Vec<String>>>", optional))]
         units: Vec<Vec<String>>,
+        /// Kat kat (docs/adr/8029; `.kcad` schema 221): a units schedule's row for each group on each storey it has
+        /// rooms on, storey by storey, its areas the storey's part (the metrekare cetveli's rows).
+        #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+        by_level: bool,
     },
     /// Veri çıkarımı (docs/adr/1030): a recipe's rows from the open drawing and other drawings read only, with what
     /// they were written from (the sources' digests, the rows' keys, the cells last extracted); written again by
     /// Tabloyu güncelle, never at every step (a drawing it reads is a file).
     Extraction(Box<crate::extraction::ExtractionSource>),
+    /// Emsal ve TAKS tablosu (docs/adr/8030; `.kcad` schema 222): the parcel's zoning against the drawing as PAİY 57/3
+    /// asks the approved project to show it (the parcel, the emsal and TAKS with the areas they allow beside the
+    /// drawing's, the construction area) and each storey's area counted in and out; written again by the document at
+    /// every step and when the project's settings change.
+    Zoning {},
+    /// Otopark hesabı (docs/adr/8036; `.kcad` schema 227): the independent units' parking need by Otopark Yönetmeliği
+    /// Ek-1 against the drawing's places; written again by the document as Emsal ve TAKS tablosu is.
+    Parking {},
+    /// Sığınak hesabı (docs/adr/8036; `.kcad` schema 227): the units' shelter people by Sığınak Yönetmeliği 8/a against
+    /// the drawing's shelter; written again by the document as Emsal ve TAKS tablosu is.
+    Shelter {},
 }
 
 impl TableSource {
@@ -333,7 +349,19 @@ impl TableSource {
             TableSource::Blocks { .. } => "blocks",
             TableSource::Schedule { .. } => "schedule",
             TableSource::Extraction(_) => "extraction",
+            TableSource::Zoning {} => "zoning",
+            TableSource::Parking {} => "parking",
+            TableSource::Shelter {} => "shelter",
         }
+    }
+
+    /// Whether the document writes its rows from the project (docs/adr/8030, 8036): Emsal ve TAKS, Otopark and Sığınak
+    /// hesabı; they name no objects.
+    pub fn of_regulation(&self) -> bool {
+        matches!(
+            self,
+            TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}
+        )
     }
 
     /// The objects it names; none for a file.
@@ -345,7 +373,10 @@ impl TableSource {
             TableSource::File { .. }
             | TableSource::Blocks { .. }
             | TableSource::Schedule { .. }
-            | TableSource::Extraction(_) => &[],
+            | TableSource::Extraction(_)
+            | TableSource::Zoning {}
+            | TableSource::Parking {}
+            | TableSource::Shelter {} => &[],
         }
     }
 }
@@ -584,9 +615,18 @@ impl TableShape<'_> {
                 sort,
                 members,
                 units,
+                by_level,
                 ..
             }) => {
-                if let Some((_, words)) = crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref()) {
+                if *by_level && *of != crate::ScheduleOf::Units {
+                    return Some((
+                        "source",
+                        "Kat kat satırlar yalnız bölüm çizelgesindedir.".into(),
+                    ));
+                }
+                if let Some((_, words)) =
+                    crate::schedule::schedule_problem(*of, columns, sort, filter.as_ref())
+                {
                     return Some(("source", words));
                 }
                 // The rows' units (docs/adr/0795): a units schedule's alone, one list a row, no empty id.
@@ -664,6 +704,9 @@ impl TableShape<'_> {
                     return Some(("source", words));
                 }
             }
+            // Emsal ve TAKS tablosu (docs/adr/8030), Otopark and Sığınak hesabı (docs/adr/8036): their rows are the
+            // document's; they name nothing.
+            Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {}
             Some(s) if s.objects().is_empty() || s.objects().len() > MAX_SOURCE_OBJECTS => {
                 return Some((
                     "source",

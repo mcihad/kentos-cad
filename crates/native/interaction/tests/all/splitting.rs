@@ -519,7 +519,7 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Özellikler 1 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+            "Özellikler 1 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, çizgi kalınlığı, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
         )
     );
     let Some(target) = b.doc.get(Slot(12)) else {
@@ -541,7 +541,7 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Özellikler 2 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+            "Özellikler 2 nesneye kopyalandı: “Parsel” katmanı, renk, çizgi tipi, çizgi kalınlığı, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
         )
     );
     for slot in [1, 2] {
@@ -583,7 +583,7 @@ fn match_properties_gives_layer_colour_weight_and_symbol_not_the_data() {
     assert_eq!(
         b.last_text(),
         Some(
-            "Özellikler 1 nesneye kopyalandı: çizgi tipi, kalınlık, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
+            "Özellikler 1 nesneye kopyalandı: çizgi tipi, çizgi kalınlığı, saydamlık, sembol, yazı, ölçü, tarama, kılavuz."
         )
     );
     let base = b.doc.get(Slot(12)).expect("the line").base().clone();

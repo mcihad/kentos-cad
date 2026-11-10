@@ -69,3 +69,13 @@ elle kurularak başlıyordu. Plan iki şeyi ister: bunların tek bir ürün pake
 - Evre tablosu: `python3 scripts/fixtures/phase_cases.py --check` ve `cargo test -p kentos-native-style --test all phases`.
 - `.kcad` şema 82: `fixtures/kcad/v2/phases.json` ve bozuk örnekleri (`python3 scripts/fixtures/kcad_v2_reference.py --check`).
 - Resimler: `KENTOS_SHOTS_ONLY=mimari-sablon,evre-tumu,evre-yikim,evre-yeni cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`.
+
+## 9 Kasım 2026 eki: "Evre" → "Tadilat durumu"
+
+Sahibin bildirimi: "Evre mantıksız bir kavram, daha düzgün bir kavram kullan." Kullanıcının gördüğü sözcükler Mimarlar
+Odası'nın tadilat tekniğine göre değişti ("Projede mevcut, iptal ve ilaveler üç farklı teknikle ifade edilmelidir"):
+Evre → **Tadilat durumu**; Mevcut, Yıkılacak, Yeni, Geçici → Mevcut, **İptal**, **İlave**, Geçici; şeritte Evre ▾ →
+**Tadilat ▾**; komut adları "Tadilat: Mevcut durum" …. Dosya ve komut adları değişmedi (`phase`, `phaseView`). Tam tablo
+ve gerekçe: [ADR 8039 §0](3039-renovation-graphic-language.md). Bu belgenin yukarıdaki metni o günün sözcükleriyle
+kaldı; resimlerin adları `tadilat-tumu`, `tadilat-yikim`, `tadilat-yeni` oldu. Yukarıdaki "DXF'e evre görünüşü
+yazılmaz" kuralı da değişti: DXF görünümün gösterdiğini alır, her nesne durumunun katmanında (ADR 8039 §4).

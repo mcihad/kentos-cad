@@ -340,6 +340,32 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - Şerit (7 Kasım 2026, DESIGN.md §7.3.1): web'in `Ribbon.fit`'inde yalnız ikon basamağının kaldırılması; panel
   sığmazsa adıyla katlanır, şeritte başlıksız düğme kalmaz.
 - MAP-04 / ADR 1760: `map.features.reconcile`'in web işleyicisi ve Detay eşleştirme penceresi.
+- M8 / ADR 8007: web'in `model/newProject.ts`'i işi Mimari olan yeni projeye Zemin kat'ı (`zemin`, ±0,00, 3,00 m) koysun;
+  web'in Mimari şablonu penceresi paketin m / 1:100'ünü paketten okusun.
+- M9 / ADR 8008: web'in mimari araçları nesneyi türünün EK-4 katmanına yazsın (`arch_layer`'ın tablosu), araç
+  panelinde Katman satırı olsun; web'in DXF yazıcısı EK-4 katmanındaki taramaları "-T" katmanına koysun.
+- M10 / ADR 8009: web'in çizimi parçanın `weightScale`'ini (açıklığın yayı, camı; duvarın malzeme sınırları 0,5) nesnenin
+  kalınlığıyla çarpsın.
+- M11 / ADR 8010: web'in çizimi deponun duvar görünüşünü (`set_wall_view`) paftanın ölçeğine ve ekranın yakınlığına göre
+  seçsin; seçmedikçe kapı ve pencere webde her ölçekte bütün parçalarıyla (Uygulama) çizilir.
+- M12 / ADR 8011: web'in JSON blok tanımlarında (`Blocks::from_json`) kapalı çoklu çizginin `closed`ı okunmuyor;
+  mobilyanın 1:200 sade gösterimi webde yalnız çokgen, çember ve ucu başına dönen çizgide çalışır. Web görünüşü seçince
+  bunu da okusun.
+- M13 / ADR 8012: `io/kcad.ts` şema 217 (projenin kesme yüksekliği, `settings.arch.cutHeight`); web'in Proje ayarları ›
+  Mimari'si "Planın kesme yüksekliği" alanını alsın, web çizimi görünüşün `cut`'ını projeden (`plan_cut`) versin.
+- M13 / ADR 8012 adım 3: webde kat görünümü yok (ADR 0715); geldiğinde bir üst katın döşemelerini kesikli çizsin
+  (`level_view::looks`'un `overhead`'ı, `slab::Look::overhead`).
+- ADR 8013 (çizgi grubu): `io/kcad.ts` şema 218 (`settings.arch.lineGroups`); web çizimi görünüşün `pens`'ini projeden
+  (`pens_at`) versin; web'in Proje ayarları › Mimari'si Çizgi kalınlıkları seçimini alsın.
+- M18 / ADR 8018: web'in imleç kutusu (`CursorInput`) aynı Tab sırasını (Uzunluk → Açı → aracın ayarları) ve ↓ ile ilk ayarda
+  açılışı almalı; masaüstünde `Tool::cursor_settings` ve `Session::configure`.
+- M15 / ADR 8015: `scripts/fixtures/ribbon_cases.py`'nin sekme listesi güncel değil (Arazi, Güzergâh, Koridor, Plan, Ölçme,
+  Mimari ve bağlam sekmeleri yok); `--check` HEAD'de de kırmızı, çalıştırılırsa onları `fixtures/shell/v1/ribbon.json`'dan
+  siler. Şeridi değiştiren her iş `catalog/v1/ribbon.json`'u elle değil `scripts/ui/ribbon.py` ile yazmalı.
+- `cargo clippy` `kentos-formats`'ta duruyor: `formats/src/report.rs:137` `expect("pushed")` (CAD-ADV-17, ADR 1010) crate'in
+  `clippy::expect_used` yasağına takılıyor; aşağı akıştaki crate'ler ancak `--no-deps` ile denetlenebiliyor.
+- M14 / ADR 8014: web'in WASM çekirdeği yeniden derlenince TS 5319 desenleri ve SN55 zikzağı webde de çizilir;
+  `pnpm inventory:check` envanterin elle eklenen 22 tarama simgesini (hatchIcons.ts'ten aynı sırayla) doğrulamalı.
 - MAP-03/05 / ADR 1740: `io/kcad.ts` şema 199 (GNSS arşivinin bazları, bilinen noktaları, dengelemeleri), GVX okuyucunun
   web yapısı, `map.survey.network`'ün ve `network` işleminin web işleyicisi ve GNSS ağ dengelemesi penceresi.
 - MAP-20 / ADR 1720: `io/kcad.ts` şema 198 (Harita'nın çizim kayıtları, sıfır hattı çizimi) ve web'in proje ağacının

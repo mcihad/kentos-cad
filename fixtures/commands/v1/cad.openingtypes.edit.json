@@ -9067,7 +9067,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik ya da yapı verin.",
+              "message": "Tipin değişecek bir alanı verilmedi: kaba boşluk ya da ölçü, kanat, açılış, açı, kasa, denizlik, lento, derinlik, yapı, kasa ve kanat ya da U değeri verin.",
               "path": "operation.change"
             }
           },
@@ -9420,6 +9420,412 @@
               "code": "nothing_to_set",
               "message": "“K01” tipi zaten bu değerlerde; hiçbir şey değişmiyor.",
               "path": "operation.change"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kasa ve kanat ile U değeri: yalnız tip yazılır, sürüm aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "type": "P01",
+              "change": {
+                "material": " PVC, 5 odacıklı; çift camlı Low-E ",
+                "uValue": 1.6
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "types": [
+                {
+                  "id": "k01",
+                  "name": "K01",
+                  "version": 1,
+                  "form": "door",
+                  "width": 1.02,
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "build": {
+                    "sizeBy": "leaf",
+                    "fit": 0.01,
+                    "leafThickness": 0.04
+                  }
+                },
+                {
+                  "id": "k02",
+                  "name": "K02",
+                  "version": 1,
+                  "form": "door",
+                  "width": 0.9,
+                  "frame": 0.05,
+                  "head": 2.1
+                },
+                {
+                  "id": "p01",
+                  "name": "P01",
+                  "version": 1,
+                  "source": "Ofis 2026",
+                  "form": "window",
+                  "width": 1.2,
+                  "leaves": 2,
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "build": {
+                    "sillBoard": 0.05,
+                    "mullions": 1
+                  },
+                  "material": "PVC, 5 odacıklı; çift camlı Low-E",
+                  "uValue": 1.6
+                }
+              ],
+              "report": {
+                "applied": [],
+                "kept": [],
+                "skipped": [],
+                "refused": [],
+                "fields": []
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0
+                  },
+                  {
+                    "id": "kat1",
+                    "name": "1. kat",
+                    "elevation": 3.0
+                  }
+                ],
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  },
+                  {
+                    "id": "k02",
+                    "name": "K02",
+                    "version": 1,
+                    "form": "door",
+                    "width": 0.9,
+                    "frame": 0.05,
+                    "head": 2.1
+                  },
+                  {
+                    "id": "p01",
+                    "name": "P01",
+                    "version": 1,
+                    "source": "Ofis 2026",
+                    "form": "window",
+                    "width": 1.2,
+                    "leaves": 2,
+                    "frame": 0.06,
+                    "sill": 0.9,
+                    "head": 2.2,
+                    "build": {
+                      "sillBoard": 0.05,
+                      "mullions": 1
+                    },
+                    "material": "PVC, 5 odacıklı; çift camlı Low-E",
+                    "uValue": 1.6
+                  }
+                ]
+              }
+            },
+            "entities": {},
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "type": "P01",
+              "change": {
+                "material": null,
+                "uValue": null
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "types": [
+                {
+                  "id": "k01",
+                  "name": "K01",
+                  "version": 1,
+                  "form": "door",
+                  "width": 1.02,
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "build": {
+                    "sizeBy": "leaf",
+                    "fit": 0.01,
+                    "leafThickness": 0.04
+                  }
+                },
+                {
+                  "id": "k02",
+                  "name": "K02",
+                  "version": 1,
+                  "form": "door",
+                  "width": 0.9,
+                  "frame": 0.05,
+                  "head": 2.1
+                },
+                {
+                  "id": "p01",
+                  "name": "P01",
+                  "version": 1,
+                  "source": "Ofis 2026",
+                  "form": "window",
+                  "width": 1.2,
+                  "leaves": 2,
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "build": {
+                    "sillBoard": 0.05,
+                    "mullions": 1
+                  }
+                }
+              ],
+              "report": {
+                "applied": [],
+                "kept": [],
+                "skipped": [],
+                "refused": [],
+                "fields": []
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0
+                  },
+                  {
+                    "id": "kat1",
+                    "name": "1. kat",
+                    "elevation": 3.0
+                  }
+                ],
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  },
+                  {
+                    "id": "k02",
+                    "name": "K02",
+                    "version": 1,
+                    "form": "door",
+                    "width": 0.9,
+                    "frame": 0.05,
+                    "head": 2.1
+                  },
+                  {
+                    "id": "p01",
+                    "name": "P01",
+                    "version": 1,
+                    "source": "Ofis 2026",
+                    "form": "window",
+                    "width": 1.2,
+                    "leaves": 2,
+                    "frame": 0.06,
+                    "sill": 0.9,
+                    "head": 2.2,
+                    "build": {
+                      "sillBoard": 0.05,
+                      "mullions": 1
+                    }
+                  }
+                ]
+              }
+            },
+            "entities": {},
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: U değeri sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "update",
+              "type": "P01",
+              "change": {
+                "uValue": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening_type",
+              "message": "U değeri sıfırdan büyük, en çok 10 W/m²K olur.",
+              "path": "operation.change.uValue"
             }
           },
           "within": 1e-09,
@@ -10054,6 +10460,302 @@
               "code": "nothing_to_set",
               "message": "Tipin adı zaten “K02”.",
               "path": "operation.name"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doğrama kodu: tip kodunu alır, izleyenler aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "code",
+              "type": "k02",
+              "code": "K02"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "types": [
+                {
+                  "id": "k01",
+                  "name": "K01",
+                  "version": 1,
+                  "form": "door",
+                  "width": 1.02,
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "build": {
+                    "sizeBy": "leaf",
+                    "fit": 0.01,
+                    "leafThickness": 0.04
+                  }
+                },
+                {
+                  "id": "k02",
+                  "name": "K02",
+                  "code": "K02",
+                  "version": 1,
+                  "form": "door",
+                  "width": 0.9,
+                  "frame": 0.05,
+                  "head": 2.1
+                },
+                {
+                  "id": "p01",
+                  "name": "P01",
+                  "version": 1,
+                  "source": "Ofis 2026",
+                  "form": "window",
+                  "width": 1.2,
+                  "leaves": 2,
+                  "frame": 0.06,
+                  "sill": 0.9,
+                  "head": 2.2,
+                  "build": {
+                    "sillBoard": 0.05,
+                    "mullions": 1
+                  }
+                }
+              ],
+              "report": {
+                "applied": [],
+                "kept": [],
+                "skipped": [],
+                "refused": [],
+                "fields": []
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0.0
+                  },
+                  {
+                    "id": "kat1",
+                    "name": "1. kat",
+                    "elevation": 3.0
+                  }
+                ],
+                "openingTypes": [
+                  {
+                    "id": "k01",
+                    "name": "K01",
+                    "version": 1,
+                    "form": "door",
+                    "width": 1.02,
+                    "frame": 0.05,
+                    "head": 2.1,
+                    "build": {
+                      "sizeBy": "leaf",
+                      "fit": 0.01,
+                      "leafThickness": 0.04
+                    }
+                  },
+                  {
+                    "id": "k02",
+                    "name": "K02",
+                    "code": "K02",
+                    "version": 1,
+                    "form": "door",
+                    "width": 0.9,
+                    "frame": 0.05,
+                    "head": 2.1
+                  },
+                  {
+                    "id": "p01",
+                    "name": "P01",
+                    "version": 1,
+                    "source": "Ofis 2026",
+                    "form": "window",
+                    "width": 1.2,
+                    "leaves": 2,
+                    "frame": 0.06,
+                    "sill": 0.9,
+                    "head": 2.2,
+                    "build": {
+                      "sillBoard": 0.05,
+                      "mullions": 1
+                    }
+                  }
+                ]
+              }
+            },
+            "entities": {},
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: rakamla başlayan doğrama kodu",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "code",
+              "type": "K02",
+              "code": "1K"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_opening_type",
+              "message": "“1K” doğrama kodu olamaz: harf, rakam, “-” ya da “.” ile en çok 16 harf, harfle başlar (K01 gibi).",
+              "path": "operation.code"
+            }
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34
+            ],
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kodu olmayan tipin kodu kaldırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "operation": {
+              "kind": "code",
+              "type": "K02",
+              "code": null
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "“K02” tipinin kodu yok.",
+              "path": "operation.code"
             }
           },
           "within": 1e-09,

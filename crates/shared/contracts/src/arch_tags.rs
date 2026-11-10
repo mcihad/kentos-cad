@@ -12,7 +12,7 @@ use ts_rs::TS;
 use crate::entity::{EntityBase, Vec2};
 
 /// The places a template may name, besides `attr:Name`.
-pub const TAG_PLACES: [&str; 38] = [
+pub const TAG_PLACES: [&str; 40] = [
     "number",
     "type",
     "form",
@@ -55,6 +55,9 @@ pub const TAG_PLACES: [&str; 38] = [
     // The shares (docs/adr/0784 §3): a space's unit's share of the common areas and its gross.
     "share",
     "gross",
+    // An opening's type's joinery code and its size in centimetres, 90/210 (docs/adr/8028; KCAD schema 220).
+    "code",
+    "size",
 ];
 /// The most letters a template or a tag's words hold.
 pub const MAX_TAG_LETTERS: usize = 200;
@@ -76,14 +79,18 @@ pub enum TagShape {
     Rectangle,
     Rounded,
     None,
+    /// Round the first line only (docs/adr/8027): a room's number in its ellipse, its name and area below, as
+    /// Mimarlar Odası's room tag (KCAD schema 219).
+    Ellipse,
 }
 
 impl TagShape {
-    pub const ALL: [TagShape; 5] = [
+    pub const ALL: [TagShape; 6] = [
         TagShape::Circle,
         TagShape::Hexagon,
         TagShape::Rectangle,
         TagShape::Rounded,
+        TagShape::Ellipse,
         TagShape::None,
     ];
 
@@ -94,6 +101,7 @@ impl TagShape {
             TagShape::Rectangle => "Dikdörtgen",
             TagShape::Rounded => "Yuvarlak köşeli",
             TagShape::None => "Çerçevesiz",
+            TagShape::Ellipse => "Elips içinde numara",
         }
     }
 
@@ -104,12 +112,58 @@ impl TagShape {
             TagShape::Rectangle => "rectangle",
             TagShape::Rounded => "rounded",
             TagShape::None => "none",
+            TagShape::Ellipse => "ellipse",
         }
     }
 }
 
 fn is_circle(s: &TagShape) -> bool {
     *s == TagShape::Circle
+}
+
+/// Whether `e` is a tag whose template names an opening's joinery code or size, or a schedule with a Kod column
+/// (docs/adr/8028): KCAD schema 220.
+pub fn needs_opening_codes(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Tag(t) => t
+            .tag
+            .content
+            .as_deref()
+            .is_some_and(|c| c.contains("{code}") || c.contains("{size}")),
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_opening_code())),
+        _ => false,
+    }
+}
+
+/// Whether `e` is a schedule with a column of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/8029): KCAD schema
+/// 209.
+pub fn needs_paiy_areas(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Table(t) if matches!(&t.source,
+        Some(crate::TableSource::Schedule { columns, by_level, .. })
+            if *by_level || columns.iter().any(|c| c.field.is_paiy())))
+}
+
+/// Whether `e` is a units schedule with one of kat irtifakı's fields (docs/adr/8031): KCAD schema 223.
+pub fn needs_land_shares(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Table(t) if matches!(&t.source,
+        Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_land())))
+}
+
+/// Whether `e` says the room list's fields (docs/adr/8038): a space with a sill's, a stair's or a railing's finish, or a
+/// spaces schedule with one of the room list's columns: KCAD schema 228.
+pub fn needs_room_list(e: &crate::Entity) -> bool {
+    match e {
+        crate::Entity::Space(s) => s.space.finishes.has_room_list(),
+        crate::Entity::Table(t) => matches!(&t.source,
+            Some(crate::TableSource::Schedule { columns, .. }) if columns.iter().any(|c| c.field.is_room_list())),
+        _ => false,
+    }
+}
+
+/// Whether `e` is a tag framed by an ellipse (docs/adr/8027): KCAD schema 219.
+pub fn needs_ellipse_tags(e: &crate::Entity) -> bool {
+    matches!(e, crate::Entity::Tag(t) if t.tag.shape == TagShape::Ellipse)
 }
 
 /// Why a tag's words are no longer its object's.

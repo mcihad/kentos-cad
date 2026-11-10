@@ -163,6 +163,11 @@ pub struct NewOpening {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub build: Option<crate::OpeningBuild>,
+    /// Its own tadilat durumu (docs/adr/8039 §1, §3): a door drawn in Yeni durum into an existing wall is İlave.
+    /// Absent: its wall's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub phase: Option<crate::ArchPhase>,
 }
 
 /// Input of `cad.openings.create` v1: doors, windows, bare openings, niches and flues in their walls, written as one
@@ -337,6 +342,16 @@ pub struct OpeningChange {
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub number: Option<Option<String>>,
+    /// Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up; null:
+    /// its wall's.
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::ArchPhase>>", optional))]
+    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::ArchPhase>"))]
+    pub phase: Option<Option<crate::ArchPhase>>,
     /// Its construction's fields given (docs/adr/0772 §3); each set, the others stay. Boxed: the operations' enum
     /// stays small.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -506,6 +521,12 @@ pub enum OpeningsOperation {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "ts", ts(optional))]
         form: Option<OpeningForm>,
+        /// Mahale göre (docs/adr/8028): each opening `prefix` and its room's number instead (a door's the room it opens
+        /// into, else its other side's; another's the room on either side), and when that room has more than one of
+        /// them -A, -B … in their walls' order; `start` is not used. One with no numbered room keeps its number.
+        #[serde(default, rename = "byRoom", skip_serializing_if = "std::ops::Not::not")]
+        #[cfg_attr(feature = "ts", ts(rename = "byRoom", as = "Option<bool>", optional))]
+        by_room: bool,
     },
     /// Adet/aralıkla çoğalt: exactly one source; count NEW independent copies,
     /// source unchanged. Optional unique numbering belongs to these copies only.

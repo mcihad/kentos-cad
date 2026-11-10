@@ -102,11 +102,36 @@
    "view": "proposed",
    "phase": "temporary",
    "look": "dashed"
+  },
+  {
+   "view": "renovation",
+   "phase": null,
+   "look": "shown"
+  },
+  {
+   "view": "renovation",
+   "phase": "existing",
+   "look": "shown"
+  },
+  {
+   "view": "renovation",
+   "phase": "demolish",
+   "look": "dashed"
+  },
+  {
+   "view": "renovation",
+   "phase": "new",
+   "look": "shown"
+  },
+  {
+   "view": "renovation",
+   "phase": "temporary",
+   "look": "dashed"
   }
  ],
  "objects": [
   {
-   "name": "yıkılacak duvar Yıkım planında kesikli",
+   "name": "iptal edilen duvar Yıkım planında kesikli",
    "view": "demolition",
    "entity": {
     "kind": "wall",
@@ -154,7 +179,7 @@
    }
   },
   {
-   "name": "yıkılacak duvarın kendi deseni kesikliye bırakır",
+   "name": "iptal edilen duvarın kendi deseni kesikliye bırakır",
    "view": "demolition",
    "entity": {
     "kind": "wall",
@@ -424,7 +449,7 @@
    }
   },
   {
-   "name": "evresiz duvar her görünümde olduğu gibi",
+   "name": "tadilat durumu olmayan duvar her görünümde olduğu gibi",
    "view": "demolition",
    "entity": {
     "kind": "wall",
@@ -467,6 +492,101 @@
   {
    "name": "yeni duvar Tümü'nde olduğu gibi",
    "view": "all",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "new"
+    }
+   },
+   "look": "shown",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "new"
+    }
+   }
+  },
+  {
+   "name": "iptal edilen duvar Tadilat projesinde kesikli",
+   "view": "renovation",
+   "entity": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    }
+   },
+   "look": "dashed",
+   "drawn": {
+    "kind": "wall",
+    "id": 1,
+    "layerId": "duvar",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 0.0,
+      "y": 0.0
+     },
+     {
+      "x": 5.0,
+      "y": 0.0
+     }
+    ],
+    "width": 0.2,
+    "justify": "center",
+    "arch": {
+     "phase": "demolish"
+    },
+    "lineType": "dashed"
+   }
+  },
+  {
+   "name": "ilave duvar Tadilat projesinde olduğu gibi (taramasını depo çizer)",
+   "view": "renovation",
    "entity": {
     "kind": "wall",
     "id": 1,

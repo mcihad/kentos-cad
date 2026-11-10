@@ -8,7 +8,8 @@ Writes fixtures/commands/v1/cad.templates.apply.json; `--check` compares and wri
 - the standard's layers and styles as `cad.standards.apply` adds them with `restyle` and `rename` off (the standard
   apply's own reference, `standards_cases.py`); the library's blocks whose names the drawing has not, in the library's
   order; one undo step “Mimari şablonu”;
-- the unit (the call's, else the template's) written to a drawing without objects; a drawing with objects keeps its
+- the unit (the call's, else ADR 0346's centimetres: this old call keeps them although the package is metres and 1:100
+  since docs/adr/8007) written to a drawing without objects; a drawing with objects keeps its
   own, said by `template_unit_kept` when they differ; the plot scale the template's; its levels the drawing has not (by
   id or name), in order; its space method when the drawing sets none; KentOS's wall styles the project has not;
 - its sheets the book has not, by id, in order.
@@ -37,6 +38,8 @@ S = _load("standards_cases")
 TEMPLATE = json.loads((ROOT / "catalog/v1/templates/mimari.json").read_text(encoding="utf-8"))
 STANDARD = S.BUILT_IN[TEMPLATE["standard"]]
 LIBRARY = [b["name"] for b in json.loads((ROOT / "catalog/v1/blocks/kentos-temel.kblok").read_text(encoding="utf-8"))["blocks"]]
+# What the call without settingsMode writes when given no unit (ADR 0346, kept by ADR 0659): not the package's own.
+LEGACY_UNIT = "cm"
 # KentOS's wall styles (docs/adr/0339 §3), by name, in their order.
 WALL_STYLES = ["Dış duvar 25", "İç duvar 15", "Gazbeton 20", "Betonarme perde 25", "Bölme duvar 10"]
 INVALID_REVISION = ("Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da "
@@ -89,7 +92,7 @@ def applied(doc, inp, sheets_have=()):
     blocks = [n for n in LIBRARY if n not in have]
     warnings = []
     unit_now = s.get("drawingUnit", "m")
-    unit = inp.get("unit", TEMPLATE["unit"])
+    unit = inp.get("unit", LEGACY_UNIT)
     if unit_now != unit:
         if doc["entities"]:
             warnings.append({"code": "template_unit_kept",

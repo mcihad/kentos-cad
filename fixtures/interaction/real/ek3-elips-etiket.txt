@@ -1,0 +1,81 @@
+# M27 (docs/adr/8027): EK-3 room numbers and Mimarlar Odası's ellipse room tags in the real window, on malzeme.kcad
+# (headless scales.rs keeps it) opened on Mimari at 1440 × 900, 13 px text. Oda draws four rooms (each its walls,
+# room and tag); Mahal numarala from Komut ara, E turns EK-3 on: the storey's rooms numbered K00_001_001 … clockwise
+# from north, shown before Enter; Hepsini etiketle, B to Elips içinde numara and E to Yenile: the rooms' tags framed
+# by an ellipse round the number.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 88 75   # araç: Oda
+wait 800
+click 380 260
+wait 400
+move 560 410
+wait 300
+click 560 410
+wait 1200
+click 620 260
+wait 400
+move 800 410
+wait 300
+click 800 410
+wait 1200
+click 380 470
+wait 400
+move 560 620
+wait 300
+click 560 620
+wait 1200
+click 620 470
+wait 400
+move 800 620
+wait 300
+click 800 620
+wait 1200
+key Escape
+wait 500
+key Escape
+wait 500
+move 900 720
+wait 500
+shot m27-10-odalar
+click 1165 20   # Menülerde ara
+wait 500
+type mahal numarala
+wait 1000
+key Return
+wait 1200
+key e   # EK-3 açık
+wait 1500
+move 900 720
+wait 600
+shot m27-11-ek3-onizleme
+key Return
+wait 1500
+shot m27-12-numaralandi
+click 1165 20
+wait 500
+type hepsini etiketle
+wait 1000
+key Return
+wait 1200
+key b   # çerçeve: Daire
+wait 300
+key b   # Altıgen
+wait 300
+key b   # Dikdörtgen
+wait 300
+key b   # Yuvarlak köşeli
+wait 300
+key b   # Elips içinde numara
+wait 300
+key e   # mevcut etiket: Yenile
+wait 1500
+move 900 720
+wait 600
+shot m27-13-elips-onizleme
+key Return
+wait 1500
+shot m27-14-elips
+wheel 470 335 4
+wait 1500
+shot m27-15-yakin

@@ -11,12 +11,19 @@ use serde_json::{Value, json};
 
 #[path = "headless/dwg.rs"]
 mod dwg;
+#[path = "headless/pens.rs"]
+mod pens;
+#[path = "headless/scales.rs"]
+mod scales;
 
 #[path = "headless/cad_open.rs"]
 mod cad_open;
 
 #[path = "headless/walls_rectangle.rs"]
 mod walls_rectangle;
+// Tadilat durumu in a DXF (docs/adr/8039 §4).
+#[path = "headless/renovation_dxf.rs"]
+mod renovation_dxf;
 
 #[path = "headless/dimension_set_exports.rs"]
 mod dimension_set_exports;

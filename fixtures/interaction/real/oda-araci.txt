@@ -1,0 +1,38 @@
+# M21 (docs/adr/8021): Oda in the real window, on malzeme.kcad (headless scales.rs keeps it) opened on Mimari at
+# 1440 × 900, 13 px text. Oda (large, beside Duvar ▾); ↓ opens Boyutlar beside the cursor: 4.2,3.6; Tab: Mahal adı,
+# Salon, Enter; the corner and the side clicked: the walls, the room Salon and its tag, written together. One Ctrl+Z
+# takes all three away, Ctrl+Y brings them back.
+fit KentOS Mimari — Malzeme
+wait 3000
+click 88 75   # araç: Oda
+wait 800
+move 600 420
+wait 300
+move 650 450
+wait 600
+key Down
+wait 600
+type 4.2,3.6
+wait 400
+key Tab
+wait 600
+shot m21-10-mahal-adi
+type Salon
+wait 400
+key Return
+wait 600
+click 500 450   # the room's corner
+wait 600
+move 700 300
+wait 400
+click 700 300   # its side: up and right
+wait 1200
+shot m21-11-oda
+key Escape
+wait 400
+key ctrl+z
+wait 1000
+shot m21-12-geri-al
+key ctrl+y
+wait 1000
+shot m21-13-yinele

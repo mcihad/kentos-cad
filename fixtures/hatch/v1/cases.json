@@ -796,6 +796,294 @@
      ]
     }
    ]
+  },
+  {
+   "name": "SN46",
+   "group": "ts",
+   "description": "Betonarme (TS 5319 SN46)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      3.0
+     ]
+    },
+    {
+     "angle": 45.0,
+     "origin": [
+      2.121320343559643,
+      0.0
+     ],
+     "offset": [
+      0.5,
+      3.0
+     ],
+     "dashes": [
+      0.0,
+      -1.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN47",
+   "group": "ts",
+   "description": "Beton, takviyesiz (TS 5319 SN47)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      1.0,
+      2.5
+     ],
+     "dashes": [
+      2.5,
+      -1.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN48",
+   "group": "ts",
+   "description": "Hafif beton, gazbeton (TS 5319 SN48)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      4.0
+     ]
+    },
+    {
+     "angle": 45.0,
+     "origin": [
+      2.8284271247461903,
+      0.0
+     ],
+     "offset": [
+      1.0,
+      4.0
+     ],
+     "dashes": [
+      0.0,
+      -2.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN49",
+   "group": "ts",
+   "description": "Pomzalı beton (TS 5319 SN49)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      1.5
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN21",
+   "group": "ts",
+   "description": "Ahşap, enine lifli (TS 5319 SN21)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      3.0
+     ]
+    },
+    {
+     "angle": 45.0,
+     "origin": [
+      1.1313708498984762,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      3.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN22",
+   "group": "ts",
+   "description": "Ahşap, lif doğrultusunda (TS 5319 SN22)",
+   "lines": [
+    {
+     "angle": 0.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      1.5
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN23",
+   "group": "ts",
+   "description": "Ağaç malzeme (TS 5319 SN23)",
+   "lines": [
+    {
+     "angle": 90.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      2.0
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN54",
+   "group": "ts",
+   "description": "Porselen (TS 5319 SN54)",
+   "lines": [
+    {
+     "angle": 0.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      1.5
+     ]
+    },
+    {
+     "angle": 90.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      1.5
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN55",
+   "group": "ts",
+   "description": "Yalıtım malzemesi (TS 5319 SN55)",
+   "lines": [
+    {
+     "angle": 63.43494882292201,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.8944271909999161,
+      -1.7888543819998317
+     ],
+     "dashes": [
+      2.23606797749979,
+      -2.23606797749979
+     ]
+    },
+    {
+     "angle": -63.43494882292201,
+     "origin": [
+      1.0,
+      2.0
+     ],
+     "offset": [
+      0.8944271909999161,
+      1.7888543819998317
+     ],
+     "dashes": [
+      2.23606797749979,
+      -2.23606797749979
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN58",
+   "group": "ts",
+   "description": "Tecrit malzemesi (TS 5319 SN58)",
+   "lines": [
+    {
+     "angle": 45.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      2.5
+     ]
+    },
+    {
+     "angle": 135.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.0,
+      2.5
+     ]
+    }
+   ]
+  },
+  {
+   "name": "SN5",
+   "group": "ts",
+   "description": "Kum (TS 5319 SN5)",
+   "lines": [
+    {
+     "angle": 0.0,
+     "origin": [
+      0.0,
+      0.0
+     ],
+     "offset": [
+      0.75,
+      1.5
+     ],
+     "dashes": [
+      0.0,
+      -1.5
+     ]
+    }
+   ]
   }
  ],
  "dashes": [

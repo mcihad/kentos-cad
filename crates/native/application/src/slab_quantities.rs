@@ -107,5 +107,19 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
         edge_length,
         excluded: s.excluded,
         rule,
+        // Its layers on its net area (docs/adr/8040 §2): kaplama and sıva by area, şap and yalıtım by volume too.
+        layers: s
+            .layers
+            .over
+            .iter()
+            .chain(&s.layers.under)
+            .map(|l| kentos_commands::SlabLayerRow {
+                kind: l.kind,
+                material: l.material.clone(),
+                thickness: l.thickness,
+                area: net,
+                volume: net * l.thickness,
+            })
+            .collect(),
     }
 }

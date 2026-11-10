@@ -16,4 +16,9 @@ version?: string,
 /**
  * How the common areas are shared out to the independent units (docs/adr/0784 §2); none: they are not.
  */
-shareRule?: ShareRule, };
+shareRule?: ShareRule, 
+/**
+ * Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
+ * parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
+ */
+landTotal?: bigint, };

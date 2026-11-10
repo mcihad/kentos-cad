@@ -36,6 +36,8 @@ schemars = { workspace = true, optional = true }
 [dev-dependencies]
 # Tests only: the reference decoder the PDF writer's own PNG reader is held to (native only).
 png = { workspace = true }
+# Tests only: an archival file read back by the PDF reader's PDF/A-2 rules (docs/adr/8037).
+kentos-formats = { path = "../formats" }
 
 [features]
 default = ["ts"]

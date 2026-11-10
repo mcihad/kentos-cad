@@ -19,6 +19,8 @@ pub struct Setting {
     pub warn: bool,
     /// A two-state setting shown directly rather than hidden in a choice menu.
     pub toggle: bool,
+    /// A choice that takes any text too (docs/adr/8021): the list offers, it does not bind (a room's name).
+    pub open: bool,
 }
 impl Setting {
     pub fn text(
@@ -35,6 +37,7 @@ impl Setting {
             note: false,
             warn: false,
             toggle: false,
+            open: false,
         }
     }
     pub fn choice(
@@ -56,13 +59,23 @@ impl Setting {
             note: false,
             warn: false,
             toggle: false,
+            open: false,
         }
     }
     pub fn read_only(mut self) -> Self {
         self.editable = false;
         self
     }
-    pub fn toggle(key: &'static str, label: impl Into<std::borrow::Cow<'static, str>>, on: bool) -> Self {
+    /// The choices offered, any text taken too (docs/adr/8021).
+    pub fn open(mut self) -> Self {
+        self.open = true;
+        self
+    }
+    pub fn toggle(
+        key: &'static str,
+        label: impl Into<std::borrow::Cow<'static, str>>,
+        on: bool,
+    ) -> Self {
         Self {
             toggle: true,
             ..Self::choice(
@@ -154,6 +167,12 @@ pub fn wall_rows(memory: &Memory, styles: &[WallStyleDef], f: &Format) -> Vec<Se
 }
 pub fn wall_apply(key: &str, value: &str, cx: &mut Context<'_>) -> bool {
     match key {
+        // Kapanınca mahal (docs/adr/8022): Açık or Kapalı (yes, no as the toggle sends them).
+        "M" => {
+            let v = crate::prompt::fold_tr(value.trim());
+            cx.memory.wall_room = matches!(v.as_str(), "YES" | "AÇIK" | "ACIK" | "EVET" | "1");
+            true
+        }
         "S" | "H" => wall::choose(key, value, cx),
         "E" | "Ö" => {
             if key == "E"

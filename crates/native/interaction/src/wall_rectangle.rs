@@ -23,6 +23,12 @@ use crate::{Tool, wall};
 
 pub const ID: &str = "wallRectangle";
 pub const LABEL: &str = "Dikdörtgen duvar";
+/// Oda (docs/adr/8021): the same rectangle of walls, its room (a space seeded at its middle) and the room's tag
+/// written with them, one undo step.
+pub const ROOM_ID: &str = "room";
+pub const ROOM_LABEL: &str = "Oda";
+/// A room with no name chosen.
+const NO_NAME: &str = "Adsız";
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Ask {
@@ -33,9 +39,10 @@ enum Ask {
     Reference,
 }
 
-/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on.
-const ADOPT: &str = "Benimse";
-const DRAW: &str = "Çiz";
+/// Ortak duvar (docs/adr/0770 §1): a new tool session adopts the walls the room runs on. Said plainly (docs/adr/8003):
+/// Benimse, “adopt” word for word, told the owner nothing.
+const ADOPT: &str = "Var olanı kullan";
+const DRAW: &str = "Ayrıca çiz";
 
 #[derive(Clone, Debug, Default)]
 pub struct WallRectangle {
@@ -54,6 +61,12 @@ pub struct WallRectangle {
     own: bool,
     /// The walls the plan adopts, drawn marked.
     adopted: Vec<Stroke>,
+    /// Oda: its room and tag are written with the walls (docs/adr/8021).
+    room: bool,
+    /// The room's name, from the project's names or typed; none: unnamed.
+    room_name: Option<String>,
+    /// The project's room names (Proje ayarları › Mimari), offered for the name.
+    names: Vec<String>,
 }
 
 impl WallRectangle {
@@ -61,11 +74,102 @@ impl WallRectangle {
         Self::default()
     }
 
+    /// Oda: the walls, their room and its tag (docs/adr/8021).
+    pub fn room() -> Self {
+        Self {
+            room: true,
+            ..Self::default()
+        }
+    }
+
     fn see(&mut self, cx: &Context<'_>) {
         self.seen = *cx.memory;
         self.format = cx.format();
         self.styles = wall::offered(cx.doc.settings());
+        if self.room {
+            self.names = cx
+                .doc
+                .settings()
+                .arch
+                .as_ref()
+                .map_or_else(Vec::new, |a| a.space_names.clone());
+        }
         self.refresh(cx);
+    }
+
+    /// The rectangle's middle: between its two corners, or half its sizes from its corner toward the side shown
+    /// (the same at any of its references: the room's middle).
+    fn middle(&self, a: Vec2, b: Vec2) -> Vec2 {
+        match self.size {
+            None => Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
+            Some((length, width)) => {
+                let (c, s) = (self.rotation.cos(), self.rotation.sin());
+                let (dx, dy) = (b.x - a.x, b.y - a.y);
+                let along = if dx * c + dy * s < 0.0 { -1.0 } else { 1.0 };
+                let across = if -dx * s + dy * c < 0.0 { -1.0 } else { 1.0 };
+                let (l, w) = (along * length / 2.0, across * width / 2.0);
+                Vec2::new(a.x + l * c - w * s, a.y + l * s + w * c)
+            }
+        }
+    }
+
+    /// The room inside the walls just written (docs/adr/8021): its space seeded at the rectangle's middle, named as
+    /// chosen, on the walls' storey, and the space's tag (its kind's template and frame), each on its layer
+    /// (docs/adr/8008). False, and why said, when either is refused.
+    fn write_room(&self, a: Vec2, b: Vec2, cx: &mut Context<'_>) -> bool {
+        use crate::arch_layer::Kind;
+        let space = kentos_commands::NewSpace {
+            seed: Some(points::wire(self.middle(a, b))),
+            scope: Some(kentos_commands::SpaceScope::Project),
+            columns: Some(kentos_commands::SpaceColumns::Net),
+            name: self.room_name.clone(),
+            arch: cx.new_arch(),
+            ..kentos_commands::NewSpace::default()
+        };
+        let mut made = None;
+        let spaced = crate::arch_layer::writing(&Kind::Space, cx, |layer, cx| {
+            let input = kentos_commands::SpacesCreate {
+                layer_id: layer.to_owned(),
+                spaces: vec![space.clone()],
+                color: cx.draft.color_text(),
+                line_weight: cx.draft.line_weight,
+                expected_revision: None,
+            };
+            let result = kentos_native_application::spaces_create::execute(
+                &mut ExecutionContext::new(cx.doc),
+                input,
+            );
+            made = points::written(result, cx).and_then(|out| out.ids.first().copied());
+            made.is_some()
+        });
+        let Some(uid) = made
+            .filter(|_| spaced)
+            .and_then(|id| cx.doc.uid(kentos_domain::Slot(id)))
+        else {
+            return false;
+        };
+        crate::arch_layer::writing(&Kind::Tag, cx, |layer, cx| {
+            let input = kentos_commands::TagsCreate {
+                layer_id: layer.to_owned(),
+                tags: vec![kentos_commands::NewTag {
+                    of: uid.to_string(),
+                    at: None,
+                    content: None,
+                    shape: None,
+                    size: None,
+                    leader: None,
+                }],
+                all: None,
+                color: cx.draft.color_text(),
+                line_weight: cx.draft.line_weight,
+                expected_revision: None,
+            };
+            let result = kentos_native_application::tags_create::execute(
+                &mut ExecutionContext::new(cx.doc),
+                input,
+            );
+            points::written(result, cx).is_some()
+        })
     }
 
     fn request(&self, a: Vec2, b: Vec2, cx: &Context<'_>) -> WallsRectangle {
@@ -75,7 +179,8 @@ impl WallRectangle {
             .and_then(|s| fixed_width(&s.components))
             .is_some();
         WallsRectangle {
-            layer_id: cx.doc.layers().active().to_owned(),
+            // The walls' layer (docs/adr/8008).
+            layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
             frame: match self.size {
                 Some((length, width)) => RectangleFrame::Size {
                     corner: points::wire(a),
@@ -95,7 +200,7 @@ impl WallRectangle {
             style: style.map(|s| s.id),
             height: None,
             // Etkin kat (docs/adr/0713).
-            arch: cx.level_arch(),
+            arch: cx.new_arch(),
             attrs: cx.template_attrs(None),
             label: cx.template_label(),
             color: cx.draft.color_text(),
@@ -176,19 +281,44 @@ impl WallRectangle {
             self.d.hover = Some(p);
             return true;
         };
-        let input = self.request(a, p, cx);
-        let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
-        if let Some(out) = points::written(result, cx) {
-            for id in out.ids {
-                self.d.note(id, cx);
+        // Oda: the walls, the room and its tag one undo step; a refusal of the room takes the walls back too.
+        let group = self.room.then(|| cx.doc.begin_group(ROOM_LABEL));
+        let kind = wall::layer_kind(cx);
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let input = self.request(a, p, cx);
+            let result = walls_rectangle::execute(&mut ExecutionContext::new(cx.doc), input);
+            match points::written(result, cx) {
+                Some(out) => {
+                    for id in out.ids {
+                        self.d.note(id, cx);
+                    }
+                    true
+                }
+                None => false,
             }
-            cx.say(
-                Level::Success,
+        });
+        let written = written && (!self.room || self.write_room(a, p, cx));
+        if let Some(group) = group {
+            if written {
+                cx.doc.end_group(group);
+            } else {
+                cx.doc.cancel_group(group);
+            }
+        }
+        if written {
+            let said = if self.room {
+                format!(
+                    "Oda eklendi: duvarları, mahali ({}) ve etiketi; boy referansı: {}. Tek geri almayla gider.",
+                    self.room_name.as_deref().unwrap_or(NO_NAME),
+                    self.reference.label()
+                )
+            } else {
                 format!(
                     "Dikdörtgen duvar eklendi; boy referansı: {}.",
                     self.reference.label()
-                ),
-            );
+                )
+            };
+            cx.say(Level::Success, said);
             self.drop_draft();
         }
         true
@@ -297,11 +427,15 @@ impl WallRectangle {
 }
 
 impl Tool for WallRectangle {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(wall::layer_kind(cx))
+    }
+
     fn id(&self) -> &'static str {
-        ID
+        if self.room { ROOM_ID } else { ID }
     }
     fn label(&self) -> &'static str {
-        LABEL
+        if self.room { ROOM_LABEL } else { LABEL }
     }
     fn point_count(&self) -> usize {
         self.d.pts.len()
@@ -327,7 +461,7 @@ impl Tool for WallRectangle {
     fn prompt(&self) -> Prompt {
         if let Some(ask) = self.ask {
             return Prompt::new(
-                LABEL,
+                self.label(),
                 match ask {
                     Ask::Size => "uzunluk ve genişliği yazın; ör. 4,3 (seçilen boy referansında)",
                     Ask::Rotation => {
@@ -351,7 +485,14 @@ impl Tool for WallRectangle {
         let size = self
             .size
             .map(|(l, w)| format!("{} × {}", self.format.length_bare(l), self.format.length(w)));
-        let prompt = Prompt::new(LABEL, text)
+        let prompt = Prompt::new(self.label(), text);
+        // Oda's room name first: what the room is (docs/adr/8021).
+        let prompt = if self.room {
+            prompt.option_with("Mahal adı", "A", self.room_name.as_deref().unwrap_or(NO_NAME))
+        } else {
+            prompt
+        };
+        let prompt = prompt
             .option_with("Boy referansı", "R", self.reference.label())
             .option_with("Ortak duvar", "O", if self.own { DRAW } else { ADOPT })
             .option_with(
@@ -370,7 +511,7 @@ impl Tool for WallRectangle {
                 .option("Köşeler", "K"),
             None => prompt.option("Boyutlar", "B"),
         };
-        prompt.option_with("Döndür", "D", short_degrees(self.rotation))
+        prompt.option_with("Açı", "D", short_degrees(self.rotation))
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.d.hover = Some(p.world);
@@ -386,8 +527,23 @@ impl Tool for WallRectangle {
         taken
     }
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
+        // Oda's name (docs/adr/8021): unnamed, then the project's room names.
+        if key == "A" && self.room {
+            let chosen = self.room_name.as_deref().unwrap_or(NO_NAME);
+            return std::iter::once(NO_NAME.to_owned())
+                .chain(self.names.iter().cloned())
+                .map(|name| OptionChoice {
+                    checked: name == chosen,
+                    typed: name.clone(),
+                    label: name,
+                    icon: None,
+                    preview: None,
+                    command: None,
+                })
+                .collect();
+        }
         if key == "O" {
-            return [(ADOPT, "benimse", false), (DRAW, "ciz", true)]
+            return [(ADOPT, "kullan", false), (DRAW, "çiz", true)]
                 .into_iter()
                 .map(|(label, typed, own)| OptionChoice {
                     label: label.to_owned(),
@@ -419,6 +575,13 @@ impl Tool for WallRectangle {
         use crate::tool_settings::{Setting, wall_rows};
         let mut rows = wall_rows(&self.seen, &self.styles, format);
         rows.retain(|r| matches!(r.key, "S" | "E"));
+        // Oda's room name (docs/adr/8021).
+        if self.room {
+            rows.insert(
+                0,
+                Setting::choice("A", "Mahal adı", self.option_choices("A")).open(),
+            );
+        }
         rows.push(Setting::choice(
             "R",
             "Boy referansı",
@@ -431,7 +594,7 @@ impl Tool for WallRectangle {
         ));
         rows.push(Setting::text(
             "B",
-            "Boylar",
+            "Boyutlar",
             self.size
                 .map(|(l, w)| format!("{},{}", format.length(l), format.length(w)))
                 .unwrap_or_default(),
@@ -443,13 +606,22 @@ impl Tool for WallRectangle {
         ));
         rows
     }
+    /// The room's sizes, the wall's Kalınlık and what the sizes measure in the value field after its locks
+    /// (docs/adr/8018): "4,20 × 3,60 bir yatak odası" typed beside the cursor.
+    fn cursor_settings(&self) -> &'static [&'static str] {
+        if self.room {
+            &["B", "A", "E", "R"]
+        } else {
+            &["B", "E", "R"]
+        }
+    }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         if matches!(key, "S" | "E") {
             let taken = crate::tool_settings::wall_apply(key, value, cx);
             self.see(cx);
             return taken;
         }
-        if key == "R" || key == "O" {
+        if key == "R" || key == "O" || (key == "A" && self.room) {
             return self.choose_option(key, value, cx);
         }
         if key == "B" && value.trim().is_empty() {
@@ -483,20 +655,34 @@ impl Tool for WallRectangle {
             }
             "O" => {
                 let k = fold_tr(js_trim(typed));
-                if k == fold_tr(ADOPT) || k == "BENIMSE" {
+                // The old words still read: Benimse, Çiz.
+                if k == fold_tr(ADOPT) || k == "KULLAN" || k == "BENIMSE" {
                     self.own = false;
                     true
-                } else if k == fold_tr(DRAW) || k == "CIZ" {
+                } else if k == fold_tr(DRAW) || k == "CIZ" || k == "AYRICA CIZ" {
                     self.own = true;
                     true
                 } else {
-                    cx.say(Level::Warn, "Ortak duvar için Benimse ya da Çiz seçin.");
+                    cx.say(Level::Warn, "Ortak duvar için Var olanı kullan ya da Ayrıca çiz seçin.");
                     false
                 }
             }
             "S" => {
                 self.ask = None;
                 wall::choose(key, typed, cx)
+            }
+            // Oda's name: one of the project's, or typed; Adsız (or nothing) none.
+            "A" if self.room => {
+                let name = js_trim(typed);
+                self.room_name =
+                    (!name.is_empty() && fold_tr(name) != fold_tr(NO_NAME)).then(|| {
+                        self.names
+                            .iter()
+                            .find(|n| fold_tr(n) == fold_tr(name))
+                            .cloned()
+                            .unwrap_or_else(|| name.to_owned())
+                    });
+                true
             }
             _ => false,
         };
@@ -546,7 +732,7 @@ impl Tool for WallRectangle {
         }
         let mut lines = vec![format!("Boy referansı: {}", self.reference.label())];
         if !self.adopted.is_empty() {
-            lines.push("Ortak duvar benimsenir".to_owned());
+            lines.push("Ortak duvar: var olan kullanılır".to_owned());
         }
         if self.ring.len() == 4 {
             let (length, width) = self.size.unwrap_or_else(|| {

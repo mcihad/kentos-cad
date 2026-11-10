@@ -6,7 +6,7 @@
 //! at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=mimari-sablon,evre-tumu,evre-yikim,evre-yeni,pafta-seti,pafta-seti-etkilenen,dxf-mimari cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=mimari-sablon,tadilat-tumu,tadilat-yikim,tadilat-yeni,pafta-seti,pafta-seti-etkilenen,dxf-mimari cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -270,9 +270,9 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("mimari-sablon-18", template_large),
         ("mimari-sablon-ofis", template_office),
         ("mimari-sablon-mevcut", template_existing),
-        ("evre-tumu", all),
-        ("evre-yikim", demolition),
-        ("evre-yeni", proposed),
+        ("tadilat-tumu", all),
+        ("tadilat-yikim", demolition),
+        ("tadilat-yeni", proposed),
         ("pafta-seti", set_alone),
         ("pafta-seti-etkilenen", set_affected),
         ("dxf-mimari", dxf_back),

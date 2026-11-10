@@ -498,7 +498,12 @@ impl WallDimensions {
             } else {
                 DimensionSetReference::Faces
             },
-            layer_id: self.layer.clone(),
+            // The key's Ölçü layer still to open is planned on the active one (docs/adr/8008).
+            layer_id: if doc.layers().get(&self.layer).is_some() {
+                self.layer.clone()
+            } else {
+                doc.layers().active().to_owned()
+            },
             at: kentos_commands::Vec2 { x: at.x, y: at.y },
             edge: if self.mode == Mode::Wall { self.edge } else { None },
             around: self.around,
@@ -542,6 +547,22 @@ impl WallDimensions {
                 command: None,
             })
             .collect();
+        // The key's Ölçü layer, opened with the first dimension (docs/adr/8008).
+        if let Some((typed, label)) =
+            crate::arch_layer::missing_choice(&crate::arch_layer::Kind::Dimension, cx)
+        {
+            self.layer_choices.insert(
+                0,
+                OptionChoice {
+                    checked: typed == self.layer,
+                    typed,
+                    label,
+                    icon: None,
+                    preview: None,
+                    command: None,
+                },
+            );
+        }
         self.style_choices = vec![OptionChoice {
             typed: STANDARD_STYLE.into(),
             label: STANDARD_STYLE.into(),
@@ -971,11 +992,23 @@ impl WallDimensions {
             );
             return false;
         }
-        let Some(input) = self.request(true, cx.doc) else {
+        if self.request(true, cx.doc).is_none() {
             return false;
-        };
-        let result = dimension_sets_create::execute(&mut ExecutionContext::new(cx.doc), input);
-        match crate::points::written(result, cx) {
+        }
+        let before = cx.doc.revision();
+        let layer = self.layer.clone();
+        let mut written = None;
+        crate::arch_layer::writing_on(&crate::arch_layer::Kind::Dimension, &layer, cx, |_, cx| {
+            let Some(mut input) = self.request(true, cx.doc) else {
+                return false;
+            };
+            input.expected_revision =
+                crate::arch_layer::carried(input.expected_revision, before, cx);
+            let result = dimension_sets_create::execute(&mut ExecutionContext::new(cx.doc), input);
+            written = crate::points::written(result, cx);
+            written.is_some()
+        });
+        match written {
             Some(output) => {
                 let ids: Vec<Slot> = output
                     .uids
@@ -1166,7 +1199,8 @@ impl Tool for WallDimensions {
         false
     }
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
-        self.layer = cx.doc.layers().active().into();
+        // MM-XXXX-OLCU with the layer key on (docs/adr/8008), else the active layer.
+        self.layer = crate::arch_layer::chosen_at_start(&crate::arch_layer::Kind::Dimension, cx);
         self.style = styles::dimension_style(cx.memory, cx.doc.settings()).map(|s| s.name.clone());
         self.openings = cx.memory.wall_dimensions_rows & 1 != 0;
         self.overall = cx.memory.wall_dimensions_rows & 2 != 0;

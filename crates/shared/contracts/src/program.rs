@@ -38,16 +38,26 @@ pub enum UnitKind {
     Common,
     /// Dış alan: a garden, a car park; summed apart.
     Outdoor,
+    /// Eklenti (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 2/a, 6): a place outside an independent unit,
+    /// allocated to it (a storage room, a garage, a coal room; `annexOf`); its gross counts into its unit's total gross
+    /// (PAİY 4/ğ-4), never into the common areas.
+    Annex,
 }
 
 impl UnitKind {
-    pub const ALL: [UnitKind; 3] = [UnitKind::Unit, UnitKind::Common, UnitKind::Outdoor];
+    pub const ALL: [UnitKind; 4] = [
+        UnitKind::Unit,
+        UnitKind::Common,
+        UnitKind::Outdoor,
+        UnitKind::Annex,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
             UnitKind::Unit => "Bağımsız bölüm",
             UnitKind::Common => "Ortak alan",
             UnitKind::Outdoor => "Dış alan",
+            UnitKind::Annex => "Eklenti",
         }
     }
 
@@ -56,6 +66,7 @@ impl UnitKind {
             UnitKind::Unit => "unit",
             UnitKind::Common => "common",
             UnitKind::Outdoor => "outdoor",
+            UnitKind::Annex => "annex",
         }
     }
 }
@@ -132,6 +143,21 @@ pub struct ProgramUnit {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
     pub share_weight: Option<String>,
+    /// Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
+    /// what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub nature: Option<String>,
+    /// An annex's independent unit (docs/adr/8031): the id of the group of kind `unit` it is allocated to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annex_of: Option<String>,
+    /// An independent unit's value factor in the land shares (docs/adr/8031; Kat Mülkiyeti Kanunu 3: values by
+    /// location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
+    pub land_factor: Option<String>,
 }
 
 /// The design brief for the spaces of one usage: what the designer aims at, never a legal limit.
@@ -173,6 +199,11 @@ pub struct SpaceBrief {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub outdoor: bool,
+    /// How its rooms count for the floor area ratio (docs/adr/8030; `.kcad` schema 222). Absent: by their name and
+    /// use (`emsal_by_use`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub emsal: Option<crate::EmsalCount>,
 }
 
 impl SpaceBrief {
@@ -239,7 +270,17 @@ pub struct BuildingProgram {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub share_rule: Option<crate::ShareRule>,
+    /// Arsa payı paydası (docs/adr/8031; `.kcad` schema 223): the whole the land shares are written over; none: the
+    /// parcel's area in whole m² when the project has a zoning, else the units' weighted areas in whole m² summed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(range(min = 1, max = 100000000)))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub land_total: Option<u64>,
 }
+
+/// The largest land share whole (payda) a program may give (docs/adr/8031).
+pub const MAX_LAND_TOTAL: u64 = 100_000_000;
 
 fn text_problem(v: &str, at: &str, what: &str) -> Option<(String, String)> {
     let t = v.trim();
@@ -277,8 +318,33 @@ fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String,
 }
 
 impl BuildingProgram {
+    /// Whether a brief says how its rooms count for the floor area ratio (KCAD 222, docs/adr/8030).
+    pub fn has_emsal(&self) -> bool {
+        self.briefs.iter().any(|b| b.emsal.is_some())
+    }
+
     pub fn is_empty(&self) -> bool {
         self == &BuildingProgram::default()
+    }
+
+    /// Whether it says what schema 223 brings (docs/adr/8031): an annex, a unit's nature or value factor, the land
+    /// shares' whole.
+    pub fn has_land_shares(&self) -> bool {
+        self.land_total.is_some()
+            || self.units.iter().any(|u| {
+                u.kind == UnitKind::Annex
+                    || u.nature.is_some()
+                    || u.annex_of.is_some()
+                    || u.land_factor.is_some()
+            })
+    }
+
+    /// The annexes of the unit of the id given (docs/adr/8031), in the program's order.
+    pub fn annexes_of(&self, id: &str) -> Vec<&ProgramUnit> {
+        self.units
+            .iter()
+            .filter(|u| u.kind == UnitKind::Annex && u.annex_of.as_deref() == Some(id))
+            .collect()
     }
 
     /// Whether it says what schema 147 brings (docs/adr/0784): a share rule, a unit's weight, a building's or a wing's
@@ -446,6 +512,79 @@ impl BuildingProgram {
             {
                 return Some((format!("{at}.shareWeight"), why));
             }
+            // Kat irtifakı (docs/adr/8031): the nature, an annex's unit, a unit's value factor.
+            if let Some(n) = &u.nature
+                && let Some(p) = text_problem(n, &format!("{at}.nature"), "Bölümün niteliği")
+            {
+                return Some(p);
+            }
+            match (u.kind, &u.annex_of) {
+                (UnitKind::Annex, None) => {
+                    return Some((
+                        format!("{at}.annexOf"),
+                        format!(
+                            "“{}” eklentisinin hangi bağımsız bölüme ait olduğu seçilmeli.",
+                            u.number
+                        ),
+                    ));
+                }
+                (UnitKind::Annex, Some(_)) | (_, None) => {}
+                (_, Some(_)) => {
+                    return Some((
+                        format!("{at}.annexOf"),
+                        "Ait olduğu bölüm yalnız eklentide seçilir.".into(),
+                    ));
+                }
+            }
+            if let Some(f) = &u.land_factor {
+                if u.kind != UnitKind::Unit {
+                    return Some((
+                        format!("{at}.landFactor"),
+                        "Değer katsayısı yalnız bağımsız bölümde verilir.".into(),
+                    ));
+                }
+                match crate::program_share::weight_units(f) {
+                    Err(why) => {
+                        return Some((
+                            format!("{at}.landFactor"),
+                            why.replacen("Pay ağırlığı", "Değer katsayısı", 1),
+                        ));
+                    }
+                    Ok(0) => {
+                        return Some((
+                            format!("{at}.landFactor"),
+                            "Değer katsayısı sıfırdan büyük olmalı.".into(),
+                        ));
+                    }
+                    Ok(_) => {}
+                }
+            }
+        }
+        for (i, u) in self.units.iter().enumerate() {
+            if let Some(of) = &u.annex_of
+                && !self
+                    .units
+                    .iter()
+                    .any(|x| &x.id == of && x.kind == UnitKind::Unit)
+            {
+                return Some((
+                    format!("units[{i}].annexOf"),
+                    format!(
+                        "“{}” eklentisinin ait olduğu “{of}” programda bir bağımsız bölüm değil.",
+                        u.number
+                    ),
+                ));
+            }
+        }
+        if let Some(t) = self.land_total
+            && !(1..=MAX_LAND_TOTAL).contains(&t)
+        {
+            return Some((
+                "landTotal".into(),
+                format!(
+                    "Arsa payı paydası {t}; 1 ile {MAX_LAND_TOTAL} arasında bir tam sayı olmalı."
+                ),
+            ));
         }
         let mut usages: Vec<&str> = Vec::new();
         for (i, b) in self.briefs.iter().enumerate() {

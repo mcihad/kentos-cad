@@ -564,6 +564,18 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
             }
+            // A beam (docs/adr/8041 §1): its fields as one map; only the drawing's.
+            Entity::Beam(e) => {
+                if uid.is_none() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
+                }
+                if let Some((_, problem)) = e.beam.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("beam", Val::Json(serde_json::to_value(&e.beam).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;
@@ -1088,8 +1100,17 @@ impl<'d> Encoder<'d> {
                         // Schema 68 (docs/adr/0327 §4): a block schedule's source, as its JSON; schema 80's
                         // schedule of the drawing's objects too (docs/adr/0344 §3).
                         // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
-                        TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_) => {
-                            f.push(("schedule", Val::Json(serde_json::to_value(source).unwrap_or_default())));
+                        // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
+                        TableSource::Blocks { .. }
+                        | TableSource::Schedule { .. }
+                        | TableSource::Extraction(_)
+                        | TableSource::Zoning {}
+                        | TableSource::Parking {}
+                        | TableSource::Shelter {} => {
+                            f.push((
+                                "schedule",
+                                Val::Json(serde_json::to_value(source).unwrap_or_default()),
+                            ));
                         }
                         TableSource::File {
                             path,

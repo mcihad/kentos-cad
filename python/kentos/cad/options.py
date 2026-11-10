@@ -40,7 +40,7 @@ class _OptionsEdit(LocalCommand[OptionsEdit, OptionsEdited, OptionsEdited]):
     delete (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set,
     option isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir
     seçeneğin nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik
-    birleştirme yoktur. Evre seçenek kimliği değildir.
+    birleştirme yoktur. Tadilat durumu seçenek kimliği değildir.
     """
     __slots__ = ()
     id = "cad.options.edit"
@@ -76,7 +76,7 @@ class _OptionsEdit(LocalCommand[OptionsEdit, OptionsEdited, OptionsEdited]):
         (set, option: birincil olmayan seçenek nesneleriyle silinir), rename (set, option
         isteğe bağlı, name). Ana modelin bir nesnesi seçeneğin nesnesine ya da bir seçeneğin
         nesnesi başka bir seçeneğinkine bağlıysa option_leaning. Otomatik birleştirme
-        yoktur. Evre seçenek kimliği değildir.
+        yoktur. Tadilat durumu seçenek kimliği değildir.
 
         Args:
             doc: The drawing it works on.

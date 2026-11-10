@@ -216,3 +216,43 @@ fn drawing_set_publication_names_and_manifest_use_literal_captured_metadata() {
     assert_eq!(manifest["drawingSet"][0]["info"]["revision"],"R02");
     std::fs::remove_dir_all(root).unwrap();
 }
+
+/// PDF/A-2b (docs/adr/8037): a separate-file publication with `pdfa` delivers every sheet as a file the PDF reader's
+/// PDF/A-2 rules pass, and records the option; the same publication without it delivers plain PDFs.
+#[test]
+fn an_archival_publication_delivers_pdf_a_2_files() {
+    let fx = fixture();
+    let case = &fx["cases"][0];
+    let dir = std::env::temp_dir().join(format!("kentos-publish-pdfa-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir(&dir).unwrap();
+    for archival in [true, false] {
+        let target = dir.join(if archival { "arsiv" } else { "duz" });
+        let mut doc = source(&fx, case, &dir);
+        let answer = kentos_headless::file_commands::call(
+            &mut doc,
+            CallEnvelope {
+                command: FILE_PUBLISH_SHEETS.into(),
+                version: Some(1),
+                op: CallOp::Execute,
+                request_id: None,
+                expected: None,
+                relax_constraints: false,
+                input: json!({"path": target, "mode": "separate", "pdfa": archival}),
+            },
+        );
+        let got = serde_json::to_value(&answer.result).unwrap();
+        assert_eq!(got["status"], "completed", "{got}");
+        let files = got["output"]["files"].as_array().unwrap();
+        assert!(files.len() >= 2, "a file a sheet: {got}");
+        for f in files {
+            let bytes = std::fs::read(target.join(f["name"].as_str().unwrap())).unwrap();
+            let report = kentos_formats::pdf::pdfa::pdfa2_report(&bytes).unwrap();
+            assert_eq!(report.conforms(), archival, "{}: {:?}", f["name"], report.findings);
+        }
+        let manifest: Value =
+            serde_json::from_slice(&std::fs::read(target.join("yayin.json")).unwrap()).unwrap();
+        assert_eq!(manifest["options"]["pdfa"], if archival { json!(true) } else { Value::Null });
+    }
+    let _ = std::fs::remove_dir_all(&dir);
+}

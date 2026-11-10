@@ -29,7 +29,8 @@ bölümler (3, 5–8, 11, 13–15, 18–20, 23) aşağıdadır.
 | 24 | [Ürün kapsamının izlenmesi](docs/kilavuz/24-kapsam-izleme.md) | Veri, iş akışı, paylaşım ve operasyon kapsamı |
 
 Öbür başvurular: bir maddeyi baştan sona yapma sırası [docs/MADDE-TARIFI.md](docs/MADDE-TARIFI.md); Yol modülünün planı
-[plan/road.md](plan/road.md), mimarininki [plan/architecture.md](plan/architecture.md); GUI resimlerinin kuralı
+[plan/road.md](plan/road.md), mimarininki [plan/architecture.md](plan/architecture.md) ve
+[plan/architecture-advanced.md](plan/architecture-advanced.md) (iş sırası §5, madde talimatı §6); GUI resimlerinin kuralı
 [docs/baseline/README.md](docs/baseline/README.md).
 
 **Bu dosyaya ne yazılır:** yalnız her oturumda gereken kural ve haritanın satırı. Bir özelliğin kararı, ölçümü ve
@@ -45,6 +46,7 @@ satıra (749 KB) büyüdüğü için bölündü.
   `cargo test -p kentos-desktop --lib <modül>_tests::screens -- --ignored --nocapture`.
 - **GUI kanıtı:** resimler `.run/gui-evidence/` altına yazılır, Git'e eklenmez; görüntü yokluğu doğrulama başarısı
   sayılmaz. Resim bakılarak gözden geçirilir, kusur düzeltilir, yeniden çekilir.
+  Kullanıcıya dönük kabul gerçek pencerede, gerçek fare ve klavyeyle yapılır: `scripts/usage/real/` (ADR 8000).
 - **Araştırma önce:** her yeni mimari adımda üreticilerin resmî belgeleri (Civil 3D, OpenRoads, NETPRO…) araştırılır;
   kaynak ve KentOS kararı ADR'ye ve plana yazılır. Değer uydurulmaz, kaynak beklenir.
 - **Araç = komut** (§9.2): çizimi değiştiren her iş anlamsal komutla yapılır; katalog, ≥20 bağımsız başvurulu ortak durum,

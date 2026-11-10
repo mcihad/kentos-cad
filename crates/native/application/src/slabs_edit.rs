@@ -27,6 +27,9 @@ fn changed(s: &SlabFields, c: &SlabChange) -> SlabFields {
     if let Some(v) = c.thickness {
         f.thickness = v;
     }
+    if let Some(v) = &c.layers {
+        f.layers = v.clone();
+    }
     if let Some(v) = c.offset {
         f.offset = v;
     }
@@ -90,7 +93,7 @@ fn check(doc: &Document, input: &SlabsEdit) -> Result<Vec<(Slot, SlabEntity)>, S
             if c == &SlabChange::default() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, evre, malzeme, kenar ya da metraj dışı seçimlerinden birini verin.".into(),
+                    "Değiştirilecek bir alan verilmedi: tür, kalınlık, kot farkı, kat, tadilat durumu, malzeme, kenar, katmanlar ya da metraj dışı seçimlerinden birini verin.".into(),
                     "operation",
                 ));
             }

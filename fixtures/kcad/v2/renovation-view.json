@@ -1,0 +1,189 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Tadilat projesi görünümü",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "cad",
+    "arch": {
+      "phaseView": "renovation"
+    }
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "duvar",
+      "name": "Duvar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#404040",
+        "lineType": "continuous",
+        "lineWeight": 0.5
+      },
+      "children": []
+    },
+    {
+      "id": "kapi",
+      "name": "Kapı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#1E88E5",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "duvar",
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "uids": [
+    "0192f5a1-2590-7000-8000-000000000071",
+    "0192f5a1-2590-7000-8000-000000000072",
+    "0192f5a1-2590-7000-8000-000000000073",
+    "0192f5a1-2590-7000-8000-000000000074"
+  ],
+  "entities": [
+    {
+      "kind": "wall",
+      "id": 1,
+      "layerId": "duvar",
+      "attrs": {},
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 6.0,
+          "y": 0.0
+        }
+      ],
+      "width": 0.3,
+      "justify": "center",
+      "arch": {
+        "phase": "existing"
+      }
+    },
+    {
+      "kind": "opening",
+      "id": 2,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-2590-7000-8000-000000000071",
+      "at": 1.5,
+      "width": 0.9,
+      "form": "door",
+      "place": [
+        {
+          "x": 1.05,
+          "y": 0.15
+        },
+        {
+          "x": 1.05,
+          "y": -0.15
+        },
+        {
+          "x": 1.95,
+          "y": 0.15
+        },
+        {
+          "x": 1.95,
+          "y": -0.15
+        }
+      ],
+      "phase": "new"
+    },
+    {
+      "kind": "opening",
+      "id": 3,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-2590-7000-8000-000000000071",
+      "at": 4.0,
+      "width": 1.2,
+      "form": "window",
+      "leaves": 2,
+      "sill": 0.9,
+      "head": 2.2,
+      "place": [
+        {
+          "x": 3.4,
+          "y": 0.15
+        },
+        {
+          "x": 3.4,
+          "y": -0.15
+        },
+        {
+          "x": 4.6,
+          "y": 0.15
+        },
+        {
+          "x": 4.6,
+          "y": -0.15
+        }
+      ],
+      "phase": "demolish"
+    },
+    {
+      "kind": "opening",
+      "id": 4,
+      "layerId": "kapi",
+      "attrs": {},
+      "host": "0192f5a1-2590-7000-8000-000000000071",
+      "at": 5.4,
+      "width": 0.6,
+      "form": "opening",
+      "head": 2.1,
+      "place": [
+        {
+          "x": 5.1,
+          "y": 0.15
+        },
+        {
+          "x": 5.1,
+          "y": -0.15
+        },
+        {
+          "x": 5.7,
+          "y": 0.15
+        },
+        {
+          "x": 5.7,
+          "y": -0.15
+        }
+      ]
+    }
+  ]
+}

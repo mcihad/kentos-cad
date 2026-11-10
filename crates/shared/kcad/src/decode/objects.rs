@@ -85,6 +85,7 @@ enum Kind {
     Tag,
     ViewMark,
     Slab,
+    Beam,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -122,6 +123,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("tag", Kind::Tag),
     ("viewmark", Kind::ViewMark),
     ("slab", Kind::Slab),
+    ("beam", Kind::Beam),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -420,6 +422,10 @@ pub(super) struct Features {
     pub(super) parcel_register: bool,
     /// Schema 208: a constraint naming a boundary edge, a map bond (docs/adr/2580).
     pub(super) boundary_bonds: bool,
+    /// Schema 217 (docs/adr/8012): the project's plan cut height.
+    pub(super) plan_cut: bool,
+    /// Schema 218 (docs/adr/8013): how the project's plan lines are weighted.
+    pub(super) line_groups: bool,
     /// Schema 182: a table's parts, cells of several lines and a data extraction table (docs/adr/1030).
     pub(super) extraction: bool,
     /// Schema 183 (docs/adr/1100 §3): the approved sheet template revisions.
@@ -440,6 +446,38 @@ pub(super) struct Features {
     pub(super) multi_slide: bool,
     pub(super) opening_types: bool,
     pub(super) special_doors: bool,
+    pub(super) ellipse_tags: bool,
+    pub(super) opening_codes: bool,
+    pub(super) paiy_areas: bool,
+    pub(super) zoning: bool,
+    /// Schema 223 (docs/adr/8031): kat irtifakı's program fields and schedule columns.
+    pub(super) land_shares: bool,
+    /// Schema 224 (docs/adr/8032): the site plan.
+    pub(super) site_plan: bool,
+    /// Schema 225 (docs/adr/8034): the municipality's regulation.
+    pub(super) local_rules: bool,
+    /// Schema 226 (docs/adr/8035): the building's sprinkler system.
+    pub(super) sprinklers: bool,
+    /// Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
+    pub(super) provision_tables: bool,
+    /// Schema 228 (docs/adr/8038): the room list's finishes and columns.
+    pub(super) room_list: bool,
+    /// Schema 229 (docs/adr/8038): a door or window type's frame and leaves and its U value.
+    pub(super) opening_specs: bool,
+    /// Schema 230 (docs/adr/8039): a door's or window's own phase.
+    pub(super) opening_phases: bool,
+    /// Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure.
+    pub(super) slab_layers: bool,
+    /// Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan.
+    pub(super) room_heights: bool,
+    /// Schema 234 (docs/adr/8041 §1): beams.
+    pub(super) beams: bool,
+    /// Schema 235 (docs/adr/8041 §2): a column's material.
+    pub(super) column_material: bool,
+    /// Schema 236 (docs/adr/8041 §3): a beam's role and base.
+    pub(super) beam_roles: bool,
+    /// Schema 231 (docs/adr/8039 §5): the Tadilat projesi view.
+    pub(super) renovation_view: bool,
     /// Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program fields.
     pub(super) building_program: bool,
     /// Schema 141 (docs/adr/0774): a named view's recipe.
@@ -717,6 +755,8 @@ impl Features {
             review_decisions: schema >= crate::SCHEMA_WITH_REVIEW_DECISIONS,
             parcel_register: schema >= crate::SCHEMA_WITH_PARCEL_REGISTER,
             boundary_bonds: schema >= crate::SCHEMA_WITH_BOUNDARY_BONDS,
+            plan_cut: schema >= crate::SCHEMA_WITH_PLAN_CUT,
+            line_groups: schema >= crate::SCHEMA_WITH_LINE_GROUPS,
             extraction: schema >= crate::SCHEMA_WITH_EXTRACTION,
             approved_sheet_templates: schema >= crate::SCHEMA_WITH_APPROVED_SHEET_TEMPLATES,
             layer_indexes: schema >= crate::SCHEMA_WITH_LAYER_INDEXES,
@@ -730,6 +770,24 @@ impl Features {
             multi_slide: schema >= crate::SCHEMA_WITH_MULTI_SLIDE,
             opening_types: schema >= crate::SCHEMA_WITH_OPENING_TYPES,
             special_doors: schema >= crate::SCHEMA_WITH_SPECIAL_DOORS,
+            ellipse_tags: schema >= crate::SCHEMA_WITH_ELLIPSE_TAGS,
+            opening_codes: schema >= crate::SCHEMA_WITH_OPENING_CODES,
+            paiy_areas: schema >= crate::SCHEMA_WITH_PAIY_AREAS,
+            zoning: schema >= crate::SCHEMA_WITH_ZONING,
+            land_shares: schema >= crate::SCHEMA_WITH_LAND_SHARES,
+            site_plan: schema >= crate::SCHEMA_WITH_SITE_PLAN,
+            local_rules: schema >= crate::SCHEMA_WITH_LOCAL_RULES,
+            sprinklers: schema >= crate::SCHEMA_WITH_SPRINKLERS,
+            provision_tables: schema >= crate::SCHEMA_WITH_PROVISION_TABLES,
+            room_list: schema >= crate::SCHEMA_WITH_ROOM_LIST,
+            opening_specs: schema >= crate::SCHEMA_WITH_OPENING_SPECS,
+            opening_phases: schema >= crate::SCHEMA_WITH_OPENING_PHASES,
+            slab_layers: schema >= crate::SCHEMA_WITH_SLAB_LAYERS,
+            room_heights: schema >= crate::SCHEMA_WITH_ROOM_HEIGHTS,
+            beams: schema >= crate::SCHEMA_WITH_BEAMS,
+            column_material: schema >= crate::SCHEMA_WITH_COLUMN_MATERIAL,
+            beam_roles: schema >= crate::SCHEMA_WITH_BEAM_ROLES,
+            renovation_view: schema >= crate::SCHEMA_WITH_RENOVATION_VIEW,
             building_program: schema >= crate::SCHEMA_WITH_BUILDING_PROGRAM,
             view_recipes: schema >= crate::SCHEMA_WITH_VIEW_RECIPES,
             modules: schema >= crate::SCHEMA_WITH_MODULES,
@@ -820,6 +878,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Tag => key == "tag",
             Kind::ViewMark => key == "viewmark",
             Kind::Slab => key == "slab",
+            Kind::Beam => key == "beam",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -1033,6 +1092,7 @@ struct Fields {
     viewmark: Option<kentos_contracts::ViewMarkFields>,
     /// A slab's fields (docs/adr/0722).
     slab: Option<kentos_contracts::SlabFields>,
+    beam: Option<kentos_contracts::BeamFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -1319,6 +1379,7 @@ pub(super) fn object(
             && (has.tags || *kind != Kind::Tag)
             && (has.viewmarks || *kind != Kind::ViewMark)
             && (has.slabs || *kind != Kind::Slab)
+            && (has.beams || *kind != Kind::Beam)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -1366,6 +1427,10 @@ pub(super) fn object(
     // Nor a slab: its walls are the drawing's (docs/adr/0722 §1).
     if kind == Kind::Slab && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında döşeme olamaz"));
+    }
+    // Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/8041 §1).
+    if kind == Kind::Beam && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında kiriş olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1643,6 +1708,7 @@ pub(super) fn object(
             }
             // Schema 123 (docs/adr/0722): a slab's fields.
             "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
+            "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) =
@@ -1869,7 +1935,7 @@ pub(super) fn object(
             // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
             "arch" => {
                 let what = if kind == Kind::Insert {
-                    "yerleştirmenin katı ve evresi"
+                    "yerleştirmenin katı ve tadilat durumu"
                 } else {
                     "duvarın mimari bilgisi"
                 };
@@ -1993,7 +2059,11 @@ pub(super) fn object(
                 let schedule = matches!(v, TableSource::Blocks { .. })
                     || (has.tags && matches!(v, TableSource::Schedule { .. }))
                     // Schema 182 (docs/adr/1030 §6): a data extraction table's recipe and what it was written from.
-                    || (has.extraction && matches!(v, TableSource::Extraction(_)));
+                    || (has.extraction && matches!(v, TableSource::Extraction(_)))
+                    // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
+                    || (has.zoning && matches!(v, TableSource::Zoning {}))
+                    // Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
+                    || (has.provision_tables && matches!(v, TableSource::Parking {} | TableSource::Shelter {}));
                 // Schema 131 (docs/adr/0733): a schedule's fixtures, new fields, type filter, headings and subtotals.
                 if !has.fixtures
                     && matches!(&v, TableSource::Schedule { of, columns, filter, sort, .. }
@@ -2003,6 +2073,24 @@ pub(super) fn object(
                         Code::UnknownField,
                         at,
                         "çizelgenin donatısı, yeni alanları, tür süzgeci, başlığı ve ara toplamı şema 131'den beri yazılır",
+                    ));
+                }
+                // Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu.
+                if !has.zoning && matches!(v, TableSource::Zoning {}) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "emsal ve TAKS tablosunun kaynağı şema 222'den beri yazılır",
+                    ));
+                }
+                // Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
+                if !has.provision_tables
+                    && matches!(v, TableSource::Parking {} | TableSource::Shelter {})
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "otopark ve sığınak hesabı tablolarının kaynağı şema 227'den beri yazılır",
                     ));
                 }
                 // Schema 182 (docs/adr/1030 §6): a data extraction table.
@@ -2513,8 +2601,78 @@ pub(super) fn object(
             "döner merdivenin bükümü (bulges) şema 117 ister",
         ));
     }
+    // Schema 230 (docs/adr/8039): a door's or window's own phase.
+    if matches!(&entity, Entity::Opening(o) if o.opening.phase.is_some()) && !has.opening_phases {
+        return Err(r.fail(
+            Code::UnknownField,
+            "kapı ve pencerenin kendi tadilat durumu (phase) şema 230 ister",
+        ));
+    }
+    // Schema 236 (docs/adr/8041 §3): a beam's role and base.
+    if kentos_contracts::needs_beam_roles(&entity) && !has.beam_roles {
+        return Err(r.fail(
+            Code::UnknownField,
+            "kirişin türü (role) ve kattan yüksekliği (baseOffset) şema 236 ister",
+        ));
+    }
+    // Schema 235 (docs/adr/8041 §2): a column's material.
+    if matches!(&entity, Entity::Column(c) if c.column.material.is_some()) && !has.column_material {
+        return Err(r.fail(Code::UnknownField, "kolonun malzemesi (material) şema 235 ister"));
+    }
+    // Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan.
+    if kentos_contracts::needs_room_heights(&entity) && !has.room_heights {
+        return Err(r.fail(
+            Code::UnknownField,
+            "mahalin döşeme kot farkı (floorOffset) ve asma tavanı (suspendedCeiling) şema 233 ister",
+        ));
+    }
+    // Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure.
+    if matches!(&entity, Entity::Slab(s) if !s.slab.layers.is_empty()) && !has.slab_layers {
+        return Err(r.fail(
+            Code::UnknownField,
+            "döşemenin katmanları (layers) şema 232 ister",
+        ));
+    }
+    // Schema 228 (docs/adr/8038): the room list's finishes and a spaces schedule's room list columns.
+    if kentos_contracts::needs_room_list(&entity) && !has.room_list {
+        return Err(r.fail(
+            Code::UnknownField,
+            "mahalin denizlik, merdiven ve korkuluk kaplamaları ve çizelgenin mahal listesi sütunları (sillFinish, \
+             stairFinish, railingFinish, doors, windows) şema 228 ister",
+        ));
+    }
+    // Schema 223 (docs/adr/8031): a units schedule's kat irtifakı fields; before it none was a field.
+    if kentos_contracts::needs_land_shares(&entity) && !has.land_shares {
+        return Err(r.fail(
+            Code::UnknownField,
+            "çizelgenin kat irtifakı sütunları (nature, annexNet, annexGross, annexes, totalGross, landShare) şema 223 ister",
+        ));
+    }
+    // Schema 221 (docs/adr/8029): a units schedule's regulation areas; before it none was a field.
+    if kentos_contracts::needs_paiy_areas(&entity) && !has.paiy_areas {
+        return Err(r.fail(
+            Code::UnknownField,
+            "çizelgenin yönetmelik alanı sütunları (paiyNet, paiyGross, paiyShare, generalGross) şema 221 ister",
+        ));
+    }
+    // Schema 220 (docs/adr/8028): a tag naming an opening's joinery code or size; before it neither was a place.
+    if kentos_contracts::needs_opening_codes(&entity) && !has.opening_codes {
+        return Err(r.fail(
+            Code::UnknownField,
+            "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 220 ister",
+        ));
+    }
+    // Schema 219 (docs/adr/8027): a tag framed by an ellipse; before it a tag's frame was one of five.
+    if kentos_contracts::needs_ellipse_tags(&entity) && !has.ellipse_tags {
+        return Err(r.fail(
+            Code::UnknownField,
+            "etiketin elips çerçevesi (ellipse) şema 219 ister",
+        ));
+    }
     // Schema 153 (docs/adr/0807): an XOX slide; before it three sliding leaves did not part to both sides.
-    if matches!(&entity, Entity::Opening(o) if kentos_contracts::is_xox(&o.opening)) && !has.slide_more {
+    if matches!(&entity, Entity::Opening(o) if kentos_contracts::is_xox(&o.opening))
+        && !has.slide_more
+    {
         return Err(r.fail(
             Code::BadValue,
             "üç kanatlı sürmenin iki yana açılması (XOX) şema 153 ister",
@@ -2787,6 +2945,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Slab(kentos_contracts::SlabEntity { base, slab })
+        }
+        Kind::Beam => {
+            let beam = required(r, f.beam.take(), "beam")?;
+            if let Some((_, problem)) = beam.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Beam(kentos_contracts::BeamEntity { base, beam })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

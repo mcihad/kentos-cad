@@ -6,8 +6,10 @@
 //!   to its end when clockwise). A curved side is not unrolled (`curvedSide`).
 //! - The walls on the space's level whose left or right face lies on the side (parallel, within 1 mm) cover the
 //!   stretch their straight segments' ends project onto; a stretch no face covers is open (`open`).
-//! - Its height is the space's (floor to ceiling); else the lowest of its walls' heights (a wall's own, else its
-//!   level's); else not known: only the floor line is drawn. A wall lower than it draws its top across its stretch.
+//! - Its height is the space's inside height when its ceiling is known: its finished floor to its asma tavan, its height
+//!   typed or the slab over it's plastered underside (docs/adr/8040 §3); else the lowest of its walls' tops over its
+//!   floor (a wall's own height, else up to the slab over it within its storey, else its level's: §1); else not known:
+//!   only the floor line is drawn. A wall lower than it draws its top across its stretch.
 //! - An opening of one of those walls draws its jambs where its points on the side's face project, from its sill (absent:
 //!   the floor) to its head; without a head its jambs are dashed up to the side's height (`headUnknown`). A niche is seen
 //!   only from its own face; a flue never (`flue`); an opening not where its wall says is not drawn (`brokenOpening`).
@@ -169,15 +171,9 @@ pub(crate) fn draw(
     let settings = doc.settings();
     let h = PAPER * settings.plot_scale;
     let level = s.space.arch.level.clone();
-    let level_height = level.as_ref().and_then(|id| {
-        settings
-            .arch
-            .as_ref()?
-            .levels
-            .iter()
-            .find(|l| &l.id == id)?
-            .height
-    });
+    // Its floor and its ceiling (docs/adr/8040 §3): its walls' tops are measured from its floor.
+    let room = doc.room_height(&s.space);
+    let floor = doc.room_floor(&s.space).0;
     // The sides: every outer ring's edges, part by part.
     struct Edge {
         a: Vec2,
@@ -372,7 +368,8 @@ pub(crate) fn draw(
                     left,
                     lo,
                     hi,
-                    height: f.height.or(level_height),
+                    // Up to the slab over it within its storey (docs/adr/8040 §1), over the room's floor (§3).
+                    height: doc.wall_height(f).map(|h| doc.wall_foot(f) + h - floor),
                 });
             }
         }
@@ -382,12 +379,16 @@ pub(crate) fn draw(
                 side_walls.push(f.wall.clone());
             }
         }
-        let height = s.space.height.or_else(|| {
-            faces
-                .iter()
-                .filter_map(|f| f.height)
-                .fold(None, |m: Option<f64>, x| Some(m.map_or(x, |m| m.min(x))))
-        });
+        // Its inside height when its ceiling is known (docs/adr/8040 §3); else its walls' lowest top.
+        let height = room
+            .filter(kentos_domain::RoomHeight::ceiling_known)
+            .map(|h| h.inside())
+            .or_else(|| {
+                faces
+                    .iter()
+                    .filter_map(|f| f.height)
+                    .fold(None, |m: Option<f64>, x| Some(m.map_or(x, |m| m.min(x))))
+            });
         // The stretches no face covers.
         let mut spans: Vec<(f64, f64)> = faces.iter().map(|f| (f.lo, f.hi)).collect();
         spans.sort_by(|p, q| p.0.total_cmp(&q.0).then(p.1.total_cmp(&q.1)));

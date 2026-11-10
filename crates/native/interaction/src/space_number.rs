@@ -1,4 +1,10 @@
 //! Select/click rooms and review the shared semantic numbering plan before one write.
+//!
+//! EK-3 (docs/adr/8027; 2026 Dijital Hazırlama Yönetmeliği, EK-3 Mahal İsimlendirme Esasları): a room's number is
+//! Kat_Bölüm_Sıra, three characters each, joined by “_” — its storey's code (EK-2 Tablo 2.14: K00 the ground floor, K01
+//! the first, B01 the first basement, NNN none), the project's section or use code, and its place counted from 001,
+//! clockwise. With EK-3 on, the first number is made from Etkin kat, the rooms go clockwise round their middle from
+//! north, and with none clicked Enter numbers every room of the storey.
 use crate::edge::Outline;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{Context, Cursor, Flow, Label, OptionChoice, Pointer, Preview, Tone, Tool};
@@ -14,6 +20,11 @@ pub struct Number {
     uids: Vec<String>,
     first: String,
     directional: bool,
+    /// Saat yönü (EK-3 3.2.3): the rooms clockwise round their middle, from north.
+    clockwise: bool,
+    /// EK-3's Kat_Bölüm_Sıra and its section code.
+    ek3: bool,
+    section: String,
     direction: Vec<Vec2>,
     asking: bool,
     revision: Option<u64>,
@@ -29,6 +40,9 @@ impl Default for Number {
             uids: vec![],
             first: "Z-001".into(),
             directional: false,
+            clockwise: false,
+            ek3: false,
+            section: "001".into(),
             direction: vec![],
             asking: false,
             revision: None,
@@ -44,12 +58,21 @@ impl Number {
     fn waiting_direction(&self) -> bool {
         self.directional && self.direction.len() < 2
     }
-    fn request(&self) -> Option<SpacesNumber> {
+    fn request(&self, cx: &Context<'_>) -> Option<SpacesNumber> {
+        self.request_for(&self.uids, cx)
+    }
+
+    /// The command's input for `uids` (EK-3's preview: every room of the storey before any is clicked).
+    fn request_for(&self, uids: &[String], cx: &Context<'_>) -> Option<SpacesNumber> {
         if self.waiting_direction() {
             return None;
         }
         Some(SpacesNumber {
-            uids: self.uids.clone(),
+            uids: if self.clockwise && !self.directional {
+                clockwise(uids, cx)
+            } else {
+                uids.to_vec()
+            },
             first: self.first.clone(),
             order: if self.directional {
                 let [a, b] = self.direction.as_slice() else {
@@ -67,13 +90,45 @@ impl Number {
     }
     fn options(&self) -> Vec<OptionChoice> {
         choices(
-            &[("input", "Tıklama sırası"), ("direction", "Yön izdüşümü")],
+            &[
+                ("input", "Tıklama sırası"),
+                ("direction", "Yön izdüşümü"),
+                ("clockwise", "Saat yönü (EK-3)"),
+            ],
             if self.directional {
                 "direction"
+            } else if self.clockwise {
+                "clockwise"
             } else {
                 "input"
             },
         )
+    }
+
+    /// EK-3's first number for Etkin kat: its code, the section, 001.
+    fn ek3_first(&self, cx: &Context<'_>) -> String {
+        let levels = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.as_slice())
+            .unwrap_or_default();
+        format!("{}_{}_001", ek3_level(levels, cx.level), self.section)
+    }
+
+    /// With EK-3 and none clicked: every room of Etkin kat.
+    fn storey_rooms(cx: &Context<'_>) -> Vec<String> {
+        cx.doc
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Space(s) if s.space.arch.level.as_deref() == cx.level => {
+                    cx.doc.uid(kentos_domain::Slot(s.base.id))
+                }
+                _ => None,
+            })
+            .map(|u| u.to_string())
+            .collect()
     }
     fn see(&mut self, cx: &Context<'_>) {
         if self.prefix_revision != Some(cx.doc.revision()) {
@@ -127,10 +182,16 @@ impl Number {
                     .extend(Outline::of(&shape(e), Some([5., 3.]), 2., Tone::Accent).strokes);
             }
         }
-        if self.uids.is_empty() {
+        // EK-3 with none clicked: the whole storey's numbers shown before Enter (docs/adr/8027).
+        let uids = if self.ek3 && self.uids.is_empty() {
+            Self::storey_rooms(cx)
+        } else {
+            self.uids.clone()
+        };
+        if uids.is_empty() {
             return;
         }
-        let Some(input) = self.request() else {
+        let Some(input) = self.request_for(&uids, cx) else {
             return;
         };
         match spaces_number::plan_in(cx.doc, &input) {
@@ -214,6 +275,11 @@ impl Tool for Number {
             "mahallere sırayla tıklayın; yeniden tıklama çıkarır, Enter önizlemeyi uygular"
         };
         Prompt::new(LABEL, step)
+            .option_with(
+                "EK-3 numarası",
+                "E",
+                if self.ek3 { "Açık" } else { "Kapalı" },
+            )
             .option("İlk numara", "N")
             .option("Sıralama", "S")
             .option("Yönü seç", "Y")
@@ -288,7 +354,15 @@ impl Tool for Number {
         self.see(cx);
     }
     fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
-        let Some(input) = self.request() else {
+        // EK-3 with none clicked: the whole storey (docs/adr/8027).
+        if self.ek3 && self.uids.is_empty() {
+            self.uids = Self::storey_rooms(cx);
+            if self.uids.is_empty() {
+                cx.say(Level::Info, "Etkin katta numaralanacak mahal yok.");
+                return Flow::Stay;
+            }
+        }
+        let Some(input) = self.request(cx) else {
             cx.say(Level::Info, "Yön için iki farklı nokta seçin.");
             return Flow::Stay;
         };
@@ -350,6 +424,8 @@ impl Tool for Number {
             ),
             "Y" => self.configure("Y", "pick", cx),
             "G" => self.undo_step(cx),
+            // EK-3 on or off from the keyboard (docs/adr/8027).
+            "E" => self.configure("E", if self.ek3 { "no" } else { "yes" }, cx),
             _ if self.waiting_direction() => {
                 if let Some(p) = cx.typed_point(text, self.direction.last().copied(), None) {
                     self.direction_point(p, cx);
@@ -363,10 +439,17 @@ impl Tool for Number {
     }
     fn settings(&self, _: &Format) -> Vec<Setting> {
         let mut rows = vec![
+            Setting::toggle("E", "EK-3 numarası (Kat_Bölüm_Sıra)", self.ek3),
             Setting::text("N", "İlk numara", &self.first),
             Setting::choice("S", "Sıralama", self.options()),
             Setting::text("A", "Seçilen mahal", self.uids.len().to_string()).read_only(),
         ];
+        if self.ek3 {
+            rows.insert(
+                1,
+                Setting::text("B", "Bölüm/Fonksiyon (3 karakter)", &self.section),
+            );
+        }
         if !self.prefixes.is_empty() {
             let mut row = Setting::choice("P", "Kat önekinden", self.prefixes.clone());
             row.value = "Kat seç".into();
@@ -413,8 +496,35 @@ impl Tool for Number {
                 self.first = value.into();
                 self.asking = false;
             }
-            ("S", "input" | "direction") => {
+            ("S", "input" | "direction" | "clockwise") => {
                 self.directional = value == "direction";
+                self.clockwise = value == "clockwise";
+            }
+            ("E", _) => {
+                self.ek3 = matches!(
+                    crate::prompt::fold_tr(value.trim()).as_str(),
+                    "YES" | "AÇIK" | "ACIK" | "EVET" | "1" | "TRUE"
+                );
+                if self.ek3 {
+                    self.first = self.ek3_first(cx);
+                    self.clockwise = true;
+                    self.directional = false;
+                }
+                self.asking = false;
+            }
+            ("B", _) => {
+                let code = upper_tr(value.trim());
+                if code.chars().count() != 3 || !code.chars().all(|c| c.is_ascii_alphanumeric()) {
+                    cx.say(
+                        Level::Warn,
+                        "Bölüm/Fonksiyon üç harf ya da rakamdır (EK-3 3.2.2): 001, D01, ORT gibi.",
+                    );
+                    return false;
+                }
+                self.section = code;
+                if self.ek3 {
+                    self.first = self.ek3_first(cx);
+                }
             }
             ("Y", "pick") => {
                 self.directional = true;
@@ -438,5 +548,107 @@ impl Tool for Number {
     }
     fn preview(&self, _: &Format) -> Preview {
         self.drawn.clone()
+    }
+}
+
+/// EK-2 Tablo 2.14's code of storey `level` among `levels`: the ground floor K00 (the one named Zemin, else the one
+/// nearest ±0.00), those above K01, K02 …, those below B01, B02 …; NNN for a room of no storey (Kattan bağımsız).
+pub fn ek3_level(levels: &[kentos_commands::ArchLevel], level: Option<&str>) -> String {
+    let Some(id) = level else {
+        return "NNN".into();
+    };
+    let mut order: Vec<&kentos_commands::ArchLevel> = levels.iter().collect();
+    order.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
+    let Some(at) = order.iter().position(|l| l.id == id) else {
+        return "NNN".into();
+    };
+    let ground = order
+        .iter()
+        .position(|l| crate::prompt::fold_tr(&l.name).contains("ZEMIN"))
+        .or_else(|| {
+            order
+                .iter()
+                .enumerate()
+                .min_by(|a, b| a.1.elevation.abs().total_cmp(&b.1.elevation.abs()))
+                .map(|(i, _)| i)
+        })
+        .unwrap_or(0);
+    let k = at as i64 - ground as i64;
+    if k >= 0 {
+        format!("K{k:02}")
+    } else {
+        format!("B{:02}", -k)
+    }
+}
+
+/// `uids`' rooms clockwise round their labels' middle, from north (EK-3 3.2.3: “saat yönünde arttırılır”).
+fn clockwise(uids: &[String], cx: &Context<'_>) -> Vec<String> {
+    let mut placed: Vec<(String, Vec2)> = uids
+        .iter()
+        .filter_map(|u| {
+            let e = u
+                .parse()
+                .ok()
+                .and_then(|u| cx.doc.slot_of(u))
+                .and_then(|s| cx.doc.get(s))?;
+            let kentos_geometry_core::entity::Shape::Space { parts, .. } = shape(e) else {
+                return None;
+            };
+            Some((
+                u.clone(),
+                kentos_geometry_core::geom::space::label_at(&parts)?,
+            ))
+        })
+        .collect();
+    if placed.is_empty() {
+        return uids.to_vec();
+    }
+    let n = placed.len() as f64;
+    let c = Vec2::new(
+        placed.iter().map(|(_, p)| p.x).sum::<f64>() / n,
+        placed.iter().map(|(_, p)| p.y).sum::<f64>() / n,
+    );
+    let turn = |p: Vec2| {
+        let a = (p.x - c.x).atan2(p.y - c.y);
+        if a < 0.0 {
+            a + std::f64::consts::TAU
+        } else {
+            a
+        }
+    };
+    placed.sort_by(|a, b| turn(a.1).total_cmp(&turn(b.1)).then(a.0.cmp(&b.0)));
+    placed.into_iter().map(|(u, _)| u).collect()
+}
+
+#[cfg(test)]
+mod ek3_tests {
+    use super::ek3_level;
+    use kentos_commands::ArchLevel;
+
+    fn level(id: &str, name: &str, elevation: f64) -> ArchLevel {
+        ArchLevel {
+            id: id.into(),
+            name: name.into(),
+            elevation,
+            height: None,
+        }
+    }
+
+    #[test]
+    fn storeys_are_coded_as_ek2_table_2_14_says() {
+        let levels = [
+            level("b", "Bodrum kat", -3.0),
+            level("z", "Zemin kat", 0.0),
+            level("1", "1. kat", 3.0),
+            level("2", "2. kat", 6.0),
+        ];
+        assert_eq!(ek3_level(&levels, Some("z")), "K00");
+        assert_eq!(ek3_level(&levels, Some("1")), "K01");
+        assert_eq!(ek3_level(&levels, Some("2")), "K02");
+        assert_eq!(ek3_level(&levels, Some("b")), "B01");
+        assert_eq!(ek3_level(&levels, None), "NNN");
+        // No Zemin by name: the one nearest ±0.00 is the ground floor.
+        let unnamed = [level("a", "A", -0.1), level("c", "C", 2.9)];
+        assert_eq!(ek3_level(&unnamed, Some("c")), "K01");
     }
 }

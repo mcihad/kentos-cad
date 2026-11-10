@@ -15,12 +15,13 @@ use kentos_sheet::template::*;
 use kentos_sheet::*;
 use std::collections::BTreeSet;
 
-pub const SYSTEM_IDS: [&str; 14] = [
+pub const SYSTEM_IDS: [&str; 15] = [
     "sys:genel-a4-dikey",
     "sys:genel-a3-yatay",
     "sys:rapor-sayfasi",
     "sys:cad-teknik",
     "sys:cad-mimari",
+    "sys:mimari-ruhsat",
     "sys:aplikasyon-krokisi",
     "sys:ifraz-paftasi",
     "sys:ayirma-capi",

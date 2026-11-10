@@ -292,7 +292,7 @@ impl Document {
             }
         }
         // Two clash where they run into each other and their heights meet or plan would cut both (docs/adr/0719 §3).
-        let cut = kentos_contracts::PLAN_CUT_HEIGHT;
+        let cut = self.settings().plan_cut();
         // Two options of one set never clash (docs/adr/0788 §4): only one of them is ever built.
         let groups = self.option_groups();
         for list in by_host.values() {

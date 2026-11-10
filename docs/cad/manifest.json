@@ -468,9 +468,42 @@
    "tests": 0
   },
   {
+   "id": "arch.parkingTable",
+   "kind": "command",
+   "title": "Otopark hesabı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Otopark hesabı (kaynağı parking): bölümlerin Ek-1 ihtiyacı, toplam, Otopark/Garaj mahallerinden yer sayısı ve şarj yeri; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 8036).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.permitSet",
+   "kind": "command",
+   "title": "Ruhsat takımı",
+   "level": "semantic",
+   "via": [
+    "cad.sheets.edit",
+    "file.publish.sheets"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sheets.edit, kentos.cad.file.publish.sheets",
+   "mcp": "cad.sheets.edit, file.publish.sheets",
+   "note": "Ruhsat takımı: künye çizimin değişkenlerine (Proje ayarları › Değişkenler), takımın paftaları sys:mimari-ruhsat şablonundan tek cad.sheets.edit değişikliğiyle; yayın file.publish.sheets ile ayrı dosya, pdfa ve EK-2 adı ({@proje_kodu}_{@bina_kodu}_MM_XXXX_…) (ADR 8037).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.phase.all",
    "kind": "command",
-   "title": "Evre: Tümü",
+   "title": "Tadilat: Tümü",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -486,7 +519,7 @@
   {
    "id": "arch.phase.demolition",
    "kind": "command",
-   "title": "Evre: Yıkım planı",
+   "title": "Tadilat: Yıkım planı",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -502,7 +535,7 @@
   {
    "id": "arch.phase.existing",
    "kind": "command",
-   "title": "Evre: Mevcut durum",
+   "title": "Tadilat: Mevcut durum",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -518,7 +551,7 @@
   {
    "id": "arch.phase.proposed",
    "kind": "command",
-   "title": "Evre: Yeni durum",
+   "title": "Tadilat: Yeni durum",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -527,6 +560,22 @@
    "python": "kentos.cad.settings.set",
    "mcp": "cad.settings.set",
    "note": "Projenin arch.phaseView'u (ADR 0346 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.phase.renovation",
+   "kind": "command",
+   "title": "Tadilat: Tadilat projesi",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Projenin arch.phaseView'u renovation (ADR 8039 §5): Mimarlar Odası'nın üç tekniği tek planda.",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -583,7 +632,7 @@
   {
    "id": "arch.settings",
    "kind": "command",
-   "title": "Katlar",
+   "title": "Mimari ayarları",
    "level": "semantic",
    "via": [
     "cad.settings.set"
@@ -608,6 +657,22 @@
    "python": "kentos.cad.sheets.set",
    "mcp": "cad.sheets.set",
    "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.shelterTable",
+   "kind": "command",
+   "title": "Sığınak hesabı",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Sığınak hesabı (kaynağı shelter): bölümlerin kişi sayısı, gereken net alan, Sığınak mahallerinin alanı, muafiyet, tuvalet ve çıkış; satırlarını belge her adımda ve ayar değişince kendisi yazar (ADR 8036).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -706,6 +771,22 @@
    "python": "kentos.cad.styles.edit",
    "mcp": "cad.styles.edit",
    "note": "Her stil kind wall'la oluşturulur, güncellenir ya da silinir; izleyen duvarlar aynı adımda (ADR 0339 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.zoningTable",
+   "kind": "command",
+   "title": "Emsal ve TAKS tablosu",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create"
+   ],
+   "operation": "table",
+   "python": "kentos.cad.entities.create",
+   "mcp": "cad.entities.create",
+   "note": "Emsal ve TAKS tablosu (kaynağı zoning): parsel, emsal, TAKS, izin verilen ve projedeki alanlar, kat kat emsale dahil ve harici alan; satırlarını belge her adımda ve Proje ayarları değişince kendisi yazar (ADR 8030).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -3091,6 +3172,20 @@
    "mcp": null,
    "note": null,
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "edit.selectFilter.beam",
+   "kind": "command",
+   "title": "Seçim süzgecinde Kiriş",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },
@@ -11144,6 +11239,22 @@
    "tests": 0
   },
   {
+   "id": "tool.beam",
+   "kind": "command",
+   "title": "Kiriş",
+   "level": "semantic",
+   "via": [
+    "cad.beams.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.beams.create",
+   "mcp": "cad.beams.create",
+   "note": "Eksenin noktaları, genişlik, yükseklik, hiza, kot farkı ve numara komuta verilir; tepesinin nerede asıldığı ve altındaki duvarın kirişin altında bitmesi belgenin kuralı (ADR 8041 §1).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.blockDefine",
    "kind": "tool",
    "title": "Blok oluştur",
@@ -12032,6 +12143,23 @@
    "tests": 1
   },
   {
+   "id": "tool.escapeRoutes",
+   "kind": "command",
+   "title": "Kaçış yolları",
+   "level": "semantic",
+   "via": [
+    "cad.entities.create",
+    "cad.entities.delete"
+   ],
+   "operation": null,
+   "python": "kentos.cad.entities.create, kentos.cad.entities.delete",
+   "mcp": "cad.entities.create, cad.entities.delete",
+   "note": "Kaçış yolları: Mevzuat grubunun yangın kurallarının ölçtüğü yollar (BYKHY 32/6, 4/i, 48/2, 48/4, Ek-5/B) etkin katta çizgi, ok başı ve sınırıyla yazı olarak çizime; Kaçış özniteliği taşıyan eski yollar silinir (ADR 8035 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.explode",
    "kind": "tool",
    "title": "Patlat",
@@ -12464,6 +12592,22 @@
    "tests": 3
   },
   {
+   "id": "tool.joineryList",
+   "kind": "command",
+   "title": "Doğrama listesi",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.insert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.insert",
+   "note": "Doğrama listesinin bloğu (kimliği sabit, adı MM-XXXX-DOGRAMALISTESI) çizimin tiplerinden yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı; belge tip ya da açıklık değişince bloğu aynı adımda yeniden yazar (ADR 8038).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.labelHide",
    "kind": "tool",
    "title": "Etiketi gizle",
@@ -12790,7 +12934,7 @@
    "operation": null,
    "python": "kentos.cad.modules.edit",
    "mcp": "cad.modules.edit",
-   "note": "Tıklanan nokta, açı, ayna, kat, evre, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
+   "note": "Tıklanan nokta, açı, ayna, kat, tadilat durumu, numaralar ve bölüm place'e verilir; nesneler ve bağları komutun hesabı, önizleme planından (ADR 0775 §2, ADR 0779 §4).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -12970,6 +13114,23 @@
    "tests": 0
   },
   {
+   "id": "tool.openingCodes",
+   "kind": "command",
+   "title": "Doğrama kodları",
+   "level": "semantic",
+   "via": [
+    "cad.openingtypes.edit",
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.openingtypes.edit, kentos.cad.tags.create",
+   "mcp": "cad.openingtypes.edit, cad.tags.create",
+   "note": "Kodlar ve tipi olmayan açıklıkların tipleri openingtypes.edit'in Codes işlemiyle, etiketler tags.create'in all'ı ({code} üstünde {size}, Yenile) ile; ikisi tek geri alma adımıdır, önizleme aynı planı okur (ADR 8028).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.openingFlip",
    "kind": "command",
    "title": "Açıklığı çevir",
@@ -13142,6 +13303,23 @@
    "scope": "cad",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "tool.planDimensions",
+   "kind": "command",
+   "title": "Planı ölçülendir",
+   "level": "semantic",
+   "via": [
+    "cad.dimensionsets.create",
+    "cad.dimensions.interior"
+   ],
+   "operation": null,
+   "python": "kentos.cad.dimensionsets.create, kentos.cad.dimensions.interior",
+   "mcp": "cad.dimensionsets.create, cad.dimensions.interior",
+   "note": "Dış duvarlar, doğrultu, dört yan, aşamanın sıraları ve açıklık uç/merkez seçimi dizi komutuna; mahalleri ikişer kez kesen iç kesen çizgiler iç ölçü komutuna gider; hepsi tek geri alma adımıdır, önizleme aynı planları okur (ADR 8026).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.planRoad",
@@ -13496,6 +13674,22 @@
    "tests": 2
   },
   {
+   "id": "tool.renovationLegend",
+   "kind": "command",
+   "title": "Tadilat lejantı",
+   "level": "semantic",
+   "via": [
+    "cad.blocks.insert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.blocks.insert",
+   "mcp": "cad.blocks.insert",
+   "note": "Tadilat lejantının bloğu (kimliği sabit, adı MM-XXXX-TADILATLEJANTI) pafta ölçeğinde yazılır ve imleçte sol üst köşesinden yerleştirilir; blok ve yerleştirme tek geri alma adımı (ADR 8039 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.repeat",
    "kind": "command",
    "title": "Son komutu yinele",
@@ -13638,6 +13832,24 @@
    "tests": 1
   },
   {
+   "id": "tool.room",
+   "kind": "command",
+   "title": "Oda",
+   "level": "semantic",
+   "via": [
+    "cad.walls.rectangle",
+    "cad.spaces.create",
+    "cad.tags.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.rectangle, kentos.cad.spaces.create, kentos.cad.tags.create",
+   "mcp": "cad.walls.rectangle, cad.spaces.create, cad.tags.create",
+   "note": "Dikdörtgen duvarın köşeleri ya da boyları, yön, kalınlık, stil, referans ve ortak duvar duvar komutuna, odanın ortası ve adı mahal komutuna, mahal etiket komutuna gider; üçü tek geri alma adımıdır (ADR 8021).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.roomElevation",
    "kind": "command",
    "title": "Oda iç görünüşü",
@@ -13687,6 +13899,22 @@
    "tests": 2
   },
   {
+   "id": "tool.scheduleAreas",
+   "kind": "command",
+   "title": "Metrekare cetveli",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Bölüm çizelgesi kat kat (byLevel): kat, numara, ad, bölüm türü, BB brüt ve net alanı sütunları; yer imleçten, toplam satırıyla (ADR 8029).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.scheduleFinishes",
    "kind": "command",
    "title": "Mahal kaplama çizelgesi",
@@ -13698,7 +13926,7 @@
    "python": "kentos.cad.schedules.create",
    "mcp": "cad.schedules.create",
    "note": "Mahal kaplama çizelgesi: kaplama sütunları, kat, grup, toplam, ara toplam ve köşe komuta verilir (ADR 0733 §3, §5).",
-   "scope": "cad",
+   "scope": "none",
    "desktop": "implemented",
    "tests": 0
   },
@@ -13719,6 +13947,22 @@
    "tests": 0
   },
   {
+   "id": "tool.scheduleLandShares",
+   "kind": "command",
+   "title": "Kat irtifakı tablosu",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Bölüm çizelgesi, yalnız bağımsız bölümler: numara, kat, nitelik, BB net ve brüt, eklentiler, eklenti net, BB toplam ve genel brüt, arsa payı sütunları; yer imleçten, toplam satırıyla (ADR 8031).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.scheduleOpenings",
    "kind": "command",
    "title": "Kapı ve pencere çizelgesi",
@@ -13730,6 +13974,22 @@
    "python": "kentos.cad.schedules.create",
    "mcp": "cad.schedules.create",
    "note": "Tür, grup, toplam, sıra ve tıklanan köşe komuta verilir; satırlar komutun ve belgenin hesabı, önizleme planından (ADR 0344 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.scheduleRoomList",
+   "kind": "command",
+   "title": "Mahal listesi",
+   "level": "semantic",
+   "via": [
+    "cad.schedules.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.schedules.create",
+   "mcp": "cad.schedules.create",
+   "note": "Mahal çizelgesi: kat (başlık satırıyla, en alt kattan), numara, ad, döşeme, süpürgelik, duvar, tavan, kapı, pencere, denizlik ve parapet, basamak ve rıht, küpeşte ve korkuluk sütunları; toplamsız (ADR 8038).",
    "scope": "cad",
    "desktop": "implemented",
    "tests": 0
@@ -13960,6 +14220,23 @@
    "tests": 0
   },
   {
+   "id": "tool.siteParcel",
+   "kind": "command",
+   "title": "Parsel ve bahçe mesafeleri",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set",
+    "cad.entities.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set, kentos.cad.entities.create",
+   "mcp": "cad.settings.set, cad.entities.create",
+   "note": "Vaziyet planı: parsel (kapalı çizginin ya da alanın kimliği), kenar türleri ve kendi mesafeleri ayarlara (arch.site), yapı yaklaşma sınırı kesikli kapalı çizgi olarak çizime; sınırı belge her adımda yeniden yazar (ADR 8032).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.slab",
    "kind": "command",
    "title": "Döşeme",
@@ -14059,7 +14336,7 @@
   {
    "id": "tool.spaceRebound",
    "kind": "command",
-   "title": "İç nokta seç",
+   "title": "Mahali yeniden sınırla",
    "level": "semantic",
    "via": [
     "cad.spaces.edit"
@@ -14867,7 +15144,7 @@
   {
    "id": "tool.wallJoin",
    "kind": "command",
-   "title": "Duvarları birleştir",
+   "title": "Tek duvara çevir",
    "level": "semantic",
    "via": [
     "cad.walls.edit"

@@ -42,7 +42,7 @@ const ADD: &str = "Bileşen ekle";
 /// The details a component may be drawn from, in order.
 const DETAILS: [(WallDetail, &str); 3] = [
     (WallDetail::Schematic, "Şematik"),
-    (WallDetail::Standard, "Standart"),
+    (WallDetail::Standard, "Uygulama"),
     (WallDetail::Detailed, "Ayrıntılı"),
 ];
 
@@ -70,10 +70,15 @@ pub struct Window {
     asking: Option<String>,
     /// The project's materials a component may be bound to (docs/adr/0791).
     materials: Vec<ArchMaterial>,
+    /// Closed with unsaved changes: “Kaydedilmemiş değişiklikler” asks (docs/adr/8006).
+    closing: bool,
 }
 
 #[derive(Debug, Clone)]
 pub enum Event {
+    /// A click beside the window, its × or Esc: asks when there are unsaved changes (docs/adr/8006).
+    Close,
+    Answer(crate::unsaved_close::Answer),
     Choose(Option<String>),
     New,
     Take,
@@ -140,6 +145,11 @@ fn free_name(base: &str, taken: &[WallStyleDef]) -> String {
 impl Window {
     pub(crate) fn asking(&self) -> bool {
         self.asking.is_some()
+    }
+
+    /// Whether “Kaydedilmemiş değişiklikler” is open (docs/adr/8006).
+    pub(crate) fn closing(&self) -> bool {
+        self.closing
     }
 
     fn problem(&self) -> Option<String> {
@@ -250,6 +260,7 @@ impl App {
             usage,
             asking: None,
             materials: doc.model.materials().to_vec(),
+            closing: false,
         };
         w.fill();
         self.wall_styles = Some(w);
@@ -364,9 +375,30 @@ impl App {
                 self.save_wall_styles();
                 return Task::none();
             }
-            Event::Cancel => {
+            Event::Cancel | Event::Answer(crate::unsaved_close::Answer::Discard) => {
                 self.wall_styles = None;
                 self.dialog = None;
+                return Task::none();
+            }
+            Event::Close => {
+                if self.wall_styles_changed() {
+                    if let Some(w) = self.wall_styles.as_mut() {
+                        w.closing = true;
+                    }
+                } else {
+                    self.wall_styles = None;
+                    self.dialog = None;
+                }
+                return Task::none();
+            }
+            Event::Answer(crate::unsaved_close::Answer::Save) => {
+                self.save_wall_styles();
+                return Task::none();
+            }
+            Event::Answer(crate::unsaved_close::Answer::Stay) => {
+                if let Some(w) = self.wall_styles.as_mut() {
+                    w.closing = false;
+                }
                 return Task::none();
             }
             _ => {}
@@ -535,7 +567,7 @@ impl App {
                 }
                 w.fill();
             }
-            Event::Save | Event::Cancel => {}
+            Event::Save | Event::Cancel | Event::Close | Event::Answer(_) => {}
         }
         Task::none()
     }
@@ -650,7 +682,17 @@ impl App {
             .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
             .action(words::primary(SAVE, can_save.then(|| msg(Event::Save))))
             .width(860.0)
-            .modal(msg(Event::Cancel));
+            .modal(msg(Event::Close));
+        if w.closing {
+            use crate::unsaved_close::Answer;
+            let question = kentos_ui::widget::unsaved(
+                TITLE,
+                msg(Event::Answer(Answer::Discard)),
+                msg(Event::Answer(Answer::Stay)),
+                can_save.then(|| msg(Event::Answer(Answer::Save))),
+            );
+            return iced::widget::stack![window, question].into();
+        }
         let Some(id) = &w.asking else {
             return window;
         };
@@ -713,7 +755,8 @@ impl App {
         .searchable(false);
         let top = row![
             container(words::field("Ad", name, None)).width(Fill),
-            container(words::field("Genişlik", width, Some(width_hint))).width(Fill),
+            // A wall's width is its Kalınlık, as the tool, its panel and Öznitelikler say (docs/adr/8003).
+            container(words::field("Kalınlık", width, Some(width_hint))).width(Fill),
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
         ]
         .spacing(12)
@@ -896,9 +939,9 @@ impl App {
                 table,
                 Some(
                     if w.materials.is_empty() {
-                        "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür. Döner: yüzün dış katmanları duvar ucunda ve kapı ile pencere sövesinde döner."
+                        "Kalınlığı boş bırakılan tek bileşen duvarın kalınlığından kalanı alır. Öncelik birleşimde: 1 en güçlü (çekirdek), 5 sıva; Kural 3'tür. Döner: yüzün dış katmanları duvar ucunda ve kapı ile pencere sövesinde döner."
                     } else {
-                        "Kalınlığı boş bırakılan tek bileşen duvarın genişliğinden kalanı alır. Malzeme: Metin ya da projenin malzemesi; bağlı bileşenin taraması ve kesit kalemi malzemeninkidir (Malzemeler penceresinde değişir). Öncelik birleşimde: 1 en güçlü, Kural 3'tür. Döner: dış katmanlar uçta ve sövede döner."
+                        "Kalınlığı boş bırakılan tek bileşen duvarın kalınlığından kalanı alır. Malzeme: Metin ya da projenin malzemesi; bağlı bileşenin taraması ve kesit kalemi malzemeninkidir (Malzemeler penceresinde değişir). Öncelik birleşimde: 1 en güçlü, Kural 3'tür. Döner: dış katmanlar uçta ve sövede döner."
                     }
                     .to_owned(),
                 ),
@@ -1012,10 +1055,7 @@ impl canvas::Program<Message> for Sample {
             &pts,
             bulges.as_deref(),
             &spec,
-            View {
-                detail: Detail::Detailed,
-                scale: 20.0,
-            },
+            View::new(Detail::Detailed, 20.0),
         ) else {
             return vec![frame.into_geometry()];
         };

@@ -60,7 +60,7 @@ const fn on_sheet(name: &'static str, caption: &'static str, open: Open) -> Scen
     }
 }
 
-const SCENES: [Scene; 37] = [
+const SCENES: [Scene; 52] = [
     scene("daire", Some("Giriş"), "Daire", Open::Caption),
     scene("yay", Some("Giriş"), "Yay", Open::Caption),
     scene("buda", Some("Giriş"), "Buda", Open::Arrow),
@@ -115,6 +115,22 @@ const SCENES: [Scene; 37] = [
     on_sheet("pafta-sira", "Sıra", Open::Caption),
     on_sheet("pafta-disa", "Dışa aktar", Open::Caption),
     on_sheet("pafta-oge", "Harita", Open::Menu),
+    // Mimari's lists and its panels' ▾ (docs/adr/8015, 8016): the building's every icon, one list after another.
+    scene("mimari-duvar", Some("Mimari"), "Duvar", Open::Caption),
+    scene("mimari-bosluk", Some("Mimari"), "Boşluk", Open::Arrow),
+    scene("mimari-aks", Some("Mimari"), "Aks", Open::Arrow),
+    scene("mimari-merdiven", Some("Mimari"), "Merdiven", Open::Arrow),
+    scene("mimari-mahal", Some("Mimari"), "Mahal", Open::Caption),
+    scene("mimari-donati", Some("Mimari"), "Donatı", Open::Caption),
+    scene("mimari-duzenle", Some("Mimari"), "Düzenle", Open::Caption),
+    scene("mimari-olcu", Some("Mimari"), "Ölçü", Open::Caption),
+    scene("mimari-etiket", Some("Mimari"), "Etiket", Open::Arrow),
+    scene("mimari-cizelge", Some("Mimari"), "Çizelge", Open::Arrow),
+    scene("mimari-isaret", Some("Mimari"), "İşaret", Open::Arrow),
+    scene("mimari-belgele", Some("Mimari"), "Belgele", Open::Caption),
+    scene("mimari-kat", Some("Mimari"), "Kat", Open::Caption),
+    scene("mimari-tadilat", Some("Mimari"), "Tadilat", Open::Caption),
+    scene("mimari-proje", Some("Mimari"), "Proje", Open::Caption),
 ];
 
 fn press(snapshot: &mut Snapshot, app: &mut App, at: Point, button: mouse::Button) {

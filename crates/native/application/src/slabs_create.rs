@@ -163,6 +163,7 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
             edge: n.edge.as_ref().map(slabs::edge_of),
             excluded: n.excluded.unwrap_or(false),
             bound,
+            layers: n.layers.clone().unwrap_or_default(),
         };
         slabs::valid(&s, &at)?;
         let s = slabs::with_bound_uids(doc, s);

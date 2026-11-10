@@ -2637,6 +2637,8 @@ codes! {
     INVALID_STAIR = "invalid_stair", Failed, false, "Merdivenin alanları bir merdiven tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, rıht ve basamak, rıht sayısı 1–400.";
     /// A ramp's fields that make none.
     INVALID_RAMP = "invalid_ramp", Failed, false, "Rampanın alanları bir rampa tanımlamıyor: yol 2–4 nokta, sıfırdan büyük genişlik, sonlu yükseklik.";
+    /// A beam's fields that make none (docs/adr/8041 §1).
+    INVALID_BEAM = "invalid_beam", Failed, false, "Kirişin alanları bir kiriş tanımlamıyor: en az iki noktalı eksen, sıfırdan büyük genişlik ve yükseklik, sınırları içinde kot farkı.";
     /// An object that is no grid where a grid is asked.
     NOT_A_GRID = "not_a_grid", Failed, false, "Nesne aks değil.";
     /// An object that is no column where a column is asked (docs/adr/0712).
@@ -2646,7 +2648,7 @@ codes! {
     /// Two grids that do not cross.
     GRIDS_PARALLEL = "grids_parallel", Failed, false, "İki aks kesişmiyor (paralel ya da yayları ayrık); kolon onların kesişimine konamaz.";
     /// An object no architectural element command takes.
-    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, merdiven ya da rampa değil.";
+    NOT_ARCH_ELEMENT = "not_arch_element", Failed, false, "Nesne aks, kolon, kiriş, merdiven ya da rampa değil.";
     /// A field the object's kind does not have.
     FIELD_NOT_FOR_KIND = "field_not_for_kind", Failed, false, "Verilen alan bu nesnenin türünde yok (örneğin aksın genişliği, kolonun etiketi dışında kolonun rıhtı).";
     /// Objects of more than one kind where one is asked.
@@ -2761,6 +2763,45 @@ codes! {
     ARCH_DOOR_FRONT_BLOCKED = "arch_door_front_blocked", Warning, false, "Kapının önündeki kullanım alanına bir duvar, kolon ya da donatı giriyor (net geçiş).";
     /// A door narrower in clear than the project rule the audit was given (docs/adr/0772 §5): a rule.
     ARCH_DOOR_CLEAR_NARROW = "arch_door_clear_narrow", Warning, false, "Kapının net geçişi verilen proje kuralının en az net geçişinden dar (proje kuralı).";
+    /// A fixture's use zone (its block's “Boşluk zarfı”, or KentOS's for its older sanitary blocks) taken by a wall, a
+    /// column or another fixture (docs/adr/8025): passage.
+    ARCH_FIXTURE_ZONE_BLOCKED = "arch_fixture_zone_blocked", Warning, false, "Donatının önündeki kullanım alanına bir duvar, kolon ya da başka bir donatı giriyor (net geçiş).";
+    PAIY_ROOM_AREA_BELOW = "paiy_room_area_below", Warning, false, "Konuttaki piyesin net alanı Planlı Alanlar İmar Yönetmeliği 29/1'in en azından küçük.";
+    PAIY_ROOM_WIDTH_BELOW = "paiy_room_width_below", Warning, false, "Konuttaki piyesin dar kenarı (net eni) Planlı Alanlar İmar Yönetmeliği 29/1'in en azından dar.";
+    PAIY_ROOM_MISSING = "paiy_room_missing", Warning, false, "Konutta Planlı Alanlar İmar Yönetmeliği 29/1'in istediği piyeslerden biri yok.";
+    PAIY_CORRIDOR_NARROW = "paiy_corridor_narrow", Warning, false, "Hol ya da koridorun net eni Planlı Alanlar İmar Yönetmeliği 29/3'ün 1,20 metresinden dar.";
+    PAIY_STOREY_HEIGHT_OVER = "paiy_storey_height_over", Warning, false, "Konut bölgesinde kat yüksekliği Planlı Alanlar İmar Yönetmeliği 28/1-c'nin en çoğunu aşıyor.";
+    /// A room's inside height under PAİY 28/4–6's (docs/adr/8040 §3).
+    PAIY_INSIDE_HEIGHT_BELOW = "paiy_inside_height_below", Warning, false, "Mahalin iç yüksekliği Planlı Alanlar İmar Yönetmeliği 28/4–6'nın en azından az (iskân edilen mahalde 2,60; ıslak hacim, kiler, geçit ve teknik mahalde 2,20 metre).";
+    PAIY_DOOR_HEIGHT_BELOW = "paiy_door_height_below", Warning, false, "Kapı yüksekliği Planlı Alanlar İmar Yönetmeliği 39/1-a'nın 2,10 metresinden az.";
+    PAIY_DOOR_WIDTH_BELOW = "paiy_door_width_below", Warning, false, "Kapının net genişliği Planlı Alanlar İmar Yönetmeliği 39/1-b, c'nin en azından dar.";
+    PAIY_STAIR_WIDTH_NARROW = "paiy_stair_width_narrow", Warning, false, "Merdiven kolu Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından dar.";
+    PAIY_STAIR_LANDING_SHORT = "paiy_stair_landing_short", Warning, false, "Merdivenin ara sahanlığı Planlı Alanlar İmar Yönetmeliği 31/1-a'nın (ya da yerel yönetmeliğin) en azından kısa.";
+    PAIY_STAIR_RISER_HIGH = "paiy_stair_riser_high", Warning, false, "Merdivenin rıhtı Planlı Alanlar İmar Yönetmeliği 31/2-a'nın en çoğundan yüksek (asansörsüz binada 0,16, asansörlüde 0,18 metre).";
+    PAIY_STAIR_STEP = "paiy_stair_step", Warning, false, "Merdivenin basamağı Planlı Alanlar İmar Yönetmeliği 31/2-b, c'ye uymuyor (2a+b 60–64 cm, basamak en az 0,27, döner merdivende dar uçta 0,10 metre).";
+    PAIY_RAILING_MISSING = "paiy_railing_missing", Warning, false, "Merdivende ya da rampada Planlı Alanlar İmar Yönetmeliği 31/1-ç, 38/1'in istediği korkuluk yok.";
+    PAIY_RAMP_STEEP = "paiy_ramp_steep", Warning, false, "Rampanın eğimi Planlı Alanlar İmar Yönetmeliği 30/12'nin kot farkına göre en çoğunu aşıyor.";
+    PAIY_WINDOW_RAILING = "paiy_window_railing", Warning, false, "Denizliği 0,90 metreden alçak pencere: Planlı Alanlar İmar Yönetmeliği 38/1'e göre 1,10 metre korkuluk gerekir.";
+    PAIY_LIGHTWELL_SMALL = "paiy_lightwell_small", Warning, false, "Işıklığın dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/2'nin en azından küçük.";
+    PAIY_AIR_SHAFT_SMALL = "paiy_air_shaft_small", Warning, false, "Hava bacasının dar kenarı ya da alanı Planlı Alanlar İmar Yönetmeliği 32/3'ün (ya da yerel yönetmeliğin) en azından küçük.";
+    PAIY_ELEVATOR_MISSING = "paiy_elevator_missing", Warning, false, "Kat adedine göre Planlı Alanlar İmar Yönetmeliği 34/1'in (ya da yerel yönetmeliğin) istediği asansör ya da asansör yeri yok.";
+    PAIY_ELEVATOR_SMALL = "paiy_elevator_small", Warning, false, "Asansör kuyusu Planlı Alanlar İmar Yönetmeliği 34/2'nin kabininden (dar kenar 1,20 metre, alan 1,80 m²) küçük.";
+    PAIY_ELEVATOR_LANDING_NARROW = "paiy_elevator_landing_narrow", Warning, false, "Asansör kapısının açıldığı sahanlık Planlı Alanlar İmar Yönetmeliği 34/2'nin en azından dar (sürme kapıda 1,20, dışa açılanda 1,50 metre).";
+    REGULATION_CONFLICT = "regulation_conflict", Warning, false, "Ölçü yerel imar yönetmeliğine uyuyor, Planlı Alanlar İmar Yönetmeliği'ne uymuyor: çelişkide idare karar verir.";
+    BYKHY_ESCAPE_DISTANCE_OVER = "bykhy_escape_distance_over", Warning, false, "Kaçış uzaklığı Binaların Yangından Korunması Hakkında Yönetmelik'in (32/4, 48/2, 48/4, Ek-5/B) en çoğunu aşıyor.";
+    BYKHY_ESCAPE_NO_ROUTE = "bykhy_escape_no_route", Warning, false, "Mahalden kat çıkışına ya da daire kapısına yürünerek ulaşılmıyor (Binaların Yangından Korunması Hakkında Yönetmelik 33/6-b, 48/2).";
+    BYKHY_EXIT_WIDTH_BELOW = "bykhy_exit_width_below", Warning, false, "Kaçış merdiveni ya da çıkış kapısı kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 33/1, 33/2'nin istediğinden dar.";
+    BYKHY_EXIT_COUNT_BELOW = "bykhy_exit_count_below", Warning, false, "Kişi yüküne göre Binaların Yangından Korunması Hakkında Yönetmelik 39/2'nin istediği çıkış sayısı yok.";
+    BYKHY_CORRIDOR_NARROW = "bykhy_corridor_narrow", Warning, false, "Kaçış yolu olan koridor Binaların Yangından Korunması Hakkında Yönetmelik 33/1'in 1,10 metresinden (yüksek binada 33/2'nin 1,20 metresinden) dar.";
+    BYKHY_STAIR_COUNT_BELOW = "bykhy_stair_count_below", Warning, false, "Yapı yüksekliğine göre Binaların Yangından Korunması Hakkında Yönetmelik 48/5'in istediği kaçış merdiveni sayısı yok.";
+    PARKING_SHORT = "parking_short", Warning, false, "Çizimdeki otopark yeri (Otopark ya da Garaj mahallerinin net alanı ÷ 20 m²) Otopark Yönetmeliği Ek-1'in istediğinden az.";
+    SHELTER_SHORT = "shelter_short", Warning, false, "Sığınak mahallerinin net alanı Sığınak Yönetmeliği 8/a'nın kişi başına 1 m²'sinden az.";
+    SHELTER_EXIT_COUNT = "shelter_exit_count", Warning, false, "100 m²'yi aşan sığınağın Sığınak Yönetmeliği 8/c'nin istediği iki çıkışı yok.";
+    SHELTER_HEIGHT_LOW = "shelter_height_low", Warning, false, "Sığınağın iç yüksekliği Sığınak Yönetmeliği 8/a'nın 2,40 metresinden az.";
+    /// A window type's U value above TS 825:2024's (docs/adr/8038).
+    WINDOW_U_HIGH = "window_u_high", Warning, false, "Pencere tipinin ısıl geçirgenliği (U) TS 825:2024'ün tavsiye edilen 1,8 W/m²K değerinden yüksek.";
+    /// A door's leaf opening into a fixture's use zone (docs/adr/8025): passage.
+    ARCH_FIXTURE_ZONE_DOOR = "arch_fixture_zone_door", Warning, false, "Bir kapının kanadı donatının önündeki kullanım alanına açılıyor (net geçiş).";
     /// A ramp steeper than its accessibility profile allows for its rise (docs/adr/0723 §4).
     RAMP_SLOPE_OVER_PROFILE = "ramp_slope_over_profile", Warning, false, "Rampanın eğimi kot farkı için erişilebilirlik profilinin sınırını aşıyor.";
     /// A sloped run longer than the profile's long run and steeper than it allows there.

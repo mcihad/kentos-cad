@@ -231,6 +231,22 @@ impl Store {
                 }
             }
         }
+        // A room is picked on its floor too, as its net area (docs/adr/8023): its pieces are its outline and its
+        // label, so a click on its floor picked nothing and a tagged room (Oda's, its label the tag's) could be chosen
+        // only at its outline, from the click's list. Edges still go first, and so does anything smaller in it. A
+        // slab is not: it covers the whole floor.
+        if interior
+            && let Shape::Space { parts, space } = &it.shape
+            && space.slab.is_none()
+            && let Some(a) = parts
+                .iter()
+                .filter(|part| crate::geom::region::inside_area(part, p))
+                .map(crate::geom::region::net_area)
+                .reduce(js_min)
+            && out.area.is_none_or(|best| a < best)
+        {
+            out.area = Some(a);
+        }
         out
     }
 

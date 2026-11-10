@@ -20,6 +20,7 @@ mod clips;
 mod atlas_clip;
 
 mod map_levels;
+mod permit;
 
 mod model_scope;
 

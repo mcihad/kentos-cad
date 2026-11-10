@@ -14,6 +14,9 @@ use kentos_ui::{
     widget::{Dialog, Switch},
 };
 use std::{path::PathBuf, time::Duration};
+/// The PDF/A switch's words (docs/adr/8037).
+pub(crate) const ARCHIVE_LABEL: &str = "PDF/A-2 arşiv biçimi (e-PYS teslimi)";
+
 #[derive(Clone, Debug)]
 pub struct Row {
     pub id: String,
@@ -62,6 +65,8 @@ pub enum Event {
     Move(usize, i32),
     Separate(bool),
     Resources(bool),
+    /// PDF/A-2b (docs/adr/8037).
+    Archive(bool),
     Naming(String),
     Name(String),
     Path(String),
@@ -164,6 +169,7 @@ impl App {
             dpi: None,
             geo: options.geo,
             layers: options.layers,
+            pdfa: false,
             pin: None,
             resumable: true,
             resume: false,
@@ -234,6 +240,10 @@ impl App {
             }
             Event::Resources(on) => {
                 s.input.resources = on;
+                s.changed();
+            }
+            Event::Archive(on) => {
+                s.input.pdfa = on;
                 s.changed();
             }
             Event::Separate(on) => {
@@ -613,6 +623,14 @@ impl App {
                 .label("Her pafta ayrı PDF")
                 .into()
             });
+            // The archival file the 2026 digital project regulation asks a drawing as (docs/adr/8037).
+            body = body.push(if busy {
+                Element::from(Switch::<Message>::disabled(s.input.pdfa).label(ARCHIVE_LABEL))
+            } else {
+                Element::from(
+                    Switch::new(s.input.pdfa, |v| event(Event::Archive(v))).label(ARCHIVE_LABEL),
+                )
+            });
             body = body.push(if busy {
                 Element::from(
                     Switch::<Message>::disabled(s.input.resources)
@@ -626,7 +644,7 @@ impl App {
             });
             if s.input.mode == SheetPublishMode::Separate {
                 body = body.push(label::caption(
-                    "Dosya adı · {index}, {sheet}, {number}, {revision}",
+                    "Dosya adı · {index}, {sheet}, {number}, {revision}, {@değişken}",
                 ));
                 let mut field = kentos_ui::widget::text_field("{index}-{sheet}", &s.input.naming);
                 if !busy {

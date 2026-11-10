@@ -100,6 +100,8 @@ impl ScheduleOf {
 pub enum ScheduleField {
     #[default]
     Number,
+    /// An opening's type's joinery code (docs/adr/8028; KCAD schema 220): grouped by it, the joinery list.
+    Code,
     Type,
     Form,
     Width,
@@ -165,11 +167,36 @@ pub enum ScheduleField {
     Wing,
     RecordedArea,
     ShareWeight,
+    /// Planlı Alanlar İmar Yönetmeliği 4's areas of a units schedule's group (docs/adr/8029; `.kcad` schema 221): its
+    /// net area, its gross (outer contour: the façade's outer face, a shared wall's axis), its part of the common
+    /// areas' gross and its general gross (gross and part).
+    PaiyNet,
+    PaiyGross,
+    PaiyShare,
+    GeneralGross,
+    /// Kat irtifakı (docs/adr/8031; `.kcad` schema 223): a units schedule's group's nature (Kat Mülkiyeti Kanunu 12/a:
+    /// daire, dükkân, iş bürosu …), its annexes' net and gross areas, its annexes said (their nature or name and gross),
+    /// its total gross (PAİY 4/ğ-4: its gross and its annexes') and its land share (“225/450”).
+    Nature,
+    AnnexNet,
+    AnnexGross,
+    Annexes,
+    TotalGross,
+    LandShare,
+    /// Mahal listesi (docs/adr/8038; `.kcad` schema 228; Planlı Alanlar İmar Yönetmeliği 57(29)): a space's window
+    /// sills' and parapets', its stair's treads' and risers', and its handrails' and railings' finishes; the doors and the
+    /// windows that serve it, by their joinery codes (“K01, P01 (2)”).
+    SillFinish,
+    StairFinish,
+    RailingFinish,
+    Doors,
+    Windows,
 }
 
 impl ScheduleField {
-    pub const ALL: [ScheduleField; 48] = [
+    pub const ALL: [ScheduleField; 64] = [
         ScheduleField::Number,
+        ScheduleField::Code,
         ScheduleField::Type,
         ScheduleField::Form,
         ScheduleField::Width,
@@ -217,12 +244,28 @@ impl ScheduleField {
         ScheduleField::Wing,
         ScheduleField::RecordedArea,
         ScheduleField::ShareWeight,
+        ScheduleField::PaiyNet,
+        ScheduleField::PaiyGross,
+        ScheduleField::PaiyShare,
+        ScheduleField::GeneralGross,
+        ScheduleField::Nature,
+        ScheduleField::AnnexNet,
+        ScheduleField::AnnexGross,
+        ScheduleField::Annexes,
+        ScheduleField::TotalGross,
+        ScheduleField::LandShare,
+        ScheduleField::SillFinish,
+        ScheduleField::StairFinish,
+        ScheduleField::RailingFinish,
+        ScheduleField::Doors,
+        ScheduleField::Windows,
     ];
 
     /// Its heading when the column gives none.
     pub fn title(self) -> &'static str {
         match self {
             ScheduleField::Number => "No",
+            ScheduleField::Code => "Kod",
             ScheduleField::Type => "Tür",
             ScheduleField::Form => "Biçim",
             ScheduleField::Width => "Genişlik",
@@ -231,7 +274,7 @@ impl ScheduleField {
             ScheduleField::Head => "Lento",
             ScheduleField::Wall => "Duvar",
             ScheduleField::Level => "Kat",
-            ScheduleField::Phase => "Evre",
+            ScheduleField::Phase => "Tadilat durumu",
             ScheduleField::Count => "Adet",
             ScheduleField::Area => "Alan",
             ScheduleField::Perimeter => "Çevre",
@@ -262,7 +305,8 @@ impl ScheduleField {
             ScheduleField::Drum => "Tambur çapı",
             ScheduleField::Pocket => "Cep boyu",
             ScheduleField::Share => "Pay",
-            ScheduleField::Gross => "Brüt",
+            // Its own rooms and its part: not the regulation's gross (docs/adr/8029), so not called Brüt.
+            ScheduleField::Gross => "Net + pay",
             ScheduleField::Tracks => "Ray sayısı",
             ScheduleField::Panels => "Kanat düzeni",
             ScheduleField::UnitKind => "Bölüm türü",
@@ -270,12 +314,28 @@ impl ScheduleField {
             ScheduleField::Wing => "Kanat",
             ScheduleField::RecordedArea => "Kayıtlı alan",
             ScheduleField::ShareWeight => "Pay ağırlığı",
+            ScheduleField::PaiyNet => "BB net alanı",
+            ScheduleField::PaiyGross => "BB brüt alanı",
+            ScheduleField::PaiyShare => "Ortak alan payı",
+            ScheduleField::GeneralGross => "BB genel brüt alanı",
+            ScheduleField::Nature => "Niteliği",
+            ScheduleField::AnnexNet => "Eklenti net alanı",
+            ScheduleField::AnnexGross => "Eklenti brüt alanı",
+            ScheduleField::Annexes => "Eklentiler",
+            ScheduleField::TotalGross => "BB toplam brüt alanı",
+            ScheduleField::LandShare => "Arsa payı",
+            ScheduleField::SillFinish => "Denizlik ve parapet",
+            ScheduleField::StairFinish => "Basamak ve rıht",
+            ScheduleField::RailingFinish => "Küpeşte ve korkuluk",
+            ScheduleField::Doors => "Kapı",
+            ScheduleField::Windows => "Pencere",
         }
     }
 
     pub fn name(self) -> &'static str {
         match self {
             ScheduleField::Number => "number",
+            ScheduleField::Code => "code",
             ScheduleField::Type => "type",
             ScheduleField::Form => "form",
             ScheduleField::Width => "width",
@@ -323,6 +383,21 @@ impl ScheduleField {
             ScheduleField::Wing => "wing",
             ScheduleField::RecordedArea => "recordedArea",
             ScheduleField::ShareWeight => "shareWeight",
+            ScheduleField::PaiyNet => "paiyNet",
+            ScheduleField::PaiyGross => "paiyGross",
+            ScheduleField::PaiyShare => "paiyShare",
+            ScheduleField::GeneralGross => "generalGross",
+            ScheduleField::Nature => "nature",
+            ScheduleField::AnnexNet => "annexNet",
+            ScheduleField::AnnexGross => "annexGross",
+            ScheduleField::Annexes => "annexes",
+            ScheduleField::TotalGross => "totalGross",
+            ScheduleField::LandShare => "landShare",
+            ScheduleField::SillFinish => "sillFinish",
+            ScheduleField::StairFinish => "stairFinish",
+            ScheduleField::RailingFinish => "railingFinish",
+            ScheduleField::Doors => "doors",
+            ScheduleField::Windows => "windows",
         }
     }
 
@@ -348,11 +423,23 @@ impl ScheduleField {
                     | Target
                     | TargetDiff
                     | Count
+                    | PaiyNet
+                    | PaiyGross
+                    | PaiyShare
+                    | GeneralGross
+                    | Nature
+                    | AnnexNet
+                    | AnnexGross
+                    | Annexes
+                    | TotalGross
+                    | LandShare
             );
         }
         match self {
             Count | Level | Phase | Attr => true,
             UnitKind | Building | Wing | RecordedArea | ShareWeight => false,
+            PaiyNet | PaiyGross | PaiyShare | GeneralGross => false,
+            Nature | AnnexNet | AnnexGross | Annexes | TotalGross | LandShare => false,
             Number => matches!(of, ScheduleOf::Openings | ScheduleOf::Spaces),
             Type => matches!(
                 of,
@@ -369,11 +456,10 @@ impl ScheduleField {
                     ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls
                 ) && !(self == Volume && of == ScheduleOf::Openings)
             }
-            Form | Sill | Head | Wall => of == ScheduleOf::Openings,
-            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish | Baseboard | Unit
-            | Target | TargetDiff | Share | Gross => {
-                of == ScheduleOf::Spaces
-            }
+            Form | Sill | Head | Wall | Code => of == ScheduleOf::Openings,
+            Name | Usage | Perimeter | FloorFinish | BaseFinish | WallFinish | CeilingFinish
+            | Baseboard | Unit | Target | TargetDiff | Share | Gross => of == ScheduleOf::Spaces,
+            SillFinish | StairFinish | RailingFinish | Doors | Windows => of == ScheduleOf::Spaces,
             Tag | Place => of == ScheduleOf::Columns,
             Length | Thickness => of == ScheduleOf::Walls,
             Category | Space => of == ScheduleOf::Fixtures,
@@ -401,6 +487,9 @@ impl ScheduleField {
                 | BaseFinish
                 | WallFinish
                 | CeilingFinish
+                | SillFinish
+                | StairFinish
+                | RailingFinish
                 | RecordedArea
                 | ShareWeight
         )
@@ -412,7 +501,9 @@ impl ScheduleField {
     pub fn edits_in(self, of: ScheduleOf) -> bool {
         use ScheduleField::*;
         match of {
-            ScheduleOf::Units => matches!(self, Number | Name | RecordedArea | ShareWeight),
+            ScheduleOf::Units => {
+                matches!(self, Number | Name | RecordedArea | ShareWeight | Nature)
+            }
             _ => self.editable() && !(of == ScheduleOf::Fixtures && self == Type),
         }
     }
@@ -427,7 +518,21 @@ impl ScheduleField {
     /// each unit's own (a spaces schedule repeats its unit's on each of its spaces, docs/adr/0784 §3).
     pub fn summed_in(self, of: ScheduleOf) -> bool {
         use ScheduleField::*;
-        self.summed() || (of == ScheduleOf::Units && matches!(self, Share | Gross | RecordedArea))
+        self.summed()
+            || (of == ScheduleOf::Units
+                && matches!(
+                    self,
+                    Share
+                        | Gross
+                        | RecordedArea
+                        | PaiyNet
+                        | PaiyGross
+                        | PaiyShare
+                        | GeneralGross
+                        | AnnexNet
+                        | AnnexGross
+                        | TotalGross
+                ))
     }
 
     /// Whether it is a length the project's unit writes.
@@ -475,6 +580,35 @@ impl ScheduleField {
     /// Whether it is one of the shares' fields (docs/adr/0784, `.kcad` schema 147).
     pub fn is_share(self) -> bool {
         matches!(self, ScheduleField::Share | ScheduleField::Gross)
+    }
+
+    /// Whether it is one of Planlı Alanlar İmar Yönetmeliği 4's areas (docs/adr/8029, `.kcad` schema 221).
+    pub fn is_paiy(self) -> bool {
+        use ScheduleField::*;
+        matches!(self, PaiyNet | PaiyGross | PaiyShare | GeneralGross)
+    }
+
+    /// Whether it is one of kat irtifakı's fields (docs/adr/8031, `.kcad` schema 223).
+    pub fn is_land(self) -> bool {
+        use ScheduleField::*;
+        matches!(
+            self,
+            Nature | AnnexNet | AnnexGross | Annexes | TotalGross | LandShare
+        )
+    }
+
+    /// Whether it is one of the room list's fields (docs/adr/8038, `.kcad` schema 228).
+    pub fn is_room_list(self) -> bool {
+        use ScheduleField::*;
+        matches!(
+            self,
+            SillFinish | StairFinish | RailingFinish | Doors | Windows
+        )
+    }
+
+    /// Whether it is an opening's type's joinery code (docs/adr/8028, `.kcad` schema 220).
+    pub fn is_opening_code(self) -> bool {
+        self == ScheduleField::Code
     }
 
     /// Whether it is one of a units schedule's own fields (docs/adr/0795, `.kcad` schema 151).
@@ -701,7 +835,7 @@ pub fn schedule_problem(
             if let Some((k, _)) = objects_only.iter().find(|(_, on)| *on) {
                 return Some((
                     format!("filter.{k}"),
-                    "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; evre, biçim, katman ve tür adı süzgeci \
+                    "Bölüm çizelgesi bölümleri kat, bina, kanat ve türle süzer; tadilat durumu, biçim, katman ve tür adı süzgeci \
                      nesne çizelgelerindedir."
                         .into(),
                 ));

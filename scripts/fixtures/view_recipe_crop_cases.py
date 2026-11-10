@@ -63,7 +63,7 @@ def cases():
     add("Alana değen katsız çizgi dar haritada", [step(book(), [3])])
     add("Alanın dışındaki tarama dar haritada yok, ötekilerde var", [step(book(), [4])])
     add("Projede olmayan katın kolonu alanın dışında: dar haritada yok", [step(book(), [6])])
-    add("Alanın altındaki yıkılacak kolon dar haritada yok", [step(book(), [7])])
+    add("Alanın altındaki iptal edilen kolon dar haritada yok", [step(book(), [7])])
     add("Alanın altındaki yeni kolon dar haritada yok", [step(book(), [8])])
     add("Çerçevenin dışındaki kolon hiçbir haritada", [step(book(), [5])])
     add("Bütün nesneler: dar harita yalnız alanındakileri sayar", [step(book(), vrs.IDS)])

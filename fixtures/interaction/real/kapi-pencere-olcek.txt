@@ -1,0 +1,45 @@
+# M11 (docs/adr/8010): a door and a window on the 11 × 8 m outer walls, seen near and far. The screen's scale picks
+# the walls' detail and the openings follow it: at Home (1 m = 60.6 px, 1:62, Uygulama) the frame's sides show; two
+# wheel turns out (1:113, Şematik) the door is its leaf and swing, the window three lines jamb to jamb; five in (1:25,
+# Ayrıntılı) every part. At 1:113 the 6 cm frame is under 2 px and merges with the wall's end: the picture is the
+# same as before M11 to the pixel; the difference shows on paper (kapi-pencere-pafta.txt). A wheel turn here is about ×1.35 (measured on 7 November 2026: four out took 1:62 to 1:208).
+# The clicks are scenario_2p1.py's measures: 1 m = 66.47 px after the first Home, (0, 0) at (160.4, 741.4); the door's
+# swing outside the walls makes the second Home a little farther.
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 115 84    # araç: Dikdörtgen duvar
+wait 400
+move 500 450
+type 0,0
+key Return
+type 11,8
+key Return
+wait 500
+key Escape
+key Home
+wait 800
+click 452 75    # araç: Kapı
+wait 400
+click 360 748   # kapı: alttaki dış duvar
+wait 300
+key Escape
+key Escape
+click 509 75    # araç: Pencere
+wait 400
+click 559 748   # pencere: alttaki dış duvar
+wait 300
+key Escape
+key Escape
+key Home
+wait 1000
+shot m11-01-uygulama
+wheel 460 741 -2   # uzaklaş: 1:113
+wait 1500
+shot m11-02-sematik
+wheel 460 741 5   # yaklaş: 1:25
+wait 1500
+shot m11-03-ayrintili

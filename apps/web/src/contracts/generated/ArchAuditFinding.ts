@@ -25,7 +25,17 @@ key: string, check: ArchAuditCheck,
  * `ramp_no_run`, `ramp_slope_mismatch` or `arch_casework_broken` (docs/adr/0732 §4); the program group's
  * `program_unit_missing`, `program_area_below`, `program_area_above`, `program_width_narrow`,
  * `program_passage_narrow`, `program_adjacent_missing`, `program_reach_missing`, `program_no_door`,
- * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1).
+ * `program_fixture_clearance` (docs/adr/0773 §5), `program_level_outside` (docs/adr/0784 §1); the fixtures group's
+ * `arch_fixture_zone_blocked`, `arch_fixture_zone_door` (docs/adr/8025); the regulation group's
+ * `paiy_room_area_below`, `paiy_room_width_below`, `paiy_room_missing`, `paiy_corridor_narrow`,
+ * `paiy_storey_height_over`, `paiy_door_height_below`, `paiy_door_width_below` (docs/adr/8033),
+ * `paiy_inside_height_below` (docs/adr/8040 §3),
+ * `paiy_stair_width_narrow`, `paiy_stair_landing_short`, `paiy_stair_riser_high`, `paiy_stair_step`,
+ * `paiy_railing_missing`, `paiy_ramp_steep`, `paiy_window_railing`, `paiy_lightwell_small`, `paiy_air_shaft_small`,
+ * `paiy_elevator_missing`, `paiy_elevator_small`, `paiy_elevator_landing_narrow` and `regulation_conflict`
+ * (docs/adr/8034); `bykhy_escape_distance_over`, `bykhy_escape_no_route`, `bykhy_exit_width_below`,
+ * `bykhy_exit_count_below`, `bykhy_corridor_narrow`, `bykhy_stair_count_below` (docs/adr/8035); `parking_short`,
+ * `shelter_short`, `shelter_exit_count`, `shelter_height_low` (docs/adr/8036).
  */
 code: string, 
 /**
@@ -63,4 +73,9 @@ note?: string,
 /**
  * A door finding's kind (docs/adr/0772 §5): physical, passage or a project rule.
  */
-nature?: ArchAuditNature, };
+nature?: ArchAuditNature, 
+/**
+ * A regulation finding's article and gazette (docs/adr/8033): “PAİY 29/1 · RG 3.7.2017/30113”; a local
+ * regulation's (docs/adr/8034) “Sivas İmar Yön. 31/1-a · RG 10.11.2022/32009”; a conflict's both, “… ↔ …”.
+ */
+rule?: string, };

@@ -37,6 +37,7 @@ pub fn kind_name(e: &Entity) -> &'static str {
         Entity::Column(_) => "Kolon",
         Entity::Stair(_) => "Merdiven",
         Entity::Ramp(_) => "Rampa",
+        Entity::Beam(_) => "Kiriş",
         Entity::Tag(_) => "Etiket",
         Entity::ViewMark(_) => "Görünüm işareti",
         Entity::Xline(_) => "Yardımcı çizgi",

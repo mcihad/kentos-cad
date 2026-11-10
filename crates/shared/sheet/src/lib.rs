@@ -40,6 +40,7 @@ pub mod model;
 pub mod ops;
 pub mod paper;
 pub mod pdf;
+pub mod permit;
 pub mod preflight;
 pub mod profile;
 pub mod project;

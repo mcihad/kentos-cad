@@ -137,6 +137,108 @@ fn an_empty_construction_draws_as_none() {
     }
 }
 
+/// A built door and window (docs/adr/8010, ADV-15) at 1:200, 1:100, 1:50 and 1:20, each scale's detail as the walls take
+/// it: what a drawing at each shows, in the symbol's order.
+#[test]
+fn a_door_and_a_window_show_their_parts_by_the_scale() {
+    use kentos_geometry_core::geom::wall::{Detail, View};
+    use opening::Part::*;
+    let parts = |json: &str, detail: Detail, scale: f64| -> Vec<opening::Part> {
+        opening::pieces_at(&place(), &spec(json), View::new(detail, scale))
+            .into_iter()
+            .map(|m| m.part)
+            .collect()
+    };
+    let door = r#"{"form":"door","frame":0.05,"build":{"threshold":0.02,"casing":0.07,"leafThickness":0.04,"useZone":0.6}}"#;
+    assert_eq!(
+        parts(door, Detail::Schematic, 200.0),
+        [Leaf, Zone],
+        "1:200: its leaf"
+    );
+    assert_eq!(
+        parts(door, Detail::Schematic, 100.0),
+        [Leaf, Swing, Zone],
+        "1:100: and its swing"
+    );
+    let whole = [
+        Frame, Frame, Leaf, Swing, Threshold, Casing, Casing, Casing, Casing, Zone,
+    ];
+    assert_eq!(
+        parts(door, Detail::Standard, 50.0),
+        whole,
+        "1:50: and its frame's sides, threshold and casings"
+    );
+    assert_eq!(parts(door, Detail::Detailed, 20.0), whole, "1:20: the same");
+    let window =
+        r#"{"form":"window","frame":0.05,"build":{"mullions":2,"sillBoard":0.05,"casing":0.07}}"#;
+    assert_eq!(
+        parts(window, Detail::Schematic, 200.0),
+        [Glass],
+        "1:200: its glass"
+    );
+    assert_eq!(
+        parts(window, Detail::Schematic, 100.0),
+        [Face, Face, Glass],
+        "1:100: and its faces"
+    );
+    let whole = [
+        Frame, Frame, Face, Face, Glass, Mullion, Mullion, Sill, Casing, Casing, Casing, Casing,
+    ];
+    assert_eq!(
+        parts(window, Detail::Standard, 50.0),
+        whole,
+        "1:50: and its frame's sides, mullions, sill and casings"
+    );
+    assert_eq!(
+        parts(window, Detail::Detailed, 20.0),
+        whole,
+        "1:20: the same"
+    );
+    // Without its frame's sides the window's faces and glass span the hole, jamb to jamb (x = 1 to 2); with them they
+    // stand between the frame's sides (x = 1.05 to 1.95).
+    let span = |detail: Detail, scale: f64| -> Vec<(opening::Part, f64, f64)> {
+        opening::pieces_at(&place(), &spec(window), View::new(detail, scale))
+            .into_iter()
+            .filter_map(|m| match m.shape {
+                kentos_geometry_core::entity::Shape::Line { a, b }
+                    if matches!(m.part, Face | Glass) =>
+                {
+                    Some((m.part, js_min(a.x, b.x), js_max(a.x, b.x)))
+                }
+                _ => None,
+            })
+            .collect()
+    };
+    for (detail, scale, from, to) in [
+        (Detail::Schematic, 200.0, 1.0, 2.0),
+        (Detail::Schematic, 100.0, 1.0, 2.0),
+        (Detail::Standard, 50.0, 1.05, 1.95),
+    ] {
+        let lines = span(detail, scale);
+        assert!(!lines.is_empty());
+        for (part, x0, x1) in lines {
+            assert!(
+                (x0 - from).abs() < TOL && (x1 - to).abs() < TOL,
+                "1:{scale} {part:?}: {x0}–{x1}"
+            );
+        }
+    }
+    // A view's own detail outranks its scale, as a view's Detail Level does in Revit: 1:200 drawn for construction
+    // shows the frame and the swing, 1:50 drawn schematically 1:100's parts.
+    assert_eq!(
+        parts(door, Detail::Standard, 200.0),
+        [
+            Frame, Frame, Leaf, Swing, Threshold, Casing, Casing, Casing, Casing, Zone
+        ]
+    );
+    assert_eq!(parts(door, Detail::Schematic, 50.0), [Leaf, Swing, Zone]);
+    // Up to 1:150 a schematic door keeps its swing.
+    assert_eq!(
+        parts(door, Detail::Schematic, opening::SWING_UP_TO),
+        [Leaf, Swing, Zone]
+    );
+}
+
 #[test]
 fn a_construction_adds_its_parts() {
     let plain = opening::symbol(&place(), &spec(r#"{"form":"door","frame":0.05}"#)).len();
@@ -153,4 +255,28 @@ fn a_construction_adds_its_parts() {
     )
     .len();
     assert!(mullioned >= window + 3, "{window} → {mullioned}");
+}
+
+/// A window over the plan's cut (docs/adr/8012; İTÜ, Teknik Çizim İlkeleri: plan is cut 1.20–1.50 m over the floor, to
+/// show the windows): a bathroom's high window, sill 1.6, leaves its wall whole and is drawn dashed, every part of it;
+/// one across the cut (sill 0.9) is cut and drawn solid; a door is cut whatever its heights.
+#[test]
+fn a_window_over_the_cut_leaves_its_wall_whole_and_is_drawn_dashed() {
+    let high = spec(r#"{"form":"window","frame":0.06,"sill":1.6,"head":2.2}"#);
+    assert!(!opening::cut_in_plan(&high));
+    assert!(opening::hole(1.5, 1.0, &high).is_none(), "its wall whole");
+    let pieces = opening::pieces(&place(), &high);
+    assert!(
+        !pieces.is_empty() && pieces.iter().all(|m| m.dashed),
+        "{pieces:?}"
+    );
+    let low = spec(r#"{"form":"window","frame":0.06,"sill":0.9,"head":2.2}"#);
+    assert!(opening::cut_in_plan(&low) && opening::hole(1.5, 1.0, &low).is_some());
+    assert!(opening::pieces(&place(), &low).iter().all(|m| !m.dashed));
+    // Without heights a window runs from the floor up: cut, as before.
+    assert!(opening::cut_in_plan(&spec(
+        r#"{"form":"window","frame":0.06}"#
+    )));
+    let door = spec(r#"{"form":"door","frame":0.05,"sill":1.5,"head":2.1}"#);
+    assert!(opening::cut_in_plan(&door));
 }

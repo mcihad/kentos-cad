@@ -91,8 +91,25 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
             notes.push("Blok adetleri çizimden yeniden sayıldı; kaynak çizim değişmedi.".into());
             ("Blok çizelgesi".to_owned(), columns, rest.to_vec())
         }
-        Some(TableSource::Schedule { of, columns, filter, sort, group, total, .. }) => {
-            let written = doc.schedule_rows(*of, columns, filter.as_ref(), sort, *group, *total);
+        Some(TableSource::Schedule {
+            of,
+            columns,
+            filter,
+            sort,
+            group,
+            total,
+            by_level,
+            ..
+        }) => {
+            let written = doc.schedule_rows_by(
+                *of,
+                columns,
+                filter.as_ref(),
+                sort,
+                *group,
+                *total,
+                *by_level,
+            );
             let last = written.rows.len().saturating_sub(1);
             let mut rows: Vec<Vec<String>> = Vec::new();
             for (i, cells) in written.rows.iter().enumerate().skip(1) {
@@ -136,6 +153,37 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                 })
                 .collect();
             (of.label().to_owned(), heads, rows)
+        }
+        // Emsal ve TAKS tablosu (docs/adr/8030): its rows worked out again, its words as the drawing shows them.
+        // Otopark and Sığınak hesabı (docs/adr/8036) alike.
+        Some(TableSource::Zoning {} | TableSource::Parking {} | TableSource::Shelter {}) => {
+            let written = match &t.source {
+                Some(TableSource::Parking {}) => doc.parking_table(),
+                Some(TableSource::Shelter {}) => doc.shelter_table(),
+                _ => doc.zoning_table(),
+            };
+            let (head, rest) = written
+                .rows
+                .split_first()
+                .expect("an Emsal ve TAKS table has a heading");
+            let heads = head
+                .iter()
+                .enumerate()
+                .map(|(j, name)| WorkbookColumn {
+                    name: name.clone(),
+                    kind: if j == 0 {
+                        CellKind::Text
+                    } else {
+                        CellKind::Auto
+                    },
+                    decimals: None,
+                })
+                .collect();
+            notes.push(
+                "Emsal ve TAKS çizimden ve imar durumundan yeniden okundu; kaynaklar değişmedi."
+                    .into(),
+            );
+            ("Emsal ve TAKS".to_owned(), heads, rest.to_vec())
         }
         _ => {
             let width = t.cells.iter().map(Vec::len).max().unwrap_or(0);

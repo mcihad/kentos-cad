@@ -139,6 +139,24 @@ impl Item {
             .map(|(_, s)| s)
     }
 
+    /// [`Item::shapes`] snapping looks at: a symbol drawn over the object left out (docs/adr/8014), as a hatch is.
+    pub fn snap_shapes(&self) -> impl Iterator<Item = &Shape> + Clone {
+        let (list, keep): (&[Shape], fn(&&Shape) -> bool) = match &self.expanded {
+            Some(x) => (&x.shapes, |s| !crate::block::shows_nothing(s)),
+            None => (std::slice::from_ref(&self.shape), |_| true),
+        };
+        let veiled = self.veiled.as_deref();
+        let symbols = self.expanded.as_deref().map(|x| x.strokes.as_slice());
+        list.iter()
+            .enumerate()
+            .filter(move |(i, s)| {
+                keep(s)
+                    && veiled.is_none_or(|v| v.get(*i) != Some(&true))
+                    && symbols.is_none_or(|k| !k.get(*i).is_some_and(|st| st.symbol))
+            })
+            .map(|(_, s)| s)
+    }
+
     /// Whether piece `i` of an insert shows: no layer it shows only with is hidden (docs/adr/0315 §2).
     pub fn piece_shown(&self, i: usize) -> bool {
         self.veiled
@@ -235,6 +253,56 @@ impl ViewWindow {
     }
 }
 
+/// The Tadilat projesi view's marks (docs/adr/8039 §5; `Store::set_renovation`): every wall drawn without its solid
+/// fill (mevcut a plain outline), `added`'s walls with their bodies hatched (ilave), `infill`'s openings drawn as their
+/// wall's infill (a closed opening, hatched; the store leaves them out of the cuts too, `set_option_out`), `cut_in`'s
+/// openings with the wall they remove dashed.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Renovation {
+    added: IdSet,
+    infill: IdSet,
+    cut_in: IdSet,
+}
+
+impl Renovation {
+    pub fn new(
+        added: impl IntoIterator<Item = f64>,
+        infill: impl IntoIterator<Item = f64>,
+        cut_in: impl IntoIterator<Item = f64>,
+    ) -> Renovation {
+        Renovation {
+            added: added.into_iter().map(f64::to_bits).collect(),
+            infill: infill.into_iter().map(f64::to_bits).collect(),
+            cut_in: cut_in.into_iter().map(f64::to_bits).collect(),
+        }
+    }
+
+    /// Whether wall `id` is ilave.
+    pub(super) fn added(&self, id: f64) -> bool {
+        self.added.contains(&id.to_bits())
+    }
+}
+
+/// Mimarlar Odası's ilave hatch (docs/adr/8039 §5): ANSI31's 45° lines, at the view's scale.
+pub(crate) const RENOVATION_HATCH: &str = "ANSI31";
+
+/// A piece the Tadilat projesi view adds: an infill's hatch, a removed wall's dashed face.
+pub(crate) fn renovation_piece(shape: Shape, line_type: Option<&str>) -> crate::block::Piece {
+    crate::block::Piece {
+        shape,
+        color: None,
+        line_weight: None,
+        by_layer: Vec::new(),
+        gates: Vec::new(),
+        stroke: crate::block::PieceStroke {
+            line_type: line_type.map(str::to_owned),
+            ..Default::default()
+        },
+        attribute: None,
+        annotation_origin: None,
+    }
+}
+
 #[derive(Default)]
 pub struct Store {
     slots: Vec<Option<Item>>,
@@ -273,6 +341,13 @@ pub struct Store {
     wall_dirty: Vec<Bounds>,
     wall_drawn: IdMap<Arc<crate::geom::wall::Drawn>>,
     wall_issues: Vec<wall_joins::WallIssue>,
+    /// Each wall's drawing as its joins left it, before the columns standing in it cut it (`wall_drawn` is after,
+    /// docs/adr/8041 §2): what a column's look is taken from.
+    wall_whole: IdMap<Arc<crate::geom::wall::Drawn>>,
+    /// Each column's footprint as the walls on its level meet it (docs/adr/8041 §2): they are cut where it stands.
+    column_feet: IdMap<Arc<crate::geom::column_join::Foot>>,
+    /// Each column's look taken from a wall's layer of its material it meets (docs/adr/8041 §2).
+    column_looks: IdMap<Arc<crate::geom::column_join::Joined>>,
     /// Each opening's wall, by the opening's id (`set_hosts`, docs/adr/0341 §2): its wall's lines are cut where it is.
     opening_hosts: IdMap<f64>,
     /// The openings in no wall (broken, or their wall gone): each shows a warning (docs/adr/0341 §1).
@@ -307,6 +382,8 @@ pub struct Store {
     /// The objects of the design options the store does not show (`set_option_out`, docs/adr/0788 §4): their walls
     /// join no wall and their openings cut no wall.
     option_out: IdSet,
+    /// The Tadilat projesi view's marks (docs/adr/8039 §5); none: another view.
+    renovation: Option<Renovation>,
     /// The objects drawn faint under the active level (`set_unpicked`, docs/adr/0715 §2): snapped to, never picked.
     unpicked: IdSet,
     /// What the label engine reads (docs/adr/0212 §3.1): the layers' labelling, the kinds' defaults, the
@@ -528,6 +605,7 @@ impl Store {
     ) {
         let layer = self.layer_index(layer_id);
         self.note_wall(id, matches!(shape, Shape::Wall { .. }).then_some(bounds));
+        self.note_column(id, Some(&shape));
         let veiled = expanded.as_deref().and_then(|x| self.veil(x));
         let key = id.to_bits();
         // Its labels' texts and pins come again with it (docs/adr/0212 §3.1).
@@ -600,6 +678,7 @@ impl Store {
     pub fn remove(&mut self, ids: &[f64]) {
         for id in ids {
             self.note_wall(*id, None);
+            self.note_column(*id, None);
             self.forget_opening(*id);
             self.times.remove(&id.to_bits());
             self.filtered.remove(&id.to_bits());
@@ -688,12 +767,20 @@ impl Store {
         if view == self.wall_view {
             return;
         }
+        // Another cut height cuts other openings: every wall is joined again with its holes (docs/adr/8012).
+        if view.cut != self.wall_view.cut {
+            self.wall_dirty.push(Bounds {
+                min_x: f64::NEG_INFINITY,
+                min_y: f64::NEG_INFINITY,
+                max_x: f64::INFINITY,
+                max_y: f64::INFINITY,
+            });
+        }
         self.wall_view = view;
         let walls: Vec<u32> = (0..self.slots.len() as u32)
-            // A space's label is sized on paper too (docs/adr/0342 §2).
-            .filter(|&s| {
-                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. }))
-            })
+            .filter(
+                |&s| matches!(&self.slots[s as usize], Some(it) if self.follows_view(&it.shape)),
+            )
             .collect();
         for s in &walls {
             let fresh = self.slots[*s as usize]
@@ -711,6 +798,25 @@ impl Store {
 
     pub fn wall_view(&self) -> crate::geom::wall::View {
         self.wall_view
+    }
+
+    /// Whether an object's pieces follow the walls' view: the walls, the architectural objects and a space's label
+    /// sized on paper (docs/adr/0339 §3, 0342 §2), a door's parts (docs/adr/8010), furniture's outline (docs/adr/8011).
+    fn follows_view(&self, shape: &Shape) -> bool {
+        match shape {
+            Shape::Wall { .. }
+            | Shape::Opening { .. }
+            | Shape::Space { .. }
+            | Shape::Grid { .. }
+            | Shape::Column { .. }
+            | Shape::Beam { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. }
+            | Shape::Tag { .. }
+            | Shape::ViewMark { .. } => true,
+            Shape::Insert { block, .. } => self.blocks.is_furniture(block),
+            _ => false,
+        }
     }
 
     /// `set_blocks` from the contract's JSON of the definitions (`[{ id, base, entities, … }]`).
@@ -736,6 +842,10 @@ impl Store {
     fn expansion_in(&self, shape: &Shape, view: crate::geom::wall::View) -> (Option<Arc<Expanded>>, Bounds) {
         let b = entity_bounds_in(shape, self.font);
         let pieces = match shape {
+            // Furniture its outline in the simplest view (docs/adr/8011).
+            Shape::Insert { block, .. } if view.simple() && self.blocks.is_furniture(block) => {
+                crate::block::outline_pieces(self.blocks.expand(shape), self.font)
+            }
             Shape::Insert { .. } => self.blocks.expand(shape),
             // A wall's faces, ends, lines and hatches at the view's detail; one that cannot be drawn its path
             // (docs/adr/0339 §1).
@@ -752,45 +862,101 @@ impl Store {
                         annotation_origin: None,
                     }]
                 }),
-            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2).
-            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-                crate::geom::arch::pieces(shape, view.scale)
+            // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2) and level (docs/adr/8011); a
+            // beam's dashed band and, from 1:50, its number and size (docs/adr/8041 §1).
+            Shape::Grid { .. }
+            | Shape::Column { .. }
+            | Shape::Beam { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. }
+            | Shape::Tag { .. }
+            | Shape::ViewMark { .. } => {
+                crate::geom::arch::pieces_in(shape, view)
             }
-            // Its rings and its label at the view's scale (docs/adr/0342 §2).
-            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view.scale),
-            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2); a flue's cross, and the outline of one
-            // plan does not cut dashed (docs/adr/0719 §2).
-            Shape::Opening { place, opening, .. } => crate::geom::opening::pieces(place, opening)
-                .into_iter()
-                .map(|m| crate::block::Piece {
-                    shape: m.shape,
-                    color: None,
-                    line_weight: None,
-                    by_layer: Vec::new(),
-                    gates: Vec::new(),
-                    stroke: crate::block::PieceStroke {
-                        line_type: m.dashed.then(|| "dashed".to_owned()),
-                        ..Default::default()
-                    },
-                    attribute: None,
-                    annotation_origin: None,
-                })
-                .collect(),
+            // Its rings and its label at the view's scale (docs/adr/0342 §2); a slab's edge at its level.
+            Shape::Space { parts, space } => self.space_pieces(parts, space, true, view),
+            // Its frame, leaves, swing and a window's lines (docs/adr/0341 §2) the view's detail and scale show
+            // (docs/adr/8010); a flue's cross, and the outline of one plan does not cut dashed (docs/adr/0719 §2).
+            Shape::Opening { place, opening, .. } => {
+                crate::geom::opening::pieces_at(place, opening, view)
+                    .into_iter()
+                    .map(|m| crate::block::Piece {
+                        shape: m.shape,
+                        color: None,
+                        line_weight: None,
+                        by_layer: Vec::new(),
+                        gates: Vec::new(),
+                        // Its share of the opening's pen (docs/adr/8009): a swing, glass or sill the narrow line.
+                        stroke: crate::block::PieceStroke {
+                            line_type: m.dashed.then(|| "dashed".to_owned()),
+                            weight_scale: Some(m.part.pen()).filter(|s| *s != 1.0),
+                            ..Default::default()
+                        },
+                        attribute: None,
+                        annotation_origin: None,
+                    })
+                    .collect()
+            }
             _ => return (None, b),
         };
-        self.expanded_of(pieces, b)
+        self.expanded_of(self.with_line_group(shape, pieces, view), b)
+    }
+
+    /// `pieces` at the view's line group (docs/adr/8013): the model's lines (a wall, an opening, a column, a beam, a
+    /// stair, a ramp, a slab, furniture) take the group's share of their pen, as Revit's model line weights go by the view's
+    /// scale; annotation (a grid, a tag, a view mark, a room's outline and label) keeps its own. Nothing changes at a
+    /// share of 1: on a 1:21–1:50 plan, or while every object keeps its own pen.
+    fn with_line_group(
+        &self,
+        shape: &Shape,
+        mut pieces: Vec<crate::block::Piece>,
+        view: crate::geom::wall::View,
+    ) -> Vec<crate::block::Piece> {
+        if view.pens == 1.0 || !self.takes_line_group(shape) {
+            return pieces;
+        }
+        for p in &mut pieces {
+            p.stroke.weight_scale = Some(p.stroke.weight_scale.unwrap_or(1.0) * view.pens);
+        }
+        pieces
+    }
+
+    /// Whether `shape` is one of the model's lines a line group weighs (docs/adr/8013).
+    fn takes_line_group(&self, shape: &Shape) -> bool {
+        match shape {
+            Shape::Wall { .. }
+            | Shape::Opening { .. }
+            | Shape::Column { .. }
+            | Shape::Beam { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. } => true,
+            Shape::Space { space, .. } => space.slab.is_some(),
+            Shape::Insert { block, .. } => self.blocks.is_furniture(block),
+            _ => false,
+        }
     }
 
     /// Pieces as an object's expansion, its box grown around them.
-    /// A space's rings and, when `label`, its label at the view's `scale` (docs/adr/0342 §2).
+    /// A space's rings and, when `label`, its label at the view's scale (docs/adr/0342 §2); a slab's edge at the view's
+    /// level (docs/adr/8011).
     fn space_pieces(
         &self,
         parts: &[crate::geom::arrangement::Area],
         space: &crate::geom::space::Spec,
         label: bool,
-        scale: f64,
+        view: crate::geom::wall::View,
     ) -> Vec<crate::block::Piece> {
-        crate::geom::space::pieces_with(parts, space, scale, label)
+        // A slab of the level above (docs/adr/8012, step 3): its rings dashed and narrow.
+        let stroke = if space.slab.as_ref().is_some_and(|l| l.overhead) {
+            crate::block::PieceStroke {
+                line_type: Some("dashed".to_owned()),
+                weight_scale: Some(crate::geom::slab::OVERHEAD_PEN),
+                ..Default::default()
+            }
+        } else {
+            Default::default()
+        };
+        crate::geom::space::pieces_with_view(parts, space, view, label)
             .into_iter()
             .map(|shape| crate::block::Piece {
                 shape,
@@ -798,7 +964,7 @@ impl Store {
                 line_weight: None,
                 by_layer: Vec::new(),
                 gates: Vec::new(),
-                stroke: Default::default(),
+                stroke: stroke.clone(),
                 attribute: None,
                 annotation_origin: None,
             })
@@ -819,10 +985,73 @@ impl Store {
         view: crate::geom::wall::View,
     ) -> (Option<Arc<Expanded>>, Bounds) {
         match shape {
+            // Tadilat projesi (docs/adr/8039 §5): a closed opening its wall's infill, a new one the wall it removes.
+            Shape::Opening { place, .. }
+                if place.len() == 4
+                    && self.renovation.as_ref().is_some_and(|r| {
+                        r.infill.contains(&id.to_bits()) || r.cut_in.contains(&id.to_bits())
+                    }) =>
+            {
+                let b = entity_bounds_in(shape, self.font);
+                let infill = self
+                    .renovation
+                    .as_ref()
+                    .is_some_and(|r| r.infill.contains(&id.to_bits()));
+                let mut pieces = Vec::new();
+                if infill {
+                    // The jambs' points: the start's on the left and right face, then the end's.
+                    let ring = vec![place[0], place[2], place[3], place[1]];
+                    if let Some(pattern) =
+                        crate::geom::wall::component_hatch(RENOVATION_HATCH, 1.0, 0.0, view.scale)
+                    {
+                        pieces.push(renovation_piece(
+                            Shape::Hatch {
+                                ring,
+                                holes: None,
+                                pattern,
+                                assoc: None,
+                                boundary: None,
+                            },
+                            None,
+                        ));
+                    }
+                } else {
+                    if let (Some(e), _) = self.expansion_in(shape, view) {
+                        pieces.extend(e.shapes.iter().zip(&e.strokes).map(|(s, stroke)| {
+                            crate::block::Piece {
+                                shape: s.clone(),
+                                color: None,
+                                line_weight: None,
+                                by_layer: Vec::new(),
+                                gates: Vec::new(),
+                                stroke: stroke.clone(),
+                                attribute: None,
+                                annotation_origin: None,
+                            }
+                        }));
+                    }
+                    // The wall it removes: its two faces across, dashed (iptal).
+                    for (a, z) in [(place[0], place[2]), (place[1], place[3])] {
+                        pieces.push(renovation_piece(Shape::Line { a, b: z }, Some("dashed")));
+                    }
+                }
+                self.expanded_of(pieces, b)
+            }
             Shape::Space { parts, space } if self.tagged_spaces.contains(&id.to_bits()) => {
                 let b = entity_bounds_in(shape, self.font);
-                self.expanded_of(self.space_pieces(parts, space, false, view.scale), b)
+                let pieces = self.space_pieces(parts, space, false, view);
+                self.expanded_of(self.with_line_group(shape, pieces, view), b)
             }
+            // One section with a wall's layer of its material (docs/adr/8041 §2): that layer's look, its outline where
+            // it is not inside the layer.
+            Shape::Column { at, column } => match self.column_looks.get(&id.to_bits()) {
+                Some(look) => {
+                    let b = entity_bounds_in(shape, self.font);
+                    let pieces = crate::geom::arch::column_pieces_joined(*at, column, view, look);
+                    self.expanded_of(self.with_line_group(shape, pieces, view), b)
+                }
+                None => self.expansion_in(shape, view),
+            },
             _ => self.expansion_in(shape, view),
         }
     }
@@ -833,18 +1062,7 @@ impl Store {
     /// without pieces.
     pub fn expanded_at(&self, id: f64, view: crate::geom::wall::View) -> Option<Arc<Expanded>> {
         let it = self.get(id)?;
-        let depends = matches!(
-            it.shape,
-            Shape::Wall { .. }
-                | Shape::Space { .. }
-                | Shape::Grid { .. }
-                | Shape::Column { .. }
-                | Shape::Stair { .. }
-                | Shape::Ramp { .. }
-                | Shape::Tag { .. }
-                | Shape::ViewMark { .. }
-        );
-        if view == self.wall_view || !depends {
+        if view == self.wall_view || !self.follows_view(&it.shape) {
             return it.expanded.clone();
         }
         self.wall_expansion_in(id, &it.shape, view).0

@@ -3,4 +3,4 @@
 /**
  * A group of spaces' kind.
  */
-export type UnitKind = "unit" | "common" | "outdoor";
+export type UnitKind = "unit" | "common" | "outdoor" | "annex";

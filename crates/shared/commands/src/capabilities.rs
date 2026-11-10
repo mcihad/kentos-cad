@@ -13,7 +13,7 @@
 use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 30] = [
+pub const KINDS: [&str; 31] = [
     "point",
     "line",
     "polyline",
@@ -40,6 +40,7 @@ pub const KINDS: [&str; 30] = [
     "slab",
     "grid",
     "column",
+    "beam",
     "stair",
     "ramp",
     "tag",
@@ -3819,7 +3820,7 @@ const ENTRIES: &[Entry] = &[
             vec![target(
                 None,
                 &[
-                    "wall", "space", "grid", "column", "stair", "ramp", "slab", "polyline",
+                    "wall", "space", "grid", "column", "beam", "stair", "ramp", "slab", "polyline",
                     "insert",
                 ],
                 &[],
@@ -4041,6 +4042,23 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.beams.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_beam",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
         id: "cad.arch.edit",
         refusals: &[
             OBJECTS,
@@ -4054,6 +4072,7 @@ const ENTRIES: &[Entry] = &[
                 "invalid_column",
                 "invalid_stair",
                 "invalid_ramp",
+                "invalid_beam",
                 "not_a_grid",
                 "grids_parallel",
                 "level_not_found",
@@ -4073,7 +4092,7 @@ const ENTRIES: &[Entry] = &[
         targets: || {
             vec![target(
                 None,
-                &["grid", "column", "stair", "ramp"],
+                &["grid", "column", "stair", "ramp", "beam"],
                 &[],
                 Some("not_arch_element"),
                 None,
@@ -6949,6 +6968,7 @@ const ENTRIES: &[Entry] = &[
                         "space",
                         "grid",
                         "column",
+                        "beam",
                         "stair",
                         "ramp",
                         "slab",

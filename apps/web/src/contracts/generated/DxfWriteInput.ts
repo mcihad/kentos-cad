@@ -93,4 +93,9 @@ uids?: { [key in number]: EntityId },
 /**
  * The detail walls are drawn at (docs/adr/0339 §4): the project's own; absent: by the scale.
  */
-wallDetail?: WallDetail, };
+wallDetail?: WallDetail, 
+/**
+ * The plan's cut height, metres (docs/adr/8012): the project's own; absent: [`crate::PLAN_CUT_HEIGHT`]. What it
+ * cuts takes its hole out of its wall; a window over it is written dashed, its wall whole.
+ */
+cutHeight?: number, };

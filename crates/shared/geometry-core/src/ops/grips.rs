@@ -114,7 +114,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         // Its label's place: dragged, the whole space moves (docs/adr/0342 §3).
         Shape::Space { parts, .. } => crate::geom::space::label_at(parts).into_iter().collect(),
         // A grid's ends, a stair's or ramp's walking line's points, a column's centre (docs/adr/0343 §2).
-        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => pts.clone(),
+        Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. }
+        | Shape::Beam { pts, .. } => pts.clone(),
         Shape::Column { at, .. } | Shape::Tag { at, .. } => vec![*at],
         Shape::ViewMark { points, .. } => points.clone(),
         Shape::Line { a, b } => vec![*a, *b],
@@ -410,7 +413,10 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         // Moved above by its path.
         Shape::Wall { .. } => return None,
         // A path's point moves; a column moves whole (docs/adr/0343 §2).
-        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } => {
+        Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. }
+        | Shape::Beam { pts, .. } => {
             let mut pts = pts.clone();
             *pts.get_mut(index)? = p;
             crate::geom::arch::with_pts(&e.shape, pts)?

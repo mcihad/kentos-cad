@@ -1,0 +1,116 @@
+# M12 (docs/adr/8011) on a sheet, as a hand does it: a column named S1 (Kolon, İlk etiket), a stair with its treads
+# numbered and railings both sides (Merdiven's panel: Basamak numaraları, Korkuluk › İki yan), a ramp, the library's
+# double bed (Ekle › Kitaplık, then Bloklar' search and a double click on its card), and a sheet from the + beside
+# Model whose map is set to 100, 50 and 200. The map is centred on the drawing, at (641, 503) on the A1 sheet at %25:
+# each scale is looked at from there, five wheel turns in at 1:100, three at 1:50, seven at 1:200 (measured on
+# 8 November 2026: the objects span 156 × 104 mm of paper at 1:100).
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 1500
+click 589 20    # Mimari sekmesi
+wait 500
+click 575 84    # araç: Kolon
+wait 600
+click 1320 829   # panel: İlk etiket
+key ctrl+a
+type S1
+key Return
+wait 300
+click 300 330   # kolon
+wait 400
+key Escape
+wait 300
+key Escape
+wait 500
+click 673 56    # araç: Merdiven
+wait 800
+wheel 1240 700 -2   # paneli kaydır
+wait 600
+click 1240 676   # panel: Basamak numaraları
+wait 300
+click 1320 705   # panel: Korkuluk
+wait 500
+click 1270 824   # İki yan
+wait 400
+click 380 330   # merdiven: başı
+wait 400
+click 700 330   # merdiven: çıkış yönü
+wait 400
+key Return      # merdiveni bitir (son kol rıhtlara göre biter)
+wait 600
+key Escape
+wait 300
+key Escape
+wait 500
+click 671 84    # araç: Rampa
+wait 800
+click 300 450   # rampa: başı
+wait 400
+click 700 450   # rampa: yönü
+wait 400
+key Return      # rampayı bitir
+wait 600
+key Escape
+wait 300
+key Escape
+wait 500
+click 385 20    # Ekle sekmesi
+wait 600
+click 115 110   # Kitaplık: KentOS blok kitaplığı
+wait 1200
+click 1185 248   # Bloklar: Blok ara
+type kişilik
+wait 800
+dclick 1150 360   # Çift kişilik yatak: Blok ekle
+wait 800
+click 560 300   # yatak
+wait 600
+key Escape
+wait 300
+key Escape
+wait 500
+key Home
+wait 1000
+shot m00-cizim
+click 96 820    # Model'in yanındaki +: yeni pafta
+wait 1500
+click 927 739   # Paftayı oluştur
+wait 2500
+shot p00-pafta
+wheel 641 503 5   # 1:100: nesnelere yaklaş
+wait 1500
+shot p01-1-100
+click 1050 56   # Sığdır
+wait 800
+click 110 283   # Öğeler: Görünüm penceresi
+wait 600
+wheel 1280 600 -6   # Öğe panelini aşağı kaydır
+wait 600
+click 1350 471   # Ölçek (1:...)
+key ctrl+a
+type 50
+key Return
+wait 1500
+wheel 641 503 3   # 1:50: nesnelere yaklaş
+wait 1500
+shot p02-1-50
+wheel 419 453 4   # 1:50: kolonla merdivenin başına yaklaş, yazılar okunsun
+wait 1500
+shot p02b-1-50-yazilar
+click 1050 56   # Sığdır
+wait 800
+wheel 505 471 7   # 1:50: kolona yaklaş
+wait 1500
+shot p02c-1-50-kolon
+click 1050 56   # Sığdır
+wait 800
+# Görünüm penceresi hâlâ seçili ve panel kaydırılmış: satırına yeniden tıklamak seçimi kaldırırdı.
+click 1350 471   # Ölçek (1:...)
+key ctrl+a
+type 200
+key Return
+wait 1500
+wheel 641 503 7   # 1:200: nesnelere yaklaş
+wait 1500
+shot p03-1-200

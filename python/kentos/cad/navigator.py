@@ -29,9 +29,10 @@ class _NavigatorRead(LocalCommand[NavigatorRead, NavigatorReadResult, NavigatorR
     ölçek; cad.sheets.set'inkiler). Her çizelge: tablonun kimliği, neyi listelediği,
     başlığı ve listelediği nesne sayısı. unleveled katsız nesnelerin sayısıdır. uid
     verilince nesnenin nerede göründüğü: katı, onu çizen görünümler (alanının kutusu
-    nesnenin kutusuyla kesişen, tarifi katını, evresini ve türünü dışarıda bırakmayan),
-    onu çizen haritalar (cad.sheets.set'in shows'u), onu listeleyen çizelgeler ve onu
-    adlandıran etiketler. Kutu kesişimidir: fazladan listelenebilir, eksik listelenmez.
+    nesnenin kutusuyla kesişen, tarifi katını, tadilat durumunu ve türünü dışarıda
+    bırakmayan), onu çizen haritalar (cad.sheets.set'in shows'u), onu listeleyen
+    çizelgeler ve onu adlandıran etiketler. Kutu kesişimidir: fazladan listelenebilir,
+    eksik listelenmez.
     """
     __slots__ = ()
     id = "cad.navigator.read"
@@ -60,7 +61,7 @@ class _NavigatorRead(LocalCommand[NavigatorRead, NavigatorReadResult, NavigatorR
         çizelge: tablonun kimliği, neyi listelediği, başlığı ve listelediği nesne sayısı.
         unleveled katsız nesnelerin sayısıdır. uid verilince nesnenin nerede göründüğü:
         katı, onu çizen görünümler (alanının kutusu nesnenin kutusuyla kesişen, tarifi
-        katını, evresini ve türünü dışarıda bırakmayan), onu çizen haritalar
+        katını, tadilat durumunu ve türünü dışarıda bırakmayan), onu çizen haritalar
         (cad.sheets.set'in shows'u), onu listeleyen çizelgeler ve onu adlandıran etiketler.
         Kutu kesişimidir: fazladan listelenebilir, eksik listelenmez.
 

@@ -1,0 +1,70 @@
+# M30 (docs/adr/8030): İmar durumu typed in Proje ayarları › Mimari, the Emsal ve TAKS badge in the status bar, the
+# İmar durumu rows in Öznitelikler and Emsal ve TAKS tablosu placed from Metraj ▾, in the real window at 1440 × 900, on
+# the building paiy_area_tests keeps (15 × 6 m, three rooms, no zoning). 300 m², emsal 1,50, TAKS 0,40: emsal 0,30,
+# TAKS 0,30; the table lists PAİY 57/3's values; a 200 m² parcel passes TAKS: the table's TAKS and footprint red and
+# the badge's “!”.
+fit KentOS Mimari — Yeni proje
+wait 3000
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 700 600
+wait 500
+shot m30-10-once
+click 1258 57   # Mimari ayarları
+wait 2000
+wheel 700 500 -10
+wait 1000
+click 680 432   # Parsel alanı
+type 300
+click 680 466   # Emsal (KAKS)
+type 1,5
+click 680 500   # TAKS
+type 0,4
+wait 600
+shot m30-11-imar-durumu
+click 1155 829  # Kaydet
+wait 2000
+move 700 600
+wait 800
+shot m30-12-rozet
+click 1003 110  # Metraj ▾
+wait 900
+shot m30-15-metraj-menusu
+key Escape
+wait 500
+click 1165 20   # Menülerde ara
+wait 500
+type emsal ve taks
+wait 1000
+key Return
+wait 1500
+move 60 720
+wait 1200
+shot m30-16-yerlestirme
+click 60 720
+wait 1500
+key Escape
+wait 500
+click 600 450 middle
+click 600 450 middle
+wait 1500
+move 1040 860
+wait 600
+shot m30-17-tablo
+click 1258 57
+wait 2000
+wheel 700 500 -10
+wait 1000
+shot m30-18a-ayar
+# The ratios' lines below the fields make the page longer: scrolled to its end, Parsel alanı stands higher.
+click 680 317
+key ctrl+a
+type 200
+wait 400
+shot m30-18b-yazildi
+click 1155 829
+wait 2000
+move 1040 860
+wait 800
+shot m30-18-taks-asildi

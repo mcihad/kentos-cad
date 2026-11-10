@@ -122,9 +122,18 @@ impl Document {
             Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
             _ => false,
         });
+        // A slab moves the floors and ceilings of the rooms over and under it (docs/adr/8040 §3).
+        let slabs = ops.iter().any(|op| match op {
+            Op::Add(s) | Op::Remove(s) => matches!(&*s.entity, Entity::Slab(_)),
+            Op::Update { before, after } => {
+                matches!(&*before.entity, Entity::Slab(_))
+                    || matches!(&*after.entity, Entity::Slab(_))
+            }
+            _ => false,
+        });
         // A column may change net area while a gross room's stored parts stay identical.
-        if settings || sources {
-            out.extend(self.derived_tag_updates(!settings));
+        if settings || sources || slabs {
+            out.extend(self.derived_tag_updates(!(settings || slabs)));
         }
         if !settings && spaces && self.program().share_rule.is_some() {
             out.extend(self.share_tag_updates());

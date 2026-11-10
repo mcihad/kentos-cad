@@ -451,6 +451,13 @@ OPENING_TYPE_FIELDS = ("width", "leaves", "operation", "swing", "showSwing", "fr
                        "fit", "leafThickness", "split", "frameDepth", "frameOffset", "threshold", "casing", "sillBoard",
                        "mullions", "transoms", "useZone")
 SCHEDULE_SIZED_FIELDS = ("roughWidth", "unitWidth", "leafWidth", "clearWidth")
+# Schema 220 (docs/adr/8028): an opening's type's joinery code as a schedule's column.
+SCHEDULE_CODE_FIELDS = ("code",)
+# Schema 221 (docs/adr/8029): a units schedule's regulation areas.
+SCHEDULE_PAIY_FIELDS = ("paiyNet", "paiyGross", "paiyShare", "generalGross")
+SCHEDULE_LAND_FIELDS = ("nature", "annexNet", "annexGross", "annexes", "totalGross", "landShare")
+# Schema 228 (docs/adr/8038): Mahal listesi's columns.
+SCHEDULE_ROOM_LIST_FIELDS = ("sillFinish", "stairFinish", "railingFinish", "doors", "windows")
 # Schema 140 (docs/adr/0773): the building program (`arch.program`: buildings, wings, units, design brief, fixture
 # clearances), a space's group (`unit`) and a schedule's program fields (`unit`, `target`, `targetDiff`); written only
 # when the project or a space has one.
@@ -599,6 +606,50 @@ SCHEMA_WITH_REVIEW_DECISIONS = 215
 # Schema 216: the parcel register (`settings.parcelRegister`): documents, boundaries and parcels whose rings are chains
 # of boundaries (docs/adr/4220).
 SCHEMA_WITH_PARCEL_REGISTER = 216
+# Docs/adr/8012: the project's plan cut height, the height its plans are cut at.
+SCHEMA_WITH_PLAN_CUT = 217
+# Docs/adr/8013: how the project's plan lines are weighted (lineGroups: own, byScale).
+SCHEMA_WITH_LINE_GROUPS = 218
+# Docs/adr/8027: a tag framed by an ellipse round its first line (a room's number, Mimarlar Odası's).
+SCHEMA_WITH_ELLIPSE_TAGS = 219
+# Docs/adr/8028: a door or window type's joinery code (openingTypes[].code) and a tag naming it or an opening's size.
+SCHEMA_WITH_OPENING_CODES = 220
+# Docs/adr/8029: a units schedule's Planlı Alanlar İmar Yönetmeliği 4 areas.
+SCHEMA_WITH_PAIY_AREAS = 221
+# Docs/adr/8030: the parcel's zoning (arch.zoning) and a brief's floor area ratio count (briefs[].emsal).
+SCHEMA_WITH_ZONING = 222
+# Docs/adr/8031: kat irtifakı: annexes (kind annex, annexOf), a unit's nature and value factor (landFactor), the land
+# shares' whole (program.landTotal) and a units schedule's kat irtifakı fields.
+SCHEMA_WITH_LAND_SHARES = 223
+# Docs/adr/8032: the site plan (arch.site: the parcel, its edges' kinds and setbacks, ±0.00's elevation, the setback
+# line).
+SCHEMA_WITH_SITE_PLAN = 224
+# Docs/adr/8034: the municipality's regulation the audit reads (arch.localRules).
+SCHEMA_WITH_LOCAL_RULES = 225
+# Docs/adr/8035: the building's sprinkler system (arch.sprinklers).
+SCHEMA_WITH_SPRINKLERS = 226
+# Docs/adr/8036: Otopark and Sığınak hesabı (a table's source parking, shelter).
+SCHEMA_WITH_PROVISION_TABLES = 227
+# Docs/adr/8038: Mahal listesi (a space's finishes sill, stair, railing; a spaces schedule's room list columns).
+SCHEMA_WITH_ROOM_LIST = 228
+# Docs/adr/8038: a door or window type's frame and leaves and its U value (openingTypes[].material, uValue).
+SCHEMA_WITH_OPENING_SPECS = 229
+# Docs/adr/8039: a door's or window's own phase (an opening's `phase`).
+SCHEMA_WITH_OPENING_PHASES = 230
+# Docs/adr/8039 §5: the Tadilat projesi view (`renovation`), the project's phaseView or a recipe's phase.
+SCHEMA_WITH_RENOVATION_VIEW = 231
+# Docs/adr/8040 §2: a slab's layers besides its structure (a slab's `layers`: kaplama, şap, yalıtım over it, sıva under).
+SCHEMA_WITH_SLAB_LAYERS = 232
+# Docs/adr/8040 §3: a room's floor offset (`floorOffset`, Döşeme kot farkı) and asma tavan (`suspendedCeiling`).
+SCHEMA_WITH_ROOM_HEIGHTS = 233
+# Docs/adr/8041 §1: beams (`beam`), the drawing's only.
+SCHEMA_WITH_BEAMS = 234
+# Docs/adr/8041 §2: a column's material (`material` of a column).
+SCHEMA_WITH_COLUMN_MATERIAL = 235
+# Docs/adr/8041 §3: a beam's role (`role`: lintel, bond beam) and its base over its storey's floor (`baseOffset`).
+SCHEMA_WITH_BEAM_ROLES = 236
+# The plan cut height's range in metres (docs/adr/8012).
+CUT_HEIGHT_RANGE = (0.3, 3.0)
 def grades_from_percent(road):
     """A road project's settings written before schema 191 (docs/adr/0977): its grades were percent, each is divided
     by 100 (the same IEEE division KentOS makes). Anything not shaped as expected is left for the checks to refuse."""
@@ -971,7 +1022,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS, SCHEMA_WITH_NETWORK_CONFIGS, SCHEMA_WITH_NETWORK_PROFILES, SCHEMA_WITH_TIMED_CLOSURES, SCHEMA_WITH_LINEAR_EVENTS, SCHEMA_WITH_SOURCE_CRS, SCHEMA_WITH_EXCEPTION_DIGESTS, SCHEMA_WITH_GEOREF_CRS, SCHEMA_WITH_LINEAGE, SCHEMA_WITH_LAYER_GEOMETRY, SCHEMA_WITH_RASTER_TILES, SCHEMA_WITH_FIELD_KINDS, SCHEMA_WITH_JOIN_SOURCES, SCHEMA_WITH_DATASETS, SCHEMA_WITH_WITHHELD_FIELDS, SCHEMA_WITH_SPACE_COLUMNS, SCHEMA_WITH_SPACE_SCOPE, SCHEMA_WITH_SPACE_SOURCES, SCHEMA_WITH_SPACE_SEPARATORS, SCHEMA_WITH_SPACE_CHOICES, SCHEMA_WITH_DIMENSION_SETS, SCHEMA_WITH_DIMENSION_SET_EDGES, SCHEMA_WITH_RAILINGS, SCHEMA_WITH_SPACE_VOIDS, SCHEMA_WITH_STAIR_ARCS, SCHEMA_WITH_DIMENSION_CROSS, SCHEMA_WITH_RECESSES, SCHEMA_WITH_LEVEL_STATE, SCHEMA_WITH_DIMENSION_LEVELS, SCHEMA_WITH_SCHEDULE_COLUMNS, SCHEMA_WITH_SLABS, SCHEMA_WITH_RAMP_LEVELS, SCHEMA_WITH_STAIR_LEVELS, SCHEMA_WITH_GRID_COLUMN_FORMS, SCHEMA_WITH_CASEWORK, SCHEMA_WITH_DIMENSION_SET_SPANS, SCHEMA_WITH_DIMENSION_SET_SCALES, SCHEMA_WITH_AUDIT_EXCEPTIONS, SCHEMA_WITH_FIXTURES, SCHEMA_WITH_PROFILE_FILES, SCHEMA_WITH_FIELD_COLUMNS, SCHEMA_WITH_TABLE_CONSTRAINTS, SCHEMA_WITH_CAD_WORK, SCHEMA_WITH_LAYER_INDEXES, SCHEMA_WITH_ARCH_BONDS, SCHEMA_WITH_BUILDING_PARTS, SCHEMA_WITH_OPENING_TYPES, SCHEMA_WITH_BUILDING_PROGRAM, SCHEMA_WITH_VIEW_RECIPES, SCHEMA_WITH_MODULES, SCHEMA_WITH_RECIPE_DETAIL, SCHEMA_WITH_SPECIAL_DOORS, SCHEMA_WITH_MODULE_UNITS, SCHEMA_WITH_VIEW_TEMPLATES, SCHEMA_WITH_PROGRAM_SHARES, SCHEMA_WITH_MATERIALS, SCHEMA_WITH_OPTIONS, SCHEMA_WITH_MULTI_SLIDE, SCHEMA_WITH_UNIT_SCHEDULES, SCHEMA_WITH_MODULE_STOREYS, SCHEMA_WITH_SLIDE_MORE, SCHEMA_WITH_OPTION_COMBOS, SCHEMA_WITH_INSTANCE_STOREYS, SCHEMA_WITH_ARC_EDGE_BONDS, SCHEMA_WITH_BLOCK_PUBLICATIONS, SCHEMA_WITH_BLOCK_PARAMETER_GROUPS, SCHEMA_WITH_BLOCK_TYPE_VALUES, SCHEMA_WITH_LATTICE_ARRAYS, SCHEMA_WITH_ROAD_WORK, SCHEMA_WITH_TEXT_ENGINE, SCHEMA_WITH_SHAPE_RESOURCES, SCHEMA_WITH_STANDARD_DOCS, SCHEMA_WITH_ROAD_PAVEMENT, SCHEMA_WITH_ROAD_PIVOT, SCHEMA_WITH_SECTION_BREAKS, SCHEMA_WITH_VOLUME_CURVE, SCHEMA_WITH_CORRIDOR_SAMPLING, SCHEMA_WITH_HAUL_SORTING, SCHEMA_WITH_PROFILE_CROSSINGS, SCHEMA_WITH_VOLUME_HISTORY, SCHEMA_WITH_HAUL_APPROVAL, SCHEMA_WITH_HAUL_NETWORK, SCHEMA_WITH_VOLUME_STATES, SCHEMA_WITH_CUT_BENCHES, SCHEMA_WITH_SLOPE_TRANSITIONS, SCHEMA_WITH_VOLUME_GRID, SCHEMA_WITH_REVIEW_NOTES, SCHEMA_WITH_LONG_PATTERNS, SCHEMA_WITH_EXTRACTION, SCHEMA_WITH_APPROVED_SHEET_TEMPLATES, SCHEMA_WITH_SHX_FONTS, SCHEMA_WITH_TABLE_STYLES, SCHEMA_WITH_DIMENSION_TEXT_STYLES, SCHEMA_WITH_LEADER_TEXT_STYLES, SCHEMA_WITH_MAP_WORK, SCHEMA_WITH_TOPOLOGY_REVIEWS, SCHEMA_WITH_STANDARD_EXCEPTIONS, SCHEMA_WITH_ROAD_GRADES, SCHEMA_WITH_ROAD_OVE, SCHEMA_WITH_MAP_WORK_RELATIVE, SCHEMA_WITH_MAP_SURVEY, SCHEMA_WITH_MAP_SURFACES, SCHEMA_WITH_SURFACE_EDITS, SCHEMA_WITH_MAP_PLATFORMS, SCHEMA_WITH_MAP_DRAWINGS, SCHEMA_WITH_GNSS_NETWORK, SCHEMA_WITH_ROAD_SPEED, SCHEMA_WITH_ROAD_PLACES, SCHEMA_WITH_ROAD_CLOUD_HEIGHTS, SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS, SCHEMA_WITH_ROAD_APPROVAL_SOURCES, SCHEMA_WITH_CUTFILL_DRAWINGS, SCHEMA_WITH_WORK_STAMPS, SCHEMA_WITH_KNOWN_VELOCITIES, SCHEMA_WITH_BOUNDARY_BONDS, SCHEMA_WITH_DRAWING_PROVENANCE, SCHEMA_WITH_APPROVED_OBJECTS, SCHEMA_WITH_APPROVED_PARTS, SCHEMA_WITH_PIPE_PROFILE_DRAWINGS, SCHEMA_WITH_APPROVED_VALUES, SCHEMA_WITH_SURFACE_PASTES, SCHEMA_WITH_REVIEW_DECISIONS, SCHEMA_WITH_PARCEL_REGISTER, SCHEMA_WITH_PLAN_CUT, SCHEMA_WITH_LINE_GROUPS, SCHEMA_WITH_ELLIPSE_TAGS, SCHEMA_WITH_OPENING_CODES, SCHEMA_WITH_PAIY_AREAS, SCHEMA_WITH_ZONING, SCHEMA_WITH_LAND_SHARES, SCHEMA_WITH_SITE_PLAN, SCHEMA_WITH_LOCAL_RULES, SCHEMA_WITH_SPRINKLERS, SCHEMA_WITH_PROVISION_TABLES, SCHEMA_WITH_ROOM_LIST, SCHEMA_WITH_OPENING_SPECS, SCHEMA_WITH_OPENING_PHASES, SCHEMA_WITH_RENOVATION_VIEW, SCHEMA_WITH_SLAB_LAYERS, SCHEMA_WITH_ROOM_HEIGHTS, SCHEMA_WITH_BEAMS, SCHEMA_WITH_COLUMN_MATERIAL, SCHEMA_WITH_BEAM_ROLES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -3624,6 +3675,26 @@ class _Schema:
         self.road_cloud_heights = version >= SCHEMA_WITH_ROAD_CLOUD_HEIGHTS
         self.road_cloud_conversions = version >= SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS
         self.road_approval_sources = version >= SCHEMA_WITH_ROAD_APPROVAL_SOURCES
+        self.plan_cut = version >= SCHEMA_WITH_PLAN_CUT
+        self.line_groups = version >= SCHEMA_WITH_LINE_GROUPS
+        self.ellipse_tags = version >= SCHEMA_WITH_ELLIPSE_TAGS
+        self.opening_codes = version >= SCHEMA_WITH_OPENING_CODES
+        self.paiy_areas = version >= SCHEMA_WITH_PAIY_AREAS
+        self.zoning = version >= SCHEMA_WITH_ZONING
+        self.land_shares = version >= SCHEMA_WITH_LAND_SHARES
+        self.site_plan = version >= SCHEMA_WITH_SITE_PLAN
+        self.local_rules = version >= SCHEMA_WITH_LOCAL_RULES
+        self.sprinklers = version >= SCHEMA_WITH_SPRINKLERS
+        self.provision_tables = version >= SCHEMA_WITH_PROVISION_TABLES
+        self.room_list = version >= SCHEMA_WITH_ROOM_LIST
+        self.opening_specs = version >= SCHEMA_WITH_OPENING_SPECS
+        self.opening_phases = version >= SCHEMA_WITH_OPENING_PHASES
+        self.renovation_view = version >= SCHEMA_WITH_RENOVATION_VIEW
+        self.slab_layers = version >= SCHEMA_WITH_SLAB_LAYERS
+        self.room_heights = version >= SCHEMA_WITH_ROOM_HEIGHTS
+        self.beams = version >= SCHEMA_WITH_BEAMS
+        self.column_material = version >= SCHEMA_WITH_COLUMN_MATERIAL
+        self.beam_roles = version >= SCHEMA_WITH_BEAM_ROLES
         self.section_breaks = version >= SCHEMA_WITH_SECTION_BREAKS
         self.volume_curve = version >= SCHEMA_WITH_VOLUME_CURVE
         self.corridor_sampling = version >= SCHEMA_WITH_CORRIDOR_SAMPLING
@@ -5864,7 +5935,7 @@ class _Schema:
         # Schema 154 (docs/adr/0808): the combination of design options the view shows.
         if self.option_combos:
             extra = {**extra, "combo": (combo, False)}
-        r = self.fields({"version": (self.uint(32), True), "level": (level, False), "phase": (self.enum(RECIPE_PHASES), False),
+        r = self.fields({"version": (self.uint(32), True), "level": (level, False), "phase": (self.enum(RECIPE_PHASES + (("renovation",) if self.renovation_view else ())), False),
                          "layerState": (self.text, False), "hidden": (self.array(category), False),
                          "scale": (self.uint(32), False), **extra})(v)
         if "pens" in r:
@@ -7803,7 +7874,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks) or (kind == "slab" and not self.slabs):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks) or (kind == "slab" and not self.slabs) or (kind == "beam" and not self.beams):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -7842,6 +7913,10 @@ class _Schema:
         if kind == "slab" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında döşeme olamaz")
+        # Nor a beam: it hangs from the drawing's storeys and slabs (docs/adr/8041 §1).
+        if kind == "beam" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında kiriş olamaz")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -7943,7 +8018,7 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
-        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark", "slab"):
+        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark", "slab", "beam"):
             fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
@@ -9155,6 +9230,16 @@ class _Schema:
     def table_schedule(self, v):
         if self.extraction and isinstance(v, dict) and v.get("kind") == "extraction":
             return self.extraction_source(v)
+        # Schema 222 (docs/adr/8030): Emsal ve TAKS tablosu; its rows are the document's.
+        if isinstance(v, dict) and v.get("kind") == "zoning":
+            if not self.zoning:
+                self.fail("unknown_field", "emsal ve TAKS tablosunun kaynağı şema 222'den beri yazılır")
+            return self.fields({"kind": (self.enum(("zoning",)), True)})(v)
+        # Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı; their rows are the document's.
+        if isinstance(v, dict) and v.get("kind") in ("parking", "shelter"):
+            if not self.provision_tables:
+                self.fail("unknown_field", "otopark ve sığınak hesabı tablolarının kaynağı şema 227'den beri yazılır")
+            return self.fields({"kind": (self.enum(("parking", "shelter")), True)})(v)
         if self.tags and isinstance(v, dict) and v.get("kind") == "schedule":
             return self.arch_schedule(v)
         # A JSON part read as its contract's (spec §6): another type is a bad value, not a wrong CBOR type.
@@ -9187,19 +9272,35 @@ class _Schema:
             if not t.strip() or any(unicodedata.category(c) == "Cc" for c in t) or len(t) > 200:
                 self.fail("bad_value", "tür süzgecinin her adı boş olmayan tek satırdır, en çok 200 harftir")
             return t
-        column = self.fields({"field": (self.enum(SCHEDULE_FIELDS + (SCHEDULE_EXTRA_FIELDS if extra else ())
+        later = {**{f: ("şema 220", self.opening_codes) for f in SCHEDULE_CODE_FIELDS},
+                 **{f: ("şema 221", self.paiy_areas) for f in SCHEDULE_PAIY_FIELDS},
+                 **{f: ("şema 223", self.land_shares) for f in SCHEDULE_LAND_FIELDS},
+                 **{f: ("şema 228", self.room_list) for f in SCHEDULE_ROOM_LIST_FIELDS}}
+
+        def field_of(read):
+            # A field a later schema brought is unknown before it (docs/adr/8028, 8029), as the Rust reader says.
+            def f(x):
+                if isinstance(x, str) and x in later and not later[x][1]:
+                    self.fail("unknown_field", f"çizelge sütunu “{x}” {later[x][0]} ister")
+                return read(x)
+            return f
+        column = self.fields({"field": (field_of(self.enum(SCHEDULE_FIELDS + (SCHEDULE_EXTRA_FIELDS if extra else ())
                                                   + (SCHEDULE_SIZED_FIELDS if self.opening_types else ())
                                                   + (SCHEDULE_PROGRAM_FIELDS if self.building_program else ())
                                                   + (SCHEDULE_SPECIAL_FIELDS if self.special_doors else ())
                                                   + (SCHEDULE_SHARE_FIELDS if self.program_shares else ())
                                                   + (SCHEDULE_MULTI_SLIDE_FIELDS if self.multi_slide else ())
-                                                  + (SCHEDULE_UNIT_FIELDS if self.unit_schedules else ())), True),
+                                                  + (SCHEDULE_UNIT_FIELDS if self.unit_schedules else ())
+                                                  + (SCHEDULE_CODE_FIELDS if self.opening_codes else ())
+                                                  + (SCHEDULE_PAIY_FIELDS if self.paiy_areas else ())
+                                                  + (SCHEDULE_LAND_FIELDS if self.land_shares else ())
+                                                  + (SCHEDULE_ROOM_LIST_FIELDS if self.room_list else ()))), True),
                               "title": (self.text, False), "attr": (self.text, False)})
         flt = self.fields({"levels": (self.array(self.text), False), "phases": (self.array(self.enum(("existing", "demolish", "new", "temporary"))), False),
                            "forms": (self.array(self.opening_form), False), "layers": (self.array(self.text), False),
                            **({"types": (self.array(type_name), False)} if extra else {}),
                            **({"buildings": (self.array(self.text), False), "wings": (self.array(self.text), False),
-                               "kinds": (self.array(self.enum(UNIT_KINDS)), False)} if self.unit_schedules else {})})
+                               "kinds": (self.array(self.enum(UNIT_KINDS + (("annex",) if self.land_shares else ()))), False)} if self.unit_schedules else {})})
         sort = self.fields({"column": (self.uint(32), True), "descending": (true_only, False),
                             **({"header": (true_only, False), "footer": (true_only, False)} if extra else {})})
         kinds = (("openings", "spaces", "columns", "walls") + (("fixtures",) if extra else ())
@@ -9208,7 +9309,9 @@ class _Schema:
                          "columns": (self.array(column), True), "filter": (flt, False), "sort": (self.array(sort), False),
                          "group": (true_only, False), "total": (true_only, False),
                          "members": (self.array(self.array(self.text)), False),
-                         **({"units": (self.array(self.array(self.text)), False)} if self.unit_schedules else {})})(v)
+                         **({"units": (self.array(self.array(self.text)), False)} if self.unit_schedules else {}),
+                         # Schema 221 (docs/adr/8029): a units schedule storey by storey.
+                         **({"byLevel": (true_only, False)} if self.paiy_areas else {})})(v)
         if not 1 <= len(d["columns"]) <= 30:
             self.path.append("columns")
             self.fail("bad_value", "çizelgenin 1 ile 30 arası sütunu olur")
@@ -9225,7 +9328,9 @@ class _Schema:
         # A units schedule's (docs/adr/0795): its filter its groups', its rows' units beside their members.
         flt_keys = set(d.get("filter", {}))
         if d["of"] == "units" and flt_keys & {"phases", "forms", "layers", "types"}:
-            self.fail("bad_value", "bölüm çizelgesi evre, biçim, katman ve tür adıyla süzülmez")
+            self.fail("bad_value", "bölüm çizelgesi tadilat durumu, biçim, katman ve tür adıyla süzülmez")
+        if d.get("byLevel") and d["of"] != "units":
+            self.fail("bad_value", "kat kat satırlar yalnız bölüm çizelgesindedir")
         if d["of"] != "units" and flt_keys & {"buildings", "wings", "kinds"}:
             self.fail("bad_value", "bina, kanat ve bölüm türü süzgeci yalnız bölüm çizelgesindedir")
         if "units" in d and (d["of"] != "units" or len(d["units"]) != len(d.get("members", []))
@@ -9238,9 +9343,12 @@ class _Schema:
         """A tag's fields (schema 80, docs/adr/0344 §1), as the contract's JSON has them; the frame only when not a circle,
         the leader only when on, no empty words."""
         def not_circle(x):
-            x = self.enum(("circle", "hexagon", "rectangle", "rounded", "none"))(x)
+            x = self.enum(("circle", "hexagon", "rectangle", "rounded", "none", "ellipse"))(x)
             if x == "circle":
                 self.fail("bad_value", "varsayılan çerçeve (circle) yazılmaz")
+            if x == "ellipse" and not self.ellipse_tags:
+                # Schema 219 (docs/adr/8027): before it a tag's frame was one of five.
+                self.fail("unknown_field", "etiketin elips çerçevesi (ellipse) şema 219 ister")
             return x
         def true_only(x):
             x = self.bool(x)
@@ -9261,6 +9369,11 @@ class _Schema:
             if not c.strip() or len(c) > 200 or c.count("\n") + 1 > 6:
                 bad("Etiketin şablonu boş olamaz, en çok 200 harf ve 6 satırdır.")
             for name in [part.split("}")[0] for part in c.split("{")[1:]]:
+                if name in ("code", "size"):
+                    if not self.opening_codes:
+                        # Schema 220 (docs/adr/8028): before it neither was a place.
+                        self.fail("unknown_field", "etiketin doğrama kodu ya da ölçü yeri ({code}, {size}) şema 220 ister")
+                    continue
                 if not (name in TAG_PLACES or (name.startswith("attr:") and name[5:].strip())):
                     bad(f"Şablonda bilinmeyen yer “{{{name}}}”.")
         if "size" in f and not (math.isfinite(f["size"]) and 0 < f["size"] <= 50):
@@ -9352,7 +9465,9 @@ class _Schema:
                          # Schema 138 (docs/adr/0771 §4): an outline bound to its walls or its space.
                          **({"bound": (self.slab_bound, False)} if self.building_parts else {}),
                          # Schema 148 (docs/adr/0785): the project material it binds to.
-                         **({"materialId": (self.material_ref, False)} if self.materials else {})})(v)
+                         **({"materialId": (self.material_ref, False)} if self.materials else {}),
+                         # Schema 232 (docs/adr/8040 §2): its layers besides its structure.
+                         **({"layers": (self.slab_layers_field, False)} if self.slab_layers else {})})(v)
         bad = lambda words: self.fail("bad_value", words)  # noqa: E731
         if not f["parts"]:
             bad("Döşemenin sınırı yok: en az bir halka verin.")
@@ -9369,6 +9484,79 @@ class _Schema:
         e = f.get("edge")
         if e is not None and not (math.isfinite(e["width"]) and 0 < e["width"] <= MAX_SLAB_EDGE):
             bad("Kenarın eni sıfırdan büyük, en çok 2 m olmalı.")
+        return f
+
+    def beam_fields(self, v):
+        """A beam's fields (schema 234, docs/adr/8041 §1): its axis (at least two points, at most 1000, none twice in a
+        row), its width (over 0, at most 3 m) and height (over 0, at most 5 m); its justification, offset (at most ±10
+        m), number and material only when not their defaults. The contract's rule (`BeamFields::problem`)."""
+        def text(x):
+            x = self.text(x)
+            if not x.strip() or x.strip() != x or any(unicodedata.category(c) == "Cc" for c in x) or len(x) > 120:
+                self.fail("bad_value", "Boş, kenarı boşluklu ya da denetim karakterli metin yazılmaz; en çok 120 karakter.")
+            return x
+        def justify(x):
+            j = self.enum(("left", "center", "right"))(x)
+            if j == "center":
+                self.fail("bad_value", "varsayılan hiza ('center') yazılmaz")
+            return j
+        def offset(x):
+            x = self.float(x)
+            if x == 0:
+                self.fail("bad_value", "varsayılan kot farkı (0) yazılmaz")
+            return x
+        def role(x):
+            r = self.enum(("beam", "lintel", "bondBeam"))(x)
+            if r == "beam":
+                self.fail("bad_value", "varsayılan tür ('beam') yazılmaz")
+            return r
+        # Schema 236 (docs/adr/8041 §3): its role and its base over its storey's floor.
+        roles = {"role": (role, False), "baseOffset": (self.float, False)} if self.beam_roles else {}
+        f = self.fields({"pts": (self.array(self.jpoint), True), "width": (self.float, True), "height": (self.float, True),
+                         "justify": (justify, False), "offset": (offset, False), **roles, "tag": (text, False),
+                         "material": (text, False), "arch": (self.arch_info, False)})(v)
+        pts = f["pts"]
+        if not 2 <= len(pts) <= 1000:
+            self.fail("bad_value", f"Kirişin ekseni en az iki, en çok 1000 noktadır; {len(pts)} verildi.")
+        if any(not (math.isfinite(p["x"]) and math.isfinite(p["y"])) for p in pts):
+            self.fail("bad_value", "Kirişin ekseninin noktaları sonlu olmalı.")
+        if any(a == b for a, b in zip(pts, pts[1:])):
+            self.fail("bad_value", "Kirişin ekseninde art arda iki aynı nokta var; birini kaldırın.")
+        if not (math.isfinite(f["width"]) and 0 < f["width"] <= 3):
+            self.fail("bad_value", "Kirişin genişliği sıfırdan büyük, en çok 3 m olmalı.")
+        if not (math.isfinite(f["height"]) and 0 < f["height"] <= 5):
+            self.fail("bad_value", "Kirişin yüksekliği sıfırdan büyük, en çok 5 m olmalı.")
+        if "baseOffset" in f:
+            if not (math.isfinite(f["baseOffset"]) and abs(f["baseOffset"]) <= 10):
+                self.fail("bad_value", "Kirişin kattan yüksekliği en çok ±10 m olmalı.")
+            if "offset" in f:
+                self.fail("bad_value", "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.")
+        if "offset" in f and not (math.isfinite(f["offset"]) and abs(f["offset"]) <= 10):
+            self.fail("bad_value", "Kirişin kot farkı en çok ±10 m olmalı.")
+        return f
+
+    def slab_layers_field(self, v):
+        """A slab's layers besides its structure (schema 232, docs/adr/8040 §2): those over it and those under it, each
+        list only when not empty, each layer its kind, its thickness (above 0, at most 1 m) and its material; at most 8
+        a side. The contract's rule (`SlabLayers::problem`)."""
+        layer = self.fields({"kind": (self.enum(("finish", "screed", "insulation", "waterproofing", "plaster")), True),
+                             "thickness": (self.float, True), "material": (self.text, False)})
+        def side(x):
+            r = self.array(layer)(x)
+            if not r:
+                self.fail("bad_value", "boş katman listesi yazılmaz")
+            if len(r) > 8:
+                self.fail("bad_value", "Döşemenin bir yanında en çok 8 katman olur.")
+            for item in r:
+                if not (math.isfinite(item["thickness"]) and 0 < item["thickness"] <= 1.0):
+                    self.fail("bad_value", "Katmanın kalınlığı sıfırdan büyük, en çok 1 m olmalı.")
+                m = item.get("material")
+                if m is not None and (not m.strip() or m.strip() != m or any(unicodedata.category(c) == "Cc" for c in m) or len(m) > MAX_SLAB_MATERIAL):
+                    self.fail("bad_value", "Katmanın malzemesi boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok 120 karakter.")
+            return r
+        f = self.fields({"over": (side, False), "under": (side, False)})(v)
+        if not f:
+            self.fail("bad_value", "boş katmanlar yazılmaz")
         return f
 
     def slab_bound(self, v):
@@ -9533,7 +9721,7 @@ class _Schema:
                     refuse("source", "kaynak dosyanın adı boş olamaz")
                 if "sheet" in src and not src["sheet"].strip():
                     refuse("source", "kaynak sayfanın adı boş olamaz")
-            elif src["kind"] == "schedule":
+            elif src["kind"] in ("schedule", "zoning", "parking", "shelter"):
                 pass  # Its columns are checked as it is read (`arch_schedule`); its rows are the document's.
             elif src["kind"] == "extraction":
                 # Its copy is its heading, a row per key and a total, the recipe's columns wide (docs/adr/1030 §6).
@@ -10029,7 +10217,10 @@ class _Schema:
             "finishes": (self.fields({"floor": (text_not_blank, False), "wall": (text_not_blank, False),
                                       "ceiling": (text_not_blank, False),
                                       # Schema 131 (docs/adr/0733 §3): the skirting's finish.
-                                      **({"base": (text_not_blank, False)} if self.fixtures else {})}), False),
+                                      **({"base": (text_not_blank, False)} if self.fixtures else {}),
+                                      # Schema 228 (docs/adr/8038): the room list's finishes.
+                                      **({"sill": (text_not_blank, False), "stair": (text_not_blank, False),
+                                          "railing": (text_not_blank, False)} if self.room_list else {})}), False),
             "broken": (self.enum(("lostEnclosure", "noFreeArea", "invalidBoundarySource", "sourceUnavailable") if self.space_sources else ("lostEnclosure", "noFreeArea", "invalidBoundarySource") if self.space_columns else ("lostEnclosure",)), False),
         }
         if self.space_columns:
@@ -10050,6 +10241,10 @@ class _Schema:
         if self.building_program:
             # Schema 140 (docs/adr/0773 §1): the program's group it belongs to.
             table["unit"] = (text_not_blank, False)
+        if self.room_heights:
+            # Schema 233 (docs/adr/8040 §3): its floor offset and its asma tavan.
+            table["floorOffset"] = (self.float, False)
+            table["suspendedCeiling"] = (self.float, False)
         if self.space_voids:
             def void(value):
                 # Schema 116 (docs/adr/0708): written only when true.
@@ -10075,6 +10270,12 @@ class _Schema:
         h = s["space"].get("height")
         if h is not None and not (math.isfinite(h) and 0 < h <= 1000):
             self.fail("bad_value", "Mahalin yüksekliği sıfırdan büyük, en çok 1000 m olmalı.")
+        f = s["space"].get("floorOffset")
+        if f is not None and not (math.isfinite(f) and abs(f) <= 10.0):
+            self.fail("bad_value", "Mahalin döşeme kot farkı katın kotuna göre en çok ±10 m olmalı.")
+        c = s["space"].get("suspendedCeiling")
+        if c is not None and not (math.isfinite(c) and 0 < c <= 1000):
+            self.fail("bad_value", "Asma tavanın yüksekliği döşemeden sıfırdan büyük, en çok 1000 m olmalı.")
         if s["space"].get("arch") == {}:
             self.fail("bad_value", "boş mimari bilgi yazılmaz")
         if s["space"].get("finishes") == {}:
@@ -10126,6 +10327,8 @@ class _Schema:
                 "overrides": (self.array(self.enum(OPENING_TYPE_FIELDS + (SPECIAL_TYPE_FIELDS if self.special_doors else ())
                                                    + (MULTI_SLIDE_TYPE_FIELDS if self.multi_slide else ()))), False),
                 "build": (self.opening_build, False)} if self.opening_types else {}),
+            # Schema 230 (docs/adr/8039): its own phase; absent: its wall's.
+            **({"phase": (self.enum(ARCH_PHASES), False)} if self.opening_phases else {}),
         })(v)
 
     def operations(self):
@@ -10320,7 +10523,9 @@ class _Schema:
                        "anchor": (formed(unless("center", self.enum(COLUMN_ANCHORS))), False),
                        "type": (self.text, False), "tag": (self.text, False), "fill": (unless(False, self.bool), False),
                        "grids": (self.array(self.text), False), "place": (self.text, False),
-                       "broken": (self.enum(("gridGone",)), False), "arch": arch},
+                       "broken": (self.enum(("gridGone",)), False), "arch": arch,
+                       # Schema 235 (docs/adr/8041 §2): its material.
+                       **({"material": (self.text, False)} if self.column_material else {})},
             "stair": {"pts": (points, True), "bulges": (stair_bulges, False), "width": (self.float, True), "risers": (self.uint(32), True),
                       "riserHeight": (self.float, True), "tread": (self.float, True), "landing": (self.float, False),
                       "cut": (self.uint(32), False), "numbering": (unless(False, self.bool), False),
@@ -10383,7 +10588,7 @@ class _Schema:
             g = f.get("grids")
             if g is not None and (len(g) != 2 or g[0] == g[1]):
                 bad("Kolon iki ayrı aksın kesişimine bağlanır.")
-            for k in ("type", "tag"):
+            for k in ("type", "tag", "material"):
                 if k in f and f[k].strip() == "":
                     bad("Boş metin yazılmaz.")
         elif kind == "stair":
@@ -10529,19 +10734,36 @@ class _Schema:
         spans = {"levels": (levels, False)} if self.program_shares else {}
         wing = self.fields({"id": (word, True), "name": (word, True), **spans})
         building = self.fields({"id": (word, True), "name": (word, True), "wings": (self.array(wing), False), **spans})
+        def factor(x):
+            t = weight(x)
+            if not re.search(r"[1-9]", t):
+                self.fail("bad_value", "değer katsayısı sıfırdan büyük olmalı")
+            return t
+
+        def land_total(x):
+            n = self.uint(64)(x)
+            if not 1 <= n <= 100_000_000:
+                self.fail("bad_value", "arsa payı paydası 1 ile 100000000 arasında bir tam sayıdır")
+            return n
+        # Schema 223 (docs/adr/8031): an annex and its unit, a unit's nature and value factor, the land shares' whole.
+        land = self.land_shares
         unit = self.fields({"id": (word, True), "number": (word, True), "name": (word, False),
-                            "kind": (self.enum(("common", "outdoor")), False), "building": (word, False),
-                            "wing": (word, False), "recordedArea": (positive, False),
-                            **({"shareWeight": (weight, False)} if self.program_shares else {})})
+                            "kind": (self.enum(("common", "outdoor") + (("annex",) if land else ())), False),
+                            "building": (word, False), "wing": (word, False), "recordedArea": (positive, False),
+                            **({"shareWeight": (weight, False)} if self.program_shares else {}),
+                            **({"nature": (word, False), "annexOf": (word, False), "landFactor": (factor, False)} if land else {})})
         brief = self.fields({"usage": (word, True), "areaMin": (positive, False), "areaMax": (positive, False),
                              "minWidth": (positive, False), "minPassage": (positive, False),
                              "adjacent": (self.array(word), False), "reach": (self.array(word), False),
-                             "outdoor": (lambda x: x if x is True else self.fail("bad_value", "dış mahal yalnız true yazılır"), False)})
+                             "outdoor": (lambda x: x if x is True else self.fail("bad_value", "dış mahal yalnız true yazılır"), False),
+                             # Schema 222 (docs/adr/8030): how its rooms count for the floor area ratio.
+                             **({"emsal": (self.enum(("included", "exempt", "outside")), False)} if self.zoning else {})})
         clearance = self.fields({"block": (word, True), "width": (positive, True), "depth": (positive, True)})
         p = self.fields({"buildings": (self.array(building), False), "units": (self.array(unit), False),
                          "briefs": (self.array(brief), False), "clearances": (self.array(clearance), False),
                          "version": (word, False),
-                         **({"shareRule": (self.enum(SHARE_RULES), False)} if self.program_shares else {})})(v)
+                         **({"shareRule": (self.enum(SHARE_RULES), False)} if self.program_shares else {}),
+                         **({"landTotal": (land_total, False)} if land else {})})(v)
         if not p:
             self.fail("bad_value", "boş bina programı yazılmaz")
         for b in p.get("buildings", []):
@@ -10565,6 +10787,17 @@ class _Schema:
                 self.fail("bad_value", "bölümün binası programda yok")
             if "wing" in u and (b is None or u["wing"] not in [w["id"] for w in b.get("wings", [])]):
                 self.fail("bad_value", "bölümün kanadı binasının değil")
+            # Docs/adr/8031: an annex names its independent unit; only an annex does; a value factor is a unit's.
+            annex = u.get("kind") == "annex"
+            if annex and "annexOf" not in u:
+                self.fail("bad_value", "eklentinin ait olduğu bağımsız bölüm yazılmalı")
+            if not annex and "annexOf" in u:
+                self.fail("bad_value", "ait olduğu bölüm yalnız eklentide yazılır")
+            if "landFactor" in u and "kind" in u:
+                self.fail("bad_value", "değer katsayısı yalnız bağımsız bölümde yazılır")
+        for u in units:
+            if "annexOf" in u and not any(x["id"] == u["annexOf"] and "kind" not in x for x in units):
+                self.fail("bad_value", "eklentinin ait olduğu bölüm programda bir bağımsız bölüm değil")
         usages = [b["usage"] for b in p.get("briefs", [])]
         if len(usages) != len(set(usages)):
             self.fail("bad_value", "bir kullanımın hedefi bir kez yazılır")
@@ -11627,7 +11860,9 @@ class _Schema:
                          # Schema 78 (docs/adr/0342 §1): the project's space method.
                          **({"spaceMethod": (self.enum(SPACE_METHODS), False)} if self.spaces else {}),
                          # Schema 82 (docs/adr/0346 §2): the phases the drawing shows.
-                         **({"phaseView": (self.enum(("all", "existing", "demolition", "proposed")), False)} if self.phases else {}),
+                         **({"phaseView": (self.enum(("all", "existing", "demolition", "proposed")
+                                                      + (("renovation",) if self.renovation_view else ())), False)}
+                            if self.phases else {}),
                          **({key:(self.any, False) for key in ("spaceNames","spaceUsages","spaceNumberPrefixes")} if self.space_choices else {}),
                          # Schema 120 (docs/adr/0720): the level and view the drawing opens with.
                          **({"activeLevel": (lambda x: None if x is None else self.text(x), False),
@@ -11648,9 +11883,51 @@ class _Schema:
                          # Schema 140 (docs/adr/0773): the building program.
                          **({"program": (self.program_, False)} if self.building_program else {}),
                          # Schema 148 (docs/adr/0785): the project's building materials.
-                         **({"materials": (self.array(self.material_), False)} if self.materials else {})})(v)
+                         **({"materials": (self.array(self.material_), False)} if self.materials else {}),
+                         # Schema 217 (docs/adr/8012): the height the project's plans are cut at.
+                         **({"cutHeight": (self.float, False)} if self.plan_cut else {}),
+                         # Schema 218 (docs/adr/8013): how the plan's lines are weighted.
+                         **({"lineGroups": (self.enum(("own", "byScale")), False)} if self.line_groups else {}),
+                         # Schema 222 (docs/adr/8030): the parcel's zoning.
+                         **({"zoning": (self.fields({"parcelArea": (self.float, True), "far": (self.float, False),
+                                                      "coverage": (self.float, False)}), False)} if self.zoning else {}),
+                         # Schema 224 (docs/adr/8032): the site plan.
+                         **({"site": (self.fields({"parcel": (self.text, False),
+                                                    "edges": (self.array(self.fields({"kind": (self.enum(("front", "back", "public")), False),
+                                                                                      "setback": (self.float, False)})), False),
+                                                    "datum": (self.float, False), "envelope": (self.text, False)}), False)}
+                            if self.site_plan else {}),
+                         # Schema 225 (docs/adr/8034): the municipality's regulation.
+                         **({"localRules": (self.enum(("sivas",)), False)} if self.local_rules else {}),
+                         # Schema 226 (docs/adr/8035): the building's sprinkler system.
+                         **({"sprinklers": (self.only_true, False)} if self.sprinklers else {})})(v)
         if not a:
             self.fail("bad_value", "boş mimari ayar yazılmaz")
+        if "zoning" in a:
+            z = a["zoning"]
+            if not (math.isfinite(z["parcelArea"]) and 0 < z["parcelArea"] <= 1e8):
+                self.fail("bad_value", "parsel alanı sıfırdan büyük olur")
+            if "far" in z and not (math.isfinite(z["far"]) and 0 < z["far"] <= 50):
+                self.fail("bad_value", "emsal sıfırdan büyük, en çok 50 olur")
+            if "coverage" in z and not (math.isfinite(z["coverage"]) and 0 < z["coverage"] <= 1):
+                self.fail("bad_value", "TAKS sıfırdan büyük, en çok 1 olur")
+        if "site" in a:
+            site = a["site"]
+            if not site:
+                self.fail("bad_value", "boş vaziyet planı yazılmaz")
+            for key in ("parcel", "envelope"):
+                if key in site and not site[key].strip():
+                    self.fail("bad_value", "parselin ve yaklaşma sınırının kimliği boş olamaz")
+            edges = site.get("edges")
+            if edges is not None and (not edges or len(edges) > 1000):
+                self.fail("bad_value", "parselin kenarları boş yazılmaz, en çok 1000 olur")
+            for e in edges or []:
+                if "setback" in e and not (math.isfinite(e["setback"]) and 0 < e["setback"] <= 100):
+                    self.fail("bad_value", "bahçe mesafesi sıfırdan büyük, en çok 100 m olur")
+            if "datum" in site and not (math.isfinite(site["datum"]) and abs(site["datum"]) <= 10000):
+                self.fail("bad_value", "±0,00 kotu en çok ±10 000 m olur")
+        if "cutHeight" in a and not (math.isfinite(a["cutHeight"]) and CUT_HEIGHT_RANGE[0] <= a["cutHeight"] <= CUT_HEIGHT_RANGE[1]):
+            self.fail("bad_value", "planın kesme yüksekliği 0,3 ile 3 m arasında olur")
         ids, names = set(), set()
         for lv in a.get("levels", []):
             if not lv["id"] or lv["id"] in ids or not lv["name"].strip() or lv["name"].lower() in names or lv["name"].lower() == "standart":
@@ -11709,12 +11986,16 @@ class _Schema:
             types = a["openingTypes"]
             if not 1 <= len(types) <= 1000:
                 self.fail("bad_value", "kapı ve pencere tipleri 1–1000 olmalı; boş liste yazılmaz")
-            ids, names = set(), set()
+            ids, names, codes = set(), set(), set()
             for t in types:
                 if t["id"] in ids or t["name"].lower() in names:
                     self.fail("bad_value", f"“{t['name']}” tipinin kimliği ya da adı iki kez var")
+                if "code" in t and t["code"].lower() in codes:
+                    self.fail("bad_value", f"“{t['code']}” doğrama kodu iki tipte var")
                 ids.add(t["id"])
                 names.add(t["name"].lower())
+                if "code" in t:
+                    codes.add(t["code"].lower())
         return a
 
     def option_combos_(self, sets, combos):
@@ -11888,12 +12169,17 @@ class _Schema:
                 return x
             return f
         t = self.fields({"id": (self.text, True), "name": (self.text, True), "version": (self.uint(32), True),
+                         # Schema 220 (docs/adr/8028): its joinery code.
+                         **({"code": (self.text, False)} if self.opening_codes else {}),
                          "source": (self.text, False), "form": (self.opening_form, True), "width": (self.float, True),
                          "leaves": (unless(1, self.uint(8)), False),
                          "operation": (unless("swing", self.enum(self.operations())), False),
                          "swing": (self.float, False), "showSwing": (unless(True, self.bool), False),
                          "frame": (self.float, False), "sill": (self.float, False), "head": (self.float, False),
-                         "depth": (self.float, False), "build": (self.opening_build, False)})(v)
+                         "depth": (self.float, False), "build": (self.opening_build, False),
+                         # Schema 229 (docs/adr/8038): its frame and leaves and its U value.
+                         **({"material": (self.text, False), "uValue": (self.float, False)}
+                            if self.opening_specs else {})})(v)
         i = t["id"]
         if not i or len(i) > 64 or i.startswith("kentos-") or any(not (c.isascii() and (c.islower() or c.isdigit()) or c == "-") for c in i):
             self.fail("bad_value", f"“{i}” tip kimliği olamaz")
@@ -11901,6 +12187,16 @@ class _Schema:
             self.fail("bad_value", "tipin sürümü 1'den başlar")
         if not t["name"].strip() or t["name"].strip() != t["name"]:
             self.fail("bad_value", "tipin adı boş ya da kenarı boşluklu")
+        if "code" in t:
+            c = t["code"]
+            if not (c and c[0].isalpha() and len(c) <= 16 and all(ch.isalnum() or ch in "-." for ch in c[1:])):
+                self.fail("bad_value", f"“{c}” doğrama kodu olamaz")
+        if "material" in t:
+            m = t["material"]
+            if not m.strip() or m.strip() != m or len(m) > 200 or any(unicodedata.category(c) == "Cc" for c in m):
+                self.fail("bad_value", "kasa ve kanat tek satır, boş değil, kenarı boşluksuz ve en çok 200 harftir")
+        if "uValue" in t and not (math.isfinite(t["uValue"]) and 0 < t["uValue"] <= 10):
+            self.fail("bad_value", "U değeri sıfırdan büyük, en çok 10 W/m²K olur")
         w = t["width"]
         if not (math.isfinite(w) and 0 < w <= OPENING_MAX_WIDTH):
             self.fail("bad_value", "tipin kaba boşluğu sıfırdan büyük, en çok 100 m olmalı")
@@ -12536,6 +12832,8 @@ ENTITY_KINDS = {
     # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
     "viewmark": lambda s: {"viewmark": (s.viewmark_fields, True)},
     "slab": lambda s: {"slab": (s.slab_fields, True)},
+    # Schema 234 (docs/adr/8041 §1): a beam; its fields as one map.
+    "beam": lambda s: {"beam": (s.beam_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

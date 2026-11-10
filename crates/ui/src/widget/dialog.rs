@@ -302,6 +302,34 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
     }
 }
 
+/// The question an editor with its own save asks when it is closed with unsaved changes (DESIGN.md §7.9, §7.9.1;
+/// docs/adr/8006): what would be lost, “Kaydetmeden kapat” aside, “Vazgeç” and “Kaydet ve kapat”. Dismissing it is
+/// Vazgeç: the editor stays as it was. Bina programı, Duvar stilleri, the opening types and Malzemeler threw their
+/// edits away on a click beside them; the table editor and the designers asked, each with its own copy of this.
+pub fn unsaved<'a, Message: Clone + 'a>(
+    editor: &str,
+    on_discard: Message,
+    on_stay: Message,
+    on_save: Option<Message>,
+) -> Element<'a, Message> {
+    let answer = |caption: &'static str, on: Option<Message>, look: fn(&Theme, button::Status) -> button::Style| {
+        button(crate::label::body(caption))
+            .on_press_maybe(on)
+            .padding(crate::theme::metrics::action())
+            .style(look)
+    };
+    Dialog::new("Kaydedilmemiş değişiklikler")
+        .push(crate::label::body(format!(
+            "“{editor}” içinde kaydedilmemiş değişiklikler var. Pencere kapanırsa bu değişiklikler kaybolur."
+        )))
+        .aside(answer("Kaydetmeden kapat", Some(on_discard), style::button::ghost))
+        .action(answer("Vazgeç", Some(on_stay.clone()), style::button::secondary))
+        .action(answer("Kaydet ve kapat", on_save, style::button::primary))
+        .width(460.0)
+        .no_close()
+        .modal(on_stay)
+}
+
 /// Onay kutusu: yapılacak işin ne olduğu, sonucu ve iki düğme.
 ///
 /// ```text

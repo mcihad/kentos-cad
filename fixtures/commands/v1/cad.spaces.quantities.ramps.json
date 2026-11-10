@@ -815,7 +815,7 @@
       ]
     },
     {
-      "name": "evre süzgeci: yeni",
+      "name": "tadilat süzgeci: ilave",
       "steps": [
         {
           "op": "execute",
@@ -878,7 +878,7 @@
       ]
     },
     {
-      "name": "evre süzgeci: var olan",
+      "name": "tadilat süzgeci: mevcut",
       "steps": [
         {
           "op": "execute",
@@ -1252,7 +1252,7 @@
       ]
     },
     {
-      "name": "kat ve evre birlikte: inen U rampa",
+      "name": "kat ve tadilat birlikte: inen U rampa",
       "steps": [
         {
           "op": "execute",
@@ -1317,7 +1317,7 @@
       ]
     },
     {
-      "name": "katman ve evre: var olan rampalar",
+      "name": "katman ve tadilat: mevcut rampalar",
       "steps": [
         {
           "op": "execute",

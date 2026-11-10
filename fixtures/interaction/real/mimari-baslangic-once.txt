@@ -1,0 +1,23 @@
+# M8 öncesi: KentOS Mimari'de yeni proje ve ilk duvar, M7'nin programıyla (docs/adr/8007).
+# Oynatma: KENTOS_BIN=<M7 ikilisi> scripts/usage/real/session.sh fixtures/interaction/real/mimari-baslangic-once.txt .run/gui-evidence/mimari-m8/once --modul mimari
+fit KentOS Mimari
+wait 1500
+click 353 343   # Başlangıç: Yeni proje
+wait 2000
+shot m8-once-1-yeni-proje
+click 589 20    # Mimari sekmesi: bugün ayrıca tıklanıyor
+wait 600
+click 114 80    # Dikdörtgen duvar
+wait 600
+shot m8-once-2-arac
+click 400 300
+wait 300
+click 750 550
+wait 900
+shot m8-once-3-ilk-duvar
+key Escape
+key Escape
+wait 300
+click 400 425   # duvarın sol kenarı: seç
+wait 900
+shot m8-once-4-secili-duvar

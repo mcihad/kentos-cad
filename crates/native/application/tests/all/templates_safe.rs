@@ -99,21 +99,50 @@ fn safe_package_preserves_entities_definitions_and_all_parts_undo_and_redo_toget
 #[test]
 fn explicit_template_policy_changes_only_shown_settings_and_undo_restores_them() {
     let mut doc = drawing();
+    // A drawing other than the package: centimetres at 1:200.
+    let mut settings = doc.settings().clone();
+    settings.drawing_unit = Some(DrawingUnit::Cm);
+    settings.plot_scale = 200.;
+    doc.set_settings(settings);
     let before = doc.to_snapshot_v2();
     let request = input(&doc, "template");
     let plan = done(templates_apply::plan_in(&doc, &request));
-    assert_eq!(plan.unit, DrawingUnit::Cm);
-    assert_eq!(plan.review.as_ref().unwrap().previous_unit, DrawingUnit::M);
-    assert_eq!(plan.review.as_ref().unwrap().plot_scale, 50.);
+    // The package's own: metres and 1:100, a new Mimari project's (docs/adr/8007).
+    assert_eq!(plan.unit, DrawingUnit::M);
+    assert_eq!(plan.review.as_ref().unwrap().previous_unit, DrawingUnit::Cm);
+    assert_eq!(plan.review.as_ref().unwrap().plot_scale, 100.);
     done(templates_apply::execute(
         &mut ExecutionContext::new(&mut doc),
         request,
     ));
-    assert_eq!(doc.settings().unit(), DrawingUnit::Cm);
-    assert_eq!(doc.settings().plot_scale, 50.);
+    assert_eq!(doc.settings().unit(), DrawingUnit::M);
+    assert_eq!(doc.settings().plot_scale, 100.);
     assert_eq!(doc.to_snapshot_v2().entities, before.entities);
     doc.undo();
     assert_eq!(doc.to_snapshot_v2(), before);
+}
+#[test]
+fn the_call_without_a_policy_keeps_adr_0346s_centimetres_and_1_50() {
+    // docs/adr/8007 moved the package to metres and 1:100; the old automation call writes what it always wrote.
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.templates.apply.review.json"
+    ))
+    .unwrap();
+    let empty = fixture["setup"].clone();
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&empty.to_string()).unwrap())
+            .unwrap();
+    assert_eq!(doc.settings().plot_scale, 100.);
+    let request: TemplatesApply = serde_json::from_value(json!({"name": "mimari"})).unwrap();
+    let out = done(templates_apply::execute(
+        &mut ExecutionContext::new(&mut doc),
+        request,
+    ));
+    assert_eq!(out.unit, DrawingUnit::Cm);
+    assert_eq!(doc.settings().unit(), DrawingUnit::Cm);
+    assert_eq!(doc.settings().plot_scale, 50.);
+    let package = builtin_template("mimari").unwrap();
+    assert_eq!((package.unit, package.plot_scale), (DrawingUnit::M, 100.));
 }
 #[test]
 fn unreadable_book_and_stale_revision_are_atomic_refusals() {

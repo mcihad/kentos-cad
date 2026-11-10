@@ -38,6 +38,8 @@ pub mod slab;
 pub mod space;
 pub mod space_index;
 pub mod arch;
+pub mod beam;
+pub mod column_join;
 pub mod casework;
 pub mod tag;
 pub mod viewmark;

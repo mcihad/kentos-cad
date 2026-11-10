@@ -29,6 +29,12 @@ pub(crate) struct SpaceRest {
     pub arch: ArchInfo,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub height: Option<f64>,
+    /// Schema 233 (docs/adr/8040 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub floor_offset: Option<f64>,
+    /// Schema 233 (docs/adr/8040 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub suspended_ceiling: Option<f64>,
     #[serde(default, skip_serializing_if = "SpaceFinishes::is_empty")]
     pub finishes: SpaceFinishes,
     /// Schema 116 (docs/adr/0708).
@@ -58,6 +64,8 @@ impl SpaceRest {
             usage: f.usage.clone(),
             arch: f.arch.clone(),
             height: f.height,
+            floor_offset: f.floor_offset,
+            suspended_ceiling: f.suspended_ceiling,
             finishes: f.finishes.clone(),
             void: f.void,
             broken: f.broken,
@@ -78,6 +86,8 @@ impl SpaceRest {
             usage: self.usage,
             arch: self.arch,
             height: self.height,
+            floor_offset: self.floor_offset,
+            suspended_ceiling: self.suspended_ceiling,
             finishes: self.finishes,
             void: self.void,
             broken: self.broken,

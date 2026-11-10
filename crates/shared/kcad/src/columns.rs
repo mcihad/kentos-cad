@@ -180,7 +180,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 31] = [
+pub const KINDS: [&str; 32] = [
     "point",
     "line",
     "polyline",
@@ -212,6 +212,7 @@ pub const KINDS: [&str; 31] = [
     "tag",
     "viewmark",
     "slab",
+    "beam",
 ];
 
 const COLOR: u32 = 1;
@@ -435,6 +436,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::Tag(_) => 28,
         Entity::ViewMark(_) => 29,
         Entity::Slab(_) => 30,
+        Entity::Beam(_) => 31,
     }
 }
 
@@ -1541,6 +1543,8 @@ impl Packer {
             // A view mark (docs/adr/0345 §1): its fields as one JSON text.
             Entity::ViewMark(e) => self.text(&serde_json::to_value(&e.mark).unwrap_or_default().to_string()),
             Entity::Slab(e) => self.text(&serde_json::to_value(&e.slab).unwrap_or_default().to_string()),
+            // A beam (docs/adr/8041 §1): its fields as one JSON text.
+            Entity::Beam(e) => self.text(&serde_json::to_value(&e.beam).unwrap_or_default().to_string()),
             // A space (docs/adr/0342 §1): its source as one JSON text.
             Entity::Space(kentos_contracts::SpaceEntity { base: _, space }) => {
                 self.text(&serde_json::to_value(space).unwrap_or_default().to_string());
@@ -1761,15 +1765,17 @@ impl Packer {
                     flags |= OPT[10];
                     self.float(*f);
                 }
-                if let Some(source) = source
-                    .as_ref()
-                    .filter(|s| {
-                        !matches!(
-                            s,
-                            TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_)
-                        )
-                    })
-                {
+                if let Some(source) = source.as_ref().filter(|s| {
+                    !matches!(
+                        s,
+                        TableSource::Blocks { .. }
+                            | TableSource::Schedule { .. }
+                            | TableSource::Extraction(_)
+                            | TableSource::Zoning {}
+                            | TableSource::Parking {}
+                            | TableSource::Shelter {}
+                    )
+                }) {
                     flags |= OPT[9];
                     match source {
                         TableSource::File { name, sheet, .. } => {
@@ -3491,6 +3497,15 @@ fn geometry(
             }
             Entity::Slab(kentos_contracts::SlabEntity { base, slab })
         }
+        31 => {
+            let text = c.text(|| "kirişin alanları".into())?;
+            let beam: kentos_contracts::BeamFields =
+                serde_json::from_str(&text).map_err(|_| broken("kirişin alanları"))?;
+            if let Some((_, problem)) = beam.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Beam(kentos_contracts::BeamEntity { base, beam })
+        }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;
             let space: kentos_contracts::SpaceFields =
@@ -3668,10 +3683,10 @@ fn geometry(
             };
             let arch = if has(5) {
                 let text = c.text(|| place("arch"))?;
-                let arch: kentos_contracts::ArchInfo =
-                    serde_json::from_str(&text).map_err(|_| broken("yerleştirmenin katı ve evresi okunamadı"))?;
+                let arch: kentos_contracts::ArchInfo = serde_json::from_str(&text)
+                    .map_err(|_| broken("yerleştirmenin katı ve tadilat durumu okunamadı"))?;
                 if arch.is_empty() {
-                    return Err(broken("boş kat ve evre"));
+                    return Err(broken("boş kat ve tadilat durumu"));
                 }
                 arch
             } else {
@@ -3834,7 +3849,15 @@ fn table_cells_json(
     };
     let schedule = source
         .filter(|s| {
-            matches!(s, TableSource::Blocks { .. } | TableSource::Schedule { .. } | TableSource::Extraction(_))
+            matches!(
+                s,
+                TableSource::Blocks { .. }
+                    | TableSource::Schedule { .. }
+                    | TableSource::Extraction(_)
+                    | TableSource::Zoning {}
+                    | TableSource::Parking {}
+                    | TableSource::Shelter {}
+            )
         })
         .cloned();
     if styles.is_empty()

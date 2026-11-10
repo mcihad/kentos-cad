@@ -36,7 +36,7 @@ use crate::checks::{self, Stop, error};
 use crate::codes;
 
 /// Each group's codes, in the order its findings come (docs/adr/0703 §2).
-const CODES: [(ArchAuditCheck, &[&str]); 16] = [
+const CODES: [(ArchAuditCheck, &[&str]); 18] = [
     (
         ArchAuditCheck::Walls,
         &[
@@ -95,6 +95,8 @@ const CODES: [(ArchAuditCheck, &[&str]); 16] = [
         &[codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW],
     ),
     (ArchAuditCheck::Program, &crate::program_check::CODES),
+    (ArchAuditCheck::Fixtures, &[codes::ARCH_FIXTURE_ZONE_BLOCKED, codes::ARCH_FIXTURE_ZONE_DOOR]),
+    (ArchAuditCheck::Regulation, &crate::regulation_audit::CODES),
 ];
 
 /// The codes only a profile finds (docs/adr/0723 §4, 0724 §2): an exception of one is not stale while its profile is not
@@ -230,6 +232,7 @@ fn finding(
         lapsed: false,
         note: None,
         nature: None,
+        rule: None,
     }
 }
 
@@ -1294,8 +1297,9 @@ impl Audit<'_> {
         out
     }
 
-    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a stair, a ramp or a room separator on no
-    /// level or on one the project lacks; each fixed by giving it `level` (`cad.levels.assign`) unless locked.
+    /// Objects without a level (docs/adr/0717 §3): a wall, a space, a column, a beam (docs/adr/8041 §1), a stair, a ramp
+    /// or a room separator on no level or on one the project lacks; each fixed by giving it `level`
+    /// (`cad.levels.assign`) unless locked.
     fn levels(&self, level: Option<&ArchLevel>) -> Vec<ArchAuditFinding> {
         let levels = self
             .doc
@@ -1314,6 +1318,7 @@ impl Audit<'_> {
                 Entity::Wall(w) => ("Duvarın", first(&w.wall.pts)),
                 Entity::Space(s) => ("Mahalın", space_point(&s.space.parts)),
                 Entity::Column(c) => ("Kolonun", core(c.column.at)),
+                Entity::Beam(b) => ("Kirişin", first(&b.beam.pts)),
                 Entity::Stair(s) => ("Merdivenin", first(&s.stair.pts)),
                 Entity::Ramp(r) => ("Rampanın", first(&r.ramp.pts)),
                 Entity::Polyline(p) => ("Mahal ayırıcının", first(&p.pts)),
@@ -1849,9 +1854,12 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
     let audit = Audit { doc };
-    // The doors (docs/adr/0772 §5) only when asked by name: an older call's findings stay as they were.
+    // The doors (docs/adr/0772 §5), the fixtures (docs/adr/8025) and the regulation (docs/adr/8033) only when asked by
+    // name: an older call's findings stay as they were. Denetim's panel asks for every group by name.
     let asked = |c: ArchAuditCheck| {
-        input.checks.contains(&c) || (input.checks.is_empty() && c != ArchAuditCheck::Doors)
+        input.checks.contains(&c)
+            || (input.checks.is_empty()
+                && !matches!(c, ArchAuditCheck::Doors | ArchAuditCheck::Fixtures | ArchAuditCheck::Regulation))
     };
     let mut findings = Vec::new();
     let mut run: HashSet<&'static str> = HashSet::new();
@@ -1911,6 +1919,44 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                 },
             ),
             ArchAuditCheck::Program => crate::program_check::findings(doc),
+            // Mevzuat (docs/adr/8033): each finding naming its article.
+            ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, rule, offer| {
+                let uids = slots.iter().map(|s| audit.uid(*s)).collect();
+                // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer.
+                let fix = offer.zip(slots.first()).and_then(|(o, s)| {
+                    let e = doc.get(*s)?;
+                    (!audit.locked(e)).then(|| {
+                        fix(o.label, "cad.arch.edit", json!({"uids": [audit.uid(*s)], "operation": o.operation}))
+                    })
+                });
+                let mut f = finding(ArchAuditCheck::Regulation, code, message, repair, uids, at, fix);
+                f.rule = Some(rule);
+                f
+            }),
+            ArchAuditCheck::Fixtures => crate::fixture_audit::findings(doc, |code, message, repair, slots, at, turn| {
+                // A door's fix: the door turned (docs/adr/0787 §1), not on a locked layer.
+                let fix = turn.zip(slots.get(1)).and_then(|((label, what), door)| {
+                    let e = doc.get(*door)?;
+                    (!audit.locked(e)).then(|| {
+                        fix(
+                            label,
+                            "cad.openings.edit",
+                            json!({"uids": [audit.uid(*door)], "operation": {"kind": "flip", "what": what}}),
+                        )
+                    })
+                });
+                let mut f = finding(
+                    ArchAuditCheck::Fixtures,
+                    code,
+                    message,
+                    repair,
+                    slots.iter().map(|s| audit.uid(*s)).collect(),
+                    at,
+                    fix,
+                );
+                f.nature = Some(kentos_commands::ArchAuditNature::Passage);
+                f
+            }),
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.

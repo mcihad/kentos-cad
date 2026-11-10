@@ -94,7 +94,7 @@ fn every_wall_draws_as_the_reference_says() {
             (Detail::Detailed, 20.0, "detailed"),
         ] {
             let pieces =
-                wall::pieces(&pts, bulges.as_deref(), &spec, View { detail, scale }).unwrap();
+                wall::pieces(&pts, bulges.as_deref(), &spec, View::new(detail, scale)).unwrap();
             let want = c["pieces"][key].as_array().unwrap();
             assert_eq!(pieces.len(), want.len(), "{name} ({key}): parça sayısı");
             let mut faces = 0;

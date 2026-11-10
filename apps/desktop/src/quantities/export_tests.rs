@@ -13,10 +13,25 @@ fn csv_exports_selected_quantity_table_including_empty_table_workbooks_keep_all(
     assert_eq!((q.spaces.len(), q.walls.len(), q.openings.len()), (400, 200, 0));
     let dir = scratch("quantity-export");
     for (tab, name, count, heading) in [
-        (Tab::Spaces, "Mahaller", 400, "Numara;Ad;Kullanım;Kat;Yöntem;Alan;Çevre;Süpürgelik;Yükseklik;Hacim;Net;Eksen;Brüt"),
-        (Tab::Walls, "Duvarlar", 200, "Stil;Kat;Uzunluk;Kalınlık;Yükseklik;Brüt yüzey;Açıklıklar;Net yüzey;Cep hacmi;Hacim"),
+        (
+            Tab::Spaces,
+            "Mahaller",
+            400,
+            "Numara;Ad;Kullanım;Kat;Yöntem;Alan;Çevre;Süpürgelik;İç yükseklik;Hacim;Asma tavan;Net;Eksen;Brüt",
+        ),
+        (
+            Tab::Walls,
+            "Duvarlar",
+            200,
+            "Stil;Kat;Uzunluk;Kalınlık;Yükseklik;Brüt yüzey;Açıklıklar;Net yüzey;Cep hacmi;Hacim",
+        ),
         // A niche's or flue's depth (docs/adr/0719 §4).
-        (Tab::Openings, "Açıklıklar", 0, "Numara;Biçim;Tür;Genişlik;Yükseklik;Alan;Derinlik"),
+        (
+            Tab::Openings,
+            "Açıklıklar",
+            0,
+            "Numara;Biçim;Tür;Genişlik;Yükseklik;Alan;Derinlik",
+        ),
     ] {
         for format in [WorkbookFormat::Csv, WorkbookFormat::Xlsx, WorkbookFormat::Ods] {
             let sheets = app.quantities_sheets(&q, tab, format);
@@ -36,7 +51,9 @@ fn csv_exports_selected_quantity_table_including_empty_table_workbooks_keep_all(
                 assert_eq!(read.problem, None);
                 assert_eq!(read.sheets.iter().map(|s| (s.name.as_deref(), s.rows.len())).collect::<Vec<_>>(),
                     [(Some("Mahaller"), 401), (Some("Duvarlar"), 201), (Some("Açıklıklar"), 1), (Some("Döşemeler"), 1),
-                     (Some("Geçişler"), 1), (Some("Rampalar"), 1), (Some("Merdivenler"), 1)]);
+                     (Some("Geçişler"), 1), (Some("Rampalar"), 1), (Some("Merdivenler"), 1),
+                     // Docs/adr/8041 §3.
+                     (Some("Kirişler"), 1)]);
             }
         }
     }

@@ -223,7 +223,7 @@ def edit_cases():
                                                                          "canRedo": True, "revision": "changed"}}])
     for name, op, r in [
         ("Yalnız sabit referans: değiştirilecek alan yok", {"kind": "set", "keep": "leftFace"},
-         refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.", "operation")),
+         refusal("nothing_to_set", "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, tadilat durumu, yapım durumu ya da disiplin verin.", "operation")),
         ("Sabit referans ötelemeyle birlikte verilmez", {"kind": "set", "width": 0.3, "offset": 0.1, "keep": "leftFace"},
          refusal("invalid_wall", "Sabit referans duvarın ötelemesini kendisi bulur; öteleme ya da hiza ile birlikte verilmez.", "operation.keep")),
         ("Sabit referans hizayla birlikte verilmez", {"kind": "set", "width": 0.3, "justify": "left", "keep": "leftFace"},

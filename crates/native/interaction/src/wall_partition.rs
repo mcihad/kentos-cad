@@ -61,7 +61,8 @@ impl Partition {
                 _ => PartitionExtent::Source,
             },
             wall: WallsCreate {
-                layer_id: cx.doc.layers().active().to_owned(),
+                // The wall's layer (docs/adr/8008).
+                layer_id: crate::arch_layer::planned(&wall::layer_kind(cx), cx),
                 walls: vec![NewWall {
                     pts: vec![],
                     bulges: None,
@@ -73,7 +74,7 @@ impl Partition {
                     caps: None,
                     height: None,
                     // Etkin kat (docs/adr/0713).
-                    arch: cx.level_arch(),
+                    arch: cx.new_arch(),
                     attrs: cx.template_attrs(None),
                     label: cx.template_label(),
                 }],
@@ -251,19 +252,25 @@ impl Partition {
         })
     }
     fn write(&mut self, cx: &mut Context<'_>) {
-        let Some(input) = self.input_for(cx) else {
+        if self.input_for(cx).is_none() {
             cx.say(
                 Level::Warn,
                 "Önce kaynak duvarı ve gerekiyorsa iki sınır kenarını seçin.",
             );
             return;
-        };
-        if points::written(
-            walls_partition::execute(&mut ExecutionContext::new(cx.doc), input),
-            cx,
-        )
-        .is_some()
-        {
+        }
+        let kind = wall::layer_kind(cx);
+        let written = crate::arch_layer::writing(&kind, cx, |_, cx| {
+            let Some(input) = self.input_for(cx) else {
+                return false;
+            };
+            points::written(
+                walls_partition::execute(&mut ExecutionContext::new(cx.doc), input),
+                cx,
+            )
+            .is_some()
+        });
+        if written {
             self.source = None;
             self.candidates.clear();
             self.limits.clear();
@@ -273,6 +280,10 @@ impl Partition {
     }
 }
 impl Tool for Partition {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        Some(wall::layer_kind(cx))
+    }
+
     fn id(&self) -> &'static str {
         ID
     }
@@ -305,8 +316,8 @@ impl Tool for Partition {
             .option("Uzaklık", "U")
             .option("Kalınlık", "E")
             .option("Stil", "S")
-            .option("Ölçme", "M")
-            .option("Yan", "Y")
+            .option("Uzaklık türü", "M")
+            .option("Kaynağın yanı", "Y")
             .option("Uçlar", "B");
         let prompt = if self.candidates.len() > 1 {
             prompt.option("Kaynak", "C")

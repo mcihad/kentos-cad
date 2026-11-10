@@ -1,0 +1,125 @@
+# M38 (docs/adr/8038), 1920 × 1080: the acceptance apartment (gercek/daire.kcad from acceptance_flat_tests), Mimari.
+# Doğrama kodları; the Salon selected and its five finishes typed in Öznitelikler; Çizelge ▾ › Mahal listesi placed
+# at 0,-12; Ruhsat takımı with the particulars; UP-01 left out (no İmar durumu here), the rest published.
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250   # Öznitelikler taller
+wait 1200
+click 1640 20   # Menülerde ara
+wait 600
+type doğrama kodları
+wait 1200
+key Return
+wait 1500
+key Return
+wait 2500
+click 200 560   # inside the Salon
+wait 1500
+click 1800 682   # Döşeme kaplaması
+wait 700
+type Lamine parke
+key Return
+wait 1200
+click 1800 711   # Süpürgelik
+wait 700
+type Ahşap süpürgelik
+key Return
+wait 1200
+click 1800 740   # Duvar kaplaması
+wait 700
+type Saten boya
+key Return
+wait 1200
+click 1800 769   # Tavan kaplaması
+wait 700
+type Saten boya
+key Return
+wait 1200
+click 1800 798   # Denizlik ve parapet
+wait 700
+type Mermer denizlik, 3 cm
+key Return
+wait 1500
+move 1300 950
+wait 600
+shot sonra-oznitelikler
+key Escape
+wait 800
+click 1095 56   # Çizelge ▾
+wait 1000
+shot sonra-cizelge
+click 1160 146   # Mahal listesi
+wait 1500
+type 0,-12
+key Return
+wait 2500
+key Escape
+wait 600
+click 800 500 middle
+click 800 500 middle
+wait 1500
+move 1300 950
+shot sonra-liste-genel
+wheel 700 885 2
+wait 1500
+move 1300 1010
+wait 600
+shot sonra-liste-yakin
+click 800 500 middle
+click 800 500 middle
+wait 1200
+click 1258 111   # Proje › Ruhsat takımı
+wait 2000
+click 778 390
+type Sivas
+click 1127 390
+type Merkez
+click 778 443
+type Kardeşler
+click 778 497
+type 1234
+click 1127 497
+type 7
+click 1127 629
+type Ayşe Yılmaz
+click 1127 683
+type Betonarme karkas
+click 778 815
+type Cihad Gündoğdu
+wait 300
+wheel 950 600 -10
+wait 600
+click 778 540
+type 41234
+click 1127 540
+type 58-2026-0012
+click 778 594
+type İstasyon Cad. 12, Merkez / Sivas
+click 778 726
+key ctrl+a
+type 260457
+wait 400
+click 1250 897   # Paftaları oluştur
+wait 9000
+wheel 950 500 40
+wait 1000
+shot s8-a
+click 647 366    # UP-01 out (no İmar durumu in this drawing)
+wait 1000
+shot s8-b
+click 935 781    # Denetle (the dialog shrank)
+wait 9000
+shot s8-c
+click 1254 854   # Yayınla
+wait 15000
+shot s8-d
+click 661 854    # Kapat
+wait 800
+click 918 1000   # UP-04 Mahal listesi
+wait 3500
+move 1300 1010
+wait 600
+shot sonra-up04

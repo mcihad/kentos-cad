@@ -1,0 +1,40 @@
+# M39 part 1b (docs/adr/8039 §3): the survey flat in Yeni durum; a door placed into the existing wall between Salon and
+# Yatak odası 1 takes İlave; Mevcut durum then leaves it out.
+fit KentOS Mimari — Daire
+wait 3000
+click 800 500 middle
+click 800 500 middle
+wait 1500
+drag 1700 633 1700 250
+wait 800
+click 1640 20
+wait 600
+type tadilat: yeni durum
+wait 1200
+key Return
+wait 2000
+shot sonra-yeni-durum-mesaj
+click 152 75    # Kapı
+wait 1200
+move 384 531
+wait 800
+click 384 531   # in the existing wall between Salon and Yatak odası 1
+wait 1500
+key Escape
+wait 500
+key Escape
+wait 500
+click 384 531
+wait 1200
+shot sonra-kapi-secili
+key Escape
+wait 500
+click 1640 20
+wait 600
+type tadilat: mevcut durum
+wait 1200
+key Return
+wait 2000
+move 1300 1010
+wait 500
+shot sonra-mevcut-durum

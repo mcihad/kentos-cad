@@ -841,6 +841,191 @@
       ]
     },
     {
+      "name": "Değiştir: kendi tadilat durumu ilave (mevcut duvara açılan kapı)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "phase": "new"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 9,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.0,
+                  "width": 0.9,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.55,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.55,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": -0.1
+                    }
+                  ],
+                  "phase": "new"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ],
+                "phase": "new"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
       "name": "Taşı: duvar boyunca 1,5 m",
       "steps": [
         {
@@ -2559,6 +2744,293 @@
                   },
                   {
                     "x": 6.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Değiştir: kendi tadilat durumu iptal, sonra kaldırılır ve duvarınkini alır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.openings.create",
+          "input": {
+            "layerId": "kapi",
+            "openings": [
+              {
+                "host": "$uidOf:1",
+                "at": 2.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "uids": [
+                "$any"
+              ],
+              "ids": [
+                9
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ]
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "phase": "demolish"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 9,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.0,
+                  "width": 0.9,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.55,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.55,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": -0.1
+                    }
+                  ],
+                  "phase": "demolish"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": -0.1
+                  }
+                ],
+                "phase": "demolish"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:9"
+            ],
+            "operation": {
+              "kind": "set",
+              "phase": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "openings": [
+                {
+                  "kind": "opening",
+                  "id": 9,
+                  "layerId": "kapi",
+                  "attrs": {},
+                  "host": "$uidOf:1",
+                  "at": 2.0,
+                  "width": 0.9,
+                  "form": "door",
+                  "frame": 0.05,
+                  "head": 2.1,
+                  "style": "kentos-kapi-90",
+                  "place": [
+                    {
+                      "x": 1.55,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 1.55,
+                      "y": -0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": 0.1
+                    },
+                    {
+                      "x": 2.45,
+                      "y": -0.1
+                    }
+                  ]
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "within": 1e-09,
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "entities": {
+              "9": {
+                "kind": "opening",
+                "id": 9,
+                "layerId": "kapi",
+                "attrs": {},
+                "host": "$uidOf:1",
+                "at": 2.0,
+                "width": 0.9,
+                "form": "door",
+                "frame": 0.05,
+                "head": 2.1,
+                "style": "kentos-kapi-90",
+                "place": [
+                  {
+                    "x": 1.55,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 1.55,
+                    "y": -0.1
+                  },
+                  {
+                    "x": 2.45,
+                    "y": 0.1
+                  },
+                  {
+                    "x": 2.45,
                     "y": -0.1
                   }
                 ]
@@ -5569,7 +6041,7 @@
             "status": "failed",
             "error": {
               "code": "nothing_to_set",
-              "message": "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık ya da numara verin.",
+              "message": "Değiştirilecek bir alan verilmedi: genişlik, biçim, kanat, açılış, menteşe, yan, açı, açılım yayı, kasa, denizlik, lento, derinlik, yüzden uzaklık, numara ya da tadilat durumu verin.",
               "path": "operation"
             }
           },

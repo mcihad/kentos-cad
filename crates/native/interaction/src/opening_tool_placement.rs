@@ -190,7 +190,8 @@ impl OpeningTool {
         if let Some(m) = kentos_native_application::opening_placement::measure(cx.doc, o) {
             self.placement
                 .info
-                .push(format!("Duvar · En {}", f.length(m.width)));
+                // The opening's width, as its panel names it (docs/adr/8003); “Duvar · En” read as the wall's.
+                .push(format!("Genişlik {}", f.length(m.width)));
             self.placement.info.push(format!(
                 "Net köşe payı: Baş {} · Son {}",
                 f.length(m.start_clear),
@@ -254,9 +255,10 @@ impl OpeningTool {
                 });
             }
         }
-        // Whether plan cuts it: a bare opening, a niche or a flue only across the cut height (docs/adr/0719 §2).
+        // Whether plan cuts it: a window, a bare opening, a niche or a flue only across the project's cut height
+        // (docs/adr/0719 §2, 3012).
         if o.form.cut_by_height() {
-            let cut = kentos_commands::PLAN_CUT_HEIGHT;
+            let cut = cx.doc.settings().plan_cut();
             self.placement.info.push(if o.cut_in_plan(cut) {
                 format!("Planda kesilir ({} kesme yüksekliği)", f.length(cut))
             } else {

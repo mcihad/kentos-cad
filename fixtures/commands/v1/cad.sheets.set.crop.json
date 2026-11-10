@@ -7730,7 +7730,7 @@
       ]
     },
     {
-      "name": "Alanın altındaki yıkılacak kolon dar haritada yok",
+      "name": "Alanın altındaki iptal edilen kolon dar haritada yok",
       "steps": [
         {
           "op": "execute",

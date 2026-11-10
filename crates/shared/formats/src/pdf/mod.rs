@@ -10,6 +10,7 @@ pub mod file;
 pub mod filter;
 pub mod font;
 pub mod object;
+pub mod pdfa;
 
 use content::{IDENTITY, M, Run};
 use file::PdfFile;

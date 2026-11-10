@@ -9,6 +9,7 @@ use kentos_contracts::{
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::opening::{self, Anchor, Form, Operation, Spec};
+use kentos_geometry_core::geom::wall::View;
 
 /// The core's anchor.
 pub fn anchor(a: OpeningAnchor) -> Anchor {
@@ -88,6 +89,11 @@ pub fn holes(o: &OpeningFields) -> Vec<opening::Hole> {
     opening::holes(o.at, o.width, &spec(o))
 }
 
+/// [`holes`] with the plan cut at `cut` (docs/adr/8012).
+pub fn holes_at(o: &OpeningFields, cut: f64) -> Vec<opening::Hole> {
+    opening::holes_at(o.at, o.width, &spec(o), cut)
+}
+
 /// Its place along its wall, from its start to its end.
 pub fn span(o: &OpeningFields) -> (f64, f64) {
     opening::span(o.at, anchor(o.anchor), o.width)
@@ -109,15 +115,16 @@ pub fn core_opening(o: &OpeningFields) -> Shape {
 
 /// Its symbol as the contract's plain objects on its layer, with its look: closed polylines for its frame, lines for
 /// its leaves and glass, arcs for its swings, a flue's cross, the dashed outline of one plan does not cut (docs/adr/0719
-/// §2). Empty for a cut bare opening or niche or one without its four jambs.
-pub fn plain_pieces(base: &EntityBase, o: &OpeningFields) -> Vec<Entity> {
+/// §2); the parts a drawing at `view` shows (docs/adr/8010), as the walls beside it. Empty for a cut bare opening or
+/// niche or one without its four jambs.
+pub fn plain_pieces(base: &EntityBase, o: &OpeningFields, view: View) -> Vec<Entity> {
     let place: Vec<CoreVec2> = o.place.iter().map(core).collect();
     let mut plain = base.clone();
     plain.attachments.clear();
     plain.label_pins.clear();
     plain.label = None;
     let back = |p: CoreVec2| Vec2 { x: p.x, y: p.y };
-    opening::pieces(&place, &spec(o))
+    opening::pieces_at(&place, &spec(o), view)
         .into_iter()
         .filter_map(|m| {
             let mut b = plain.clone();
@@ -177,6 +184,7 @@ pub fn spans_by_wall(
     entities: &[Entity],
     walls: &[usize],
     uid_of: impl Fn(u32) -> Option<String>,
+    cut: f64,
 ) -> Vec<Vec<opening::Hole>> {
     let mut out = vec![Vec::new(); walls.len()];
     let place: std::collections::HashMap<String, usize> = walls
@@ -189,7 +197,7 @@ pub fn spans_by_wall(
             && o.opening.broken.is_none()
             && let Some(&k) = place.get(o.opening.host.as_str())
         {
-            out[k].extend(holes(&o.opening));
+            out[k].extend(holes_at(&o.opening, cut));
         }
     }
     out

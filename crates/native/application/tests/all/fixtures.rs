@@ -107,7 +107,7 @@ use kentos_native_application::{
     walls_joins, walls_partition, walls_rectangle,
 };
 use kentos_native_application::{
-    arch_edit, columns_create, grids_create, ramps_create, stairs_create,
+    arch_edit, beams_create, columns_create, grids_create, ramps_create, stairs_create,
 };
 use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
@@ -1012,7 +1012,8 @@ impl Input for kentos_commands::SpacesSeparators {
 }
 
 impl Input for kentos_commands::SpacesCreate {
-    /// `spaces[0].seed.x` and `.y`, `.height`, `lineWeight` (docs/adr/0342).
+    /// `spaces[0].seed.x` and `.y`, `.height`, `.floorOffset`, `.suspendedCeiling`, `lineWeight` (docs/adr/0342,
+    /// 3040 §3).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
             return self.line_weight.as_mut();
@@ -1023,17 +1024,31 @@ impl Input for kentos_commands::SpacesCreate {
             "seed.x" => s.seed.as_mut().map(|p| &mut p.x),
             "seed.y" => s.seed.as_mut().map(|p| &mut p.y),
             "height" => s.height.as_mut(),
+            "floorOffset" => s.floor_offset.as_mut(),
+            "suspendedCeiling" => s.suspended_ceiling.as_mut(),
             _ => None,
         }
     }
 }
 
 impl Input for kentos_commands::SpacesEdit {
-    /// Değiştir's `operation.height`; Böl's `operation.line[k].x` and `.y`; Duvarlardan bul's `operation.seed.x`, `.y`.
+    /// Değiştir's `operation.height`, `.floorOffset`, `.suspendedCeiling`; Böl's `operation.line[k].x` and `.y`;
+    /// Duvarlardan bul's `operation.seed.x`, `.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         use kentos_commands::SpacesOperation as Op;
         match &mut self.operation {
-            Op::Set(c) if path == "operation.height" => c.height.as_mut()?.as_mut(),
+            Op::Set(c)
+                if matches!(
+                    path,
+                    "operation.height" | "operation.floorOffset" | "operation.suspendedCeiling"
+                ) =>
+            {
+                match path {
+                    "operation.height" => c.height.as_mut()?.as_mut(),
+                    "operation.floorOffset" => c.floor_offset.as_mut()?.as_mut(),
+                    _ => c.suspended_ceiling.as_mut()?.as_mut(),
+                }
+            }
             Op::Split { keep: Some(p), .. } if path.starts_with("operation.keep.") => match path {
                 "operation.keep.x" => Some(&mut p.x),
                 "operation.keep.y" => Some(&mut p.y),
@@ -1226,6 +1241,25 @@ impl Input for kentos_commands::RampsCreate {
             "width" => Some(&mut r.width),
             "baseOffset" => r.base_offset.as_mut(),
             _ => named_point(&mut r.pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for kentos_commands::BeamsCreate {
+    /// `beams[0].width`, `.height`, `.offset`, `.baseOffset` (docs/adr/8041 §3), `.pts[k].x` and `.y`, `lineWeight`
+    /// (docs/adr/8041 §1).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("beams[")?.split_once("].")?;
+        let b = self.beams.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "width" => Some(&mut b.width),
+            "height" => Some(&mut b.height),
+            "offset" => b.offset.as_mut(),
+            "baseOffset" => b.base_offset.as_mut(),
+            _ => named_point(&mut b.pts, "pts", rest),
         }
     }
 }
@@ -1551,6 +1585,9 @@ impl Input for kentos_commands::ArchEdit {
                 "operation.ends" => c.ends.as_mut().and_then(Option::as_mut),
                 "operation.legs[0]" => c.legs.as_mut().map(|l| &mut l[0]),
                 "operation.legs[1]" => c.legs.as_mut().map(|l| &mut l[1]),
+                // A beam's (docs/adr/8041 §1).
+                "operation.height" => c.height.as_mut(),
+                "operation.offset" => c.offset.as_mut(),
                 _ => None,
             },
             // Mesafe's `operation.distance` (docs/adr/0712).
@@ -5449,6 +5486,9 @@ fn run_op(
         }
         kentos_commands::CAD_RAMPS_CREATE => {
             run!(ramps_create, kentos_commands::RampsCreate)
+        }
+        kentos_commands::CAD_BEAMS_CREATE => {
+            run!(beams_create, kentos_commands::BeamsCreate)
         }
         kentos_commands::CAD_ARCH_EDIT => {
             run!(arch_edit, kentos_commands::ArchEdit)

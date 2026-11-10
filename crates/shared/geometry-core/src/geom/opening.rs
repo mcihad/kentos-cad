@@ -25,6 +25,11 @@ pub const SPAN_TOLERANCE: f64 = 1e-9;
 /// The plan's cut height above the floor, metres (docs/adr/0719 §2; the contract's `PLAN_CUT_HEIGHT`).
 pub const PLAN_CUT: f64 = 1.1;
 
+/// Up to 1:`SWING_UP_TO` a schematic drawing shows a door's swing and a window's faces; beyond (1:200 and smaller) a
+/// door is its leaf and a window its glass in the wall's hole (docs/adr/8010): the walls' simplest view
+/// ([`wall::SIMPLE_BEYOND`]).
+pub const SWING_UP_TO: f64 = wall::SIMPLE_BEYOND;
+
 /// What an opening is (the contract's `OpeningForm`).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum Form {
@@ -370,13 +375,19 @@ pub fn span(at: f64, anchor: Anchor, width: f64) -> (f64, f64) {
     }
 }
 
-/// Whether plan draws the opening cut (docs/adr/0719 §2): a door or a window always; a bare opening, a niche or a flue
-/// only when it crosses [`PLAN_CUT`] (its sill none: the floor; its head none: full height).
+/// Whether plan draws the opening cut (docs/adr/0719 §2): a door always; a window (docs/adr/8012), a bare opening, a
+/// niche or a flue only when it crosses [`PLAN_CUT`] (its sill none: the floor; its head none: full height). One that
+/// does not leaves its wall whole: a high window over the cut is drawn dashed.
 pub fn cut_in_plan(spec: &Spec) -> bool {
+    cut_in_plan_at(spec, PLAN_CUT)
+}
+
+/// [`cut_in_plan`] at the plan's cut height `cut` above the floor (docs/adr/8012: the project's, a view's).
+pub fn cut_in_plan_at(spec: &Spec, cut: f64) -> bool {
     match spec.form {
-        Form::Door | Form::Window => true,
-        Form::Opening | Form::Niche | Form::Flue => {
-            spec.sill.unwrap_or(0.0) < PLAN_CUT && spec.head.is_none_or(|h| h > PLAN_CUT)
+        Form::Door => true,
+        Form::Window | Form::Opening | Form::Niche | Form::Flue => {
+            spec.sill.unwrap_or(0.0) < cut && spec.head.is_none_or(|h| h > cut)
         }
     }
 }
@@ -496,7 +507,12 @@ pub fn pockets(width: f64, spec: &Spec) -> Vec<Pocket> {
 /// What the opening at `at` of `width` takes out of its wall in plan with its pockets (docs/adr/0777 §2): its hole, then
 /// each pocket's cavity, centred in the wall, open at the jamb it meets; none when plan does not cut it.
 pub fn holes(at: f64, width: f64, spec: &Spec) -> Vec<Hole> {
-    let Some(mut main) = hole(at, width, spec) else {
+    holes_at(at, width, spec, PLAN_CUT)
+}
+
+/// [`holes`] with the plan cut at `cut` (docs/adr/8012).
+pub fn holes_at(at: f64, width: f64, spec: &Spec, cut: f64) -> Vec<Hole> {
+    let Some(mut main) = hole_at(at, width, spec, cut) else {
         return Vec::new();
     };
     let mut out = Vec::new();
@@ -529,7 +545,12 @@ pub fn holes(at: f64, width: f64, spec: &Spec) -> Vec<Hole> {
 /// What the opening at `at` of `width` takes out of its wall in plan; none when plan does not cut it (or a niche or
 /// flue without its depth).
 pub fn hole(at: f64, width: f64, spec: &Spec) -> Option<Hole> {
-    if !cut_in_plan(spec) {
+    hole_at(at, width, spec, PLAN_CUT)
+}
+
+/// [`hole`] with the plan cut at `cut` (docs/adr/8012).
+pub fn hole_at(at: f64, width: f64, spec: &Spec, cut: f64) -> Option<Hole> {
+    if !cut_in_plan_at(spec, cut) {
         return None;
     }
     let (s0, s1) = span(at, spec.anchor, width);
@@ -680,11 +701,77 @@ pub fn frame_of(place: &[Vec2]) -> Option<Frame> {
     })
 }
 
-/// One of an opening's pieces, dashed when plan does not cut it (docs/adr/0719 §2).
+/// One of an opening's pieces, dashed when plan does not cut it (docs/adr/0719 §2), and what it is (docs/adr/8009).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Mark {
     pub shape: Shape,
     pub dashed: bool,
+    pub part: Part,
+}
+
+/// What a piece of an opening is (docs/adr/8009): its pen and the scales it is drawn at (docs/adr/8010) follow from it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Part {
+    /// Kasa: the frame's sides, cut at the jambs.
+    Frame,
+    /// A window's faces: its frame's lines along the light, on the wall's faces.
+    Face,
+    /// Kanat: a leaf, a sliding sash, a fixed panel.
+    Leaf,
+    /// Açılma yayı: a leaf's swing, a revolving door's drum.
+    Swing,
+    /// Cam: a window's glass line.
+    Glass,
+    /// Kayıt: a window's mullions.
+    Mullion,
+    /// Denizlik.
+    Sill,
+    /// Eşik.
+    Threshold,
+    /// Pervaz.
+    Casing,
+    /// Ray: a sliding leaf's track.
+    Track,
+    /// Kullanım alanı: the use zone in front of it (docs/adr/0772 §5).
+    Zone,
+    /// A bare opening's, a niche's or a flue's outline.
+    Outline,
+    /// A flue's cross.
+    Cross,
+}
+
+impl Part {
+    /// Its share of the opening's pen: the frame, a window's faces and the leaves the whole, the rest ISO 128-23's
+    /// narrow line, half the wide (Table 2's 1:2): a door's swing, a window's glass and mullions, a sill, a threshold,
+    /// a casing, a track, the use zone and a recess's lines.
+    pub fn pen(self) -> f64 {
+        match self {
+            Part::Frame | Part::Face | Part::Leaf => 1.0,
+            _ => 0.5,
+        }
+    }
+
+    /// Whether a drawing at `view` shows it (docs/adr/8010, ADV-15), as a Revit door's subcategories show by the
+    /// view's detail level: the detail is the walls' (`wall::View`), from the sheet's scale or the view's own.
+    /// - schematic beyond 1:[`SWING_UP_TO`] (1:200): the leaves and a window's glass in the wall's hole;
+    /// - schematic (1:100): and a door's swing and a window's faces;
+    /// - standard (1:50) and detailed (1:20): every part, the frame's sides, the mullions, the sill, the threshold, a
+    ///   sliding leaf's track and the casings too.
+    ///
+    /// The use zone the designer asked for, a recess's outline and a flue's cross at every scale.
+    pub fn shown_at(self, view: wall::View) -> bool {
+        let schematic = view.detail == wall::Detail::Schematic;
+        match self {
+            Part::Leaf | Part::Glass | Part::Zone | Part::Outline | Part::Cross => true,
+            Part::Swing | Part::Face => !view.simple(),
+            Part::Frame
+            | Part::Mullion
+            | Part::Sill
+            | Part::Threshold
+            | Part::Track
+            | Part::Casing => !schematic,
+        }
+    }
 }
 
 /// Where the jambs' lines meet: an arc wall's centre; none on a straight one.
@@ -725,26 +812,51 @@ fn across_jambs(place: &[Vec2], right: bool, near: f64, far: f64, thickness: f64
     [at(f0, o0, near), at(f0, o0, far), at(f1, o1, near), at(f1, o1, far)]
 }
 
-/// The opening's pieces from its jambs (docs/adr/0341 §2, 0719 §2): a door's or window's symbol; a cut flue's cross; a
-/// bare opening, a niche or a flue plan does not cut drawn dashed (an opening its jambs and a cross, a niche its
-/// sides and back, a flue its cavity and a cross); a cut bare opening or niche nothing (its wall shows it).
+/// The opening's pieces from its jambs (docs/adr/0341 §2, 0719 §2): a door's or window's symbol, a window over the
+/// plan's cut dashed (docs/adr/8012); a cut flue's cross; a bare opening, a niche or a flue plan does not cut drawn
+/// dashed (an opening its jambs and a cross, a niche its sides and back, a flue its cavity and a cross); a cut bare
+/// opening or niche nothing (its wall shows it).
 pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
+    pieces_cut(place, spec, PLAN_CUT)
+}
+
+/// [`pieces`] with the plan cut at `cut` (docs/adr/8012).
+fn pieces_cut(place: &[Vec2], spec: &Spec, cut_at: f64) -> Vec<Mark> {
     if matches!(spec.form, Form::Door | Form::Window) {
-        let mut out: Vec<Mark> = symbol(place, spec)
+        // A window over the plan's cut is seen from above, dashed, its wall whole (docs/adr/8012).
+        let over = !cut_in_plan_at(spec, cut_at);
+        let mut out: Vec<Mark> = symbol_parts(place, spec)
             .into_iter()
-            .map(|shape| Mark { shape, dashed: false })
+            .map(|(part, shape)| Mark {
+                shape,
+                dashed: over,
+                part,
+            })
             .collect();
         // Its use zone, dashed (docs/adr/0772 §5).
         if let Some(ring) = use_zone(place, spec) {
-            out.push(Mark { shape: closed_ring(ring), dashed: true });
+            out.push(Mark {
+                shape: closed_ring(ring),
+                dashed: true,
+                part: Part::Zone,
+            });
         }
         return out;
     }
     let Some(f) = frame_of(place) else {
         return Vec::new();
     };
-    let cut = cut_in_plan(spec);
-    let mark = |shape: Shape| Mark { shape, dashed: !cut };
+    let cut = cut_in_plan_at(spec, cut_at);
+    let mark = |shape: Shape| Mark {
+        shape,
+        dashed: !cut,
+        part: Part::Outline,
+    };
+    let cross = |shape: Shape| Mark {
+        shape,
+        dashed: !cut,
+        part: Part::Cross,
+    };
     let t = f.thickness;
     let centre = jambs_centre(place);
     match spec.form {
@@ -779,8 +891,8 @@ pub fn pieces(place: &[Vec2], spec: &Spec) -> Vec<Mark> {
                 out.push(mark(line(b1, a1)));
                 out.push(mark(along(a1, a0, centre)));
             }
-            out.push(mark(line(a0, b1)));
-            out.push(mark(line(b0, a1)));
+            out.push(cross(line(a0, b1)));
+            out.push(cross(line(b0, a1)));
             out
         }
         Form::Door | Form::Window => Vec::new(),
@@ -921,6 +1033,43 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     if !matches!(spec.form, Form::Door | Form::Window) {
         return pieces(place, spec).into_iter().map(|m| m.shape).collect();
     }
+    symbol_parts(place, spec).into_iter().map(|(_, s)| s).collect()
+}
+
+/// [`pieces`] as a drawing at `view` shows them (docs/adr/8010): a door's and a window's parts by the view's detail and
+/// scale ([`Part::shown_at`]), the other forms' all; what is cut by the view's cut height (docs/adr/8012). [`pieces`] is every part, as the 1:20 detail shows them.
+///
+/// Drawn without its frame's sides, a window's faces, glass and leaves span the whole hole, jamb to jamb: else the frame
+/// it no longer draws leaves a gap its width at each end (6 cm, 0.6 mm at 1:100). Its use zone stays the light's. A
+/// door keeps its leaf's width and its hinge.
+pub fn pieces_at(place: &[Vec2], spec: &Spec, view: wall::View) -> Vec<Mark> {
+    let mut out = pieces_cut(place, spec, view.cut);
+    if spec.form == Form::Window
+        && !Part::Frame.shown_at(view)
+        && (spec.frame > 0.0 || spec.build.fit > 0.0)
+    {
+        let mut bare = spec.clone();
+        bare.frame = 0.0;
+        bare.build.fit = 0.0;
+        let zone: Vec<Mark> = out.into_iter().filter(|m| m.part == Part::Zone).collect();
+        out = pieces_cut(place, &bare, view.cut)
+            .into_iter()
+            .filter(|m| m.part != Part::Zone)
+            .chain(zone)
+            .collect();
+    }
+    out.retain(|m| m.part.shown_at(view));
+    out
+}
+
+/// [`symbol`]'s pieces, each with what it is (docs/adr/8009): its pen follows from that.
+pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
+    if !matches!(spec.form, Form::Door | Form::Window) {
+        return pieces(place, spec)
+            .into_iter()
+            .map(|m| (m.part, m.shape))
+            .collect();
+    }
     let Some(p) = Parts::new(place, spec) else {
         return Vec::new();
     };
@@ -930,46 +1079,55 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     let (dl, dr) = (p.dl, p.dr);
     let u = p.f.along;
     if fr > 0.0 {
-        out.push(closed_ring(vec![
+        out.push((Part::Frame, closed_ring(vec![
             p.along_start(fit, dl),
             p.along_start(fit + fr, dl),
             p.along_start(fit + fr, dr),
             p.along_start(fit, dr),
-        ]));
-        out.push(closed_ring(vec![
+        ])));
+        out.push((Part::Frame, closed_ring(vec![
             p.along_end(fit, dl),
             p.along_end(fit + fr, dl),
             p.along_end(fit + fr, dr),
             p.along_end(fit, dr),
-        ]));
+        ])));
     }
     let m0 = p.light_start();
     let depth = dr - dl;
     match spec.form {
         Form::Window => {
-            out.push(line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl)));
-            out.push(line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)));
+            out.push((
+                Part::Face,
+                line(p.along_start(fit + fr, dl), p.along_end(fit + fr, dl)),
+            ));
+            out.push((
+                Part::Face,
+                line(p.along_start(fit + fr, dr), p.along_end(fit + fr, dr)),
+            ));
             if spec.operation == Operation::Slide && spec.leaves > 2 {
-                out.extend(multi_slide(&p, spec, true));
+                out.extend(leaves(multi_slide(&p, spec, true)));
             } else if spec.operation == Operation::Slide {
                 let k = depth / 12.0;
                 let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                 let half = two_leaf_meet(spec, clear);
-                out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
-                out.push(line(
+                out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k))))));
+                out.push((Part::Leaf, line(
                     add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
                     add(m0, add(mul(u, clear), mul(p.f.left, -k))),
-                ));
+                )));
                 if b.track {
-                    out.push(line(m0, add(m0, mul(u, clear))));
+                    out.push((Part::Track, line(m0, add(m0, mul(u, clear)))));
                 }
             } else {
-                out.push(line(m0, add(m0, mul(u, clear))));
+                out.push((Part::Glass, line(m0, add(m0, mul(u, clear)))));
             }
             let n = f64::from(b.mullions);
             for i in 1..=b.mullions {
                 let s = fit + fr + clear * f64::from(i) / (n + 1.0);
-                out.push(line(p.along_start(s, dl), p.along_start(s, dr)));
+                out.push((
+                    Part::Mullion,
+                    line(p.along_start(s, dl), p.along_start(s, dr)),
+                ));
             }
             if let Some(board) = b.sill_board.filter(|v| *v > 0.0) {
                 // The sill board on the face away from the side it opens to.
@@ -977,7 +1135,7 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
                 let d = if left { 0.0 } else { p.f.thickness };
                 let o = p.out(left);
                 let (a, c) = (p.along_start(0.0, d), p.along_end(0.0, d));
-                out.push(closed_ring(vec![a, c, add(c, mul(o, board)), add(a, mul(o, board))]));
+                out.push((Part::Sill, closed_ring(vec![a, c, add(c, mul(o, board)), add(a, mul(o, board))])));
             }
         }
         Form::Door => {
@@ -985,39 +1143,39 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
                 Operation::Slide => {
                     let k = depth / 8.0;
                     if spec.leaves > 2 {
-                        out.extend(multi_slide(&p, spec, false));
+                        out.extend(leaves(multi_slide(&p, spec, false)));
                     } else if spec.leaves == 1 && b.track {
-                        out.extend(surface_slide(&p, spec));
+                        out.extend(leaves(surface_slide(&p, spec)));
                     } else if spec.leaves == 1 {
-                        out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k)))));
+                        out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k))))));
                     } else {
                         let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                         let half = two_leaf_meet(spec, clear);
-                        out.push(line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k)))));
-                        out.push(line(
+                        out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k))))));
+                        out.push((Part::Leaf, line(
                             add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
                             add(m0, add(mul(u, clear), mul(p.f.left, -k))),
-                        ));
+                        )));
                         if b.track {
-                            out.push(line(m0, add(m0, mul(u, clear))));
+                            out.push((Part::Track, line(m0, add(m0, mul(u, clear)))));
                         }
                     }
                 }
-                Operation::Revolving => out.extend(revolving(&p, spec)),
-                Operation::Pocket => out.extend(pocket_leaves(&p, spec)),
+                Operation::Revolving => out.extend(leaves(revolving(&p, spec))),
+                Operation::Pocket => out.extend(leaves(pocket_leaves(&p, spec))),
                 Operation::Folding => {
                     for g in fold_groups(&p, spec) {
                         let mut at = g.hinge;
                         for i in 0..g.panels {
                             let rise = if i % 2 == 0 { g.sin } else { -g.sin };
                             let next = add(at, add(mul(g.dir, g.width * g.cos), mul(g.out, g.width * rise)));
-                            out.push(line(at, next));
+                            out.push((Part::Leaf, line(at, next)));
                             at = next;
                         }
                     }
                 }
                 Operation::Fixed => {
-                    out.push(line(m0, add(m0, mul(u, clear))));
+                    out.push((Part::Leaf, line(m0, add(m0, mul(u, clear)))));
                 }
                 Operation::Swing => {
                     for l in swing_leaves(&p, spec) {
@@ -1028,15 +1186,15 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
                             // A thick leaf: a band on the side it swung from.
                             Some(t) => {
                                 let back = rotated(open, if turn < 0.0 { 90.0 } else { -90.0 });
-                                out.push(closed_ring(vec![l.hinge, tip, add(tip, mul(back, t)), add(l.hinge, mul(back, t))]));
+                                out.push((Part::Leaf, closed_ring(vec![l.hinge, tip, add(tip, mul(back, t)), add(l.hinge, mul(back, t))])));
                             }
-                            None => out.push(line(l.hinge, tip)),
+                            None => out.push((Part::Leaf, line(l.hinge, tip))),
                         }
                         if spec.show_swing {
                             let a_closed = atan2(l.closed.y, l.closed.x);
                             let a_open = atan2(open.y, open.x);
                             let (a0, a1) = if turn > 0.0 { (a_closed, a_open) } else { (a_open, a_closed) };
-                            out.push(Shape::Arc { c: l.hinge, r: l.len, a0, a1 });
+                            out.push((Part::Swing, Shape::Arc { c: l.hinge, r: l.len, a0, a1 }));
                         }
                     }
                 }
@@ -1044,12 +1202,12 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             if let Some(th) = b.threshold.filter(|v| *v > 0.0) {
                 let c = p.middle();
                 let (a, z) = (js_max(c - th / 2.0, 0.0), js_min(c + th / 2.0, p.f.thickness));
-                out.push(closed_ring(vec![
+                out.push((Part::Threshold, closed_ring(vec![
                     p.along_start(fit + fr, a),
                     p.along_end(fit + fr, a),
                     p.along_end(fit + fr, z),
                     p.along_start(fit + fr, z),
-                ]));
+                ])));
             }
         }
         Form::Opening | Form::Niche | Form::Flue => {}
@@ -1062,11 +1220,19 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
             for along_end in [false, true] {
                 let at = |s: f64| if along_end { p.along_end(s, d) } else { p.along_start(s, d) };
                 let (a, c) = (at(s0), at(s1));
-                out.push(closed_ring(vec![a, c, add(c, o), add(a, o)]));
+                out.push((Part::Casing, closed_ring(vec![a, c, add(c, o), add(a, o)])));
             }
         }
     }
     out
+}
+
+/// A helper's leaves: its arcs are the leaves' swing (a revolving door's drum), the rest the leaves.
+fn leaves(shapes: Vec<Shape>) -> impl Iterator<Item = (Part, Shape)> {
+    shapes.into_iter().map(|s| match s {
+        Shape::Arc { .. } => (Part::Swing, s),
+        s => (Part::Leaf, s),
+    })
 }
 
 /// Where two sliding leaves meet along the light (docs/adr/0807 §2): its `split` of it, none: the middle.

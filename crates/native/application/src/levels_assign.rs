@@ -17,8 +17,8 @@ use crate::codes;
 
 pub const STEP: &str = "Kat ver";
 
-/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a stair, a ramp, a room
-/// separator or a block insert (a fixture, docs/adr/0733 §1).
+/// Whether `e` has a level of its own (docs/adr/0715 §1): a wall, a space, a grid, a column, a beam (docs/adr/8041 §1),
+/// a stair, a ramp, a room separator or a block insert (a fixture, docs/adr/0733 §1).
 pub fn levelled(e: &Entity) -> bool {
     match e {
         Entity::Insert(_)
@@ -28,14 +28,15 @@ pub fn levelled(e: &Entity) -> bool {
         | Entity::Grid(_)
         | Entity::Column(_)
         | Entity::Stair(_)
-        | Entity::Ramp(_) => true,
+        | Entity::Ramp(_)
+        | Entity::Beam(_) => true,
         Entity::Polyline(p) => p.space_separator.is_some(),
         _ => false,
     }
 }
 
 /// What Denetim says lacks a level (`arch_level_missing`) while the project has `levels`: a wall, a space, a column,
-/// a stair, a ramp or a room separator on no level or on a level the project does not have. A grid may stand on none
+/// a beam, a stair, a ramp or a room separator on no level or on a level the project does not have. A grid may stand on none
 /// (it serves every level).
 pub fn lacks_level(e: &Entity, levels: &[ArchLevel]) -> bool {
     !levels.is_empty()
@@ -55,6 +56,7 @@ fn level_mut(e: &mut Entity) -> Option<&mut Option<String>> {
         Entity::Column(x) => Some(&mut x.column.arch.level),
         Entity::Stair(x) => Some(&mut x.stair.arch.level),
         Entity::Ramp(x) => Some(&mut x.ramp.arch.level),
+        Entity::Beam(x) => Some(&mut x.beam.arch.level),
         Entity::Polyline(p) => p.space_separator.as_mut().map(|a| &mut a.level),
         Entity::Insert(x) => Some(&mut x.arch.level),
         _ => None,
@@ -72,7 +74,7 @@ fn not_levelled(e: &Entity) -> String {
             "Çoklu çizgi yalnız mahal ayırıcıyken kat alır; bu çizgi mahal ayırıcı değil.".into()
         }
         _ => format!(
-            "“{}” nesnesinin kendi katı yok; kat yalnız duvar, mahal, aks, kolon, merdiven, rampa ve mahal ayırıcıya verilir.",
+            "“{}” nesnesinin kendi katı yok; kat yalnız duvar, mahal, döşeme, aks, kolon, kiriş, merdiven, rampa, mahal ayırıcı ve bloğa verilir.",
             e.kind()
         ),
     }

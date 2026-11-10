@@ -102,12 +102,13 @@ fn detail_label(d: Option<WallDetail>) -> &'static str {
     }
 }
 
-const PHASES: [Option<PhaseView>; 5] = [
+const PHASES: [Option<PhaseView>; 6] = [
     None,
     Some(PhaseView::All),
     Some(PhaseView::Existing),
     Some(PhaseView::Demolition),
     Some(PhaseView::Proposed),
+    Some(PhaseView::Renovation),
 ];
 
 fn phase_label(p: Option<PhaseView>) -> &'static str {
@@ -117,6 +118,7 @@ fn phase_label(p: Option<PhaseView>) -> &'static str {
         Some(PhaseView::Existing) => "Mevcut durum",
         Some(PhaseView::Demolition) => "Yıkım planı",
         Some(PhaseView::Proposed) => "Yeni durum",
+        Some(PhaseView::Renovation) => "Tadilat projesi",
     }
 }
 
@@ -649,14 +651,14 @@ impl App {
                     .push(words::field(
                         "Şablondan",
                         kentos_ui::label::muted(recipe_caption(self, &t.recipe)),
-                        Some("Evre, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
+                        Some("Tadilat görünümü, katman durumu, ölçek, ayrıntı, gizlenenler ve kalemler şablondan gelir; şablon değişince bağlı paftalar da değişir.".to_owned()),
                     ));
             }
             None => {
                 body = body
                     .push(
                         row![
-                            cell("Evre", phase.into()),
+                            cell("Tadilat görünümü", phase.into()),
                             cell("Katman durumu", state.into()),
                             cell("Ölçek", scale.into())
                         ]

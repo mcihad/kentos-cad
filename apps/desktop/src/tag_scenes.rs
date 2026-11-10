@@ -37,6 +37,7 @@ fn numbered(app: &mut App) {
                     prefix: prefix.into(),
                     start: 1,
                     form: Some(form),
+                    by_room: false,
                 },
                 expected_revision: None,
             },

@@ -24,12 +24,12 @@ pub const SLACK: f64 = 0.001;
 const ARC_STEP: f64 = 0.1;
 
 /// An obstacle: its object, what it is, its rings (an outer one and holes).
-struct Obstacle {
-    slot: Slot,
-    level: Option<String>,
-    what: &'static str,
-    outer: Vec<V>,
-    holes: Vec<Vec<V>>,
+pub(crate) struct Obstacle {
+    pub(crate) slot: Slot,
+    pub(crate) level: Option<String>,
+    pub(crate) what: &'static str,
+    pub(crate) outer: Vec<V>,
+    pub(crate) holes: Vec<Vec<V>>,
 }
 
 fn points_of(edges: &[Edge]) -> Vec<V> {
@@ -136,7 +136,7 @@ fn edges_cross(a: &[V], b: &[V]) -> bool {
 
 /// Whether the zone `z` and the obstacle overlap: an edge of one crosses the other's, or a point of one lies inside the
 /// other (inside its outer ring, outside its holes).
-fn overlaps(z: &[V], o: &Obstacle) -> bool {
+pub(crate) fn overlaps(z: &[V], o: &Obstacle) -> bool {
     if !boxes_meet(z, &o.outer) {
         return false;
     }
@@ -162,7 +162,7 @@ fn boxes_meet(a: &[V], b: &[V]) -> bool {
 }
 
 /// `ring` shrunk by [`SLACK`] toward its middle.
-fn shrunk(ring: &[V]) -> Vec<V> {
+pub(crate) fn shrunk(ring: &[V]) -> Vec<V> {
     let n = ring.len() as f64;
     let c = V::new(
         ring.iter().map(|p| p.x).sum::<f64>() / n,
@@ -181,7 +181,7 @@ fn shrunk(ring: &[V]) -> Vec<V> {
         .collect()
 }
 
-fn middle(ring: &[V]) -> V {
+pub(crate) fn middle(ring: &[V]) -> V {
     let n = ring.len().max(1) as f64;
     V::new(
         ring.iter().map(|p| p.x).sum::<f64>() / n,
@@ -191,15 +191,15 @@ fn middle(ring: &[V]) -> V {
 
 /// A door's zones: its zones as it opens and its use zone, with its slot, its host's slot, its mark, how it opens, and
 /// what it is drawn from (its jambs and spec), so its zones turned can be tried.
-struct Door {
-    slot: Slot,
-    level: Option<String>,
+pub(crate) struct Door {
+    pub(crate) slot: Slot,
+    pub(crate) level: Option<String>,
     host: Option<Slot>,
-    mark: String,
+    pub(crate) mark: String,
     operation: OpeningOperation,
     place: Vec<V>,
     spec: opening::Spec,
-    sweeps: Vec<Vec<V>>,
+    pub(crate) sweeps: Vec<Vec<V>>,
     zone: Option<Vec<V>>,
 }
 
@@ -233,7 +233,7 @@ fn clash_words(d: &Door, what: &str) -> (String, String) {
 }
 
 /// The door's zones turned as `what` says.
-fn turned(d: &Door, what: &str) -> Vec<Vec<V>> {
+pub(crate) fn turned(d: &Door, what: &str) -> Vec<Vec<V>> {
     let mut spec = d.spec.clone();
     if what != "hand" {
         spec.side_right = !spec.side_right;
@@ -245,7 +245,7 @@ fn turned(d: &Door, what: &str) -> Vec<Vec<V>> {
 }
 
 /// Whether `zones` clear every obstacle off the door's host and on its level, and every other door's zones.
-fn clear_of(d: &Door, zones: &[Vec<V>], obstacles: &[Obstacle], doors: &[Door]) -> bool {
+pub(crate) fn clear_of(d: &Door, zones: &[Vec<V>], obstacles: &[Obstacle], doors: &[Door]) -> bool {
     zones.iter().all(|z| {
         let shrunk_z = shrunk(z);
         obstacles
@@ -260,7 +260,7 @@ fn clear_of(d: &Door, zones: &[Vec<V>], obstacles: &[Obstacle], doors: &[Door]) 
 }
 
 /// Whether two zones overlap by more than a touch.
-fn zones_meet(a: &[V], b: &[V]) -> bool {
+pub(crate) fn zones_meet(a: &[V], b: &[V]) -> bool {
     if !boxes_meet(a, b) {
         return false;
     }
@@ -283,7 +283,7 @@ fn fix_of(d: &Door, obstacles: &[Obstacle], doors: &[Door]) -> Option<(&'static 
     })
 }
 
-fn doors(doc: &Document) -> Vec<Door> {
+pub(crate) fn doors(doc: &Document) -> Vec<Door> {
     let mut out = Vec::new();
     for e in doc.entities() {
         let Entity::Opening(o) = e else { continue };
@@ -315,7 +315,7 @@ fn doors(doc: &Document) -> Vec<Door> {
     out
 }
 
-fn obstacles(doc: &Document) -> Vec<Obstacle> {
+pub(crate) fn obstacles(doc: &Document) -> Vec<Obstacle> {
     let mut out = Vec::new();
     for e in doc.entities() {
         let slot = Slot(e.base().id);

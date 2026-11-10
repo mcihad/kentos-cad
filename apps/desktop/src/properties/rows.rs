@@ -258,7 +258,9 @@ pub(crate) fn panel(
         [] => Panel {
             summary: Summary::Empty,
             meta: None,
-            sections: vec![document_section(doc, shown.crs)],
+            sections: std::iter::once(document_section(doc, shown.crs))
+                .chain(zoning_section(doc))
+                .collect(),
             types: Vec::new(),
             total: 0,
             editable: 0,
@@ -344,6 +346,42 @@ fn document_section(doc: &Document, crs: bool) -> Section {
         title: "Çizim".into(),
         rows,
     }
+}
+
+/// No selection, the project with a zoning (docs/adr/8030): its emsal and TAKS against their limits, live as the
+/// status bar's badge, with the room the badge has not on a narrow bar.
+fn zoning_section(doc: &Document) -> Option<Section> {
+    let r = doc.model.zoning_report()?;
+    let comma = |v: f64| format!("{v:.2}").replace('.', ",");
+    let against = |v: f64, l: Option<f64>| match l {
+        Some(l) if v > l + 1e-9 => format!("{} / {} · aşıldı", comma(v), comma(l)),
+        Some(l) => format!("{} / {}", comma(v), comma(l)),
+        None => comma(v),
+    };
+    Some(Section {
+        id: "zoning".into(),
+        title: "İmar durumu".into(),
+        rows: {
+            let mut rows = vec![
+                Row::figure("Parsel alanı", comma(r.parcel)).unit("m²"),
+                Row::figure("Emsal", against(r.far(), r.far_limit)),
+                Row::figure("TAKS", against(r.coverage(), r.coverage_limit)),
+            ];
+            // The site plan's garden distances (docs/adr/8032).
+            if crate::zoning_badge::site(&doc.model).is_some() {
+                let short = crate::zoning_badge::short_edges(&doc.model);
+                rows.push(Row::text(
+                    "Bahçe mesafeleri",
+                    if short.is_empty() {
+                        "uygun".to_owned()
+                    } else {
+                        format!("dar: {}", short.join("; "))
+                    },
+                ));
+            }
+            rows
+        },
+    })
 }
 
 /// A layer drawn from a map service (docs/adr/0208 §14): its kind, address,
@@ -953,6 +991,46 @@ fn origin_rows(parts: &[kentos_native_application::appearance_origin::Explained]
 }
 
 /// One object's sections: Genel, Geometri, an insert's Blok öznitelikleri, and Öznitelik bilgileri when it has other attributes.
+/// The rows a building element's own section starts with, in this order (docs/adr/8005, plan ADV-09): what makes it
+/// the element it is, then where it stands.
+const BUILDING_MAIN: [&str; 10] = ["Numara", "Ad", "Tür", "Kalınlık", "Genişlik", "Stil", "Yükseklik", "Hiza", "Kat", "Tadilat durumu"];
+
+/// A building element's own section comes first, named for it, its main rows at its top. A wall's Kalınlık, Stil,
+/// Yükseklik, Hiza, Kat and Tadilat durumu were under the eight rows every object has (Tür, Katman, Renk, Çizgi kalınlığı …) and
+/// further down their own section, below the joins: at 1100 × 650 and 18 px only Tür showed (plan S18). The general
+/// rows follow, as they were.
+fn building_first(e: &Entity, sections: &mut Vec<Section>) {
+    if !matches!(
+        e,
+        Entity::Wall(_)
+            | Entity::Opening(_)
+            | Entity::Space(_)
+            | Entity::Slab(_)
+            | Entity::Stair(_)
+            | Entity::Ramp(_)
+            | Entity::Beam(_)
+            | Entity::Column(_)
+            | Entity::Grid(_)
+    ) {
+        return;
+    }
+    let Some(i) = sections.iter().position(|s| s.id == "geometry") else { return };
+    let mut own = sections.remove(i);
+    own.title = kind_title(e.kind()).into();
+    // Each row with the notes under it, so a note keeps its row.
+    let mut groups: Vec<Vec<Row>> = Vec::new();
+    for row in std::mem::take(&mut own.rows) {
+        match groups.last_mut() {
+            Some(group) if row.note => group.push(row),
+            _ => groups.push(vec![row]),
+        }
+    }
+    let rank = |g: &Vec<Row>| BUILDING_MAIN.iter().position(|m| g[0].label == *m).unwrap_or(BUILDING_MAIN.len());
+    groups.sort_by_key(rank);
+    own.rows = groups.into_iter().flatten().collect();
+    sections.insert(0, own);
+}
+
 fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     let base = e.base();
     let slot = Slot(base.id);
@@ -983,7 +1061,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     if e.draws_lines() {
         let weight = Some(base.line_weight);
         general.push(
-            Row::text("Kalınlık", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
+            Row::text("Çizgi kalınlığı", weight_text(weight)).editor(edit(weight_editor(&ids, weight))),
         );
         // Its own line type, its scale and transparency (docs/adr/0260).
         general.push(
@@ -1261,14 +1339,15 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 })
             };
             let fixed = kentos_commands::fixed_width(&x.components).is_some();
-            geo.push(metres("Genişlik", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+            // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/8003); a line's weight is Çizgi kalınlığı.
+            geo.push(metres("Kalınlık", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
             // Kalınlıkta sabit (docs/adr/0771 §2): the line a width or style change keeps, this session's.
             let keep_now = super::wall_parts::keep();
             let keeps = kentos_commands::WallReference::ALL
                 .iter()
                 .map(|&r| pick(r.label().to_owned(), r == keep_now, Message::Properties(Event::WallKeep(r)), None))
                 .collect();
-            geo.push(Row::text("Kalınlıkta sabit", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
+            geo.push(Row::text("Sabit kalan çizgi", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
             let justify = kentos_commands::WallJustify::ALL
                 .iter()
                 .map(|&j| {
@@ -1397,15 +1476,44 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     )
                 })
                 .collect();
-            let clean_text = if x.cleanup { "Önceliğe göre" } else { "Kapalı" };
-            geo.push(Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)));
-            let height = x.height.map_or_else(|| "Katın".to_owned(), |h| f.length_bare(h));
+            let clean_text = if x.cleanup {
+                "Önceliğe göre"
+            } else {
+                "Kapalı"
+            };
             geo.push(
-                Row::figure("Yükseklik", height)
-                    .unit(if x.height.is_some() { f.length_unit_label() } else { "" })
-                    .editor(number(Field::WallHeight(slot))),
+                Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)),
             );
-            let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/8040 §1): the number in
+            // its cell, where it comes from in a note under it (docs/adr/0687: a decorated number does not fit a
+            // numeric cell at a large text size).
+            let height = doc.model.wall_height(x);
+            geo.push(
+                Row::figure(
+                    "Yükseklik",
+                    height.map_or_else(|| "Yok".to_owned(), |h| f.length_bare(h)),
+                )
+                .unit(if height.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::WallHeight(slot))),
+            );
+            if x.height.is_none() && height.is_some() {
+                geo.push(Row::note(match doc.model.wall_top_from(x) {
+                    Some(kentos_domain::WallTop::Slab) => "Üst döşemenin altına kadar",
+                    // Docs/adr/8041 §1: a beam over it.
+                    Some(kentos_domain::WallTop::Beam) => "Kirişin altına kadar",
+                    None => "Katın yüksekliği",
+                }));
+            }
+            let levels = doc
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.levels.clone())
+                .unwrap_or_default();
             let level_name = x
                 .arch
                 .level
@@ -1434,7 +1542,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             }));
             level_items.push(Choice::Separator);
             level_items.push(Choice::Command {
-                label: "Katlar…",
+                label: "Katları düzenle…",
                 icon: crate::icons::from_web(Some("archSettings")),
                 id: "arch.settings",
             });
@@ -1460,7 +1568,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     None,
                 )
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
             geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
             geo.extend(area(area_of.unwrap_or(0.0)));
         }
@@ -1469,6 +1577,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
         | Entity::Column(_)
         | Entity::Stair(_)
         | Entity::Ramp(_)
+        | Entity::Beam(_)
         | Entity::Tag(_)
         | Entity::ViewMark(_) => {
             geo.extend(arch::rows(doc, slot, e, locked, &f));
@@ -1585,7 +1694,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .into_iter()
                 .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
                 .collect();
-            geo.push(Row::text("Boşluk", void_words).editor(select(void_words.into(), voids)));
+            geo.push(Row::text("Döşeme boşluğu", void_words).editor(select(void_words.into(), voids)));
             let methods = SpaceMethod::ALL
                 .iter()
                 .map(|&m| {
@@ -1597,11 +1706,12 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     )
                 })
                 .collect();
-            geo.push(Row::text("Yöntem", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+            // Alan yöntemi, as the Mahal tool names it (docs/adr/8003).
+            geo.push(Row::text("Alan yöntemi", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
             if x.seed.is_some() {
-                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.label().into(),m==x.columns,
+                let items=SpaceColumns::ALL.iter().map(|&m|pick(m.choice().into(),m==x.columns,
                     set(SpaceChange {columns:Some(m),..Default::default()}),None)).collect();
-                geo.push(Row::text("Kolon alanı",x.columns.label()).editor(select(x.columns.label().into(),items)));
+                geo.push(Row::text("Kolon alanı",x.columns.choice()).editor(select(x.columns.choice().into(),items)));
             } else {
                 geo.push(Row::text("Kolon alanı","Çizilen sınır korunur"));
             }
@@ -1633,7 +1743,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             }));
             level_items.push(Choice::Separator);
             level_items.push(Choice::Command {
-                label: "Katlar…",
+                label: "Katları düzenle…",
                 icon: crate::icons::from_web(Some("archSettings")),
                 id: "arch.settings",
             });
@@ -1653,36 +1763,107 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                     None,
                 )
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
-            let level_height = x
+            geo.push(
+                Row::text("Tadilat durumu", phase_name)
+                    .editor(select(phase_name.to_owned(), phases)),
+            );
+            // Its floor, its asma tavan and its inside height (docs/adr/8040 §3; PAİY 4(1)(ıı): from the floor's finish
+            // to the ceiling's): each number in its cell, where it comes from in a note under it (docs/adr/0687: a
+            // decorated number does not fit a numeric cell).
+            let (floor, floor_from) = doc.model.room_floor(x);
+            let storey_floor = x
                 .arch
                 .level
                 .as_deref()
                 .and_then(|id| levels.iter().find(|l| l.id == id))
-                .and_then(|l| l.height);
-            let height = x.height.or(level_height);
-            let cad = doc.settings().workspace == Some(kentos_commands::Workspace::Cad);
-            let shown = match (x.height, level_height) {
-                (Some(h), _) => f.length_bare(h),
-                (None, Some(h)) if cad => f.length_bare(h),
-                (None, Some(h)) => format!("{} (katın)", f.length_bare(h)),
-                (None, None) => "Yok".to_owned(),
-            };
+                .map_or(0.0, |l| l.elevation);
             geo.push(
-                Row::figure("Yükseklik", shown)
-                    .unit(if height.is_some() { f.length_unit_label() } else { "" })
-                    .editor(number(Field::SpaceHeight(slot))),
+                Row::figure("Döşeme kot farkı", f.length_bare(floor - storey_floor))
+                    .unit(f.length_unit_label())
+                    .editor(number(Field::SpaceFloorOffset(slot))),
             );
-            if cad && x.height.is_none() && level_height.is_some() {
-                // A numeric editor must not clip or parse a decorated fallback.
-                geo.push(Row::note("Katlar arası"));
+            if floor_from == kentos_domain::FloorFrom::Slab {
+                geo.push(Row::note("Altındaki döşemenin üstü"));
             }
-            geo.push(words("Zemin kaplaması", &x.finishes.floor, Field::SpaceFloor(slot)));
-            geo.push(words("Duvar kaplaması", &x.finishes.wall, Field::SpaceWall(slot)));
-            geo.push(words("Tavan kaplaması", &x.finishes.ceiling, Field::SpaceCeiling(slot)));
+            geo.push(Row::figure("Döşeme kotu", f.length_bare(floor)).unit(f.length_unit_label()));
+            geo.push(
+                Row::figure(
+                    "Asma tavan",
+                    x.suspended_ceiling
+                        .map_or_else(|| "Yok".to_owned(), |c| f.length_bare(c)),
+                )
+                .unit(if x.suspended_ceiling.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::SpaceSuspended(slot))),
+            );
+            let room = doc.model.room_height(x);
+            let height = room.map(|h| h.inside());
+            geo.push(
+                Row::figure(
+                    "İç yükseklik",
+                    height.map_or_else(|| "Yok".to_owned(), |h| f.length_bare(h)),
+                )
+                .unit(if height.is_some() {
+                    f.length_unit_label()
+                } else {
+                    ""
+                })
+                .editor(number(Field::SpaceHeight(slot))),
+            );
+            if let Some(from) = room.and_then(|h| match h.ceiling_from {
+                kentos_domain::CeilingFrom::Suspended => Some("Asma tavana kadar"),
+                kentos_domain::CeilingFrom::Own => None,
+                kentos_domain::CeilingFrom::Slab => Some("Üst döşemenin altına kadar"),
+                kentos_domain::CeilingFrom::Storey => Some("Katlar arası"),
+            }) {
+                geo.push(Row::note(from));
+            }
+            // The finishes as the room list writes them (docs/adr/8038; PAİY 57(29)): “Döşeme”, the regulation's word
+            // and the schedules', not “Zemin” (the ground's).
+            geo.push(words(
+                "Döşeme kaplaması",
+                &x.finishes.floor,
+                Field::SpaceFloor(slot),
+            ));
+            geo.push(words(
+                "Süpürgelik",
+                &x.finishes.base,
+                Field::SpaceBase(slot),
+            ));
+            geo.push(words(
+                "Duvar kaplaması",
+                &x.finishes.wall,
+                Field::SpaceWall(slot),
+            ));
+            geo.push(words(
+                "Tavan kaplaması",
+                &x.finishes.ceiling,
+                Field::SpaceCeiling(slot),
+            ));
+            geo.push(words(
+                "Denizlik ve parapet",
+                &x.finishes.sill,
+                Field::SpaceSill(slot),
+            ));
+            geo.push(words(
+                "Basamak ve rıht",
+                &x.finishes.stair,
+                Field::SpaceStair(slot),
+            ));
+            geo.push(words(
+                "Küpeşte ve korkuluk",
+                &x.finishes.railing,
+                Field::SpaceRailing(slot),
+            ));
             let a = kentos_native_application::spaces::area_of(&x.parts);
             geo.extend(area(a));
-            geo.push(metres("Çevre", kentos_native_application::spaces::perimeter_of(&x.parts)));
+            geo.push(metres(
+                "Çevre",
+                kentos_native_application::spaces::perimeter_of(&x.parts),
+            ));
             if let Some(h) = height {
                 geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
             }
@@ -1694,7 +1875,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             );
             geo.push(Row::text("Kaynaklar", source_summary.clone())
                 .editor(select(source_summary, source_items)));
-            let rebound = vec![Choice::Command {label:"İç nokta seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
+            let rebound = vec![Choice::Command {label:"Mahali yeniden sınırla…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
                 "Duvarlardan yeniden bul".to_owned(),
                 false,
                 Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Rebound { seed: None }))),
@@ -1787,6 +1968,57 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if let Some(l) = level {
                 geo.push(Row::figure("Üst kot", f.length_bare(l.elevation + x.offset)).unit(f.length_unit_label()));
             }
+            // Its layers (docs/adr/8040 §2): a build-up picked whole, then each layer's thickness from the top, and
+            // the whole thickness.
+            let build_ups = kentos_commands::slab_build_ups();
+            let named = build_ups
+                .iter()
+                .find(|(_, l)| *l == x.layers)
+                .map(|(n, _)| *n);
+            let layer = |l: &kentos_commands::SlabLayer| {
+                format!("{} {}", l.kind.label(), f.length_bare(l.thickness))
+            };
+            let summary = named.map_or_else(
+                || {
+                    let structure = format!("Taşıyıcı {}", f.length_bare(x.thickness));
+                    x.layers
+                        .over
+                        .iter()
+                        .map(layer)
+                        .chain(std::iter::once(structure))
+                        .chain(x.layers.under.iter().map(layer))
+                        .collect::<Vec<_>>()
+                        .join(" · ")
+                },
+                str::to_owned,
+            );
+            let builds = build_ups
+                .iter()
+                .map(|(name, layers)| {
+                    pick(
+                        (*name).to_owned(),
+                        *layers == x.layers,
+                        set(SlabChange {
+                            layers: Some(layers.clone()),
+                            ..Default::default()
+                        }),
+                        Some("slab"),
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Katmanlar", summary.clone()).editor(select(summary, builds)));
+            for (over, list) in [(true, &x.layers.over), (false, &x.layers.under)] {
+                for (k, l) in list.iter().enumerate() {
+                    geo.push(
+                        Row::figure(l.kind.label(), f.length_bare(l.thickness))
+                            .unit(f.length_unit_label())
+                            .editor(number(Field::SlabLayer(slot, over, k))),
+                    );
+                }
+            }
+            if !x.layers.is_empty() {
+                geo.push(metres("Toplam kalınlık", x.whole_thickness()));
+            }
             let edge_name = x.edge.as_ref().map_or("Yok", |e| e.kind.label());
             let edges = std::iter::once(None)
                 .chain(SlabEdgeKind::ALL.iter().map(|k| Some(*k)))
@@ -1832,7 +2064,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 )
             }));
             level_items.push(Choice::Separator);
-            level_items.push(Choice::Command { label: "Katlar…", icon: crate::icons::from_web(Some("archSettings")), id: "arch.settings" });
+            level_items.push(Choice::Command { label: "Katları düzenle…", icon: crate::icons::from_web(Some("archSettings")), id: "arch.settings" });
             geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
             let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
             let mut phases =
@@ -1840,7 +2072,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
                 pick(p.label().to_owned(), x.arch.phase == Some(p), set(SlabChange { phase: Some(Some(p)), ..Default::default() }), None)
             }));
-            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
             let summed = if x.excluded { "Dışında" } else { "Toplamda" };
             let sums = [(false, "Toplamda"), (true, "Dışında")]
                 .into_iter()
@@ -1931,6 +2163,42 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             geo.push(Row::text("Tür", type_name.clone()).editor(select(type_name, type_items)));
             geo.push(metres("Genişlik", x.width).editor(number(Field::OpeningWidth(slot))));
             geo.push(metres("Konum", x.at).editor(number(Field::OpeningAt(slot))));
+            // Its own phase (docs/adr/8039 §1): a new door cut into an existing wall, an existing window closed up.
+            // Duvarınki: its wall's, which it says.
+            let wall_phase = kentos_domain::Uuid::parse_str(&x.host)
+                .ok()
+                .and_then(|u| doc.model.slot_of(u))
+                .and_then(|s| doc.model.get(s))
+                .and_then(Entity::own_phase);
+            let walls = wall_phase.map_or_else(
+                || "Duvarınki".to_owned(),
+                |p| format!("Duvarınki ({})", p.label()),
+            );
+            let phase_name = x
+                .phase
+                .map_or_else(|| walls.clone(), |p| p.label().to_owned());
+            let mut phases = vec![pick(
+                walls,
+                x.phase.is_none(),
+                set(OpeningChange {
+                    phase: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            )];
+            phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
+                let change = set(OpeningChange {
+                    phase: Some(Some(p)),
+                    ..Default::default()
+                });
+                pick(
+                    p.label().to_owned(),
+                    x.phase == Some(p),
+                    change,
+                    None,
+                )
+            }));
+            geo.push(Row::text("Tadilat durumu", phase_name.clone()).editor(select(phase_name, phases)));
             // A niche's or flue's face, depth and a flue's distance from its face (docs/adr/0719).
             if x.form.is_recess() {
                 let sides = [(OpeningSide::Left, "Sol", "openingSideLeft"), (OpeningSide::Right, "Sağ", "openingSideRight")]
@@ -2118,9 +2386,9 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             } else {
                 geo.push(optional("Lento", x.head, Field::OpeningHead(slot)));
             }
-            // Whether plan cuts it, at the plan's cut height (docs/adr/0719 §2).
+            // Whether plan cuts it, at the project's cut height (docs/adr/0719 §2, 3012).
             if x.form.cut_by_height() {
-                let cut = kentos_commands::PLAN_CUT_HEIGHT;
+                let cut = doc.settings().plan_cut();
                 let words = if x.cut_in_plan(cut) {
                     format!("Kesilir ({} kesme)", f.length(cut))
                 } else {
@@ -2654,7 +2922,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
             if e.draws_lines() {
                 appearance.insert(1, Row::text("Çizgi tipi", format!("{type_name} · {}",
                     source(look.from[1]))));
-                appearance.insert(2, Row::text("Kalınlık", format!("{} · {}",
+                appearance.insert(2, Row::text("Çizgi kalınlığı", format!("{} · {}",
                     weight_label(look.line_weight), source(look.from[3]))));
                 appearance.push(Row::text("Çizgi tipi ölçeği", format!("{} · {}",
                     plain_number(look.line_type_scale),
@@ -2787,6 +3055,7 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
                 .collect(),
         });
     }
+    building_first(e, &mut sections);
     sections
 }
 
@@ -3884,7 +4153,7 @@ fn many_sections(
     if !lined.is_empty() {
         let lined_ids: Vec<Slot> = lined.iter().map(|e| Slot(e.base().id)).collect();
         rows.push(
-            Row::text("Kalınlık", weight_text(weight))
+            Row::text("Çizgi kalınlığı", weight_text(weight))
                 .editor(edit(weight_editor(&lined_ids, weight))),
         );
         // The look's parts (docs/adr/0260): the shared value, else Çeşitli. Compared as their written forms were: the

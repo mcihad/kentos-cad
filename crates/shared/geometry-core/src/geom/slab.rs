@@ -41,7 +41,15 @@ impl Run {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Look {
     pub edge: Option<Edge>,
+    /// Drawn as the plan of the level under its own shows it (docs/adr/8012, step 3): its rings alone, dashed and
+    /// narrow ([`OVERHEAD_PEN`]), its edge left out. A view's, never read from nor written to JSON (as a stair's
+    /// `upper`).
+    pub overhead: bool,
 }
+
+/// The share of its pen a slab of the level above is drawn with on the plan under it (docs/adr/8012, step 3): ISO
+/// 128-23's dashed narrow line (02.1) for what is hidden or over the cut, half the wide line.
+pub const OVERHEAD_PEN: f64 = 0.5;
 
 /// A slab's edge as drawn: a parapet or a railing, its width, its runs.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -293,6 +301,12 @@ fn inner(run: &Run, width: f64) -> Option<(Vec<Vec2>, Option<Vec<f64>>)> {
 
 /// The edge's pieces along its runs: a railing's two lines, a parapet's two lines and its ends.
 pub fn edge_pieces(edge: &Edge) -> Vec<Shape> {
+    edge_pieces_with(edge, true)
+}
+
+/// [`edge_pieces`], its inner lines and a parapet's ends only when `inner` (docs/adr/8011: not beyond 1:150
+/// schematic, as a stair draws no railings there).
+fn edge_pieces_with(edge: &Edge, inner_too: bool) -> Vec<Shape> {
     let mut out = Vec::new();
     for run in &edge.runs {
         let closed = run.closed();
@@ -306,6 +320,9 @@ pub fn edge_pieces(edge: &Edge) -> Vec<Shape> {
             )
         };
         out.push(polyline(pts.clone(), bulges, closed));
+        if !inner_too {
+            continue;
+        }
         let Some((ipts, ibulges)) = inner(run, edge.width) else {
             continue;
         };
@@ -328,8 +345,25 @@ pub fn pieces(parts: &[Area], look: &Look) -> Vec<Shape> {
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
         .map(|r| polyline(r.pts.clone(), r.bulges.clone(), true))
         .collect();
-    if let Some(e) = &look.edge {
+    if !look.overhead
+        && let Some(e) = &look.edge
+    {
         out.extend(edge_pieces(e));
+    }
+    out
+}
+
+/// [`pieces`] as a view draws them (docs/adr/8011): beyond 1:150 schematic its edge is its outer lines alone.
+pub fn pieces_in(parts: &[Area], look: &Look, view: crate::geom::wall::View) -> Vec<Shape> {
+    let mut out: Vec<Shape> = parts
+        .iter()
+        .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
+        .map(|r| polyline(r.pts.clone(), r.bulges.clone(), true))
+        .collect();
+    if !look.overhead
+        && let Some(e) = &look.edge
+    {
+        out.extend(edge_pieces_with(e, !view.simple()));
     }
     out
 }

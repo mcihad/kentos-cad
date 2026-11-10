@@ -35,15 +35,21 @@ impl App {
         let audited = self.arch_audit.audited.as_ref();
         let shown = self.arch_audit_shown();
         let columns = COLUMNS.iter().enumerate().map(|(i, title)| {
-            let width = match i {
+            let share = match i {
                 0 => Length::Fixed(typography::scaled(44.0)),
                 1 => Length::FillPortion(2),
                 2 => Length::FillPortion(6),
                 3 => Length::FillPortion(5),
                 _ => Length::FillPortion(2),
             };
+            // A column dragged wider keeps its width (docs/adr/8034): a regulation finding ends with its article.
+            let width = self.arch_audit.columns[i].map_or(share, Length::Fixed);
             let column = TableColumn::new(*title).width(width);
-            if i == 0 { column.align_right() } else { column }
+            if i == 0 {
+                column.align_right()
+            } else {
+                column.resizable(move |w| msg(Event::Column(i, w)))
+            }
         });
         let empty = match audited {
             None => NOT_CHECKED,

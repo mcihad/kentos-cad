@@ -80,10 +80,18 @@ pub const TOOLS: &[&str] = &[
     wall::ID,
     wall_from_lines::ID,
     wall_rectangle::ID,
+    // Oda (docs/adr/8021).
+    wall_rectangle::ROOM_ID,
     crate::wall_partition::ID,
     // Duvarı kaydır (docs/adr/0790 §1).
     crate::wall_shift::ID,
     crate::wall_dimensions::ID,
+    crate::plan_dimensions::ID,
+    // Doğrama kodları (docs/adr/8028).
+    crate::opening_codes_tool::ID,
+    crate::parcel_tool::ID,
+    // Kaçış yolları (docs/adr/8035 §2).
+    crate::escape_tool::ID,
     // İç ölçü zinciri (docs/adr/0711 §5).
     crate::interior_dims::ID,
     // The wall edits by a click (docs/adr/0340 §6).
@@ -118,6 +126,8 @@ pub const TOOLS: &[&str] = &[
     arch_tools::STAIR_ID,
     arch_tools::SPIRAL_ID,
     arch_tools::RAMP_ID,
+    // docs/adr/8041 §1: Kiriş.
+    crate::beam_tools::BEAM_ID,
     arch_tools::GRID_NUMBER_ID,
     crate::grid_system::ID,
     crate::module_place::ID,
@@ -133,6 +143,11 @@ pub const TOOLS: &[&str] = &[
     tag_tools::SCHEDULE_FINISHES_ID,
     tag_tools::SCHEDULE_FIXTURES_ID,
     tag_tools::SCHEDULE_UNITS_ID,
+    tag_tools::SCHEDULE_AREAS_ID,
+    tag_tools::SCHEDULE_LAND_SHARES_ID,
+    tag_tools::SCHEDULE_ROOM_LIST_ID,
+    crate::joinery_list_tool::ID,
+    crate::renovation_legend_tool::ID,
     viewmark_tools::SECTION_ID,
     viewmark_tools::ELEVATION_ID,
     viewmark_tools::DETAIL_ID,
@@ -427,6 +442,8 @@ pub struct Session {
     cursor: Option<Vec2>,
     /// How many tools have started ([`Session::runs`]).
     runs: u64,
+    /// The layer the running tool writes on, by name, as last settled (docs/adr/8008): the panel's Katman.
+    layer: Option<String>,
 }
 
 /// What the web says when the command takes no point at its step.
@@ -485,11 +502,21 @@ impl Session {
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
             wall::ID => Box::new(Path::wall()),
             wall_rectangle::ID => Box::new(wall_rectangle::WallRectangle::new()),
+            // Oda (docs/adr/8021): the rectangle's walls, its room and tag.
+            wall_rectangle::ROOM_ID => Box::new(wall_rectangle::WallRectangle::room()),
             crate::wall_partition::ID => Box::new(crate::wall_partition::Partition::new()),
             crate::wall_shift::ID => Box::new(crate::wall_shift::WallShift::new()),
             crate::interior_dims::ID => {
                 Box::new(crate::interior_dims::InteriorDimensions::default())
             }
+            crate::plan_dimensions::ID => Box::new(crate::plan_dimensions::PlanDimensions::new()),
+            crate::opening_codes_tool::ID => {
+                Box::new(crate::opening_codes_tool::OpeningCodes::new())
+            }
+            // Parsel (docs/adr/8032).
+            crate::parcel_tool::ID => Box::new(crate::parcel_tool::ParcelTool::new()),
+            // Kaçış yolları (docs/adr/8035 §2).
+            crate::escape_tool::ID => Box::new(crate::escape_tool::EscapeRoutes::new()),
             crate::wall_dimensions::ID => {
                 Box::new(crate::wall_dimensions::WallDimensions::default())
             }
@@ -522,6 +549,7 @@ impl Session {
             arch_tools::STAIR_ID => Box::new(arch_tools::FlightTool::stair()),
             arch_tools::SPIRAL_ID => Box::new(arch_tools::FlightTool::curved_stair()),
             arch_tools::RAMP_ID => Box::new(arch_tools::FlightTool::ramp()),
+            crate::beam_tools::BEAM_ID => Box::new(crate::beam_tools::BeamTool::new()),
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             crate::grid_system::ID => Box::new(crate::grid_system::GridSystemTool::new()),
             crate::module_place::ID => Box::new(crate::module_place::ModulePlace::new()),
@@ -545,6 +573,21 @@ impl Session {
             tag_tools::SCHEDULE_UNITS_ID => Box::new(tag_tools::ScheduleTool::new(
                 kentos_commands::ScheduleOf::Units,
             )),
+            tag_tools::SCHEDULE_AREAS_ID => Box::new(tag_tools::ScheduleTool::of_preset(
+                tag_tools::SchedulePreset::AreaTable,
+            )),
+            tag_tools::SCHEDULE_LAND_SHARES_ID => Box::new(tag_tools::ScheduleTool::of_preset(
+                tag_tools::SchedulePreset::LandShares,
+            )),
+            tag_tools::SCHEDULE_ROOM_LIST_ID => Box::new(tag_tools::ScheduleTool::of_preset(
+                tag_tools::SchedulePreset::RoomList,
+            )),
+            crate::joinery_list_tool::ID => {
+                Box::new(crate::joinery_list_tool::JoineryListTool::new())
+            }
+            crate::renovation_legend_tool::ID => {
+                Box::new(crate::renovation_legend_tool::RenovationLegendTool::new())
+            }
             viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(
                 kentos_commands::ViewMarkForm::Section,
             )),
@@ -948,6 +991,22 @@ impl Session {
         {
             self.tool = None;
         }
+        self.see_layer(cx);
+    }
+
+    /// The running tool's layer, by name (docs/adr/8008): its kind's with the layer key on, else the active one;
+    /// none for a tool of no Mimari object.
+    pub fn layer_shown(&self) -> Option<&str> {
+        self.layer.as_deref()
+    }
+
+    /// Takes the running tool's layer again: after each event, the key turned or the drawing changed.
+    pub fn see_layer(&mut self, cx: &Context<'_>) {
+        self.layer = self
+            .tool
+            .as_ref()
+            .and_then(|t| t.layer_kind(cx))
+            .map(|k| crate::arch_layer::shown(&k, cx));
     }
 
     /// Etkin kat changed (docs/adr/0720 §4): the running tool sees it at once.
@@ -1876,6 +1935,17 @@ impl Session {
             tool.document_changed(cx);
         }
     }
+    /// The running tool's settings the value field offers after its locks, in Tab's order (docs/adr/8018).
+    pub fn cursor_settings(&self, format: &crate::Format) -> Vec<crate::tool_settings::Setting> {
+        let Some(tool) = self.tool.as_ref() else {
+            return Vec::new();
+        };
+        let rows = tool.settings(format);
+        tool.cursor_settings()
+            .iter()
+            .filter_map(|key| rows.iter().find(|r| r.key == *key && r.editable).cloned())
+            .collect()
+    }
     pub fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let taken = self
             .tool
@@ -1913,6 +1983,7 @@ impl Session {
             self.select.see_temporary(cx);
         }
         self.follow_locks(cx);
+        self.see_layer(cx);
     }
 
     /// Enter, Space or a quick right click while a tool runs: it commits what
@@ -1979,6 +2050,15 @@ impl Session {
             return Vec::new();
         }
         self.select.temporary_locks()
+    }
+
+    /// Where the temporary dimensions' + stand, those that write a permanent dimension, while no tool runs
+    /// (docs/adr/8019).
+    pub fn temporary_permanents(&self) -> Vec<Vec2> {
+        if self.tool.is_some() {
+            return Vec::new();
+        }
+        self.select.temporary_permanents()
     }
 
     /// What to draw over the drawing while a tool runs, or a grip moves.

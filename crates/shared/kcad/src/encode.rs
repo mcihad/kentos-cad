@@ -2291,6 +2291,183 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 236 (docs/adr/8041 §3): a beam's role or its base over its storey's floor.
+    if objs.iter().any(kentos_contracts::needs_beam_roles) {
+        return crate::SCHEMA_WITH_BEAM_ROLES;
+    }
+    // Schema 235 (docs/adr/8041 §2): a column's material.
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Column(c) if c.column.material.is_some()))
+    {
+        return crate::SCHEMA_WITH_COLUMN_MATERIAL;
+    }
+    // Schema 234 (docs/adr/8041 §1): a beam.
+    if objs.iter().any(|e| matches!(e, Entity::Beam(_))) {
+        return crate::SCHEMA_WITH_BEAMS;
+    }
+    // Schema 233 (docs/adr/8040 §3): a room's floor offset or asma tavan.
+    if objs.iter().any(kentos_contracts::needs_room_heights) {
+        return crate::SCHEMA_WITH_ROOM_HEIGHTS;
+    }
+    // Schema 232 (docs/adr/8040 §2): a slab's layers besides its structure.
+    let slab_layers = |e: &Entity| matches!(e, Entity::Slab(s) if !s.slab.layers.is_empty());
+    if objs.iter().any(slab_layers)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(slab_layers))
+    {
+        return crate::SCHEMA_WITH_SLAB_LAYERS;
+    }
+    // Schema 231 (docs/adr/8039 §5): the Tadilat projesi view, the project's or a named view's recipe's.
+    let renovation = Some(kentos_contracts::PhaseView::Renovation);
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.phase_view == renovation)
+        || doc
+            .settings
+            .named_views
+            .iter()
+            .any(|v| v.recipe.as_ref().is_some_and(|r| r.phase == renovation))
+    {
+        return crate::SCHEMA_WITH_RENOVATION_VIEW;
+    }
+    // Schema 230 (docs/adr/8039): a door's or window's own phase.
+    let opening_phase = |e: &Entity| matches!(e, Entity::Opening(o) if o.opening.phase.is_some());
+    if objs.iter().any(opening_phase)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(opening_phase))
+    {
+        return crate::SCHEMA_WITH_OPENING_PHASES;
+    }
+    // Schema 229 (docs/adr/8038): a door or window type's frame and leaves and its U value.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_opening_specs)
+    {
+        return crate::SCHEMA_WITH_OPENING_SPECS;
+    }
+    // Schema 228 (docs/adr/8038): the room list's finishes and columns.
+    if objs.iter().any(kentos_contracts::needs_room_list)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_room_list))
+    {
+        return crate::SCHEMA_WITH_ROOM_LIST;
+    }
+    // Schema 227 (docs/adr/8036): Otopark and Sığınak hesabı.
+    let provision_table = |e: &Entity| {
+        matches!(e, Entity::Table(t)
+            if matches!(t.source, Some(kentos_contracts::TableSource::Parking {} | kentos_contracts::TableSource::Shelter {})))
+    };
+    if objs.iter().any(provision_table) || doc.blocks.iter().any(|b| b.entities.iter().any(provision_table)) {
+        return crate::SCHEMA_WITH_PROVISION_TABLES;
+    }
+    // Schema 226 (docs/adr/8035): the building's sprinkler system.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_sprinklers) {
+        return crate::SCHEMA_WITH_SPRINKLERS;
+    }
+    // Schema 225 (docs/adr/8034): the municipality's regulation.
+    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_local_rules) {
+        return crate::SCHEMA_WITH_LOCAL_RULES;
+    }
+    // Schema 224 (docs/adr/8032): the site plan.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_site)
+    {
+        return crate::SCHEMA_WITH_SITE_PLAN;
+    }
+    // Schema 223 (docs/adr/8031): kat irtifakı's program fields and schedule columns.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_land_shares())
+        || objs.iter().any(kentos_contracts::needs_land_shares)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_land_shares))
+    {
+        return crate::SCHEMA_WITH_LAND_SHARES;
+    }
+    // Schema 222 (docs/adr/8030): the parcel's zoning, a brief's floor area ratio count, Emsal ve TAKS tablosu.
+    let zoning_table = |e: &Entity| matches!(e, Entity::Table(t) if matches!(t.source, Some(kentos_contracts::TableSource::Zoning {})));
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.has_zoning() || a.program.has_emsal())
+        || objs.iter().any(zoning_table)
+        || doc
+            .blocks
+            .iter()
+            .flat_map(|b| &b.entities)
+            .any(zoning_table)
+    {
+        return crate::SCHEMA_WITH_ZONING;
+    }
+    // Schema 221 (docs/adr/8029): a units schedule's regulation areas.
+    if objs.iter().any(kentos_contracts::needs_paiy_areas)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_paiy_areas))
+    {
+        return crate::SCHEMA_WITH_PAIY_AREAS;
+    }
+    // Schema 220 (docs/adr/8028): a type's joinery code, a tag naming it or an opening's size.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_opening_codes)
+        || objs.iter().any(kentos_contracts::needs_opening_codes)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_opening_codes))
+    {
+        return crate::SCHEMA_WITH_OPENING_CODES;
+    }
+    // Schema 219 (docs/adr/8027): a tag framed by an ellipse (a room's number, Mimarlar Odası's).
+    if objs.iter().any(kentos_contracts::needs_ellipse_tags)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::needs_ellipse_tags))
+    {
+        return crate::SCHEMA_WITH_ELLIPSE_TAGS;
+    }
+    // Schema 218 (docs/adr/8013): how the project's plan lines are weighted.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_line_groups)
+    {
+        return crate::SCHEMA_WITH_LINE_GROUPS;
+    }
+    // Schema 217 (docs/adr/8012): the project's plan cut height.
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_cut)
+    {
+        return crate::SCHEMA_WITH_PLAN_CUT;
+    }
     // Schema 216 (docs/adr/4220): the parcel register.
     if doc.settings.parcel_register.is_some() {
         return crate::SCHEMA_WITH_PARCEL_REGISTER;

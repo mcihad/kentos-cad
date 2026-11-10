@@ -207,6 +207,12 @@ pub struct State {
     arch_detail: Option<kentos_commands::WallDetail>,
     /// Mimari: the spaces' measurement method (docs/adr/0342 §1).
     arch_method: Option<kentos_commands::SpaceMethod>,
+    /// Mimari: the plan's cut height as typed, metres (docs/adr/8012); empty: 1.10.
+    arch_cut: String,
+    /// Mimari: how the plan's lines are weighted (docs/adr/8013); none: every object its own pen.
+    arch_lines: Option<kentos_commands::LineGroups>,
+    /// Mimari: the parcel's zoning as typed (docs/adr/8030).
+    arch_zoning: super::arch::ZoningTexts,
     /// Kotlar ve epok as typed (docs/adr/0519 §5; heights.rs); Kaydet writes them through `cad.settings.set`.
     heights: super::heights::Texts,
     /// Kaydet's question when a local project's unit changes with a drawing
@@ -272,6 +278,16 @@ pub enum Event {
     SelectLevelUsers,
     ArchDetail(Option<kentos_commands::WallDetail>),
     ArchMethod(Option<kentos_commands::SpaceMethod>),
+    /// Mimari: the plan's cut height typed (docs/adr/8012).
+    ArchCut(String),
+    /// İmar durumu's field typed (docs/adr/8030).
+    ArchZoning(super::arch::ZoningField, String),
+    /// Mimari: Çizgi kalınlıkları chosen (docs/adr/8013).
+    ArchLines(Option<kentos_commands::LineGroups>),
+    /// İmar durumu's Yerel imar yönetmeliği chosen (docs/adr/8034).
+    ArchLocalRules(Option<kentos_commands::LocalRules>),
+    /// Yangın güvenliği's sprinkler system switched (docs/adr/8035).
+    ArchSprinklers(bool),
     RoomChoices(super::arch::ChoiceEvent),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
@@ -317,6 +333,20 @@ impl State {
             arch: super::arch::rows(doc.settings().arch.as_ref()),
             arch_detail: doc.settings().arch.as_ref().and_then(|a| a.detail),
             arch_method: doc.settings().arch.as_ref().and_then(|a| a.space_method),
+            arch_cut: doc
+                .settings()
+                .arch
+                .as_ref()
+                .and_then(|a| a.cut_height)
+                .map(kentos_processing::text::js_number)
+                .unwrap_or_default(),
+            arch_zoning: super::arch::ZoningTexts::of(doc.settings().arch.as_ref()),
+            arch_lines: doc
+                .settings()
+                .arch
+                .as_ref()
+                .and_then(|a| a.line_groups)
+                .filter(|g| *g != kentos_commands::LineGroups::Own),
             heights: super::heights::texts(
                 doc.settings().heights.as_ref(),
                 doc.settings().coordinate_epoch,
@@ -362,6 +392,9 @@ impl State {
             &self.arch,
             self.arch_detail,
             self.arch_method,
+            &self.arch_cut,
+            self.arch_lines,
+            &self.arch_zoning,
             self.settings.arch.as_ref(),
         )
         .ok()?;
@@ -373,6 +406,9 @@ impl State {
             &self.arch,
             self.arch_detail,
             self.arch_method,
+            &self.arch_cut,
+            self.arch_lines,
+            &self.arch_zoning,
             self.settings.arch.as_ref(),
         )
         .is_err()
@@ -587,6 +623,11 @@ impl App {
             }
             Event::ArchDetail(detail) => s.arch_detail = detail,
             Event::ArchMethod(method) => s.arch_method = method,
+            Event::ArchCut(text) => s.arch_cut = text,
+            Event::ArchZoning(field, text) => s.arch_zoning.edit(field, text),
+            Event::ArchLines(lines) => s.arch_lines = lines,
+            Event::ArchLocalRules(rules) => s.arch_zoning.local = rules,
+            Event::ArchSprinklers(on) => s.arch_zoning.sprinklers = on,
             Event::RoomChoices(edit) => {
                 super::arch::edit_choices(d.arch.get_or_insert_with(Default::default), edit);
             }
@@ -598,6 +639,9 @@ impl App {
                 s.arch.clear();
                 s.arch_detail = None;
                 s.arch_method = None;
+                s.arch_cut.clear();
+                s.arch_lines = None;
+                s.arch_zoning = Default::default();
                 d.arch = None;
             }
             Event::ResetSection => {
@@ -769,10 +813,13 @@ impl App {
             &s.arch,
             s.arch_detail,
             s.arch_method,
+            &s.arch_cut,
+            s.arch_lines,
+            &s.arch_zoning,
             s.settings.arch.as_ref(),
         )
         .unwrap_or_default();
-        // The phase view is Mimari › Evre's, not this form's (docs/adr/0346 §2): it stays as it was.
+        // The phase view is Mimari › Tadilat's, not this form's (docs/adr/0346 §2): it stays as it was.
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         // So are Denetim's exceptions (docs/adr/0732 §3).
         arch.audit_exceptions = s
@@ -1067,7 +1114,18 @@ impl App {
                     |d| event(Event::ArchDetail(d)),
                     s.arch_method,
                     |m| event(Event::ArchMethod(m)),
+                    &s.arch_cut,
+                    |c| event(Event::ArchCut(c)),
+                    s.arch_lines,
+                    |l| event(Event::ArchLines(l)),
                 ),
+                super::arch::zoning_view(
+                    &s.arch_zoning,
+                    |f, t| event(Event::ArchZoning(f, t)),
+                    |r| event(Event::ArchLocalRules(r)),
+                    crate::zoning_badge::summary(&doc.model),
+                ),
+                super::arch::fire_view(&s.arch_zoning, |on| event(Event::ArchSprinklers(on))),
                 super::arch::in_use_view(in_use.as_ref(), event(Event::SelectLevelUsers)),
                 super::arch::choices_view(s.settings.arch.as_ref(), |e| event(Event::RoomChoices(
                     e

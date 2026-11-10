@@ -569,11 +569,11 @@ def renovation() -> dict:
          "as": list(new0), "label": "Mahal", "expect": {"count": n(2), "measures": m(new0) | m(old)}},
         {"name": "Metraj: var olan durum", "query": "cad.spaces.quantities", "input": {"phases": ["existing"]},
          "expect": {"output": {"totals": {"spaceArea": num(sum(old.values())), "wallLength": 32.0}}}},
-        {"name": "Metraj: yıkılacaklar", "query": "cad.spaces.quantities", "input": {"phases": ["demolish"]},
+        {"name": "Metraj: iptal edilenler", "query": "cad.spaces.quantities", "input": {"phases": ["demolish"]},
          "expect": {"output": {"totals": {"spaceArea": 0.0, "wallLength": 7.0}}}},
         {"name": "Metraj: yeni durum", "query": "cad.spaces.quantities", "input": {"phases": ["new"]},
          "expect": {"output": {"totals": {"spaceArea": num(sum(new0.values())), "wallLength": 7.0}}}},
-        {"name": "Evre görünümü: Yeni durum", "command": "cad.settings.set", "input": {"arch": {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0, "height": 2.8}], "phaseView": "proposed"}},
+        {"name": "Tadilat görünümü: Yeni durum", "command": "cad.settings.set", "input": {"arch": {"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0, "height": 2.8}], "phaseView": "proposed"}},
          "label": None, "expect": {"count": count}},
         {"name": "Tasarım değişikliği: yeni bölme 3.00 → 3.30; var olan mahaller yerinde", "command": "cad.walls.edit",
          "input": {"uids": ["$partition"], "operation": {"kind": "distance", "side": "right", "distance": 3.3}},
@@ -587,7 +587,7 @@ def renovation() -> dict:
          "expect": {"output": {"totals": {"spaceArea": num(sum(new1.values()))}}}},
     ]
     return {"format": "kentos.acceptance", "version": 1, "id": "renovation",
-            "title": "Tadilat: GDAL'ın yazdığı DXF altlığından var olan duvarlar, yıkım, yeni bölme, evrelere göre mahal ve metraj",
+            "title": "Tadilat: GDAL'ın yazdığı DXF altlığından var olan duvarlar, yıkım, yeni bölme, tadilat durumuna göre mahal ve metraj",
             "source": "plan/architecture-advanced.md ADV-07 (kabul korpusu); docs/adr/0798", "project": project("Tadilat"),
             "files": {"underlay": R_DXF}, "tolerance": 1e-9, "undone": 8, "steps": steps,
             "rooms": {"after": {k: num(v) for k, v in (new1 | old).items()}}}

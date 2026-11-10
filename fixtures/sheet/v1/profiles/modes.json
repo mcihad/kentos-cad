@@ -204,6 +204,11 @@
           "matches": true
         },
         {
+          "id": "sys:mimari-ruhsat",
+          "fit": "workspace",
+          "matches": true
+        },
+        {
           "id": "sys:ayirma-capi",
           "fit": "workspace",
           "matches": true
@@ -305,6 +310,12 @@
           "badge": "CAD şablonu"
         },
         {
+          "id": "sys:mimari-ruhsat",
+          "fit": "other",
+          "matches": false,
+          "badge": "CAD şablonu"
+        },
+        {
           "id": "sys:aplikasyon-krokisi",
           "fit": "other",
           "matches": false,
@@ -374,6 +385,11 @@
         },
         {
           "id": "sys:cad-mimari",
+          "fit": "common",
+          "matches": true
+        },
+        {
+          "id": "sys:mimari-ruhsat",
           "fit": "common",
           "matches": true
         },

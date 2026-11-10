@@ -105,7 +105,7 @@ pub enum Event {
     EmbedImage(Slot),
     /// Kaynak ▾'s Göm of a linked raster (docs/adr/0204 §8).
     EmbedRaster(Slot),
-    /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Evre): written through `cad.walls.edit` (docs/adr/0339 §6).
+    /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Tadilat durumu): written through `cad.walls.edit` (docs/adr/0339 §6).
     Wall(Slot, kentos_commands::WallChange),
     /// A wall's joins (docs/adr/0340 §6).
     WallOp(Slot, kentos_commands::WallsOperation),
@@ -119,10 +119,10 @@ pub enum Event {
     Module(kentos_commands::ModulesOperation),
     /// A derived interior elevation's action (docs/adr/0799 §5): written through `cad.elevations.edit`.
     Elevation(kentos_commands::ElevationsOperation),
-    /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
+    /// A space's own field chosen (Yöntem, Kat, Tadilat durumu) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, Box<kentos_commands::SpacesOperation>),
-    /// A slab's own field chosen (Tür, Kenar, Kat, Evre, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
+    /// A slab's own field chosen (Tür, Kenar, Kat, Tadilat durumu, Metraj; docs/adr/0722 §6): written through `cad.slabs.edit`.
     Slab(Slot, kentos_commands::SlabsOperation),
     SpaceSeparator(Slot, bool),
     /// Kat ▾ of several architectural objects (docs/adr/0717 §2): through `cad.levels.assign`.
@@ -224,6 +224,13 @@ pub enum ArchField {
     MarkNumber,
     /// A view mark's words' height on paper, mm; empty 2.5.
     MarkSize,
+    /// A beam's height and its top's offset (empty 0; docs/adr/8041 §1); a lintel's or a bond beam's underside over its
+    /// storey's floor (empty: it hangs; docs/adr/8041 §3).
+    BeamHeight,
+    BeamOffset,
+    BeamBase,
+    /// A column's or a beam's material (empty: Betonarme; docs/adr/8041 §2).
+    Material,
 }
 
 /// The value a cell edits.
@@ -314,19 +321,33 @@ pub enum Field {
     /// A special door's construction length (docs/adr/0777 §5): a revolving door's drum, a sliding door's overlap, a
     /// pocket door's lip (empty: none).
     OpeningBuild(Slot, kentos_commands::OpeningTypeField),
-    /// A space's number, name, usage, height (empty: the level's) and finishes (empty: none; docs/adr/0342 §5).
+    /// A space's number, name, usage, inside height (empty: up to its ceiling; with an asma tavan, its height) and
+    /// finishes (empty: none; docs/adr/0342 §5, 3040 §3).
     SpaceNumber(Slot),
     SpaceName(Slot),
     SpaceUsage(Slot),
     SpaceHeight(Slot),
+    /// Its Döşeme kot farkı (empty: the floor slab under it, else its storey's) and Asma tavan (empty or Yok: none;
+    /// docs/adr/8040 §3).
+    SpaceFloorOffset(Slot),
+    SpaceSuspended(Slot),
     SpaceFloor(Slot),
     SpaceWall(Slot),
     SpaceCeiling(Slot),
+    /// Its skirting's finish and the room list's (docs/adr/8038): sills and parapets, stair treads and risers, handrails
+    /// and railings.
+    SpaceBase(Slot),
+    SpaceSill(Slot),
+    SpaceStair(Slot),
+    SpaceRailing(Slot),
     /// A slab's thickness, top's offset, edge's width (lengths) and material (empty: none; docs/adr/0722 §6).
     SlabThickness(Slot),
     SlabOffset(Slot),
     SlabEdgeWidth(Slot),
     SlabMaterial(Slot),
+    /// A slab's layer's thickness (docs/adr/8040 §2): over its structure (true) or under it, by its place from the top;
+    /// 0 takes the layer away.
+    SlabLayer(Slot, bool, usize),
     /// A grid's, column's, stair's or ramp's typed field (docs/adr/0343 §5).
     Arch(Slot, ArchField),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
@@ -2092,6 +2113,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     | ArchField::Post
                     | ArchField::LegA
                     | ArchField::LegB
+                    | ArchField::BeamHeight
+                    | ArchField::BeamOffset
+                    | ArchField::BeamBase
             );
             let n = if physical && !t.is_empty() {
                 let Some(n) = length(text) else {
@@ -2105,7 +2129,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             if !t.is_empty()
                 && !n.is_finite()
-                && !matches!(which, ArchField::Label | ArchField::Tag | ArchField::Type)
+                && !matches!(
+                    which,
+                    ArchField::Label | ArchField::Tag | ArchField::Type | ArchField::Material
+                )
             {
                 return Vec::new();
             }
@@ -2123,6 +2150,18 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 },
                 ArchField::Type => ArchChange {
                     kind: Some(words),
+                    ..Default::default()
+                },
+                ArchField::Material => ArchChange {
+                    material: Some(words),
+                    ..Default::default()
+                },
+                ArchField::BeamOffset => ArchChange {
+                    offset: Some(words.map_or(0.0, |_| n)),
+                    ..Default::default()
+                },
+                ArchField::BeamBase => ArchChange {
+                    base_offset: Some(words.map(|_| n)),
                     ..Default::default()
                 },
                 ArchField::BubbleSize => ArchChange {
@@ -2201,6 +2240,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     rise: Some(n),
                     ..Default::default()
                 },
+                ArchField::BeamHeight => ArchChange {
+                    height: Some(n),
+                    ..Default::default()
+                },
                 ArchField::TagContent
                 | ArchField::TagSize
                 | ArchField::MarkNumber
@@ -2214,12 +2257,20 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceName(slot)
         | Field::SpaceUsage(slot)
         | Field::SpaceHeight(slot)
+        | Field::SpaceFloorOffset(slot)
+        | Field::SpaceSuspended(slot)
         | Field::SpaceFloor(slot)
         | Field::SpaceWall(slot)
-        | Field::SpaceCeiling(slot) => {
+        | Field::SpaceCeiling(slot)
+        | Field::SpaceBase(slot)
+        | Field::SpaceSill(slot)
+        | Field::SpaceStair(slot)
+        | Field::SpaceRailing(slot) => {
             use kentos_commands::{SpaceChange, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
+            // With an asma tavan the inside height is its height: what is typed there moves it (docs/adr/8040 §3).
+            let suspended = matches!(model.get(*slot), Some(Entity::Space(s)) if s.space.suspended_ceiling.is_some());
             let change = match field {
                 Field::SpaceNumber(_) => SpaceChange {
                     number: Some(words),
@@ -2245,23 +2296,72 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                     ceiling: Some(words),
                     ..Default::default()
                 },
+                Field::SpaceBase(_) => SpaceChange {
+                    base: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceSill(_) => SpaceChange {
+                    sill: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceStair(_) => SpaceChange {
+                    stair: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceRailing(_) => SpaceChange {
+                    railing: Some(words),
+                    ..Default::default()
+                },
+                Field::SpaceFloorOffset(_) if t.is_empty() => SpaceChange {
+                    floor_offset: Some(None),
+                    ..Default::default()
+                },
+                Field::SpaceSuspended(_)
+                    if t.is_empty() || kentos_domain::room_names::fold(t) == "YOK" =>
+                {
+                    SpaceChange {
+                        suspended_ceiling: Some(None),
+                        ..Default::default()
+                    }
+                }
                 _ if t.is_empty() => SpaceChange {
                     height: Some(None),
                     ..Default::default()
                 },
                 _ => {
                     let Some(n) = length(text) else {
-                        return vec![
-                            "Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m."
-                                .into(),
-                        ];
+                        return vec![match field {
+                            Field::SpaceFloorOffset(_) => {
+                                "Döşeme kot farkı için bir uzunluk girin; örneğin -2 cm.".into()
+                            }
+                            Field::SpaceSuspended(_) => {
+                                "Asma tavan için döşemeden bir yükseklik girin; örneğin 2.70 m. Kaldırmak için boş \
+                                 bırakın."
+                                    .into()
+                            }
+                            _ => "Mahal yüksekliği için bir uzunluk girin; örneğin 3000 mm veya 3 m.".into(),
+                        }];
                     };
                     if !n.is_finite() {
                         return Vec::new();
                     }
-                    SpaceChange {
-                        height: Some(Some(n)),
-                        ..Default::default()
+                    match field {
+                        Field::SpaceFloorOffset(_) => SpaceChange {
+                            floor_offset: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        Field::SpaceSuspended(_) => SpaceChange {
+                            suspended_ceiling: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        _ if suspended => SpaceChange {
+                            suspended_ceiling: Some(Some(n)),
+                            ..Default::default()
+                        },
+                        _ => SpaceChange {
+                            height: Some(Some(n)),
+                            ..Default::default()
+                        },
                     }
                 }
             };
@@ -2270,6 +2370,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         Field::SlabThickness(slot)
         | Field::SlabOffset(slot)
         | Field::SlabEdgeWidth(slot)
+        | Field::SlabLayer(slot, ..)
         | Field::SlabMaterial(slot) => {
             use kentos_commands::{SlabChange, SlabsOperation};
             let change = if let Field::SlabMaterial(_) = field {
@@ -2294,6 +2395,30 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                         offset: Some(n),
                         ..Default::default()
                     },
+                    // A layer's thickness (docs/adr/8040 §2); 0 takes it away.
+                    Field::SlabLayer(_, over, k) => {
+                        let Some(Entity::Slab(s)) = model.get(*slot) else {
+                            return Vec::new();
+                        };
+                        let mut layers = s.slab.layers.clone();
+                        let list = if *over {
+                            &mut layers.over
+                        } else {
+                            &mut layers.under
+                        };
+                        if *k >= list.len() {
+                            return Vec::new();
+                        }
+                        if n.abs() < 1e-9 {
+                            list.remove(*k);
+                        } else {
+                            list[*k].thickness = n;
+                        }
+                        SlabChange {
+                            layers: Some(layers),
+                            ..Default::default()
+                        }
+                    }
                     _ => {
                         let Some(Entity::Slab(s)) = model.get(*slot) else {
                             return Vec::new();
@@ -2467,12 +2592,19 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceName(_)
         | Field::SpaceUsage(_)
         | Field::SpaceHeight(_)
+        | Field::SpaceFloorOffset(_)
+        | Field::SpaceSuspended(_)
         | Field::SpaceFloor(_)
         | Field::SpaceWall(_)
         | Field::SpaceCeiling(_)
+        | Field::SpaceBase(_)
+        | Field::SpaceSill(_)
+        | Field::SpaceStair(_)
+        | Field::SpaceRailing(_)
         | Field::SlabThickness(_)
         | Field::SlabOffset(_)
         | Field::SlabEdgeWidth(_)
+        | Field::SlabLayer(..)
         | Field::SlabMaterial(_)
         | Field::Arch(..)
         | Field::Elevation(..)

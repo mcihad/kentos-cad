@@ -17862,7 +17862,7 @@
       ]
     },
     {
-      "name": "Yeni durum tarifi yıkılacak kolonu çizmez, yeniyi çizer",
+      "name": "Yeni durum tarifi iptal edilen kolonu çizmez, ilaveyi çizer",
       "steps": [
         {
           "op": "execute",
@@ -20026,7 +20026,7 @@
       ]
     },
     {
-      "name": "Evresiz nesne her evre tarifinde",
+      "name": "Tadilat durumu olmayan nesne her tadilat tarifinde",
       "steps": [
         {
           "op": "execute",
@@ -22248,7 +22248,7 @@
       ]
     },
     {
-      "name": "Evre tarifi Mevcut duruma dönünce yeni kolon gizlenir, yıkılacak görünür",
+      "name": "Tadilat tarifi Mevcut duruma dönünce ilave kolon gizlenir, iptal edilen görünür",
       "steps": [
         {
           "op": "execute",

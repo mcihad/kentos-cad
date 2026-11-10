@@ -58,6 +58,10 @@ pub trait Stages {
     /// Sees what the session remembers and the project's units at every
     /// event, for a prompt that shows them while picking.
     fn see(&mut self, _cx: &Context<'_>) {}
+    /// The layer kind of what the stages write (docs/adr/8008; `Tool::layer_kind`).
+    fn layer_kind(&self, _cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        None
+    }
     /// The picking prompt, with what the tool adds to it (the web's `pickHint`).
     fn picking_hint(&self, prompt: Prompt) -> Prompt {
         prompt
@@ -336,6 +340,10 @@ impl<S: Stages> Modify<S> {
 }
 
 impl<S: Stages> Tool for Modify<S> {
+    fn layer_kind(&self, cx: &Context<'_>) -> Option<crate::arch_layer::Kind> {
+        self.stages.layer_kind(cx)
+    }
+
     /// Etkin kat changed (docs/adr/0720 §4): the stages see it (Çizgiden duvar's Kat follows it).
     fn level_changed(&mut self, cx: &mut Context<'_>) {
         self.stages.see(cx);

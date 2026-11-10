@@ -2,7 +2,8 @@
 //! core's shapes, which draw them.
 
 use kentos_contracts::{
-    ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, StairFields, TagFields, TagShape, Vec2,
+    BeamFields, ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, StairFields, TagFields, TagShape,
+    Vec2, WallJustify,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;
@@ -45,6 +46,27 @@ pub fn core_column(c: &ColumnFields) -> Shape {
             fill: c.fill,
             tag: c.tag.clone(),
             place: c.place.clone(),
+            material: c.material.clone(),
+            level: c.arch.level.clone(),
+        },
+    }
+}
+
+/// The beam as the core's shape (docs/adr/8041 §1): its middle off its axis as its justification says, an axis that is
+/// its left face putting its body to the right.
+pub fn core_beam(b: &BeamFields) -> Shape {
+    let middle = match b.justify {
+        WallJustify::Left => -b.width / 2.0,
+        WallJustify::Center => 0.0,
+        WallJustify::Right => b.width / 2.0,
+    };
+    Shape::Beam {
+        pts: core(&b.pts),
+        beam: kentos_geometry_core::geom::beam::BeamSpec {
+            width: b.width,
+            middle,
+            height: b.height,
+            tag: b.tag.clone(),
         },
     }
 }
@@ -107,6 +129,7 @@ pub fn core_tag(t: &TagFields) -> Shape {
                 TagShape::Rectangle => Frame::Rectangle,
                 TagShape::Rounded => Frame::Rounded,
                 TagShape::None => Frame::None,
+                TagShape::Ellipse => Frame::Ellipse,
             },
             size: t.size,
             leader: t.leader,
@@ -145,6 +168,7 @@ pub fn core_of(e: &Entity) -> Option<Shape> {
         Entity::Column(c) => core_column(&c.column),
         Entity::Stair(s) => core_stair(&s.stair),
         Entity::Ramp(r) => core_ramp(&r.ramp),
+        Entity::Beam(b) => core_beam(&b.beam),
         Entity::Tag(t) => core_tag(&t.tag),
         Entity::ViewMark(m) => core_viewmark(&m.mark),
         _ => return None,
@@ -167,8 +191,27 @@ pub fn outline_points(e: &Entity) -> Option<Vec<Vec2>> {
 /// over it); none for another object. What DXF and Patlat write (docs/adr/0343 §5).
 pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
     let shape = core_of(e)?;
+    plain_of(e, kentos_geometry_core::geom::arch::pieces(&shape, scale))
+}
+
+/// [`plain_pieces`] as a drawing at `view` shows them (docs/adr/8011): what DXF writes, at the walls' detail and the
+/// file's scale; Patlat keeps the whole.
+pub fn plain_pieces_in(
+    e: &Entity,
+    view: kentos_geometry_core::geom::wall::View,
+) -> Option<Vec<Entity>> {
+    let shape = core_of(e)?;
+    plain_of(e, kentos_geometry_core::geom::arch::pieces_in(&shape, view))
+}
+
+/// Pieces of `e` as plain objects, each on its layer with its look (a piece's own line type over it).
+pub fn plain_of_pieces(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
+    plain_of(e, pieces)
+}
+
+fn plain_of(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
     let mut out = Vec::new();
-    for piece in kentos_geometry_core::geom::arch::pieces(&shape, scale) {
+    for piece in pieces {
         let Some(mut plain) = crate::blocks::piece_entity(&piece.shape) else {
             continue;
         };
@@ -177,6 +220,13 @@ pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
         base.attachments.clear();
         base.label_pins.clear();
         base.label = None;
+        // A piece's own colour and weight: a column one section with a wall's layer takes its fill's (docs/adr/8041 §2).
+        if piece.color.is_some() {
+            base.color = piece.color.clone();
+        }
+        if piece.line_weight.is_some() {
+            base.line_weight = piece.line_weight;
+        }
         if let Some(t) = piece
             .stroke
             .line_type
@@ -192,8 +242,8 @@ pub fn plain_pieces(e: &Entity, scale: f64) -> Option<Vec<Entity>> {
 }
 
 /// One of the four as one simple object, for formats without it (GeoJSON, KML, GPX, the server's projection): a
-/// grid's path an open polyline, a round column a circle, a rectangular column, a stair or a ramp an area; none for
-/// another object.
+/// grid's path an open polyline, a round column a circle, a rectangular column, a stair, a ramp or a beam's band
+/// (docs/adr/8041 §1) an area; none for another object.
 pub fn simple(e: &Entity) -> Option<Entity> {
     let path = |base: &kentos_contracts::EntityBase, pts: Vec<Vec2>, bulges: Option<Vec<f64>>| kentos_contracts::PathEntity {
         space_separator: None,
@@ -221,7 +271,7 @@ pub fn simple(e: &Entity) -> Option<Entity> {
                 r: c.column.width / 2.0,
             })
         }
-        Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
+        Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) => {
             Entity::Polygon(path(e.base(), outline_points(e)?, None))
         }
         // A view mark a point at its first point, its words its label (docs/adr/0345 §1).
@@ -252,4 +302,89 @@ pub fn simple(e: &Entity) -> Option<Entity> {
         }
         _ => return None,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kentos_geometry_core::geom::wall::{Detail, View};
+
+    fn entity(json: serde_json::Value) -> Entity {
+        serde_json::from_value(json).expect("an object")
+    }
+
+    fn words(pieces: &[Entity]) -> Vec<String> {
+        pieces
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Text(t) => Some(t.text.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    /// DXF writes a column and a stair as the file's scale draws them (docs/adr/8011): at 1:200 the column without its
+    /// name and the stair without railings; at 1:50 the column's name and size and the stair's risers in words. Patlat
+    /// keeps the whole.
+    #[test]
+    fn dxf_writes_a_column_and_a_stair_at_the_files_scale() {
+        let simple = View::new(Detail::Schematic, 200.0);
+        let standard = View::new(Detail::Standard, 50.0);
+        let column = entity(
+            serde_json::json!({ "kind": "column", "id": 1, "layerId": "kolon", "attrs": {},
+            "at": { "x": 3.0, "y": 3.0 }, "width": 0.3, "depth": 0.5, "tag": "S1" }),
+        );
+        assert!(words(&plain_pieces_in(&column, simple).unwrap()).is_empty());
+        assert_eq!(
+            words(&plain_pieces_in(&column, standard).unwrap()),
+            ["S1\n30/50"]
+        );
+        assert_eq!(words(&plain_pieces(&column, 200.0).unwrap()), ["S1"]);
+        let stair = entity(
+            serde_json::json!({ "kind": "stair", "id": 2, "layerId": "merdiven", "attrs": {},
+            "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 2.8, "y": 0.0 }], "width": 1.2, "risers": 11,
+            "riserHeight": 0.175, "tread": 0.28, "railings": "both" }),
+        );
+        let whole = plain_pieces(&stair, 100.0).unwrap().len();
+        assert_eq!(
+            plain_pieces_in(&stair, simple).unwrap().len(),
+            whole - 2,
+            "no railings at 1:200"
+        );
+        let at_50 = plain_pieces_in(&stair, standard).unwrap();
+        assert_eq!(at_50.len(), whole + 1);
+        assert_eq!(words(&at_50), ["11 × 17.5/28"]);
+    }
+
+    /// A beam (docs/adr/8041 §1): DXF writes its band dashed, its words by the file's scale (none at 1:200, its number
+    /// and size at 1:50); the formats without it (GeoJSON, KML, the server's projection) take its band as an area.
+    #[test]
+    fn dxf_writes_a_beam_dashed_and_the_simple_formats_its_band() {
+        let simple_view = View::new(Detail::Schematic, 200.0);
+        let standard = View::new(Detail::Standard, 50.0);
+        let beam = entity(
+            serde_json::json!({ "kind": "beam", "id": 3, "layerId": "kiris", "attrs": {},
+            "pts": [{ "x": 0.0, "y": 0.0 }, { "x": 5.0, "y": 0.0 }], "width": 0.25, "height": 0.5,
+            "justify": "left", "tag": "K101" }),
+        );
+        let plan = plain_pieces_in(&beam, simple_view).unwrap();
+        assert_eq!(plan.len(), 1, "{plan:?}");
+        assert!(words(&plan).is_empty());
+        assert_eq!(
+            plan[0].base().look.line_type,
+            kentos_contracts::LineType::from_name("dashed")
+        );
+        assert_eq!(plan[0].base().layer_id, "kiris");
+        assert_eq!(
+            words(&plain_pieces_in(&beam, standard).unwrap()),
+            ["K101 25/50"]
+        );
+        // Its band, its left face on its axis: 0 to −0.25.
+        let Some(Entity::Polygon(band)) = simple(&beam) else {
+            panic!("an area")
+        };
+        let ys: Vec<f64> = band.pts.iter().map(|p| p.y).collect();
+        assert_eq!(band.pts.len(), 4, "{:?}", band.pts);
+        assert!(ys.iter().all(|y| *y == 0.0 || (*y + 0.25).abs() < 1e-12), "{ys:?}");
+    }
 }

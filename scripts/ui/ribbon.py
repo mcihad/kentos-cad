@@ -104,8 +104,8 @@ SELECT_KINDS = ["edit.selectFilter.point", "edit.selectFilter.line", "edit.selec
     "edit.selectFilter.dimension", "edit.selectFilter.hatch", "edit.selectFilter.insert", "edit.selectFilter.leader",
     "edit.selectFilter.table", "edit.selectFilter.image"]
 ARCH_KINDS = ["edit.selectFilter.wall", "edit.selectFilter.opening", "edit.selectFilter.space",
-    "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.stair", "edit.selectFilter.ramp",
-    "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
+    "edit.selectFilter.grid", "edit.selectFilter.column", "edit.selectFilter.beam", "edit.selectFilter.stair",
+    "edit.selectFilter.ramp", "edit.selectFilter.tag", "edit.selectFilter.viewmark", "edit.selectFilter.slab"]
 def select_filter(cad):
     # The status bar's Süzgeç lists the kinds; the drop-down is the same list. The architectural kinds are a building's
     # (docs/adr/0802): KentOS Mimari's, never KentOS Harita's or a CBS project's.
@@ -133,7 +133,8 @@ EXPORT = M("Dışa aktar", [
     ("Coğrafi veri", ["file.export.shp", "file.export.geojson", "file.export.kml", "file.export.gpx",
                       "file.export.gpkg", "file.export.fgb", "file.export.parquet", "file.export.gml",
                       "file.export.csv"], MAP),
-    ("Noktalar", ["file.export.ncn", "file.export.xyz"], MAP)], size='large')
+    ("Noktalar", ["file.export.ncn", "file.export.xyz"], MAP),
+    ("Denetim", ["file.exchangeCheck"])], size='large')
 # A CBS layer holds one kind of object (docs/adr/0622 §5): Yeni katman ▾ asks which; Karışık is any kind.
 NEW_LAYER = M("Yeni katman", [("", ["layer.new"]),
     ("Türüyle", ["layer.newPoint", "layer.newLine", "layer.newArea", "layer.newAnnotation"])])
@@ -167,18 +168,22 @@ def survey_tab(cad):
         # The survey computations (karne, poligon, kutupsal alım, kestirme, ağ dengelemesi, aplikasyon) are KentOS
         # Harita's (docs/adr/0802): a CBS project keeps its points, its recorded measures and fitting.
         return T("survey", "Ölçme", [
-            P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("file.import.gnss"), S("cogo.check"),
-                S("cogo.update")]),
+            P("Noktalar", "point", [L("point.editor"), S("map.featuresCode"), S("crs.points"), S("file.import.gnss"),
+                S("cogo.check"), S("cogo.update"), S("survey.baselines")], overflow=["asbuilt.check"]),
             P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
         ])
     # A CAD project's Ölçme is a map's (docs/adr/0801, 0802): KentOS Mimari has no tab of surveying, its queries are
     # Görünüm's Sorgu. A route's station is a map's and a road's query.
     return T("survey", "Ölçme", [
     P("Sorgu", "measure", QUERY + [S("tool.stationOffset")]),
-    P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send")]),
+    P("Saha", "fieldBook", [L("calc.fieldbook"), S("file.import.gnss"), S("field.send"), S("asbuilt.check")]),
+    P("GNSS arşivi", "gnssArchive", [L("map.survey"), S("map.survey.import"), S("map.survey.select"),
+        S("map.survey.adjustment")], works=MAP),
     P("Poligon ve alım", "surveyTraverse", [L("calc.traverse"), L("calc.polar"), L("calc.stakeout")]),
-    P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork")]),
-    P("Noktalar", "point", [L("point.editor"), S("crs.points"), S("cogo.check"), S("cogo.update")]),
+    P("Kestirme ve dengeleme", "surveyNetwork", [S("calc.forward"), S("calc.resection"), S("calc.network"), S("calc.levelNetwork"),
+        S("survey.baselines", MAP)]),
+    P("Noktalar", "point", [L("point.editor"), S("map.featuresCode", MAP), S("map.featuresReconcile", MAP),
+        S("crs.points"), S("cogo.check"), S("cogo.update")]),
     P("Oturtma", "vectorFit", [S("transform.fit"), S("transform.edgematch"), S("crs.transform")]),
     ], works=MAP_ROAD)
 
@@ -206,6 +211,9 @@ def view_tab(cad):
         panels[2]["items"].insert(4, M("Kat görünümü", [("", ["view.levels.all", "view.levels.active", "view.levels.below"]),
                                                        ("Etkin kat", ["view.levels.up", "view.levels.down"])],
                                        works=ARCHITECTURE))
+        items = panels[2]["items"]
+        at = next(i for i, it in enumerate(items) if it.get("command") == "view.transparency")
+        items[at:at] = [S("view.pointNames", MAP_ROAD), S("view.pointCodes", MAP_ROAD)]
         panels.insert(0, P("Gezinme", "zoomExtents", [L("view.zoomExtents"), S("tool.zoomWindow"), S("view.zoomSelection"),
             S("tool.pan"), S("view.previous"), S("view.next")], overflow=["view.zoomIn", "view.zoomOut", "view.extentCheck"]))
         # A building's queries (docs/adr/0802): KentOS Mimari has no Ölçme.
@@ -228,8 +236,8 @@ def output_tab(cad):
 CAD = [
     file_tab(True),
     T("home", "Giriş", [
-        P("Çizim", "line", [L("tool.line"), L("tool.polyline"), SP("circle", "large"), SP("arc", "large"),
-            SP("rectangle"), S("tool.polygon"), S("tool.point"), S("tool.ellipse"), S("tool.spline")],
+        P("Çizim", "line", [L("tool.line"), L("tool.polyline"), L("tool.point"), SP("circle", "large"), SP("arc"),
+            SP("rectangle"), S("tool.polygon"), S("tool.ellipse"), S("tool.spline")],
           overflow=["tool.nurbs", "tool.xline", "tool.ray", "tool.parallel", "tool.perpIn", "tool.perpOut", "tool.donut",
             "tool.revcloud", "tool.wipeout", "tool.sector", W("tool.rangeRings", MAP), "tool.tangentLine",
             "tool.fourthCorner", "tool.divide", "tool.pointsBetween", "tool.intersectPoint", W("tool.vertexPoints", MAP_ROAD),
@@ -255,13 +263,13 @@ CAD = [
         # The surface's analysis, difference and survey quality (plan/road.md Y18, docs/adr/0916).
         P("Analiz", "terrainAnalysis", [L("terrain.analysis")]),
         # The graded pads (plan/road.md Y14, docs/adr/0927): the Platform window.
-        P("Tesviye", "platformEditor", [L("platform.editor")]),
+        P("Tesviye", "platformEditor", [L("platform.editor")], works=MAP_ROAD),
         # The surface's drainage (plan/road.md Y16, docs/adr/0929): the Drenaj window.
-        P("Drenaj", "drainageEditor", [L("drainage.editor")]),
+        P("Drenaj", "drainageEditor", [L("drainage.editor"), L("pipes.check")], works=MAP_ROAD),
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
-        P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
-          overflow=["mesh.query"]),
-    ], works=ROAD),
+        P("Arazi", "contours", [L("tool.spot"), S("pointcloud.region"), S("pointcloud.overlap"), S("pointcloud.profile")],
+          overflow=["mesh.query"], works=ROAD),
+    ], works=MAP_ROAD),
     # KentOS Yol's horizontal alignments (plan/road.md Y3, docs/adr/0901): the Güzergâh window and a new alignment.
     T("alignment", "Güzergâh", [
         P("Güzergâh", "alignmentEditor", [L("alignment.editor"), L("alignment.new"), L("alignment.fromLine"),
@@ -302,7 +310,8 @@ CAD = [
     T("plan", "Plan", [
         P("Yol", "planRoad", [L("tool.planRoad"), S("tool.roadJunctions"), S("tool.medianClose"), S("tool.centerline")]),
         P("Ada ve parsel", "parcel", [L("tool.parcel"), L("tool.boundary"), S("tool.polygonize"), S("tool.adjoin"),
-            S("tool.topology")]),
+            S("parcels.check"), S("readjustment.distribute"), S("tool.topology"), S("topology.cleanReport")]),
+        P("İmar planı", "zoningCheck", [S("zoning.check"), S("scenario.create"), S("scenario.impact")]),
         P("Alan işlemleri", "areaUnion", [S("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
             S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
           overflow=["tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toArea", "tool.toPolyline", "tool.edgeShift"]),
@@ -372,34 +381,80 @@ CAD = [
           overflow=["tool.drawOrderAbove", "tool.drawOrderUnder", "edit.textsToFront", "edit.hatchesToBack"]),
     ]),
     T("arch", "Mimari", [
-        # Döşeme (docs/adr/0722) beside Mahal: the tab keeps its words at 1440 px.
-        P("Çiz", "wall", [L("tool.wall"), L("tool.wallRectangle"), S("tool.wallPartition"),
-            S("tool.wallFromLines"), S("tool.space"), S("tool.slab"), S("tool.spaceDiscover"), S("tool.spaceSeparator")]),
-        # Boşluk, Niş and Baca (docs/adr/0719) share one small split: the tab keeps its words at 1440 px.
+        # M15 (docs/adr/8015): a plan's six main tools large, each family one button with its ways under ▾, as
+        # Revit's Wall ▾ and Room ▾: Duvar ▾, Oda (docs/adr/8021), Kapı, Pencere, Mahal ▾ and Donatı ▾. At most 30
+        # buttons show (DESIGN.md §7.3.1); the seldom used wait under their panel's ▾.
+        # Oda (docs/adr/8021) large beside Duvar ▾: the walls, the room and its tag in one step.
+        P("Duvar", "wall", [{"key": "archWalls", "size": "large", "split": [
+                {"command": "tool.wall", "title": "Duvar", "label": "Duvar"},
+                {"command": "tool.wallRectangle", "title": "Duvar", "label": "Dikdörtgen duvar"},
+                {"command": "tool.wallPartition", "title": "Duvar", "label": "Ölçülü bölme"},
+                {"command": "tool.wallFromLines", "title": "Duvar", "label": "Çizgiden duvar"},
+            ]}, L("tool.room")]),
+        # Boşluk, Niş and Baca (docs/adr/0719) share one small split.
         P("Yerleştir", "door", [L("tool.door"), L("tool.window"), OPENINGS,
-            S("tool.column"),
+            S("tool.column"), S("tool.beam"),
             {"key": "archGrids", "size": "small", "split": [
                 {"command": "tool.grid", "title": "Aks", "label": "Aks"},
                 {"command": "tool.gridSystem", "title": "Aks", "label": "Aks ağı"},
             ]}, {"key": "archStairs", "size": "small", "split": [
                 {"command": "tool.stair", "title": "Merdiven", "label": "Merdiven"},
                 {"command": "tool.stairCurved", "title": "Merdiven", "label": "Döner merdiven"},
-            ]}, S("tool.ramp"), S("tool.casework")]),
-        P("Düzenle", "wall", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
-            S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.gridNumber"), S("tool.openingNumber"), S("tool.openingArray")],
-          overflow=["tool.wallShift", "tool.spaceNumber", "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
+            ]}, S("tool.ramp")]),
+        # Döşeme (docs/adr/0722) beside the rooms it covers.
+        P("Mahal", "space", [{"key": "archSpaces", "size": "large", "split": [
+                {"command": "tool.space", "title": "Mahal", "label": "Mahal"},
+                {"command": "tool.spaceDiscover", "title": "Mahal", "label": "Toplu mahal bul"},
+                {"command": "tool.spaceSeparator", "title": "Mahal", "label": "Mahal ayırıcı"},
+            ]}, S("tool.slab")]),
+        # What a plan furnishes: the kitchen's cabinets (Mutfak) and the blocks' library (Kitaplık).
+        P("Donatı", "casework", [{"key": "archFixtures", "size": "large", "split": [
+                {"command": "tool.casework", "title": "Donatı", "label": "Mutfak"},
+                {"command": "block.library", "title": "Donatı", "label": "Kitaplık"},
+            ]}]),
+        # A panel's icon is its first command's (DESIGN.md §6): Düzenle had Duvar's (docs/adr/8016).
+        P("Düzenle", "wallJoins", [S("tool.wallJoins"), S("tool.wallSplit"), S("tool.openingMove"),
+            S("tool.spaceSplit"), S("tool.gridNumber"), S("tool.openingNumber")],
+          overflow=["tool.spaceRebound", "tool.spaceSources", "tool.openingArray", "tool.wallShift", "tool.spaceNumber",
+            "tool.wallJoin", "tool.wallExtend", "tool.wallTrim", "tool.wallFlip", "tool.wallRestyle",
             "tool.openingFlip", "arch.spaceMerge", "tool.spaceFloor", "tool.spaceCeiling"]),
-        # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split: the tab keeps its words at 1440 px.
-        # İşaret ▾ and Revizyon ▾ (docs/adr/0721) are small splits, Malzeme lejandı with the schedules: the tab keeps
-        # its words at 1440 px.
-        P("Belgele", "tag", [{"key": "archDimensions", "size": "large", "split": [
+        # Duvar ölçüleri and İç ölçü zinciri (docs/adr/0711) share one large split; Etiket ▾ holds Hepsini etiketle (as
+        # Revit's Tag panel holds Tag All), İşaret ▾ (docs/adr/0721) is a small split, Malzeme lejandı with the schedules.
+        # Ölçü ▾ small since Oda took the sixth large place (docs/adr/8021; ADV-09's Duvar, Oda, Kapı, Pencere, Mahal,
+        # Donatı).
+        P("Belgele", "wallDimensions", [{"key": "archDimensions", "size": "small", "split": [
+                # Planı ölçülendir first (docs/adr/8026): the whole plan in one command.
+                {"command": "tool.planDimensions", "title": "Ölçü", "label": "Planı ölçülendir"},
                 {"command": "tool.wallDimensions", "title": "Ölçü", "label": "Duvar ölçüleri"},
                 {"command": "tool.interiorDimensions", "title": "Ölçü", "label": "İç ölçü zinciri"},
-            ]}, S("tool.tag"), S("arch.quantities"),
+            ]}, {"key": "archTags", "size": "small", "split": [
+                {"command": "tool.tag", "title": "Etiket", "label": "Etiket"},
+                {"command": "tool.tagAll", "title": "Etiket", "label": "Hepsini etiketle"},
+                # Doğrama kodları (docs/adr/8028): the openings' joinery codes and their tags, code over 90/210.
+                {"command": "tool.openingCodes", "title": "Etiket", "label": "Doğrama kodları"},
+                # Doğrama listesi (docs/adr/8038): the codes' list with the types' elevations.
+                {"command": "tool.joineryList", "title": "Etiket", "label": "Doğrama listesi"},
+            ]},
+            # Metraj ▾ (docs/adr/8029): the quantities and the metrekare cetveli, the regulation's areas storey by
+            # storey; Çizelge ▾ holds six already (DESIGN.md §7.3.1). Emsal ve TAKS tablosu (docs/adr/8030) beside
+            # them: the areas against the parcel's zoning.
+            {"key": "archQuantities", "size": "small", "split": [
+                {"command": "arch.quantities", "title": "Metraj", "label": "Metraj"},
+                {"command": "tool.scheduleAreas", "title": "Metraj", "label": "Metrekare cetveli"},
+                {"command": "arch.zoningTable", "title": "Metraj", "label": "Emsal ve TAKS tablosu"},
+                # Kat irtifakı tablosu (docs/adr/8031): the deed's sharing table.
+                {"command": "tool.scheduleLandShares", "title": "Metraj", "label": "Kat irtifakı tablosu"},
+                # Otopark and Sığınak hesabı (docs/adr/8036): the regulations' needs against the drawing.
+                {"command": "arch.parkingTable", "title": "Metraj", "label": "Otopark hesabı"},
+                {"command": "arch.shelterTable", "title": "Metraj", "label": "Sığınak hesabı"},
+            ]},
             {"key": "archSchedules", "size": "small", "split": [
                 {"command": "tool.scheduleOpenings", "title": "Çizelge", "label": "Kapı ve pencere çizelgesi"},
                 {"command": "tool.scheduleSpaces", "title": "Çizelge", "label": "Mahal çizelgesi"},
-                {"command": "tool.scheduleFinishes", "title": "Çizelge", "label": "Mahal kaplama çizelgesi"},
+                # Mahal listesi (docs/adr/8038): PAİY 57(29)'s list, storey by storey, in the place of the finishes
+                # schedule, whose columns it has (a menu holds six, DESIGN.md §7.3.1); Mahal kaplama çizelgesi stays the
+                # Çizelge tool's Tür and the command search's.
+                {"command": "tool.scheduleRoomList", "title": "Çizelge", "label": "Mahal listesi"},
                 {"command": "tool.scheduleFixtures", "title": "Çizelge", "label": "Donatı çizelgesi"},
                 {"command": "tool.scheduleUnits", "title": "Çizelge", "label": "Bölüm çizelgesi"},
                 {"command": "tool.materialLegend", "title": "Çizelge", "label": "Malzeme lejandı"},
@@ -408,19 +463,29 @@ CAD = [
                 {"command": "tool.viewElevation", "title": "İşaret", "label": "Görünüş"},
                 {"command": "tool.viewDetail", "title": "İşaret", "label": "Detay"},
                 {"command": "tool.northArrow", "title": "İşaret", "label": "Kuzey oku"},
-            ]}, {"key": "archRevisions", "size": "small", "split": [
-                {"command": "tool.revisionMark", "title": "Revizyon", "label": "Revizyon işaretle"},
-                {"command": "arch.revisionList", "title": "Revizyon", "label": "Revizyon listesi"},
             ]}],
           # Oda iç görünüşü (docs/adr/0799) beside Başvurular under ▾, not in İşaret ▾: a derived drawing is not a mark.
-          overflow=["tool.tagAll", "arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs", "tool.roomElevation"]),
-        P("Proje", "archSettings", [S("arch.audit"), S("arch.program"), S("arch.settings"), S("arch.wallStyles"), S("arch.template"),
-            M("Evre", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed"])])],
-          # Kapı ve pencere tipleri (docs/adr/0772) under ▾: the tab keeps its words at 1440 px.
-          # Oda modülleri (docs/adr/0775) and Malzemeler (docs/adr/0785) under ▾ too; Tasarım seçenekleri (docs/adr/0788) last.
-          # Kırpma çerçevesi (docs/adr/0789 §2) beside the navigator: a view's area edited on the model.
-          overflow=["arch.sheetSet", "arch.navigator", "tool.viewCrop", "arch.openingTypes", "arch.materials", "arch.modules",
-                    "tool.modulePlace", "arch.options"]),
+          # Revizyon işaretle and Revizyon listesi (docs/adr/0721) under ▾ too: a revision comes once a set is issued.
+          overflow=["arch.tagsCheck", "arch.wallJoinCheck", "arch.viewRefs", "tool.roomElevation",
+                    "tool.revisionMark", "arch.revisionList"]),
+        # Kat ▾: the storey shown and how the others show (the status bar's Kat cell, docs/adr/8011); Mimari ayarları
+        # beside it holds the storeys themselves.
+        P("Proje", "archSettings", [M("Kat", [("", ["view.levels.up", "view.levels.down"]),
+                ("Kat görünümü", ["view.levels.all", "view.levels.active", "view.levels.below"])]),
+            M("Tadilat", [("", ["arch.phase.all", "arch.phase.existing", "arch.phase.demolition", "arch.phase.proposed",
+                                  "arch.phase.renovation"]),
+                             # Mimarlar Odası's legend (docs/adr/8039 §5).
+                             ("", ["tool.renovationLegend"])]),
+            S("arch.audit"), S("arch.settings"), S("arch.wallStyles"), S("arch.permitSet")],
+          # Program, Şablon, Kapı ve pencere tipleri (docs/adr/0772), Oda modülleri (docs/adr/0775), Malzemeler
+          # (docs/adr/0785) and Tasarım seçenekleri (docs/adr/0788) under ▾. Kırpma çerçevesi (docs/adr/0789 §2) beside
+          # the navigator: a view's area edited on the model.
+          # Parsel ve bahçe mesafeleri (docs/adr/8032) beside Program: the site plan's parcel, the project's as the
+          # program is.
+          # Kaçış yolları (docs/adr/8035 §2) beside them: the fire rules' walks drawn on the storey.
+          # Ruhsat takımı (docs/adr/8037) shown beside Denetim: the set the audit's drawing is delivered as.
+          overflow=["arch.program", "tool.siteParcel", "tool.escapeRoutes", "arch.template", "arch.sheetSet", "arch.navigator", "tool.viewCrop",
+                    "arch.openingTypes", "arch.materials", "arch.modules", "tool.modulePlace", "arch.options"]),
     ], works=ARCHITECTURE),
     view_tab(True),
     T("manage", "Yönet", [
@@ -494,8 +559,8 @@ GIS = [
             S("layer.filter"), S("layer.crs")],
           overflow=["layer.filterFromSelection", "layer.filterClear", "layer.reproject", "layer.showAll",
             "layer.info", "layer.dataset", "file.import.maplibre", "file.export.maplibre"]),
-        P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart")],
-          overflow=["chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
+        P("Tablo", "featureTable", [L("data.featureTable"), S("data.statistics"), S("data.chart"), S("parcels.check")],
+          overflow=["readjustment.distribute", "chart.bar", "chart.pie", "chart.histogram", "chart.box", "chart.scatter", "chart.line"]),
         P("Form", "forms", [S("data.forms"), S("data.formEdit"), S("data.relations")],
           overflow=["data.joinViews", "data.formAudit", "data.tableStyles", "data.subtypes", "data.contingents",
             "data.layerRules", "data.layerIndexes", "data.domains", "data.duplicate"]),
@@ -504,11 +569,11 @@ GIS = [
           overflow=["source.reconcile", "source.relink", "source.unlink", "source.writeTogether", "raster.gpkgWrite"]),
         P("Topoloji", "topologyCheck", [S("draft.topology"), S("topology.check"), S("topology.rules"),
             M("Çakışma", [("", ["draft.overlap.allow", "draft.overlap.layer", "draft.overlap.layers"])])],
-          overflow=["draft.topologyPoints", "tool.topology"]),
+          overflow=["draft.topologyPoints", "tool.topology", "topology.cleanReport"]),
         P("Ekler", "attachment", [S("attachment.add"), S("attachment.addLink"), S("layer.info")]),
         # A project's hatch patterns serve CAD's hatch objects (docs/adr/0802); CBS fills areas by a layer's symbol. A
         # CBS project's standard is its data profile; the drawing standard (Mimari ofis) is KentOS Mimari's.
-        P("Standart", "standardsCheck", [S("profile.window")],
+        P("Standart", "standardsCheck", [S("profile.window"), S("zoning.check")],
           overflow=["lineTypes.manage", "layer.impact"]),
         P("Stil", "styles", [L("style.manager"), S("data.search"), S("data.unmark")],
           overflow=["style.svgEditor", "style.assign", "style.clearSymbol"]),
@@ -516,11 +581,11 @@ GIS = [
     T("analysis", "Analiz", [
         P("İşlemler", "processing", [L("processing.toolbox"), S("processing.newModel"), S("processing.history")]),
         P("Ağ analizi", "networks", [S("network.manage"), S("tool.netRoute"), S("tool.netServiceArea"),
-            S("tool.netTrace")], overflow=["network.subnetworks", "linearRef.eventLinks"]),
-        P("Arazi", "contours", [S("tool.spot"), S("pointcloud.region"), S("pointcloud.profile")],
+            S("tool.netTrace")], overflow=["pipes.check", "network.subnetworks", "linearRef.eventLinks"]),
+        P("Arazi", "contours", [S("tool.spot"), S("pointcloud.region"), S("pointcloud.overlap"), S("pointcloud.profile")],
           overflow=["mesh.query"]),
         P("Zaman ve senaryo", "timeSlider", [S("time.slider"), S("time.layer"), S("scenario.create"),
-            S("scenario.compare"), S("data.compare")],
+            S("scenario.compare"), S("scenario.impact"), S("data.compare")],
           overflow=["time.sensors", "tool.timeVersion", "tool.timeEnd", "time.compare", "scenario.show",
             "scenario.base", "scenario.apply"]),
         P("Adres", "addressSearch", [S("address.reverse"), S("address.data")],
@@ -541,6 +606,8 @@ def edit_panel(extra=()):
     return P("Düzenle", "move", [L("tool.move"), S("tool.copy"), S("tool.rotate"), S("tool.scale"), S("tool.mirror"),
         S("tool.erase")] + list(extra))
 
+# Harita işi: a map's work taken from its source and released (a CAD map's selection).
+MAP_WORK = P("Harita işi", "workSource", [S("map.workSource"), S("map.workRelease")], works=MAP, modes=IN_CAD)
 CONTEXTUAL = [
     {"id": "selection", "label": "Seçim", "kinds": ["*"], "panels": [
         P("Seçim", "select", [B("selection")]),
@@ -553,6 +620,7 @@ CONTEXTUAL = [
         # A layer's filter is a map's (docs/adr/0802).
         P("Seçilenler", "select", [S("tool.selectSimilar"), S("file.saveSelection"),
             S("layer.filterFromSelection", MAP)]),
+        MAP_WORK,
     ]},
     {"id": "ctx.point", "label": "Nokta", "kinds": ["point"], "panels": [
         SEL,
@@ -579,6 +647,7 @@ CONTEXTUAL = [
             M("Yakınlık", [("", [pr("proximity.nearest"), pr("proximity.matrix"), pr("proximity.hub"),
                 pr("proximity.shortestLine")], (), IN_GIS), ("", [pr("attributes.fromEnclosing")])], size='large'),
         ]),
+        MAP_WORK,
     ]},
     {"id": "ctx.line", "label": "Çizgi", "kinds": ["line", "polyline", "arc", "spline", "nurbs", "xline", "ray"],
      "panels": [
@@ -588,7 +657,7 @@ CONTEXTUAL = [
             S("tool.lengthen"), S("tool.join"), S("tool.reverse")],
           overflow=["tool.continue", "tool.reshape", "tool.edgeShift"]),
         P("Köşe", "fillet", [SP("corner"), S("tool.vertex"), S("tool.curveEdit"), S("tool.simplify"),
-            S("tool.setElevation")]),
+            S("tool.setElevation"), S("tool.grade", MAP_ROAD, IN_CAD)]),
         # Survey points at the corners and a route's chainage (Km yaz) are a map's (docs/adr/0802); Km yaz is CAD
         # drafting, a CBS route has Doğrusal referans.
         P("Dönüştür", "conversion", [S("tool.toArea"), S("tool.vertexPoints", MAP_ROAD), S("tool.divide"),
@@ -605,12 +674,13 @@ CONTEXTUAL = [
                 pr("linearRef.routeEvents"), pr("linearRef.locateAlong"), pr("linearRef.overlayEvents"),
                 pr("linearRef.extractMeasures"), pr("linearRef.eventDrift")])], size='large'),
         ]),
+        MAP_WORK,
     ]},
     {"id": "ctx.area", "label": "Alan", "kinds": ["polygon", "circle", "ellipse"], "panels": [
         SEL,
         edit_panel([S("tool.stretch")]),
         P("Kenar ve köşe", "offset", [S("tool.offset"), S("tool.edgeShift"), S("tool.reshape"), S("tool.vertex"),
-            SP("corner"), S("tool.setElevation")]),
+            SP("corner"), S("tool.setElevation"), S("tool.grade", MAP_ROAD, IN_CAD)]),
         P("Alan", "areaUnion", [L("tool.areaUnion"), S("tool.areaSubtract"), S("tool.areaIntersect"),
             S("tool.areaSplit"), S("tool.partsJoin"), S("tool.partsSplit")],
           overflow=["tool.holeAdd", "tool.holeRemove", "tool.holeFill", "tool.toPolyline"]),
@@ -637,6 +707,7 @@ CONTEXTUAL = [
                 ("", [pr("statistics.summary")]), ("", [pr("raster.zonalStatistics")], (), IN_GIS),
                 ("", [pr("raster.clipByMask")]), ("", [pr("raster.rasterize")], (), IN_GIS)], size='large'),
         ]),
+        MAP_WORK,
     ]},
     {"id": "ctx.text", "label": "Yazı", "kinds": ["text"], "panels": [
         SEL,
@@ -696,7 +767,8 @@ CONTEXTUAL = [
     # scenes' bands.
     {"id": "ctx.raster", "label": "Raster", "kinds": ["raster"], "panels": [
         SEL,
-        P("Raster", "rasterAdd", [L("raster.style"), S("raster.georef"), S(pr("raster.cog")), S("raster.gpkgWrite"),
+        P("Raster", "rasterAdd", [L("raster.style"), S("raster.georef"), S("raster.accuracy"), S("raster.compare"),
+            S(pr("raster.cog")), S("raster.gpkgWrite"),
             S("raster.mosaic")], works=MAP_ROAD),
         P("Yüzey", "aspect", [
             M("Yüzey analizi", [("", [pr("surface.slope"), pr("surface.aspect"), pr("surface.hillshade"),
@@ -729,11 +801,12 @@ CONTEXTUAL = [
             M("Çok boyutlu", [("", [pr("multidim.profile"), pr("multidim.series"), pr("multidim.meshCalculator"),
                 "mesh.query"])], size='large', modes=IN_GIS),
         ], works=MAP),
+        MAP_WORK,
     ]},
     {"id": "ctx.pointcloud", "label": "Nokta bulutu", "kinds": ["pointcloud"], "panels": [
         SEL,
         P("Nokta bulutu", "pointCloudAdd", [L("pointcloud.style"), S("pointcloud.query"), S("pointcloud.profile"),
-            S("pointcloud.region"), S("pointcloud.vpcSave")]),
+            S("pointcloud.region"), S("pointcloud.overlap"), S("pointcloud.vpcSave")]),
         P("İşlemler", "processing", [L(pr("pointcloud.ground")), S(pr("pointcloud.thin")), S(pr("pointcloud.classify")),
             S(pr("pointcloud.clip")), S(pr("pointcloud.merge")), S(pr("pointcloud.tile")), S(pr("pointcloud.rasterize")),
             S(pr("pointcloud.boundary")), S(pr("pointcloud.areaStats"))]),
@@ -741,9 +814,15 @@ CONTEXTUAL = [
     {"id": "ctx.wall", "label": "Duvar", "kinds": ["wall"], "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Duvar", "wall", [L("tool.wallDimensions"), L("view.properties"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"), S("tool.wallExtend"),
-            S("tool.wallTrim"), S("tool.wallFlip"), S("tool.wallRestyle"), S("arch.wallJoinCheck")]),
-        P("Açıklık", "door", [S("tool.door"), S("tool.window"), OPENINGS, S("tool.tag")]),
+        # A wall's own work first (docs/adr/8017): Duvarı kaydır large, the wall's edits, Özellikler; the right click's
+        # first section is this panel. Its style and materials, its bonds (the architectural bonds are constraints,
+        # docs/adr/0770: shown, or relaxed for the next edit), what it hosts and how it is documented after.
+        P("Duvar", "wallShift", [L("tool.wallShift"), S("tool.wallJoins"), S("tool.wallSplit"), S("tool.wallJoin"),
+            S("tool.wallExtend"), S("tool.wallTrim"), S("tool.wallFlip"), S("view.properties")]),
+        P("Stil", "wallRestyle", [S("tool.wallRestyle"), S("arch.wallStyles"), S("arch.materials")]),
+        P("Bağ", "constraintShow", [S("constraint.show"), S("constraint.relaxNext")]),
+        P("Açıklık", "door", [S("tool.door"), S("tool.window"), OPENINGS]),
+        P("Belgele", "wallDimensions", [L("tool.wallDimensions"), S("tool.tag"), S("arch.wallJoinCheck")]),
     ]},
     {"id": "ctx.opening", "label": "Açıklık", "kinds": ["opening"], "modes": ["cad"], "panels": [
         SEL,
@@ -757,8 +836,12 @@ CONTEXTUAL = [
     {"id": "ctx.space", "label": "Mahal", "kinds": ["space"], "modes": ["cad"], "panels": [
         SEL,
         P("Düzenle", "move", [S("tool.move"), S("tool.erase")]),
-        P("Mahal", "space", [L("view.properties"), S("arch.quantities"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"), S("tool.spaceNumber"), S("arch.spaceMerge"), S("tool.spaceFloor"),
-            S("tool.spaceCeiling"), S("tool.tag"), S("tool.scheduleSpaces")]),
+        # The room's own edits (the right click's first section, docs/adr/8017), its finishes, its documents: eleven
+        # buttons in one panel read "Döşeme" for the floor pattern and "Mahal" for the room schedule.
+        P("Mahal", "space", [L("view.properties"), S("tool.spaceSplit"), S("tool.spaceRebound"), S("tool.spaceSources"),
+            S("tool.spaceNumber"), S("arch.spaceMerge")]),
+        P("Kaplama", "spaceFloor", [S("tool.spaceFloor"), S("tool.spaceCeiling")]),
+        P("Belgele", "quantities", [S("arch.quantities"), S("tool.tag"), S("tool.scheduleSpaces")]),
     ]},
     # Döşeme (docs/adr/0722 §6): its own fields in Öznitelikler, a hole cut with the tool's Delik, Metraj.
     {"id": "ctx.slab", "label": "Döşeme", "kinds": ["slab"], "modes": ["cad"], "panels": [
@@ -770,7 +853,8 @@ CONTEXTUAL = [
      "modes": ["cad"], "panels": [
         SEL,
         edit_panel(),
-        P("Mimari", "archGrid", [S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
+        # Özellikler too, as on the other building tabs (docs/adr/8017).
+        P("Mimari", "archGrid", [L("view.properties"), S("tool.gridNumber"), S("arch.tagsCheck"), S("arch.viewRefs")]),
     ]},
 ]
 
@@ -818,6 +902,12 @@ MODULES = {
         "processing.run.network.serviceAreas": ["cbs"],
         # The project type's switch: a module's projects keep their module's type.
         "workspace.cad": [], "workspace.gis": [], "workspace.plan3d": [], "workspace.disaster": [],
+        # Mahal kaplama çizelgesi (docs/adr/0733 §3) left Çizelge ▾ to the room list (docs/adr/8038), whose columns it
+        # has; it stays Mimari's (the Çizelge tool's Tür, Komut ara), not every module's.
+        "tool.scheduleFinishes": ["mimari"],
+        # The GNSS archive's sessions and the feature codes' reconciling are KentOS Harita's.
+        "map.survey": ["harita"], "map.survey.import": ["harita"], "map.survey.select": ["harita", "cbs"],
+        "map.survey.adjustment": ["harita"], "map.featuresReconcile": ["harita"],
     },
 }
 

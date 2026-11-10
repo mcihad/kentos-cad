@@ -459,8 +459,10 @@ pub mod opening_placement;
 pub mod openings_edit;
 pub mod opening_distances;
 // Kapı ve pencere tipleri (docs/adr/0772).
+pub mod opening_codes;
 pub(crate) mod opening_types;
 pub(crate) mod door_audit;
+pub mod fixture_audit;
 pub mod opening_types_edit;
 pub mod materials_edit;
 pub mod material_quantities;
@@ -515,7 +517,7 @@ mod standards_install_library;
 pub mod standard_libraries;
 pub mod appearance_origin;
 pub mod revisions;
-pub use arch_elements::{columns_create, grids_create, ramps_create, stairs_create};
+pub use arch_elements::{beams_create, columns_create, grids_create, ramps_create, stairs_create};
 pub mod tags;
 pub mod schedules;
 pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
@@ -551,6 +553,12 @@ pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
 pub mod program_check;
+pub mod regulation_audit;
+pub mod fire_audit;
+pub mod fire_marks;
+pub mod permit_set;
+pub mod provisions_audit;
+pub mod joinery_audit;
 pub mod program_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
@@ -881,6 +889,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_RAMPS_CREATE,
         kentos_commands::CAD_RAMPS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_BEAMS_CREATE,
+        kentos_commands::CAD_BEAMS_CREATE_VERSION,
     ),
     (
         kentos_commands::CAD_ARCH_EDIT,

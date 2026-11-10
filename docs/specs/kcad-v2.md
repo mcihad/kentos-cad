@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `216`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-217.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `236`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-237.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -982,6 +982,16 @@ taşıyınca seçer; 214 ve öncesi alanı tanımaz (`unknown_field`, `broken/re
 parselin. Değilse `bad_value` (`broken/parcel-register-open-ring.kcad`, `broken/parcel-register-one-area.kcad`). Yazıcı
 216'yı kayıt olunca seçer; 215 ve öncesi alanı tanımaz (`unknown_field`, `broken/parcel-register-in-schema-215.kcad`).
 Örnek `parcel-register.json/.kcad`.
+**Şema 217** (ADR 8012; ADV-15): mimari ayarların (`arch`) haritasına projenin planlarının kesildiği yüksekliği
+ekler: `cutHeight` (metre, float, 0,3 ile 3 arası; değilse `bad_value`, `broken/plan-cut-out-of-range.kcad`). Yoksa
+plan 1,10 m'den kesilir (ADR 0719); yeni Mimari projesi 1,20 yazar. Yazıcı 217'yi ayar bir kesme yüksekliği taşıyınca
+seçer; 216 ve öncesi alanı `unknown_field` sayar (`broken/plan-cut-in-schema-216.kcad`). Örnek `plan-cut.json/.kcad`.
+
+**Şema 218** (ADR 8013): mimari ayarların (`arch`) haritasına planın çizgilerinin nasıl ağırlıklandırıldığını ekler:
+`lineGroups` (numaralı metin: `own` her nesne kendi kaleminde, `byScale` TS 88-23 / ISO 128-23 çizgi grubu ölçeğe göre;
+başkası `bad_value`, `broken/line-groups-unknown.kcad`). Yoksa her nesne kendi kalemindedir; yeni Mimari projesi
+`byScale` yazar. Yazıcı 218'i ayar `lineGroups` taşıyınca seçer; 217 ve öncesi alanı `unknown_field` sayar
+(`broken/line-groups-in-schema-217.kcad`). Örnek `line-groups.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

@@ -2,12 +2,13 @@
 //!
 //! - An opening: its number, type (its style), form, width, height (head − sill, with a head), sill (absent 0), head,
 //!   area (width × height), and its wall's style, level and phase.
-//! - A space: its number, name, usage, area and perimeter (its rings', holes off), height (its own, else its level's),
-//!   volume (area × height).
+//! - A space: its number, name, usage, area and perimeter (its rings', holes off), height (its inside height: its
+//!   finished floor to its ceiling, docs/adr/8040 §3), volume (area × height), its floor's and ceiling's elevations.
 //! - A column: its tag, place, type and width. A grid: its label. A stair: its risers. A ramp: its slope (given, else
 //!   its rise over its sloped length). An insert: its block's name as its type.
 //! - A wall: its style (as type and style), its width (as thickness and width), its base line's length, height (its
-//!   own, else its level's), net face area (length × height less its openings' areas) and volume (net face × width).
+//!   own, else concrete to concrete within its storey, docs/adr/8040 §1–2), net face area (length × height less its
+//!   openings' areas) and volume (net face × width).
 //! - Each: its level's name and phase, its attribute by name.
 //!
 //! Written: a length in the project's unit and length decimals; an area in its area unit and decimals, a volume in m³
@@ -106,18 +107,7 @@ impl Document {
         )
     }
 
-    fn level_height(&self, arch: &ArchInfo) -> Option<f64> {
-        let id = arch.level.as_deref()?;
-        self.settings()
-            .arch
-            .as_ref()?
-            .levels
-            .iter()
-            .find(|l| l.id == id)?
-            .height
-    }
-
-    /// The room's assigned floor; absence is unknown, not project zero.
+    /// The room's storey's floor; absence is unknown, not project zero.
     fn room_floor_elevation(&self, arch: &ArchInfo) -> Option<f64> {
         let id = arch.level.as_deref()?;
         self.settings()
@@ -162,7 +152,8 @@ impl Document {
         .unwrap_or_else(|| s.to_owned())
     }
 
-    fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
+    /// The wall whose persistent id is `host` (an opening's host); none for another object or none.
+    pub fn wall_of(&self, host: &str) -> Option<kentos_contracts::WallFields> {
         let uid = crate::identity::Uuid::parse_str(host).ok()?;
         let slot = self.store.slot_of(uid)?;
         match &*self.store.get(slot)?.entity {
@@ -178,7 +169,8 @@ impl Document {
         w: &kentos_contracts::WallFields,
     ) -> (f64, Option<f64>) {
         let length = bulge_path_length(&core(&w.pts), w.bulges.as_deref(), w.closed);
-        let height = w.height.or_else(|| self.level_height(&w.arch));
+        // Up to the slab over it within its storey (docs/adr/8040 §1).
+        let height = self.wall_height(w);
         let openings: f64 = uid
             .map(|u| {
                 self.openings_of(u)
@@ -217,6 +209,14 @@ impl Document {
                     "type" | "style" => {
                         text(&x.style).map(|_| Text(self.opening_type_name(x.style.as_deref())))
                     }
+                    // Its type's joinery code and its size, width over height in centimetres (docs/adr/8028).
+                    "code" => x
+                        .style
+                        .as_deref()
+                        .and_then(|s| self.opening_types().iter().find(|t| t.id == s))
+                        .and_then(|t| t.code.clone())
+                        .map(Text),
+                    "size" => Some(Text(x.size_cm())),
                     "form" => Some(Text(x.form.label().to_owned())),
                     "width" => Some(Length(x.width)),
                     // Its widths (docs/adr/0772 §2): never the one for the other.
@@ -257,9 +257,11 @@ impl Document {
                         )),
                     }),
                     "level" => wall.and_then(|w| self.level_name(&w.arch)).map(Text),
-                    "phase" => wall
-                        .and_then(|w| w.arch.phase)
-                        .map(|p| Text(p.label().to_owned())),
+                    // Its own phase first (docs/adr/8039 §1), its wall's otherwise.
+                    "phase" => x.phase.map(|p| Text(p.label().to_owned())).or_else(|| {
+                        wall.and_then(|w| w.arch.phase)
+                            .map(|p| Text(p.label().to_owned()))
+                    }),
                     _ => None,
                 }
             }
@@ -267,7 +269,8 @@ impl Document {
                 let x = &s.space;
                 let areas = core_areas(&x.parts);
                 let area = kentos_geometry_core::geom::space::area(&areas);
-                let height = x.height.or_else(|| self.level_height(&x.arch));
+                // Its finished floor to its ceiling (docs/adr/8040 §3).
+                let height = self.room_height(x);
                 match place {
                     "number" => text(&x.number),
                     "name" => text(&x.name),
@@ -314,14 +317,18 @@ impl Document {
                     "perimeter" => {
                         Some(Length(kentos_geometry_core::geom::space::perimeter(&areas)))
                     }
-                    "height" => height.map(Length),
-                    "volume" => height.map(|h| Volume(area * h)),
-                    "floorElevation" => self.room_floor_elevation(&x.arch).map(Length),
-                    // Floor-to-floor level height is not a stated room ceiling.
+                    "height" => height.map(|h| Length(h.inside())),
+                    "volume" => height.map(|h| Volume(area * h.inside())),
+                    // On a storey the project knows: its finished floor; its ceiling when it has one (an asma tavan, a
+                    // height typed, the slab over it): floor to floor is no ceiling.
+                    "floorElevation" => self
+                        .room_floor_elevation(&x.arch)
+                        .map(|_| Length(self.room_floor(x).0)),
                     "ceilingElevation" => self
                         .room_floor_elevation(&x.arch)
-                        .zip(x.height)
-                        .map(|(floor, height)| Length(floor + height)),
+                        .and(height)
+                        .filter(crate::RoomHeight::ceiling_known)
+                        .map(|h| Length(h.ceiling)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
                     // Its finishes (docs/adr/0733 §3).
@@ -329,6 +336,21 @@ impl Document {
                     "baseFinish" => text(&x.finishes.base),
                     "wallFinish" => text(&x.finishes.wall),
                     "ceilingFinish" => text(&x.finishes.ceiling),
+                    // The room list's (docs/adr/8038): its sills', its stair's and its railings' finishes, the doors and
+                    // the windows that serve it.
+                    "sillFinish" => text(&x.finishes.sill),
+                    "stairFinish" => text(&x.finishes.stair),
+                    "railingFinish" => text(&x.finishes.railing),
+                    "doors" | "windows" => {
+                        let all = self.room_openings();
+                        let mine = all.get(&crate::Slot(e.base().id))?;
+                        let t = if place == "doors" {
+                            &mine.doors
+                        } else {
+                            &mine.windows
+                        };
+                        (!t.is_empty()).then(|| Text(t.clone()))
+                    }
                     // Its baseboard: Metraj's rule (docs/adr/0722 §5); a void has none.
                     "baseboard" => (!x.void).then(|| {
                         Length(crate::passages::baseboard(
@@ -346,6 +368,8 @@ impl Document {
                     "tag" => text(&x.tag),
                     "place" => text(&x.place),
                     "type" => text(&x.kind),
+                    // Its size as its plan writes it (docs/adr/8041 §2): 30/50, Ø40.
+                    "size" => Some(Text(x.size_text())),
                     "width" => Some(Length(x.width)),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
@@ -361,7 +385,7 @@ impl Document {
                     }
                     "thickness" | "width" => Some(Length(x.width)),
                     "length" => Some(Length(length)),
-                    "height" => x.height.or_else(|| self.level_height(&x.arch)).map(Length),
+                    "height" => self.wall_height(x).map(Length),
                     "area" => net.map(Area),
                     "volume" => net.map(|n| Volume(n * x.width)),
                     "level" => self.level_name(&x.arch).map(Text),
@@ -438,45 +462,51 @@ impl Document {
     }
 
     /// The box a fixture's block draws as the insert places it (docs/adr/0772 §5): its four corners; none when its
-    /// block draws nothing.
-    pub fn fixture_footprint(&self, i: &kentos_contracts::InsertEntity) -> Option<[kentos_contracts::Vec2; 4]> {
-        use kentos_geometry_core::api::json::{FromJson, Json};
-        use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+    /// block draws nothing. What the insert's visibility state hides is no part of it (docs/adr/8025): a WC's
+    /// “Boşluk zarfı” outline, hidden in its “Sade” state, made its body 60 cm deeper and a door struck the air in
+    /// front of it.
+    pub fn fixture_footprint(
+        &self,
+        i: &kentos_contracts::InsertEntity,
+    ) -> Option<[kentos_contracts::Vec2; 4]> {
         let b = self.blocks().iter().find(|b| b.id == i.block)?;
-        let mut seen: Option<[f64; 4]> = None;
-        for e in &b.entities {
-            let Some(core) = serde_json::to_string(e)
-                .ok()
-                .and_then(|t| Json::parse(&t).ok())
-                .and_then(|j| CoreEntity::from_json(&j).ok())
-            else {
-                continue;
-            };
-            let r = entity_bounds(&core.shape);
-            if ![r.min_x, r.min_y, r.max_x, r.max_y].iter().all(|v| v.is_finite()) {
-                continue;
-            }
-            seen = Some(match seen {
-                None => [r.min_x, r.min_y, r.max_x, r.max_y],
-                Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
-            });
+        let hidden = hidden_by(b, &i.parameters);
+        let corners = entities_box(b.entities.iter().filter(|e| !hidden.contains(&e.base().id)))?;
+        Some(placed_box(b, i, corners))
+    }
+
+    /// A fixture's use zone as its block draws it (docs/adr/8025, 0702): the outline its visibility state
+    /// “Boşluk zarfı” shows and its first state hides, as the insert places it; none when its block draws none.
+    pub fn fixture_zone(
+        &self,
+        i: &kentos_contracts::InsertEntity,
+    ) -> Option<[kentos_contracts::Vec2; 4]> {
+        use kentos_contracts::block_dynamic::BlockParameter;
+        let b = self.blocks().iter().find(|b| b.id == i.block)?;
+        let states = b
+            .dynamic
+            .as_ref()?
+            .parameters
+            .iter()
+            .find_map(|p| match p {
+                BlockParameter::Visibility { states, .. } => Some(states),
+                _ => None,
+            })?;
+        let first = states.first()?;
+        let zone = states
+            .iter()
+            .find(|s| fold_name(&s.name) == fold_name(ZONE_STATE))?;
+        let ids: Vec<u32> = first
+            .hidden
+            .iter()
+            .filter(|id| !zone.hidden.contains(id))
+            .copied()
+            .collect();
+        if ids.is_empty() {
+            return None;
         }
-        let [x0, y0, x1, y1] = seen?;
-        let m = kentos_geometry_core::block::placement_xy(
-            kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
-            i.scale,
-            i.y_scale.unwrap_or(i.scale),
-            i.rotation,
-            i.mirror,
-        );
-        let at = |x: f64, y: f64| {
-            let (x, y) = (x - b.base.x, y - b.base.y);
-            kentos_contracts::Vec2 {
-                x: m[0] * x + m[2] * y + m[4],
-                y: m[1] * x + m[3] * y + m[5],
-            }
-        };
-        Some([at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)])
+        let corners = entities_box(b.entities.iter().filter(|e| ids.contains(&e.base().id)))?;
+        Some(placed_box(b, i, corners))
     }
 
     /// Where a fixture stands (docs/adr/0733 §2): the middle of its block's drawing as the insert places it, so that a
@@ -632,5 +662,115 @@ impl Document {
     fn uid_of_entity(&self, e: &Entity) -> Option<String> {
         self.uid(crate::identity::Slot(e.base().id))
             .map(|u| u.to_string())
+    }
+}
+
+/// The visibility state a sanitary block's use zone is shown in (docs/adr/0702).
+pub const ZONE_STATE: &str = "Boşluk zarfı";
+
+fn fold_name(name: &str) -> String {
+    kentos_contracts::blocks::name_key(name.trim())
+}
+
+/// The local ids `b`'s visibility parameters hide as `values` show it (docs/adr/0318 §1): each parameter's state the
+/// values name, else its first.
+fn hidden_by(
+    b: &kentos_contracts::BlockDefinition,
+    values: &std::collections::BTreeMap<String, kentos_contracts::block_dynamic::ParamValue>,
+) -> Vec<u32> {
+    use kentos_contracts::block_dynamic::{BlockParameter, ParamValue};
+    let Some(dynamic) = &b.dynamic else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    for p in &dynamic.parameters {
+        let BlockParameter::Visibility { name, states } = p else {
+            continue;
+        };
+        let chosen = match values.get(name) {
+            Some(ParamValue::Text(state)) => states.iter().find(|s| &s.name == state),
+            _ => None,
+        }
+        .or(states.first());
+        if let Some(state) = chosen {
+            out.extend(state.hidden.iter().copied());
+        }
+    }
+    out
+}
+
+/// The box `entities` draw in their block's frame: `[x0, y0, x1, y1]`; none when they draw nothing.
+fn entities_box<'a>(entities: impl Iterator<Item = &'a Entity>) -> Option<[f64; 4]> {
+    use kentos_geometry_core::api::json::{FromJson, Json};
+    use kentos_geometry_core::entity::{Entity as CoreEntity, entity_bounds};
+    let mut seen: Option<[f64; 4]> = None;
+    for e in entities {
+        let Some(core) = serde_json::to_string(e)
+            .ok()
+            .and_then(|t| Json::parse(&t).ok())
+            .and_then(|j| CoreEntity::from_json(&j).ok())
+        else {
+            continue;
+        };
+        let r = entity_bounds(&core.shape);
+        if ![r.min_x, r.min_y, r.max_x, r.max_y]
+            .iter()
+            .all(|v| v.is_finite())
+        {
+            continue;
+        }
+        seen = Some(match seen {
+            None => [r.min_x, r.min_y, r.max_x, r.max_y],
+            Some(o) => [
+                o[0].min(r.min_x),
+                o[1].min(r.min_y),
+                o[2].max(r.max_x),
+                o[3].max(r.max_y),
+            ],
+        });
+    }
+    seen
+}
+
+/// A box of `b`'s frame as `i` places it: its four corners.
+fn placed_box(
+    b: &kentos_contracts::BlockDefinition,
+    i: &kentos_contracts::InsertEntity,
+    [x0, y0, x1, y1]: [f64; 4],
+) -> [Vec2; 4] {
+    let m = kentos_geometry_core::block::placement_xy(
+        kentos_geometry_core::Vec2::new(i.p.x, i.p.y),
+        i.scale,
+        i.y_scale.unwrap_or(i.scale),
+        i.rotation,
+        i.mirror,
+    );
+    let at = |x: f64, y: f64| {
+        let (x, y) = (x - b.base.x, y - b.base.y);
+        Vec2 {
+            x: m[0] * x + m[2] * y + m[4],
+            y: m[1] * x + m[3] * y + m[5],
+        }
+    };
+    [at(x0, y0), at(x1, y0), at(x1, y1), at(x0, y1)]
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::wall_height::tests::document;
+
+    /// A column's tag writes its size as its plan does (docs/adr/8041 §2): `{tag} {size}` of a 30/50 column "S1 30/50",
+    /// of a round 40 cm one "S2 Ø40".
+    #[test]
+    fn a_column_s_tag_writes_its_size() {
+        let doc = document(serde_json::json!([
+            {"kind": "column", "at": {"x": 0.0, "y": 0.0}, "width": 0.3, "depth": 0.5, "tag": "S1"},
+            {"kind": "column", "at": {"x": 4.0, "y": 0.0}, "shape": "round", "width": 0.4, "tag": "S2"}
+        ]));
+        let words: Vec<String> = doc
+            .entities()
+            .map(|e| doc.tag_text(e, Some("{tag} {size}")))
+            .collect();
+        assert_eq!(words, ["S1 30/50", "S2 Ø40"]);
     }
 }
