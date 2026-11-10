@@ -123,8 +123,8 @@ impl Report {
             .decisions
             .iter()
             .position(|d| d.topic == topic && d.code == code && d.subject == subject && d.decision == decision);
-        let d = match at {
-            Some(i) => &mut self.decisions[i],
+        let i = match at {
+            Some(i) => i,
             None => {
                 self.decisions.push(ImportDecision {
                     topic,
@@ -134,9 +134,11 @@ impl Report {
                     count: 0,
                     lines: Vec::new(),
                 });
-                self.decisions.last_mut().expect("pushed")
+                self.decisions.len() - 1
             }
         };
+        // By its index: `last_mut().expect(..)` is refused here (a panic traps the WASM module, docs/adr/0008).
+        let d = &mut self.decisions[i];
         d.count += n;
         if line > 0 && d.lines.len() < LINES_KEPT && d.lines.last() != Some(&line) {
             d.lines.push(line);
