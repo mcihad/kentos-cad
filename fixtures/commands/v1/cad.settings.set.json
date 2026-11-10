@@ -10662,6 +10662,105 @@
       ]
     },
     {
+      "name": "Kırılma katsayısı (ADR 4900): ölçülen k projeye yazılır; 0,13 öntanımlıdır, yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "refraction": 0.1625
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "refraction"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "survey": {
+                "refraction": 0.1625
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "refraction": 0.13
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "refraction"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "survey": null
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kırılma katsayısı 1'den büyük",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "refraction": 1.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_refraction",
+              "message": "Kırılma katsayısı k −1 ile 1 arasında olmalı; 1.5 verildi.",
+              "path": "refraction"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "yerel projede elipsoit yüksekliği",
       "steps": [
         {

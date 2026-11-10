@@ -78085,7 +78085,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans\n  are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or\n  absent: every object its own pen) how its lines are weighted (docs/adr/8013);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n- `standardDocs`: the entire ordered list of versioned drawing-standard\n  documents retained by the project; an empty list removes all bindings.\n  An ordered, byte-identical subset may remove unsupported existing\n  documents for recovery; new or changed documents are validated.\n  This changes the association only and does not apply the standards.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet); a project without a type chooses once; an existing type cannot change (ADR 0622);\n- `cadWork`: what a CAD project is drawn for (docs/adr/0801), `architecture`, `map` or `detail`: its KentOS\n  program and its ribbon. Only a CAD project has one (with `projectType: cad` a project without a type takes\n  both); a CAD project without a work chooses once, an existing work cannot change;\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away; with them `activeLevel` (a level's id, null for Katsız) and\n  `levelView` (`active`, `below`; `all` is no setting), the level and view the drawing opens with\n  (docs/adr/0720 §1); `cutHeight` (metres above each level's floor, 0.3–3; absent 1.10) the height its plans\n  are cut at (docs/adr/8012); `lineGroups` (`byScale`: TS 88-23's line group of the plan's scale; `own` or\n  absent: every object its own pen) how its lines are weighted (docs/adr/8013);\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n- `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).\n- `standardDocs`: the entire ordered list of versioned drawing-standard\n  documents retained by the project; an empty list removes all bindings.\n  An ordered, byte-identical subset may remove unsupported existing\n  documents for recovery; new or changed documents are validated.\n  This changes the association only and does not apply the standards.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or\nview without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`project_type_locked` (an existing project type changed),\n`cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work\nchanged),\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level taken away that a wall, room, room separator, column, grid, stair or ramp names, or a\nsheet's map shows: said by its name with how many of each, the objects' `uids` given; docs/adr/0720 §3),\n`heights_need_system` (ellipsoidal heights or an epoch for a project without a system).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -78245,6 +78245,15 @@
               }
             ]
           },
+          "refraction": {
+            "description": "The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one\nwritten to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
           "secondSrid": {
             "format": "uint32",
             "minimum": 0,
@@ -78376,6 +78385,7 @@
           "level_in_use",
           "invalid_heights",
           "invalid_epoch",
+          "invalid_refraction",
           "heights_need_system",
           "invalid_revision",
           "revision_conflict"
@@ -92492,6 +92502,17 @@
             ],
             "x-unit": "m"
           },
+          "refraction": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MeasuredRefraction"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The legs' measured refraction coefficients together (docs/adr/4900), when at least one pair gives one: the\nvalue a project may take (`cad.settings.set`'s `refraction`)."
+          },
           "refractions": {
             "description": "Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et\nal. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back.",
             "items": {
@@ -106342,6 +106363,12 @@
       "meaning": "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın."
     },
     {
+      "code": "invalid_refraction",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kırılma katsayısı k −1 ile 1 arasında olmalı (öntanımlı 0,13)."
+    },
+    {
       "code": "approval_profile",
       "kind": "failed",
       "retryable": false,
@@ -111055,7 +111082,7 @@
       "code": "invalid_qml",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok."
+      "meaning": "Dosya okunabilir bir QML stil dosyası değil ya da KentOS'un çizebileceği bir görünüşü yok."
     },
     {
       "code": "invalid_maplibre",
@@ -113587,7 +113614,7 @@
       "code": "unsupported_plot_style_file",
       "kind": "failed",
       "retryable": false,
-      "meaning": "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb) değil."
+      "meaning": "Dosya bir baskı stili tablosu (.ctb/.stb) değil."
     },
     {
       "code": "bad_plot_style_file",
@@ -156967,7 +156994,7 @@
         },
         {
           "additionalProperties": false,
-          "description": "Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation\nthat names it, a derivation left without objects taken away; the objects stay, the user's own drawing.",
+          "description": "Objects let go of their derivations (promoted to the user's own drawing, docs/adr/1201 §3): each object out of the derivation\nthat names it, a derivation left without objects taken away; the objects stay, the user's own drawing.",
           "properties": {
             "op": {
               "const": "release",
@@ -157891,6 +157918,43 @@
           "type": "object"
         }
       ]
+    },
+    "MeasuredRefraction": {
+      "description": "The pairs' refraction coefficients together (docs/adr/4900): their mean k̄ = Σkᵢ/n, how many pairs, and with two or\nmore their standard deviation s = √(Σ(kᵢ − k̄)²/(n − 1)) and the mean's s/√n. Each pair weighs the same (no source\nweighs them otherwise).",
+      "properties": {
+        "mean": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "1"
+        },
+        "pairs": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "sd": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        },
+        "sigma": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "mean",
+        "pairs"
+      ],
+      "type": "object"
     },
     "Meeting": {
       "description": "How Kesişim noktası finds its point.",

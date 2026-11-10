@@ -28,6 +28,7 @@ from pyproj.crs import CoordinateOperation
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import crs_area_test as AT  # noqa: E402
 import crs_chain_rules as rules  # noqa: E402
 import crs_transform_cases as ct  # noqa: E402
 
@@ -316,6 +317,9 @@ EDGE = 1e-9
 
 
 def holds(box, lon, lat):
+    """docs/adr/4900: a registry system's area is its polygon where carried (crs_area_test.py), else its box."""
+    if box[0] == "rings" or box[0] == "box":
+        return AT.holds(box, lon, lat)
     west, south, east, north = box[0] - EDGE, box[1] - EDGE, box[2] + EDGE, box[3] + EDGE
     along = west <= lon <= east if west <= east else (lon >= west or lon <= east)
     return along and south <= lat <= north
@@ -347,7 +351,7 @@ def verdict(src):
 def reprojected(layer_id, src):
     """`cad.layers.reproject`'s answer for a layer of the setup moved from `src`, and its warnings."""
     ents = [e for e in setup()["entities"] if e["layerId"] == layer_id]
-    boxes = (area(src), operation_area(src), area(PROJECT))
+    boxes = (AT.area_of(src, area(src)), operation_area(src), AT.area_of(PROJECT, area(PROJECT)))
     noted, plain = [], []
     total, sx, sy, least, most = 0, 0.0, 0.0, None, None
     for e in ents:

@@ -125,14 +125,12 @@ fn note_words(note: &str) -> &'static str {
 /// area of use of the source system, of the datum transformation's EPSG operation (none when the datum stays or the
 /// way is the project's own), of the project's system (none for a definition of the project's).
 struct Areas {
-    source: Option<[f64; 4]>,
-    operation: Option<[f64; 4]>,
-    project: Option<[f64; 4]>,
+    source: Option<Region>,
+    operation: Option<Region>,
+    project: Option<Region>,
 }
 
-fn bbox(a: &kentos_project::crs::AreaOfUse) -> [f64; 4] {
-    [a.west, a.south, a.east, a.north]
-}
+use kentos_project::crs::Region;
 
 /// One moved object's shift: its first point now and moved, every point's shift length and its notes. A point is
 /// read against the source's boxes at its place on the source's datum, against the project's where it lands.
@@ -145,9 +143,9 @@ fn shift_of(
     areas: &Areas,
 ) -> ReprojectShift {
     let mut outside = [false; 3];
-    let held = |b: Option<[f64; 4]>, at: Option<(f64, f64)>| match (b, at) {
-        // docs/adr/3700: a point within EDGE of an edge is on it.
-        (Some(b), Some((lat, lon))) => kentos_project::crs::box_holds_near(b, lon, lat),
+    let held = |b: Option<Region>, at: Option<(f64, f64)>| match (b, at) {
+        // docs/adr/3700: a point within EDGE of an edge is on it; docs/adr/4900: a system's polygon where it has one.
+        (Some(b), Some((lat, lon))) => b.holds_near(lon, lat),
         _ => true,
     };
     let (mut least, mut most) = (f64::INFINITY, 0.0_f64);
@@ -223,12 +221,12 @@ pub(crate) fn preview(
 ) -> Result<(Vec<(Slot, Entity)>, String, Preview), Stop> {
     let settings = doc.settings();
     let areas = Areas {
-        source: kentos_project::crs::area(from).map(bbox),
+        source: kentos_project::crs::area(from).map(Region::Area),
         operation: core::operation::operation(&mover.source, &mover.project, &mover.choices, false)
             .ok()
             .and_then(|o| o.area)
-            .map(|(_, b)| b),
-        project: kentos_project::crs::area(settings.srid).map(bbox),
+            .map(|(_, b)| Region::Box(b)),
+        project: kentos_project::crs::area(settings.srid).map(Region::Area),
     };
     let mut changes = Vec::new();
     let mut unreached: Vec<(Uuid, Option<core::Unreached>)> = Vec::new();

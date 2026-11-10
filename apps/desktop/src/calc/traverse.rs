@@ -203,6 +203,11 @@ impl Form {
     }
 
     /// The fields read and computed (the web's `recompute`).
+    /// Docs/adr/4900: the pairs' measured k together, as the window computes them now.
+    pub(crate) fn measured(&self, model: &Model) -> Option<kentos_commands::MeasuredRefraction> {
+        self.compute(model).result.as_ref().and_then(measured)
+    }
+
     pub fn compute(&self, model: &Model) -> Computed {
         let mut errors = Vec::new();
         let mut known = |text: &str, label: &str| match resolve_point(model, text) {
@@ -814,6 +819,31 @@ impl Form {
         if let Some(summary) = summary(lines) {
             body = body.push(summary);
         }
+        // Docs/adr/4900: the pairs' measured k together, and Projeye yaz.
+        if let Some(m) = c.result.as_ref().and_then(measured) {
+            let spread = match (m.sd, m.sigma) {
+                (Some(s), Some(sigma)) => format!(", s = {}, ortalamanın σ'sı {}", fixed(s, 4), fixed(sigma, 4)),
+                _ => String::new(),
+            };
+            let now = model.settings().survey.clone().unwrap_or_default().refraction();
+            body = body.push(
+                row![
+                    label::caption(format!(
+                        "Ölçülen k = {} ({} çift{spread}); projenin k'sı {}. Projeye yazılınca tek yönlü kenarlar bu k ile hesaplanır.",
+                        fixed(m.mean, 3),
+                        m.pairs,
+                        fixed(now, 3)
+                    ))
+                    .width(Fill),
+                    iced::widget::button(label::body("Projeye yaz"))
+                        .on_press(event(Event::TraverseRefraction))
+                        .padding(kentos_ui::theme::metrics::action())
+                        .style(kentos_ui::style::button::secondary),
+                ]
+                .spacing(12)
+                .align_y(iced::Center),
+            );
+        }
         if let Some(r) = &c.result {
             // With the project's grid the measured length comes before the grid's (docs/adr/0171 §4).
             let reduced = r.legs.iter().any(|l| l.ground.is_some());
@@ -1155,4 +1185,10 @@ pub(super) fn closure_lines(
         });
     }
     lines
+}
+
+/// Docs/adr/4900: the legs' measured refraction coefficients together; none without a pair.
+pub(crate) fn measured(r: &TraverseResult) -> Option<kentos_commands::MeasuredRefraction> {
+    let ks: Vec<f64> = r.legs.iter().filter_map(|l| l.refraction).collect();
+    kentos_commands::MeasuredRefraction::of(&ks)
 }

@@ -33,7 +33,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
 | MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880 | öğe türüne göre önerilen profil (kurum profiliyle); kaymanın kullanıcının seçtiği resmî değerle (yanılma sınırı) karşılaştırılması | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
-| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
+| MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500, 4900 | datum dönüşümlerinin alan çokgenleri ve koordinat sistemi penceresinde harita; atlamalı trigonometrik nivelman | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560 | robust kestirim; ağırlıklı benzerlik; bölümlü dengeleme | deformasyon için gerçek seri |
@@ -444,6 +444,15 @@ yönlü kenarlar proje k'sıyla. Yüksek duyarlıklı başvuruda yeni çağrı (
 Python (proje k'sı değişince kotlar aynı), MCP; Poligon hesabı'nda Karşılıklı anahtarı ve üç geri nişan sütunu.
 Açık: ölçülen k'nın projeye önerilmesi, kot kapanması toleransı (kaynak bekler), çokgen kullanım alanları, zamana bağlı
 Helmert.
+
+**10 Kasım 2026, onuncu tur — EPSG'nin kullanım alanı çokgenleri; ölçülen k ([ADR 4900](../docs/adr/4900-crs-area-polygons-and-measured-refraction.md)).**
+Dayanak: EPSG'nin TM30 alanı karadır (Marmara dışarıda), kutusu bütün şerit; EPSG koşulları veriyi değiştirmeden pakete
+koymaya izin verir; Netcad'in Projeksiyon Parametreleri kullanım alanı göstermez. Kanıtlanan: kayıttaki 18 sistemin
+EPSG çokgenleri (11 alan, v13.106, değiştirilmeden; ED50 / UTM 35N'ninki 1 MB, kutusu okunur) ve noktaların bunlarla
+denetlenmesi (`cad.crs.transform`, `cad.layers.reproject`, Koordinat dönüştür); `cad.survey.points`'te çiftlerin k'sının
+ortalaması (`refraction`), `cad.settings.set`'in `refraction`'ı, Poligon hesabında Projeye yaz. Bağımsız başvurular,
+Python, MCP, masaüstü. Açık: datum dönüşümlerinin çokgeni, atlamalı nivelman, zamana bağlı Helmert'in resmî parametreleri
+(sahip/kurum).
 
 ### MAP-03 — Modern ölçüm kampanyası ve GNSS veri arşivi kur [ ]
 

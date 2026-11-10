@@ -56945,6 +56945,42 @@ class MaterialsFile(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MeasuredRefraction(_Model):
+    """The pairs' refraction coefficients together (docs/adr/4900): their mean k̄ = Σkᵢ/n, how many pairs, and with two or
+    more their standard deviation s = √(Σ(kᵢ − k̄)²/(n − 1)) and the mean's s/√n. Each pair weighs the same (no source
+    weighs them otherwise).
+    Attributes:
+        mean: Unit: 1.
+        pairs: Unit: count.
+        sd: Unit: 1.
+        sigma: Unit: 1.
+    """
+    mean: float
+    pairs: int
+    sd: float | None | Unset = UNSET
+    sigma: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mean"] = float(self.mean)
+        out["pairs"] = self.pairs
+        if self.sd is not UNSET:
+            out["sd"] = None if self.sd is None else float(self.sd)
+        if self.sigma is not UNSET:
+            out["sigma"] = None if self.sigma is None else float(self.sigma)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeasuredRefraction:
+        return cls(
+            mean=float(data["mean"]),
+            pairs=data["pairs"],
+            sd=UNSET if "sd" not in data else None if data["sd"] is None else float(data["sd"]),
+            sigma=UNSET if "sigma" not in data else None if data["sigma"] is None else float(data["sigma"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MergeReport(_Model):
     """What the merge did on one layer.
     Attributes:
@@ -89607,6 +89643,7 @@ class SettingsSet(_Model):
       the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
       file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
     - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
+    - `refraction`: the refraction coefficient k of trigonometric heights, within [−1, 1] (docs/adr/4900).
     - `standardDocs`: the entire ordered list of versioned drawing-standard
       documents retained by the project; an empty list removes all bindings.
       An ordered, byte-identical subset may remove unsupported existing
@@ -89620,7 +89657,7 @@ class SettingsSet(_Model):
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
     (two levels of one id or name, a level's elevation or height, an `activeLevel` the levels lack, an active level or
-    view without levels), `invalid_heights`, `invalid_epoch`; then
+    view without levels), `invalid_heights`, `invalid_epoch`, `invalid_refraction`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `project_type_locked` (an existing project type changed),
     `cad_work_needs_cad` (a work for a project that is not a CAD project), `cad_work_locked` (an existing work
@@ -89648,6 +89685,8 @@ class SettingsSet(_Model):
             engineering and fractional feet and inches in an inch or foot drawing.
         map_srid: The map's system (docs/adr/0583 §3); 0 takes it away (the project's own). No coordinate changes. Unit: epsg.
         plot_scale: Unit: scale.
+        refraction: The refraction coefficient k of trigonometric heights (docs/adr/0169 §3, 4900), within [−1, 1]: a measured one
+            written to the project (Poligon hesabı's Projeye yaz). Not an undo step, as every setting. Unit: 1.
         second_srid: Unit: epsg.
         srid: Unit: epsg.
         standard_docs: Replace the project's ordered drawing-standard documents. Missing keeps
@@ -89670,6 +89709,7 @@ class SettingsSet(_Model):
     name: str | None | Unset = UNSET
     plot_scale: float | None | Unset = UNSET
     project_type: Workspace | WorkspaceName | None | Unset = UNSET
+    refraction: float | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
     srid: int | None | Unset = UNSET
     standard_docs: list[ProjectStandardDocument] | None | Unset = UNSET
@@ -89710,6 +89750,8 @@ class SettingsSet(_Model):
             out["plotScale"] = None if self.plot_scale is None else float(self.plot_scale)
         if self.project_type is not UNSET:
             out["projectType"] = None if self.project_type is None else _enum_out(self.project_type)
+        if self.refraction is not UNSET:
+            out["refraction"] = None if self.refraction is None else float(self.refraction)
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
         if self.srid is not UNSET:
@@ -89738,6 +89780,7 @@ class SettingsSet(_Model):
             name=data.get("name", UNSET),
             plot_scale=UNSET if "plotScale" not in data else None if data["plotScale"] is None else float(data["plotScale"]),
             project_type=UNSET if "projectType" not in data else None if data["projectType"] is None else _enum_in(Workspace, data["projectType"]),
+            refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else float(data["refraction"]),
             second_srid=data.get("secondSrid", UNSET),
             srid=data.get("srid", UNSET),
             standard_docs=UNSET if "standardDocs" not in data else None if data["standardDocs"] is None else [ProjectStandardDocument.from_json(e0) for e0 in data["standardDocs"]],
@@ -100434,6 +100477,8 @@ class SurveyPointsWritten(_Model):
         angle_misclosure: Poligon hesabı: the angular misclosure in the unit and the linear one in metres, when there is one. Unit: survey-angle.
         height_misclosure: Poligon hesabı with heights (docs/adr/4100): the height misclosure (m), when the end's height is known. Unit: m.
         linear_misclosure: Unit: m.
+        refraction: The legs' measured refraction coefficients together (docs/adr/4900), when at least one pair gives one: the
+            value a project may take (`cad.settings.set`'s `refraction`).
         refractions: Sighted back (docs/adr/4500): each leg's refraction coefficient its reciprocal zenith angles give (Baselga et
             al. 2014, eq. 11), none for a leg sighted one way; empty when no leg was sighted back. Unit: 1.
     """
@@ -100443,6 +100488,7 @@ class SurveyPointsWritten(_Model):
     angle_misclosure: float | None | Unset = UNSET
     height_misclosure: float | None | Unset = UNSET
     linear_misclosure: float | None | Unset = UNSET
+    refraction: MeasuredRefraction | None | Unset = UNSET
     refractions: list[float | None] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -100456,6 +100502,8 @@ class SurveyPointsWritten(_Model):
             out["heightMisclosure"] = None if self.height_misclosure is None else float(self.height_misclosure)
         if self.linear_misclosure is not UNSET:
             out["linearMisclosure"] = None if self.linear_misclosure is None else float(self.linear_misclosure)
+        if self.refraction is not UNSET:
+            out["refraction"] = None if self.refraction is None else self.refraction.to_json()
         if self.refractions is not UNSET:
             out["refractions"] = [None if e0 is None else float(e0) for e0 in self.refractions]
         return out
@@ -100469,6 +100517,7 @@ class SurveyPointsWritten(_Model):
             angle_misclosure=UNSET if "angleMisclosure" not in data else None if data["angleMisclosure"] is None else float(data["angleMisclosure"]),
             height_misclosure=UNSET if "heightMisclosure" not in data else None if data["heightMisclosure"] is None else float(data["heightMisclosure"]),
             linear_misclosure=UNSET if "linearMisclosure" not in data else None if data["linearMisclosure"] is None else float(data["linearMisclosure"]),
+            refraction=UNSET if "refraction" not in data else None if data["refraction"] is None else MeasuredRefraction.from_json(data["refraction"]),
             refractions=[None if e0 is None else float(e0) for e0 in data["refractions"]] if "refractions" in data else UNSET,
         )
 
@@ -124556,7 +124605,7 @@ class ForgetMapWorkOperation(MapWorkOperation):
 
 @dataclass(kw_only=True, slots=True)
 class ReleaseMapWorkOperation(MapWorkOperation):
-    """Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation
+    """Objects let go of their derivations (promoted to the user's own drawing, docs/adr/1201 §3): each object out of the derivation
     that names it, a derivation left without objects taken away; the objects stay, the user's own drawing.
     """
     TAG_VALUE: ClassVar[str] = "release"
@@ -137791,6 +137840,7 @@ __all__ = [
     "MaterialsOperation",
     "MeasuredExtractValue",
     "MeasuredPoint",
+    "MeasuredRefraction",
     "MedianRoadWork",
     "Meeting",
     "MergeDuplicates",

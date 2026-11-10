@@ -6103,6 +6103,7 @@ const ENTRIES: &[Entry] = &[
                 "level_in_use",
                 "invalid_heights",
                 "invalid_epoch",
+                "invalid_refraction",
                 "heights_need_system",
             ],
             REVISION,

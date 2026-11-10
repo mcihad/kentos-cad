@@ -640,6 +640,8 @@ codes! {
     OWN_CONTENT = "own_content", Failed, false, "Nesne kaynağın kendi katmanında: dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz.";
     /// Approving an item that holds derived objects whose source moved on.
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
+    /// A refraction coefficient outside [−1, 1] (docs/adr/4900).
+    INVALID_REFRACTION = "invalid_refraction", Failed, false, "Kırılma katsayısı k −1 ile 1 arasında olmalı (öntanımlı 0,13).";
     /// Approving an item whose typed layers break its profile (docs/adr/4880).
     APPROVAL_PROFILE = "approval_profile", Failed, false, "Öğenin tipli katmanlarında profiline uymayan nesne ya da eksik alan var; Profili denetle ile düzeltin, sonra onaylayın.";
     /// A class an item's profile names is not in the profile (docs/adr/4880).
@@ -2280,7 +2282,7 @@ codes! {
     /// An SLD whose look KentOS cannot read (docs/adr/0516).
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
     /// A QML whose look KentOS cannot read (docs/adr/0555).
-    INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok.";
+    INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QML stil dosyası değil ya da KentOS'un çizebileceği bir görünüşü yok.";
     /// A MapLibre style whose look KentOS cannot read (docs/adr/0560).
     INVALID_MAPLIBRE = "invalid_maplibre", Failed, false, "Dosya okunabilir bir MapLibre stili (sürüm 8) değil ya da KentOS'un çizebileceği bir katmanı yok.";
     /// A MapLibre style with no layer for the layers asked (docs/adr/0560).
@@ -3134,11 +3136,11 @@ codes! {
     EXTRACTION_TOO_DEEP = "extraction_too_deep", Warning, false, "En derin düzeyden daha derin iç içe bloklara bakılmadı.";
     /// A refresh that would lose a hand edit or a user's row: the table is kept as it is.
     REFRESH_KEPT = "refresh_kept", Warning, false, "Yenileme elle girilen bir değeri ya da kullanıcı satırını kaybettirecekti; tablo olduğu gibi kaldı.";
-    // AutoCAD plot style tables (docs/adr/1130).
+    // Plot style tables, colour-based and named (docs/adr/1130).
     /// A plot style table file larger than its limit.
     PLOT_STYLE_FILE_TOO_LARGE = "plot_style_file_too_large", Failed, false, "Baskı stili tablosu 4 MiB sınırını aşıyor.";
-    /// A file that is not an AutoCAD `.ctb`/`.stb` (its header).
-    UNSUPPORTED_PLOT_STYLE_FILE = "unsupported_plot_style_file", Failed, false, "Dosya bir AutoCAD baskı stili tablosu (.ctb/.stb) değil.";
+    /// A file that is not a `.ctb`/`.stb` plot style table (its header).
+    UNSUPPORTED_PLOT_STYLE_FILE = "unsupported_plot_style_file", Failed, false, "Dosya bir baskı stili tablosu (.ctb/.stb) değil.";
     /// A `.ctb`/`.stb` whose header, compressed text or fields do not read.
     BAD_PLOT_STYLE_FILE = "bad_plot_style_file", Failed, false, "Baskı stili tablosu okunamadı: üst bilgisi, sıkıştırılmış metni ya da bir alanı bozuk.";
     /// A table whose text is not UTF-8: its code page is unknown.
@@ -3153,7 +3155,7 @@ codes! {
     DUPLICATE_PLOT_PROFILE = "duplicate_plot_profile", Failed, false, "Kitapta bu adda ya da aynı dosyadan alınmış bir baskı profili var.";
     /// An assignment twice for one target, or to a pen or style the table lacks.
     BAD_PLOT_ASSIGNMENT = "bad_plot_assignment", Failed, false, "Atamanın hedefi tek olmalı; atanan kalem ya da stil tabloda bulunmalı.";
-    /// What a plot style table's reading could not carry as AutoCAD plots it.
+    /// What a plot style table's reading could not carry as the table's own pens plot it.
     PLOT_STYLE_LOSSES = "plot_style_losses", Warning, false, "Tablonun bazı alanları KentOS'ta aynı basılmıyor; rapor her birini adıyla söylüyor.";
     /// An old v1 file a save would write over.
     LEGACY_FILE = "legacy_file", Host, false, "Eski (v1) çizimin üzerine yazılmaz; kaydı yeni bir yola yapın.";

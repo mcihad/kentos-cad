@@ -187,7 +187,8 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
         || input.arch.is_some()
         || input.heights.is_some()
         || input.standard_docs.is_some()
-        || input.coordinate_epoch.is_some();
+        || input.coordinate_epoch.is_some()
+        || input.refraction.is_some();
     if !given {
         return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
@@ -300,6 +301,14 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
             codes::INVALID_EPOCH,
             format!("Epok: {why}; 0 epoku kaldırır."),
             "coordinateEpoch",
+        ));
+    }
+    // docs/adr/4900: k within [−1, 1].
+    if let Some(k) = input.refraction.filter(|k| !kentos_commands::SurveySettings::refraction_holds(*k)) {
+        return Err(fail(
+            codes::INVALID_REFRACTION,
+            format!("Kırılma katsayısı k −1 ile 1 arasında olmalı; {k} verildi."),
+            "refraction",
         ));
     }
     Ok(())
@@ -452,6 +461,12 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
     if let Some(e) = input.coordinate_epoch {
         s.coordinate_epoch = (e != 0.0).then_some(e);
     }
+    // docs/adr/4900: the project's k (the default 0.13 is not written: the settings' own rule).
+    if let Some(k) = input.refraction {
+        let mut survey = s.survey.clone().unwrap_or_default();
+        survey.refraction = Some(k);
+        s.survey = Some(survey);
+    }
     if !s.has_system() {
         let ellipsoidal = s
             .heights
@@ -587,6 +602,10 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
         "coordinateEpoch",
     );
     key(before.standard_docs != after.standard_docs, "standardDocs");
+    key(
+        before.survey.clone().unwrap_or_default().refraction() != after.survey.clone().unwrap_or_default().refraction(),
+        "refraction",
+    );
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

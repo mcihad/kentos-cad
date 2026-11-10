@@ -1134,6 +1134,159 @@
    ]
   },
   {
+   "name": "Nokta kaynak sistemin kullanım alanı çokgeninin dışında: TM30'da Marmara Denizi'nde (kutunun içinde) WGS 84'e",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 407101.63387104846,
+        "y": 4513392.561839832
+       }
+      ],
+      "to": {
+       "srid": 4326
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 29.0665,
+         "y": 40.182599999999994
+        },
+        {
+         "x": 28.899999999999995,
+         "y": 40.75
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.42,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "WGS 84 (EPSG:4326)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       },
+       "chain": {
+        "source": {
+         "srid": 5254,
+         "name": "TUREF / TM30",
+         "family": "transverseMercator",
+         "datum": "TUREF",
+         "unit": "m",
+         "axes": "east,north",
+         "epsgAxes": "ne",
+         "vertical": {
+          "kind": "orthometric",
+          "srid": 5775,
+          "name": "Antalya height",
+          "unit": "m",
+          "geoid": {
+           "name": "TG-20",
+           "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+          }
+         },
+         "epochSource": "none"
+        },
+        "target": {
+         "srid": 4326,
+         "name": "WGS 84",
+         "family": "geographic",
+         "datum": "WGS84",
+         "unit": "deg",
+         "axes": "longitude,latitude",
+         "epsgAxes": "latlon",
+         "ensembleAccuracy": 2.0,
+         "epochSource": "none"
+        },
+        "bases": [
+         "exact",
+         "epsg"
+        ],
+        "grids": [],
+        "status": "limited",
+        "reasons": [
+         "datum_ensemble"
+        ],
+        "budget": {
+         "horizontal": 1e-09,
+         "vertical": 1e-06
+        }
+       },
+       "flagged": [
+        {
+         "index": 1,
+         "notes": [
+          "outside_source_area"
+         ]
+        }
+       ]
+      },
+      "warnings": [
+       {
+        "code": "chain_limited",
+        "message": "Dönüşüm zinciri sınırlı, hassas dönüşüm sayılmaz: WGS 84 bir datum topluluğu: EPSG'ye göre 2 m'den iyi olamaz.",
+        "path": "to"
+       },
+       {
+        "code": "outside_area",
+        "message": "1 nokta EPSG'nin kullanım alanlarından birinin dışında: 1 nokta kaynak sistemin kullanım alanının dışında (nokta başka bir sistemde olabilir). Dönüştürüldüler; bu noktaları denetleyin.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-10
+    }
+   ]
+  },
+  {
    "name": "Noktaların ayrı kararları: biri içeride, biri hedefin, biri hem kaynağın hem hedefin dışında",
    "steps": [
     {

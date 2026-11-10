@@ -1998,6 +1998,7 @@ __all__ = [
     "MeasureItem",
     "MeasuredExtractValue",
     "MeasuredPoint",
+    "MeasuredRefraction",
     "Measures",
     "MedianRoadWork",
     "Meeting",

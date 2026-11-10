@@ -243,6 +243,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-02 / ADR 4500: web'in `cad.survey.points` işleyicisinde ve WASM çekirdeğinde karşılıklı başucu açıları
   (`heights.back`, `refractions`; cad.survey.points.json'un 5 yeni durumu, reference-calls.json'un 120. çağrısı) ve web
   Poligon hesabı'nda geri nişan sütunları.
+- MAP-02 / ADR 4900: web'de kullanım alanı notlarının EPSG çokgenleriyle denetlenmesi (`area-polygons.json`;
+  cad.crs.transform.json'un 1 yeni durumu), `cad.survey.points`'in `refraction`'ı, `cad.settings.set`'in `refraction`'ı
+  (2 yeni durum) ve web Poligon hesabı'nda Projeye yaz.
 - MAP-01 / ADR 4880: web'in `map.work.edit` işleyicisinde `profile` işlemi ve onayda `approval_profile`, `map.work.query`'de
   `profile` satırı ve `shift` (map.work.query.json'un 3, map.work.edit.json'un 8 yeni durumu; `.kcad` şema 239) ve web
   Harita işi'nde Tipli katman, Profil satırı, kayma tablosu ve silinenin şekli.

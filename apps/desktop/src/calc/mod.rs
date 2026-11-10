@@ -128,6 +128,8 @@ pub enum Event {
     TraverseHeights(bool),
     /// Docs/adr/4500: the legs sighted back too.
     TraverseReciprocal(bool),
+    /// Docs/adr/4900: the measured k written to the project (`cad.settings.set`'s `refraction`).
+    TraverseRefraction,
     TraverseStartZ(String),
     TraverseEndZ(String),
     /// Kutupsal alım's reading to the back point and heights.
@@ -405,6 +407,10 @@ impl App {
                 self.calc.traverse.reciprocal = on;
                 Task::none()
             }
+            Event::TraverseRefraction => {
+                self.calc_write_refraction();
+                Task::none()
+            }
             Event::TraverseStartZ(t) => {
                 self.calc.traverse.start_z = t;
                 Task::none()
@@ -667,6 +673,26 @@ impl App {
             ),
         );
         iced::clipboard::write(text)
+    }
+
+    /// Projeye yaz (docs/adr/4900): the traverse's measured k written as the project's, by `cad.settings.set`.
+    fn calc_write_refraction(&mut self) {
+        let Some(doc) = self.document.as_mut() else { return };
+        let Some(k) = self.calc.traverse.measured(&doc.model).map(|m| m.mean) else { return };
+        let answer = kentos_native_application::registry::run(
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            kentos_commands::CAD_SETTINGS_SET,
+            kentos_commands::CallOp::Execute,
+            serde_json::json!({ "refraction": k }),
+        );
+        match answer {
+            Ok(a) if a["status"] == "completed" => self.say(
+                Level::Success,
+                format!("Projenin kırılma katsayısı k = {} oldu (Proje ayarları › Ölçme).", kentos_interaction::fixed(k, 3)),
+            ),
+            Ok(a) => self.say(Level::Warn, a["error"]["message"].as_str().unwrap_or("Yazılamadı.").to_owned()),
+            Err(why) => self.say(Level::Warn, format!("{why:?}")),
+        }
     }
 
     /// Çizime ekle: what the window was given goes to `cad.survey.points`, which computes the new points and
