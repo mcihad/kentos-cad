@@ -5313,10 +5313,10 @@ PaperPlotLossKindName = Literal["colorKind", "modeColor", "grayscale", "grayscal
 
 
 class PaperPlotLossSeverity(_StrEnum):
-    """How much a reported field differs from what AutoCAD plots.
+    """How much a reported field differs from what the table's own program plots.
 
     - ``lost``: Not carried: the object's own look is plotted instead.
-    - ``approximate``: Carried by KentOS's nearest rule, which may differ from AutoCAD's.
+    - ``approximate``: Carried by KentOS's nearest rule, which may differ from the table's own program's.
     - ``note``: Said for the record; what is plotted is the same.
     """
     LOST = "lost"
@@ -5329,7 +5329,7 @@ PaperPlotLossSeverityName = Literal["lost", "approximate", "note"]
 
 
 class PaperPlotStyleFormat(_StrEnum):
-    """Which AutoCAD table a file is."""
+    """Which plot style table a file is."""
     CTB = "ctb"
     STB = "stb"
 
