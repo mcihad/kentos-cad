@@ -12,7 +12,7 @@ pub mod trace;
 pub mod vertical;
 
 pub use sight::{RESOLUTION as SIGHT_RESOLUTION, Seen, Until};
-pub use terrain::{ProfilePoint, TOLERANCE, terrain};
+pub use terrain::{ProfilePoint, TOLERANCE, terrain, terrain_told};
 pub use vertical::{CurveReport, Piece, Pvi, VCurve, Vertical, VerticalError};
 
 /// The algorithm's id, written with what it computes.

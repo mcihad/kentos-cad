@@ -90,6 +90,11 @@ pub struct RoadProducedLayer {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub line_type_added: Option<String>,
+    /// A layer added (docs/adr/4860): the value lists its fields link added to this project with it, by their names
+    /// here (a list of its name here with other values: the recipe's added as `<name>_1`); empty: none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<String>>"))]
+    pub domains_added: Vec<String>,
 }
 
 /// The main source a produced drawing was drawn from in this project: its kind, id and name.

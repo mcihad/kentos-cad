@@ -6,6 +6,7 @@ mod beam_quantities;
 mod sections;
 mod facades;
 mod blocks_find;
+mod pipes_profile_stop;
 mod review_take;
 mod reconcile_large;
 mod design_speeds;

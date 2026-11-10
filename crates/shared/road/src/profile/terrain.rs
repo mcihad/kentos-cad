@@ -171,19 +171,41 @@ fn slope(s: &Surface, t: u32) -> f64 {
 
 /// The terrain profile of `al` on `surface`, in station order.
 pub fn terrain(surface: &Surface, al: &Alignment) -> Vec<ProfilePoint> {
+    // Nothing asks it to stop.
+    terrain_told(surface, al, &|_, _| false).unwrap_or_default()
+}
+
+/// The parts of the whole [`terrain_told`] tells its progress in, per half.
+const HALF: u64 = 1000;
+/// The surface's edges looked at between two ticks of [`terrain_told`].
+const BLOCK: usize = 4096;
+
+/// [`terrain`] telling `tick` how far it has come (`done` of 2 × 1000, docs/adr/4860): the elements' crossings with the
+/// surface's edges the first half, a block of edges at a time; the points' heights the second, a point at a time.
+/// `tick` answering true stops it there: none. It does the same reckonings in the same order: the profile is
+/// [`terrain`]'s.
+pub fn terrain_told(surface: &Surface, al: &Alignment, tick: &dyn Fn(u64, u64) -> bool) -> Option<Vec<ProfilePoint>> {
+    let whole = 2 * HALF;
     let all = edges(surface);
+    let blocks = all.len().div_ceil(BLOCK) as u64;
+    let units = (al.elements.len() as u64 * blocks).max(1);
     // (station, height from an edge)
     // The elements' ends too: at a kink the path bends inside a triangle.
     let mut at: Vec<(f64, Option<f64>)> = vec![(0.0, None), (al.length, None)];
     at.extend(al.elements.iter().map(|e| (e.station, None)));
-    for e in &al.elements {
+    for (k, e) in al.elements.iter().enumerate() {
         let (lo, hi) = bounds(e);
-        for &(a, b) in &all {
-            if a[0].max(b[0]) < lo[0] || a[0].min(b[0]) > hi[0] || a[1].max(b[1]) < lo[1] || a[1].min(b[1]) > hi[1] {
-                continue;
+        for (j, block) in all.chunks(BLOCK).enumerate() {
+            if tick((k as u64 * blocks + j as u64) * HALF / units, whole) {
+                return None;
             }
-            for (s, u) in crossings(e, a, b) {
-                at.push((e.station + s, Some(a[2] + u * (b[2] - a[2]))));
+            for &(a, b) in block {
+                if a[0].max(b[0]) < lo[0] || a[0].min(b[0]) > hi[0] || a[1].max(b[1]) < lo[1] || a[1].min(b[1]) > hi[1] {
+                    continue;
+                }
+                for (s, u) in crossings(e, a, b) {
+                    at.push((e.station + s, Some(a[2] + u * (b[2] - a[2]))));
+                }
             }
         }
     }
@@ -204,7 +226,11 @@ pub fn terrain(surface: &Surface, al: &Alignment) -> Vec<ProfilePoint> {
         surface.height(p[0], p[1])
     };
     let mut out: Vec<ProfilePoint> = Vec::new();
+    let count = kept.len().max(1) as u64;
     for (i, &(s, z)) in kept.iter().enumerate() {
+        if tick(HALF + i as u64 * HALF / count, whole) {
+            return None;
+        }
         if i > 0 {
             let s0 = kept[i - 1].0;
             let mid = place(0.5 * (s0 + s));
@@ -237,5 +263,5 @@ pub fn terrain(surface: &Surface, al: &Alignment) -> Vec<ProfilePoint> {
             out.push(ProfilePoint { station: s, z: z.or_else(|| place(s).z), gap: false, crossing: z.is_some() });
         }
     }
-    out
+    Some(out)
 }

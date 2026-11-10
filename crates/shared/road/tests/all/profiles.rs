@@ -178,3 +178,48 @@ fn picture() {
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("yol-y4-cekirdek.svg"), svg).unwrap();
 }
+
+/// Docs/adr/4860: the walk told is the walk; its ticks rise within one whole, the crossings' half before the heights';
+/// a stop asked at the fourth is heard there.
+#[test]
+fn the_walk_told_is_the_walk_and_hears_a_stop() {
+    use std::cell::{Cell, RefCell};
+    let all: Value = serde_json::from_str(CASES).expect("json");
+    let c = &all["cases"][0];
+    let input: SurfaceInput = serde_json::from_value(c["input"].clone()).expect("input");
+    let surface = build(&input).expect("a surface");
+    let pis: Vec<PiInput> = c["pis"]
+        .as_array()
+        .expect("pis")
+        .iter()
+        .map(|p| PiInput {
+            id: p["id"].as_str().expect("an id").to_owned(),
+            x: n(&p["x"]),
+            y: n(&p["y"]),
+            radius: n(&p["radius"]),
+            spiral_in: n(&p["spiralIn"]),
+            spiral_out: n(&p["spiralOut"]),
+            ove: false,
+        })
+        .collect();
+    let al = align(&pis).expect("an alignment");
+    let seen = RefCell::new(Vec::new());
+    let told = kentos_road::profile::terrain_told(&surface, &al, &|done, total| {
+        seen.borrow_mut().push((done, total));
+        false
+    })
+    .expect("not stopped");
+    assert_eq!(told, terrain(&surface, &al));
+    let seen = seen.into_inner();
+    assert!(seen.len() > 4, "{} ticks", seen.len());
+    assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1), "{seen:?}");
+    assert!(seen.iter().all(|(d, t)| d < t), "{seen:?}");
+    assert!(seen.iter().any(|(d, t)| *d >= t / 2), "the heights' half: {seen:?}");
+    let asked = Cell::new(0);
+    let stopped = kentos_road::profile::terrain_told(&surface, &al, &|_, _| {
+        asked.set(asked.get() + 1);
+        asked.get() > 3
+    });
+    assert!(stopped.is_none());
+    assert_eq!(asked.get(), 4);
+}

@@ -8,7 +8,7 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
-use kentos_road::junction::{Edge, crossings, fillet};
+use kentos_road::junction::{Edge, crossings_told, fillet};
 
 use crate::checks::Stop;
 use crate::codes;
@@ -42,6 +42,16 @@ pub(crate) fn listed(list: &[JunctionDef]) -> Vec<JunctionListed> {
 
 /// The junction read now, and its warnings.
 pub(crate) fn read(doc: &Document, def: &JunctionDef) -> Result<(JunctionReport, Vec<CommandWarning>), Stop> {
+    read_told(doc, def, &|_, _| false)
+}
+
+/// [`read`] telling `tick` how far it has come (docs/adr/4860): the search for the legs' crossing, the first leg's
+/// sampled segments one at a time (`junction::crossings_told`); `tick` answering true stops it there, cancelled.
+pub(crate) fn read_told(
+    doc: &Document,
+    def: &JunctionDef,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<(JunctionReport, Vec<CommandWarning>), Stop> {
     let list = alignments::alignments(doc);
     let bad = |words: String, path: &str| fail(codes::INVALID_JUNCTION, words, path);
     let mut built = Vec::new();
@@ -52,7 +62,7 @@ pub(crate) fn read(doc: &Document, def: &JunctionDef) -> Result<(JunctionReport,
         built.push((a, b));
     }
     let ((da, ba), (db, bb)) = (&built[0], &built[1]);
-    let found = crossings(&ba.core, &bb.core, 1.0);
+    let found = crossings_told(&ba.core, &bb.core, 1.0, tick).ok_or(Stop::Cancelled)?;
     if found.is_empty() {
         return Err(bad(format!("“{}” kavşağının kolları (“{}” ve “{}”) kesişmiyor.", def.name, da.name, db.name), "legs"));
     }

@@ -77,7 +77,9 @@ fn asked(input: &PipesProfile) -> Result<(), Stop> {
     Ok(())
 }
 
-fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
+/// Checks `input` and reads the run's profile, telling `told` the run's pipes one at a time (docs/adr/4860: its
+/// crossings with the other network and the ground along it); `told` answering true stops it there, cancelled.
+fn check(doc: &Document, input: &PipesProfile, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
     asked(input)?;
     let (def, made, session) = pipes::load(doc, &input.network, input.ground.as_ref())?;
     let surface = match &made {
@@ -171,6 +173,9 @@ fn check(doc: &Document, input: &PipesProfile) -> Result<Checked, Stop> {
     let mut inverts: Vec<(f64, Option<f64>, Option<f64>, Option<f64>)> = Vec::new();
     let mut s0 = 0.0;
     for (i, &k) in run.iter().enumerate() {
+        if told(i as u64, run.len() as u64) {
+            return Err(Stop::Cancelled);
+        }
         let edge = &g.edges[k];
         let e = doc.get(slot(edge.id));
         let path = path_of(e, [edge.a.x, edge.a.y], [edge.b.x, edge.b.y]);
@@ -583,7 +588,7 @@ fn objects(doc: &Document, c: &Checked, at: [f64; 2], crowns: bool) -> Vec<NewOb
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<()> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -591,7 +596,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResul
 
 /// The profile execute would draw; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<PipesProfiled> {
-    match check(cx.doc, input) {
+    match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
         Err(stop) => stop.into(),
     }
@@ -599,7 +604,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<Pi
 
 /// Writes the profile's objects in the step it runs in (`road.project.rebuild` draws a kept profile again with it).
 pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PipesProfile) -> CommandResult<PipesProfiled> {
-    let c = match check(cx.doc, input) {
+    let checked = check(cx.doc, input, &cx.told());
+    let c = match checked {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
