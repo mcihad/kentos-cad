@@ -423,6 +423,8 @@ mod brand_tests;
 #[cfg(test)]
 mod ortho_compare_window_tests;
 #[cfg(test)]
+mod ortho_seam_polygons_tests;
+#[cfg(test)]
 mod reproject_window_tests;
 #[cfg(test)]
 mod survey_velocity_tests;

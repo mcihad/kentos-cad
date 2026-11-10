@@ -44,6 +44,14 @@ by the inverse of its affine: col = (t5·dx − t2·dy)/det, row = (−t4·dx + 
 the affine (GDAL's: east = t0 + col·t1 + row·t2, north = t3 + col·t4 + row·t5); its box the one of its four corners, the
 margin its longer pixel side; a place whose window leaves its pixels is outside. The second (north up or finer) is
 resampled onto it as above; the shift is the ground's (the second's known shift less the first's).
+
+docs/adr/4460: `polygons`, the two images' seamline polygons (a mosaic keeps one per image, the part of it used; they
+do not overlap). The places go every step along their shared boundary instead of a drawn line, each run from its start
+with its number: the runs of the first's rings lying on the second's within 1 mm (KentOS's on-a-boundary tolerance,
+docs/adr/0200 §1), by hand from the ADR's rules (shared_runs). The first's polygon west of the seam line and the
+second's east of it share the line itself: their places are the line case's; asked the other way round, the line goes
+south to north; a second pulled back east between points of the line's two edges shares two runs; 0.4 mm off, the
+boundary is still shared, 2 mm off it is not (refused).
 """
 
 import copy
@@ -594,9 +602,11 @@ def refine_sampled(first, at, x, y, w):
     return grid(coarse[0], coarse[1], 0.015625, 8) or coarse
 
 
-def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
+def seam(pixels, ask, limit, truth, line=None, second=None, first=None, shared=None):
     """The overlap measured as docs/adr/2460 says; `pixels` the two images' rows, `truth` the second's known shift;
     `line` (docs/adr/2860): (uid, world vertices[, bulges]) of a seam line measured along instead of the grid;
+    `shared` (docs/adr/4460): (the polygons' ids as asked, the runs of their shared boundary) measured along, each run
+    from its start, each place with its run's number;
     `second` (docs/adr/3660): the second's (affine, (width, height)) when it is resampled onto the first's grid;
     `first` (docs/adr/4060): a turned first's (affine, (width, height)), the grid itself: its pixels to the ground by
     GDAL's affine (east = t0 + col·t1 + row·t2, north = t3 + col·t4 + row·t5) and back by its inverse."""
@@ -677,8 +687,29 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
         return (not turned or window_in(ci, cj)) and block(ci, cj) is not None
 
     patches = []
-    places, line_out = [], None
-    if line is not None:
+    places, line_out, shared_out = [], None, None
+    if shared is not None:
+        pair, runs = shared
+        total = outside = 0
+        lengths = []
+        for n, run in enumerate(runs):
+            length = sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(run, run[1:]))
+            lengths.append(length)
+            k = 0
+            while True:
+                st = k * step
+                if st > length:
+                    break
+                px_, py_ = along(run, st)
+                total += 1
+                if inside(px_, py_):
+                    places.append(((px_, py_), st, n))
+                else:
+                    outside += 1
+                k += 1
+        shared_out = {"polygons": list(pair), "parts": [[list(v) for v in run] for run in runs],
+                      "length": sum(lengths), "places": total, "outside": outside}
+    elif line is not None:
         uid_, pts = line[0], line[1]
         bulges = line[2] if len(line) > 2 else None
         length = sum(edge_length(a, b, (bulges or [0.0] * len(pts))[k]) for k, (a, b) in enumerate(zip(pts, pts[1:])))
@@ -691,7 +722,7 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
             px_, py_ = along(pts, st, bulges)
             total += 1
             if inside(px_, py_):
-                places.append(((px_, py_), st))
+                places.append(((px_, py_), st, None))
             else:
                 outside += 1
             k += 1
@@ -702,11 +733,11 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
             x = ox0
             while x <= ox1:
                 if inside(x, y):
-                    places.append(((x, y), None))
+                    places.append(((x, y), None, None))
                 x += step
             y -= step
     big = w + 2 * r + 2 * margin
-    for (x, y), station in places:
+    for (x, y), station, part in places:
         if True:
             ci, cj = pixel_of(x, y)
             at = list(ground_of(ci + 0.5, cj + 0.5)) if turned else [oa[0] + (ci + 0.5) * PIX, oa[1] + (cj + 0.5) * -PIX]
@@ -742,6 +773,8 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
                     if c is not None and (best is None or c > best[2]):
                         best = (u, v, c)
             here = {} if station is None else {"station": station}
+            if part is not None:
+                here["part"] = part
             if best is None:
                 patches.append({"at": at, "state": "flat", "over": False, **here})
             else:
@@ -776,6 +809,8 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
         out["passed"] = all(not p["over"] for p in patches)
     if line_out is not None:
         out["line"] = line_out
+    if shared_out is not None:
+        out["shared"] = shared_out
     if block is not None:
         out["resampled"] = True
     if turned:
@@ -783,15 +818,27 @@ def seam(pixels, ask, limit, truth, line=None, second=None, first=None):
     return out, good
 
 
-def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line=None, bulges=None, first=None):
+def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line=None, bulges=None, first=None,
+              polygons=None, swap=False):
     """`line` (docs/adr/2860): the seam line's local vertices, drawn as the drawing's third object and measured along;
     `bulges` (docs/adr/3260) its edges' bulges, a vertex each as a polyline keeps them; `first` (docs/adr/4060): a
-    turned first image of RESAMPLED, the grid (`truth` then the second's shift less the first's)."""
+    turned first image of RESAMPLED, the grid (`truth` then the second's shift less the first's); `polygons`
+    (docs/adr/4460): the two images' seamline polygons (entities), the drawing's third and fourth objects, asked in
+    that order (`swap`: the other), measured along their shared boundary."""
     second_origin = IMAGES[second][0] if second in IMAGES else B0
-    s = seam_setup(second, second_origin=second_origin, extra=() if line is None else (polyline(line, bulges),),
+    extra = () if line is None else (polyline(line, bulges),)
+    if polygons is not None:
+        extra = tuple(polygons)
+    s = seam_setup(second, second_origin=second_origin, extra=extra,
                    first=None if first is None else resampled_raster(first))
     if line is not None:
         ask = dict(ask, line=uid(3))
+    shared = None
+    if polygons is not None:
+        pair = [uid(4), uid(3)] if swap else [uid(3), uid(4)]
+        ask = dict(ask, polygons=pair)
+        of = {uid(3): rings_of(polygons[0]), uid(4): rings_of(polygons[1])}
+        shared = (pair, shared_runs(of[pair[0]], of[pair[1]]))
     inp = dict(DEFAULT, seam=ask)
     out = compare(s, uid(1), uid(2), "okuma-2024", "okuma-2026")
     limit = out["limit"]
@@ -806,7 +853,7 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
         turned = (RESAMPLED[first][0], RESAMPLED[first][1])
         if other is None:
             other = ([second_origin[0], PIX, 0.0, second_origin[1], 0.0, -PIX], (W_A, H_A))
-    measured, good = seam((pa, pb), ask, limit, truth, world, other, turned)
+    measured, good = seam((pa, pb), ask, limit, truth, world, other, turned, shared)
     # Places whose window and search stay in the clean texture (off the flat and the changed patches): their error
     # against the known shift, in pixels; held under 0.05 pixel when the case expects the truth.
     reach = (ask["window"] // 2 + ask["search"] + 1) * PIX
@@ -822,6 +869,10 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
     where_ = (f"örtüşmede {len(measured['patches'])} yer" if line is None else
               f"dikiş hattı boyunca ({measured['line']['length']:.2f} m) örtüşmede {len(measured['patches'])} yer, "
               f"{measured['line']['outside']} yer örtüşmenin dışında")
+    if shared is not None:
+        sh = measured["shared"]
+        where_ = (f"dikiş çokgenlerinin ortak sınırı boyunca ({sh['length']:.2f} m, {len(sh['parts'])} parça) örtüşmede "
+                  f"{len(measured['patches'])} yer, {sh['outside']} yer örtüşmenin dışında")
     out["notes"].append(
         f"Dikiş ölçümü: {where_}; {measured['ok']} sayıldı, {measured['low']} "
         f"korelasyonu düşük, {measured['edge']} tepe arama sınırında, {measured['flat']} dokusuz. Yerler görüntülerin "
@@ -836,6 +887,116 @@ def seam_case(name, ask, second="dikis-b.tif", truth=S_B, expect_true=True, line
     case = {"name": name, "setup": s, "steps": [{"op": "plan", "input": inp, "result": {
         "status": "completed", "output": out, "warnings": []}, "expect": SAME, "within": 1e-9}]}
     return case, measured
+
+
+# docs/adr/4460: the two images' seamline polygons, as a mosaic keeps them (each the part of its image used; they do
+# not overlap): the first's west of the seam line, the second's east of it, so they share the seam line itself; the
+# second's pulled back east between points of the line's two edges (two runs shared); and their shared boundary,
+# by hand from the ADR's rules (KentOS's 1 mm on a boundary, docs/adr/0200 §1).
+P_FIRST = [(500.0, 121.5), (515.0, 121.5), (516.2, 114.0), (514.4, 106.5), (500.0, 106.5)]
+P_SECOND = [(515.0, 121.5), (530.0, 121.5), (530.0, 106.5), (514.4, 106.5), (516.2, 114.0)]
+P_NOTCHED = [(515.0, 121.5), (530.0, 121.5), (530.0, 106.5), (514.4, 106.5), (515.84, 112.5), (518.0, 113.0),
+             (515.96, 115.5)]
+ON_BOUNDARY = 1e-3
+
+
+def area(pts):
+    return {"kind": "polygon", "layerId": "0", "attrs": {}, "pts": [{"x": X0 + x, "y": Y0 + y} for x, y in pts]}
+
+
+def closed(pts, bulges=None):
+    return dict(polyline(pts, bulges), closed=True)
+
+
+def rings_of(e):
+    """A seamline polygon's rings in world metres (one ring: these cases' polygons have no holes or parts)."""
+    return [[(v["x"], v["y"]) for v in e["pts"]]]
+
+
+def ring_edges(ring):
+    out = []
+    for k in range(len(ring)):
+        a, b = ring[k], ring[(k + 1) % len(ring)]
+        if math.hypot(b[0] - a[0], b[1] - a[1]) > 0.0:
+            out.append((a, b))
+    return out
+
+
+def off_line(p, q, length, v):
+    """How far `v` lies from the line through `p` and `q`."""
+    return abs((v[0] - p[0]) * (q[1] - p[1]) - (v[1] - p[1]) * (q[0] - p[0])) / length
+
+
+def on_edge(p, q, length, t):
+    """The point `t` along `p`–`q`, its ends themselves."""
+    if t <= 0.0:
+        return p
+    if t >= length:
+        return q
+    f = t / length
+    return (p[0] + f * (q[0] - p[0]), p[1] + f * (q[1] - p[1]))
+
+
+def shared_runs(first_rings, second_rings, tol=ON_BOUNDARY):
+    """docs/adr/4460's rules: an edge of the first and one of the second share the stretch of the first's between the
+    second's ends projected on it (clamped) when both ends of one lie within `tol` of the other's line; an edge's
+    stretches are joined when apart by no more than `tol`; a stretch reaching its edge's end goes on with the next
+    edge's starting at its start, through their corner, and a ring's last run reaching its end with its first starting
+    at its start, through the start; runs no longer than `tol` are dropped."""
+    theirs = [e for r in second_rings for e in ring_edges(r)]
+    out = []
+    for ring in first_rings:
+        mine = ring_edges(ring)
+        runs = []
+        going = False
+        for k, (p, q) in enumerate(mine):
+            length = math.hypot(q[0] - p[0], q[1] - p[1])
+            ux, uy = (q[0] - p[0]) / length, (q[1] - p[1]) / length
+            spans = []
+            for r, t in theirs:
+                m = math.hypot(t[0] - r[0], t[1] - r[1])
+                near = ((off_line(p, q, length, r) <= tol and off_line(p, q, length, t) <= tol) or
+                        (off_line(r, t, m, p) <= tol and off_line(r, t, m, q) <= tol))
+                if not near:
+                    continue
+                a0 = (r[0] - p[0]) * ux + (r[1] - p[1]) * uy
+                a1 = (t[0] - p[0]) * ux + (t[1] - p[1]) * uy
+                lo, hi = max(min(a0, a1), 0.0), min(max(a0, a1), length)
+                if hi > lo:
+                    spans.append((lo, hi))
+            spans.sort()
+            joined = []
+            for lo, hi in spans:
+                if joined and lo <= joined[-1][1] + tol:
+                    joined[-1][1] = max(joined[-1][1], hi)
+                else:
+                    joined.append([lo, hi])
+            if not joined:
+                going = False
+                continue
+            for lo, hi in joined:
+                a, b = on_edge(p, q, length, lo), on_edge(p, q, length, hi)
+                starts = lo <= tol
+                if going and starts and runs:
+                    if runs[-1][0][-1] != p:
+                        runs[-1][0].append(p)
+                    runs[-1][0].append(b)
+                else:
+                    runs.append([[a, b], k == 0 and starts])
+                going = hi >= length - tol
+        if going and len(runs) > 1 and runs[0][1]:
+            first_run = runs.pop(0)[0]
+            start = mine[0][0]
+            if runs[-1][0][-1] != start:
+                runs[-1][0].append(start)
+            k = 0
+            while k < len(first_run) and first_run[k] == start:
+                k += 1
+            runs[-1][0].extend(first_run[k:])
+        for run, _ in runs:
+            if sum(math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(run, run[1:])) > tol:
+                out.append(run)
+    return out
 
 
 ROWS = {}
@@ -902,11 +1063,29 @@ def seam_cases():
                        dict(small, resample=True, subpixel="bicubic"), "dikis-d.tif", to_d, line=SEAM_LINE,
                        first="dikis-e.tif")
     assert n6["turned"] and n6["ok"] > 2, (n6["ok"], n6["line"])
+    # docs/adr/4460: along the two images' seamline polygons' shared boundary.
+    p1, q1 = seam_case("dikiş çokgenlerinden: ortak sınırları dikiş hattının kendisi, yerleri onun yerleri", ask,
+                       polygons=[area(P_FIRST), area(P_SECOND)])
+    assert len(q1["shared"]["parts"]) == 1 and q1["shared"]["outside"] == m5["line"]["outside"], q1["shared"]
+    assert [{k: v for k, v in pp.items() if k != "part"} for pp in q1["patches"]] == m5["patches"]
+    p2, q2 = seam_case("dikiş çokgenleri öbür sırayla: ortak sınır öbür yönde, yerler güneyden", ask,
+                       polygons=[area(P_FIRST), area(P_SECOND)], swap=True)
+    assert q2["shared"]["parts"][0] == list(reversed(q1["shared"]["parts"][0]))
+    assert abs(q2["shared"]["length"] - q1["shared"]["length"]) < 1e-9 and q2["patches"] != q1["patches"]
+    p3, q3 = seam_case("dikiş çokgenlerinin iki ortak parçası, her biri kendi başından; kapalı çoklu çizgi de olur", ask,
+                       polygons=[area(P_FIRST), closed(P_NOTCHED)])
+    assert len(q3["shared"]["parts"]) == 2 and {pp["part"] for pp in q3["patches"]} == {0, 1}, q3["shared"]
+    p4, q4 = seam_case("dikiş çokgeni 0,4 mm kaymış: 1 mm içinde ortak sınır", ask,
+                       polygons=[area(P_FIRST), area([(x + 0.0004, y) for x, y in P_SECOND])])
+    assert len(q4["shared"]["parts"]) == 1 and q4["shared"]["length"] < q1["shared"]["length"], q4["shared"]
     seam_in = lambda **kw: {"seam": dict(ask, **kw)}
     bad = "invalid_input"
     ss = seam_setup()
     lined = lambda e: seam_setup(extra=(e,))  # noqa: E731
-    return [c1, c2, c3, c4, c5, c6, c7, c8, c9, r1, r2, r3, r4, r5, r7, r6,
+    two = lambda a_, b_: seam_setup(extra=(a_, b_))  # noqa: E731
+    polys = two(area(P_FIRST), area(P_SECOND))
+    pair = [uid(3), uid(4)]
+    return [c1, c2, c3, c4, c5, c6, c7, c8, c9, r1, r2, r3, r4, r5, r7, r6, p1, p2, p3, p4,
             refused("dikiş: sıfır adım", seam_in(step=0.0), bad, "Dikiş ölçümünün adımı 0'dan büyük bir uzunluk olmalı (m).",
                     "seam.step", ss),
             refused("dikiş: çift pencere", seam_in(window=20), bad, "Pencere tek sayıda piksel olmalı, 5 ile 255 arasında.",
@@ -936,6 +1115,29 @@ def seam_cases():
                     "Dikiş hattının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); hattı "
                     "örtüşmeden geçirin ya da adımı küçültün.", "seam.line",
                     lined(polyline([(502.0, 119.0), (504.0, 110.0)]))),
+            refused("dikiş çokgenleri: çizilmiş hatla birlikte", seam_in(line=uid(3), polygons=pair), bad,
+                    "Dikişi ya çizilmiş bir hatla (line) ya da iki dikiş çokgeniyle (polygons) verin; ikisi birden "
+                    "olmaz.", "seam.polygons", polys),
+            refused("dikiş çokgeni iki kez", seam_in(polygons=[uid(3), f" {uid(3)}"]), bad,
+                    "İki dikiş çokgeni aynı nesne; iki görüntünün ayrı dikiş çokgenlerini verin.", "seam.polygons",
+                    polys),
+            refused("dikiş çokgeni çizimde yok", seam_in(polygons=[uid(3), uid(9)]), bad,
+                    f"“{uid(9)}” kimlikli dikiş çokgeni çizimde yok.", "seam.polygons[1]", polys),
+            refused("dikiş çokgeni alan değil", seam_in(polygons=pair), bad,
+                    f"“{uid(3)}” bir alan ya da kapalı çoklu çizgi değil; dikiş çokgeni olamaz.", "seam.polygons[0]",
+                    two(polyline(SEAM_LINE), area(P_SECOND))),
+            refused("dikiş çokgeni yaylı", seam_in(polygons=pair), bad,
+                    f"“{uid(4)}” dikiş çokgeninin yaylı kenarı var; kenarları düz olmalı.", "seam.polygons[1]",
+                    two(area(P_FIRST), closed(P_SECOND, [0.0, 0.0, 0.0, 0.0, 0.3]))),
+            refused("dikiş çokgenleri 2 mm ayrık: ortak sınır yok", seam_in(polygons=pair), bad,
+                    "İki dikiş çokgeninin ortak sınırı yok (1 mm içinde): mozaikte birbirine değmiyorlar; iki "
+                    "görüntünün dikiş çokgenlerini verin.", "seam.polygons",
+                    two(area(P_FIRST), area([(x + 0.002, y) for x, y in P_SECOND]))),
+            refused("dikiş çokgenlerinin ortak sınırı örtüşmede değil", seam_in(polygons=pair), bad,
+                    "Dikiş çokgenlerinin ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama "
+                    "payıyla); örtüşmede buluşan dikiş çokgenlerini verin ya da adımı küçültün.", "seam.polygons",
+                    two(area([(500.0, 121.5), (505.0, 121.5), (505.0, 106.5), (500.0, 106.5)]),
+                        area([(505.0, 121.5), (530.0, 121.5), (530.0, 106.5), (505.0, 106.5)]))),
             ]
 
 
@@ -1011,7 +1213,8 @@ def main():
                    "(±2·YÖA) ve her görüntünün m. 54, 91(2) denetimi elle; KentOS kodu yok. Noktalar sentetiktir. "
                    "ADR 2460: dikiş ölçümünün görüntüleri burada bayt bayt yazılır, bilinen kayma bağımsız doğrudur. "
                    "ADR 3660: 0,08 m pikselli ve 9° dönük ikinci görüntü birincinin ızgarasına yeniden örneklenir. "
-                   "ADR 4060: dönük birinci görüntü ızgaranın kendisidir.",
+                   "ADR 4060: dönük birinci görüntü ızgaranın kendisidir. ADR 4460: iki görüntünün dikiş çokgenlerinin "
+                   "ortak sınırı boyunca ölçüm.",
            "setup": BASE, "cases": cases()}
     text = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
     files = {name: geotiff(ROWS[name], IMAGES[name][0]) for name in IMAGES}

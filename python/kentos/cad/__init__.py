@@ -2256,6 +2256,7 @@ __all__ = [
     "OrthoSeam",
     "OrthoSeamAsk",
     "OrthoSeamLine",
+    "OrthoSeamShared",
     "OrthoStats",
     "OrthoSubpixel",
     "OrthoSubpixelName",

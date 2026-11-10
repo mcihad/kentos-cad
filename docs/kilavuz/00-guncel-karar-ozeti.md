@@ -273,6 +273,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dikiş ölçümü dikiş çokgenlerinin ortak sınırı boyunca (10 Kasım 2026; MAP-12, [ADR 4460](../../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
+  `cad.orthophoto.compare`'in `seam.polygons`'ı: iki görüntünün mozaikteki dikiş çokgenlerinin 1 mm içindeki ortak
+  sınırı boyunca yerler (`seam.shared`, her yerin `part`'ı). Ortofoto karşılaştırması › Seçili çokgenleri al. CAD + CBS.
 - **Tarifin katmanının saydamlığı, türü ve Yazdır'ı (10 Kasım 2026; MAP-20, [ADR 4440](../../docs/adr/4440-recipe-layer-transparency-type-and-print.md)).**
   İş grafiği'nin tarifi katmanın saydamlığını ve karışım kipini (maskesiz), türünü ve Yazdır'ını taşır; Tariften üret
   eklediği katmana verir. Çizimin nesnesini katmanının türü tutmuyorsa `layer_geometry_mismatch`, plan da. Harita + Yol.

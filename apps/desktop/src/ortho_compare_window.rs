@@ -35,6 +35,7 @@ const SAVE: &str = "CSV kaydet…";
 const SWAP: &str = "Yer değiştir";
 /// The seam line taken from the drawing's selection, and let go (docs/adr/2860).
 const TAKE_LINE: &str = "Seçili çizgiyi al";
+const TAKE_POLYGONS: &str = "Seçili çokgenleri al";
 const DROP_LINE: &str = "Hattı kaldır";
 /// docs/adr/3660: the second resampled onto the first's grid.
 const RESAMPLE: &str = "İkinciyi birincinin ızgarasına örnekle";
@@ -102,6 +103,9 @@ pub struct State {
     /// The seam line measured along (docs/adr/2860): its persistent id and its words; empty: the overlap's grid.
     pub seam_line: String,
     pub seam_line_name: String,
+    /// The two images' seamline polygons measured along their shared boundary instead (docs/adr/4460): their
+    /// persistent ids in the order chosen (`seam_line_name` then says so).
+    pub seam_polygons: Option<[String; 2]>,
     /// How the peak is refined (docs/adr/3260).
     pub refine: Refine,
     /// The second resampled onto the first's grid when their pixels differ in size or the second is turned
@@ -123,8 +127,10 @@ pub enum Event {
     Window(f64),
     Search(f64),
     Correlation(String),
-    /// The seam line: the one line or polyline chosen in the drawing taken, or let go (docs/adr/2860).
+    /// The seam line: the one line or polyline chosen in the drawing taken, or let go (docs/adr/2860); the two
+    /// seamline polygons chosen taken instead (docs/adr/4460).
     TakeLine,
+    TakePolygons,
     DropLine,
     Refine(Refine),
     /// The second resampled onto the first's grid, or not (docs/adr/3660).
@@ -218,6 +224,7 @@ impl App {
             correlation,
             folder,
             line: (!s.seam_line.is_empty()).then(|| s.seam_line.clone()),
+            polygons: s.seam_polygons.clone(),
             subpixel: (s.refine == Refine::Bicubic).then_some(OrthoSubpixel::Bicubic),
             resample: s.resample,
         });
@@ -326,6 +333,7 @@ impl App {
             show: Show::Points,
             seam_line: String::new(),
             seam_line_name: String::new(),
+            seam_polygons: None,
             refine: Refine::Parabola,
             resample: false,
         };
@@ -380,6 +388,7 @@ impl App {
                         let s = &mut self.ortho_compare;
                         s.seam_line = uid;
                         s.seam_line_name = kind.to_owned();
+                        s.seam_polygons = None;
                     }
                     None => {
                         self.warn("Dikiş hattı için çizimde tek bir çizgi ya da çoklu çizgi seçin.".to_owned());
@@ -387,9 +396,40 @@ impl App {
                     }
                 }
             }
+            Event::TakePolygons => {
+                // The two areas or closed polylines chosen (docs/adr/4460): their persistent ids in the order chosen.
+                let chosen = self.selection.ids().to_vec();
+                let picked = self.document.as_ref().and_then(|doc| {
+                    let seamline = |slot: kentos_domain::Slot| match doc.model.get(slot) {
+                        Some(kentos_commands::Entity::Polygon(_)) => doc.model.uid(slot).map(|u| u.to_string()),
+                        Some(kentos_commands::Entity::Polyline(p)) if p.closed => doc.model.uid(slot).map(|u| u.to_string()),
+                        _ => None,
+                    };
+                    match chosen.as_slice() {
+                        [a, b] => Some([seamline(*a)?, seamline(*b)?]),
+                        _ => None,
+                    }
+                });
+                match picked {
+                    Some(pair) => {
+                        let s = &mut self.ortho_compare;
+                        s.seam_polygons = Some(pair);
+                        s.seam_line.clear();
+                        s.seam_line_name = "İki dikiş çokgeni".to_owned();
+                    }
+                    None => {
+                        self.warn(
+                            "Dikiş çokgenleri için çizimde iki alan ya da kapalı çoklu çizgi seçin: iki görüntünün mozaikteki dikiş çokgenleri."
+                                .to_owned(),
+                        );
+                        return Task::none();
+                    }
+                }
+            }
             Event::DropLine => {
                 s.seam_line.clear();
                 s.seam_line_name.clear();
+                s.seam_polygons = None;
             }
             Event::Show(v) => {
                 s.show = v;
@@ -510,7 +550,17 @@ impl App {
                     m.patches.len(),
                     l.outside
                 ),
-                None => format!("{} yer", m.patches.len()),
+                // docs/adr/4460: along the seamline polygons' shared boundary.
+                None => match &m.shared {
+                    Some(sh) => format!(
+                        "dikiş çokgenlerinin ortak sınırı boyunca ({}, {} parça) {} yer, {} yer örtüşmenin dışında",
+                        self.format().length(sh.length),
+                        sh.parts.len(),
+                        m.patches.len(),
+                        sh.outside
+                    ),
+                    None => format!("{} yer", m.patches.len()),
+                },
             };
             let counted = format!(
                 "Dikiş ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
@@ -543,11 +593,17 @@ impl App {
         ));
         if self.ortho_compare.show == Show::Seam {
             let f = self.format();
+            // Docs/adr/4460: with more than one part of the shared boundary, each distance after its part's number.
+            let parts = r.seam.as_ref().and_then(|m| m.shared.as_ref()).map_or(0, |sh| sh.parts.len());
             for p in r.seam.iter().flat_map(|m| &m.patches) {
                 let o = |v: Option<f64>| v.map(cm).unwrap_or_default();
+                let station = p.station.map(|v| f.length_bare(v)).unwrap_or_default();
                 rows.push(vec![
                     // Docs/adr/2860: the distance along the seam line (the grid's places: none).
-                    p.station.map(|v| f.length_bare(v)).unwrap_or_default(),
+                    match p.part {
+                        Some(n) if parts > 1 => format!("{} · {station}", n + 1),
+                        _ => station,
+                    },
                     f.coord(p.at[0]),
                     f.coord(p.at[1]),
                     o(p.dx),
@@ -654,11 +710,16 @@ impl App {
                     ))
                     .width(160),
                     words::secondary(TAKE_LINE, s.seam.then(|| msg(Event::TakeLine))),
-                    words::secondary(DROP_LINE, (s.seam && !s.seam_line.is_empty()).then(|| msg(Event::DropLine)))
+                    words::secondary(TAKE_POLYGONS, s.seam.then(|| msg(Event::TakePolygons))),
+                    words::secondary(
+                        DROP_LINE,
+                        (s.seam && (!s.seam_line.is_empty() || s.seam_polygons.is_some())).then(|| msg(Event::DropLine))
+                    )
                 ]
                 .spacing(8)
                 .align_y(Center),
             )
+            .help("Yerler seçili çizgi boyunca ya da iki görüntünün mozaikteki dikiş çokgenlerinin ortak sınırı boyunca; ikisi de yoksa örtüşmenin bütününde.")
             // Docs/adr/3260: the peak refined by a parabola, or by the second image resampled (cubic convolution).
             .field("Piksel altı", Segmented::new([Refine::Parabola, Refine::Bicubic], s.refine, |v| msg(Event::Refine(v))))
             // Docs/adr/3660: a second of other pixels or turned, resampled onto the first's grid.
@@ -726,6 +787,7 @@ impl App {
             Control::Press(SAVE) => Some(msg(Event::Save)),
             Control::Press(SWAP) => Some(msg(Event::Swap)),
             Control::Press(TAKE_LINE) => Some(msg(Event::TakeLine)),
+            Control::Press(TAKE_POLYGONS) => Some(msg(Event::TakePolygons)),
             Control::Press(DROP_LINE) => Some(msg(Event::DropLine)),
             Control::Check(RESAMPLE, on) => Some(msg(Event::Resample(on))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

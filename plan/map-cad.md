@@ -22,12 +22,13 @@ tamamlanma işaretleri ve başka ajanın çalışma alanındaki değişiklikleri
 değiştirilmemiştir. Aşağıdaki maddelerin tamamı **açıktır**; mevcut temellerin
 listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 
-## Durum özeti (9 Kasım 2026)
+## Durum özeti (10 Kasım 2026)
 
 Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
 yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
-sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), sekizinci tur MAP-01'le başladı (ADR 4080).
+sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), dokuzuncu tur MAP-01'le başlar
+(ADR 4480).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
@@ -42,7 +43,7 @@ sırayla alır; yedinci tur 9 Kasım'da MAP-12 ile bitti (ADR 3680–4060), seki
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240 | plan değişikliği taslağı; hata katmanının GeoPackage'a yazılması; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
 | MAP-10 Senaryo ölçüleri | 1440, 2040, 2260, 2660, 3060, 3460, 3860, 4260 | ağ üzerinden erişim; damganın çizimde saklanması; eğim sınıfları ve bakı | — |
 | MAP-11 Arazi düzenlemesi | 1460, 2060, 2280, 2680, 3080, 3480, 3880, 4280 | sığmayan numaranın kılavuzla dışarıda yazılması; değer esaslı dağıtım (resmî metinde kural yok) | çapın tescil bildirimi (biçimi yönetmelikte yok, TKGM'ninki); m. 8(5) tablosu (resim); ikinci kabul: anonim gerçek örnek ve yetkili uzman |
-| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060 | türeyen nesnenin kaynağa izi (MAP-01 kararı); mozaiğin dikiş çokgenleri | DSM/DTM için gerçek veri |
+| MAP-12 Ortofoto | 1480, 1780, 2460, 2860, 3260, 3660, 4060, 4460 | türeyen nesnenin kaynağa izi (MAP-01 kararı); dikiş çokgenlerinin KentOS'ta kurulması (Voronoi, radyometri) | DSM/DTM için gerçek veri |
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
@@ -1482,6 +1483,16 @@ evrişimle örneklenir; cevapta `turned`, notta söylenir; kuzeye bakan birincid
 bakan ya da 0,08 m'lik ikinciyle üç yeni durum (56): temiz yerlerde en büyük sapma parabolde 0,053, çift kübikte 0,0075
 ve 0,0083 piksel; testin kendi ters afiniyle Python testi, MCP, masaüstünde özet. Açık: türeyen nesnenin izi (MAP-01
 kararı), mozaiğin dikiş çokgenleri.
+
+**10 Kasım 2026, sekizinci tur — dikiş ölçümü iki görüntünün dikiş çokgenlerinin ortak sınırı boyunca ([ADR 4460](../docs/adr/4460-orthophoto-seam-along-seamline-polygons.md)).**
+Kapsam: **CAD + CBS** (raster). Dayanak: ArcGIS Pro'nun mozaik dikiş hatları (her görüntüye bir çokgen, görüntünün
+kullanılan bölümü; örtüşme kalmaz), Export Mosaic Dataset Geometry (dikiş hatlarını nesne sınıfı olarak yazar), Build
+Seamlines; KentOS'un sınırda 1 mm'si (ADR 0200). Kanıtlanan: `seam.polygons`: iki dikiş çokgeninin ortak sınırı
+(birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla) bulunur, yerler her
+parçanın başından adım aralıklı, her yer parçasıyla; cevapta `seam.shared`; yedi ret. 11 yeni bağımsız durum (67):
+ortak sınır çizilmiş hattın kendisiyken yerler hat durumununki, öbür sıra, iki parça, 0,4 mm; ortak kenarlar ve
+santimetrelik örneklemeyle okuyan Python testi, MCP; Ortofoto karşılaştırması'nda Seçili çokgenleri al. Açık: türeyen
+nesnenin izi (MAP-01 kararı), dikiş çokgenlerinin KentOS'ta kurulması.
 ### MAP-13 — LiDAR ve mobil haritalamayı ölçülebilir nesne üretimine taşı [ ]
 
 **Öncelik:** P1; 3B sahne [3d.md](3d.md) ile ortak. **Kod:** [K25]–[K28], [K07].

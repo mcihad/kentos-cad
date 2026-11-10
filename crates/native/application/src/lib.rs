@@ -338,6 +338,7 @@ pub mod readjustment_scope;
 pub mod readjustment_sheets;
 pub mod orthophoto_check;
 pub mod orthophoto_compare;
+mod orthophoto_mosaic;
 mod orthophoto_seams;
 pub mod pointcloud_overlap;
 pub mod pointcloud_register;

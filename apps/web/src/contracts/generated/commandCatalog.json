@@ -58544,7 +58544,7 @@
       "id": "cad.orthophoto.compare",
       "version": 1,
       "title": "Ortofoto karşılaştırması",
-      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok), file_not_found (görüntünün dosyası yok).",
+      "summary": "İki ortofotoyu (raster; first eskisi ya da mozaikte komşusuna göre bakılan, second öbürü) aynı noktaların iki görüntüde okunan yerleriyle karşılaştırır: noktalar adlarına göre (field, ilk değer Ad) firstPoints ve secondPoints katmanlarından eşlenir; her noktanın kayması ikinci − birinci (doğu, kuzey, uzunluk), kaymaların KOH_X,Y'si, radyal RMSE'si, ortalaması (görüntüler arasındaki sistematik fark) ve en büyüğü. Nokta başına sınır kural paketinin mosaic katsayısı × iki görüntüden iri YÖA'dır (ilk değer BÖHHBÜY 2018 m. 67(6): mozaikteki ortofotolar arasındaki kayıklık en çok ±2·YÖA; iki farklı pikselde iri olanı almak KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).",
       "aliases": [
         "ortofotokarsilastir",
         "mozaikkayiklik",
@@ -163736,7 +163736,7 @@
       "type": "object"
     },
     "OrthoPatch": {
-      "description": "A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the\nsecond's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;\n`low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the\npatch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance\nalong the line.",
+      "description": "A place of the overlap measured (docs/adr/2460): where (the first image's pixel centre, metres), the shift of the\nsecond's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;\n`low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the\npatch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance\nalong the line; along the seamline polygons' shared boundary (docs/adr/4460), its distance along its part and the\npart's number.",
       "properties": {
         "at": {
           "items": {
@@ -163782,6 +163782,16 @@
         },
         "over": {
           "type": "boolean"
+        },
+        "part": {
+          "description": "The shared boundary's part it is on, 0 the first (docs/adr/4460).",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "count"
         },
         "state": {
           "type": "string"
@@ -163968,6 +163978,17 @@
           "description": "The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second\nis turned, and `resample` was asked.",
           "type": "boolean"
         },
+        "shared": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/OrthoSeamShared"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The seamline polygons' shared boundary measured along (docs/adr/4460)."
+        },
         "shift": {
           "anyOf": [
             {
@@ -163994,7 +164015,7 @@
     },
     "OrthoSeamAsk": {
       "additionalProperties": false,
-      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along\nit from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.\n`resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is\nresampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every\npixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.",
+      "description": "How the shift is measured in the overlap (docs/adr/2460): places every `step` metres across the overlap; at each,\nthe first image's patch of `window` × `window` pixels (odd) sought in the second within `search` pixels each way by\nnormalized cross-correlation, its peak refined to a fraction of a pixel by a parabola on its neighbours; a place\nwhose peak correlation is below `correlation` (the user's; none: every place counts) is not counted. `folder`: where\na raster's relative file is looked for (the drawing's folder). `line` (docs/adr/2860): a drawn seam line's persistent\nid (a line or a polyline, docs/adr/3260 its arcs too, distances along them): the places are every `step` metres along\nit from its start instead, those inside the overlap measured. `subpixel` (docs/adr/3260): how the peak is refined.\n`resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is\nresampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every\npixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.\n`polygons` (docs/adr/4460): the two images' seamline polygons, as their mosaic keeps them (each the part of its image\nthe mosaic uses; either order): the places are every `step` metres along their shared boundary instead, each of its\nparts from its start; `line` and `polygons` are not given together.",
       "properties": {
         "correlation": {
           "format": "double",
@@ -164013,6 +164034,18 @@
         "line": {
           "type": [
             "string",
+            "null"
+          ]
+        },
+        "polygons": {
+          "description": "The two images' seamline polygons' persistent ids (docs/adr/4460): areas or closed polylines of straight edges.",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
             "null"
           ]
         },
@@ -164080,6 +164113,60 @@
       },
       "required": [
         "uid",
+        "length",
+        "places",
+        "outside"
+      ],
+      "type": "object"
+    },
+    "OrthoSeamShared": {
+      "description": "The two images' seamline polygons' shared boundary measured along (docs/adr/4460): the polygons' persistent ids as\ngiven; its parts, each the vertices (east, north) of a run of the first polygon's rings lying on the second's within\n1 mm (docs/adr/0200 §1), in the first's ring order; their length together, how many places they have every step and\nhow many of them lie outside the overlap (not measured).",
+      "properties": {
+        "length": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "length"
+        },
+        "outside": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "parts": {
+          "items": {
+            "items": {
+              "items": {
+                "format": "double",
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "type": "array"
+          },
+          "type": "array",
+          "x-unit": "system"
+        },
+        "places": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "polygons": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "polygons",
+        "parts",
         "length",
         "places",
         "outside"

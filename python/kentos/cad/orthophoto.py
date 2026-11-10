@@ -207,12 +207,18 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
     edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır.
     Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample
     ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye
-    bakmalı; cevapta resampled); dosya göreliyse seam.folder. Retler: invalid_uid,
-    entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
-    layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
-    kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı;
-    resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok),
-    file_not_found (görüntünün dosyası yok).
+    bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460):
+    iki görüntünün mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu
+    çizgi); yerler ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm
+    içinde oturan parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı;
+    cevapta seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı;
+    line ile birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster,
+    crs_mismatch (raster projenin sisteminde değil), layer_not_found, invalid_input
+    (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz;
+    seam'in step, window, search, correlation'ı; resample'sız farklı pikseller, yeniden
+    örneklemede dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki
+    kez, çizimde olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak
+    sınır örtüşmede değil), file_not_found (görüntünün dosyası yok).
     """
     __slots__ = ()
     id = "cad.orthophoto.compare"
@@ -259,12 +265,18 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı
         boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü
         birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta
-        resampled); dosya göreliyse seam.folder. Retler: invalid_uid, entity_not_found,
-        not_a_raster, crs_mismatch (raster projenin sisteminde değil), layer_not_found,
-        invalid_input (aynı raster iki kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da
-        mosaic'siz; seam'in step, window, search, correlation'ı; resample'sız farklı
-        pikseller, yeniden örneklemede dönük birinci, örtüşme yok), file_not_found
-        (görüntünün dosyası yok).
+        resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün
+        mozaikteki dikiş çokgenleri (alan ya da düz kenarlı kapalı çoklu çizgi); yerler
+        ortak sınırları boyunca (birincinin halkalarının ikincininkilere 1 mm içinde oturan
+        parçaları, birincinin sırasıyla), her parçanın başından adım aralıklı; cevapta
+        seam.shared (parçalar, uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile
+        birlikte verilmez. Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch
+        (raster projenin sisteminde değil), layer_not_found, invalid_input (aynı raster iki
+        kez, ölçek 0, kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step,
+        window, search, correlation'ı; resample'sız farklı pikseller, yeniden örneklemede
+        dönük birinci, örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde
+        olmayan, alan olmayan ya da yaylı dikiş çokgeni, ortak sınır yok, ortak sınır
+        örtüşmede değil), file_not_found (görüntünün dosyası yok).
 
         Args:
             doc: The drawing it works on.

@@ -12,5 +12,12 @@ import type { OrthoSubpixel } from "./OrthoSubpixel";
  * `resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is
  * resampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every
  * pixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.
+ * `polygons` (docs/adr/4460): the two images' seamline polygons, as their mosaic keeps them (each the part of its image
+ * the mosaic uses; either order): the places are every `step` metres along their shared boundary instead, each of its
+ * parts from its start; `line` and `polygons` are not given together.
  */
-export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, line?: string, subpixel?: OrthoSubpixel, resample?: boolean, };
+export type OrthoSeamAsk = { step: number, window: number, search: number, correlation?: number, folder?: string, line?: string, subpixel?: OrthoSubpixel, resample?: boolean, 
+/**
+ * The two images' seamline polygons' persistent ids (docs/adr/4460): areas or closed polylines of straight edges.
+ */
+polygons?: [string, string], };

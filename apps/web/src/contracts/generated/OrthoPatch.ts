@@ -5,6 +5,11 @@
  * second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
  * `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
  * patch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance
- * along the line.
+ * along the line; along the seamline polygons' shared boundary (docs/adr/4460), its distance along its part and the
+ * part's number.
  */
-export type OrthoPatch = { at: [number, number], dx?: number, dy?: number, d?: number, correlation?: number, state: string, over: boolean, station?: number, };
+export type OrthoPatch = { at: [number, number], dx?: number, dy?: number, d?: number, correlation?: number, state: string, over: boolean, station?: number, 
+/**
+ * The shared boundary's part it is on, 0 the first (docs/adr/4460).
+ */
+part?: number, };

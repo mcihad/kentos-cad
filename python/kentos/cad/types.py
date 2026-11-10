@@ -62314,13 +62314,15 @@ class OrthoPatch(_Model):
     second's match − the place in east and north and its length (metres), the peak correlation, the state (`ok`;
     `low`: below the correlation asked; `edge`: the peak on the search's edge, the true one may lie beyond; `flat`: the
     patch has no texture), and whether an `ok` place is over the limit; along a seam line (docs/adr/2860), its distance
-    along the line.
+    along the line; along the seamline polygons' shared boundary (docs/adr/4460), its distance along its part and the
+    part's number.
     Attributes:
         at: Unit: system.
         correlation: Unit: 1.
         d: Unit: length.
         dx: Unit: length.
         dy: Unit: length.
+        part: The shared boundary's part it is on, 0 the first (docs/adr/4460). Unit: count.
         station: Unit: length.
     """
     at: list[float]
@@ -62330,6 +62332,7 @@ class OrthoPatch(_Model):
     d: float | None | Unset = UNSET
     dx: float | None | Unset = UNSET
     dy: float | None | Unset = UNSET
+    part: int | None | Unset = UNSET
     station: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -62345,6 +62348,8 @@ class OrthoPatch(_Model):
             out["dx"] = None if self.dx is None else float(self.dx)
         if self.dy is not UNSET:
             out["dy"] = None if self.dy is None else float(self.dy)
+        if self.part is not UNSET:
+            out["part"] = self.part
         if self.station is not UNSET:
             out["station"] = None if self.station is None else float(self.station)
         return out
@@ -62359,6 +62364,7 @@ class OrthoPatch(_Model):
             d=UNSET if "d" not in data else None if data["d"] is None else float(data["d"]),
             dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
             dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+            part=data.get("part", UNSET),
             station=UNSET if "station" not in data else None if data["station"] is None else float(data["station"]),
         )
 
@@ -62472,6 +62478,7 @@ class OrthoSeam(_Model):
         line: The seam line measured along (docs/adr/2860); none: the overlap's grid.
         resampled: The second image was resampled onto the first's grid (docs/adr/3660): their pixels differ in size or the second
             is turned, and `resample` was asked.
+        shared: The seamline polygons' shared boundary measured along (docs/adr/4460).
         turned: The first image, the grid, is turned (docs/adr/4060): the places, its patches and the match are in its own
             pixels, its affine taking them to the ground; the shifts are still east and north.
     """
@@ -62483,6 +62490,7 @@ class OrthoSeam(_Model):
     line: OrthoSeamLine | None | Unset = UNSET
     passed: bool | None | Unset = UNSET
     resampled: bool | Unset = UNSET
+    shared: OrthoSeamShared | None | Unset = UNSET
     shift: OrthoStats | None | Unset = UNSET
     turned: bool | Unset = UNSET
 
@@ -62499,6 +62507,8 @@ class OrthoSeam(_Model):
             out["passed"] = self.passed
         if self.resampled is not UNSET:
             out["resampled"] = self.resampled
+        if self.shared is not UNSET:
+            out["shared"] = None if self.shared is None else self.shared.to_json()
         if self.shift is not UNSET:
             out["shift"] = None if self.shift is None else self.shift.to_json()
         if self.turned is not UNSET:
@@ -62516,6 +62526,7 @@ class OrthoSeam(_Model):
             line=UNSET if "line" not in data else None if data["line"] is None else OrthoSeamLine.from_json(data["line"]),
             passed=data.get("passed", UNSET),
             resampled=data.get("resampled", UNSET),
+            shared=UNSET if "shared" not in data else None if data["shared"] is None else OrthoSeamShared.from_json(data["shared"]),
             shift=UNSET if "shift" not in data else None if data["shift"] is None else OrthoStats.from_json(data["shift"]),
             turned=data.get("turned", UNSET),
         )
@@ -62533,11 +62544,15 @@ class OrthoSeamAsk(_Model):
     `resample` (docs/adr/3660): when the two images' pixels differ in size or the second is turned, the second is
     resampled onto the first's grid by cubic convolution (Keys, a = −1/2: 16 pixel centres round each point) at every
     pixel centre the patches use; the first, the grid, must face north. Not given, such images are refused.
+    `polygons` (docs/adr/4460): the two images' seamline polygons, as their mosaic keeps them (each the part of its image
+    the mosaic uses; either order): the places are every `step` metres along their shared boundary instead, each of its
+    parts from its start; `line` and `polygons` are not given together.
     Attributes:
         step: Unit: length.
         window: Unit: count.
         search: Unit: count.
         correlation: Unit: 1.
+        polygons: The two images' seamline polygons' persistent ids (docs/adr/4460): areas or closed polylines of straight edges.
     """
     step: float
     window: int
@@ -62545,6 +62560,7 @@ class OrthoSeamAsk(_Model):
     correlation: float | None | Unset = UNSET
     folder: str | None | Unset = UNSET
     line: str | None | Unset = UNSET
+    polygons: list[str] | None | Unset = UNSET
     resample: bool | Unset = UNSET
     subpixel: OrthoSubpixel | OrthoSubpixelName | None | Unset = UNSET
 
@@ -62559,6 +62575,8 @@ class OrthoSeamAsk(_Model):
             out["folder"] = self.folder
         if self.line is not UNSET:
             out["line"] = self.line
+        if self.polygons is not UNSET:
+            out["polygons"] = None if self.polygons is None else list(self.polygons)
         if self.resample is not UNSET:
             out["resample"] = self.resample
         if self.subpixel is not UNSET:
@@ -62574,6 +62592,7 @@ class OrthoSeamAsk(_Model):
             correlation=UNSET if "correlation" not in data else None if data["correlation"] is None else float(data["correlation"]),
             folder=data.get("folder", UNSET),
             line=data.get("line", UNSET),
+            polygons=UNSET if "polygons" not in data else None if data["polygons"] is None else list(data["polygons"]),
             resample=data.get("resample", UNSET),
             subpixel=UNSET if "subpixel" not in data else None if data["subpixel"] is None else _enum_in(OrthoSubpixel, data["subpixel"]),
         )
@@ -62605,6 +62624,44 @@ class OrthoSeamLine(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamLine:
         return cls(
             uid=data["uid"],
+            length=float(data["length"]),
+            places=data["places"],
+            outside=data["outside"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class OrthoSeamShared(_Model):
+    """The two images' seamline polygons' shared boundary measured along (docs/adr/4460): the polygons' persistent ids as
+    given; its parts, each the vertices (east, north) of a run of the first polygon's rings lying on the second's within
+    1 mm (docs/adr/0200 §1), in the first's ring order; their length together, how many places they have every step and
+    how many of them lie outside the overlap (not measured).
+    Attributes:
+        parts: Unit: system.
+        length: Unit: length.
+        places: Unit: count.
+        outside: Unit: count.
+    """
+    polygons: list[str]
+    parts: list[list[list[float]]]
+    length: float
+    places: int
+    outside: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["polygons"] = list(self.polygons)
+        out["parts"] = [[[float(e2) for e2 in e1] for e1 in e0] for e0 in self.parts]
+        out["length"] = float(self.length)
+        out["places"] = self.places
+        out["outside"] = self.outside
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OrthoSeamShared:
+        return cls(
+            polygons=list(data["polygons"]),
+            parts=[[[float(e2) for e2 in e1] for e1 in e0] for e0 in data["parts"]],
             length=float(data["length"]),
             places=data["places"],
             outside=data["outside"],
@@ -134483,6 +134540,7 @@ __all__ = [
     "OrthoSeam",
     "OrthoSeamAsk",
     "OrthoSeamLine",
+    "OrthoSeamShared",
     "OrthoStats",
     "OrthoSubpixel",
     "OrthoSubpixelName",

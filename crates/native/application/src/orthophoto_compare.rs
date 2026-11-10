@@ -163,7 +163,17 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
                 s.patches.len(),
                 l.outside
             ),
-            None => format!("örtüşmede {} yer", s.patches.len()),
+            // docs/adr/4460: along the seamline polygons' shared boundary: its length and parts.
+            None => match &s.shared {
+                Some(sh) => format!(
+                    "dikiş çokgenlerinin ortak sınırı boyunca ({:.2} m, {} parça) örtüşmede {} yer, {} yer örtüşmenin dışında",
+                    sh.length,
+                    sh.parts.len(),
+                    s.patches.len(),
+                    sh.outside
+                ),
+                None => format!("örtüşmede {} yer", s.patches.len()),
+            },
         };
         // docs/adr/3260: how the peak was refined.
         let refined = match input.seam.as_ref().and_then(|a| a.subpixel) {

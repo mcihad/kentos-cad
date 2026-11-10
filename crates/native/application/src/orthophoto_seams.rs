@@ -32,7 +32,7 @@
 use std::path::Path;
 
 use kentos_commands::{
-    Entity, OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, OrthoSeamLine, OrthoSubpixel, RasterEntity,
+    Entity, OrthoPatch, OrthoPoint, OrthoSeam, OrthoSeamAsk, OrthoSeamLine, OrthoSeamShared, OrthoSubpixel, RasterEntity,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_formats::raster::source::Region;
@@ -64,6 +64,18 @@ pub(crate) fn asked(a: &OrthoSeamAsk) -> Result<(), Stop> {
         && !(c.is_finite() && c > 0.0 && c <= 1.0)
     {
         return bad("En az korelasyon 0'dan büyük, en çok 1 olmalı; her yer sayılacaksa boş bırakın.", "seam.correlation");
+    }
+    // docs/adr/4460: a drawn line or the seamline polygons, not both; two polygons.
+    if a.line.is_some() && a.polygons.is_some() {
+        return bad(
+            "Dikişi ya çizilmiş bir hatla (line) ya da iki dikiş çokgeniyle (polygons) verin; ikisi birden olmaz.",
+            "seam.polygons",
+        );
+    }
+    if let Some([p, q]) = &a.polygons
+        && p.trim() == q.trim()
+    {
+        return bad("İki dikiş çokgeni aynı nesne; iki görüntünün ayrı dikiş çokgenlerini verin.", "seam.polygons");
     }
     Ok(())
 }
@@ -354,10 +366,46 @@ pub(crate) fn measure(
             (!turned || window_in(ci, cj)) && block(ci, cj).is_some()
         })
     };
-    let mut places: Vec<([f64; 2], Option<f64>)> = Vec::new();
+    // Each place, its distance along its line and (docs/adr/4460) the shared boundary's part it is on.
+    let mut places: Vec<([f64; 2], Option<f64>, Option<u32>)> = Vec::new();
     let mut line = None;
-    match &a.line {
-        Some(uid) => {
+    let mut shared = None;
+    match (&a.line, &a.polygons) {
+        // docs/adr/4460: every step along each part of the seamline polygons' shared boundary, from its start.
+        (_, Some(pair)) => {
+            let runs = crate::orthophoto_mosaic::shared_of(doc, pair)?;
+            let (mut total, mut outside) = (0u32, 0u32);
+            for (n, run) in runs.iter().enumerate() {
+                let straight = vec![0.0; run.len().saturating_sub(1)];
+                let length = crate::orthophoto_mosaic::run_length(run);
+                let mut k = 0u64;
+                loop {
+                    let s = k as f64 * a.step;
+                    if s > length {
+                        break;
+                    }
+                    let p = along(run, &straight, s);
+                    total += 1;
+                    if inside(p) {
+                        places.push((p, Some(s), Some(u32::try_from(n).unwrap_or(u32::MAX))));
+                    } else {
+                        outside += 1;
+                    }
+                    k += 1;
+                }
+            }
+            if places.is_empty() {
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Dikiş çokgenlerinin ortak sınırının hiçbir yeri görüntülerin örtüşmesinde değil (pencere ve arama payıyla); örtüşmede buluşan dikiş çokgenlerini verin ya da adımı küçültün.".into(),
+                    "seam.polygons",
+                ));
+            }
+            let length = runs.iter().map(|r| crate::orthophoto_mosaic::run_length(r)).sum();
+            let polygons = [pair[0].trim().to_owned(), pair[1].trim().to_owned()];
+            shared = Some(OrthoSeamShared { polygons, parts: runs, length, places: total, outside });
+        }
+        (Some(uid), None) => {
             let (pts, bulges) = seam_line(doc, uid)?;
             let length = line_length(&pts, &bulges);
             if !(length > 0.0) {
@@ -373,7 +421,7 @@ pub(crate) fn measure(
                 let p = along(&pts, &bulges, s);
                 total += 1;
                 if inside(p) {
-                    places.push((p, Some(s)));
+                    places.push((p, Some(s), None));
                 } else {
                     outside += 1;
                 }
@@ -388,13 +436,13 @@ pub(crate) fn measure(
             }
             line = Some(OrthoSeamLine { uid: uid.trim().to_owned(), length, places: total, outside });
         }
-        None => {
+        (None, None) => {
             let mut y = oy1;
             while y >= oy0 {
                 let mut x = ox0;
                 while x <= ox1 {
                     if inside([x, y]) {
-                        places.push(([x, y], None));
+                        places.push(([x, y], None, None));
                     }
                     x += a.step;
                 }
@@ -420,7 +468,7 @@ pub(crate) fn measure(
     // docs/adr/3260: resampling reads one pixel more round the search (the cubic's reach).
     let big = w + 2 * a.search + 2 * margin as u32;
     let mut patches = Vec::new();
-    for &([x, y], station) in &places {
+    for &([x, y], station, part) in &places {
         {
             // The place: the centre of the first image's pixel it falls in.
             let (ci, cj) = pixel_of([x, y]);
@@ -466,11 +514,11 @@ pub(crate) fn measure(
                 .filter_map(|(k, s)| s.map(|s| (k, s)))
                 .fold(None, |m: Option<(usize, f64)>, (k, s)| if m.is_none_or(|m| s > m.1) { Some((k, s)) } else { m });
             let patch = match best {
-                None => OrthoPatch { at, dx: None, dy: None, d: None, correlation: None, state: "flat".into(), over: false, station },
+                None => OrthoPatch { at, dx: None, dy: None, d: None, correlation: None, state: "flat".into(), over: false, station, part },
                 Some((k, c)) => {
                     let (u, v) = ((k % side) as i64 - r, (k / side) as i64 - r);
                     if u.abs() == r || v.abs() == r {
-                        OrthoPatch { at, dx: None, dy: None, d: None, correlation: Some(c), state: "edge".into(), over: false, station }
+                        OrthoPatch { at, dx: None, dy: None, d: None, correlation: Some(c), state: "edge".into(), over: false, station, part }
                     } else {
                         let s = |du: i64, dv: i64| scores[(v + dv + r) as usize * side + (u + du + r) as usize].unwrap_or(c);
                         let (fu, fv) = if bicubic_asked {
@@ -494,6 +542,7 @@ pub(crate) fn measure(
                             state: if ok { "ok" } else { "low" }.into(),
                             over: ok && d > limit,
                             station,
+                            part,
                         }
                     }
                 }
@@ -525,6 +574,7 @@ pub(crate) fn measure(
         passed: (ok > 0).then(|| patches.iter().all(|p| !p.over)),
         patches,
         line,
+        shared,
         resampled: resample,
         turned,
     })

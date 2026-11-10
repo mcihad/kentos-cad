@@ -17,11 +17,11 @@ fn cases() -> Value {
 }
 
 /// A shared case by the start of its name.
-fn case(name: &str) -> Value {
+pub(crate) fn case(name: &str) -> Value {
     cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(name))).cloned().expect(name)
 }
 
-fn open(setup: &Value, program: Option<Module>) -> App {
+pub(crate) fn open(setup: &Value, program: Option<Module>) -> App {
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup.clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
@@ -35,7 +35,7 @@ fn opened(program: Option<Module>) -> App {
 }
 
 /// The same JSON, numbers within 1e-9.
-fn close(got: &Value, want: &Value, at: &str) {
+pub(crate) fn close(got: &Value, want: &Value, at: &str) {
     match (got, want) {
         (Value::Number(a), Value::Number(b)) => {
             let (a, b) = (a.as_f64().expect("a number"), b.as_f64().expect("a number"));
@@ -176,7 +176,7 @@ fn screens() {
 use crate::ortho_compare_window::Show;
 
 /// A case's setup with its `$fixture:` paths made absolute (the shared runners do it the same way).
-fn with_fixtures(setup: &Value) -> Value {
+pub(crate) fn with_fixtures(setup: &Value) -> Value {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/");
     let text = setup.to_string().replace("$fixture:", &root.display().to_string());
     serde_json::from_str(&text).expect("the setup")
