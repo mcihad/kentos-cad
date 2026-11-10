@@ -673,6 +673,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.options.edit"
             // A refresh writes over the elevation's objects and deletes those no longer drawn (docs/adr/0799).
             | "cad.elevations.edit"
+            // A refresh writes the section's block again: every placement shows the new drawing (docs/adr/8042).
+            | "cad.sections.edit"
             // A space's fields and boundary changed; Birleştir removes the others (docs/adr/0342 §4).
             | "cad.spaces.edit"
             | "cad.spaces.separators"

@@ -460,6 +460,9 @@ CAD = [
                 {"command": "tool.materialLegend", "title": "Çizelge", "label": "Malzeme lejandı"},
             ]}, {"key": "archMarks", "size": "small", "split": [
                 {"command": "tool.viewSection", "title": "İşaret", "label": "Kesit"},
+                # Kesit çıkar (docs/adr/8042) right under the mark it is drawn from: the section itself, not a mark;
+                # the Mimari tab holds 30 buttons at most, so no family of its own.
+                {"command": "tool.sectionDraw", "title": "İşaret", "label": "Kesit çıkar"},
                 {"command": "tool.viewElevation", "title": "İşaret", "label": "Görünüş"},
                 {"command": "tool.viewDetail", "title": "İşaret", "label": "Detay"},
                 {"command": "tool.northArrow", "title": "İşaret", "label": "Kuzey oku"},

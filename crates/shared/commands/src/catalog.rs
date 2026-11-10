@@ -4587,6 +4587,57 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Kesit çıkar (docs/adr/8042).
+        CommandDescriptor {
+            id: crate::CAD_SECTIONS_EDIT.into(),
+            version: crate::CAD_SECTIONS_EDIT_VERSION,
+            title: "Kesit çıkar".into(),
+            summary: "Bir kesit işaretinin kesitini modelin bildiklerinden 1/50 çizer (docs/adr/8042): işaretin ilk iki noktasından geçen düşey düzlem, bakış işaretin oklarının yönünde. Kesilen (düzlemin iki yanında olan) duvarlar katmanlarıyla, döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve merdivenler malzeme malzeme tek kesit olarak kalın çizilir ve taranır; ötede görünenler ince çizilir (gizli çizgiler ayıklanır); katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”."
+                .into(),
+            aliases: vec!["KESITCIKAR".into(), "BIMSECTION".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BuildingSectionsEdit>(),
+            output: schema::<crate::BuildingSectionsEdited>(),
+            plan: Some(schema::<crate::BuildingSectionsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "A-A kesitini çizimin sağına çıkar".into(),
+                    input: json!({"operation": {"kind": "derive", "mark": "0192f5a1-7880-7000-8000-000000000009"}}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kapı değişti: kesiti yeniden çiz".into(),
+                    input: json!({"operation": {"kind": "refresh", "mark": "0192f5a1-7880-7000-8000-000000000009"}}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SECTIONS_QUERY.into(),
+            version: crate::CAD_SECTIONS_QUERY_VERSION,
+            title: "Kesitler".into(),
+            summary: "Çizimin kesit işaretlerini ve kesitlerinin durumunu okur (docs/adr/8042 §5): güncel (yeniden çizilse aynı), eski (model değişti), çıkarılmadı (işaretin kesiti yok), kaynağı yok (bloğun işareti silinmiş); her birinin adı (A-A kesiti), bloğu ve yerleşim sayısı. mark ile bir işaretin, uid ile bir yerleşimin kesiti.".into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::BuildingSectionsQuery>(),
+            output: schema::<crate::BuildingSectionsQueried>(),
+            plan: Some(schema::<crate::BuildingSectionsQueried>()),
+            capabilities: None,
+            examples: vec![],
+        },
         // Türetilmiş çizim: oda iç görünüşü (docs/adr/0799), held together by fixtures/commands/v1/cad.elevations.edit.json
         // and cad.elevations.query.json (scripts/fixtures/room_elevation_cases.py).
         CommandDescriptor {
@@ -16407,7 +16458,16 @@ mod tests {
                         serde_json::from_value::<crate::ElevationsEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ELEVATIONS_QUERY => {
-                        serde_json::from_value::<crate::ElevationsQuery>(e.input.clone()).map(|_| ())
+                        serde_json::from_value::<crate::ElevationsQuery>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_SECTIONS_EDIT => {
+                        serde_json::from_value::<crate::BuildingSectionsEdit>(e.input.clone())
+                            .map(|_| ())
+                    }
+                    crate::CAD_SECTIONS_QUERY => {
+                        serde_json::from_value::<crate::BuildingSectionsQuery>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_OPENINGS_QUERY => {
                         serde_json::from_value::<crate::OpeningsQuery>(e.input.clone()).map(|_| ())
@@ -18196,10 +18256,20 @@ mod tests {
                             serde_json::from_value::<crate::ElevationsEdited>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ELEVATIONS_QUERY => {
-                            serde_json::from_value::<crate::ElevationsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ElevationsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SECTIONS_EDIT => {
+                            serde_json::from_value::<crate::BuildingSectionsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SECTIONS_QUERY => {
+                            serde_json::from_value::<crate::BuildingSectionsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_OPENINGS_QUERY => {
-                            serde_json::from_value::<crate::OpeningsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OpeningsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ARCH_AUDIT => {
                             serde_json::from_value::<crate::ArchAudited>(output.clone()).map(|_| ())

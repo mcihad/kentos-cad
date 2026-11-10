@@ -24650,6 +24650,269 @@
       ]
     },
     {
+      "id": "cad.sections.edit",
+      "version": 1,
+      "title": "Kesit çıkar",
+      "summary": "Bir kesit işaretinin kesitini modelin bildiklerinden 1/50 çizer (docs/adr/8042): işaretin ilk iki noktasından geçen düşey düzlem, bakış işaretin oklarının yönünde. Kesilen (düzlemin iki yanında olan) duvarlar katmanlarıyla, döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve merdivenler malzeme malzeme tek kesit olarak kalın çizilir ve taranır; ötede görünenler ince çizilir (gizli çizgiler ayıklanır); katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.",
+      "aliases": [
+        "KESITCIKAR",
+        "BIMSECTION"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sections.edit` v1.\n\nRefusals: `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_section_mark`,\n`section_jogged`, `section_exists`, `section_not_found`, `layer_refused`, `nothing_to_set`, `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "expectedRevision": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/BuildingSectionsOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "BuildingSectionsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"), its block, its\nplacements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "drawn": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "inserts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "leftOut": {
+            "items": {
+              "$ref": "#/$defs/BuildingSectionLeftOut"
+            },
+            "type": "array"
+          },
+          "mark": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mark",
+          "name",
+          "block",
+          "changed",
+          "revision"
+        ],
+        "title": "BuildingSectionsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"), its block, its\nplacements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
+        "properties": {
+          "block": {
+            "type": "string"
+          },
+          "changed": {
+            "type": "boolean"
+          },
+          "drawn": {
+            "items": {
+              "$ref": "#/$defs/Entity"
+            },
+            "type": "array"
+          },
+          "inserts": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "leftOut": {
+            "items": {
+              "$ref": "#/$defs/BuildingSectionLeftOut"
+            },
+            "type": "array"
+          },
+          "mark": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mark",
+          "name",
+          "block",
+          "changed",
+          "revision"
+        ],
+        "title": "BuildingSectionsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "not_finite",
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_section_mark",
+          "section_jogged",
+          "section_exists",
+          "section_not_found",
+          "layer_refused",
+          "nothing_to_set",
+          "invalid_revision",
+          "revision_conflict"
+        ]
+      },
+      "examples": [
+        {
+          "title": "A-A kesitini çizimin sağına çıkar",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-7880-7000-8000-000000000009"
+            }
+          }
+        },
+        {
+          "title": "Kapı değişti: kesiti yeniden çiz",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-7880-7000-8000-000000000009"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.sections.query",
+      "version": 1,
+      "title": "Kesitler",
+      "summary": "Çizimin kesit işaretlerini ve kesitlerinin durumunu okur (docs/adr/8042 §5): güncel (yeniden çizilse aynı), eski (model değişti), çıkarılmadı (işaretin kesiti yok), kaynağı yok (bloğun işareti silinmiş); her birinin adı (A-A kesiti), bloğu ve yerleşim sayısı. mark ile bir işaretin, uid ile bir yerleşimin kesiti.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sections.query` v1 (read-only): every section mark's section, the one of `mark`, or the one whose\nplacement `uid` is.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.",
+        "properties": {
+          "mark": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uid": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "BuildingSectionsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sections.query`.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/BuildingSectionRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sections",
+          "revision"
+        ],
+        "title": "BuildingSectionsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sections.query`.",
+        "properties": {
+          "revision": {
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/$defs/BuildingSectionRow"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sections",
+          "revision"
+        ],
+        "title": "BuildingSectionsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_section_mark",
+          "section_jogged"
+        ]
+      },
+      "examples": []
+    },
+    {
       "id": "cad.elevations.edit",
       "version": 1,
       "title": "Oda iç görünüşü",
@@ -110338,6 +110601,30 @@
       "meaning": "Bir bileşimin seçimi kalkan seçeneği gösteriyordu; o küme için birincil gösterilir."
     },
     {
+      "code": "not_a_section_mark",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır."
+    },
+    {
+      "code": "section_jogged",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kırıklı kesit henüz çıkarılmıyor: iki noktalı bir kesit çizgisi çizin."
+    },
+    {
+      "code": "section_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu işaretin kesiti zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın."
+    },
+    {
+      "code": "section_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu işaretin kesiti çıkarılmamış; önce Kesit çıkar."
+    },
+    {
       "code": "elevation_space_not_net",
       "kind": "failed",
       "retryable": false,
@@ -121068,6 +121355,184 @@
         }
       },
       "type": "object"
+    },
+    "BuildingSectionLeft": {
+      "description": "Why something of the model is not in the section, or only in part.",
+      "oneOf": [
+        {
+          "const": "roof",
+          "description": "The roof: the model has none yet (ADV-20).",
+          "type": "string"
+        },
+        {
+          "const": "naturalGround",
+          "description": "The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.",
+          "type": "string"
+        },
+        {
+          "const": "curved",
+          "description": "A curved wall, slab or stair: drawn by its chords, a curved stair not at all.",
+          "type": "string"
+        },
+        {
+          "const": "ramp",
+          "description": "A ramp: not drawn yet.",
+          "type": "string"
+        },
+        {
+          "const": "noHeight",
+          "description": "A wall or a column with no height.",
+          "type": "string"
+        },
+        {
+          "const": "headUnknown",
+          "description": "An opening without a head: its gap reaches its wall's top.",
+          "type": "string"
+        },
+        {
+          "const": "stairWaist",
+          "description": "A stair with no slab to take its waist from: drawn solid down to its floor.",
+          "type": "string"
+        },
+        {
+          "const": "recess",
+          "description": "A niche or a flue: inside its wall, not cut.",
+          "type": "string"
+        }
+      ]
+    },
+    "BuildingSectionLeftOut": {
+      "description": "Something of the model the section leaves out or draws in part, and its object when one.",
+      "properties": {
+        "uid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "why": {
+          "$ref": "#/$defs/BuildingSectionLeft"
+        }
+      },
+      "required": [
+        "why"
+      ],
+      "type": "object"
+    },
+    "BuildingSectionRow": {
+      "description": "A section as `cad.sections.query` reads it.",
+      "properties": {
+        "block": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "inserts": {
+          "description": "Its placements in the drawing.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "count"
+        },
+        "mark": {
+          "description": "Its mark's persistent id; none when the mark is gone.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "description": "\"A-A kesiti\".",
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/BuildingSectionState"
+        }
+      },
+      "required": [
+        "name",
+        "state",
+        "inserts"
+      ],
+      "type": "object"
+    },
+    "BuildingSectionState": {
+      "description": "Whether a section is what the model would draw now (BricsCAD marks a drawing out of sync red, one never made orange).",
+      "oneOf": [
+        {
+          "const": "current",
+          "description": "Güncel: drawn again it would be the same.",
+          "type": "string"
+        },
+        {
+          "const": "stale",
+          "description": "Eski: the model changed what it draws (a door moved, a wall's height); Yeniden çiz brings it up to date.",
+          "type": "string"
+        },
+        {
+          "const": "notDrawn",
+          "description": "Çıkarılmadı: the mark has no section yet.",
+          "type": "string"
+        },
+        {
+          "const": "gone",
+          "description": "Kaynağı yok: the block is the section of a mark the drawing no longer has.",
+          "type": "string"
+        }
+      ]
+    },
+    "BuildingSectionsOperation": {
+      "description": "What `cad.sections.edit` does.",
+      "oneOf": [
+        {
+          "description": "Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into\nits block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at\ntheir bottom).",
+          "properties": {
+            "at": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Vec2"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "x-unit": "length"
+            },
+            "kind": {
+              "const": "derive",
+              "type": "string"
+            },
+            "mark": {
+              "type": "string",
+              "x-format": "uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "mark"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Yeniden çiz: the section's block drawn again from the model as it is now; every placement of it shows the new\ndrawing where it is.",
+          "properties": {
+            "kind": {
+              "const": "refresh",
+              "type": "string"
+            },
+            "mark": {
+              "type": "string",
+              "x-format": "uuid"
+            }
+          },
+          "required": [
+            "kind",
+            "mark"
+          ],
+          "type": "object"
+        }
+      ]
     },
     "CadElement": {
       "description": "A part of an object a constraint names.",

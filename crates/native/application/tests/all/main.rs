@@ -3,6 +3,7 @@
 //! One binary links once where each file was linked on its own.
 
 mod beam_quantities;
+mod sections;
 mod blocks_find;
 mod review_take;
 mod reconcile_large;

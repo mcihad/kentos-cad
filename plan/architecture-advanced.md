@@ -926,6 +926,13 @@ taraması kesintisiz birleşir. Dayanak S20; Dijital Yönetmelik Md. 9(1) (çizi
 
 #### ADV-19 — Kesit ve görünüş türetimi [ ]
 
+_Durum (10 Kasım 2026):_ M42 1. bölüm yapıldı ([ADR 8042](../docs/adr/8042-section-derived-from-a-section-mark.md)):
+Mimari › İşaret ▾ › Kesit çıkar, kesit işaretinden 1/50 kesiti modelden çıkarır (kesilen kalın ve EK-4 4.14.5 `-T`
+katmanında taralı, görünen derinliğine göre `-1`…`-4`, merdiven kolu basamaklarıyla, döşeme katmanları, kotlar, akslar,
+mahaller, tesviye zemini, başlık) ve işaretin bloğuna yazar; plan değişince durum çubuğunda "B-B kesiti eski", Öznitelikler
+› Durum › Yeniden çiz; plandaki kesit çizgisi noktalı kesikli (EK-4 4.28). Kalanlar: ruhsat takımında KS paftası, yayında
+eski kesit uyarısı, Denetim › Mevzuat'ta iki kesit ve merdivenden geçen kesit (M42 2. bölüm); görünüş (M43).
+
 **Kullanıcı sonucu:** En az iki kesit ve dört görünüş (PAİY 57(2)(a)) plandan türer. Plan değişince eskidikleri görünür.
 Dayanak S20, S22.
 
@@ -1179,7 +1186,7 @@ yapı modeli ve değişim gelir. Her fazın sonunda kapı (§7) koşulur.
 |---|---|---|---|
 | M40 | Düşey model | ADV-18 | Duvar tepeleri kata bağlı; döşeme katmanları **(M40, ADR 8040: duvar betonarmeden betonarmeye, katın yüksekliğini geçmez; kat yüksekliği değişince üstteki katlar ve duvar tepeleri izler; döşemenin kaplama, şap, yalıtım ve sıva katmanları, metrajı katman katman, `.kcad` 232; mahalin döşeme kot farkı, asma tavanı ve iç yüksekliği, PAİY 28/4–6 denetimi, `.kcad` 233; yapıldı)** |
 | M41 | Kiriş, lento, kolon–duvar birleşimi | ADV-18 | Kesikli kiriş; sürekli tarama **(M41, ADR 8041: kiriş nesnesi, planda kesikli ve ince, 1:100'de numarası, 1:50'den "K101 25/50"; duvar kirişin altında biter; Mimari › Kiriş aracı, numara K101 → K102; `.kcad` 234; kolonun malzemesi, duvar kolonun yüzünde kesilir, kolon kendi malzemesindeki duvar katmanıyla tek kesit: perde + kolon kesintisiz, tuğla kolonda biter; etiketin `{size}`'ı "30/50"; `.kcad` 235; kirişin türü (lento, hatıl) ve kattan yüksekliği, lento açıklığa tıklanarak (TBDY 11.5.3), Metraj › Kirişler; `.kcad` 236; yapıldı)** |
-| M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti |
+| M42 | Kesit türetimi | ADV-19 | 1:50 kesit; eskime işareti **(M42 1. bölüm, ADR 8042: Kesit çıkar kesit işaretinden 1/50 kesiti işaretin bloğuna çizer — kesilen taralı, görünen derinlikle, merdiven, kotlar, akslar, mahaller; "B-B kesiti eski" ve Yeniden çiz; kesit çizgisi noktalı kesikli; 2. bölüm: KS paftası, yayın uyarısı, iki kesit denetimi)** |
 | M43 | Görünüş türetimi | ADV-19 | Dört cephe |
 | M44 | Çatı ve çatı planı | ADV-20 | Çatı planı paftası |
 | M45 | Merdiven ve özel elemanlar | ADV-21 | Balansman, asansör, korkuluk, otopark yeri |

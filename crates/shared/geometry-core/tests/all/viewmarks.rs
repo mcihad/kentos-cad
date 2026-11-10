@@ -32,6 +32,8 @@ fn viewmarks_draw_as_the_reference_says() {
                     close(a.y, &w["a"][1], &at);
                     close(b.x, &w["b"][0], &at);
                     close(b.y, &w["b"][1], &at);
+                    let dashdot = p.stroke.line_type.as_deref() == Some("dashdot");
+                    assert_eq!(dashdot, w["dashdot"] == true, "{at}: noktalı kesikli");
                 }
                 (Shape::Circle { c: m, r }, "circle") => {
                     close(m.x, &w["c"][0], &at);

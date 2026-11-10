@@ -24,6 +24,7 @@ mod opening_types;
 mod materials;
 mod modules;
 mod elevations;
+mod building_sections;
 pub(crate) mod cloud;
 mod dimension;
 mod dimension_set;
@@ -2958,6 +2959,8 @@ fn entity_sections(doc: &Document, e: &Entity, shown: Shown) -> Vec<Section> {
     sections.extend(modules::section(doc, slot, locked));
     // The derived interior elevation the object is drawn in (docs/adr/0799 §5).
     sections.extend(elevations::section(doc, slot));
+    // A section's placement or its mark: its state and Yeniden çiz (docs/adr/8042 §5).
+    sections.extend(building_sections::section(doc, slot));
     // An insert's block attributes (docs/adr/0144 §7): the definition's tags in
     // its order, with what the insert shows (its value, else the default).
     let tags: Vec<(String, String)> = match e {

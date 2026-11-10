@@ -10,7 +10,7 @@ piece by piece, in order, within 1e-9.
   bottom words' 0.75 h below (empty words drawn not).
 - A look arrow from a bubble towards `u`: a triangle, its tip 1.7 R from the middle along `u`, then the bubble's points
   at +60° and −60° from `u`.
-- Section: its cut line part by part; then, at its first end and then at its last, the end part (as long as the part,
+- Section: its cut line part by part, dash-dot (EK-4 4.28); then, at its first end and then at its last, the end part (as long as the part,
   at most 3 h, from the end inward) drawn again 0.15 h to the look side, a line from the end to the bubble 1.2 R past
   it along the end part, and the bubble with its arrow to the look side: the left of the first part's direction (the
   right when flipped).
@@ -65,8 +65,9 @@ def draw(form, pts, top, bottom, scale, size=None, radius=None, at=None, angle=N
                                                    on(a + math.radians(60)), on(a - math.radians(60))]})
 
     if form == "section":
+        # EK-4 4.28: the cut line dash-dot (noktalı kesikli).
         for k in range(len(pts) - 1):
-            line(pts[k], pts[k + 1])
+            out.append({"kind": "line", "a": list(pts[k]), "b": list(pts[k + 1]), "dashdot": True})
         n = len(pts)
         along = unit(pts[0], pts[1])
         side = -1.0 if flip else 1.0

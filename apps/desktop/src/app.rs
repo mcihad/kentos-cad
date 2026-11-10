@@ -993,6 +993,8 @@ pub enum Message {
     Modifiers(keyboard::Modifiers),
     Dock(docking::Event<Panel>),
     LayerSelected(String),
+    /// An object by its persistent id selected and shown (the stale section's badge, docs/adr/8042 §5).
+    SelectUid(String),
     /// Süzgeç ▾ over the layer tree: a property turned over (docs/adr/0311 §4).
     LayerProps(crate::layer_tree::Prop),
     /// Katman ara typed in; ↓ in it.
@@ -2745,6 +2747,18 @@ impl App {
                 self.dock_dragged(&event, Instant::now());
             }
             Message::LayerSelected(id) => self.layer_pressed(id),
+            Message::SelectUid(uid) => {
+                let slot = self.document.as_ref().and_then(|d| {
+                    kentos_domain::Uuid::parse_str(&uid)
+                        .ok()
+                        .and_then(|u| d.model.slot_of(u))
+                });
+                if let Some(slot) = slot {
+                    self.selection.set(vec![slot]);
+                    let ids = [f64::from(slot.0)];
+                    self.navigating(|app| app.zoom_to_objects(&ids));
+                }
+            }
             Message::LayerSearch(text) => self.layer_search(text),
             Message::LayerProps(prop) => self.layer_props(prop),
             Message::LayerSearchDown => return self.layer_search_down(),

@@ -5,7 +5,7 @@
 //!   bottom words' 0.75 h below.
 //! - A look arrow from a bubble towards `u`: a triangle, its tip 1.7 R from the bubble's middle along `u`, its base the
 //!   bubble's points at ±60° from `u`.
-//! - Section: its cut line through its points, the end parts 3 h long drawn heavy (twice: as they are and 0.15 h
+//! - Section: its cut line through its points, dash-dot (EK-4 4.28), the end parts 3 h long drawn heavy (twice: as they are and 0.15 h
 //!   aside); at each end a bubble 1.2 R past the end along the end part, its arrow to the left of the line's direction
 //!   (the right when flipped).
 //! - Elevation: a bubble at its point, its arrow at `angle` (degrees from east, counter-clockwise; 90 unless said).
@@ -239,8 +239,11 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
             if p.len() < 2 {
                 return out;
             }
+            // EK-4 4.28: the cut line dash-dot (noktalı kesikli); its ends' heavy parts drawn over it solid.
             for w in p.windows(2) {
-                out.push(line(w[0], w[1]));
+                let mut l = line(w[0], w[1]);
+                l.stroke.line_type = Some("dashdot".into());
+                out.push(l);
             }
             let n = p.len();
             // Each end: its part from the end inward, the heavy stroke beside it and the bubble past it.

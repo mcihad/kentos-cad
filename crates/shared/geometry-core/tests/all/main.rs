@@ -35,6 +35,7 @@ mod hatch;
 mod image;
 mod interior_dims;
 mod column_joins;
+mod sections;
 mod column_shift;
 mod label_engine;
 mod label_memo;

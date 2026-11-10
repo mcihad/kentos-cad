@@ -1062,6 +1062,50 @@ BreakLineName = Literal["dimension", "first", "second"]
 """The names of :class:`BreakLine`, for a plain string."""
 
 
+class BuildingSectionLeft(_StrEnum):
+    """Why something of the model is not in the section, or only in part.
+
+    - ``roof``: The roof: the model has none yet (ADV-20).
+    - ``naturalGround``: The natural ground: the model has no survey of it (EK-4 4.30); the graded ground is drawn at ±0.00.
+    - ``curved``: A curved wall, slab or stair: drawn by its chords, a curved stair not at all.
+    - ``ramp``: A ramp: not drawn yet.
+    - ``noHeight``: A wall or a column with no height.
+    - ``headUnknown``: An opening without a head: its gap reaches its wall's top.
+    - ``stairWaist``: A stair with no slab to take its waist from: drawn solid down to its floor.
+    - ``recess``: A niche or a flue: inside its wall, not cut.
+    """
+    ROOF = "roof"
+    NATURAL_GROUND = "naturalGround"
+    CURVED = "curved"
+    RAMP = "ramp"
+    NO_HEIGHT = "noHeight"
+    HEAD_UNKNOWN = "headUnknown"
+    STAIR_WAIST = "stairWaist"
+    RECESS = "recess"
+
+
+BuildingSectionLeftName = Literal["roof", "naturalGround", "curved", "ramp", "noHeight", "headUnknown", "stairWaist", "recess"]
+"""The names of :class:`BuildingSectionLeft`, for a plain string."""
+
+
+class BuildingSectionState(_StrEnum):
+    """Whether a section is what the model would draw now (BricsCAD marks a drawing out of sync red, one never made orange).
+
+    - ``current``: Güncel: drawn again it would be the same.
+    - ``stale``: Eski: the model changed what it draws (a door moved, a wall's height); Yeniden çiz brings it up to date.
+    - ``notDrawn``: Çıkarılmadı: the mark has no section yet.
+    - ``gone``: Kaynağı yok: the block is the section of a mark the drawing no longer has.
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    NOT_DRAWN = "notDrawn"
+    GONE = "gone"
+
+
+BuildingSectionStateName = Literal["current", "stale", "notDrawn", "gone"]
+"""The names of :class:`BuildingSectionState`, for a plain string."""
+
+
 class CadWork(_StrEnum):
     """What a CAD project is drawn for (docs/adr/0801, 0802; the Yeni proje
     wizard's works, docs/adr/0626 §1): a building or a map and zoning plan, the
@@ -9207,6 +9251,31 @@ class BoundChange(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> BoundChange:
         return _variant(_BOUND_CHANGE, "BoundChange", "kind", data).from_json(data)
+
+
+class BuildingSectionsOperation(_Union):
+    """What `cad.sections.edit` does.
+
+    One of:
+
+    - :class:`DeriveBuildingSectionsOperation` (``kind: derive``)
+    - :class:`RefreshBuildingSectionsOperation` (``kind: refresh``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        mark: str
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionsOperation:
+        return _variant(_BUILDING_SECTIONS_OPERATION, "BuildingSectionsOperation", "kind", data).from_json(data)
 
 
 class CadElement(_Union):
@@ -20950,6 +21019,179 @@ class BuildingProgram(_Model):
             share_rule=UNSET if "shareRule" not in data else None if data["shareRule"] is None else _enum_in(ShareRule, data["shareRule"]),
             units=[ProgramUnit.from_json(e0) for e0 in data["units"]] if "units" in data else UNSET,
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionLeftOut(_Model):
+    """Something of the model the section leaves out or draws in part, and its object when one."""
+    why: BuildingSectionLeft | BuildingSectionLeftName
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["why"] = _enum_out(self.why)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionLeftOut:
+        return cls(
+            why=_enum_in(BuildingSectionLeft, data["why"]),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionRow(_Model):
+    """A section as `cad.sections.query` reads it.
+    Attributes:
+        name: "A-A kesiti".
+        inserts: Its placements in the drawing. Unit: count.
+        mark: Its mark's persistent id; none when the mark is gone.
+    """
+    name: str
+    state: BuildingSectionState | BuildingSectionStateName
+    inserts: int
+    block: str | None | Unset = UNSET
+    mark: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["state"] = _enum_out(self.state)
+        out["inserts"] = self.inserts
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionRow:
+        return cls(
+            name=data["name"],
+            state=_enum_in(BuildingSectionState, data["state"]),
+            inserts=data["inserts"],
+            block=data.get("block", UNSET),
+            mark=data.get("mark", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionsEdit(_Model):
+    """Input of `cad.sections.edit` v1.
+
+    Refusals: `not_finite`, `invalid_uid`, `entity_not_found`, `not_a_section_mark`,
+    `section_jogged`, `section_exists`, `section_not_found`, `layer_refused`, `nothing_to_set`, `invalid_revision`,
+    `revision_conflict`.
+    """
+    operation: BuildingSectionsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionsEdit:
+        return cls(
+            operation=BuildingSectionsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionsEdited(_Model):
+    """Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"), its block, its
+    placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
+    what was left out.
+    """
+    mark: str
+    name: str
+    block: str
+    changed: bool
+    revision: str
+    drawn: list[Entity] | Unset = UNSET
+    inserts: list[str] | Unset = UNSET
+    left_out: list[BuildingSectionLeftOut] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mark"] = self.mark
+        out["name"] = self.name
+        out["block"] = self.block
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.drawn is not UNSET:
+            out["drawn"] = [e0.to_json() for e0 in self.drawn]
+        if self.inserts is not UNSET:
+            out["inserts"] = list(self.inserts)
+        if self.left_out is not UNSET:
+            out["leftOut"] = [e0.to_json() for e0 in self.left_out]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionsEdited:
+        return cls(
+            mark=data["mark"],
+            name=data["name"],
+            block=data["block"],
+            changed=data["changed"],
+            revision=data["revision"],
+            drawn=[Entity.from_json(e0) for e0 in data["drawn"]] if "drawn" in data else UNSET,
+            inserts=list(data["inserts"]) if "inserts" in data else UNSET,
+            left_out=[BuildingSectionLeftOut.from_json(e0) for e0 in data["leftOut"]] if "leftOut" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionsQueried(_Model):
+    """Output of `cad.sections.query`."""
+    sections: list[BuildingSectionRow]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sections"] = [e0.to_json() for e0 in self.sections]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionsQueried:
+        return cls(
+            sections=[BuildingSectionRow.from_json(e0) for e0 in data["sections"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BuildingSectionsQuery(_Model):
+    """Input of `cad.sections.query` v1 (read-only): every section mark's section, the one of `mark`, or the one whose
+    placement `uid` is.
+
+    Refusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.
+    """
+    mark: str | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BuildingSectionsQuery:
+        return cls(
+            mark=data.get("mark", UNSET),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -114395,6 +114637,53 @@ class ToBoundChange(BoundChange):
 
 
 @dataclass(kw_only=True, slots=True)
+class DeriveBuildingSectionsOperation(BuildingSectionsOperation):
+    """Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into
+    its block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at
+    their bottom).
+    Attributes:
+        at: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "derive"
+    mark: str
+    at: Vec2 | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "derive"}
+        out["mark"] = self.mark
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DeriveBuildingSectionsOperation:
+        return cls(
+            mark=data["mark"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RefreshBuildingSectionsOperation(BuildingSectionsOperation):
+    """Yeniden çiz: the section's block drawn again from the model as it is now; every placement of it shows the new
+    drawing where it is.
+    """
+    TAG_VALUE: ClassVar[str] = "refresh"
+    mark: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "refresh"}
+        out["mark"] = self.mark
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RefreshBuildingSectionsOperation:
+        return cls(
+            mark=data["mark"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCadElement(CadElement):
     """A point: a line's or an arc's start or end, a circle's or an arc's centre, a point object's node, a path's
     vertex. Not a place along a curve nor an edge's middle.
@@ -133291,6 +133580,9 @@ _BLOCK_PARAMETER: dict[str, type[BlockParameter]] = {"linear": LinearBlockParame
 _BOUND_CHANGE: dict[str, type[BoundChange]] = {"clear": ClearBoundChange, "to": ToBoundChange}
 
 
+_BUILDING_SECTIONS_OPERATION: dict[str, type[BuildingSectionsOperation]] = {"derive": DeriveBuildingSectionsOperation, "refresh": RefreshBuildingSectionsOperation}
+
+
 _CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment": SegmentCadElement, "arcEdge": ArcEdgeCadElement, "circle": CircleCadElement, "wall": WallCadElement, "jamb": JambCadElement, "boundary": BoundaryCadElement}
 
 
@@ -134111,6 +134403,17 @@ __all__ = [
     "BreaksSectionStations",
     "BreaksTableEdit",
     "BuildingProgram",
+    "BuildingSectionLeft",
+    "BuildingSectionLeftName",
+    "BuildingSectionLeftOut",
+    "BuildingSectionRow",
+    "BuildingSectionState",
+    "BuildingSectionStateName",
+    "BuildingSectionsEdit",
+    "BuildingSectionsEdited",
+    "BuildingSectionsOperation",
+    "BuildingSectionsQueried",
+    "BuildingSectionsQuery",
     "CadElement",
     "CadImportScale",
     "CadPaperShapeKind",
@@ -134472,6 +134775,7 @@ __all__ = [
     "DerivationStatus",
     "DerivationStatusName",
     "DerivationTable",
+    "DeriveBuildingSectionsOperation",
     "DeriveElevationsOperation",
     "DeriveMapWorkOperation",
     "DeriveWork",
@@ -136591,6 +136895,7 @@ __all__ = [
     "RectangleImageClipBy",
     "RectanglePaperViewportClip",
     "RectangleRevcloudFrame",
+    "RefreshBuildingSectionsOperation",
     "RefreshElevationsOperation",
     "RefreshMapWorkOperation",
     "RefreshOpeningsOperation",

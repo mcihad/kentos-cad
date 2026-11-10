@@ -2927,6 +2927,14 @@
       ],
       "note": "Tutamacın yeni yeri, yazılan en×boy ya da Öznitelikler'in Genişlik ve Yükseklik'i area işlemine orta, en ve boy olarak verilir; alanın hesabı aracın, yazma ve geri alma komutun (ADR 0789 §1, §2)."
     },
+    "tool.sectionDraw": {
+      "level": "semantic",
+      "via": [
+        "cad.sections.edit",
+        "cad.sections.query"
+      ],
+      "note": "Tıklanan kesit işareti ve kesitin yeri derive'a verilir; kesilen, görünen, kotlar, akslar ve leftOut komutun hesabı, önizleme planından. Çıkarılmış kesitin işaretine tıklamak refresh; durum çubuğunun eski kesit rozeti ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8042)."
+    },
     "tool.roomElevation": {
       "level": "semantic",
       "via": [

@@ -1714,6 +1714,10 @@ impl App {
             if let Some(cell) = crate::zoning_badge::cell(self, (fit < 7).then_some(fit < 2)) {
                 bar = bar.separator().push(cell);
             }
+            // Eski kesit (docs/adr/8042 §5): while a section is no longer what the model would draw.
+            if let Some(cell) = crate::section_badge::cell(self) {
+                bar = bar.separator().push(cell);
+            }
             bar = bar.separator().push(self.mode_cell(fit < 6));
             if fit < 2 {
                 // Clicked, Proje ayarları on its coordinate system page (the web's cell); the second

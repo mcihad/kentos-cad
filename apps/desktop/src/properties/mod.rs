@@ -119,6 +119,8 @@ pub enum Event {
     Module(kentos_commands::ModulesOperation),
     /// A derived interior elevation's action (docs/adr/0799 §5): written through `cad.elevations.edit`.
     Elevation(kentos_commands::ElevationsOperation),
+    /// A section's Yeniden çiz (docs/adr/8042 §5): written through `cad.sections.edit`.
+    Section(kentos_commands::BuildingSectionsOperation),
     /// A space's own field chosen (Yöntem, Kat, Tadilat durumu) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
     Space(Slot, Box<kentos_commands::SpacesOperation>),
@@ -1214,6 +1216,7 @@ impl App {
             Event::Opening(slot, op) => properties::edit_opening(model, slot, op),
             Event::Module(op) => properties::edit_module(model, op),
             Event::Elevation(op) => properties::edit_elevation(model, op),
+            Event::Section(op) => properties::edit_section(model, op),
             Event::Material(op) => properties::edit_material(model, op),
             Event::Space(slot, op) => properties::edit_space(model, slot, *op),
             Event::Slab(slot, op) => properties::edit_slab(model, slot, op),

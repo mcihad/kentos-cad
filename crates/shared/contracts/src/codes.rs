@@ -2536,6 +2536,15 @@ codes! {
     OPTION_COMBO_IN_USE = "option_combo_in_use", Failed, false, "Bir görünümün tarifi bu bileşimi gösteriyor; önce tariften kaldırın.";
     /// A combination's choice of a set or option gone (accepted or deleted): the set shows its primary there.
     OPTION_COMBO_DROPPED = "option_combo_dropped", Warning, false, "Bir bileşimin seçimi kalkan seçeneği gösteriyordu; o küme için birincil gösterilir.";
+    // Kesit çıkar (docs/adr/8042).
+    /// An object that is not a section mark where a section mark is asked for.
+    NOT_A_SECTION_MARK = "not_a_section_mark", Failed, false, "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır.";
+    /// A section line with more than two points: a jogged section is not drawn yet.
+    SECTION_JOGGED = "section_jogged", Failed, false, "Kırıklı kesit henüz çıkarılmıyor: iki noktalı bir kesit çizgisi çizin.";
+    /// The mark's section is drawn already: Yeniden çiz brings it up to date.
+    SECTION_EXISTS = "section_exists", Failed, false, "Bu işaretin kesiti zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın.";
+    /// The mark has no section to draw again.
+    SECTION_NOT_FOUND = "section_not_found", Failed, false, "Bu işaretin kesiti çıkarılmamış; önce Kesit çıkar.";
     // Türetilmiş çizim: oda iç görünüşü (docs/adr/0799).
     /// A space whose rings are not its walls' inner faces: its sides are not the walls one sees.
     ELEVATION_SPACE_NOT_NET = "elevation_space_not_net", Failed, false, "Mahalin sınırı duvarların iç yüzleri değil (eksen ya da brüt); iç görünüş yalnız net sınırlı mahalden üretilir. Mahalin yöntemini Net yapın.";

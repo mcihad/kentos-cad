@@ -248,8 +248,27 @@ pub fn edit_elevation(doc: &mut Document, operation: kentos_commands::Elevations
     said(kentos_native_application::elevations_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A section's Yeniden çiz from Öznitelikler (docs/adr/8042 §5): `operation` through `cad.sections.edit`; what to say.
+pub fn edit_section(
+    doc: &mut Document,
+    operation: kentos_commands::BuildingSectionsOperation,
+) -> Vec<String> {
+    let input = kentos_commands::BuildingSectionsEdit {
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::sections_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
+}
+
 /// A wall's joins from Öznitelikler (docs/adr/0340 §6): `operation` through `cad.walls.edit`; what to say.
-pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_commands::WallsOperation) -> Vec<String> {
+pub fn edit_wall_op(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::WallsOperation,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };

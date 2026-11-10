@@ -1,0 +1,2678 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.sections.edit",
+  "commandVersion": 1,
+  "title": "Kesit çıkar ve yeniden çiz (docs/adr/8042)",
+  "note": "scripts/fixtures/section_command_cases.py yazar: ADR 8042'nin kurallarından, KentOS kodu olmadan. Değiştirmeyin; betiği düzeltin.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 2,
+    "name": "Kesit çıkar",
+    "uids": [
+      "0192f5a1-8042-7000-8000-000000000001",
+      "0192f5a1-8042-7000-8000-000000000002",
+      "0192f5a1-8042-7000-8000-000000000003",
+      "0192f5a1-8042-7000-8000-000000000004",
+      "0192f5a1-8042-7000-8000-000000000005",
+      "0192f5a1-8042-7000-8000-000000000006",
+      "0192f5a1-8042-7000-8000-000000000007",
+      "0192f5a1-8042-7000-8000-000000000008",
+      "0192f5a1-8042-7000-8000-000000000009",
+      "0192f5a1-8042-7000-8000-00000000000a",
+      "0192f5a1-8042-7000-8000-00000000000b",
+      "0192f5a1-8042-7000-8000-00000000000c",
+      "0192f5a1-8042-7000-8000-00000000000d",
+      "0192f5a1-8042-7000-8000-00000000000e"
+    ],
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50.0,
+      "workspace": "cad",
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kapi",
+        "name": "Kapı",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "doseme",
+        "name": "Döşeme",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "mahal",
+        "name": "Mahal",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "isaret",
+        "name": "İşaret",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "blocks": [],
+    "entities": [
+      {
+        "kind": "wall",
+        "id": 1,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 0.0
+          },
+          {
+            "x": 6.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 2,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": 0.0
+          },
+          {
+            "x": 6.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 3,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 6.0,
+            "y": 4.0
+          },
+          {
+            "x": 0.0,
+            "y": 4.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 4,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 4.0
+          },
+          {
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "width": 0.25,
+        "justify": "center",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "opening",
+        "id": 5,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-8042-7000-8000-000000000001",
+        "at": 3.0,
+        "width": 1.0,
+        "form": "door",
+        "head": 2.1,
+        "number": "K01",
+        "place": [
+          {
+            "x": 2.5,
+            "y": 0.125
+          },
+          {
+            "x": 2.5,
+            "y": -0.125
+          },
+          {
+            "x": 3.5,
+            "y": 0.125
+          },
+          {
+            "x": 3.5,
+            "y": -0.125
+          }
+        ]
+      },
+      {
+        "kind": "opening",
+        "id": 6,
+        "layerId": "kapi",
+        "attrs": {},
+        "host": "0192f5a1-8042-7000-8000-000000000003",
+        "at": 4.4,
+        "width": 1.2,
+        "form": "window",
+        "sill": 0.9,
+        "head": 2.2,
+        "number": "P01",
+        "place": [
+          {
+            "x": 2.1999999999999997,
+            "y": 3.875
+          },
+          {
+            "x": 2.1999999999999997,
+            "y": 4.125
+          },
+          {
+            "x": 1.0,
+            "y": 3.875
+          },
+          {
+            "x": 1.0,
+            "y": 4.125
+          }
+        ]
+      },
+      {
+        "kind": "slab",
+        "id": 7,
+        "layerId": "doseme",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": -0.125,
+                  "y": -0.125
+                },
+                {
+                  "x": 6.125,
+                  "y": -0.125
+                },
+                {
+                  "x": 6.125,
+                  "y": 4.125
+                },
+                {
+                  "x": -0.125,
+                  "y": 4.125
+                }
+              ]
+            }
+          }
+        ],
+        "thickness": 0.15,
+        "material": "Betonarme",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "space",
+        "id": 8,
+        "layerId": "mahal",
+        "attrs": {},
+        "parts": [
+          {
+            "outer": {
+              "pts": [
+                {
+                  "x": 0.125,
+                  "y": 0.125
+                },
+                {
+                  "x": 5.875,
+                  "y": 0.125
+                },
+                {
+                  "x": 5.875,
+                  "y": 3.875
+                },
+                {
+                  "x": 0.125,
+                  "y": 3.875
+                }
+              ]
+            }
+          }
+        ],
+        "number": "101",
+        "name": "Salon",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "viewmark",
+        "id": 9,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "section",
+        "points": [
+          {
+            "x": 3.2,
+            "y": 5.5
+          },
+          {
+            "x": 3.2,
+            "y": -1.5
+          }
+        ],
+        "mark": "A",
+        "words": {
+          "top": "A",
+          "bottom": "—"
+        }
+      },
+      {
+        "kind": "viewmark",
+        "id": 10,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "section",
+        "points": [
+          {
+            "x": -1.5,
+            "y": 2.0
+          },
+          {
+            "x": 7.5,
+            "y": 2.0
+          }
+        ],
+        "mark": "B",
+        "words": {
+          "top": "B",
+          "bottom": "—"
+        }
+      },
+      {
+        "kind": "viewmark",
+        "id": 11,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "section",
+        "points": [
+          {
+            "x": -1.0,
+            "y": -1.0
+          },
+          {
+            "x": 3.0,
+            "y": -1.0
+          },
+          {
+            "x": 3.0,
+            "y": 5.0
+          }
+        ],
+        "mark": "C",
+        "words": {
+          "top": "C",
+          "bottom": "—"
+        }
+      },
+      {
+        "kind": "viewmark",
+        "id": 12,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "section",
+        "points": [
+          {
+            "x": 9.0,
+            "y": 0.0
+          },
+          {
+            "x": 9.0004,
+            "y": 0.0
+          }
+        ],
+        "mark": "D",
+        "words": {
+          "top": "D",
+          "bottom": "—"
+        }
+      },
+      {
+        "kind": "viewmark",
+        "id": 13,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "elevation",
+        "points": [
+          {
+            "x": 3.0,
+            "y": 7.0
+          },
+          {
+            "x": 3.0,
+            "y": 6.0
+          }
+        ],
+        "mark": "E",
+        "words": {
+          "top": "E",
+          "bottom": "—"
+        }
+      },
+      {
+        "kind": "text",
+        "id": 14,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 30.0,
+          "y": 30.0
+        },
+        "text": "Not",
+        "height": 0.25,
+        "rotation": 0.0
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Doğrulama: A-A çıkarılabilir, çizim değişmez",
+      "steps": [
+        {
+          "op": "validate",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan: A-A'nın adı, bloğu, çizilmeyenleri; yerleşim yok, çizim değişmez",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "A-A çıkarılır: bloğu ve tek yerleşimi; geri alınır, yinelenir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesit çıkar"
+        },
+        {
+          "op": "redo",
+          "returns": "Kesit çıkar"
+        }
+      ]
+    },
+    {
+      "name": "B-B yeri verilmeden çizimin sağına çıkarılır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "name": "B-B kesiti",
+              "block": "7b787cc3-ab1f-8109-8767-1067d48dd3c2",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İki kesit ayrı bloklarda",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "at": {
+                "x": 20.0,
+                "y": -10.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "name": "B-B kesiti",
+              "block": "7b787cc3-ab1f-8109-8767-1067d48dd3c2",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kesit zaten çıkarılmış",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 30.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "section_exists",
+              "message": "A-A kesiti zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: doğrulama da çıkarılmış kesiti reddeder",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "validate",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "section_exists",
+              "message": "A-A kesiti zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kapı taşınınca Yeniden çiz kesiti yazar; geri alınır",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "plan",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Kesiti yeniden çiz"
+        }
+      ]
+    },
+    {
+      "name": "Mahalin adı değişince iki kesit de yeniden çizilir",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "at": {
+                "x": 20.0,
+                "y": -10.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "name": "B-B kesiti",
+              "block": "7b787cc3-ab1f-8109-8767-1067d48dd3c2",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.spaces.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-000000000008"
+            ],
+            "operation": {
+              "kind": "set",
+              "name": "Oturma odası"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000a",
+              "name": "B-B kesiti",
+              "block": "7b787cc3-ab1f-8109-8767-1067d48dd3c2",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: model değişmedi, yeniden çizilecek bir şey yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "A-A kesiti güncel: model çizdiğinden beri değişmedi.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: pencere A-A'nın arkasında taşındı, A-A güncel",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-000000000006"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 4.8
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "A-A kesiti güncel: model çizdiğinden beri değişmedi.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: not taşındı, kesit güncel",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.transform",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-00000000000e"
+            ],
+            "transform": {
+              "kind": "move",
+              "dx": 5,
+              "dy": 0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "A-A kesiti güncel: model çizdiğinden beri değişmedi.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: çıkarılmamış kesit yeniden çizilmez",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-00000000000a"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "section_not_found",
+              "message": "B-B kesiti çıkarılmamış; önce Kesit çıkar.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kesit işareti değil (duvar)",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000001"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_section_mark",
+              "message": "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: görünüş işaretinden kesit çıkmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000d"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_section_mark",
+              "message": "İşaret görünüş ya da detay işareti; kesit yalnız kesit işaretinden çıkarılır.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: kırıklı kesit çizgisi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000b"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "section_jogged",
+              "message": "Kesit çizgisinin 3 noktası var; kırıklı kesit henüz çıkarılmıyor. İki noktalı bir kesit çizgisi çizin.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: milimetreden kısa kesit çizgisi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000c"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "section_jogged",
+              "message": "Kesit çizgisi bir milimetreden kısa; çizilemez.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: geçersiz kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "a"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“a” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: büyük harfli kimlik",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192F5A1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“0192F5A1-8042-7000-8000-000000000009” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: çizimde olmayan işaret",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000063"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“0192f5a1-8042-7000-8000-000000000063” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: sonsuz yer",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 1.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kesitin yerinin doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "operation.at.x"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          },
+          "nonFinite": {
+            "operation.at.x": "NaN"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: sonsuz yer, kuzeyi",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 0.0,
+                "y": 1.0
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Kesitin yerinin kuzey (X) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+              "path": "operation.at.y"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          },
+          "nonFinite": {
+            "operation.at.y": "Infinity"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: geçersiz beklenen sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            },
+            "expectedRevision": "abc"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: çizim bu arada değişti",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: önce işaret denetlenir, sonra sürüm",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "a"
+            },
+            "expectedRevision": "abc"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“a” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+              "path": "operation.mark"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: yeniden çizimde sürüm çakışması",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            },
+            "expectedRevision": "999"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Çizilmeyenler: eğri duvar, rampa, lentosuz kapı, plaksız merdiven, niş",
+      "steps": [
+        {
+          "op": "plan",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 30.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                },
+                {
+                  "why": "curved",
+                  "uid": "0192f5a1-8042-7000-8000-00000000000f"
+                },
+                {
+                  "why": "ramp",
+                  "uid": "0192f5a1-8042-7000-8000-000000000013"
+                },
+                {
+                  "why": "headUnknown",
+                  "uid": "0192f5a1-8042-7000-8000-000000000010"
+                },
+                {
+                  "why": "stairWaist",
+                  "uid": "0192f5a1-8042-7000-8000-000000000014"
+                },
+                {
+                  "why": "recess",
+                  "uid": "0192f5a1-8042-7000-8000-000000000010"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 2,
+        "name": "Kesit çıkar",
+        "uids": [
+          "0192f5a1-8042-7000-8000-000000000001",
+          "0192f5a1-8042-7000-8000-000000000002",
+          "0192f5a1-8042-7000-8000-000000000003",
+          "0192f5a1-8042-7000-8000-000000000004",
+          "0192f5a1-8042-7000-8000-000000000005",
+          "0192f5a1-8042-7000-8000-000000000006",
+          "0192f5a1-8042-7000-8000-000000000007",
+          "0192f5a1-8042-7000-8000-000000000008",
+          "0192f5a1-8042-7000-8000-000000000009",
+          "0192f5a1-8042-7000-8000-00000000000a",
+          "0192f5a1-8042-7000-8000-00000000000b",
+          "0192f5a1-8042-7000-8000-00000000000c",
+          "0192f5a1-8042-7000-8000-00000000000d",
+          "0192f5a1-8042-7000-8000-00000000000e",
+          "0192f5a1-8042-7000-8000-00000000000f",
+          "0192f5a1-8042-7000-8000-000000000010",
+          "0192f5a1-8042-7000-8000-000000000011",
+          "0192f5a1-8042-7000-8000-000000000012",
+          "0192f5a1-8042-7000-8000-000000000013",
+          "0192f5a1-8042-7000-8000-000000000014"
+        ],
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "deg",
+          "plotScale": 50.0,
+          "workspace": "cad",
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0.0,
+                "height": 3.0
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 0,
+          "y": 0
+        },
+        "layers": [
+          {
+            "id": "duvar",
+            "name": "Duvar",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kapi",
+            "name": "Kapı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "doseme",
+            "name": "Döşeme",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "mahal",
+            "name": "Mahal",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "isaret",
+            "name": "İşaret",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "styles": {
+          "items": [],
+          "categories": []
+        },
+        "blocks": [],
+        "entities": [
+          {
+            "kind": "wall",
+            "id": 1,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 2,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 0.0
+              },
+              {
+                "x": 6.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 3,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 6.0,
+                "y": 4.0
+              },
+              {
+                "x": 0.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 4,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 0.0,
+                "y": 4.0
+              },
+              {
+                "x": 0.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 5,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8042-7000-8000-000000000001",
+            "at": 3.0,
+            "width": 1.0,
+            "form": "door",
+            "head": 2.1,
+            "number": "K01",
+            "place": [
+              {
+                "x": 2.5,
+                "y": 0.125
+              },
+              {
+                "x": 2.5,
+                "y": -0.125
+              },
+              {
+                "x": 3.5,
+                "y": 0.125
+              },
+              {
+                "x": 3.5,
+                "y": -0.125
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 6,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8042-7000-8000-000000000003",
+            "at": 4.4,
+            "width": 1.2,
+            "form": "window",
+            "sill": 0.9,
+            "head": 2.2,
+            "number": "P01",
+            "place": [
+              {
+                "x": 2.1999999999999997,
+                "y": 3.875
+              },
+              {
+                "x": 2.1999999999999997,
+                "y": 4.125
+              },
+              {
+                "x": 1.0,
+                "y": 3.875
+              },
+              {
+                "x": 1.0,
+                "y": 4.125
+              }
+            ]
+          },
+          {
+            "kind": "slab",
+            "id": 7,
+            "layerId": "doseme",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": -0.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 6.125,
+                      "y": -0.125
+                    },
+                    {
+                      "x": 6.125,
+                      "y": 4.125
+                    },
+                    {
+                      "x": -0.125,
+                      "y": 4.125
+                    }
+                  ]
+                }
+              }
+            ],
+            "thickness": 0.15,
+            "material": "Betonarme",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "space",
+            "id": 8,
+            "layerId": "mahal",
+            "attrs": {},
+            "parts": [
+              {
+                "outer": {
+                  "pts": [
+                    {
+                      "x": 0.125,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.875,
+                      "y": 0.125
+                    },
+                    {
+                      "x": 5.875,
+                      "y": 3.875
+                    },
+                    {
+                      "x": 0.125,
+                      "y": 3.875
+                    }
+                  ]
+                }
+              }
+            ],
+            "number": "101",
+            "name": "Salon",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "viewmark",
+            "id": 9,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": 3.2,
+                "y": 5.5
+              },
+              {
+                "x": 3.2,
+                "y": -1.5
+              }
+            ],
+            "mark": "A",
+            "words": {
+              "top": "A",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "viewmark",
+            "id": 10,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": -1.5,
+                "y": 2.0
+              },
+              {
+                "x": 7.5,
+                "y": 2.0
+              }
+            ],
+            "mark": "B",
+            "words": {
+              "top": "B",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "viewmark",
+            "id": 11,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": -1.0,
+                "y": -1.0
+              },
+              {
+                "x": 3.0,
+                "y": -1.0
+              },
+              {
+                "x": 3.0,
+                "y": 5.0
+              }
+            ],
+            "mark": "C",
+            "words": {
+              "top": "C",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "viewmark",
+            "id": 12,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "section",
+            "points": [
+              {
+                "x": 9.0,
+                "y": 0.0
+              },
+              {
+                "x": 9.0004,
+                "y": 0.0
+              }
+            ],
+            "mark": "D",
+            "words": {
+              "top": "D",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "viewmark",
+            "id": 13,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "elevation",
+            "points": [
+              {
+                "x": 3.0,
+                "y": 7.0
+              },
+              {
+                "x": 3.0,
+                "y": 6.0
+              }
+            ],
+            "mark": "E",
+            "words": {
+              "top": "E",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "text",
+            "id": 14,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 30.0,
+              "y": 30.0
+            },
+            "text": "Not",
+            "height": 0.25,
+            "rotation": 0.0
+          },
+          {
+            "kind": "wall",
+            "id": 15,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 8.0,
+                "y": 0.0
+              },
+              {
+                "x": 10.0,
+                "y": 0.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "bulges": [
+              0.3
+            ],
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 16,
+            "layerId": "duvar",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 8.0,
+                "y": 4.0
+              },
+              {
+                "x": 12.0,
+                "y": 4.0
+              }
+            ],
+            "width": 0.25,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          },
+          {
+            "kind": "opening",
+            "id": 17,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8042-7000-8000-000000000010",
+            "at": 1.0,
+            "width": 0.9,
+            "form": "door",
+            "number": "K02",
+            "place": [
+              {
+                "x": 8.55,
+                "y": 4.125
+              },
+              {
+                "x": 8.55,
+                "y": 3.875
+              },
+              {
+                "x": 9.45,
+                "y": 4.125
+              },
+              {
+                "x": 9.45,
+                "y": 3.875
+              }
+            ]
+          },
+          {
+            "kind": "opening",
+            "id": 18,
+            "layerId": "kapi",
+            "attrs": {},
+            "host": "0192f5a1-8042-7000-8000-000000000010",
+            "at": 3.0,
+            "width": 0.6,
+            "form": "niche",
+            "sill": 0.5,
+            "head": 1.5,
+            "place": [
+              {
+                "x": 10.7,
+                "y": 4.125
+              },
+              {
+                "x": 10.7,
+                "y": 3.875
+              },
+              {
+                "x": 11.3,
+                "y": 4.125
+              },
+              {
+                "x": 11.3,
+                "y": 3.875
+              }
+            ]
+          },
+          {
+            "kind": "ramp",
+            "id": 19,
+            "layerId": "cizim",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 14.0,
+                "y": 0.0
+              },
+              {
+                "x": 17.0,
+                "y": 0.0
+              }
+            ],
+            "width": 1.2,
+            "rise": 0.15,
+            "slope": 5.0
+          },
+          {
+            "kind": "stair",
+            "id": 20,
+            "layerId": "cizim",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 20.0,
+                "y": 0.0
+              },
+              {
+                "x": 20.0,
+                "y": 3.0
+              }
+            ],
+            "width": 1.0,
+            "risers": 16,
+            "riserHeight": 0.1875,
+            "tread": 0.25,
+            "arch": {
+              "level": "zemin"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Yerleşimi silinmiş kesit yine yeniden çizilir; yerleşimsiz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "at": {
+                "x": 20.0,
+                "y": 0.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "captureUid",
+          "id": 15,
+          "as": "n15"
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "$uid:n15"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.openings.edit",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-000000000005"
+            ],
+            "operation": {
+              "kind": "move",
+              "at": 2.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "refresh",
+              "mark": "0192f5a1-8042-7000-8000-000000000009"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-000000000009",
+              "name": "A-A kesiti",
+              "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    }
+  ]
+}

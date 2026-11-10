@@ -301,6 +301,16 @@
       tek tıklama. Katmanlar MM-LENT-GENEL, MM-HATL-GENEL.
     - Metraj › Kirişler: kirişin hacmi döşemenin altında kalan kısmı (döşemenin hacmiyle iki kez sayılmaz), lento ve
       hatılınki tamamı; toplam `beamVolume`.
+  - **Kesit çıkar (M42 1. bölüm, [ADR 8042](../adr/8042-section-derived-from-a-section-mark.md)):**
+    - Kesit, işaretinin bloğudur: kimliği işaretin kimliğinden türer, adı `MM-XXXX-KESITB` (EK-4 Tablo 4.4), taban
+      noktası çizginin sol ucunda ±0,00. `cad.sections.edit` (derive, refresh) ve `cad.sections.query` (güncel, eski,
+      çıkarılmadı, kaynağı yok); eski = yeniden çizim aynı nesneleri vermiyor.
+    - Çekirdek `geom::section`: kesilen (iki yanda taban alanı olan katı; düzlemin üstündeki yüz kesilmez) ve görünen
+      (bakana dönük yüzler, önlerinde bir şey yokken; kesilen düzlemin içindekini de gizler). Bağımsız başvuru 17 durum.
+    - Çizim EK-4'e göre: kesilen malzeme malzeme tek çevre, `-T` katmanında taralı; görünen `-1`…`-4`; kotlar ve kat
+      yükseklikleri binanın ucundan 1 m; aks balonları tek sırada; mahal adı hiçbir çizgiye değmeyen ilk yerde.
+    - Durum çubuğunda "B-B kesiti eski" → tıklayınca seçilir; Öznitelikler › Durum › Yeniden çiz. Plandaki kesit çizgisi
+      noktalı kesikli (EK-4 4.28).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

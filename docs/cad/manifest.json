@@ -14027,6 +14027,23 @@
    "tests": 0
   },
   {
+   "id": "tool.sectionDraw",
+   "kind": "command",
+   "title": "Kesit çıkar",
+   "level": "semantic",
+   "via": [
+    "cad.sections.edit",
+    "cad.sections.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sections.edit, kentos.cad.sections.query",
+   "mcp": "cad.sections.edit, cad.sections.query",
+   "note": "Tıklanan kesit işareti ve kesitin yeri derive'a verilir; kesilen, görünen, kotlar, akslar ve leftOut komutun hesabı, önizleme planından. Çıkarılmış kesitin işaretine tıklamak refresh; durum çubuğunun eski kesit rozeti ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8042).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.sector",
    "kind": "tool",
    "title": "Daire dilimi",

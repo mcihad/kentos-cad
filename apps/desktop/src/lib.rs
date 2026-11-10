@@ -263,6 +263,7 @@ mod files_testing;
 mod find_replace;
 mod fixture_search;
 mod zoning_badge;
+mod section_badge;
 mod grids;
 #[cfg(test)]
 mod hatch_scenes;

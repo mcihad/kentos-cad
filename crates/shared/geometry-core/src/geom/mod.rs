@@ -42,6 +42,7 @@ pub mod beam;
 pub mod column_join;
 pub mod casework;
 pub mod tag;
+pub mod section;
 pub mod viewmark;
 pub mod wall;
 pub mod wall_partition;

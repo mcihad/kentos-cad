@@ -2290,6 +2290,11 @@
           "label": "Kesit"
          },
          {
+          "command": "tool.sectionDraw",
+          "title": "İşaret",
+          "label": "Kesit çıkar"
+         },
+         {
           "command": "tool.viewElevation",
           "title": "İşaret",
           "label": "Görünüş"

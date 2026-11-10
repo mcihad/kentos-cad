@@ -475,6 +475,9 @@ pub mod options_query;
 pub mod elevations;
 pub mod elevations_edit;
 pub mod elevations_query;
+pub mod sections;
+pub mod sections_edit;
+pub mod sections_query;
 pub mod wall_distances;
 // Kolonun geçici ölçüleri (docs/adr/0712).
 pub mod column_distances;
@@ -1119,8 +1122,23 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (kentos_commands::CAD_OPTIONS_EDIT, kentos_commands::CAD_OPTIONS_EDIT_VERSION),
     (kentos_commands::CAD_OPTIONS_QUERY, kentos_commands::CAD_OPTIONS_QUERY_VERSION),
     // Oda iç görünüşü ([`elevations_edit`], [`elevations_query`], docs/adr/0799).
-    (kentos_commands::CAD_ELEVATIONS_EDIT, kentos_commands::CAD_ELEVATIONS_EDIT_VERSION),
-    (kentos_commands::CAD_ELEVATIONS_QUERY, kentos_commands::CAD_ELEVATIONS_QUERY_VERSION),
+    (
+        kentos_commands::CAD_ELEVATIONS_EDIT,
+        kentos_commands::CAD_ELEVATIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ELEVATIONS_QUERY,
+        kentos_commands::CAD_ELEVATIONS_QUERY_VERSION,
+    ),
+    // Kesit çıkar ([`sections_edit`], [`sections_query`], docs/adr/8042).
+    (
+        kentos_commands::CAD_SECTIONS_EDIT,
+        kentos_commands::CAD_SECTIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SECTIONS_QUERY,
+        kentos_commands::CAD_SECTIONS_QUERY_VERSION,
+    ),
     // Açıklığın geçici ölçüleri ([`opening_distances`], docs/adr/0701).
     (
         kentos_commands::CAD_OPENINGS_DISTANCES,

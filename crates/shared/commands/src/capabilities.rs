@@ -3751,9 +3751,42 @@ const ENTRIES: &[Entry] = &[
         ],
         targets: none,
     },
+    // Kesit çıkar (docs/adr/8042).
+    Entry {
+        id: "cad.sections.edit",
+        refusals: &[
+            &[
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_section_mark",
+            ],
+            &[
+                "section_jogged",
+                "section_exists",
+                "section_not_found",
+                "layer_refused",
+                "nothing_to_set",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sections.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_section_mark", "section_jogged"]],
+        warnings: &[],
+        targets: none,
+    },
     Entry {
         id: "cad.elevations.query",
-        refusals: &[&["layer_not_found", "elevation_not_found", "invalid_uid", "entity_not_found"]],
+        refusals: &[&[
+            "layer_not_found",
+            "elevation_not_found",
+            "invalid_uid",
+            "entity_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
