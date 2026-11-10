@@ -24,27 +24,26 @@ if TYPE_CHECKING:
 
 
 class _ConstraintsEdit(LocalCommand[ConstraintsEdit, ConstraintsEdited, ConstraintsEditPlan]):
-    """``cad.constraints.edit`` v1. Kısıtlar: Çizimin geometrik ve ölçü kısıtlarını
-    (AutoCAD'in GEOMCONSTRAINT ve DIMCONSTRAINT'i) ekler, kaldırır, sürücü ya da başvuru
-    yapar, öbür çözümüne çevirir ya da çizimi yeniden çözer; kısıtlar ve çözümün
-    oynattığı nesneler tek geri alma adımı “Kısıtlar”. edit add: kısıtlar sırasıyla
-    eklenir; kural ve parçaları (nesnenin kalıcı kimliği ve parçası: nokta yeri, düz
-    kenar ya da daire). Yön (teğetin yanı, kenara uzaklığın yanı, açının 180°'den küçük
-    olanı, yatay ve düşey uzaklığın küçükten büyüğe) sense: given demedikçe çizimden
-    okunur. Ölçü kısıtının parameter'ı boşsa bir sonraki boş ad (d1, ang1, rad1, dia1);
-    value bir ifadedir (çizim biriminde, açı projenin açı biriminde; 3.5, 120cm, d1 /
-    2), yoksa çizimin ölçtüğü; reference yalnız ölçer. Ötekileri tekrarlayan kısıt
-    eklenmez (constraint_redundant). edit remove: kimlikleriyle kısıtlar kalkar, ölçünün
-    parametresi başka parametre okumuyorsa onunla. edit mode: ölçüler sürücü ya da
-    başvuru olur. edit flip: kısıtın öbür çözümü. edit solve: çizim kısıtlarıyla yeniden
-    çözülür. Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict,
-    çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca
-    geçireceğiyle bonds'ta), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey
-    yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz.
-    Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini
-    (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    """``cad.constraints.edit`` v1. Kısıtlar: Çizimin geometrik ve ölçü kısıtlarını ekler,
+    kaldırır, sürücü ya da başvuru yapar, öbür çözümüne çevirir ya da çizimi yeniden
+    çözer; kısıtlar ve çözümün oynattığı nesneler tek geri alma adımı “Kısıtlar”. edit
+    add: kısıtlar sırasıyla eklenir; kural ve parçaları (nesnenin kalıcı kimliği ve
+    parçası: nokta yeri, düz kenar ya da daire). Yön (teğetin yanı, kenara uzaklığın
+    yanı, açının 180°'den küçük olanı, yatay ve düşey uzaklığın küçükten büyüğe) sense:
+    given demedikçe çizimden okunur. Ölçü kısıtının parameter'ı boşsa bir sonraki boş ad
+    (d1, ang1, rad1, dia1); value bir ifadedir (çizim biriminde, açı projenin açı
+    biriminde; 3.5, 120cm, d1 / 2), yoksa çizimin ölçtüğü; reference yalnız ölçer.
+    Ötekileri tekrarlayan kısıt eklenmez (constraint_redundant). edit remove:
+    kimlikleriyle kısıtlar kalkar, ölçünün parametresi başka parametre okumuyorsa
+    onunla. edit mode: ölçüler sürücü ya da başvuru olur. edit flip: kısıtın öbür
+    çözümü. edit solve: çizim kısıtlarıyla yeniden çözülür. Kilitli katmandaki nesne
+    kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te; mimari bağlar
+    parçaları, değerleri ve hangisinin kaldırılınca geçireceğiyle bonds'ta), tekil
+    kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren
+    çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan
+    kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla,
+    çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse
+    ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.constraints.edit"
@@ -67,26 +66,26 @@ class _ConstraintsEdit(LocalCommand[ConstraintsEdit, ConstraintsEdited, Constrai
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ConstraintsEdited:
-        """Kısıtlar: Çizimin geometrik ve ölçü kısıtlarını (AutoCAD'in GEOMCONSTRAINT ve
-        DIMCONSTRAINT'i) ekler, kaldırır, sürücü ya da başvuru yapar, öbür çözümüne çevirir
-        ya da çizimi yeniden çözer; kısıtlar ve çözümün oynattığı nesneler tek geri alma
-        adımı “Kısıtlar”. edit add: kısıtlar sırasıyla eklenir; kural ve parçaları (nesnenin
-        kalıcı kimliği ve parçası: nokta yeri, düz kenar ya da daire). Yön (teğetin yanı,
-        kenara uzaklığın yanı, açının 180°'den küçük olanı, yatay ve düşey uzaklığın
-        küçükten büyüğe) sense: given demedikçe çizimden okunur. Ölçü kısıtının parameter'ı
-        boşsa bir sonraki boş ad (d1, ang1, rad1, dia1); value bir ifadedir (çizim
-        biriminde, açı projenin açı biriminde; 3.5, 120cm, d1 / 2), yoksa çizimin ölçtüğü;
-        reference yalnız ölçer. Ötekileri tekrarlayan kısıt eklenmez (constraint_redundant).
-        edit remove: kimlikleriyle kısıtlar kalkar, ölçünün parametresi başka parametre
-        okumuyorsa onunla. edit mode: ölçüler sürücü ya da başvuru olur. edit flip: kısıtın
-        öbür çözümü. edit solve: çizim kısıtlarıyla yeniden çözülür. Kilitli katmandaki
-        nesne kımıldamaz. Çelişkide (constraint_conflict, çelişenler uids'te; mimari bağlar
-        parçaları, değerleri ve hangisinin kaldırılınca geçireceğiyle bonds'ta), tekil
-        kısıtta ya da çözüm bulunamadığında hiçbir şey yazılmaz. Bir şekli ters çeviren
-        çözüm (shape_flipped) allowFlip olmadan yazılmaz. Çıktı eklenen ve kaldırılan
-        kısıtları, oynayan nesneleri ve çözücünün teşhisini (durum, serbestlik, fazla,
-        çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir. expectedRevision verilmişse
-        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Kısıtlar: Çizimin geometrik ve ölçü kısıtlarını ekler, kaldırır, sürücü ya da
+        başvuru yapar, öbür çözümüne çevirir ya da çizimi yeniden çözer; kısıtlar ve çözümün
+        oynattığı nesneler tek geri alma adımı “Kısıtlar”. edit add: kısıtlar sırasıyla
+        eklenir; kural ve parçaları (nesnenin kalıcı kimliği ve parçası: nokta yeri, düz
+        kenar ya da daire). Yön (teğetin yanı, kenara uzaklığın yanı, açının 180°'den küçük
+        olanı, yatay ve düşey uzaklığın küçükten büyüğe) sense: given demedikçe çizimden
+        okunur. Ölçü kısıtının parameter'ı boşsa bir sonraki boş ad (d1, ang1, rad1, dia1);
+        value bir ifadedir (çizim biriminde, açı projenin açı biriminde; 3.5, 120cm, d1 /
+        2), yoksa çizimin ölçtüğü; reference yalnız ölçer. Ötekileri tekrarlayan kısıt
+        eklenmez (constraint_redundant). edit remove: kimlikleriyle kısıtlar kalkar, ölçünün
+        parametresi başka parametre okumuyorsa onunla. edit mode: ölçüler sürücü ya da
+        başvuru olur. edit flip: kısıtın öbür çözümü. edit solve: çizim kısıtlarıyla yeniden
+        çözülür. Kilitli katmandaki nesne kımıldamaz. Çelişkide (constraint_conflict,
+        çelişenler uids'te; mimari bağlar parçaları, değerleri ve hangisinin kaldırılınca
+        geçireceğiyle bonds'ta), tekil kısıtta ya da çözüm bulunamadığında hiçbir şey
+        yazılmaz. Bir şekli ters çeviren çözüm (shape_flipped) allowFlip olmadan yazılmaz.
+        Çıktı eklenen ve kaldırılan kısıtları, oynayan nesneleri ve çözücünün teşhisini
+        (durum, serbestlik, fazla, çelişen, tekil, kopuk kısıtlar, serbest nesneler) verir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

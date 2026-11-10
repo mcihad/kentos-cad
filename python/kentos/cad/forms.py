@@ -1177,9 +1177,9 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
     alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse
     hiçbir şey yazılmaz, sonuç conflict olur. commit: kaydın ve alt kayıtlarının
     katmanları tek GeoPackage dosyasına bağlıysa (cad.sources.edit) aynı adımın ardından
-    dosyaya tek SQLite işleminde yazılır (cad.sources.sync'in with'i, docs/adr/0532);
-    dosyanın reddi gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey
-    yazılır. Cevabın committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz.
+    dosyaya tek SQLite işleminde yazılır (cad.sources.sync'in with'i); dosyanın reddi
+    gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey yazılır. Cevabın
+    committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz.
     """
     __slots__ = ()
     id = "cad.forms.submit"
@@ -1225,9 +1225,9 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
         conflict olur. commit: kaydın ve alt kayıtlarının katmanları tek GeoPackage
         dosyasına bağlıysa (cad.sources.edit) aynı adımın ardından dosyaya tek SQLite
-        işleminde yazılır (cad.sources.sync'in with'i, docs/adr/0532); dosyanın reddi
-        gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey yazılır. Cevabın
-        committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz.
+        işleminde yazılır (cad.sources.sync'in with'i); dosyanın reddi gönderimin reddidir:
+        plan söyler, ne çizimde ne dosyada bir şey yazılır. Cevabın committed'ı dosyaya
+        yazılanı verir; bağlı olmayan katman yazılmaz.
 
         Args:
             doc: The drawing it works on.

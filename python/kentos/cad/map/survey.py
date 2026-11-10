@@ -65,16 +65,16 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
     yeni yerine), method network, tek adım; sınıf tutmazsa uyarı network_rules_failed;
     ellipses verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda
     büyütülerek çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde,
-    kb-N dayanan kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen
-    etiketi: etiket önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst,
-    sol üst, sağ alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş
-    değilse doğuda kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da
-    bilinen noktası dışlanan dengelemenin noktası güncel değildir. Retler:
-    invalid_revision, revision_conflict, not_a_map_project, unknown_survey_record,
-    unknown_work_item, invalid_survey_text, invalid_survey_value, invalid_file_path,
-    file_not_found, unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame,
-    no_observations, no_ellipsoidal_height, solution_excluded, mark_mismatch,
-    method_count, sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
+    kb-N dayanan kaydıyla; heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket
+    önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ
+    alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda
+    kalır (labelsMoved, labelsCrowded). Bazı dışlanan ya da bilinen noktası dışlanan
+    dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict,
+    not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text,
+    invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file,
+    nothing_to_set, survey_in_use, unknown_frame, no_observations,
+    no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count,
+    sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
     already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
     entity_not_found, survey_full, ağın retleri (no_baselines, datum_missing,
     known_differ, unknown_rule_class, duplicate_station, invalid_covariance,
@@ -139,14 +139,14 @@ class _MapSurveyEdit(LocalCommand[MapSurveyEdit, MapSurveyEdited, MapSurveyEdite
         method network, tek adım; sınıf tutmazsa uyarı network_rules_failed; ellipses
         verilirse (layer, scale 1–100 000) her noktanın hata elipsi aynı adımda büyütülerek
         çizilir, büyük ekseni semtinden meridyen yakınsaması çıkarılmış yönde, kb-N dayanan
-        kaydıyla (ADR 2960); heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket
-        önce doğuda, oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ
-        alt, sol alt, batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda
-        kalır (labelsMoved, labelsCrowded; ADR 4160). Bazı dışlanan ya da bilinen noktası
-        dışlanan dengelemenin noktası güncel değildir. Retler: invalid_revision,
-        revision_conflict, not_a_map_project, unknown_survey_record, unknown_work_item,
-        invalid_survey_text, invalid_survey_value, invalid_file_path, file_not_found,
-        unreadable_gnss_file, nothing_to_set, survey_in_use, unknown_frame, no_observations,
+        kaydıyla; heights ile kot çubuğu, labels ile yarı eksen etiketi: etiket önce doğuda,
+        oraya elips, çubuk ya da önceki etiket düşerse sağ üst, sol üst, sağ alt, sol alt,
+        batı, üst, alt sırasıyla ilk boş yerde; hiçbiri boş değilse doğuda kalır
+        (labelsMoved, labelsCrowded). Bazı dışlanan ya da bilinen noktası dışlanan
+        dengelemenin noktası güncel değildir. Retler: invalid_revision, revision_conflict,
+        not_a_map_project, unknown_survey_record, unknown_work_item, invalid_survey_text,
+        invalid_survey_value, invalid_file_path, file_not_found, unreadable_gnss_file,
+        nothing_to_set, survey_in_use, unknown_frame, no_observations,
         no_ellipsoidal_height, solution_excluded, mark_mismatch, method_count,
         sigma_missing, solutions_differ, antenna_unknown, antenna_eccentric,
         already_accepted, layer_not_found, layer_locked, no_entities, invalid_uid,
@@ -427,9 +427,9 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
     sabit doğruluk garantisi değildir. uid verilince o nesnenin ölçüsü. places ile her
     bilinen noktanın projedeki kendi yeri (epoku önce kendi hızıyla ya da hız
     ızgarasıyla, sonra koordinat zinciriyle; işaretinin kabul noktasından farkı ve yatay
-    uzaklığı) ya da neden yeri olmadığı; tolerance ile (ADR 4520) kullanıcının yatay ve
-    düşey sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da
-    0'dan büyük değil), not_a_map_project, invalid_uid, entity_not_found.
+    uzaklığı) ya da neden yeri olmadığı; tolerance ile kullanıcının yatay ve düşey
+    sınırını aşan yer beyond. Retler: invalid_input (sınır places'siz, boş ya da 0'dan
+    büyük değil), not_a_map_project, invalid_uid, entity_not_found.
     """
     __slots__ = ()
     id = "map.survey.query"
@@ -465,9 +465,9 @@ class _MapSurveyQuery(LocalCommand[MapSurveyQuery, MapSurveyTree, MapSurveyTree]
         uid verilince o nesnenin ölçüsü. places ile her bilinen noktanın projedeki kendi
         yeri (epoku önce kendi hızıyla ya da hız ızgarasıyla, sonra koordinat zinciriyle;
         işaretinin kabul noktasından farkı ve yatay uzaklığı) ya da neden yeri olmadığı;
-        tolerance ile (ADR 4520) kullanıcının yatay ve düşey sınırını aşan yer beyond.
-        Retler: invalid_input (sınır places'siz, boş ya da 0'dan büyük değil),
-        not_a_map_project, invalid_uid, entity_not_found.
+        tolerance ile kullanıcının yatay ve düşey sınırını aşan yer beyond. Retler:
+        invalid_input (sınır places'siz, boş ya da 0'dan büyük değil), not_a_map_project,
+        invalid_uid, entity_not_found.
 
         Args:
             doc: The drawing it works on.

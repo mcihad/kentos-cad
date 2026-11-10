@@ -713,7 +713,7 @@ pub enum Message {
     TemplatesPanel(crate::templates_panel::Event),
     /// Kaynaklar panel (sources/, docs/adr/0199 §7).
     Sources(crate::sources::Event),
-    /// Veritabanı bağlantıları: the connection window, the password question, QGIS's file (db_connections.rs).
+    /// Veritabanı bağlantıları: the connection window, the password question, a connections file (db_connections.rs).
     Db(crate::db_connections::Event),
     /// Şablon düzenleyici (template_editor.rs).
     TemplateEditor(crate::template_editor::Event),
@@ -3298,7 +3298,7 @@ impl App {
         }
     }
 
-    /// A drafting aid of this session turned over (F8, F10): said as AutoCAD says it.
+    /// A drafting aid of this session turned over (F8, F10): said as the classic CAD programs say it.
     /// Çakışma's cell: between Serbest and the last mode that avoided overlap (docs/adr/0162 §1).
     fn toggle_overlap(&mut self) {
         use kentos_interaction::Overlap;
@@ -4435,7 +4435,7 @@ impl App {
         if let Some(task) = self.run_module_name(text) {
             return task;
         }
-        // AutoCAD takma adları, when the preference is on (alias_profile.rs, docs/adr/0282):
+        // Klasik CAD komut adları, when the preference is on (alias_profile.rs, docs/adr/0282):
         // the profile holds no name of KentOS's, which keep their meaning.
         if let Some(task) = self.run_profile_name(text) {
             return task;
@@ -4537,8 +4537,8 @@ impl App {
                     .set_title("Çizim aç")
                     .add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
-                    .add_filter("AutoCAD (.dwg, .dxf)", &["dwg", "dxf"])
-                    .add_filter("Netcad (.ncz)", &["ncz"])
+                    .add_filter("DWG ve DXF çizimleri (.dwg, .dxf)", &["dwg", "dxf"])
+                    .add_filter("NCZ çizimi (.ncz)", &["ncz"])
                     .pick_file()
                     .await?;
                 Some(file.path().to_path_buf())

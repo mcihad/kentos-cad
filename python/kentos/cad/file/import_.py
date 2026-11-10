@@ -253,17 +253,17 @@ class _FileImportCsv(LocalCommand[ImportCsv, GpkgImported, GpkgImported]):
     geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat,
     longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy
     sütunları adıyla verir; none her satırı kayıt yapar. Ayırıcı ve kodlama dosyadan
-    bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi
-    tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin
-    kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden
-    başkaysa reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa
-    dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider
-    (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından.
-    Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses).
-    plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
-    sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir
-    ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen
-    satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+    bulunur. Sütunların türleri yanındaki .csvt'den, yoksa değerlerden: hepsi tam
+    sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır).
+    Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa
+    reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın
+    adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage
+    içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan
+    geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı
+    okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya
+    da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da
+    atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları
+    nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.csv"
@@ -295,17 +295,16 @@ class _FileImportCsv(LocalCommand[ImportCsv, GpkgImported, GpkgImported]):
         the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude,
         easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla
         verir; none her satırı kayıt yapar. Ayırıcı ve kodlama dosyadan bulunur. Sütunların
-        türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam
-        sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem
-        .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa
-        reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın
-        adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage
-        içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan
-        geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı
-        okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya
-        da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da
-        atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları
-        nedenleriyle CSV'ye yazar (docs/adr/0628).
+        türleri yanındaki .csvt'den, yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa
+        ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya
+        da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir,
+        yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa
+        sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı);
+        kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır
+        numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz. merge
+        var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir
+        (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur
+        ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
 
         Args:
             doc: The drawing it works on.
@@ -429,17 +428,17 @@ csv = _FileImportCsv()
 
 class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
     """``file.import.dwg`` v1. DWG içe aktar: path'teki DWG dosyasını açık çizime alır,
-    masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile
-    (ADR 0586), ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde
-    aynı adlı katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın
-    görünüşüyle yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer
-    (group ile başka bir grup, boş metinle ağacın üstü). layers bir kaynak katmanı var
-    olan bir katmana yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar
-    tanım olarak (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks
-    ile patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim
-    (unit): fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli
-    projede de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk
-    gerçek metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim
+    masaüstünün DWG içe aktar penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile,
+    ağ veya uzak dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı
+    katmana (büyük küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni
+    bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir
+    grup, boş metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana
+    yönlendirir, skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak
+    (çizimde aynı adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile
+    patlatılarak gelir; dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit):
+    fileUnit verilmişse değerler o birimdedir; verilmemişse koordinat sistemli projede
+    de dosyanın $INSUNITS birimi korunur. scaleReference ile ham bir uzunluk gerçek
+    metre uzunluğuna kalibre edilebilir; fileUnit ile birlikte verilemez. Birim
     bildirmeyen ya da tanınmayan kod bildiren dosyanın sayıları ölçeklenmez: projenin
     biriminde (sistemli projede metre) sayılır ve unit_assumed söyler; birimi başka
     bloklar block_units_differ ile söylenir. Kaynak DWG sürümü ve bellek içi DXF aktarma
@@ -480,16 +479,16 @@ class _FileImportDwg(LocalCommand[ImportDxf, DxfImported, DxfImported]):
         expected: Expected | None = None,
     ) -> DxfImported:
         """DWG içe aktar: path'teki DWG dosyasını açık çizime alır, masaüstünün DWG içe aktar
-        penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile (ADR 0586), ağ veya uzak
-        dönüştürücü olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük
-        küçük harf ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana
-        gider; yeni katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş
-        metinle ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir,
-        skipLayers kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı
-        adlı blok varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir;
-        dosyanın yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse
-        değerler o birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS
-        birimi korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre
+        penceresi gibi, sürümü sabit OpenCADCodec (MPL-2.0) ile, ağ veya uzak dönüştürücü
+        olmadan: her kaynak katmanın nesneleri çizimde aynı adlı katmana (büyük küçük harf
+        ve Türkçe işaretler bir), yoksa dosyanın görünüşüyle yeni bir katmana gider; yeni
+        katmanlar dosyanın adındaki gruba girer (group ile başka bir grup, boş metinle
+        ağacın üstü). layers bir kaynak katmanı var olan bir katmana yönlendirir, skipLayers
+        kaynak katmanları dışarıda bırakır. Bloklar tanım olarak (çizimde aynı adlı blok
+        varsa yeni adla, renamed söyler), explodeBlocks ile patlatılarak gelir; dosyanın
+        yazı ve ölçü stilleri projeye eklenir. Birim (unit): fileUnit verilmişse değerler o
+        birimdedir; verilmemişse koordinat sistemli projede de dosyanın $INSUNITS birimi
+        korunur. scaleReference ile ham bir uzunluk gerçek metre uzunluğuna kalibre
         edilebilir; fileUnit ile birlikte verilemez. Birim bildirmeyen ya da tanınmayan kod
         bildiren dosyanın sayıları ölçeklenmez: projenin biriminde (sistemli projede metre)
         sayılır ve unit_assumed söyler; birimi başka bloklar block_units_differ ile
@@ -890,7 +889,7 @@ class _FileImportFgb(LocalCommand[ImportFgb, GpkgImported, GpkgImported]):
     reddedilir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın
     nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
     güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da
-    reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+    reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.fgb"
@@ -928,7 +927,7 @@ class _FileImportFgb(LocalCommand[ImportFgb, GpkgImported, GpkgImported]):
         okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla ya
         da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir ya da
         atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen satırları
-        nedenleriyle CSV'ye yazar (docs/adr/0628).
+        nedenleriyle CSV'ye yazar.
 
         Args:
             doc: The drawing it works on.
@@ -1064,7 +1063,7 @@ class _FileImportGeojson(LocalCommand[ImportGeojson, GisImported, GisImported]):
     ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan
     katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının
     kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects
-    reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+    reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.geojson"
@@ -1114,7 +1113,7 @@ class _FileImportGeojson(LocalCommand[ImportGeojson, GisImported, GisImported]):
         hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla
         birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir,
         eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye
-        yazar (docs/adr/0628).
+        yazar.
 
         Args:
             doc: The drawing it works on.
@@ -1278,8 +1277,7 @@ class _FileImportGml(LocalCommand[ImportGml, GpkgImported, GpkgImported]):
     dosyanın adı, nesne türü ve sırasından. plan dosyayı okur, hiçbir şey yazmaz. merge
     var olan katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir
     (eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur
-    ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar
-    (docs/adr/0628).
+    ya da reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.gml"
@@ -1322,7 +1320,7 @@ class _FileImportGml(LocalCommand[ImportGml, GpkgImported, GpkgImported]):
         sırasından. plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın
         nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
         güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da
-        reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+        reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
 
         Args:
             doc: The drawing it works on.
@@ -1456,16 +1454,16 @@ class _FileImportGpkg(LocalCommand[ImportGpkg, GpkgImported, GpkgImported]):
     satır geometrisiz kayıttır. NULL değer özniteliğin yokluğu, boş metin boş metindir;
     2⁵³'ten büyük tam sayılar büyük tam sayı (bigint), dilimli ya da kesirli tarih ve
     saat zaman damgası (instant), BLOB ikili (binary) alanına kayıpsız gelir; KentOS'un
-    yazdığı dosyanın belgesi UUID ve JSON sütunlarını da söyler (docs/adr/0629). Her
-    satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş
-    kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi
-    projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum
-    seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır
-    (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır
-    (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan
-    katmanın nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
+    yazdığı dosyanın belgesi UUID ve JSON sütunlarını da söyler. Her satırın kalıcı
+    kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı
+    dosya ikinci kez alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden
+    başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle),
+    yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared).
+    Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage:
+    ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın
+    nesneleriyle anahtar sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen
     güncellenir, eşleşmeyen eklenir ya da atlanır, yinelenen anahtar durdurur ya da
-    reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+    reddedilir), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.gpkg"
@@ -1501,16 +1499,16 @@ class _FileImportGpkg(LocalCommand[ImportGpkg, GpkgImported, GpkgImported]):
         değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar büyük
         tam sayı (bigint), dilimli ya da kesirli tarih ve saat zaman damgası (instant), BLOB
         ikili (binary) alanına kayıpsız gelir; KentOS'un yazdığı dosyanın belgesi UUID ve
-        JSON sütunlarını da söyler (docs/adr/0629). Her satırın kalıcı kimliği dosyanın
-        kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez
-        alınmaz (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa
-        reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa
-        crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde
-        geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”);
-        plan dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
+        JSON sütunlarını da söyler. Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da
+        tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz
+        (entity_exists). Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile
+        projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch;
+        sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri
+        metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan
+        dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
         sütunuyla ya da kalıcı kimlikle birleştirir (eşleşen güncellenir, eşleşmeyen eklenir
         ya da atlanır, yinelenen anahtar durdurur ya da reddedilir), rejects reddedilen
-        satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+        satırları nedenleriyle CSV'ye yazar.
 
         Args:
             doc: The drawing it works on.
@@ -1646,8 +1644,7 @@ class _FileImportKml(LocalCommand[ImportKml, GisImported, GisImported]):
     değerler) uyarıda ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey
     yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla birleştirir (bu
     dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir
-    ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar
-    (docs/adr/0628).
+    ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.kml"
@@ -1695,7 +1692,7 @@ class _FileImportKml(LocalCommand[ImportKml, GisImported, GisImported]):
         hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar sütunuyla
         birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen güncellenir,
         eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları nedenleriyle CSV'ye
-        yazar (docs/adr/0628).
+        yazar.
 
         Args:
             doc: The drawing it works on.
@@ -2578,16 +2575,16 @@ pdf = _FileImportPdf()
 
 
 class _FileImportQml(LocalCommand[ImportQml, QmlImported, QmlImported]):
-    """``file.import.qml`` v1. QML'den görünüş al: path'teki (ya da text'teki) QGIS stil
+    """``file.import.qml`` v1. QML'den görünüş al: path'teki (ya da text'teki) QML stil
     dosyasının görünüşünü katmanın işleyicisi yapar, tek geri alma adımı (Katman stili):
-    QGIS'in tek simge, kategorili, aralıklı ve kurallı görünüşü KentOS'un aynı türü
-    olur; birden çok değerli sınıf her değer için bir sınıf, NULL sınıfı Diğerleri,
-    kuralların süzgeci KentOS'un ifadesine çevrilir (IN de). Basit dolgu (kenarı ayrı
-    çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel kesikler), basit işaret ve
-    merkez dolgusu, simgenin saydamlığı, kapalı katman, mm, nokta, inç, piksel ve harita
-    birimi alınır. Başka simge katmanları, fırça desenleri, veriye bağlı değerler,
-    etiketler, katmanın saydamlığı ve çevrilemeyen süzgeç alınmaz, import_losses ile
-    söylenir; aralıkların sınır kuralı farkı da söylenir. QGIS 3 ve 4'ün yazdığı QML
+    QML'in tek simge, kategorili, aralıklı ve kurallı görünüşü KentOS'un aynı türü olur;
+    birden çok değerli sınıf her değer için bir sınıf, NULL sınıfı Diğerleri, kuralların
+    süzgeci KentOS'un ifadesine çevrilir (IN de). Basit dolgu (kenarı ayrı çizgi), basit
+    çizgi (Qt'nin kesik desenleri ya da özel kesikler), basit işaret ve merkez dolgusu,
+    simgenin saydamlığı, kapalı katman, mm, nokta, inç, piksel ve harita birimi alınır.
+    Başka simge katmanları, fırça desenleri, veriye bağlı değerler, etiketler, katmanın
+    saydamlığı ve çevrilemeyen süzgeç alınmaz, import_losses ile söylenir; aralıkların
+    sınır kuralı farkı da söylenir. QML'in 3.x ve 4.x sürümlerinin yazdığı dosyalar
     okunur. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur,
     hiçbir şey yazmaz.
     """
@@ -2612,8 +2609,8 @@ class _FileImportQml(LocalCommand[ImportQml, QmlImported, QmlImported]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> QmlImported:
-        """QML'den görünüş al: path'teki (ya da text'teki) QGIS stil dosyasının görünüşünü
-        katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): QGIS'in tek simge,
+        """QML'den görünüş al: path'teki (ya da text'teki) QML stil dosyasının görünüşünü
+        katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): QML'in tek simge,
         kategorili, aralıklı ve kurallı görünüşü KentOS'un aynı türü olur; birden çok
         değerli sınıf her değer için bir sınıf, NULL sınıfı Diğerleri, kuralların süzgeci
         KentOS'un ifadesine çevrilir (IN de). Basit dolgu (kenarı ayrı çizgi), basit çizgi
@@ -2621,8 +2618,9 @@ class _FileImportQml(LocalCommand[ImportQml, QmlImported, QmlImported]):
         simgenin saydamlığı, kapalı katman, mm, nokta, inç, piksel ve harita birimi alınır.
         Başka simge katmanları, fırça desenleri, veriye bağlı değerler, etiketler, katmanın
         saydamlığı ve çevrilemeyen süzgeç alınmaz, import_losses ile söylenir; aralıkların
-        sınır kuralı farkı da söylenir. QGIS 3 ve 4'ün yazdığı QML okunur. Katman aynı
-        görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.
+        sınır kuralı farkı da söylenir. QML'in 3.x ve 4.x sürümlerinin yazdığı dosyalar
+        okunur. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur,
+        hiçbir şey yazmaz.
 
         Args:
             doc: The drawing it works on.
@@ -2740,7 +2738,7 @@ class _FileImportShp(LocalCommand[ImportShp, GisImported, GisImported]):
     ve cevabın raporunda söylenir. plan dosyayı okur, hiçbir şey yazmaz. merge var olan
     katmanın nesneleriyle anahtar sütunuyla birleştirir (bu dosyaların satırlarının
     kalıcı kimliği yok; eşleşen güncellenir, eşleşmeyen eklenir ya da atlanır), rejects
-    reddedilen satırları nedenleriyle CSV'ye yazar (docs/adr/0628).
+    reddedilen satırları nedenleriyle CSV'ye yazar.
     """
     __slots__ = ()
     id = "file.import.shp"
@@ -2790,7 +2788,7 @@ class _FileImportShp(LocalCommand[ImportShp, GisImported, GisImported]):
         dosyayı okur, hiçbir şey yazmaz. merge var olan katmanın nesneleriyle anahtar
         sütunuyla birleştirir (bu dosyaların satırlarının kalıcı kimliği yok; eşleşen
         güncellenir, eşleşmeyen eklenir ya da atlanır), rejects reddedilen satırları
-        nedenleriyle CSV'ye yazar (docs/adr/0628).
+        nedenleriyle CSV'ye yazar.
 
         Args:
             doc: The drawing it works on.
@@ -2956,9 +2954,9 @@ class _FileImportSld(LocalCommand[ImportSld, SldImported, SldImported]):
     dolgusu, çizgisi (kesikler, uç, köşe, kaydırma), iyi bilinen işaretleri,
     saydamlıkları ve birimleri (piksel 0,28 mm kâğıt, metre) alınır; dış resim, işaretli
     çizgi ve desenli dolgu, etiket ve raster simgeleyicisi, çevrilemeyen süzgeç alınmaz,
-    import_losses ile söylenir. QGIS'in, GeoServer'ın ve KentOS'un yazdığı SLD 1.0 ve
-    1.1 okunur; birden çok görünüşten ilki alınır. Katman aynı görünüşteyse adım
-    yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.
+    import_losses ile söylenir. CBS yazılımlarının, harita sunucularının ve KentOS'un
+    yazdığı SLD 1.0 ve 1.1 okunur; birden çok görünüşten ilki alınır. Katman aynı
+    görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.
     """
     __slots__ = ()
     id = "file.import.sld"
@@ -2988,10 +2986,10 @@ class _FileImportSld(LocalCommand[ImportSld, SldImported, SldImported]):
         olur; ölçek aralıkları ve ElseFilter korunur. SE'nin dolgusu, çizgisi (kesikler, uç,
         köşe, kaydırma), iyi bilinen işaretleri, saydamlıkları ve birimleri (piksel 0,28 mm
         kâğıt, metre) alınır; dış resim, işaretli çizgi ve desenli dolgu, etiket ve raster
-        simgeleyicisi, çevrilemeyen süzgeç alınmaz, import_losses ile söylenir. QGIS'in,
-        GeoServer'ın ve KentOS'un yazdığı SLD 1.0 ve 1.1 okunur; birden çok görünüşten ilki
-        alınır. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur,
-        hiçbir şey yazmaz.
+        simgeleyicisi, çevrilemeyen süzgeç alınmaz, import_losses ile söylenir. CBS
+        yazılımlarının, harita sunucularının ve KentOS'un yazdığı SLD 1.0 ve 1.1 okunur;
+        birden çok görünüşten ilki alınır. Katman aynı görünüşteyse adım yazılmaz (changed
+        false). plan dosyayı okur, hiçbir şey yazmaz.
 
         Args:
             doc: The drawing it works on.

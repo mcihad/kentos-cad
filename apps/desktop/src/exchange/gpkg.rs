@@ -49,7 +49,7 @@ pub struct State {
     pub area: bool,
     /// With `bind`: the field that names a row whatever the table's row ids (docs/adr/0533 §1, 0636 §7); empty, none.
     pub key: String,
-    /// The file's relations and its tables' default QGIS styles, taken with the tables (docs/adr/0627 §6, §7).
+    /// The file's relations and its tables' default layer styles (QML), taken with the tables (docs/adr/0627 §6, §7).
     pub relations: usize,
     pub styles: usize,
     pub status: Option<(bool, String)>,
@@ -84,7 +84,7 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let mut tables = Vec::new();
     let mut srid = None;
-    // The relations' mapping tables and QGIS's styles come in with the layers, not as layers (docs/adr/0627 §6, §7).
+    // The relations' mapping tables and the layer styles come in with the layers, not as layers (docs/adr/0627 §6, §7).
     let beside = gp.side_tables().map_err(|e| e.0)?;
     for l in gp.layers().map_err(|e| e.0)? {
         if !matches!(l.data_type, DataType::Features | DataType::Attributes)
@@ -154,14 +154,14 @@ fn import_input(s: &State, files: bool) -> serde_json::Value {
     input
 }
 
-/// The relations and QGIS styles a GeoPackage carried, as the message says them (docs/adr/0627 §6, §7).
+/// The relations and layer styles a GeoPackage carried, as the message says them (docs/adr/0627 §6, §7).
 fn profile_words(relations: usize, styles: u32) -> String {
     let mut parts = Vec::new();
     if relations > 0 {
         parts.push(format!("{relations} ilişki"));
     }
     if styles > 0 {
-        parts.push(format!("{styles} QGIS stili"));
+        parts.push(format!("{styles} katman stili (QML)"));
     }
     if parts.is_empty() {
         String::new()
@@ -575,7 +575,7 @@ impl App {
                     side.push(format!("{} ilişkisi", s.relations));
                 }
                 if s.styles > 0 {
-                    side.push(format!("{} QGIS stili", s.styles));
+                    side.push(format!("{} katman stili (QML)", s.styles));
                 }
                 let side = if side.is_empty() {
                     String::new()

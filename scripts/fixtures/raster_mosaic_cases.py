@@ -244,7 +244,7 @@ def mosaic(doc, inp):
         raise Refused("invalid_file_path", "Mozaiğin dosya yolu boş; bir .vrt dosyasının yolunu verin.", "path")
     if not text.lower().endswith(".vrt"):
         raise Refused(
-            "invalid_file_path", f"“{name_of(text)}” bir .vrt dosyası değil; mozaik GDAL'ın VRT dosyası olarak yazılır.", "path"
+            "invalid_file_path", f"“{name_of(text)}” bir .vrt dosyası değil; mozaik VRT dosyası olarak yazılır.", "path"
         )
     absolute = text.startswith("/") or text.startswith("$")
     if absolute:

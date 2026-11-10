@@ -42,31 +42,30 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
     wallMismatch (dış çap iç çaptan küçük ya da iç çap + 2 × et değil), noGround,
     offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda
     örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına
-    açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı
-    eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
+    açıklık: planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi
+    alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
     (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma),
     closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru
     altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır;
-    diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü
-    borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa
-    ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür;
-    verilmezse et bilinmez. diameter.outer dış çapın özniteliğini verirse (ADR 4780) et
-    dış çap eksi iç çapın yarısıdır; ikisi birlikte sorulursa uyuşmaları (dış = iç + 2 ×
-    et, dış çapın milyarda biri kadar) denetlenir, uyuşmayan borunun eti hiçbirinden
-    alınmaz (wallMismatch). Sınırlar (minCover, maxCover, minSlope, maxSlope,
-    clearance.vertical, clearance.horizontal) kullanıcınındır; program kendiliğinden
-    sınır koymaz, verilmeyen sınır denetlenmez. rules istenirse (ADR 4780) yazılmayan
-    sınırlar bir kural paketinin sisteminden alınır: KentOS'unki
-    (catalog/v1/rules/kanal-csb-2017.json) Atıksu Toplama ve Uzaklaştırma Sistemleri
-    Hakkında Yönetmelik EK-1'i (RG 06.01.2017/29940; atiksu: çap sınıfına göre 1:A
-    eğimler, en az örtü 2,70 m, baca aralığı) ve Yağmursuyu Toplama, Depolama ve Deşarj
-    Sistemleri Hakkında Yönetmelik EK-1 Çizelge 1.4'üdür (RG 23.06.2017/30105;
-    yagmursuyu: her çapın en az, istisnai en az ve en çok eğimi, en az örtü 1,2 m);
-    rules.package başka bir paket verir. Her borunun sınıfı cevapta (class).
-    Yönetmeliğin dili “olabilir”, “alınabilir”dir: bulgu uygunluk kararı değildir. Birim
-    hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
-    not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-    invalid_network, tools_unavailable.
+    diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde) örtü borunun
+    dış tepesinden (akar + çap + et), açıklıklar dıştan dışa ölçülür, et kalınlığı
+    olmayan boru noWall ile söylenir ve iç tepeden ölçülür; verilmezse et bilinmez.
+    diameter.outer dış çapın özniteliğini verirse et dış çap eksi iç çapın yarısıdır;
+    ikisi birlikte sorulursa uyuşmaları (dış = iç + 2 × et, dış çapın milyarda biri
+    kadar) denetlenir, uyuşmayan borunun eti hiçbirinden alınmaz (wallMismatch).
+    Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical,
+    clearance.horizontal) kullanıcınındır; program kendiliğinden sınır koymaz,
+    verilmeyen sınır denetlenmez. rules istenirse yazılmayan sınırlar bir kural
+    paketinin sisteminden alınır: KentOS'unki (catalog/v1/rules/kanal-csb-2017.json)
+    Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik EK-1'i (RG
+    06.01.2017/29940; atiksu: çap sınıfına göre 1:A eğimler, en az örtü 2,70 m, baca
+    aralığı) ve Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik
+    EK-1 Çizelge 1.4'üdür (RG 23.06.2017/30105; yagmursuyu: her çapın en az, istisnai en
+    az ve en çok eğimi, en az örtü 1,2 m); rules.package başka bir paket verir. Her
+    borunun sınıfı cevapta (class). Yönetmeliğin dili “olabilir”, “alınabilir”dir: bulgu
+    uygunluk kararı değildir. Birim hatası önerilir, düzeltilmez. Retler:
+    invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project,
+    unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.
     """
     __slots__ = ()
     id = "cad.pipes.check"
@@ -109,31 +108,30 @@ class _PipesCheck(LocalCommand[PipesCheck, PipesChecked, PipesChecked]):
         wallMismatch (dış çap iç çaptan küçük ya da iç çap + 2 × et değil), noGround,
         offSurface, aboveGround (tepe zeminin üstünde), shallow, deep, curved (yaylı boruda
         örtü yalnız köşelerde). İstenirse (clearance) başka bir altyapı ağının borularına
-        açıklık (ADR 2360): planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı
-        eksi alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
+        açıklık: planda kesiştikleri yerde düşey açıklık (üstteki borunun akarı eksi
+        alttakinin tepesi; crossings), kesişmeden geçtiklerinde en az yatay açıklık
         (eksenler arası en kısa uzaklık eksi iki yarıçap; near); bulgular clash (çakışma),
         closeCrossing (düşey açıklık en azdan küçük), wrongSide (üstte olması istenen boru
         altta), closeAlongside (yatay açıklık en azdan küçük). Çaplar iç çaptır;
-        diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde; ADR 3960) örtü
-        borunun dış tepesinden (akar + çap + et, Civil 3D'nin), açıklıklar dıştan dışa
-        ölçülür, et kalınlığı olmayan boru noWall ile söylenir ve iç tepeden ölçülür;
-        verilmezse et bilinmez. diameter.outer dış çapın özniteliğini verirse (ADR 4780) et
-        dış çap eksi iç çapın yarısıdır; ikisi birlikte sorulursa uyuşmaları (dış = iç + 2 ×
-        et, dış çapın milyarda biri kadar) denetlenir, uyuşmayan borunun eti hiçbirinden
-        alınmaz (wallMismatch). Sınırlar (minCover, maxCover, minSlope, maxSlope,
-        clearance.vertical, clearance.horizontal) kullanıcınındır; program kendiliğinden
-        sınır koymaz, verilmeyen sınır denetlenmez. rules istenirse (ADR 4780) yazılmayan
-        sınırlar bir kural paketinin sisteminden alınır: KentOS'unki
-        (catalog/v1/rules/kanal-csb-2017.json) Atıksu Toplama ve Uzaklaştırma Sistemleri
-        Hakkında Yönetmelik EK-1'i (RG 06.01.2017/29940; atiksu: çap sınıfına göre 1:A
-        eğimler, en az örtü 2,70 m, baca aralığı) ve Yağmursuyu Toplama, Depolama ve Deşarj
-        Sistemleri Hakkında Yönetmelik EK-1 Çizelge 1.4'üdür (RG 23.06.2017/30105;
-        yagmursuyu: her çapın en az, istisnai en az ve en çok eğimi, en az örtü 1,2 m);
-        rules.package başka bir paket verir. Her borunun sınıfı cevapta (class).
-        Yönetmeliğin dili “olabilir”, “alınabilir”dir: bulgu uygunluk kararı değildir. Birim
-        hatası önerilir, düzeltilmez. Retler: invalid_pipe_check, unknown_network,
-        not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-        invalid_network, tools_unavailable.
+        diameter.wall et kalınlığının özniteliğini verirse (çapın biriminde) örtü borunun
+        dış tepesinden (akar + çap + et), açıklıklar dıştan dışa ölçülür, et kalınlığı
+        olmayan boru noWall ile söylenir ve iç tepeden ölçülür; verilmezse et bilinmez.
+        diameter.outer dış çapın özniteliğini verirse et dış çap eksi iç çapın yarısıdır;
+        ikisi birlikte sorulursa uyuşmaları (dış = iç + 2 × et, dış çapın milyarda biri
+        kadar) denetlenir, uyuşmayan borunun eti hiçbirinden alınmaz (wallMismatch).
+        Sınırlar (minCover, maxCover, minSlope, maxSlope, clearance.vertical,
+        clearance.horizontal) kullanıcınındır; program kendiliğinden sınır koymaz,
+        verilmeyen sınır denetlenmez. rules istenirse yazılmayan sınırlar bir kural
+        paketinin sisteminden alınır: KentOS'unki (catalog/v1/rules/kanal-csb-2017.json)
+        Atıksu Toplama ve Uzaklaştırma Sistemleri Hakkında Yönetmelik EK-1'i (RG
+        06.01.2017/29940; atiksu: çap sınıfına göre 1:A eğimler, en az örtü 2,70 m, baca
+        aralığı) ve Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında Yönetmelik
+        EK-1 Çizelge 1.4'üdür (RG 23.06.2017/30105; yagmursuyu: her çapın en az, istisnai en
+        az ve en çok eğimi, en az örtü 1,2 m); rules.package başka bir paket verir. Her
+        borunun sınıfı cevapta (class). Yönetmeliğin dili “olabilir”, “alınabilir”dir: bulgu
+        uygunluk kararı değildir. Birim hatası önerilir, düzeltilmez. Retler:
+        invalid_pipe_check, unknown_network, not_a_pipe_network, not_a_road_project,
+        unknown_terrain, terrain_unbuildable, invalid_network, tools_unavailable.
 
         Args:
             doc: The drawing it works on.
@@ -288,22 +286,22 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
     çap (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların
     kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her
     düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çapta et
-    (diameter.wall) ya da dış çap (diameter.outer) sorulursa (ADR 4780) eti bilinen her
-    borunun eti cevapta (wall), örtüsü dış tepeden, eti 0'dan büyükse dış duvarları
-    (akarın et kadar altı ve tepenin et kadar üstü) ince kırmızı çizgilerle çizilir; et
-    ile dış çapı uyuşmayan borunun dış duvarı çizilmez. Çizim road.profiles.draw'unki
-    gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir
-    birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa
-    2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe
-    çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu,
-    Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat
-    profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560; zemin yüzeyi ve
-    kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında
-    güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı
-    girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network,
-    not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-    invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer,
-    layer_locked, invalid_revision, revision_conflict.
+    (diameter.wall) ya da dış çap (diameter.outer) sorulursa eti bilinen her borunun eti
+    cevapta (wall), örtüsü dış tepeden, eti 0'dan büyükse dış duvarları (akarın et kadar
+    altı ve tepenin et kadar üstü) ince kırmızı çizgilerle çizilir; et ile dış çapı
+    uyuşmayan borunun dış duvarı çizilmez. Çizim road.profiles.draw'unki gibidir: at
+    çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir
+    metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas
+    kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri
+    (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar
+    giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”.
+    Harita ve Yol projesinde çizim ağıyla tutulur (zemin yüzeyi ve kesişen ağ da
+    kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında güncel değil
+    olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı girdiyle yeniden
+    çizer. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network,
+    not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network,
+    tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked,
+    invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "cad.pipes.profile"
@@ -343,22 +341,22 @@ class _PipesProfile(LocalCommand[PipesProfile, PipesProfiled, PipesProfiled]):
         (öznitelik ve birimi), zemin (yüzeyin her üçgen kenarı kesişimi ya da bacaların
         kapak kotu); her borunun akar ve tepe kotları, eğimi, çapı, en az örtüsü; her
         düğümde baca (Ad), zemin, giren ve çıkan akar kotu, derinlik. Çapta et
-        (diameter.wall) ya da dış çap (diameter.outer) sorulursa (ADR 4780) eti bilinen her
-        borunun eti cevapta (wall), örtüsü dış tepeden, eti 0'dan büyükse dış duvarları
-        (akarın et kadar altı ve tepenin et kadar üstü) ince kırmızı çizgilerle çizilir; et
-        ile dış çapı uyuşmayan borunun dış duvarı çizilmez. Çizim road.profiles.draw'unki
-        gibidir: at çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir
-        birim, bir metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa
-        2,5), kıyas kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe
-        çizgileri (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu,
-        Akar giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat
-        profili”. Harita ve Yol projesinde çizim ağıyla tutulur (ADR 3560; zemin yüzeyi ve
-        kesişen ağ da kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında
-        güncel değil olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı
-        girdiyle yeniden çizer. Retler: invalid_pipe_check, unknown_network,
-        not_a_pipe_network, not_a_road_project, unknown_terrain, terrain_unbuildable,
-        invalid_network, tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer,
-        layer_locked, invalid_revision, revision_conflict.
+        (diameter.wall) ya da dış çap (diameter.outer) sorulursa eti bilinen her borunun eti
+        cevapta (wall), örtüsü dış tepeden, eti 0'dan büyükse dış duvarları (akarın et kadar
+        altı ve tepenin et kadar üstü) ince kırmızı çizgilerle çizilir; et ile dış çapı
+        uyuşmayan borunun dış duvarı çizilmez. Çizim road.profiles.draw'unki gibidir: at
+        çerçevenin sol altı (hattın başı kıyas kotunda), bir metre mesafe bir birim, bir
+        metre kot exaggeration birim (yoksa 10), yazılar height kâğıt mm (yoksa 2,5), kıyas
+        kotu en alçak kotun bir metre altı; kot ızgarası, zemin, akar ve tepe çizgileri
+        (kırmızı), bacalar; çerçevenin altında bantlar: Baca, Mesafe, Zemin kotu, Akar
+        giriş, Akar çıkış, Derinlik, Eğim ‰, Çap mm, Boy. Tek geri alma adımı “Hat profili”.
+        Harita ve Yol projesinde çizim ağıyla tutulur (zemin yüzeyi ve kesişen ağ da
+        kaynağıdır): ağın bir nesnesi ya da tanımı değişince Proje ağacında güncel değil
+        olur, road.project.rebuild ya da kendiliğinden yeniden üretim aynı girdiyle yeniden
+        çizer. Retler: invalid_pipe_check, unknown_network, not_a_pipe_network,
+        not_a_road_project, unknown_terrain, terrain_unbuildable, invalid_network,
+        tools_unavailable, invalid_pipe_run, layer_not_found, not_a_layer, layer_locked,
+        invalid_revision, revision_conflict.
 
         Args:
             doc: The drawing it works on.

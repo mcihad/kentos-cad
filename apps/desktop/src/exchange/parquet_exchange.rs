@@ -380,7 +380,7 @@ impl App {
             Some(
                 match s.compression {
                     ParquetCompression::Snappy => {
-                        "Parquet'in olağan sıkıştırması; GDAL, QGIS, DuckDB ve pandas okur."
+                        "Parquet'in olağan sıkıştırması; CBS ve veri çözümleme yazılımları okur."
                     }
                     ParquetCompression::None => {
                         "Sayfalar olduğu gibi yazılır: dosya büyür, her okuyucu açar."

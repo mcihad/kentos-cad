@@ -174,7 +174,7 @@ adjust = _SurveyAdjust()
 
 class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, SurveyBaselinesAdjusted]):
     """``cad.survey.baselines`` v1. GNSS baz ağı dengelemesi: GNSS baz vektörlerinden
-    kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz, ADR 1380).
+    kurulan ağı en küçük karelerle dengeler; hiçbir şey yazmaz (önce analiz).
     İstasyonlar ECEF X, Y, Z'de (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy,
     xz, yy, yz, zz, m²); scale kovaryansların çarpanı (varsayılan 1; işleyicinin
     kovaryansı çoğu kez iyimserdir). Bilinen istasyon fixed ile sabit, sigma ile
@@ -188,7 +188,7 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
     verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
     B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
     (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-    okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
+    okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
     invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
     datum_missing, network_too_large, network_disconnected.
     """
@@ -215,20 +215,20 @@ class _SurveyBaselines(LocalCommand[SurveyBaselines, SurveyBaselinesAdjusted, Su
         expected: Expected | None = None,
     ) -> SurveyBaselinesAdjusted:
         """GNSS baz ağı dengelemesi: GNSS baz vektörlerinden kurulan ağı en küçük karelerle
-        dengeler; hiçbir şey yazmaz (önce analiz, ADR 1380). İstasyonlar ECEF X, Y, Z'de
-        (m); baz ΔX, ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale
-        kovaryansların çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir).
-        Bilinen istasyon fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum:
-        minimal koordinatı olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı
-        L·Lᵀ ayrıştırılıp üç denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95),
-        artık sayıları ve Baarda testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir,
-        bazın sonucu bileşenlerinin en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve
-        standart sapmaları (m0 ile ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları
-        (GRS80), bazların artık vektörü (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ²,
-        geçti mi, en kötü baz. Ağ metinle de verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
+        dengeler; hiçbir şey yazmaz (önce analiz). İstasyonlar ECEF X, Y, Z'de (m); baz ΔX,
+        ΔY, ΔZ ve tam 3×3 kovaryansıyla (xx, xy, xz, yy, yz, zz, m²); scale kovaryansların
+        çarpanı (varsayılan 1; işleyicinin kovaryansı çoğu kez iyimserdir). Bilinen istasyon
+        fixed ile sabit, sigma ile ağırlıklıdır; ikisi de yoksa datum: minimal koordinatı
+        olan ilk istasyonu tutar ve söyler (held). Her bazın kovaryansı L·Lᵀ ayrıştırılıp üç
+        denklemi L⁻¹ ile korelasyonsuz yapılır; m0, χ² testi (%95), artık sayıları ve Baarda
+        testi (α₀ = 0,001, w > 3,29) bu bileşenler üzerindendir, bazın sonucu bileşenlerinin
+        en büyük test değeri. Cevap: istasyonların X, Y, Z'si ve standart sapmaları (m0 ile
+        ölçeklenmiş) ile yerel doğu, kuzey, yukarı sapmaları (GRS80), bazların artık vektörü
+        (hesaplanan − gözlenen), n, u, f, vᵀPv, m0, χ², geçti mi, en kötü baz. Ağ metinle de
+        verilir: K;ad;X;Y;Z[;sX;sY;sZ], N;ad[;X;Y;Z],
         B;başlangıç;bitiş;dX;dY;dZ;xx;xy;xz;yy;yz;zz. Normal denklem seyrek çözülür
         (istasyonlar ters Cuthill–McKee sırasında, Cholesky zarfında, kovaryansın yalnız
-        okunan girdileri; ADR 4560); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
+        okunan girdileri); zarfı 30 milyon girdiyi aşan ağ reddedilir. Retler:
         invalid_input, no_baselines, duplicate_station, unknown_station, invalid_covariance,
         datum_missing, network_too_large, network_disconnected.
 
@@ -339,10 +339,10 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
     """``cad.survey.points`` v1. Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp
     verilen katmana adlı noktalar olarak yazar; hesabı komut ortak çekirdekle yapar:
     Poligon hesabı (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar
-    uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100;
+    uzunlukları, kapanma hataları dağıtılır; heights ile trigonometrik kotlar;
     heights.back ile karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün
-    ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta,
-    ADR 4500), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu
+    ortalaması, k düşer, aynı iki uç arasındaki çiftin kırılma katsayısı
+    refractions'ta), Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu
     açısıyla kot), Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen
     noktalar adıyla (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı
     biriminde. Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin
@@ -372,13 +372,13 @@ class _SurveyPoints(LocalCommand[SurveyPoints, SurveyPointsWritten, EntitiesCrea
         """Ölçme hesabı: Ölçme pencerelerinin noktalarını hesaplayıp verilen katmana adlı
         noktalar olarak yazar; hesabı komut ortak çekirdekle yapar: Poligon hesabı
         (traverse: bağlı, kapalı ya da açık; kırılma açıları ve kenar uzunlukları, kapanma
-        hataları dağıtılır; heights ile trigonometrik kotlar, ADR 4100; heights.back ile
-        karşılıklı başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k
-        düşer, aynı iki uç arasındaki çiftin kırılma katsayısı refractions'ta, ADR 4500),
-        Kutupsal alım (polar: bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot),
-        Önden kestirme (forward) ve Geriden kestirme (resection). Bilinen noktalar adıyla
-        (named) ya da koordinatıyla (at); açılar unit'te, yoksa projenin açı biriminde.
-        Noktalar Ad, Tür ve kotuyla yazılır. Tek geri alma adımı, pencerenin adıyla.
+        hataları dağıtılır; heights ile trigonometrik kotlar; heights.back ile karşılıklı
+        başucu açıları: geri nişanlı kenarın kot farkı iki yönün ortalaması, k düşer, aynı
+        iki uç arasındaki çiftin kırılma katsayısı refractions'ta), Kutupsal alım (polar:
+        bakılan noktaya yöneltilmiş okumalar, başucu açısıyla kot), Önden kestirme (forward)
+        ve Geriden kestirme (resection). Bilinen noktalar adıyla (named) ya da koordinatıyla
+        (at); açılar unit'te, yoksa projenin açı biriminde. Noktalar Ad, Tür ve kotuyla
+        yazılır. Tek geri alma adımı, pencerenin adıyla.
 
         Args:
             doc: The drawing it works on.

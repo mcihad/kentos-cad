@@ -43,23 +43,23 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
     denetlenmez. Tasarım özeti (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır;
     expectedDesign verilir ve tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni
     tasarıma sessizce bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i,
-    mutlak yol; ADR 2420): paketin tasarım özeti beklenen özet olur, kabul sınırları
-    girdi vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot
-    sistemi projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
-    sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820)
-    kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
-    tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
-    katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
-    cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse
-    (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük
-    kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay
-    hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds
-    (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan
-    küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar
-    (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven
-    kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler:
-    invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok),
-    layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.
+    mutlak yol): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi
+    vermediyse uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi
+    projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
+    sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile kayıt
+    paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım)
+    denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines katmanları
+    yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler; cevapta
+    package.design. İzleme işinin dönem dizisinde (epochs) istenirse: trend.confidence
+    ile her noktanın günlü dönemlerinden (en az 3) en küçük kareler doğrusu
+    (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay hız; moving: |v| >
+    t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds (warning, alarm: yatay ve
+    düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan küçük) ile her noktanın
+    state'i (normal, warning, alarm) ve aştığı sınırlar (exceeded); hız doğrununki,
+    doğru yoksa ortalama hız. Eşikler ve güven kullanıcınındır; izleme için yönetmelik
+    değeri yoktur. Retler: invalid_asbuilt_check, invalid_file_path (paket yolu),
+    file_not_found (paket yok), layer_not_found, not_a_road_project, unknown_terrain,
+    terrain_unbuildable.
     """
     __slots__ = ()
     id = "cad.asbuilt.check"
@@ -113,22 +113,21 @@ class _AsbuiltCheck(LocalCommand[AsbuiltCheck, AsbuiltChecked, AsbuiltChecked]):
         kullanıcınındır; KentOS değer vermez, verilmeyen denetlenmez. Tasarım özeti
         (designDigest: noktalar ve çizgiler, SHA-256) cevaptadır; expectedDesign verilir ve
         tutmazsa designChanged: eski tasarımla ölçülen kayıt yeni tasarıma sessizce
-        bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol; ADR
-        2420): paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse
-        uygulanır (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi
-        projeninkiyle karşılaştırılır; cevapta package (yol, tarih, revizyon, özet,
-        sameSystem, sameEpoch, sameHeights, sınırlar, taken). packageDesign ile (ADR 2820)
-        kayıt paketin kendi tasarımıyla (noktalar.csv, cizgiler.csv; ekibin elindeki
-        tasarım) denetlenir: dosyalar paketin özetiyle tutmalı, verilen design ve lines
-        katmanları yalnız çizimdeki tasarımın paketten sonra değişip değişmediğini söyler;
-        cevapta package.design. İzleme işinin dönem dizisinde (epochs, ADR 4420) istenirse
-        (ADR 4840): trend.confidence ile her noktanın günlü dönemlerinden (en az 3) en küçük
-        kareler doğrusu (tracks[].fit: doğu, kuzey, kot hızı m/yıl, σ'ları s/√Sxx, yatay
-        hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan bileşenler) ve thresholds
-        (warning, alarm: yatay ve düşey hareket m, yatay ve düşey hız m/yıl; uyarı alarmdan
-        küçük) ile her noktanın state'i (normal, warning, alarm) ve aştığı sınırlar
-        (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve güven
-        kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler:
+        bağlanmaz. Saha paketiyle (package: cad.field.package'ın .zip'i, mutlak yol):
+        paketin tasarım özeti beklenen özet olur, kabul sınırları girdi vermediyse uygulanır
+        (kalite sınırı qualityField ile), sistemi, epoku ve kot sistemi projeninkiyle
+        karşılaştırılır; cevapta package (yol, tarih, revizyon, özet, sameSystem, sameEpoch,
+        sameHeights, sınırlar, taken). packageDesign ile kayıt paketin kendi tasarımıyla
+        (noktalar.csv, cizgiler.csv; ekibin elindeki tasarım) denetlenir: dosyalar paketin
+        özetiyle tutmalı, verilen design ve lines katmanları yalnız çizimdeki tasarımın
+        paketten sonra değişip değişmediğini söyler; cevapta package.design. İzleme işinin
+        dönem dizisinde (epochs) istenirse: trend.confidence ile her noktanın günlü
+        dönemlerinden (en az 3) en küçük kareler doğrusu (tracks[].fit: doğu, kuzey, kot
+        hızı m/yıl, σ'ları s/√Sxx, yatay hız; moving: |v| > t(n − 2; (1 + güven)/2)·σ olan
+        bileşenler) ve thresholds (warning, alarm: yatay ve düşey hareket m, yatay ve düşey
+        hız m/yıl; uyarı alarmdan küçük) ile her noktanın state'i (normal, warning, alarm)
+        ve aştığı sınırlar (exceeded); hız doğrununki, doğru yoksa ortalama hız. Eşikler ve
+        güven kullanıcınındır; izleme için yönetmelik değeri yoktur. Retler:
         invalid_asbuilt_check, invalid_file_path (paket yolu), file_not_found (paket yok),
         layer_not_found, not_a_road_project, unknown_terrain, terrain_unbuildable.
 

@@ -21,22 +21,22 @@ if TYPE_CHECKING:
 
 
 class _PlotstylesImport(LocalCommand[PlotStylesImport, PlotStylesImported, PlotStylesImported]):
-    """``cad.plotstyles.import`` v1. Baskı stili tablosu içe aktar: AutoCAD'in ikili baskı
-    stili tablosunu (.ctb renge bağlı, ACI 1–255 için 255 kalem; .stb adlı stiller)
-    pafta kitabına bir baskı profili olarak alır (docs/adr/1130). Dosya yalnız okunur:
-    60 baytlık üst bilgi (PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress, pmzlibcodec, üç
-    küçük-sonlu u32) ve zlib ile sıkıştırılmış ad=değer metni. Her alan açıkça eşlenir:
-    renk (-1 nesnenin; 0xC2/0xC3 türlü RGB #rrggbb), gri tonlama, tarama (yalnız
-    titreşim açıkken), kalınlık (kalınlık tablosunun mm değeri µm'ye; 0 nesnenin),
-    uç/birleşim (elmas yok), çizgi tipi (0 sürekli, 31 nesnenin; 1–30 eşlenmez).
-    KentOS'un başka bastığı her şey losses'ta türü, ağırlığı (lost, approximate, note),
-    stilleri ve dosyadaki değerleriyle söylenir; sessiz kırpma yoktur. Profil dosyanın
-    biçimini, SHA-256'sını ve adını taşır. assignments kalemleri ya da stilleri model
-    katmanlarına ({type:modelLayer,id}) veya kâğıt öğelerine açıkça verir (katmanın
-    RGB'sinden kalem tahmin edilmez); sheets profili paftalara uygular, yayın onunla
-    basar. Kitabın tek değişikliğidir; inverse geri alır. Plan yazmaz. Aynı ad ya da
-    aynı dosya ikinci kez duplicate_plot_profile; .ctb/.stb olmayan dosya
-    unsupported_plot_style_file; bozuk üst bilgi, metin ya da alan bad_plot_style_file.
+    """``cad.plotstyles.import`` v1. Baskı stili tablosu içe aktar: İkili baskı stili
+    tablosunu (.ctb renge bağlı, ACI 1–255 için 255 kalem; .stb adlı stiller) pafta
+    kitabına bir baskı profili olarak alır. Dosya yalnız okunur: 60 baytlık üst bilgi
+    (PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress, pmzlibcodec, üç küçük-sonlu u32) ve
+    zlib ile sıkıştırılmış ad=değer metni. Her alan açıkça eşlenir: renk (-1 nesnenin;
+    0xC2/0xC3 türlü RGB #rrggbb), gri tonlama, tarama (yalnız titreşim açıkken),
+    kalınlık (kalınlık tablosunun mm değeri µm'ye; 0 nesnenin), uç/birleşim (elmas yok),
+    çizgi tipi (0 sürekli, 31 nesnenin; 1–30 eşlenmez). KentOS'un başka bastığı her şey
+    losses'ta türü, ağırlığı (lost, approximate, note), stilleri ve dosyadaki
+    değerleriyle söylenir; sessiz kırpma yoktur. Profil dosyanın biçimini, SHA-256'sını
+    ve adını taşır. assignments kalemleri ya da stilleri model katmanlarına
+    ({type:modelLayer,id}) veya kâğıt öğelerine açıkça verir (katmanın RGB'sinden kalem
+    tahmin edilmez); sheets profili paftalara uygular, yayın onunla basar. Kitabın tek
+    değişikliğidir; inverse geri alır. Plan yazmaz. Aynı ad ya da aynı dosya ikinci kez
+    duplicate_plot_profile; .ctb/.stb olmayan dosya unsupported_plot_style_file; bozuk
+    üst bilgi, metin ya da alan bad_plot_style_file.
     """
     __slots__ = ()
     id = "cad.plotstyles.import"
@@ -61,9 +61,9 @@ class _PlotstylesImport(LocalCommand[PlotStylesImport, PlotStylesImported, PlotS
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> PlotStylesImported:
-        """Baskı stili tablosu içe aktar: AutoCAD'in ikili baskı stili tablosunu (.ctb renge
-        bağlı, ACI 1–255 için 255 kalem; .stb adlı stiller) pafta kitabına bir baskı profili
-        olarak alır (docs/adr/1130). Dosya yalnız okunur: 60 baytlık üst bilgi
+        """Baskı stili tablosu içe aktar: İkili baskı stili tablosunu (.ctb renge bağlı, ACI
+        1–255 için 255 kalem; .stb adlı stiller) pafta kitabına bir baskı profili olarak
+        alır. Dosya yalnız okunur: 60 baytlık üst bilgi
         (PIAFILEVERSION_2.0,CTBVER1|STBVER1,compress, pmzlibcodec, üç küçük-sonlu u32) ve
         zlib ile sıkıştırılmış ad=değer metni. Her alan açıkça eşlenir: renk (-1 nesnenin;
         0xC2/0xC3 türlü RGB #rrggbb), gri tonlama, tarama (yalnız titreşim açıkken),

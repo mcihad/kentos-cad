@@ -25,19 +25,19 @@ if TYPE_CHECKING:
 
 class _RevisionsMark(LocalCommand[RevisionsMark, RevisionMarked, RevisionPlan]):
     """``cad.revisions.mark`` v1. Revizyon işaretle: Revizyon bulutunu ve üçgenini birlikte
-    yazar (docs/adr/0721 §4); tek geri alma adımı “Revizyon”. Bulut
-    cad.revcloud.create'in çizdiğidir (frame: dikdörtgen, çokgen ya da nesne; arc yay
-    boyu), özniteliği Revizyon numaradır (date, description verilirse Tarih, Açıklama).
-    Üçgen KentOS blok kitaplığının “Revizyon” bloğudur (çizimin kendisininki varsa o;
-    yoksa aynı adımda eklenir, added), REV özniteliği numara; size kâğıttaki eni (mm,
-    yok: 6; en çok 100), çizim ölçeğiyle büyür. at üçgenin merkezidir; yoksa bulutun sağ
-    üst köşesinin dışında: köşelerin en doğusu ve en kuzeyi artı yarım yay ve yarım
-    üçgen. Revizyonları “Revizyon” bloğunun REV'e göre Blok çizelgesi listeler. Ret
-    sırası: invalid_mark (numara boş, kenarı boşluklu, denetim karakterli ya da 16
-    karakterden uzun; tarih 32, açıklama 240 karakterden uzun), not_finite (at, boy),
-    invalid_scale, sonra cad.revcloud.create'inkiler (çerçeve, yay, beklenen sürüm,
-    katman). Plan bulutu ve üçgeni (id 0) ve eklenecek bloğu verir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    yazar; tek geri alma adımı “Revizyon”. Bulut cad.revcloud.create'in çizdiğidir
+    (frame: dikdörtgen, çokgen ya da nesne; arc yay boyu), özniteliği Revizyon numaradır
+    (date, description verilirse Tarih, Açıklama). Üçgen KentOS blok kitaplığının
+    “Revizyon” bloğudur (çizimin kendisininki varsa o; yoksa aynı adımda eklenir,
+    added), REV özniteliği numara; size kâğıttaki eni (mm, yok: 6; en çok 100), çizim
+    ölçeğiyle büyür. at üçgenin merkezidir; yoksa bulutun sağ üst köşesinin dışında:
+    köşelerin en doğusu ve en kuzeyi artı yarım yay ve yarım üçgen. Revizyonları
+    “Revizyon” bloğunun REV'e göre Blok çizelgesi listeler. Ret sırası: invalid_mark
+    (numara boş, kenarı boşluklu, denetim karakterli ya da 16 karakterden uzun; tarih
+    32, açıklama 240 karakterden uzun), not_finite (at, boy), invalid_scale, sonra
+    cad.revcloud.create'inkiler (çerçeve, yay, beklenen sürüm, katman). Plan bulutu ve
+    üçgeni (id 0) ve eklenecek bloğu verir. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.revisions.mark"
@@ -67,20 +67,20 @@ class _RevisionsMark(LocalCommand[RevisionsMark, RevisionMarked, RevisionPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RevisionMarked:
-        """Revizyon işaretle: Revizyon bulutunu ve üçgenini birlikte yazar (docs/adr/0721 §4);
-        tek geri alma adımı “Revizyon”. Bulut cad.revcloud.create'in çizdiğidir (frame:
-        dikdörtgen, çokgen ya da nesne; arc yay boyu), özniteliği Revizyon numaradır (date,
-        description verilirse Tarih, Açıklama). Üçgen KentOS blok kitaplığının “Revizyon”
-        bloğudur (çizimin kendisininki varsa o; yoksa aynı adımda eklenir, added), REV
-        özniteliği numara; size kâğıttaki eni (mm, yok: 6; en çok 100), çizim ölçeğiyle
-        büyür. at üçgenin merkezidir; yoksa bulutun sağ üst köşesinin dışında: köşelerin en
-        doğusu ve en kuzeyi artı yarım yay ve yarım üçgen. Revizyonları “Revizyon” bloğunun
-        REV'e göre Blok çizelgesi listeler. Ret sırası: invalid_mark (numara boş, kenarı
-        boşluklu, denetim karakterli ya da 16 karakterden uzun; tarih 32, açıklama 240
-        karakterden uzun), not_finite (at, boy), invalid_scale, sonra
-        cad.revcloud.create'inkiler (çerçeve, yay, beklenen sürüm, katman). Plan bulutu ve
-        üçgeni (id 0) ve eklenecek bloğu verir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Revizyon işaretle: Revizyon bulutunu ve üçgenini birlikte yazar; tek geri alma adımı
+        “Revizyon”. Bulut cad.revcloud.create'in çizdiğidir (frame: dikdörtgen, çokgen ya da
+        nesne; arc yay boyu), özniteliği Revizyon numaradır (date, description verilirse
+        Tarih, Açıklama). Üçgen KentOS blok kitaplığının “Revizyon” bloğudur (çizimin
+        kendisininki varsa o; yoksa aynı adımda eklenir, added), REV özniteliği numara; size
+        kâğıttaki eni (mm, yok: 6; en çok 100), çizim ölçeğiyle büyür. at üçgenin
+        merkezidir; yoksa bulutun sağ üst köşesinin dışında: köşelerin en doğusu ve en
+        kuzeyi artı yarım yay ve yarım üçgen. Revizyonları “Revizyon” bloğunun REV'e göre
+        Blok çizelgesi listeler. Ret sırası: invalid_mark (numara boş, kenarı boşluklu,
+        denetim karakterli ya da 16 karakterden uzun; tarih 32, açıklama 240 karakterden
+        uzun), not_finite (at, boy), invalid_scale, sonra cad.revcloud.create'inkiler
+        (çerçeve, yay, beklenen sürüm, katman). Plan bulutu ve üçgeni (id 0) ve eklenecek
+        bloğu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

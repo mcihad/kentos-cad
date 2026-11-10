@@ -329,9 +329,9 @@ impl App {
                 lines.push(words::text_line(
                     if out.indexed { Line::Ok } else { Line::Info },
                     if out.indexed {
-                        "Mekânsal dizin yazılır: QGIS ve GDAL görünen kutuyu dosyanın tamamını okumadan bulur."
+                        "Mekânsal dizin yazılır: CBS yazılımları görünen kutuyu dosyanın tamamını okumadan bulur."
                     } else {
-                        "Konumsuz kayıt olduğu için mekânsal dizin yazılmaz (GDAL'ın kuralı)."
+                        "Konumsuz kayıt olduğu için mekânsal dizin yazılmaz (dizin her kaydın kutusunu ister)."
                     },
                 ));
                 for l in &out.lost {

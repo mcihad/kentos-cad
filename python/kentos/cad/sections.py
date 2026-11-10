@@ -24,20 +24,20 @@ if TYPE_CHECKING:
 
 class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, BuildingSectionsEdited]):
     """``cad.sections.edit`` v1. Kesit çıkar: Bir kesit işaretinin kesitini modelin
-    bildiklerinden 1/50 çizer (docs/adr/8042): işaretin ilk iki noktasından geçen düşey
-    düzlem, bakış işaretin oklarının yönünde. Kesilen (düzlemin iki yanında olan)
-    duvarlar katmanlarıyla, döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve
-    merdivenler malzeme malzeme tek kesit olarak kalın çizilir ve taranır; ötede
-    görünenler ince çizilir (gizli çizgiler ayıklanır); katların kotları (EK-4 Şekil
-    4.3), kat yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı,
-    ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır
-    (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de,
-    görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin bilmediği
-    çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve merdiven, rampa,
-    lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive (mark: kesit
-    işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı),
-    refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her yerleşim
-    güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
+    bildiklerinden 1/50 çizer: işaretin ilk iki noktasından geçen düşey düzlem, bakış
+    işaretin oklarının yönünde. Kesilen (düzlemin iki yanında olan) duvarlar
+    katmanlarıyla, döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve merdivenler
+    malzeme malzeme tek kesit olarak kalın çizilir ve taranır; ötede görünenler ince
+    çizilir (gizli çizgiler ayıklanır); katların kotları (EK-4 Şekil 4.3), kat
+    yükseklikleri, kesilen akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye
+    zemini, başlık (A-A KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA;
+    nesneleri EK-4'ün malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre
+    -1…-4) ve bir kez yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir:
+    çatı, tabii zemin, eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız
+    merdiven, niş ve baca. operation: derive (mark: kesit işaretinin kimliği; at:
+    çizginin sol ucunun ±0,00'ı nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu
+    modelin şimdiki hâliyle yeniden yazar; her yerleşim güncellenir). Tek geri alma
+    adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
     """
     __slots__ = ()
     id = "cad.sections.edit"
@@ -58,21 +58,20 @@ class _SectionsEdit(LocalCommand[BuildingSectionsEdit, BuildingSectionsEdited, B
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> BuildingSectionsEdited:
-        """Kesit çıkar: Bir kesit işaretinin kesitini modelin bildiklerinden 1/50 çizer
-        (docs/adr/8042): işaretin ilk iki noktasından geçen düşey düzlem, bakış işaretin
-        oklarının yönünde. Kesilen (düzlemin iki yanında olan) duvarlar katmanlarıyla,
-        döşemeler katmanlarıyla, kolonlar, kirişler, lentolar ve merdivenler malzeme malzeme
-        tek kesit olarak kalın çizilir ve taranır; ötede görünenler ince çizilir (gizli
-        çizgiler ayıklanır); katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen
-        akslar, geçilen mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A
-        KESİTİ) ve ölçek. Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün
-        malzeme katmanlarında, taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez
-        yerleştirilir. Modelin bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin,
-        eğri duvar ve merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca.
-        operation: derive (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı
-        nereye, yoksa çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle
-        yeniden yazar; her yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da
-        “Kesiti yeniden çiz”.
+        """Kesit çıkar: Bir kesit işaretinin kesitini modelin bildiklerinden 1/50 çizer:
+        işaretin ilk iki noktasından geçen düşey düzlem, bakış işaretin oklarının yönünde.
+        Kesilen (düzlemin iki yanında olan) duvarlar katmanlarıyla, döşemeler katmanlarıyla,
+        kolonlar, kirişler, lentolar ve merdivenler malzeme malzeme tek kesit olarak kalın
+        çizilir ve taranır; ötede görünenler ince çizilir (gizli çizgiler ayıklanır);
+        katların kotları (EK-4 Şekil 4.3), kat yükseklikleri, kesilen akslar, geçilen
+        mahallerin numarası ve adı, ±0,00'da tesviye zemini, başlık (A-A KESİTİ) ve ölçek.
+        Çizim işaretin bloğundadır (MM-XXXX-KESITA; nesneleri EK-4'ün malzeme katmanlarında,
+        taramaları -T'de, görünenler derinliğe göre -1…-4) ve bir kez yerleştirilir. Modelin
+        bilmediği çizilmez, leftOut'ta listelenir: çatı, tabii zemin, eğri duvar ve
+        merdiven, rampa, lentosuz açıklık, plaksız merdiven, niş ve baca. operation: derive
+        (mark: kesit işaretinin kimliği; at: çizginin sol ucunun ±0,00'ı nereye, yoksa
+        çizimin 5 m sağı), refresh (mark: bloğu modelin şimdiki hâliyle yeniden yazar; her
+        yerleşim güncellenir). Tek geri alma adımı “Kesit çıkar” ya da “Kesiti yeniden çiz”.
 
         Args:
             doc: The drawing it works on.
@@ -155,10 +154,10 @@ edit = _SectionsEdit()
 
 class _SectionsQuery(LocalCommand[BuildingSectionsQuery, BuildingSectionsQueried, BuildingSectionsQueried]):
     """``cad.sections.query`` v1. Kesitler: Çizimin kesit işaretlerini ve kesitlerinin
-    durumunu okur (docs/adr/8042 §5): güncel (yeniden çizilse aynı), eski (model
-    değişti), çıkarılmadı (işaretin kesiti yok), kaynağı yok (bloğun işareti silinmiş);
-    her birinin adı (A-A kesiti), bloğu ve yerleşim sayısı. mark ile bir işaretin, uid
-    ile bir yerleşimin kesiti.
+    durumunu okur: güncel (yeniden çizilse aynı), eski (model değişti), çıkarılmadı
+    (işaretin kesiti yok), kaynağı yok (bloğun işareti silinmiş); her birinin adı (A-A
+    kesiti), bloğu ve yerleşim sayısı. mark ile bir işaretin, uid ile bir yerleşimin
+    kesiti.
     """
     __slots__ = ()
     id = "cad.sections.query"
@@ -179,10 +178,10 @@ class _SectionsQuery(LocalCommand[BuildingSectionsQuery, BuildingSectionsQueried
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> BuildingSectionsQueried:
-        """Kesitler: Çizimin kesit işaretlerini ve kesitlerinin durumunu okur (docs/adr/8042
-        §5): güncel (yeniden çizilse aynı), eski (model değişti), çıkarılmadı (işaretin
-        kesiti yok), kaynağı yok (bloğun işareti silinmiş); her birinin adı (A-A kesiti),
-        bloğu ve yerleşim sayısı. mark ile bir işaretin, uid ile bir yerleşimin kesiti.
+        """Kesitler: Çizimin kesit işaretlerini ve kesitlerinin durumunu okur: güncel (yeniden
+        çizilse aynı), eski (model değişti), çıkarılmadı (işaretin kesiti yok), kaynağı yok
+        (bloğun işareti silinmiş); her birinin adı (A-A kesiti), bloğu ve yerleşim sayısı.
+        mark ile bir işaretin, uid ile bir yerleşimin kesiti.
 
         Args:
             doc: The drawing it works on.

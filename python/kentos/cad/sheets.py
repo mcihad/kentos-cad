@@ -179,24 +179,24 @@ create = _SheetsCreate()
 
 class _SheetsDetails(LocalCommand[SheetsDetails, SheetsDetailed, SheetsDetailed]):
     """``cad.sheets.details`` v1. Detay paftaları: Aynı modelin genel 2B detaylarını kesin
-    oranlarla paftalara yerleştirir (docs/adr/1090 §2); mimari kat verisi gerekmez. Her
-    detay: name, bounds (model kapsamı, metre: en küçük doğu, kuzey, en büyük doğu,
-    kuzey) ya da table {table, part} (bölünmüş model tablosunun parçası, docs/adr/1030
-    §7), ratio {paper, model} (1:5 = paper 1, model 5; 2:1 = paper 2, model 1), isteğe
-    bağlı layers (katman durumu {type:theme,name}; başka kullanıcının katman aç/kapası
-    baskıyı değiştirmez), layerOverrides, annotation {type:fixed,scale} ve locked (yok:
-    kilitli; ekran yakınlaştırması baskı ölçeğini değiştirmez). Pencere boyu kapsam ×
-    paper/model, en yakın µm'ye yuvarlanır. Detaylar şablonun (source; yok:
-    sys:cad-teknik) ilk sabit görünüm penceresinin alanına verilen sırayla, soldan sağa
-    satır satır (aralık 10 mm, başlık bandı 6,5 mm, hücre en az 40 mm) yerleşir; paftaya
-    sığmayan detay setin sonraki paftasına geçer. Şablonun penceresi detaylara yer açar;
-    her detayın altında “<ad> — Ölçek 1/N” yazısı görünümün kendi ölçeğini okur.
-    Paftalar first'ten (yok: D-501) numaralanır, başlık title (yok: Detaylar), alt küme
-    Detaylar. Plan yapılacak paftaları ve her detayın kâğıt çerçevesini verir; hepsi tek
-    değişiklik, inverse geri alır. Boş kapsam invalid_extent, geçersiz oran
-    invalid_ratio, 1 mm'den küçük pencere detail_too_small, boş alana bile sığmayan
-    detay detail_does_not_fit, bounds ile table birlikte ya da hiçbiri ambiguous_source,
-    tablo olmayan nesne not_a_table, olmayan parça table_part_missing.
+    oranlarla paftalara yerleştirir; mimari kat verisi gerekmez. Her detay: name, bounds
+    (model kapsamı, metre: en küçük doğu, kuzey, en büyük doğu, kuzey) ya da table
+    {table, part} (bölünmüş model tablosunun parçası), ratio {paper, model} (1:5 = paper
+    1, model 5; 2:1 = paper 2, model 1), isteğe bağlı layers (katman durumu
+    {type:theme,name}; başka kullanıcının katman aç/kapası baskıyı değiştirmez),
+    layerOverrides, annotation {type:fixed,scale} ve locked (yok: kilitli; ekran
+    yakınlaştırması baskı ölçeğini değiştirmez). Pencere boyu kapsam × paper/model, en
+    yakın µm'ye yuvarlanır. Detaylar şablonun (source; yok: sys:cad-teknik) ilk sabit
+    görünüm penceresinin alanına verilen sırayla, soldan sağa satır satır (aralık 10 mm,
+    başlık bandı 6,5 mm, hücre en az 40 mm) yerleşir; paftaya sığmayan detay setin
+    sonraki paftasına geçer. Şablonun penceresi detaylara yer açar; her detayın altında
+    “<ad> — Ölçek 1/N” yazısı görünümün kendi ölçeğini okur. Paftalar first'ten (yok:
+    D-501) numaralanır, başlık title (yok: Detaylar), alt küme Detaylar. Plan yapılacak
+    paftaları ve her detayın kâğıt çerçevesini verir; hepsi tek değişiklik, inverse geri
+    alır. Boş kapsam invalid_extent, geçersiz oran invalid_ratio, 1 mm'den küçük pencere
+    detail_too_small, boş alana bile sığmayan detay detail_does_not_fit, bounds ile
+    table birlikte ya da hiçbiri ambiguous_source, tablo olmayan nesne not_a_table,
+    olmayan parça table_part_missing.
     """
     __slots__ = ()
     id = "cad.sheets.details"
@@ -222,21 +222,21 @@ class _SheetsDetails(LocalCommand[SheetsDetails, SheetsDetailed, SheetsDetailed]
         expected: Expected | None = None,
     ) -> SheetsDetailed:
         """Detay paftaları: Aynı modelin genel 2B detaylarını kesin oranlarla paftalara
-        yerleştirir (docs/adr/1090 §2); mimari kat verisi gerekmez. Her detay: name, bounds
-        (model kapsamı, metre: en küçük doğu, kuzey, en büyük doğu, kuzey) ya da table
-        {table, part} (bölünmüş model tablosunun parçası, docs/adr/1030 §7), ratio {paper,
-        model} (1:5 = paper 1, model 5; 2:1 = paper 2, model 1), isteğe bağlı layers (katman
-        durumu {type:theme,name}; başka kullanıcının katman aç/kapası baskıyı değiştirmez),
-        layerOverrides, annotation {type:fixed,scale} ve locked (yok: kilitli; ekran
-        yakınlaştırması baskı ölçeğini değiştirmez). Pencere boyu kapsam × paper/model, en
-        yakın µm'ye yuvarlanır. Detaylar şablonun (source; yok: sys:cad-teknik) ilk sabit
-        görünüm penceresinin alanına verilen sırayla, soldan sağa satır satır (aralık 10 mm,
-        başlık bandı 6,5 mm, hücre en az 40 mm) yerleşir; paftaya sığmayan detay setin
-        sonraki paftasına geçer. Şablonun penceresi detaylara yer açar; her detayın altında
-        “<ad> — Ölçek 1/N” yazısı görünümün kendi ölçeğini okur. Paftalar first'ten (yok:
-        D-501) numaralanır, başlık title (yok: Detaylar), alt küme Detaylar. Plan yapılacak
-        paftaları ve her detayın kâğıt çerçevesini verir; hepsi tek değişiklik, inverse geri
-        alır. Boş kapsam invalid_extent, geçersiz oran invalid_ratio, 1 mm'den küçük pencere
+        yerleştirir; mimari kat verisi gerekmez. Her detay: name, bounds (model kapsamı,
+        metre: en küçük doğu, kuzey, en büyük doğu, kuzey) ya da table {table, part}
+        (bölünmüş model tablosunun parçası), ratio {paper, model} (1:5 = paper 1, model 5;
+        2:1 = paper 2, model 1), isteğe bağlı layers (katman durumu {type:theme,name}; başka
+        kullanıcının katman aç/kapası baskıyı değiştirmez), layerOverrides, annotation
+        {type:fixed,scale} ve locked (yok: kilitli; ekran yakınlaştırması baskı ölçeğini
+        değiştirmez). Pencere boyu kapsam × paper/model, en yakın µm'ye yuvarlanır. Detaylar
+        şablonun (source; yok: sys:cad-teknik) ilk sabit görünüm penceresinin alanına
+        verilen sırayla, soldan sağa satır satır (aralık 10 mm, başlık bandı 6,5 mm, hücre
+        en az 40 mm) yerleşir; paftaya sığmayan detay setin sonraki paftasına geçer.
+        Şablonun penceresi detaylara yer açar; her detayın altında “<ad> — Ölçek 1/N” yazısı
+        görünümün kendi ölçeğini okur. Paftalar first'ten (yok: D-501) numaralanır, başlık
+        title (yok: Detaylar), alt küme Detaylar. Plan yapılacak paftaları ve her detayın
+        kâğıt çerçevesini verir; hepsi tek değişiklik, inverse geri alır. Boş kapsam
+        invalid_extent, geçersiz oran invalid_ratio, 1 mm'den küçük pencere
         detail_too_small, boş alana bile sığmayan detay detail_does_not_fit, bounds ile
         table birlikte ya da hiçbiri ambiguous_source, tablo olmayan nesne not_a_table,
         olmayan parça table_part_missing.
@@ -668,18 +668,17 @@ fit = _SheetsFit()
 
 class _SheetsLevels(LocalCommand[SheetsLevels, SheetsEdited, SheetsEdited]):
     """``cad.sheets.levels`` v1. Kat planı paftaları: Projenin her katı için bir pafta
-    yapar (docs/adr/0718): aynı şablondan (source; yok: sys:cad-mimari), haritası o katı
-    çizer (docs/adr/0716; below: alt kat soluk), bütün haritalar aynı zemini gösterir:
-    seçilen katların nesnelerinin kutusu (yoksa bütün çizim), options.scale ölçeğinde ya
-    da verilmezse sığdığı standart ölçekte; planlar kâğıtta üst üste oturur. levels:
-    katların kimlikleri (yok: projenin bütün katları). Paftalar first'ten (yok: A-101)
-    son rakamları artarak numaralanır, kullanılan numaralar atlanır; adı “A-101 Zemin
-    kat planı”, çizim bilgisi numara, başlık ve Mimari › Kat planları. Bir haritası
-    zaten gösterdiği kat atlanır (Revit'in Do not duplicate existing views'i); again
-    true yeniden yapar. Plan yapılacak paftaları ve haritalarını verir; hepsi tek
-    değişiklik, inverse geri alır. Projede olmayan kat level_not_found, options.name
-    invalid_options, katların hepsinin paftası varsa levels_have_sheets, haritasız
-    şablon not_fixed_map, rakamla bitmeyen first bad_drawing_info.
+    yapar: aynı şablondan (source; yok: sys:cad-mimari), haritası o katı çizer (below:
+    alt kat soluk), bütün haritalar aynı zemini gösterir: seçilen katların nesnelerinin
+    kutusu (yoksa bütün çizim), options.scale ölçeğinde ya da verilmezse sığdığı
+    standart ölçekte; planlar kâğıtta üst üste oturur. levels: katların kimlikleri (yok:
+    projenin bütün katları). Paftalar first'ten (yok: A-101) son rakamları artarak
+    numaralanır, kullanılan numaralar atlanır; adı “A-101 Zemin kat planı”, çizim
+    bilgisi numara, başlık ve Mimari › Kat planları. Bir haritası zaten gösterdiği kat
+    atlanır; again true yeniden yapar. Plan yapılacak paftaları ve haritalarını verir;
+    hepsi tek değişiklik, inverse geri alır. Projede olmayan kat level_not_found,
+    options.name invalid_options, katların hepsinin paftası varsa levels_have_sheets,
+    haritasız şablon not_fixed_map, rakamla bitmeyen first bad_drawing_info.
     """
     __slots__ = ()
     id = "cad.sheets.levels"
@@ -705,19 +704,18 @@ class _SheetsLevels(LocalCommand[SheetsLevels, SheetsEdited, SheetsEdited]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SheetsEdited:
-        """Kat planı paftaları: Projenin her katı için bir pafta yapar (docs/adr/0718): aynı
-        şablondan (source; yok: sys:cad-mimari), haritası o katı çizer (docs/adr/0716;
-        below: alt kat soluk), bütün haritalar aynı zemini gösterir: seçilen katların
-        nesnelerinin kutusu (yoksa bütün çizim), options.scale ölçeğinde ya da verilmezse
-        sığdığı standart ölçekte; planlar kâğıtta üst üste oturur. levels: katların
-        kimlikleri (yok: projenin bütün katları). Paftalar first'ten (yok: A-101) son
-        rakamları artarak numaralanır, kullanılan numaralar atlanır; adı “A-101 Zemin kat
-        planı”, çizim bilgisi numara, başlık ve Mimari › Kat planları. Bir haritası zaten
-        gösterdiği kat atlanır (Revit'in Do not duplicate existing views'i); again true
-        yeniden yapar. Plan yapılacak paftaları ve haritalarını verir; hepsi tek değişiklik,
-        inverse geri alır. Projede olmayan kat level_not_found, options.name
-        invalid_options, katların hepsinin paftası varsa levels_have_sheets, haritasız
-        şablon not_fixed_map, rakamla bitmeyen first bad_drawing_info.
+        """Kat planı paftaları: Projenin her katı için bir pafta yapar: aynı şablondan (source;
+        yok: sys:cad-mimari), haritası o katı çizer (below: alt kat soluk), bütün haritalar
+        aynı zemini gösterir: seçilen katların nesnelerinin kutusu (yoksa bütün çizim),
+        options.scale ölçeğinde ya da verilmezse sığdığı standart ölçekte; planlar kâğıtta
+        üst üste oturur. levels: katların kimlikleri (yok: projenin bütün katları). Paftalar
+        first'ten (yok: A-101) son rakamları artarak numaralanır, kullanılan numaralar
+        atlanır; adı “A-101 Zemin kat planı”, çizim bilgisi numara, başlık ve Mimari › Kat
+        planları. Bir haritası zaten gösterdiği kat atlanır; again true yeniden yapar. Plan
+        yapılacak paftaları ve haritalarını verir; hepsi tek değişiklik, inverse geri alır.
+        Projede olmayan kat level_not_found, options.name invalid_options, katların hepsinin
+        paftası varsa levels_have_sheets, haritasız şablon not_fixed_map, rakamla bitmeyen
+        first bad_drawing_info.
 
         Args:
             doc: The drawing it works on.

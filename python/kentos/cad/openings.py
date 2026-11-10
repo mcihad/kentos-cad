@@ -214,13 +214,13 @@ create = _OpeningsCreate()
 
 class _OpeningsDistances(LocalCommand[OpeningsDistancesInput, OpeningsDistances, OpeningsDistances]):
     """``cad.openings.distances`` v1. Açıklığın mesafeleri: Kalıcı kimlikleri verilen kapı,
-    pencere ve boşlukların geçici ölçülerini okur (docs/adr/0701): duvar kenarının
-    seçilen yüzünde (face: left, varsayılan, ya da right; yolun yönüne göre)
-    pervazlardan önceki (start) ve sonraki (end) en yakın referansa net mesafe. Referans
-    yüzün köşesi ya da ucu (end), aynı kenardaki başka açıklığın pervazı (opening) ya da
-    yüzü kesen başka duvarın yüzü (wall); from pervazın, to referansın yüzdeki noktası,
-    metre. Yay kenardaki açıklık reddedilir (invalid_opening). Belgeye yazmaz; mesafeyi
-    değiştirmek için cad.openings.edit'in distance işlemi.
+    pencere ve boşlukların geçici ölçülerini okur: duvar kenarının seçilen yüzünde
+    (face: left, varsayılan, ya da right; yolun yönüne göre) pervazlardan önceki (start)
+    ve sonraki (end) en yakın referansa net mesafe. Referans yüzün köşesi ya da ucu
+    (end), aynı kenardaki başka açıklığın pervazı (opening) ya da yüzü kesen başka
+    duvarın yüzü (wall); from pervazın, to referansın yüzdeki noktası, metre. Yay
+    kenardaki açıklık reddedilir (invalid_opening). Belgeye yazmaz; mesafeyi değiştirmek
+    için cad.openings.edit'in distance işlemi.
     """
     __slots__ = ()
     id = "cad.openings.distances"
@@ -242,13 +242,13 @@ class _OpeningsDistances(LocalCommand[OpeningsDistancesInput, OpeningsDistances,
         expected: Expected | None = None,
     ) -> OpeningsDistances:
         """Açıklığın mesafeleri: Kalıcı kimlikleri verilen kapı, pencere ve boşlukların geçici
-        ölçülerini okur (docs/adr/0701): duvar kenarının seçilen yüzünde (face: left,
-        varsayılan, ya da right; yolun yönüne göre) pervazlardan önceki (start) ve sonraki
-        (end) en yakın referansa net mesafe. Referans yüzün köşesi ya da ucu (end), aynı
-        kenardaki başka açıklığın pervazı (opening) ya da yüzü kesen başka duvarın yüzü
-        (wall); from pervazın, to referansın yüzdeki noktası, metre. Yay kenardaki açıklık
-        reddedilir (invalid_opening). Belgeye yazmaz; mesafeyi değiştirmek için
-        cad.openings.edit'in distance işlemi.
+        ölçülerini okur: duvar kenarının seçilen yüzünde (face: left, varsayılan, ya da
+        right; yolun yönüne göre) pervazlardan önceki (start) ve sonraki (end) en yakın
+        referansa net mesafe. Referans yüzün köşesi ya da ucu (end), aynı kenardaki başka
+        açıklığın pervazı (opening) ya da yüzü kesen başka duvarın yüzü (wall); from
+        pervazın, to referansın yüzdeki noktası, metre. Yay kenardaki açıklık reddedilir
+        (invalid_opening). Belgeye yazmaz; mesafeyi değiştirmek için cad.openings.edit'in
+        distance işlemi.
 
         Args:
             doc: The drawing it works on.
@@ -340,21 +340,20 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
     gibi düşerse menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa
     from türündeki bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların
     sırasıyla ve her duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar),
-    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), distance
-    (docs/adr/0701: side start/end, face left/right, distance metre: pervazın o yöndeki
-    en yakın referansa — yüzün köşesi ya da ucu, aynı kenardaki başka açıklığın pervazı,
-    yüzü kesen başka duvar — net mesafesi bu olur; referans sabit, açıklık kenarında
-    kalır; mesafeyi önce cad.openings.distances okur), array (tek kaynak, korunur;
-    layout.count yalnız yeni kopyaların adedi 1–10000; spacing: distance net pervaz
-    arası veya centers merkez aralığı, direction start/end; fit: startMargin/endMargin
-    net uç payları arasında eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik
-    duvar yolu boyunca; numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar,
-    aynı biçimdeki mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın
-    dışına ya da köşesine taşan (opening_off_wall), başka açıklığa binen
-    (openings_overlap) açıklık yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz
-    ve kopyalanmaz (opening_host_gone), önce rehost'la bir duvara konur. Kilitli
-    katmandaki açıklık bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları
-    gibi gösterir.
+    copy (offsets: her uzaklıkta duvar boyunca bir kopya, numarasız), distance (side
+    start/end, face left/right, distance metre: pervazın o yöndeki en yakın referansa —
+    yüzün köşesi ya da ucu, aynı kenardaki başka açıklığın pervazı, yüzü kesen başka
+    duvar — net mesafesi bu olur; referans sabit, açıklık kenarında kalır; mesafeyi önce
+    cad.openings.distances okur), array (tek kaynak, korunur; layout.count yalnız yeni
+    kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez
+    aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında
+    eşit dağıtım, 1 adet ortalanır; uzunluklar metre, analitik duvar yolu boyunca;
+    numbering isteğe bağlı prefix/start/step, yalnız yeni kopyalar, aynı biçimdeki
+    mevcut açıklıkla yinelenen numara tüm işlemi reddeder). Duvarın dışına ya da
+    köşesine taşan (opening_off_wall), başka açıklığa binen (openings_overlap) açıklık
+    yazılmaz; duvarı olmayan açıklık duvar boyunca taşınmaz ve kopyalanmaz
+    (opening_host_gone), önce rehost'la bir duvara konur. Kilitli katmandaki açıklık
+    bütün değişikliği reddeder. Plan yazmadan açıklıkları olacakları gibi gösterir.
     """
     __slots__ = ()
     id = "cad.openings.edit"
@@ -386,10 +385,10 @@ class _OpeningsEdit(LocalCommand[OpeningsEdit, OpeningsEdited, OpeningsEdited]):
         menteşe ve yan çevrilir), replaceType (to: KentOS'un türü; uids boşsa from türündeki
         bütün açıklıklar), renumber (prefix ve start: K1, K2 …; duvarların sırasıyla ve her
         duvar boyunca; uids boşsa form biçimindeki ya da bütün açıklıklar), copy (offsets:
-        her uzaklıkta duvar boyunca bir kopya, numarasız), distance (docs/adr/0701: side
-        start/end, face left/right, distance metre: pervazın o yöndeki en yakın referansa —
-        yüzün köşesi ya da ucu, aynı kenardaki başka açıklığın pervazı, yüzü kesen başka
-        duvar — net mesafesi bu olur; referans sabit, açıklık kenarında kalır; mesafeyi önce
+        her uzaklıkta duvar boyunca bir kopya, numarasız), distance (side start/end, face
+        left/right, distance metre: pervazın o yöndeki en yakın referansa — yüzün köşesi ya
+        da ucu, aynı kenardaki başka açıklığın pervazı, yüzü kesen başka duvar — net
+        mesafesi bu olur; referans sabit, açıklık kenarında kalır; mesafeyi önce
         cad.openings.distances okur), array (tek kaynak, korunur; layout.count yalnız yeni
         kopyaların adedi 1–10000; spacing: distance net pervaz arası veya centers merkez
         aralığı, direction start/end; fit: startMargin/endMargin net uç payları arasında
@@ -490,10 +489,10 @@ edit = _OpeningsEdit()
 
 class _OpeningsQuery(LocalCommand[OpeningsQuery, OpeningsQueried, OpeningsQueried]):
     """``cad.openings.query`` v1. Açıklıkları oku: Çizimin kapı, pencere ve öbür
-    açıklıklarını tipleri ve genişlikleriyle okur (docs/adr/0772); çizimi değiştirmez.
-    Süzgeçler: uids (seçim kapsamı), type (projenin ya da KentOS'un tipi, kimlik ya da
-    ad: Aynı tiptekileri seç), level (duvarın katı; null katsız), form. Her satır: uid,
-    form, number, type ve typeName, typeVersion (izlediği tipin aldığı sürümü), stale
+    açıklıklarını tipleri ve genişlikleriyle okur; çizimi değiştirmez. Süzgeçler: uids
+    (seçim kapsamı), type (projenin ya da KentOS'un tipi, kimlik ya da ad: Aynı
+    tiptekileri seç), level (duvarın katı; null katsız), form. Her satır: uid, form,
+    number, type ve typeName, typeVersion (izlediği tipin aldığı sürümü), stale
     (tipinden eski), overrides (örnek istisnaları), level, host ve sizes: rough kaba
     boşluk (açıklığın width'i), unit kasa dış eni (kaba boşluk eksi iki yanda montaj
     boşluğu), leaf kanat eni (kasanın içi), leaves (kanatlar), clear net geçiş (kapı
@@ -524,17 +523,17 @@ class _OpeningsQuery(LocalCommand[OpeningsQuery, OpeningsQueried, OpeningsQuerie
         expected: Expected | None = None,
     ) -> OpeningsQueried:
         """Açıklıkları oku: Çizimin kapı, pencere ve öbür açıklıklarını tipleri ve
-        genişlikleriyle okur (docs/adr/0772); çizimi değiştirmez. Süzgeçler: uids (seçim
-        kapsamı), type (projenin ya da KentOS'un tipi, kimlik ya da ad: Aynı tiptekileri
-        seç), level (duvarın katı; null katsız), form. Her satır: uid, form, number, type ve
-        typeName, typeVersion (izlediği tipin aldığı sürümü), stale (tipinden eski),
-        overrides (örnek istisnaları), level, host ve sizes: rough kaba boşluk (açıklığın
-        width'i), unit kasa dış eni (kaba boşluk eksi iki yanda montaj boşluğu), leaf kanat
-        eni (kasanın içi), leaves (kanatlar), clear net geçiş (kapı açıkken açık kanadın
-        yüzünden karşı kasaya; açıda kanadın izdüşümü ve kalınlığı düşülür, kalınlık
-        verilmezse 0.04 m), clearFirst (iki kanatlıda yalnız birinci kanat açıkken), sizeBy
-        ve nominal (tipin ölçüsünün adladığı genişlik). types: projenin tipleri, bütün
-        çizimde izleyen, eski sürümde kalan ve istisnalı açıklık sayılarıyla.
+        genişlikleriyle okur; çizimi değiştirmez. Süzgeçler: uids (seçim kapsamı), type
+        (projenin ya da KentOS'un tipi, kimlik ya da ad: Aynı tiptekileri seç), level
+        (duvarın katı; null katsız), form. Her satır: uid, form, number, type ve typeName,
+        typeVersion (izlediği tipin aldığı sürümü), stale (tipinden eski), overrides (örnek
+        istisnaları), level, host ve sizes: rough kaba boşluk (açıklığın width'i), unit kasa
+        dış eni (kaba boşluk eksi iki yanda montaj boşluğu), leaf kanat eni (kasanın içi),
+        leaves (kanatlar), clear net geçiş (kapı açıkken açık kanadın yüzünden karşı kasaya;
+        açıda kanadın izdüşümü ve kalınlığı düşülür, kalınlık verilmezse 0.04 m), clearFirst
+        (iki kanatlıda yalnız birinci kanat açıkken), sizeBy ve nominal (tipin ölçüsünün
+        adladığı genişlik). types: projenin tipleri, bütün çizimde izleyen, eski sürümde
+        kalan ve istisnalı açıklık sayılarıyla.
 
         Args:
             doc: The drawing it works on.

@@ -366,7 +366,7 @@ impl App {
                     lines.push(words::text_line(
                         Line::Ok,
                         format!(
-                            "Özelliklerin türleri {} şemasında: GDAL ve QGIS türleri oradan okur.",
+                            "Özelliklerin türleri {} şemasında: CBS yazılımları türleri oradan okur.",
                             x.name
                         ),
                     ));

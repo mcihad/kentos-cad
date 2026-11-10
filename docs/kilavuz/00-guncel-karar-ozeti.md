@@ -2671,7 +2671,7 @@
   söylenir; takma ad ve seçenek harfi çakışmaları testte (ADR 0281);
   AutoCAD takma adları: Uygulama ayarları › Görünüm › Komut satırı'nda kapalı başlayan tercih (`drafting.autocadAliases`); komut satırı
   AutoCAD'in acad.pgp adlarını da alır (RECTANG, LA, DT, U, UNDO, QSAVE; yöntemiyle JOG), profil veridir
-  (`catalog/v1/aliases-autocad.json`), KentOS'un adları, yöntem adları ve tek tuş kısayolları önce gelir (B, CP, D, I, P, POLYGON, S, T
+  (`catalog/v1/aliases-classic.json`), KentOS'un adları, yöntem adları ve tek tuş kısayolları önce gelir (B, CP, D, I, P, POLYGON, S, T
   eklenmez); öneri listesinde ve F1'de görünür, tuşlar ve seçenek harfleri değişmez (`alias_profile.rs`, ADR 0282);
   şeffaf komutlar: Kaydır, Pencere yakınlaştır, Mesafe ölç, Açı ölç ve Koordinat oku çalışan komutun ya da sıcak tutamacın üstünde
   çalışır (`Session::start_over`, `TRANSPARENT`), komut noktaları, seçenekleri, istemi, kilitleri, referansı ve Yapım kipiyle bekler,

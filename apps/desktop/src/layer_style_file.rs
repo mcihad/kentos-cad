@@ -1,5 +1,5 @@
 //! Stil yükle… and Stili kaydet… (docs/adr/0635 §9, plan/gis.md CBS-17): a layer's look from or to one style file,
-//! the file's extension choosing the format, the format's own command doing the work (`.qml` QGIS's
+//! the file's extension choosing the format, the format's own command doing the work (`.qml` QML's
 //! `file.import.qml`, `.sld` `file.import.sld`, `.json` a MapLibre style's `file.import.maplibre`, and the exports).
 //! What each format carries is the style exchange's profile (docs/style/exchange.md). Tests give the path through
 //! `Picker::File`.
@@ -34,7 +34,7 @@ impl StyleFile {
 
 const FILTERS: [(&str, &[&str]); 4] = [
     ("Stil dosyaları", &["qml", "sld", "xml", "json"]),
-    ("QGIS stili (QML)", &["qml"]),
+    ("QML stili (.qml)", &["qml"]),
     ("SLD", &["sld", "xml"]),
     ("MapLibre stili", &["json"]),
 ];
@@ -120,7 +120,7 @@ impl App {
 
 fn unknown(path: &Path) -> String {
     format!(
-        "{} bir stil dosyası değil: uzantısı .qml (QGIS), .sld ya da .json (MapLibre) olmalı.",
+        "{} bir stil dosyası değil: uzantısı .qml, .sld ya da .json (MapLibre stili) olmalı.",
         path.display()
     )
 }

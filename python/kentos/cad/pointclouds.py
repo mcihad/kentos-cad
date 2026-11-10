@@ -1065,18 +1065,17 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
     (hücre RMS'i paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler
     ve kontrol noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si
     (BÖHHBÜY m. 91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır
-    sayılmaz. robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer
-    1,345; ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı
-    eşleşmelerin tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini
-    ve ağırlığı birden küçük eşleşmeleri verir. reject (ADR 2700, PCL'in eşleşme
-    ayıklayıcıları): edges, sabit noktası bulutunun kenarında olan eşleşmeyi (erişim
-    içindeki komşularının teğet düzlemdeki yönleri 90°'den büyük boşluk bırakıyor:
-    tarama sınırı, gölge) her adımın dışında bırakır; angle, sabit normali ile hareketli
-    noktanın kendi normali bu kadar dereceden çok ayrılan (ya da hareketli normali
-    olmayan) eşleşmeyi bırakır: bir taramanın görüp öbürünün görmediği duvar, araç yanı;
-    cevap son adımda bırakılanları sayar. Retler: invalid_uid, entity_not_found,
-    not_a_pointcloud, invalid_input (reject boş, reject.angle 0–90 dışı),
-    layer_not_found, too_many_cloud_points.
+    sayılmaz. robust: her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345;
+    ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin
+    tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı
+    birden küçük eşleşmeleri verir. reject (PCL'in eşleşme ayıklayıcıları): edges, sabit
+    noktası bulutunun kenarında olan eşleşmeyi (erişim içindeki komşularının teğet
+    düzlemdeki yönleri 90°'den büyük boşluk bırakıyor: tarama sınırı, gölge) her adımın
+    dışında bırakır; angle, sabit normali ile hareketli noktanın kendi normali bu kadar
+    dereceden çok ayrılan (ya da hareketli normali olmayan) eşleşmeyi bırakır: bir
+    taramanın görüp öbürünün görmediği duvar, araç yanı; cevap son adımda bırakılanları
+    sayar. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input
+    (reject boş, reject.angle 0–90 dışı), layer_not_found, too_many_cloud_points.
     """
     __slots__ = ()
     id = "cad.pointclouds.register"
@@ -1126,18 +1125,17 @@ class _PointcloudsRegister(LocalCommand[PointCloudsRegister, PointCloudsRegister
         paketin şeritler arası örnek sınırıyla, lidar-uyum), en kötü hücreler ve kontrol
         noktalarında sabit bulutun ve hareketli bulutun önce/sonra KOH_Z'si (BÖHHBÜY m.
         91(2) sınırıyla). Bulut taşınmaz; kontrolsüz kayıt ölçüye kesin hazır sayılmaz.
-        robust (ADR 2300): her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345;
-        ölçek 1,4826 × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin
-        tutulan payı, kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı
-        birden küçük eşleşmeleri verir. reject (ADR 2700, PCL'in eşleşme ayıklayıcıları):
-        edges, sabit noktası bulutunun kenarında olan eşleşmeyi (erişim içindeki
-        komşularının teğet düzlemdeki yönleri 90°'den büyük boşluk bırakıyor: tarama sınırı,
-        gölge) her adımın dışında bırakır; angle, sabit normali ile hareketli noktanın kendi
-        normali bu kadar dereceden çok ayrılan (ya da hareketli normali olmayan) eşleşmeyi
-        bırakır: bir taramanın görüp öbürünün görmediği duvar, araç yanı; cevap son adımda
-        bırakılanları sayar. Retler: invalid_uid, entity_not_found, not_a_pointcloud,
-        invalid_input (reject boş, reject.angle 0–90 dışı), layer_not_found,
-        too_many_cloud_points.
+        robust: her adımda eşleşmeler ağırlıklanır; huber (k, ilk değer 1,345; ölçek 1,4826
+        × ortanca |artık|) ya da trimmed (ratio: en küçük artıklı eşleşmelerin tutulan payı,
+        kullanıcının; ilk değeri yok); cevap son adımın ölçeğini ve ağırlığı birden küçük
+        eşleşmeleri verir. reject (PCL'in eşleşme ayıklayıcıları): edges, sabit noktası
+        bulutunun kenarında olan eşleşmeyi (erişim içindeki komşularının teğet düzlemdeki
+        yönleri 90°'den büyük boşluk bırakıyor: tarama sınırı, gölge) her adımın dışında
+        bırakır; angle, sabit normali ile hareketli noktanın kendi normali bu kadar
+        dereceden çok ayrılan (ya da hareketli normali olmayan) eşleşmeyi bırakır: bir
+        taramanın görüp öbürünün görmediği duvar, araç yanı; cevap son adımda bırakılanları
+        sayar. Retler: invalid_uid, entity_not_found, not_a_pointcloud, invalid_input
+        (reject boş, reject.angle 0–90 dışı), layer_not_found, too_many_cloud_points.
 
         Args:
             doc: The drawing it works on.

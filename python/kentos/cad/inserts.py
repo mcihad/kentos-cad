@@ -21,19 +21,19 @@ if TYPE_CHECKING:
 
 
 class _InsertsClip(LocalCommand[InsertsClip, InsertsClipped, InsertsClipped]):
-    """``cad.inserts.clip`` v1. Kırp: Blok ve dış başvuru yerleştirmelerini kırpar
-    (AutoCAD'in XCLIP'i); tek geri alma adımı “Kırp”. operation.kind: set (boundary
-    çizimde: rectangle a, b köşeleriyle ya da polygon points; inverted dışını gösterir;
-    frame hide, show: yalnız ekranda çerçeve, plot: çerçeve içerikle çizilir ve
-    yazdırılır), remove (sınır kalkar), frame (çerçevenin görünüşü), invert (içi ve dışı
-    yer değiştirir). Sınır yerleştirmenin tanımında saklanır: yerleştirme taşınınca,
-    döndürülünce, ölçeklenince onunla gider. Dolu alanlar alan olarak, çizgiler ve
-    kapalı eğrilerin sınırları yol olarak kesilir; yazı, nokta ve tarama kutusunun
-    ortasına göre ya bütün ya hiç. Kilitli katmandakiler atlanır ve sayılır. Retler:
-    no_entities, invalid_uid, entity_not_found, not_an_insert, layer_locked,
-    invalid_clipping (en az 3, en çok 10 000 köşe, alanı olan, kendini kesmeyen),
-    not_clipped, invalid_revision, revision_conflict; uyarılar layer_locked, clip_empty.
-    Plan yazmadan ne olacağını söyler.
+    """``cad.inserts.clip`` v1. Kırp: Blok ve dış başvuru yerleştirmelerini kırpar; tek
+    geri alma adımı “Kırp”. operation.kind: set (boundary çizimde: rectangle a, b
+    köşeleriyle ya da polygon points; inverted dışını gösterir; frame hide, show: yalnız
+    ekranda çerçeve, plot: çerçeve içerikle çizilir ve yazdırılır), remove (sınır
+    kalkar), frame (çerçevenin görünüşü), invert (içi ve dışı yer değiştirir). Sınır
+    yerleştirmenin tanımında saklanır: yerleştirme taşınınca, döndürülünce, ölçeklenince
+    onunla gider. Dolu alanlar alan olarak, çizgiler ve kapalı eğrilerin sınırları yol
+    olarak kesilir; yazı, nokta ve tarama kutusunun ortasına göre ya bütün ya hiç.
+    Kilitli katmandakiler atlanır ve sayılır. Retler: no_entities, invalid_uid,
+    entity_not_found, not_an_insert, layer_locked, invalid_clipping (en az 3, en çok 10
+    000 köşe, alanı olan, kendini kesmeyen), not_clipped, invalid_revision,
+    revision_conflict; uyarılar layer_locked, clip_empty. Plan yazmadan ne olacağını
+    söyler.
     """
     __slots__ = ()
     id = "cad.inserts.clip"
@@ -55,13 +55,13 @@ class _InsertsClip(LocalCommand[InsertsClip, InsertsClipped, InsertsClipped]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> InsertsClipped:
-        """Kırp: Blok ve dış başvuru yerleştirmelerini kırpar (AutoCAD'in XCLIP'i); tek geri
-        alma adımı “Kırp”. operation.kind: set (boundary çizimde: rectangle a, b köşeleriyle
-        ya da polygon points; inverted dışını gösterir; frame hide, show: yalnız ekranda
-        çerçeve, plot: çerçeve içerikle çizilir ve yazdırılır), remove (sınır kalkar), frame
-        (çerçevenin görünüşü), invert (içi ve dışı yer değiştirir). Sınır yerleştirmenin
-        tanımında saklanır: yerleştirme taşınınca, döndürülünce, ölçeklenince onunla gider.
-        Dolu alanlar alan olarak, çizgiler ve kapalı eğrilerin sınırları yol olarak kesilir;
+        """Kırp: Blok ve dış başvuru yerleştirmelerini kırpar; tek geri alma adımı “Kırp”.
+        operation.kind: set (boundary çizimde: rectangle a, b köşeleriyle ya da polygon
+        points; inverted dışını gösterir; frame hide, show: yalnız ekranda çerçeve, plot:
+        çerçeve içerikle çizilir ve yazdırılır), remove (sınır kalkar), frame (çerçevenin
+        görünüşü), invert (içi ve dışı yer değiştirir). Sınır yerleştirmenin tanımında
+        saklanır: yerleştirme taşınınca, döndürülünce, ölçeklenince onunla gider. Dolu
+        alanlar alan olarak, çizgiler ve kapalı eğrilerin sınırları yol olarak kesilir;
         yazı, nokta ve tarama kutusunun ortasına göre ya bütün ya hiç. Kilitli katmandakiler
         atlanır ve sayılır. Retler: no_entities, invalid_uid, entity_not_found,
         not_an_insert, layer_locked, invalid_clipping (en az 3, en çok 10 000 köşe, alanı

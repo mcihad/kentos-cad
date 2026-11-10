@@ -104,7 +104,7 @@ fn a_geopackage_brings_its_relation_and_qgis_style() {
     assert!(
         said(
             &app,
-            "“profil-qgis.gpkg” alındı. 2 tablodan 6 nesne (3 geometrisiz kayıt), 1 ilişki, 1 QGIS stili;"
+            "“profil-qgis.gpkg” alındı. 2 tablodan 6 nesne (3 geometrisiz kayıt), 1 ilişki, 1 katman stili (QML);"
         ),
         "{:?}",
         app.log.lines().last().map(|l| l.text.clone())

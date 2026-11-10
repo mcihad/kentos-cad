@@ -110,7 +110,7 @@ fn name_of(p: &Path) -> String {
     )
 }
 
-/// A raster value as the windows write it: a whole number as it is, the lowest float (GDAL's nodata of a scaled
+/// A raster value as the windows write it: a whole number as it is, the lowest float (the usual nodata of a scaled
 /// coverage) in words.
 fn value_text(v: f64) -> String {
     if v == f64::from(f32::MIN) {
@@ -860,7 +860,7 @@ impl App {
                         .option(
                             true,
                             "WebP",
-                            "Kayıpsız ve daha küçük; gpkg_webp uzantısıyla, GDAL ve QGIS okur.",
+                            "Kayıpsız ve daha küçük; gpkg_webp uzantısıyla, CBS yazılımları okur.",
                         ),
                     None,
                 ),

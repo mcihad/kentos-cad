@@ -28,16 +28,16 @@ class _FileExchangeCheck(LocalCommand[ExchangeCheck, ExchangeChecked, ExchangeCh
     biçimin yazıcısının varsayılan katmanlarını) seçilen değişim biçimine (gpkg,
     parquet, fgb, gml, shp, dxf) KentOS'un yazıcısıyla geçici bir dosyaya yazar,
     KentOS'un aynı biçim okuyucusuyla çizimin boş bir kopyasına (ayarlar ve katmanlar;
-    nesne, blok tanımı ve ilişki olmadan: geri okunanlar okuyucunundur, ADR 2380) geri
-    okur ve nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. Eşleme:
-    kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en
-    yakın nesne. Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı
-    (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı
-    aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın
-    nesnesi ve toleransı (metre, varsayılan 0,001) aşanların sayısı. Anlamsal (losses):
-    notWritten (türüne göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe
-    döndü), zLost, zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla),
-    styleLost (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra
+    nesne, blok tanımı ve ilişki olmadan: geri okunanlar okuyucunundur) geri okur ve
+    nesne nesne karşılaştırır; dosya silinir, açık çizim değişmez. Eşleme: kalıcı
+    kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan) aynı ve kutu merkezi en yakın
+    nesne. Sayısal (numeric): geri okunan her köşenin özgün geometriye uzaklığı (çizgi,
+    yay, daire kesin; elips, eğri, NURBS 1024 parçalık çevreyle), köşe sayısı aynıysa
+    kot ve ölçü farkı, uzunluk ve alan farkı; en büyükleri, en büyük kaymanın nesnesi ve
+    toleransı (metre, varsayılan 0,001) aşanların sayısı. Anlamsal (losses): notWritten
+    (türüne göre), kindChanged (circle → polygon gibi), chorded (eğri kirişe döndü),
+    zLost, zAdded, mLost, attrLost, attrChanged, attrAdded (öznitelik adıyla), styleLost
+    (color, lineWeight, symbol), identityLost (kalıcı kimlik korunmadı), extra
     (eşleşmeyen geri okunan), blockChanged (blok başka tanımla geri okundu: ad, taban,
     nesnelerin türü ve yeri, ekin ölçeği, dönüklüğü, aynası; blok adıyla), tableChanged
     (tablonun cells, sizes ya da merges'i değişti), relationLost (yazılan katmanlar
@@ -72,11 +72,11 @@ class _FileExchangeCheck(LocalCommand[ExchangeCheck, ExchangeChecked, ExchangeCh
         katmanlarını) seçilen değişim biçimine (gpkg, parquet, fgb, gml, shp, dxf) KentOS'un
         yazıcısıyla geçici bir dosyaya yazar, KentOS'un aynı biçim okuyucusuyla çizimin boş
         bir kopyasına (ayarlar ve katmanlar; nesne, blok tanımı ve ilişki olmadan: geri
-        okunanlar okuyucunundur, ADR 2380) geri okur ve nesne nesne karşılaştırır; dosya
-        silinir, açık çizim değişmez. Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta,
-        çizgi, alan) aynı ve kutu merkezi en yakın nesne. Sayısal (numeric): geri okunan her
-        köşenin özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024
-        parçalık çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en
+        okunanlar okuyucunundur) geri okur ve nesne nesne karşılaştırır; dosya silinir, açık
+        çizim değişmez. Eşleme: kalıcı kimliği aynı olan, yoksa sınıfı (nokta, çizgi, alan)
+        aynı ve kutu merkezi en yakın nesne. Sayısal (numeric): geri okunan her köşenin
+        özgün geometriye uzaklığı (çizgi, yay, daire kesin; elips, eğri, NURBS 1024 parçalık
+        çevreyle), köşe sayısı aynıysa kot ve ölçü farkı, uzunluk ve alan farkı; en
         büyükleri, en büyük kaymanın nesnesi ve toleransı (metre, varsayılan 0,001)
         aşanların sayısı. Anlamsal (losses): notWritten (türüne göre), kindChanged (circle →
         polygon gibi), chorded (eğri kirişe döndü), zLost, zAdded, mLost, attrLost,
@@ -189,12 +189,11 @@ class _FileExchangeMatrix(LocalCommand[ExchangeMatrix, ExchangeMatrixed, Exchang
     attributes (kaybolan, yoksa değişen, yoksa eklenen; adlarıyla), style, identity
     (kalıcı kimlik), position (toleransı aşan köşeler; en büyük kayma), extra
     (eşleşmeyen geri okunan), blocks ve tables (yazılmayan ekler ya da tablolar
-    kaybolur, başka türe dönen ya da değişen dönüşür; ADR 2380), relations (geri
-    okunmayan proje ilişkileri, adlarıyla). Hücre: format, state (kept, approximated,
-    converted, added, lost), count, detail. Her biçimin denetim cevabı da checks'te.
-    Açık çizim değişmez. Retler: file.exchange.check'inkiler (invalid_tolerance,
-    layer_not_found, yazıcının kendi reddi, exchange_unreadable, file_unwritable),
-    biçimin yolu formats[i] altında.
+    kaybolur, başka türe dönen ya da değişen dönüşür), relations (geri okunmayan proje
+    ilişkileri, adlarıyla). Hücre: format, state (kept, approximated, converted, added,
+    lost), count, detail. Her biçimin denetim cevabı da checks'te. Açık çizim değişmez.
+    Retler: file.exchange.check'inkiler (invalid_tolerance, layer_not_found, yazıcının
+    kendi reddi, exchange_unreadable, file_unwritable), biçimin yolu formats[i] altında.
     """
     __slots__ = ()
     id = "file.exchange.matrix"
@@ -225,9 +224,9 @@ class _FileExchangeMatrix(LocalCommand[ExchangeMatrix, ExchangeMatrixed, Exchang
         yoksa değişen, yoksa eklenen; adlarıyla), style, identity (kalıcı kimlik), position
         (toleransı aşan köşeler; en büyük kayma), extra (eşleşmeyen geri okunan), blocks ve
         tables (yazılmayan ekler ya da tablolar kaybolur, başka türe dönen ya da değişen
-        dönüşür; ADR 2380), relations (geri okunmayan proje ilişkileri, adlarıyla). Hücre:
-        format, state (kept, approximated, converted, added, lost), count, detail. Her
-        biçimin denetim cevabı da checks'te. Açık çizim değişmez. Retler:
+        dönüşür), relations (geri okunmayan proje ilişkileri, adlarıyla). Hücre: format,
+        state (kept, approximated, converted, added, lost), count, detail. Her biçimin
+        denetim cevabı da checks'te. Açık çizim değişmez. Retler:
         file.exchange.check'inkiler (invalid_tolerance, layer_not_found, yazıcının kendi
         reddi, exchange_unreadable, file_unwritable), biçimin yolu formats[i] altında.
 

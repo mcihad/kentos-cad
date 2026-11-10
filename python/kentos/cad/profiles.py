@@ -47,13 +47,13 @@ class _ProfilesApply(LocalCommand[ProfilesApply, ProfilesApplied, ProfilesApplie
     atlanır (profile_layer_skipped). Katmanlar ve alanları tek geri alma adımıdır (“Veri
     profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî
     bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan
-    aynısını söyler. Profil kurumun kendi adlarıyla da uygulanır (docs/adr/0558): name
-    yerleşik olmayan bir ad verilirse profil çizimin “profiller” klasöründeki
-    dosyasından (drawing çizimin dosyası) okunur; mapping (ya da projenin eşlemesinin
-    adı, mappingName) verilirse profil o eşlemeden okunur: kurumun katman yolları, alan
-    adları ve kodlarıyla bulunur ve eklenir, hiçbir şey kendiliğinden yeniden
-    adlandırılmaz (unknown_mapping, invalid_profile_mapping). expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    aynısını söyler. Profil kurumun kendi adlarıyla da uygulanır: name yerleşik olmayan
+    bir ad verilirse profil çizimin “profiller” klasöründeki dosyasından (drawing
+    çizimin dosyası) okunur; mapping (ya da projenin eşlemesinin adı, mappingName)
+    verilirse profil o eşlemeden okunur: kurumun katman yolları, alan adları ve
+    kodlarıyla bulunur ve eklenir, hiçbir şey kendiliğinden yeniden adlandırılmaz
+    (unknown_mapping, invalid_profile_mapping). expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.profiles.apply"
@@ -89,13 +89,13 @@ class _ProfilesApply(LocalCommand[ProfilesApply, ProfilesApplied, ProfilesApplie
         Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri,
         ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir;
         temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. Profil kurumun
-        kendi adlarıyla da uygulanır (docs/adr/0558): name yerleşik olmayan bir ad verilirse
-        profil çizimin “profiller” klasöründeki dosyasından (drawing çizimin dosyası)
-        okunur; mapping (ya da projenin eşlemesinin adı, mappingName) verilirse profil o
-        eşlemeden okunur: kurumun katman yolları, alan adları ve kodlarıyla bulunur ve
-        eklenir, hiçbir şey kendiliğinden yeniden adlandırılmaz (unknown_mapping,
-        invalid_profile_mapping). expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        kendi adlarıyla da uygulanır: name yerleşik olmayan bir ad verilirse profil çizimin
+        “profiller” klasöründeki dosyasından (drawing çizimin dosyası) okunur; mapping (ya
+        da projenin eşlemesinin adı, mappingName) verilirse profil o eşlemeden okunur:
+        kurumun katman yolları, alan adları ve kodlarıyla bulunur ve eklenir, hiçbir şey
+        kendiliğinden yeniden adlandırılmaz (unknown_mapping, invalid_profile_mapping).
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -223,8 +223,8 @@ class _ProfilesCheck(LocalCommand[ProfilesCheck, ProfilesReport, ProfilesReport]
     iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını
     söyler, mevzuata uygunluğu değil. Profil, Veri profilini uygula gibi, çizimin
     klasöründeki bir dosyadan (name, drawing) ve bir eşlemeden (mapping, mappingName)
-    okunabilir: bulgular kurumun adlarıyla gelir, raporda mapping eşlemenin adını söyler
-    (docs/adr/0558).
+    okunabilir: bulgular kurumun adlarıyla gelir, raporda mapping eşlemenin adını
+    söyler.
     """
     __slots__ = ()
     id = "cad.profiles.check"
@@ -261,7 +261,7 @@ class _ProfilesCheck(LocalCommand[ProfilesCheck, ProfilesReport, ProfilesReport]
         da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil. Profil, Veri profilini
         uygula gibi, çizimin klasöründeki bir dosyadan (name, drawing) ve bir eşlemeden
         (mapping, mappingName) okunabilir: bulgular kurumun adlarıyla gelir, raporda mapping
-        eşlemenin adını söyler (docs/adr/0558).
+        eşlemenin adını söyler.
 
         Args:
             doc: The drawing it works on.
@@ -700,13 +700,13 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
     adım sessiz atlanır, kilitli katman atlanır (profile_layer_skipped). Hepsi tek geri
     alma adımıdır (“Profil göçü”, değer listeleri dahil); yalnız katman adları adımın
     dışındadır: katmanın adı çizimin bayrağıdır, hiçbir katman yeniden adlandırması geri
-    alınmaz (docs/adr/0020), geri alma alanları, değerleri ve listeleri geri verir.
-    layer_refused'ta hiçbir şey yazılmaz. Göç yeni sürümün getirdiklerini eklemez: Veri
-    profilini uygula ekler, Veri profilini denetle verinin hâlâ ayrıldığı yeri söyler;
-    önce göç, sonra uygula. Cevapta adım adım ne yapıldığı, kaç nesneye yazıldığı ve
-    uymayan değerler (katman, alan, değer, nesnelerin kalıcı kimlikleri en çok 1000,
-    sayı) vardır. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o
-    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    alınmaz, geri alma alanları, değerleri ve listeleri geri verir. layer_refused'ta
+    hiçbir şey yazılmaz. Göç yeni sürümün getirdiklerini eklemez: Veri profilini uygula
+    ekler, Veri profilini denetle verinin hâlâ ayrıldığı yeri söyler; önce göç, sonra
+    uygula. Cevapta adım adım ne yapıldığı, kaç nesneye yazıldığı ve uymayan değerler
+    (katman, alan, değer, nesnelerin kalıcı kimlikleri en çok 1000, sayı) vardır. Plan
+    yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse
+    hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.profiles.migrate"
@@ -751,14 +751,14 @@ class _ProfilesMigrate(LocalCommand[ProfilesMigrate, ProfilesMigrated, ProfilesM
         (migration_step_skipped); zaten uygulanmış adım sessiz atlanır, kilitli katman
         atlanır (profile_layer_skipped). Hepsi tek geri alma adımıdır (“Profil göçü”, değer
         listeleri dahil); yalnız katman adları adımın dışındadır: katmanın adı çizimin
-        bayrağıdır, hiçbir katman yeniden adlandırması geri alınmaz (docs/adr/0020), geri
-        alma alanları, değerleri ve listeleri geri verir. layer_refused'ta hiçbir şey
-        yazılmaz. Göç yeni sürümün getirdiklerini eklemez: Veri profilini uygula ekler, Veri
-        profilini denetle verinin hâlâ ayrıldığı yeri söyler; önce göç, sonra uygula.
-        Cevapta adım adım ne yapıldığı, kaç nesneye yazıldığı ve uymayan değerler (katman,
-        alan, değer, nesnelerin kalıcı kimlikleri en çok 1000, sayı) vardır. Plan yazmadan
-        aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        bayrağıdır, hiçbir katman yeniden adlandırması geri alınmaz, geri alma alanları,
+        değerleri ve listeleri geri verir. layer_refused'ta hiçbir şey yazılmaz. Göç yeni
+        sürümün getirdiklerini eklemez: Veri profilini uygula ekler, Veri profilini denetle
+        verinin hâlâ ayrıldığı yeri söyler; önce göç, sonra uygula. Cevapta adım adım ne
+        yapıldığı, kaç nesneye yazıldığı ve uymayan değerler (katman, alan, değer,
+        nesnelerin kalıcı kimlikleri en çok 1000, sayı) vardır. Plan yazmadan aynısını
+        söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
+        sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

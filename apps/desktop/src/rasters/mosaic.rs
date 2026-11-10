@@ -640,7 +640,7 @@ impl App {
             ]
             .spacing(8)
             .align_y(iced::Center),
-            Some("Pikseller kopyalanmaz: GDAL'ın VRT dosyası dosyaları yerinde okur; GDAL ve QGIS de açar.".to_owned()),
+            Some("Pikseller kopyalanmaz: VRT dosyası dosyaları yerinde okur; CBS yazılımları da açar.".to_owned()),
         ));
         let add = words::check(s.add, "Katman olarak ekle", Some(msg(Event::Add)));
         let layer: Element<'_, Message> = if s.add {

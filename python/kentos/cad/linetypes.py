@@ -24,19 +24,19 @@ if TYPE_CHECKING:
 
 class _LinetypesEdit(LocalCommand[LineTypesEdit, LineTypesEdited, LineTypesEdited]):
     """``cad.linetypes.edit`` v1. Çizgi tipleri: Projenin desenli çizgi tiplerini
-    değiştirir (AutoCAD'in LIN dosyaları ve LTYPE'ı): load bir LIN dosyasının metnindeki
-    (lin; source dosyanın adı, her tipin kaynağı) tipleri alır, names verilmişse yalnız
-    onları; projede aynı adlı tip (harf büyüklüğüne bakılmaz) kalır ve skipped'da
-    söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla
-    söylenir. add tek bir tipi (lineType: ad, öğeler, birim paper ya da drawing) ekler,
-    replace ile aynı adlıyı değiştirir. remove adı verilen tipi siler; bir katman,
-    katman durumu ya da nesne onu kullanıyorsa line_type_in_use. scale projenin çizgi
-    tipi ölçeğini (LTSCALE, 0'dan büyük, en çok 1000; 1 ölçeksiz) verir. export tipleri
-    (names verilmişse onları) LIN metni olarak lin'de verir, çizimi değiştirmez. Tablo
-    proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. Katmana
-    desen cad.layers.set'in stiliyle (linePattern), nesneye cad.entities.set'in
-    linePattern'iyle verilir. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    değiştirir: load bir LIN dosyasının metnindeki (lin; source dosyanın adı, her tipin
+    kaynağı) tipleri alır, names verilmişse yalnız onları; projede aynı adlı tip (harf
+    büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın
+    okunmayan satırları problems'ta satırlarıyla söylenir. add tek bir tipi (lineType:
+    ad, öğeler, birim paper ya da drawing) ekler, replace ile aynı adlıyı değiştirir.
+    remove adı verilen tipi siler; bir katman, katman durumu ya da nesne onu
+    kullanıyorsa line_type_in_use. scale projenin çizgi tipi ölçeğini (LTSCALE, 0'dan
+    büyük, en çok 1000; 1 ölçeksiz) verir. export tipleri (names verilmişse onları) LIN
+    metni olarak lin'de verir, çizimi değiştirmez. Tablo proje ayarıdır: değiştirmek
+    çizimi kirli yapar, geri alma adımı değildir. Katmana desen cad.layers.set'in
+    stiliyle (linePattern), nesneye cad.entities.set'in linePattern'iyle verilir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.linetypes.edit"
@@ -64,20 +64,19 @@ class _LinetypesEdit(LocalCommand[LineTypesEdit, LineTypesEdited, LineTypesEdite
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LineTypesEdited:
-        """Çizgi tipleri: Projenin desenli çizgi tiplerini değiştirir (AutoCAD'in LIN dosyaları
-        ve LTYPE'ı): load bir LIN dosyasının metnindeki (lin; source dosyanın adı, her tipin
-        kaynağı) tipleri alır, names verilmişse yalnız onları; projede aynı adlı tip (harf
-        büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir; dosyanın
-        okunmayan satırları problems'ta satırlarıyla söylenir. add tek bir tipi (lineType:
-        ad, öğeler, birim paper ya da drawing) ekler, replace ile aynı adlıyı değiştirir.
-        remove adı verilen tipi siler; bir katman, katman durumu ya da nesne onu
-        kullanıyorsa line_type_in_use. scale projenin çizgi tipi ölçeğini (LTSCALE, 0'dan
-        büyük, en çok 1000; 1 ölçeksiz) verir. export tipleri (names verilmişse onları) LIN
-        metni olarak lin'de verir, çizimi değiştirmez. Tablo proje ayarıdır: değiştirmek
-        çizimi kirli yapar, geri alma adımı değildir. Katmana desen cad.layers.set'in
-        stiliyle (linePattern), nesneye cad.entities.set'in linePattern'iyle verilir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        """Çizgi tipleri: Projenin desenli çizgi tiplerini değiştirir: load bir LIN dosyasının
+        metnindeki (lin; source dosyanın adı, her tipin kaynağı) tipleri alır, names
+        verilmişse yalnız onları; projede aynı adlı tip (harf büyüklüğüne bakılmaz) kalır ve
+        skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları problems'ta
+        satırlarıyla söylenir. add tek bir tipi (lineType: ad, öğeler, birim paper ya da
+        drawing) ekler, replace ile aynı adlıyı değiştirir. remove adı verilen tipi siler;
+        bir katman, katman durumu ya da nesne onu kullanıyorsa line_type_in_use. scale
+        projenin çizgi tipi ölçeğini (LTSCALE, 0'dan büyük, en çok 1000; 1 ölçeksiz) verir.
+        export tipleri (names verilmişse onları) LIN metni olarak lin'de verir, çizimi
+        değiştirmez. Tablo proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı
+        değildir. Katmana desen cad.layers.set'in stiliyle (linePattern), nesneye
+        cad.entities.set'in linePattern'iyle verilir. expectedRevision verilmişse ve çizim o
+        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

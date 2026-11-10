@@ -1417,7 +1417,7 @@ class _BlocksParameters(LocalCommand[BlocksParameters, BlocksParametersOut, Bloc
     Ortak kapsam/değer için cad.blocks.edit dynamic kullanılır. Tam reset yalnız örnek
     girdilerini sıfırlar. Yerleştirme yalnız varsayılandan farklı örnek değerlerini
     tutar; cevap her yerleştirmenin bütün etkin değerlerini verir. Kilitli katmandaki
-    yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri.
+    yerleştirme atlanır.
     """
     __slots__ = ()
     id = "cad.blocks.parameters"
@@ -1452,7 +1452,7 @@ class _BlocksParameters(LocalCommand[BlocksParameters, BlocksParametersOut, Bloc
         değiştiremez. Ortak kapsam/değer için cad.blocks.edit dynamic kullanılır. Tam reset
         yalnız örnek girdilerini sıfırlar. Yerleştirme yalnız varsayılandan farklı örnek
         değerlerini tutar; cevap her yerleştirmenin bütün etkin değerlerini verir. Kilitli
-        katmandaki yerleştirme atlanır. AutoCAD'in dinamik blok özellikleri.
+        katmandaki yerleştirme atlanır.
 
         Args:
             doc: The drawing it works on.
@@ -1674,7 +1674,6 @@ class _BlocksQuery(LocalCommand[BlocksQuery, BlocksQueried, BlocksQueried]):
     yerleştirmenin, yoksa tanımın varsayılanı; metin karşılaştırmaları Türkçe büyük
     küçük harfe bakmaz, lt ve gt sayı karşılaştırır. columns çizelgenin öznitelik
     sütunlarıdır (verilmezse blokların bütün etiketleri). Hiçbir şey yazılmaz.
-    AutoCAD'in BCOUNT'u ve öznitelik çıkarması.
     """
     __slots__ = ()
     id = "cad.blocks.query"
@@ -1706,7 +1705,7 @@ class _BlocksQuery(LocalCommand[BlocksQuery, BlocksQueried, BlocksQueried]):
         öznitelikte tanımın değeri, öbürlerinde yerleştirmenin, yoksa tanımın varsayılanı;
         metin karşılaştırmaları Türkçe büyük küçük harfe bakmaz, lt ve gt sayı
         karşılaştırır. columns çizelgenin öznitelik sütunlarıdır (verilmezse blokların bütün
-        etiketleri). Hiçbir şey yazılmaz. AutoCAD'in BCOUNT'u ve öznitelik çıkarması.
+        etiketleri). Hiçbir şey yazılmaz.
 
         Args:
             doc: The drawing it works on.
@@ -1827,9 +1826,8 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
     alınır; yalnız kapsam yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef
     değişikliği ve uyumsuz girdiler atomik reddedilir. Bu kipte purge verilmez; target
     ve added çözümlenen hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa
-    silinir. Kilitli katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    silinir. Kilitli katmandakiler atlanır ve söylenir. expectedRevision verilmişse ve
+    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.blocks.replace"
@@ -1868,8 +1866,8 @@ class _BlocksReplace(LocalCommand[BlocksReplace, BlocksReplaced, BlocksReplaced]
         yerleştirmeleri geçirilir. Eski tanımlar korunur; yerel hedef değişikliği ve uyumsuz
         girdiler atomik reddedilir. Bu kipte purge verilmez; target ve added çözümlenen
         hedefi bildirir. purge ile from artık hiçbir yerde yerleşmiyorsa silinir. Kilitli
-        katmandakiler atlanır ve söylenir. AutoCAD'in BLOCKREPLACE'i. expectedRevision
-        verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        katmandakiler atlanır ve söylenir. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

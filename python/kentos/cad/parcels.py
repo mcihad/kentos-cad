@@ -48,14 +48,14 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
     çemberinde ve kirişin yay yanında), splitCorner (1 µm'den yakın iki ayrı köşe:
     tesadüfen çakışan koordinat), overlap (üç ya da daha çok parselin, ya da bir yanda
     iki parselin kenarı), arcChord (aynı iki köşe arasında yay ile kiriş ya da iki
-    farklı yay; ADR 2620), approxArc (ADR 3420: yaylı sınırı komşu kirişlerle çizmiş:
-    yayın bir köşesinden öbürüne, köşeleri yayın üstünde (1 µm'de ya da arcTolerance
-    metrede) duran sınır zinciri; yay ile zincir arasındaki şeridin alanı ve en geniş
-    yeri; zincirin köşeleri ayrıca missingVertex sayılmaz). Kimlikler geometriden
-    türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir. uids yoksa
-    parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan kayıtlı
-    alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel
-    (uids[i]), invalid_input (arcTolerance eksi ya da sonlu değil).
+    farklı yay), approxArc (yaylı sınırı komşu kirişlerle çizmiş: yayın bir köşesinden
+    öbürüne, köşeleri yayın üstünde (1 µm'de ya da arcTolerance metrede) duran sınır
+    zinciri; yay ile zincir arasındaki şeridin alanı ve en geniş yeri; zincirin köşeleri
+    ayrıca missingVertex sayılmaz). Kimlikler geometriden türetilir (aynı geometri aynı
+    kimlikleri verir), kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel)
+    bütün alanları. Salt okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler:
+    invalid_uid, entity_not_found, not_a_parcel (uids[i]), invalid_input (arcTolerance
+    eksi ya da sonlu değil).
     """
     __slots__ = ()
     id = "cad.parcels.boundaries"
@@ -87,15 +87,14 @@ class _ParcelsBoundaries(LocalCommand[ParcelsBoundaries, ParcelsBounded, Parcels
         uçların arasında, yaylı sınırda yayın çemberinde ve kirişin yay yanında),
         splitCorner (1 µm'den yakın iki ayrı köşe: tesadüfen çakışan koordinat), overlap (üç
         ya da daha çok parselin, ya da bir yanda iki parselin kenarı), arcChord (aynı iki
-        köşe arasında yay ile kiriş ya da iki farklı yay; ADR 2620), approxArc (ADR 3420:
-        yaylı sınırı komşu kirişlerle çizmiş: yayın bir köşesinden öbürüne, köşeleri yayın
-        üstünde (1 µm'de ya da arcTolerance metrede) duran sınır zinciri; yay ile zincir
-        arasındaki şeridin alanı ve en geniş yeri; zincirin köşeleri ayrıca missingVertex
-        sayılmaz). Kimlikler geometriden türetilir (aynı geometri aynı kimlikleri verir),
-        kalıcı kayıt değildir. uids yoksa parsel katmanının (parsel) bütün alanları. Salt
-        okunur; geometrik alan kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid,
-        entity_not_found, not_a_parcel (uids[i]), invalid_input (arcTolerance eksi ya da
-        sonlu değil).
+        köşe arasında yay ile kiriş ya da iki farklı yay), approxArc (yaylı sınırı komşu
+        kirişlerle çizmiş: yayın bir köşesinden öbürüne, köşeleri yayın üstünde (1 µm'de ya
+        da arcTolerance metrede) duran sınır zinciri; yay ile zincir arasındaki şeridin
+        alanı ve en geniş yeri; zincirin köşeleri ayrıca missingVertex sayılmaz). Kimlikler
+        geometriden türetilir (aynı geometri aynı kimlikleri verir), kalıcı kayıt değildir.
+        uids yoksa parsel katmanının (parsel) bütün alanları. Salt okunur; geometrik alan
+        kayıtlı alanın üstüne yazılmaz. Retler: invalid_uid, entity_not_found, not_a_parcel
+        (uids[i]), invalid_input (arcTolerance eksi ya da sonlu değil).
 
         Args:
             doc: The drawing it works on.
@@ -481,23 +480,23 @@ create = _ParcelsCreate()
 
 
 class _ParcelsRecord(LocalCommand[ParcelsRecord, ParcelsRecorded, ParcelsRecorded]):
-    """``cad.parcels.record`` v1. Parsel kaydı: Çizimin parsel kayıtlarına bir belge yazar
-    (ArcGIS parsel ağının kaydı gibi; ADR 4220): belgenin adı (çizimde tek), türü,
-    tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur (create: kimlik
-    İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan statedArea ya da
-    alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi; halkalar sınır zinciri
-    olarak) ve önceki parselleri kapatır (close: numaraları; kapanan parsel tarihçe
-    olarak kalır). Halka kenarının iki köşesi (saklandığı gibi) ve yayı güncel bir
-    sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir
-    güncel parselin kullanmadığı sınırı belge kapatır. Alanlara dokunulmaz: kayıt
-    çizimden ayrıdır; sonra kenar taşınırsa geometrik alan değişir, belgedeki alan ve
-    kayıttaki şekil değişmez. Tek geri alma adımı “Parsel kaydı”. Retler:
-    invalid_revision, revision_conflict, invalid_input (belgenin adı, türü, tarihi ya da
-    notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da alan iki kez; 120
-    karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan alan; kayıtların
-    sınırları), document_name_taken, unknown_parcel_record, parcel_closed (close[i]),
-    invalid_uid, entity_not_found, not_a_parcel, no_parcel_identity, parcel_recorded
-    (alan kapatılmayan güncel bir parseli çiziyor), parcel_identity_taken (create[i]).
+    """``cad.parcels.record`` v1. Parsel kaydı: Çizimin parsel kayıtlarına bir belge yazar:
+    belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan
+    parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın
+    özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz
+    ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri
+    kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). Halka kenarının
+    iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o
+    sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı
+    sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar
+    taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek
+    geri alma adımı “Parsel kaydı”. Retler: invalid_revision, revision_conflict,
+    invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak
+    parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde
+    iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken,
+    unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found,
+    not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir
+    parseli çiziyor), parcel_identity_taken (create[i]).
     """
     __slots__ = ()
     id = "cad.parcels.record"
@@ -520,23 +519,23 @@ class _ParcelsRecord(LocalCommand[ParcelsRecord, ParcelsRecorded, ParcelsRecorde
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ParcelsRecorded:
-        """Parsel kaydı: Çizimin parsel kayıtlarına bir belge yazar (ArcGIS parsel ağının kaydı
-        gibi; ADR 4220): belgenin adı (çizimde tek), türü, tarihi (yazıldığı gibi) ve notu.
-        Belge alanlardan parsel oluşturur (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın
-        özniteliklerinden, belgedeki alan statedArea ya da alanın Tapu alanı (m²)'si, düz
-        ondalık olarak yazıldığı gibi; halkalar sınır zinciri olarak) ve önceki parselleri
-        kapatır (close: numaraları; kapanan parsel tarihçe olarak kalır). Halka kenarının
-        iki köşesi (saklandığı gibi) ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o
-        sınırdır: iki parsel onu numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı
-        sınırı belge kapatır. Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar
-        taşınırsa geometrik alan değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek
-        geri alma adımı “Parsel kaydı”. Retler: invalid_revision, revision_conflict,
-        invalid_input (belgenin adı, türü, tarihi ya da notu; oluşturacak ya da kapatacak
-        parsel yok; aynı numara ya da alan iki kez; 120 karakteri aşan kimlik; aynı yerde
-        iki köşe; düz ondalık olmayan alan; kayıtların sınırları), document_name_taken,
-        unknown_parcel_record, parcel_closed (close[i]), invalid_uid, entity_not_found,
-        not_a_parcel, no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir
-        parseli çiziyor), parcel_identity_taken (create[i]).
+        """Parsel kaydı: Çizimin parsel kayıtlarına bir belge yazar: belgenin adı (çizimde
+        tek), türü, tarihi (yazıldığı gibi) ve notu. Belge alanlardan parsel oluşturur
+        (create: kimlik İl/İlçe/Mahalle/Ada/Parsel alanın özniteliklerinden, belgedeki alan
+        statedArea ya da alanın Tapu alanı (m²)'si, düz ondalık olarak yazıldığı gibi;
+        halkalar sınır zinciri olarak) ve önceki parselleri kapatır (close: numaraları;
+        kapanan parsel tarihçe olarak kalır). Halka kenarının iki köşesi (saklandığı gibi)
+        ve yayı güncel bir sınırınkiyle aynıysa (1e-9) o sınırdır: iki parsel onu
+        numarasıyla paylaşır; hiçbir güncel parselin kullanmadığı sınırı belge kapatır.
+        Alanlara dokunulmaz: kayıt çizimden ayrıdır; sonra kenar taşınırsa geometrik alan
+        değişir, belgedeki alan ve kayıttaki şekil değişmez. Tek geri alma adımı “Parsel
+        kaydı”. Retler: invalid_revision, revision_conflict, invalid_input (belgenin adı,
+        türü, tarihi ya da notu; oluşturacak ya da kapatacak parsel yok; aynı numara ya da
+        alan iki kez; 120 karakteri aşan kimlik; aynı yerde iki köşe; düz ondalık olmayan
+        alan; kayıtların sınırları), document_name_taken, unknown_parcel_record,
+        parcel_closed (close[i]), invalid_uid, entity_not_found, not_a_parcel,
+        no_parcel_identity, parcel_recorded (alan kapatılmayan güncel bir parseli çiziyor),
+        parcel_identity_taken (create[i]).
 
         Args:
             doc: The drawing it works on.
@@ -635,14 +634,14 @@ record = _ParcelsRecord()
 
 class _ParcelsRecords(LocalCommand[ParcelsRecords, ParcelsRecordsListed, ParcelsRecordsListed]):
     """``cad.parcels.records`` v1. Parsel kayıtları: Çizimin parsel kayıtlarını çizimle
-    birlikte okur (ADR 4220): belgeler (oluşturdukları ve kapattıkları parseller),
-    parseller (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların
-    alanı, onu çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi
-    çizili, changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka
-    sırasıyla; paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu
-    kapatan belgenin oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri,
-    kullanan parseller, kayıttaki yerinde hâlâ çizili mi). history ile kapanan parseller
-    ve sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne
+    birlikte okur: belgeler (oluşturdukları ve kapattıkları parseller), parseller
+    (kimlik, belgeleri, belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu
+    çizen alan ve onun bugünkü geometrik alanı; durum current: kayıttaki gibi çizili,
+    changed: başka türlü çizili, missing: alanı yok, closed; sınırları halka sırasıyla;
+    paylaşılan sınırdan komşuları; belgesinin kapattıkları before, onu kapatan belgenin
+    oluşturdukları after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan
+    parseller, kayıttaki yerinde hâlâ çizili mi). history ile kapanan parseller ve
+    sınırlar da. Salt okunur; geometrik alan belgedeki ya da kayıttaki alanın üstüne
     yazılmaz. Ret yok: kaydı olmayan çizim boş listeler verir.
     """
     __slots__ = ()
@@ -663,11 +662,11 @@ class _ParcelsRecords(LocalCommand[ParcelsRecords, ParcelsRecordsListed, Parcels
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> ParcelsRecordsListed:
-        """Parsel kayıtları: Çizimin parsel kayıtlarını çizimle birlikte okur (ADR 4220):
-        belgeler (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri,
-        belgedeki alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun
-        bugünkü geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü
-        çizili, missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan
+        """Parsel kayıtları: Çizimin parsel kayıtlarını çizimle birlikte okur: belgeler
+        (oluşturdukları ve kapattıkları parseller), parseller (kimlik, belgeleri, belgedeki
+        alan yazıldığı gibi, kayıttaki halkaların alanı, onu çizen alan ve onun bugünkü
+        geometrik alanı; durum current: kayıttaki gibi çizili, changed: başka türlü çizili,
+        missing: alanı yok, closed; sınırları halka sırasıyla; paylaşılan sınırdan
         komşuları; belgesinin kapattıkları before, onu kapatan belgenin oluşturdukları
         after) ve sınırlar (köşeleri, yayı, boyu, belgeleri, kullanan parseller, kayıttaki
         yerinde hâlâ çizili mi). history ile kapanan parseller ve sınırlar da. Salt okunur;

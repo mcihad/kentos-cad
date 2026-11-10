@@ -20,19 +20,19 @@ if TYPE_CHECKING:
 
 
 class _LevelsAssign(LocalCommand[LevelsAssign, LevelsAssigned, LevelsAssigned]):
-    """``cad.levels.assign`` v1. Kat ver: Mimari nesnelere projenin bir katını verir
-    (docs/adr/0717); yerleri değişmez, tek geri alma adımı “Kat ver”. uids verilirse
-    onlar (duvar, mahal, döşeme, aks, kolon, kiriş, merdiven, rampa, mahal ayırıcı,
-    blok; kapı, pencere, etiket, kaplama ve çizginin kendi katı yok: not_levelled),
-    verilmezse katsız ya da projede olmayan bir kattaki bütün duvar, mahal, döşeme,
-    kolon, kiriş, merdiven, rampa ve mahal ayırıcılar (Denetim'in arch_level_missing
-    bulguları; akslar ve bloklar katsız kalabilir). Zaten o kattaki nesne değişmez;
-    kilitli katmandakiler atlanır ve sayılır (layer_locked uyarısı), hepsi kilitliyse
-    ret. Hiçbiri değişmeyecekse nothing_to_assign. Mahalın sınırı aynı adımda yeni
-    katının duvarları arasında yeniden bulunur; kapanmayan ya da duvarları katından
-    ayrılan mahal son sınırıyla kalır (arch_space_broken uyarısı). Plan kat
-    verilecekleri (uid, id, kind, from) çizimin sırasıyla verir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    """``cad.levels.assign`` v1. Kat ver: Mimari nesnelere projenin bir katını verir;
+    yerleri değişmez, tek geri alma adımı “Kat ver”. uids verilirse onlar (duvar, mahal,
+    döşeme, aks, kolon, kiriş, merdiven, rampa, mahal ayırıcı, blok; kapı, pencere,
+    etiket, kaplama ve çizginin kendi katı yok: not_levelled), verilmezse katsız ya da
+    projede olmayan bir kattaki bütün duvar, mahal, döşeme, kolon, kiriş, merdiven,
+    rampa ve mahal ayırıcılar (Denetim'in arch_level_missing bulguları; akslar ve
+    bloklar katsız kalabilir). Zaten o kattaki nesne değişmez; kilitli katmandakiler
+    atlanır ve sayılır (layer_locked uyarısı), hepsi kilitliyse ret. Hiçbiri
+    değişmeyecekse nothing_to_assign. Mahalın sınırı aynı adımda yeni katının duvarları
+    arasında yeniden bulunur; kapanmayan ya da duvarları katından ayrılan mahal son
+    sınırıyla kalır (arch_space_broken uyarısı). Plan kat verilecekleri (uid, id, kind,
+    from) çizimin sırasıyla verir. expectedRevision verilmişse ve çizim o sürümde
+    değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.levels.assign"
@@ -54,19 +54,19 @@ class _LevelsAssign(LocalCommand[LevelsAssign, LevelsAssigned, LevelsAssigned]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> LevelsAssigned:
-        """Kat ver: Mimari nesnelere projenin bir katını verir (docs/adr/0717); yerleri
-        değişmez, tek geri alma adımı “Kat ver”. uids verilirse onlar (duvar, mahal, döşeme,
-        aks, kolon, kiriş, merdiven, rampa, mahal ayırıcı, blok; kapı, pencere, etiket,
-        kaplama ve çizginin kendi katı yok: not_levelled), verilmezse katsız ya da projede
-        olmayan bir kattaki bütün duvar, mahal, döşeme, kolon, kiriş, merdiven, rampa ve
-        mahal ayırıcılar (Denetim'in arch_level_missing bulguları; akslar ve bloklar katsız
-        kalabilir). Zaten o kattaki nesne değişmez; kilitli katmandakiler atlanır ve sayılır
-        (layer_locked uyarısı), hepsi kilitliyse ret. Hiçbiri değişmeyecekse
-        nothing_to_assign. Mahalın sınırı aynı adımda yeni katının duvarları arasında
-        yeniden bulunur; kapanmayan ya da duvarları katından ayrılan mahal son sınırıyla
-        kalır (arch_space_broken uyarısı). Plan kat verilecekleri (uid, id, kind, from)
-        çizimin sırasıyla verir. expectedRevision verilmişse ve çizim o sürümde değilse
-        hiçbir şey yazılmaz, sonuç conflict olur.
+        """Kat ver: Mimari nesnelere projenin bir katını verir; yerleri değişmez, tek geri alma
+        adımı “Kat ver”. uids verilirse onlar (duvar, mahal, döşeme, aks, kolon, kiriş,
+        merdiven, rampa, mahal ayırıcı, blok; kapı, pencere, etiket, kaplama ve çizginin
+        kendi katı yok: not_levelled), verilmezse katsız ya da projede olmayan bir kattaki
+        bütün duvar, mahal, döşeme, kolon, kiriş, merdiven, rampa ve mahal ayırıcılar
+        (Denetim'in arch_level_missing bulguları; akslar ve bloklar katsız kalabilir). Zaten
+        o kattaki nesne değişmez; kilitli katmandakiler atlanır ve sayılır (layer_locked
+        uyarısı), hepsi kilitliyse ret. Hiçbiri değişmeyecekse nothing_to_assign. Mahalın
+        sınırı aynı adımda yeni katının duvarları arasında yeniden bulunur; kapanmayan ya da
+        duvarları katından ayrılan mahal son sınırıyla kalır (arch_space_broken uyarısı).
+        Plan kat verilecekleri (uid, id, kind, from) çizimin sırasıyla verir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

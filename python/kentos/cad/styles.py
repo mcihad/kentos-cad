@@ -50,11 +50,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
     verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     Duvar stilinin (kind wall) materialId'li bileşeni projenin malzemesinin metnini,
     taramasını ve kalemini alır; projede olmayan malzemeye bağlı bileşen create, update
-    ve import'ta material_not_found ile reddedilir (docs/adr/0791). Tablo stili (kind
-    table, docs/adr/1127 §2) başlık, sütun başı ve veri hücre stilleriyle tablosunu
-    kendi değeri olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin
-    tablolarının bağını tek adımda (“Tablo stili”) kaldırır. Yazı stili yeniden
-    adlandırılınca tablo stillerinin hücre stilleri onu yeni adıyla anar.
+    ve import'ta material_not_found ile reddedilir. Tablo stili (kind table) başlık,
+    sütun başı ve veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir:
+    update ve rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo
+    stili”) kaldırır. Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri
+    onu yeni adıyla anar.
     """
     __slots__ = ()
     id = "cad.styles.edit"
@@ -102,12 +102,11 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         sayılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz,
         sonuç conflict olur. Duvar stilinin (kind wall) materialId'li bileşeni projenin
         malzemesinin metnini, taramasını ve kalemini alır; projede olmayan malzemeye bağlı
-        bileşen create, update ve import'ta material_not_found ile reddedilir
-        (docs/adr/0791). Tablo stili (kind table, docs/adr/1127 §2) başlık, sütun başı ve
-        veri hücre stilleriyle tablosunu kendi değeri olmayan yerde çizdirir: update ve
-        rename tablo yazmaz; remove stilin tablolarının bağını tek adımda (“Tablo stili”)
-        kaldırır. Yazı stili yeniden adlandırılınca tablo stillerinin hücre stilleri onu
-        yeni adıyla anar.
+        bileşen create, update ve import'ta material_not_found ile reddedilir. Tablo stili
+        (kind table) başlık, sütun başı ve veri hücre stilleriyle tablosunu kendi değeri
+        olmayan yerde çizdirir: update ve rename tablo yazmaz; remove stilin tablolarının
+        bağını tek adımda (“Tablo stili”) kaldırır. Yazı stili yeniden adlandırılınca tablo
+        stillerinin hücre stilleri onu yeni adıyla anar.
 
         Args:
             doc: The drawing it works on.

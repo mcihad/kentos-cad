@@ -455,9 +455,9 @@ create = _WallsCreate()
 
 class _WallsDistances(LocalCommand[WallsDistancesInput, WallsDistances, WallsDistances]):
     """``cad.walls.distances`` v1. Duvarın mesafeleri: Kalıcı kimlikleri verilen duvarların
-    düz kenarı edge'de (verilmezse 0) iki yanındaki net mesafeleri okur (docs/adr/0710):
-    yolun soluna (left) ve sağına (right) kenarın yüzünden, aynı kattaki (duvarın kendi
-    öbür kenarları da) ona paralel ve boyunca örtüşen en yakın düz duvar kenarının bakan
+    düz kenarı edge'de (verilmezse 0) iki yanındaki net mesafeleri okur: yolun soluna
+    (left) ve sağına (right) kenarın yüzünden, aynı kattaki (duvarın kendi öbür
+    kenarları da) ona paralel ve boyunca örtüşen en yakın düz duvar kenarının bakan
     yüzüne dik uzaklık; uid, edge ve face o duvarı ve yüzünü, from ve to örtüşmenin
     ortasında iki yüzdeki noktaları verir (metre). Paralel duvarı olmayan yan yoktur.
     Yay kenar ya da olmayan kenar invalid_wall. Belgeye yazmaz; kenarı kaydırmak için
@@ -483,13 +483,13 @@ class _WallsDistances(LocalCommand[WallsDistancesInput, WallsDistances, WallsDis
         expected: Expected | None = None,
     ) -> WallsDistances:
         """Duvarın mesafeleri: Kalıcı kimlikleri verilen duvarların düz kenarı edge'de
-        (verilmezse 0) iki yanındaki net mesafeleri okur (docs/adr/0710): yolun soluna
-        (left) ve sağına (right) kenarın yüzünden, aynı kattaki (duvarın kendi öbür
-        kenarları da) ona paralel ve boyunca örtüşen en yakın düz duvar kenarının bakan
-        yüzüne dik uzaklık; uid, edge ve face o duvarı ve yüzünü, from ve to örtüşmenin
-        ortasında iki yüzdeki noktaları verir (metre). Paralel duvarı olmayan yan yoktur.
-        Yay kenar ya da olmayan kenar invalid_wall. Belgeye yazmaz; kenarı kaydırmak için
-        cad.walls.edit'in distance ya da shift işlemi.
+        (verilmezse 0) iki yanındaki net mesafeleri okur: yolun soluna (left) ve sağına
+        (right) kenarın yüzünden, aynı kattaki (duvarın kendi öbür kenarları da) ona paralel
+        ve boyunca örtüşen en yakın düz duvar kenarının bakan yüzüne dik uzaklık; uid, edge
+        ve face o duvarı ve yüzünü, from ve to örtüşmenin ortasında iki yüzdeki noktaları
+        verir (metre). Paralel duvarı olmayan yan yoktur. Yay kenar ya da olmayan kenar
+        invalid_wall. Belgeye yazmaz; kenarı kaydırmak için cad.walls.edit'in distance ya da
+        shift işlemi.
 
         Args:
             doc: The drawing it works on.
@@ -590,16 +590,16 @@ class _WallsEdit(LocalCommand[WallsEdit, WallsEdited, WallsEdited]):
     yer değiştirir. replaceStyle (Stili değiştir): from stilindeki duvarlar (uids boşsa
     çizimin bütün duvarları) to stilini alır (style_not_used). joins (Birleşim):
     başlangıcın ve sonun birleşimi (auto, none, miter, butt, through) ve bileşen
-    temizliği (cleanup); resetJoins ikisini de kurala döndürür. shift (Kaydır,
-    docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0) kendine dik by metre
-    kayar (yolun soluna artı, sağına eksi); yanındaki köşeler bitişik kenarlar boyunca,
-    yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın ucu da aynı noktaya),
-    saplandığı duvar boyunca ya da serbestse dik kayar; kenara T ile saplanan duvarların
-    uçları kendi doğrultularında izler; açıklıklar yerinde kalır, izleyen duvarlar
-    çıktının joined'ındadır. distance (Mesafe): side (left ya da right) yanındaki en
-    yakın paralel duvara net mesafe distance olacak kadar Kaydır (cad.walls.distances
-    aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı doğrultudaki bitişik kenar ya da
-    uç uca duvar, köşede birden çok duvar, kenarı yok eden ya da ters çeviren kaydırma
+    temizliği (cleanup); resetJoins ikisini de kurala döndürür. shift (Kaydır): tek
+    duvarın düz kenarı edge (verilmezse 0) kendine dik by metre kayar (yolun soluna
+    artı, sağına eksi); yanındaki köşeler bitişik kenarlar boyunca, yol ucu ona uç uca
+    bağlı duvarın doğrultusunda (o duvarın ucu da aynı noktaya), saplandığı duvar
+    boyunca ya da serbestse dik kayar; kenara T ile saplanan duvarların uçları kendi
+    doğrultularında izler; açıklıklar yerinde kalır, izleyen duvarlar çıktının
+    joined'ındadır. distance (Mesafe): side (left ya da right) yanındaki en yakın
+    paralel duvara net mesafe distance olacak kadar Kaydır (cad.walls.distances aynı
+    mesafeyi okur), o duvar sabit. Yay kenar, aynı doğrultudaki bitişik kenar ya da uç
+    uca duvar, köşede birden çok duvar, kenarı yok eden ya da ters çeviren kaydırma
     invalid_wall; sıfır kaydırma nothing_to_set; izleyen duvar kilitli katmandaysa
     layer_locked. Birleşimler duvarlardan çizilir, aynı adımda izler; düzenlemeden sonra
     birleşmeyen duvarlar uyarıda onaran öneriyle söylenir (wall_join_overlap,
@@ -645,13 +645,13 @@ class _WallsEdit(LocalCommand[WallsEdit, WallsEdited, WallsEdited]):
         from stilindeki duvarlar (uids boşsa çizimin bütün duvarları) to stilini alır
         (style_not_used). joins (Birleşim): başlangıcın ve sonun birleşimi (auto, none,
         miter, butt, through) ve bileşen temizliği (cleanup); resetJoins ikisini de kurala
-        döndürür. shift (Kaydır, docs/adr/0710): tek duvarın düz kenarı edge (verilmezse 0)
-        kendine dik by metre kayar (yolun soluna artı, sağına eksi); yanındaki köşeler
-        bitişik kenarlar boyunca, yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın
-        ucu da aynı noktaya), saplandığı duvar boyunca ya da serbestse dik kayar; kenara T
-        ile saplanan duvarların uçları kendi doğrultularında izler; açıklıklar yerinde
-        kalır, izleyen duvarlar çıktının joined'ındadır. distance (Mesafe): side (left ya da
-        right) yanındaki en yakın paralel duvara net mesafe distance olacak kadar Kaydır
+        döndürür. shift (Kaydır): tek duvarın düz kenarı edge (verilmezse 0) kendine dik by
+        metre kayar (yolun soluna artı, sağına eksi); yanındaki köşeler bitişik kenarlar
+        boyunca, yol ucu ona uç uca bağlı duvarın doğrultusunda (o duvarın ucu da aynı
+        noktaya), saplandığı duvar boyunca ya da serbestse dik kayar; kenara T ile saplanan
+        duvarların uçları kendi doğrultularında izler; açıklıklar yerinde kalır, izleyen
+        duvarlar çıktının joined'ındadır. distance (Mesafe): side (left ya da right)
+        yanındaki en yakın paralel duvara net mesafe distance olacak kadar Kaydır
         (cad.walls.distances aynı mesafeyi okur), o duvar sabit. Yay kenar, aynı
         doğrultudaki bitişik kenar ya da uç uca duvar, köşede birden çok duvar, kenarı yok
         eden ya da ters çeviren kaydırma invalid_wall; sıfır kaydırma nothing_to_set;

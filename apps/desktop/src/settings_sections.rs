@@ -78,7 +78,7 @@ impl Section {
     pub fn lead(self) -> &'static str {
         match self {
             Self::Appearance => {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının AutoCAD adları, çizilen nesnenin formu ve işlemlerin Python kodu."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, coğrafi koordinatlar, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının klasik CAD komut adları, çizilen nesnenin formu ve işlemlerin Python kodu."
             }
             Self::Snap => {
                 "İmlecin hangi noktalara yapışacağı ve nesneleri ne kadar yakından yakalayacağı; bu oturumun çizim yardımcıları."
@@ -268,7 +268,7 @@ impl App {
                 if !self.shows_setting(AppSetting::Geographic)
                     && !self.shows_setting(AppSetting::FormOnCreate) =>
             {
-                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının AutoCAD adları ve işlemlerin Python kodu."
+                "Tema, vurgu rengi, yazı tipi, yazı boyutu, çizim zemini, artı imleç, fare yardımcıları, şeridin bağlamsal sekmeleri, sağ tık, komut satırının klasik CAD komut adları ve işlemlerin Python kodu."
             }
             // A map's programs: their works are in metres (docs/adr/0802).
             Section::NewProjects if !self.shows_setting(AppSetting::NewProjectUnit) => {
@@ -485,7 +485,7 @@ impl App {
         .fold(rest.section("Şerit ve fare"), |form, key| {
             f.switch_field(form, key, None)
         });
-        // AutoCAD's names in the command line (alias_profile.rs, docs/adr/0282).
+        // The classic CAD command names in the command line (alias_profile.rs, docs/adr/0282).
         let rest = f.switch_field(
             rest.section("Komut satırı"),
             crate::alias_profile::SETTING,

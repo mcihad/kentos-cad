@@ -28,22 +28,21 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
     karar alanı (kullanım, TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan
     notları), plan notu (no, kapsam). Bulgular: missingLayer (profil katmanı yok),
     noLevel, upperMissing, levelOrder (üst plan üst kademede değil), outsideUpper (plan
-    sınırı üst planının sınırı dışına taşıyor, ADR 2020), noPlan, noUse, unknownUse,
-    missingValue (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0
-    sayılmaz), declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir),
-    overlap (iki karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız
-    kısım), outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol
-    aksının ucu ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020),
-    roadWidth (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar
-    şeride yolun planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının
-    ortasını içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
-    katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
-    noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme
-    parçalarını regions'ta taşır (ADR 3440: her bölgenin dış halkası saat yönünün
-    tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre).
-    tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın
-    MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input
-    (tolerance).
+    sınırı üst planının sınırı dışına taşıyor), noPlan, noUse, unknownUse, missingValue
+    (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz),
+    declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki
+    karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım),
+    outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu
+    ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol), roadWidth (genişliği
+    yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun planının yol
+    olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını içine alan en alt
+    kademeli plan), roadParcel (aynı şeride parsel katmanındaki bir parsel giriyor,
+    hangi planda olursa olsun), noteMissing, noteUnused. Alan ölçen bulgu area taşır;
+    roadWidth ve roadParcel sayılan örtüşme parçalarını regions'ta taşır (her bölgenin
+    dış halkası saat yönünün tersine, delikleri saat yönünde, en alttaki köşeden;
+    bölgeler ilk köşelerine göre). tolerance (m, ilk değer 0,01) bundan dar parçayı
+    saymaz. Salt okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk
+    iddiası değildir. Ret: invalid_input (tolerance).
     """
     __slots__ = ()
     id = "cad.zoning.check"
@@ -68,22 +67,21 @@ class _ZoningCheck(LocalCommand[ZoningCheck, ZoningChecked, ZoningChecked]):
         TAKS, KAKS, kat adedi/Hmax, planda verilmeyen değerler, plan notları), plan notu
         (no, kapsam). Bulgular: missingLayer (profil katmanı yok), noLevel, upperMissing,
         levelOrder (üst plan üst kademede değil), outsideUpper (plan sınırı üst planının
-        sınırı dışına taşıyor, ADR 2020), noPlan, noUse, unknownUse, missingValue
-        (verilmemiş ve Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz),
-        declaredValued, kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki
-        karar aynı yerde: karar çelişkisi), uncovered (plan sınırında kararsız kısım),
-        outside (karar plan dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu
-        ne başka bir yola ne plan sınırına bağlanıyor, kopuk yol; ADR 2020), roadWidth
-        (genişliği yazılmış yolun aksının iki yanında genişliğin yarısı kadar şeride yolun
-        planının yol olmayan bir kararı giriyor; yolun planı en uzun kenarının ortasını
-        içine alan en alt kademeli plan; ADR 2240), roadParcel (aynı şeride parsel
-        katmanındaki bir parsel giriyor, hangi planda olursa olsun; ADR 2640), noteMissing,
-        noteUnused. Alan ölçen bulgu area taşır; roadWidth ve roadParcel sayılan örtüşme
-        parçalarını regions'ta taşır (ADR 3440: her bölgenin dış halkası saat yönünün
-        tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk köşelerine göre).
-        tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt okunur; Bakanlığın
-        MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir. Ret: invalid_input
-        (tolerance).
+        sınırı dışına taşıyor), noPlan, noUse, unknownUse, missingValue (verilmemiş ve
+        Planda verilmeyen'de de olmayan değer; boş değer 0 sayılmaz), declaredValued,
+        kaksReview (KAKS > TAKS × kat adedi, gözden geçir), overlap (iki karar aynı yerde:
+        karar çelişkisi), uncovered (plan sınırında kararsız kısım), outside (karar plan
+        dışına taşıyor), roadGap (Yollar katmanı varsa: yol aksının ucu ne başka bir yola ne
+        plan sınırına bağlanıyor, kopuk yol), roadWidth (genişliği yazılmış yolun aksının
+        iki yanında genişliğin yarısı kadar şeride yolun planının yol olmayan bir kararı
+        giriyor; yolun planı en uzun kenarının ortasını içine alan en alt kademeli plan),
+        roadParcel (aynı şeride parsel katmanındaki bir parsel giriyor, hangi planda olursa
+        olsun), noteMissing, noteUnused. Alan ölçen bulgu area taşır; roadWidth ve
+        roadParcel sayılan örtüşme parçalarını regions'ta taşır (her bölgenin dış halkası
+        saat yönünün tersine, delikleri saat yönünde, en alttaki köşeden; bölgeler ilk
+        köşelerine göre). tolerance (m, ilk değer 0,01) bundan dar parçayı saymaz. Salt
+        okunur; Bakanlığın MPYY/PlanGML şemasına ya da mevzuata uygunluk iddiası değildir.
+        Ret: invalid_input (tolerance).
 
         Args:
             doc: The drawing it works on.
@@ -158,9 +156,9 @@ check = _ZoningCheck()
 
 class _ZoningSymbolize(LocalCommand[ZoningSymbolize, ZoningSymbolized, ZoningSymbolized]):
     """``cad.zoning.symbolize`` v1. Sembolü karardan ver: Karar alanlarına MPYY sembolünü
-    kararlarından verir, tersini hiç yapmaz (ADR 4240): sembol alanın kullanımından
-    (Kullanim, imar-plani profilinin plan-kullanim listesi) ve planının kademesinden
-    (plan sınırının Seviye'si) seçilir. KentOS'un tablosu
+    kararlarından verir, tersini hiç yapmaz: sembol alanın kullanımından (Kullanim,
+    imar-plani profilinin plan-kullanim listesi) ve planının kademesinden (plan
+    sınırının Seviye'si) seçilir. KentOS'un tablosu
     (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY alan sembollerinden
     adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir eşi olmayan kullanım
     açık kalır (unmapped), sembolünü symbols ile kullanıcı seçer (kademenin alan
@@ -194,7 +192,7 @@ class _ZoningSymbolize(LocalCommand[ZoningSymbolize, ZoningSymbolized, ZoningSym
         expected: Expected | None = None,
     ) -> ZoningSymbolized:
         """Sembolü karardan ver: Karar alanlarına MPYY sembolünü kararlarından verir, tersini
-        hiç yapmaz (ADR 4240): sembol alanın kullanımından (Kullanim, imar-plani profilinin
+        hiç yapmaz: sembol alanın kullanımından (Kullanim, imar-plani profilinin
         plan-kullanim listesi) ve planının kademesinden (plan sınırının Seviye'si) seçilir.
         KentOS'un tablosu (catalog/v1/profiles/imar-plani-semboller.json) kademenin MPYY
         alan sembollerinden adı kullanımın adıyla aynı yazılan tek sembolü verir; birebir

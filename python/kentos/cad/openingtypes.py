@@ -24,26 +24,26 @@ if TYPE_CHECKING:
 
 class _OpeningtypesEdit(LocalCommand[OpeningTypesEdit, OpeningTypesEdited, OpeningTypesEdited]):
     """``cad.openingtypes.edit`` v1. Kapı ve pencere tipleri: Projenin kapı ve pencere
-    tiplerini (ofisin K01'i) yönetir (docs/adr/0772); tek geri alma adımı “Açıklık
-    tipi”, tipi izleyen açıklıklar aynı adımda. operation: define (name, id isteğe
-    bağlı, copyOf: projenin ya da KentOS'un tipi, form, change; sürüm 1), update (type:
-    kimlik ya da ad, change; sürüm bir artar, tipi izleyen açıklıklar yeni değerleri
-    alır), rename (type, name; kimlik değişmez), remove (type; izleyen açıklık varsa
-    opening_type_in_use, detach: true açıklıkları değerleriyle tipten ayırır), import
-    (library: kentos.opening-types 1 dosyasının içeriği, tiplerin kaynağı kitaplığın
-    adı; onConflict: refuse, skip, replace — yalnız aynı kimlik ve kaynak, yeni sürüm —,
-    rename), export (library adı, types; dosyanın içeriği library çıktısında, çizim
-    değişmez). change: width (kaba boşluk) ya da nominal (by: rough kaba boşluk, unit
-    kasa dış eni, leaf kanat eni; value: kaba boşluk bundan, montaj boşluğu ve kasadan
-    hesaplanır), leaves, operation, swing, showSwing, frame, sill, head, depth, build
-    (sizeBy, fit montaj boşluğu, leafThickness, split eşit olmayan kanatlarda birinci
-    kanadın payı, frameDepth, frameOffset, threshold eşik, casing pervaz, sillBoard
-    denizlik çıkıntısı, mullions, transoms, useZone kullanım alanı), unset (yapının
-    alanlarını kaldırır). Tipi izleyen açıklığın istisnası (overrides) olan alan korunur
-    (report.kept, opening_type_kept); kilitli katmandaki açıklık eski sürümde kalır
-    (report.skipped, opening_type_skipped); yeni değerle duvarına sığmayan açıklık bütün
-    değişikliği reddeder (opening_type_refused) ya da onRefused: skip ile eski sürümde
-    kalır (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu gösterir
+    tiplerini (ofisin K01'i) yönetir; tek geri alma adımı “Açıklık tipi”, tipi izleyen
+    açıklıklar aynı adımda. operation: define (name, id isteğe bağlı, copyOf: projenin
+    ya da KentOS'un tipi, form, change; sürüm 1), update (type: kimlik ya da ad, change;
+    sürüm bir artar, tipi izleyen açıklıklar yeni değerleri alır), rename (type, name;
+    kimlik değişmez), remove (type; izleyen açıklık varsa opening_type_in_use, detach:
+    true açıklıkları değerleriyle tipten ayırır), import (library: kentos.opening-types
+    1 dosyasının içeriği, tiplerin kaynağı kitaplığın adı; onConflict: refuse, skip,
+    replace — yalnız aynı kimlik ve kaynak, yeni sürüm —, rename), export (library adı,
+    types; dosyanın içeriği library çıktısında, çizim değişmez). change: width (kaba
+    boşluk) ya da nominal (by: rough kaba boşluk, unit kasa dış eni, leaf kanat eni;
+    value: kaba boşluk bundan, montaj boşluğu ve kasadan hesaplanır), leaves, operation,
+    swing, showSwing, frame, sill, head, depth, build (sizeBy, fit montaj boşluğu,
+    leafThickness, split eşit olmayan kanatlarda birinci kanadın payı, frameDepth,
+    frameOffset, threshold eşik, casing pervaz, sillBoard denizlik çıkıntısı, mullions,
+    transoms, useZone kullanım alanı), unset (yapının alanlarını kaldırır). Tipi izleyen
+    açıklığın istisnası (overrides) olan alan korunur (report.kept, opening_type_kept);
+    kilitli katmandaki açıklık eski sürümde kalır (report.skipped,
+    opening_type_skipped); yeni değerle duvarına sığmayan açıklık bütün değişikliği
+    reddeder (opening_type_refused) ya da onRefused: skip ile eski sürümde kalır
+    (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu gösterir
     (etkilenenlerin önizlemesi).
     """
     __slots__ = ()
@@ -66,28 +66,27 @@ class _OpeningtypesEdit(LocalCommand[OpeningTypesEdit, OpeningTypesEdited, Openi
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> OpeningTypesEdited:
-        """Kapı ve pencere tipleri: Projenin kapı ve pencere tiplerini (ofisin K01'i) yönetir
-        (docs/adr/0772); tek geri alma adımı “Açıklık tipi”, tipi izleyen açıklıklar aynı
-        adımda. operation: define (name, id isteğe bağlı, copyOf: projenin ya da KentOS'un
-        tipi, form, change; sürüm 1), update (type: kimlik ya da ad, change; sürüm bir
-        artar, tipi izleyen açıklıklar yeni değerleri alır), rename (type, name; kimlik
-        değişmez), remove (type; izleyen açıklık varsa opening_type_in_use, detach: true
-        açıklıkları değerleriyle tipten ayırır), import (library: kentos.opening-types 1
-        dosyasının içeriği, tiplerin kaynağı kitaplığın adı; onConflict: refuse, skip,
-        replace — yalnız aynı kimlik ve kaynak, yeni sürüm —, rename), export (library adı,
-        types; dosyanın içeriği library çıktısında, çizim değişmez). change: width (kaba
-        boşluk) ya da nominal (by: rough kaba boşluk, unit kasa dış eni, leaf kanat eni;
-        value: kaba boşluk bundan, montaj boşluğu ve kasadan hesaplanır), leaves, operation,
-        swing, showSwing, frame, sill, head, depth, build (sizeBy, fit montaj boşluğu,
-        leafThickness, split eşit olmayan kanatlarda birinci kanadın payı, frameDepth,
-        frameOffset, threshold eşik, casing pervaz, sillBoard denizlik çıkıntısı, mullions,
-        transoms, useZone kullanım alanı), unset (yapının alanlarını kaldırır). Tipi izleyen
-        açıklığın istisnası (overrides) olan alan korunur (report.kept, opening_type_kept);
-        kilitli katmandaki açıklık eski sürümde kalır (report.skipped,
-        opening_type_skipped); yeni değerle duvarına sığmayan açıklık bütün değişikliği
-        reddeder (opening_type_refused) ya da onRefused: skip ile eski sürümde kalır
-        (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu gösterir
-        (etkilenenlerin önizlemesi).
+        """Kapı ve pencere tipleri: Projenin kapı ve pencere tiplerini (ofisin K01'i) yönetir;
+        tek geri alma adımı “Açıklık tipi”, tipi izleyen açıklıklar aynı adımda. operation:
+        define (name, id isteğe bağlı, copyOf: projenin ya da KentOS'un tipi, form, change;
+        sürüm 1), update (type: kimlik ya da ad, change; sürüm bir artar, tipi izleyen
+        açıklıklar yeni değerleri alır), rename (type, name; kimlik değişmez), remove (type;
+        izleyen açıklık varsa opening_type_in_use, detach: true açıklıkları değerleriyle
+        tipten ayırır), import (library: kentos.opening-types 1 dosyasının içeriği, tiplerin
+        kaynağı kitaplığın adı; onConflict: refuse, skip, replace — yalnız aynı kimlik ve
+        kaynak, yeni sürüm —, rename), export (library adı, types; dosyanın içeriği library
+        çıktısında, çizim değişmez). change: width (kaba boşluk) ya da nominal (by: rough
+        kaba boşluk, unit kasa dış eni, leaf kanat eni; value: kaba boşluk bundan, montaj
+        boşluğu ve kasadan hesaplanır), leaves, operation, swing, showSwing, frame, sill,
+        head, depth, build (sizeBy, fit montaj boşluğu, leafThickness, split eşit olmayan
+        kanatlarda birinci kanadın payı, frameDepth, frameOffset, threshold eşik, casing
+        pervaz, sillBoard denizlik çıkıntısı, mullions, transoms, useZone kullanım alanı),
+        unset (yapının alanlarını kaldırır). Tipi izleyen açıklığın istisnası (overrides)
+        olan alan korunur (report.kept, opening_type_kept); kilitli katmandaki açıklık eski
+        sürümde kalır (report.skipped, opening_type_skipped); yeni değerle duvarına sığmayan
+        açıklık bütün değişikliği reddeder (opening_type_refused) ya da onRefused: skip ile
+        eski sürümde kalır (report.refused). Plan yazmadan tabloyu ve her açıklığın sonucunu
+        gösterir (etkilenenlerin önizlemesi).
 
         Args:
             doc: The drawing it works on.

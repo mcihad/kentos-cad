@@ -252,13 +252,13 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
     (17) ve üst yapı (19) zemine katılmaz. Bulut dosyalarının söylediği düşey sistem
     (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda vertical olarak yazılır; kaynaklar
     ya da proje ya da yüzeyin öbür bulutları başka bir sistem söylüyorsa ret
-    (cloud_heights_differ; ADR 1029). heights bulutun kotlarını söyler (dosya
-    söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform
-    gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N; ADR 1032) ve kayda
-    heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit
-    özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı datumda
-    geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain;
-    dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden,
+    (cloud_heights_differ). heights bulutun kotlarını söyler (dosya söylemiyorsa, ör.
+    elipsoit yüksekliği): kalan noktaların kotları cad.crs.transform gibi geoit
+    modelleriyle projenin kotlarına çevrilir (H = h − N) ve kayda heights (from, to)
+    yazılır; projenin kotları bilinmiyorsa heights_unknown, geoit özeti ya da ızgarası
+    yoksa geoid_required ya da geoid_missing, iki ayrı datumda geoit yoksa
+    vertical_unsupported, nokta ızgaranın dışındaysa invalid_cloud_terrain; dosya başka
+    sistem söylüyorsa cloud_heights_differ. Uyarılar: layer_hidden,
     cloud_class_above_ground, cloud_source_unreadable. Retler: not_a_road_project,
     not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain,
     katmanın retleri, invalid_heights, heights_unknown, geoid_required, geoid_missing,
@@ -314,18 +314,17 @@ class _RoadTerrainsCloud(LocalCommand[TerrainsFromCloud, TerrainsFromCloudWritte
         da tolerans vermez. Köprü tabliyesi (17) ve üst yapı (19) zemine katılmaz. Bulut
         dosyalarının söylediği düşey sistem (WKT'nin VERT_CS'i ya da GeoTIFF anahtarı) kayda
         vertical olarak yazılır; kaynaklar ya da proje ya da yüzeyin öbür bulutları başka
-        bir sistem söylüyorsa ret (cloud_heights_differ; ADR 1029). heights bulutun
-        kotlarını söyler (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların
-        kotları cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h
-        − N; ADR 1032) ve kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa
-        heights_unknown, geoit özeti ya da ızgarası yoksa geoid_required ya da
-        geoid_missing, iki ayrı datumda geoit yoksa vertical_unsupported, nokta ızgaranın
-        dışındaysa invalid_cloud_terrain; dosya başka sistem söylüyorsa
-        cloud_heights_differ. Uyarılar: layer_hidden, cloud_class_above_ground,
-        cloud_source_unreadable. Retler: not_a_road_project, not_a_pointcloud,
-        invalid_cloud_terrain, cloud_class_not_ground, unknown_terrain, katmanın retleri,
-        invalid_heights, heights_unknown, geoid_required, geoid_missing,
-        vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
+        bir sistem söylüyorsa ret (cloud_heights_differ). heights bulutun kotlarını söyler
+        (dosya söylemiyorsa, ör. elipsoit yüksekliği): kalan noktaların kotları
+        cad.crs.transform gibi geoit modelleriyle projenin kotlarına çevrilir (H = h − N) ve
+        kayda heights (from, to) yazılır; projenin kotları bilinmiyorsa heights_unknown,
+        geoit özeti ya da ızgarası yoksa geoid_required ya da geoid_missing, iki ayrı
+        datumda geoit yoksa vertical_unsupported, nokta ızgaranın dışındaysa
+        invalid_cloud_terrain; dosya başka sistem söylüyorsa cloud_heights_differ. Uyarılar:
+        layer_hidden, cloud_class_above_ground, cloud_source_unreadable. Retler:
+        not_a_road_project, not_a_pointcloud, invalid_cloud_terrain, cloud_class_not_ground,
+        unknown_terrain, katmanın retleri, invalid_heights, heights_unknown, geoid_required,
+        geoid_missing, vertical_unsupported, cloud_heights_differ, too_many_cloud_points,
         cloud_ground_empty, invalid_terrain, terrain_unbuildable, invalid_revision,
         revision_conflict.
 
@@ -515,41 +514,39 @@ cloud = _RoadTerrainsCloud()
 
 class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, TerrainsCompared]):
     """``road.terrains.compare`` v1. Yüzeyleri karşılaştır: İki arazi yüzeyinin farkını
-    okur (Civil 3D'nin TIN hacim yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base
-    yüzeyinden farkı d = z_karşılaştırma − z_taban, karşılaştırmanın planında: iki
-    yüzeyin üçgenleri üst üste kırpılır, her parçada d doğrusal, hacim kesin. Kazı
-    (karşılaştırma tabanın altında) ve dolgu hacmi, net (dolgu − kazı), alanları, iki
-    yüzeyin örttüğü alan ve tabanın dışında kalan alan; en küçük ve en büyük fark ve
-    yeri; ranges (m) ile farkın aralıklarının plan alanı ve aralık dışı. Malzeme
-    bölgeleri (zones, ADR 3540; Civil 3D'nin sınırlı hacimleri): her biri bir malzemenin
-    yeri olan kapalı nesne (düz kenarlı tek parçalı kapalı çoklu çizgi ya da alan,
-    delikli olabilir), adı ve kendi kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o
-    da yoksa 1); her bölgenin içinde kesin TIN–TIN farkı (alan, örtülen alan, kazı,
-    dolgu, net, katsayılı), bölgelerin dışı (rest, karşılaştırmanın katsayılarıyla) ve
-    malzemeye göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara
-    yönteminde istenmez; iki yüzeyin dışına taşan bölge uyarıyla (compare_uncovered).
-    Kesit yöntemi (method: sections, ADR 4340; Civil 3D'nin örnek çizgi hacimleri):
-    semti azimuth (derece, kuzeyden saat yönünde; yoksa 0) olan eksene dik paralel
-    kesitler, karşılaştırmanın eksen boyunca ilk yerinden başlayıp interval (m) arayla,
-    sonuncusu son yerinde; her kesitin kazı ve dolgu alanı iki yüzeyin ortak yerinde
-    farkın kesin integralidir (fark sıfırında bölünür). Aks boyunca (axis, ADR 4760;
-    Netcad'in Enkesit Çiz'i): çizimdeki bir çizgi ya da tek parçalı açık çoklu çizgi
-    (yaylar dahil), kesitler başından her interval'da ve sonunda (corners ile iç
-    köşelerinde de), aksa dik (kurpta yarıçap doğrultusunda, köşede açıortaya dik),
-    solda left, sağda right metre; boy aks boyunca; cevapta axis, length, her kesitin
-    at'ı ve ends'i; semtle birlikte verilmez. Hacim ardışık iki kesit arasında ortalama
-    alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki kesitle L/6·(A₀ + 4·Aₘ +
-    A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin TIN'in. Cevapta interval,
-    azimuth, formula ve sections (uzaklık, kazı alanı, dolgu alanı). Retler
-    (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt [0, 360)
-    dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan formül,
-    10 000'den çok kesit. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin kendi
-    kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
-    söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
-    true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
-    her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler:
-    not_a_road_project, invalid_analysis, unknown_terrain, entity_not_found,
-    unproven_heights, terrain_unbuildable.
+    okur; hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d =
+    z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste
+    kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında)
+    ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın
+    dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın
+    aralıklarının plan alanı ve aralık dışı. Malzeme bölgeleri (zones): her biri bir
+    malzemenin yeri olan kapalı nesne (düz kenarlı tek parçalı kapalı çoklu çizgi ya da
+    alan, delikli olabilir), adı ve kendi kazı/dolgu katsayıları (yoksa
+    karşılaştırmanınki, o da yoksa 1); her bölgenin içinde kesin TIN–TIN farkı (alan,
+    örtülen alan, kazı, dolgu, net, katsayılı), bölgelerin dışı (rest, karşılaştırmanın
+    katsayılarıyla) ve malzemeye göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok
+    örtüşemez, ızgara yönteminde istenmez; iki yüzeyin dışına taşan bölge uyarıyla
+    (compare_uncovered). Kesit yöntemi (method: sections): semti azimuth (derece,
+    kuzeyden saat yönünde; yoksa 0) olan eksene dik paralel kesitler, karşılaştırmanın
+    eksen boyunca ilk yerinden başlayıp interval (m) arayla, sonuncusu son yerinde; her
+    kesitin kazı ve dolgu alanı iki yüzeyin ortak yerinde farkın kesin integralidir
+    (fark sıfırında bölünür). Aks boyunca (axis): çizimdeki bir çizgi ya da tek parçalı
+    açık çoklu çizgi (yaylar dahil), kesitler başından her interval'da ve sonunda
+    (corners ile iç köşelerinde de), aksa dik (kurpta yarıçap doğrultusunda, köşede
+    açıortaya dik), solda left, sağda right metre; boy aks boyunca; cevapta axis,
+    length, her kesitin at'ı ve ends'i; semtle birlikte verilmez. Hacim ardışık iki
+    kesit arasında ortalama alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki
+    kesitle L/6·(A₀ + 4·Aₘ + A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin
+    TIN'in. Cevapta interval, azimuth, formula ve sections (uzaklık, kazı alanı, dolgu
+    alanı). Retler (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt
+    [0, 360) dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan
+    formül, 10 000'den çok kesit. Kotlar: iki yüzeyin kaynakları (çizimin kendi kotları
+    projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde)
+    tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı
+    sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda
+    ret. Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project,
+    invalid_analysis, unknown_terrain, entity_not_found, unproven_heights,
+    terrain_unbuildable.
     """
     __slots__ = ()
     id = "road.terrains.compare"
@@ -584,41 +581,40 @@ class _RoadTerrainsCompare(LocalCommand[TerrainsCompare, TerrainsCompared, Terra
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> TerrainsCompared:
-        """Yüzeyleri karşılaştır: İki arazi yüzeyinin farkını okur (Civil 3D'nin TIN hacim
-        yüzeyi); hiçbir şey yazmaz. comparison yüzeyinin base yüzeyinden farkı d =
-        z_karşılaştırma − z_taban, karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste
-        kırpılır, her parçada d doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında)
-        ve dolgu hacmi, net (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın
-        dışında kalan alan; en küçük ve en büyük fark ve yeri; ranges (m) ile farkın
-        aralıklarının plan alanı ve aralık dışı. Malzeme bölgeleri (zones, ADR 3540; Civil
-        3D'nin sınırlı hacimleri): her biri bir malzemenin yeri olan kapalı nesne (düz
-        kenarlı tek parçalı kapalı çoklu çizgi ya da alan, delikli olabilir), adı ve kendi
-        kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o da yoksa 1); her bölgenin içinde
-        kesin TIN–TIN farkı (alan, örtülen alan, kazı, dolgu, net, katsayılı), bölgelerin
-        dışı (rest, karşılaştırmanın katsayılarıyla) ve malzemeye göre katsayılı toplam
-        (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara yönteminde istenmez; iki yüzeyin
-        dışına taşan bölge uyarıyla (compare_uncovered). Kesit yöntemi (method: sections,
-        ADR 4340; Civil 3D'nin örnek çizgi hacimleri): semti azimuth (derece, kuzeyden saat
-        yönünde; yoksa 0) olan eksene dik paralel kesitler, karşılaştırmanın eksen boyunca
-        ilk yerinden başlayıp interval (m) arayla, sonuncusu son yerinde; her kesitin kazı
-        ve dolgu alanı iki yüzeyin ortak yerinde farkın kesin integralidir (fark sıfırında
-        bölünür). Aks boyunca (axis, ADR 4760; Netcad'in Enkesit Çiz'i): çizimdeki bir çizgi
-        ya da tek parçalı açık çoklu çizgi (yaylar dahil), kesitler başından her interval'da
-        ve sonunda (corners ile iç köşelerinde de), aksa dik (kurpta yarıçap doğrultusunda,
-        köşede açıortaya dik), solda left, sağda right metre; boy aks boyunca; cevapta axis,
-        length, her kesitin at'ı ve ends'i; semtle birlikte verilmez. Hacim ardışık iki
-        kesit arasında ortalama alan L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki
-        kesitle L/6·(A₀ + 4·Aₘ + A₁); kesin TIN–TIN exact'te yanında, plan alanları kesin
-        TIN'in. Cevapta interval, azimuth, formula ve sections (uzaklık, kazı alanı, dolgu
-        alanı). Retler (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt
-        [0, 360) dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan
-        formül, 10 000'den çok kesit. Kotlar (ADR 1029): iki yüzeyin kaynakları (çizimin
-        kendi kotları projenin ayarındaki düşey sistemde, buluttan alınan zemin dosyasının
-        söylediğinde) tek düşey sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights:
-        true ile aynı sayılır ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem
-        her durumda ret. Uyarılar: heights_assumed, compare_uncovered. Retler:
-        not_a_road_project, invalid_analysis, unknown_terrain, entity_not_found,
-        unproven_heights, terrain_unbuildable.
+        """Yüzeyleri karşılaştır: İki arazi yüzeyinin farkını okur; hiçbir şey yazmaz.
+        comparison yüzeyinin base yüzeyinden farkı d = z_karşılaştırma − z_taban,
+        karşılaştırmanın planında: iki yüzeyin üçgenleri üst üste kırpılır, her parçada d
+        doğrusal, hacim kesin. Kazı (karşılaştırma tabanın altında) ve dolgu hacmi, net
+        (dolgu − kazı), alanları, iki yüzeyin örttüğü alan ve tabanın dışında kalan alan; en
+        küçük ve en büyük fark ve yeri; ranges (m) ile farkın aralıklarının plan alanı ve
+        aralık dışı. Malzeme bölgeleri (zones): her biri bir malzemenin yeri olan kapalı
+        nesne (düz kenarlı tek parçalı kapalı çoklu çizgi ya da alan, delikli olabilir), adı
+        ve kendi kazı/dolgu katsayıları (yoksa karşılaştırmanınki, o da yoksa 1); her
+        bölgenin içinde kesin TIN–TIN farkı (alan, örtülen alan, kazı, dolgu, net,
+        katsayılı), bölgelerin dışı (rest, karşılaştırmanın katsayılarıyla) ve malzemeye
+        göre katsayılı toplam (zoned); bölgeler 1 mm²'den çok örtüşemez, ızgara yönteminde
+        istenmez; iki yüzeyin dışına taşan bölge uyarıyla (compare_uncovered). Kesit yöntemi
+        (method: sections): semti azimuth (derece, kuzeyden saat yönünde; yoksa 0) olan
+        eksene dik paralel kesitler, karşılaştırmanın eksen boyunca ilk yerinden başlayıp
+        interval (m) arayla, sonuncusu son yerinde; her kesitin kazı ve dolgu alanı iki
+        yüzeyin ortak yerinde farkın kesin integralidir (fark sıfırında bölünür). Aks
+        boyunca (axis): çizimdeki bir çizgi ya da tek parçalı açık çoklu çizgi (yaylar
+        dahil), kesitler başından her interval'da ve sonunda (corners ile iç köşelerinde
+        de), aksa dik (kurpta yarıçap doğrultusunda, köşede açıortaya dik), solda left,
+        sağda right metre; boy aks boyunca; cevapta axis, length, her kesitin at'ı ve
+        ends'i; semtle birlikte verilmez. Hacim ardışık iki kesit arasında ortalama alan
+        L·(A₀ + A₁)/2 ya da formula: prismoidal ile ortadaki kesitle L/6·(A₀ + 4·Aₘ + A₁);
+        kesin TIN–TIN exact'te yanında, plan alanları kesin TIN'in. Cevapta interval,
+        azimuth, formula ve sections (uzaklık, kazı alanı, dolgu alanı). Retler
+        (invalid_analysis): kesitte aralık yok ya da 0'dan büyük değil, semt [0, 360)
+        dışında, kesitte fark aralığı ya da malzeme bölgesi, kesit yöntemi olmadan formül,
+        10 000'den çok kesit. Kotlar: iki yüzeyin kaynakları (çizimin kendi kotları projenin
+        ayarındaki düşey sistemde, buluttan alınan zemin dosyasının söylediğinde) tek düşey
+        sistemde gösterilmeli; biri bilinmiyorsa ret, assumeHeights: true ile aynı sayılır
+        ve sonuç taslaktır (heights_assumed); bilinen iki ayrı sistem her durumda ret.
+        Uyarılar: heights_assumed, compare_uncovered. Retler: not_a_road_project,
+        invalid_analysis, unknown_terrain, entity_not_found, unproven_heights,
+        terrain_unbuildable.
 
         Args:
             doc: The drawing it works on.
@@ -815,15 +811,15 @@ class _RoadTerrainsContours(LocalCommand[TerrainsContours, TerrainsContoured, Te
     """``road.terrains.contours`` v1. Eş yükselti eğrileri: Yol projesinin bir arazi
     yüzeyinin (surface: kimliği ya da adı) eş yükselti eğrilerini bir katmana 3B çoklu
     çizgi olarak yazar: base'ten (yoksa 0) her interval metrede (m) bir düzey, base'ten
-    sayılan her majorEvery'inci düzey (yoksa 5, 0: hiçbiri) kalın ana eğri; Civil 3D'nin
-    yüzeyden ana ve ara eğri çıkarması gibi. Düzey bir üçgenin köşeleri iki yanında olan
-    kenarını keser (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir);
-    kesişim kenarın kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından
-    zincirlenir, kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine
-    göre sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. Tek
-    geri alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project,
-    invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision,
-    revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.
+    sayılan her majorEvery'inci düzey (yoksa 5, 0: hiçbiri) kalın ana eğri. Düzey bir
+    üçgenin köşeleri iki yanında olan kenarını keser (düzeydeki köşe üstte sayılır:
+    köşeden geçen eğri bir kez çizilir); kesişim kenarın kendi doğrusundan, iki üçgende
+    aynı yerde; parçalar kenarlarından zincirlenir, kapanan eğri kapalı çoklu çizgidir.
+    Eğriler düzeye, sonra ilk yerlerine göre sıralıdır; açık eğri küçük ucundan, kapalı
+    eğri en küçük yerinden başlar. Tek geri alma adımı “Eş yükselti eğrileri”. Retler:
+    not_a_road_project, invalid_contours, layer_not_found, not_a_layer, layer_locked,
+    invalid_revision, revision_conflict, unknown_terrain, terrain_unbuildable,
+    no_contours.
     """
     __slots__ = ()
     id = "road.terrains.contours"
@@ -851,15 +847,14 @@ class _RoadTerrainsContours(LocalCommand[TerrainsContours, TerrainsContoured, Te
         """Eş yükselti eğrileri: Yol projesinin bir arazi yüzeyinin (surface: kimliği ya da
         adı) eş yükselti eğrilerini bir katmana 3B çoklu çizgi olarak yazar: base'ten (yoksa
         0) her interval metrede (m) bir düzey, base'ten sayılan her majorEvery'inci düzey
-        (yoksa 5, 0: hiçbiri) kalın ana eğri; Civil 3D'nin yüzeyden ana ve ara eğri
-        çıkarması gibi. Düzey bir üçgenin köşeleri iki yanında olan kenarını keser
-        (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir); kesişim kenarın
-        kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından zincirlenir,
-        kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine göre
-        sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. Tek geri
-        alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project, invalid_contours,
-        layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-        unknown_terrain, terrain_unbuildable, no_contours.
+        (yoksa 5, 0: hiçbiri) kalın ana eğri. Düzey bir üçgenin köşeleri iki yanında olan
+        kenarını keser (düzeydeki köşe üstte sayılır: köşeden geçen eğri bir kez çizilir);
+        kesişim kenarın kendi doğrusundan, iki üçgende aynı yerde; parçalar kenarlarından
+        zincirlenir, kapanan eğri kapalı çoklu çizgidir. Eğriler düzeye, sonra ilk yerlerine
+        göre sıralıdır; açık eğri küçük ucundan, kapalı eğri en küçük yerinden başlar. Tek
+        geri alma adımı “Eş yükselti eğrileri”. Retler: not_a_road_project,
+        invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision,
+        revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.
 
         Args:
             doc: The drawing it works on.
@@ -978,12 +973,11 @@ class _RoadTerrainsCoverage(LocalCommand[TerrainsCoverage, TerrainsCovered, Terr
     nesnesidir: düz kenarlı, tek parçalı kapalı çoklu çizgi ya da alan; alanın delikleri
     sayılmaz; yoksa yüzeyin kendisi. Her üçgen sınırın halkalarıyla kesin kırpılır.
     Planda kenarı longest'tan uzun üçgen ölçülmemiş, tahmin edilmiş sayılır: noktalar
-    arasında çok geniş boşluğu geçer (Civil 3D'nin en büyük üçgen boyu); longest
-    kullanıcınındır. Cevap: yüzeyin alanı; sınırla sınırın alanı, örtülen, verisiz
-    kalan, dışarıdaki, örtülen payı; örtülenin tahmin edilen kısmı, payı ve üçgen
-    sayısı; içerideki en uzun kenar. Uyarılar: terrain_no_data. Retler:
-    invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable,
-    entity_not_found.
+    arasında çok geniş boşluğu geçer; longest kullanıcınındır. Cevap: yüzeyin alanı;
+    sınırla sınırın alanı, örtülen, verisiz kalan, dışarıdaki, örtülen payı; örtülenin
+    tahmin edilen kısmı, payı ve üçgen sayısı; içerideki en uzun kenar. Uyarılar:
+    terrain_no_data. Retler: invalid_coverage, not_a_road_project, unknown_terrain,
+    terrain_unbuildable, entity_not_found.
     """
     __slots__ = ()
     id = "road.terrains.coverage"
@@ -1009,12 +1003,12 @@ class _RoadTerrainsCoverage(LocalCommand[TerrainsCoverage, TerrainsCovered, Terr
         şey yazmaz. Sınır (boundary) çizimin kapalı nesnesidir: düz kenarlı, tek parçalı
         kapalı çoklu çizgi ya da alan; alanın delikleri sayılmaz; yoksa yüzeyin kendisi. Her
         üçgen sınırın halkalarıyla kesin kırpılır. Planda kenarı longest'tan uzun üçgen
-        ölçülmemiş, tahmin edilmiş sayılır: noktalar arasında çok geniş boşluğu geçer (Civil
-        3D'nin en büyük üçgen boyu); longest kullanıcınındır. Cevap: yüzeyin alanı; sınırla
-        sınırın alanı, örtülen, verisiz kalan, dışarıdaki, örtülen payı; örtülenin tahmin
-        edilen kısmı, payı ve üçgen sayısı; içerideki en uzun kenar. Uyarılar:
-        terrain_no_data. Retler: invalid_coverage, not_a_road_project, unknown_terrain,
-        terrain_unbuildable, entity_not_found.
+        ölçülmemiş, tahmin edilmiş sayılır: noktalar arasında çok geniş boşluğu geçer;
+        longest kullanıcınındır. Cevap: yüzeyin alanı; sınırla sınırın alanı, örtülen,
+        verisiz kalan, dışarıdaki, örtülen payı; örtülenin tahmin edilen kısmı, payı ve
+        üçgen sayısı; içerideki en uzun kenar. Uyarılar: terrain_no_data. Retler:
+        invalid_coverage, not_a_road_project, unknown_terrain, terrain_unbuildable,
+        entity_not_found.
 
         Args:
             doc: The drawing it works on.
@@ -1321,15 +1315,14 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
     road.project.rebuild yeniden çizer. labels: her bölgenin türü ve hacmi içinde
     (çekirdeğin iç noktası, GEOS'un kuralı), projenin yazı yüksekliğiyle; table:
     bölgelerin yanında miktar tablosu (bölgeler, kazı, dolgu ve net toplam; iki
-    ondalık), projenin tablo yüksekliğiyle (ADR 2340). sections (ADR 4760):
-    road.terrains.compare'inki gibi bir aks boyunca kesitler (axis, interval, left,
-    right, corners, formula, start: aksın başlangıç kilometresi); her kesit bir çizgi,
-    solda kilometresi (k+mmm.cc), sağda kazı ve dolgu alanı, kesit boyunca okunur yönde;
-    table ile kübaj cetveli (Km, Ara uzaklık, alanlar, hacimler, kümülatif hacimler;
-    Netcad'in düzeni). materials (ADR 4760): malzeme bölgeleri (ADR 3540'ın zones'u),
-    her birinin içine adı ve kazı, dolgu hacmi; table ile malzeme tablosu. Aksın ve
-    sınırların katmanları çizimin kaynağıdır. Her bölgenin en derin yeri ve derinliği
-    cevapta (deepest, depth; ADR 2740): parçalarının köşelerinden farkın mutlak değeri
+    ondalık), projenin tablo yüksekliğiyle. sections: road.terrains.compare'inki gibi
+    bir aks boyunca kesitler (axis, interval, left, right, corners, formula, start:
+    aksın başlangıç kilometresi); her kesit bir çizgi, solda kilometresi (k+mmm.cc),
+    sağda kazı ve dolgu alanı, kesit boyunca okunur yönde; table ile kübaj cetveli (Km,
+    Ara uzaklık, alanlar, hacimler, kümülatif hacimler). materials: malzeme bölgeleri
+    (zones), her birinin içine adı ve kazı, dolgu hacmi; table ile malzeme tablosu.
+    Aksın ve sınırların katmanları çizimin kaynağıdır. Her bölgenin en derin yeri ve
+    derinliği cevapta (deepest, depth): parçalarının köşelerinden farkın mutlak değeri
     en büyük olanı, 1 nm içinde eşitlerden en batıdaki, sonra en güneydeki; depths: bu
     yerlere nokta ve yanına “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve
     Yol projelerinde. Tek geri alma adımı “Kazı ve dolgu bölgeleri”. Retler:
@@ -1380,20 +1373,19 @@ class _RoadTerrainsCutfill(LocalCommand[TerrainsCutFill, TerrainsCutFilled, Terr
         iki yüzeyin damgasıyla tutulur: biri değişince eskir, road.project.rebuild yeniden
         çizer. labels: her bölgenin türü ve hacmi içinde (çekirdeğin iç noktası, GEOS'un
         kuralı), projenin yazı yüksekliğiyle; table: bölgelerin yanında miktar tablosu
-        (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle
-        (ADR 2340). sections (ADR 4760): road.terrains.compare'inki gibi bir aks boyunca
-        kesitler (axis, interval, left, right, corners, formula, start: aksın başlangıç
-        kilometresi); her kesit bir çizgi, solda kilometresi (k+mmm.cc), sağda kazı ve dolgu
-        alanı, kesit boyunca okunur yönde; table ile kübaj cetveli (Km, Ara uzaklık,
-        alanlar, hacimler, kümülatif hacimler; Netcad'in düzeni). materials (ADR 4760):
-        malzeme bölgeleri (ADR 3540'ın zones'u), her birinin içine adı ve kazı, dolgu hacmi;
-        table ile malzeme tablosu. Aksın ve sınırların katmanları çizimin kaynağıdır. Her
-        bölgenin en derin yeri ve derinliği cevapta (deepest, depth; ADR 2740): parçalarının
-        köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde eşitlerden en
-        batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına “derinlik 1.85 m”
-        (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri alma adımı “Kazı
-        ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found, not_a_layer,
-        layer_locked, invalid_revision, revision_conflict, invalid_analysis,
+        (bölgeler, kazı, dolgu ve net toplam; iki ondalık), projenin tablo yüksekliğiyle.
+        sections: road.terrains.compare'inki gibi bir aks boyunca kesitler (axis, interval,
+        left, right, corners, formula, start: aksın başlangıç kilometresi); her kesit bir
+        çizgi, solda kilometresi (k+mmm.cc), sağda kazı ve dolgu alanı, kesit boyunca okunur
+        yönde; table ile kübaj cetveli (Km, Ara uzaklık, alanlar, hacimler, kümülatif
+        hacimler). materials: malzeme bölgeleri (zones), her birinin içine adı ve kazı,
+        dolgu hacmi; table ile malzeme tablosu. Aksın ve sınırların katmanları çizimin
+        kaynağıdır. Her bölgenin en derin yeri ve derinliği cevapta (deepest, depth):
+        parçalarının köşelerinden farkın mutlak değeri en büyük olanı, 1 nm içinde
+        eşitlerden en batıdaki, sonra en güneydeki; depths: bu yerlere nokta ve yanına
+        “derinlik 1.85 m” (dolguda “yükseklik”) yazısı. Harita ve Yol projelerinde. Tek geri
+        alma adımı “Kazı ve dolgu bölgeleri”. Retler: not_a_road_project, layer_not_found,
+        not_a_layer, layer_locked, invalid_revision, revision_conflict, invalid_analysis,
         unknown_terrain, entity_not_found, terrain_unbuildable, no_cut_fill. Uyarılar:
         layer_hidden, compare_uncovered (malzeme iki yüzeyin dışına taşar).
 
@@ -1999,13 +1991,13 @@ class _RoadTerrainsQuality(LocalCommand[TerrainsQuality, TerrainsQualityRead, Te
     sayısı, yüzey dışı, ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en
     büyük farkı; tek RMSE değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün.
     Sınırlar kullanıcının; KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam
-    ölçüler de verilir (docs/adr/0945, Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²),
-    medyan, NMAD (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95
-    yüzdelikleri, çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar
-    (işaretlenir, çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol
-    noktalarının kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler:
-    not_a_road_project, invalid_analysis, unknown_terrain, terrain_unbuildable,
-    layer_not_found, entity_not_found.
+    ölçüler de verilir (Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²), medyan, NMAD
+    (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95 yüzdelikleri,
+    çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar (işaretlenir,
+    çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol noktalarının
+    kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler: not_a_road_project,
+    invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found,
+    entity_not_found.
     """
     __slots__ = ()
     id = "road.terrains.quality"
@@ -2039,14 +2031,13 @@ class _RoadTerrainsQuality(LocalCommand[TerrainsQuality, TerrainsQualityRead, Te
         yüzeye farkı (nokta − yüzey) ve her sınıfın ve hepsinin sayısı, yüzey dışı,
         ortalaması, standart sapması (n − 1), RMSE'si, en küçük ve en büyük farkı; tek RMSE
         değil, sınıf sınıf. Listeler en çok 1000, sayıları bütün. Sınırlar kullanıcının;
-        KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam ölçüler de verilir
-        (docs/adr/0945, Höhle ve Höhle 2009): RMSE'nin %95 aralığı (χ²), medyan, NMAD
-        (1,4826 × medyandan mutlak sapmaların medyanı), |fark|'ın %68,3 ve %95 yüzdelikleri,
-        çarpıklık ve basıklık, sınıfının medyanından 3 NMAD'den uzak noktalar (işaretlenir,
-        çıkarılmaz; uyarı terrain_checkpoints_far); checkpoints.sigma (kontrol noktalarının
-        kendi RMSE'si) verilirse birleşik hata √(RMSE² + σ²).Retler: not_a_road_project,
-        invalid_analysis, unknown_terrain, terrain_unbuildable, layer_not_found,
-        entity_not_found.
+        KentOS değer vermez.  Her sınıfta RMSE'nin yanında sağlam ölçüler de verilir (Höhle
+        ve Höhle 2009): RMSE'nin %95 aralığı (χ²), medyan, NMAD (1,4826 × medyandan mutlak
+        sapmaların medyanı), |fark|'ın %68,3 ve %95 yüzdelikleri, çarpıklık ve basıklık,
+        sınıfının medyanından 3 NMAD'den uzak noktalar (işaretlenir, çıkarılmaz; uyarı
+        terrain_checkpoints_far); checkpoints.sigma (kontrol noktalarının kendi RMSE'si)
+        verilirse birleşik hata √(RMSE² + σ²).Retler: not_a_road_project, invalid_analysis,
+        unknown_terrain, terrain_unbuildable, layer_not_found, entity_not_found.
 
         Args:
             doc: The drawing it works on.
@@ -2163,11 +2154,11 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
     da daha çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her
     yer, başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin
     dışında kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur
-    (interpolation: linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin
-    köşelerini (corners: x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest)
-    ve en yakın köşeye plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem
-    buluşur, verilmez. Kaynak sürümü yüzeyin özetidir (digest). Retler:
-    not_a_road_project, unknown_terrain, no_terrain, invalid_places.
+    (interpolation: linear); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini
+    (corners: x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın
+    köşeye plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur,
+    verilmez. Kaynak sürümü yüzeyin özetidir (digest). Retler: not_a_road_project,
+    unknown_terrain, no_terrain, invalid_places.
     """
     __slots__ = ()
     id = "road.terrains.query"
@@ -2200,11 +2191,11 @@ class _RoadTerrainsQuery(LocalCommand[TerrainsQuery, TerrainsQueried, TerrainsQu
         çok yerli hattın kesiti: hattın köşeleri ve üçgen kenarlarını kestiği her yer,
         başından uzaklığı (station), kotu, ve önceki yerden bu yere hattın yüzeyin dışında
         kalıp kalmadığı (gap). Kot ve kesit üçgenin düzleminde okunur (interpolation:
-        linear; ADR 1033); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini (corners:
-        x, y, z; x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın köşeye
-        plan uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur, verilmez.
-        Kaynak sürümü yüzeyin özetidir (digest). Retler: not_a_road_project,
-        unknown_terrain, no_terrain, invalid_places.
+        linear); yer tek bir üçgenin içindeyse kot o üçgenin köşelerini (corners: x, y, z;
+        x'e sonra y'ye göre), en uzun plan kenarını (longest) ve en yakın köşeye plan
+        uzaklığını (corner) da verir; kenarda ve köşede iki düzlem buluşur, verilmez. Kaynak
+        sürümü yüzeyin özetidir (digest). Retler: not_a_road_project, unknown_terrain,
+        no_terrain, invalid_places.
 
         Args:
             doc: The drawing it works on.
@@ -2442,30 +2433,29 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
     olarak çizilmiş yol ve dere, şev sınırı) içinden eğri geçmez; kalan uzunluk cut. (ğ)
     İstenirse (spots) tepe ve çukur kotları: en içteki kapalı kalın ya da ara eğrinin
     içindeki en yüksek (alçak) yüzey köşesi, detayın içindeki köşe sayılmaz, kotu dm'ye
-    kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004; ADR 2320); istenirse
-    (slopes: top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu
+    kadar kot noktası yazısıyla (paketin spotHeight'ı, Ek-3 0004); istenirse (slopes:
+    top ve bottom katmanları) şevlerin üst ve dip çizgilerindeki çizgi ve çoklu
     çizgilerin köşeleri, kotları yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır,
-    yazılmaz (ADR 3120); istenirse (points: nokta katmanları) ölçmecinin seçtiği
-    noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta),
-    yoksa yüzeyden; yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin
-    dışındaki nokta sayılır (ADR 3520). Kendi kotu olan, yüzeyde ve yüzeyin köşesi
-    olmayan seçilen noktalarda ölçülen kotla yüzeyin kotu arasındaki farkların karesel
-    ortalaması paketin sınırıyla (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m.
-    91(2)'den ölçeğe göre) karşılaştırılır (check); aşarsa uyarı section_check_exceeded
-    (ADR 4740). İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda
-    paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca
-    başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın
-    içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden
-    (ADR 4740). 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti
-    eğrileri”. Çizim projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev,
-    seçilen nokta, yerleşik alan, yol) damgasıyla tutulur (ADR 4740): biri değişince
-    eskir, road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Yardımcı
-    eğriler paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm
-    boşluk; ADR 2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede
-    yoksa eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır;
-    cevabın pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours,
-    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-    unknown_terrain, terrain_unbuildable, no_contours.
+    yazılmaz; istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi
+    ölçülmüş kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden;
+    yalnız kot yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta
+    sayılır. Kendi kotu olan, yüzeyde ve yüzeyin köşesi olmayan seçilen noktalarda
+    ölçülen kotla yüzeyin kotu arasındaki farkların karesel ortalaması paketin sınırıyla
+    (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre)
+    karşılaştırılır (check); aşarsa uyarı section_check_exceeded. İstenirse (builtUp:
+    areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her heightEvery
+    mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım aralıkta
+    başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın dışında ve
+    başka bir kota yarım aralıktan uzakta; kotlar yüzeyden. 3B çoklu çizgi ve yazı
+    olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Çizim projenin ağacında
+    yüzeyin ve okuduğu katmanların (detay, şev, seçilen nokta, yerleşik alan, yol)
+    damgasıyla tutulur: biri değişince eskir, road.project.rebuild (ya da açıksa
+    kendiliğinden) yeniden üretir. Yardımcı eğriler paketin desenini (auxiliaryPattern;
+    Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk) “Yardımcı eğri (paket)” proje çizgi tipi
+    olarak alır: tip projede yoksa eklenir (proje ayarıdır, geri almada kalır), varsa
+    projedeki kullanılır; cevabın pattern'ı adını söyler. Retler: not_a_road_project,
+    invalid_contours, layer_not_found, not_a_layer, layer_locked, invalid_revision,
+    revision_conflict, unknown_terrain, terrain_unbuildable, no_contours.
     """
     __slots__ = ()
     id = "road.terrains.sheetcontours"
@@ -2511,30 +2501,29 @@ class _RoadTerrainsSheetcontours(LocalCommand[TerrainsSheetContours, TerrainsShe
         içinden eğri geçmez; kalan uzunluk cut. (ğ) İstenirse (spots) tepe ve çukur kotları:
         en içteki kapalı kalın ya da ara eğrinin içindeki en yüksek (alçak) yüzey köşesi,
         detayın içindeki köşe sayılmaz, kotu dm'ye kadar kot noktası yazısıyla (paketin
-        spotHeight'ı, Ek-3 0004; ADR 2320); istenirse (slopes: top ve bottom katmanları)
-        şevlerin üst ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları
-        yüzeyden, aynı yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz (ADR 3120);
-        istenirse (points: nokta katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş
-        kotu varsa o (yüzeyinki surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot
-        yazısı yazılır, nokta ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır (ADR
-        3520). Kendi kotu olan, yüzeyde ve yüzeyin köşesi olmayan seçilen noktalarda ölçülen
-        kotla yüzeyin kotu arasındaki farkların karesel ortalaması paketin sınırıyla
-        (sectionCheck: m. 93(1)(c)'nin 1,5 · KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre)
-        karşılaştırılır (check); aşarsa uyarı section_check_exceeded (ADR 4740). İstenirse
-        (builtUp: areas, roads; m. 63(2)) yerleşik alan ve yollarda paftada yaklaşık her
-        heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi boyunca başından yarım
-        aralıkta başlayarak, sonra aralığın ızgarasında yerleşik alanın içinde, detayın
-        dışında ve başka bir kota yarım aralıktan uzakta; kotlar yüzeyden (ADR 4740). 3B
-        çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti eğrileri”. Çizim
-        projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev, seçilen nokta,
-        yerleşik alan, yol) damgasıyla tutulur (ADR 4740): biri değişince eskir,
+        spotHeight'ı, Ek-3 0004); istenirse (slopes: top ve bottom katmanları) şevlerin üst
+        ve dip çizgilerindeki çizgi ve çoklu çizgilerin köşeleri, kotları yüzeyden, aynı
+        yazıyla; yüzeyin dışındaki köşe sayılır, yazılmaz; istenirse (points: nokta
+        katmanları) ölçmecinin seçtiği noktalar: kendi ölçülmüş kotu varsa o (yüzeyinki
+        surface'ta, en büyük fark notta), yoksa yüzeyden; yalnız kot yazısı yazılır, nokta
+        ölçmecinindir; kotsuz ve yüzeyin dışındaki nokta sayılır. Kendi kotu olan, yüzeyde
+        ve yüzeyin köşesi olmayan seçilen noktalarda ölçülen kotla yüzeyin kotu arasındaki
+        farkların karesel ortalaması paketin sınırıyla (sectionCheck: m. 93(1)(c)'nin 1,5 ·
+        KOH_Z'si, KOH_Z m. 91(2)'den ölçeğe göre) karşılaştırılır (check); aşarsa uyarı
+        section_check_exceeded. İstenirse (builtUp: areas, roads; m. 63(2)) yerleşik alan ve
+        yollarda paftada yaklaşık her heightEvery mm'de (paket: 20 mm) bir kot: yol çizgisi
+        boyunca başından yarım aralıkta başlayarak, sonra aralığın ızgarasında yerleşik
+        alanın içinde, detayın dışında ve başka bir kota yarım aralıktan uzakta; kotlar
+        yüzeyden. 3B çoklu çizgi ve yazı olarak tek geri alma adımı “Pafta eş yükselti
+        eğrileri”. Çizim projenin ağacında yüzeyin ve okuduğu katmanların (detay, şev,
+        seçilen nokta, yerleşik alan, yol) damgasıyla tutulur: biri değişince eskir,
         road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Yardımcı eğriler
-        paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk; ADR
-        2720) “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa
-        eklenir (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın
-        pattern'ı adını söyler. Retler: not_a_road_project, invalid_contours,
-        layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-        unknown_terrain, terrain_unbuildable, no_contours.
+        paketin desenini (auxiliaryPattern; Ek-3 0003: kâğıtta 5 mm çizgi, 1 mm boşluk)
+        “Yardımcı eğri (paket)” proje çizgi tipi olarak alır: tip projede yoksa eklenir
+        (proje ayarıdır, geri almada kalır), varsa projedeki kullanılır; cevabın pattern'ı
+        adını söyler. Retler: not_a_road_project, invalid_contours, layer_not_found,
+        not_a_layer, layer_locked, invalid_revision, revision_conflict, unknown_terrain,
+        terrain_unbuildable, no_contours.
 
         Args:
             doc: The drawing it works on.
@@ -2886,20 +2875,20 @@ class _RoadTerrainsStockpile(LocalCommand[TerrainsStockpile, TerrainsStockpiled,
     """``road.terrains.stockpile`` v1. Stok hacmi: Bir yığının (stok) hacmini sınırından
     çizilen bir tabana göre ölçer; hiçbir şey yazmaz. Yüzey (surface) ve sınır
     (boundary: road.terrains.coverage'daki gibi düz kenarlı, tek parçalı kapalı nesne,
-    alanın delikleri dışarıda) verilir. Taban (base, Pix4D'nin hacim tabanları): lowest,
-    highest, average sınırın dış köşelerinin yüzeydeki kotlarının en alçağında, en
-    yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey farkların kareleri
-    toplamı en küçük olan eğimli düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış
-    halkanın içinde üçgenlenmesi (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her
-    üçgen kendi düzlemi; dört köşe bir çemberdeyse notta söylenir); elevation verilen
-    kotta (elevation) yatay düzlem. Tabanın üstü kazı (yığın), altı dolgudur; toplam
-    ikisinin toplamı. Yüzeyin her üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir
-    de tabanın üçgenleriyle) kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark
-    parçanın alanı ve birinci momentleriyle kesin tümlenir. Cevap: taban düzlemi (z =
-    a·x + b·y + c; üçgenlenmiş tabanda onun yerine üçgenleri), köşelerin kotları,
-    sınırın alanı, yüzeyin örttüğü ve örtmediği alan, kazı, dolgu, toplam ve alanları.
-    Uyarılar: terrain_no_data. Retler: invalid_stockpile, not_a_road_project,
-    unknown_terrain, terrain_unbuildable, entity_not_found, invalid_coverage.
+    alanın delikleri dışarıda) verilir. Taban (base): lowest, highest, average sınırın
+    dış köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında
+    yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli
+    düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi
+    (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe
+    bir çemberdeyse notta söylenir); elevation verilen kotta (elevation) yatay düzlem.
+    Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her
+    üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle)
+    kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci
+    momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş
+    tabanda onun yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve
+    örtmediği alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler:
+    invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable,
+    entity_not_found, invalid_coverage.
     """
     __slots__ = ()
     id = "road.terrains.stockpile"
@@ -2925,18 +2914,18 @@ class _RoadTerrainsStockpile(LocalCommand[TerrainsStockpile, TerrainsStockpiled,
         """Stok hacmi: Bir yığının (stok) hacmini sınırından çizilen bir tabana göre ölçer;
         hiçbir şey yazmaz. Yüzey (surface) ve sınır (boundary: road.terrains.coverage'daki
         gibi düz kenarlı, tek parçalı kapalı nesne, alanın delikleri dışarıda) verilir.
-        Taban (base, Pix4D'nin hacim tabanları): lowest, highest, average sınırın dış
-        köşelerinin yüzeydeki kotlarının en alçağında, en yükseğinde ya da ortalamasında
-        yatay düzlem; fit köşelere düşey farkların kareleri toplamı en küçük olan eğimli
-        düzlem; triangulated köşelerin yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi
-        (yüzey çekirdeğinin kısıtlı Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe
-        bir çemberdeyse notta söylenir); elevation verilen kotta (elevation) yatay düzlem.
-        Tabanın üstü kazı (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her
-        üçgeni sınırın halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle)
-        kırpılır, farkın sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci
-        momentleriyle kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş
-        tabanda onun yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve
-        örtmediği alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler:
+        Taban (base): lowest, highest, average sınırın dış köşelerinin yüzeydeki kotlarının
+        en alçağında, en yükseğinde ya da ortalamasında yatay düzlem; fit köşelere düşey
+        farkların kareleri toplamı en küçük olan eğimli düzlem; triangulated köşelerin
+        yüzeydeki kotlarıyla dış halkanın içinde üçgenlenmesi (yüzey çekirdeğinin kısıtlı
+        Delaunay üçgenlemesi, her üçgen kendi düzlemi; dört köşe bir çemberdeyse notta
+        söylenir); elevation verilen kotta (elevation) yatay düzlem. Tabanın üstü kazı
+        (yığın), altı dolgudur; toplam ikisinin toplamı. Yüzeyin her üçgeni sınırın
+        halkalarıyla (üçgenlenmiş tabanda bir de tabanın üçgenleriyle) kırpılır, farkın
+        sıfır çizgisinde bölünür, doğrusal fark parçanın alanı ve birinci momentleriyle
+        kesin tümlenir. Cevap: taban düzlemi (z = a·x + b·y + c; üçgenlenmiş tabanda onun
+        yerine üçgenleri), köşelerin kotları, sınırın alanı, yüzeyin örttüğü ve örtmediği
+        alan, kazı, dolgu, toplam ve alanları. Uyarılar: terrain_no_data. Retler:
         invalid_stockpile, not_a_road_project, unknown_terrain, terrain_unbuildable,
         entity_not_found, invalid_coverage.
 
@@ -3045,11 +3034,11 @@ class _RoadTerrainsZeroline(LocalCommand[TerrainsZeroLine, TerrainsZeroLined, Te
     buluştuğu köşe çizgileri ayırır; komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır.
     Her çizgi en küçük yerinden (x, sonra y) başlar ve buna göre sıralıdır. İki yüzeyin
     çakıştığı alan (coincident) çizilmez, söylenir. Çizim projenin ağacında iki yüzeyin
-    damgasıyla tutulur (ADR 1720): yüzeylerden biri değişince eskir,
-    road.project.rebuild (ya da açıksa kendiliğinden) yeniden üretir. Harita ve Yol
-    projelerinde. Tek geri alma adımı “Sıfır hattı”. Retler: not_a_road_project,
-    layer_not_found, not_a_layer, layer_locked, invalid_revision, revision_conflict,
-    unknown_terrain, invalid_analysis, terrain_unbuildable, no_zero_line.
+    damgasıyla tutulur: yüzeylerden biri değişince eskir, road.project.rebuild (ya da
+    açıksa kendiliğinden) yeniden üretir. Harita ve Yol projelerinde. Tek geri alma
+    adımı “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer,
+    layer_locked, invalid_revision, revision_conflict, unknown_terrain,
+    invalid_analysis, terrain_unbuildable, no_zero_line.
     """
     __slots__ = ()
     id = "road.terrains.zeroline"
@@ -3080,12 +3069,12 @@ class _RoadTerrainsZeroline(LocalCommand[TerrainsZeroLine, TerrainsZeroLined, Te
         birleştirilir (10⁻⁹ m), üç ya da daha çok parçanın buluştuğu köşe çizgileri ayırır;
         komşularıyla doğrudaş köşe (10⁻¹² oranında) atılır. Her çizgi en küçük yerinden (x,
         sonra y) başlar ve buna göre sıralıdır. İki yüzeyin çakıştığı alan (coincident)
-        çizilmez, söylenir. Çizim projenin ağacında iki yüzeyin damgasıyla tutulur (ADR
-        1720): yüzeylerden biri değişince eskir, road.project.rebuild (ya da açıksa
-        kendiliğinden) yeniden üretir. Harita ve Yol projelerinde. Tek geri alma adımı
-        “Sıfır hattı”. Retler: not_a_road_project, layer_not_found, not_a_layer,
-        layer_locked, invalid_revision, revision_conflict, unknown_terrain,
-        invalid_analysis, terrain_unbuildable, no_zero_line.
+        çizilmez, söylenir. Çizim projenin ağacında iki yüzeyin damgasıyla tutulur:
+        yüzeylerden biri değişince eskir, road.project.rebuild (ya da açıksa kendiliğinden)
+        yeniden üretir. Harita ve Yol projelerinde. Tek geri alma adımı “Sıfır hattı”.
+        Retler: not_a_road_project, layer_not_found, not_a_layer, layer_locked,
+        invalid_revision, revision_conflict, unknown_terrain, invalid_analysis,
+        terrain_unbuildable, no_zero_line.
 
         Args:
             doc: The drawing it works on.

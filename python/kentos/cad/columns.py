@@ -30,13 +30,13 @@ class _ColumnsCreate(LocalCommand[ColumnsCreate, ColumnsCreated, ColumnsPlan]):
     kesişimlerinde durur, at verilirse ona en yakın kesişimde), biçim (shape: rect,
     round, lShape), en (width), boy (depth; yoksa en), L kolonun kolları (legs: en
     boyunca kolun boy yönündeki ve boy boyunca kolun en yönündeki kalınlığı; yalnız
-    L'de, gerekli, o yanından ince; docs/adr/0725 §3), hiza (anchor: center, left,
-    right, bottom, top, bottomLeft, bottomRight, topLeft, topRight; at ve aks kesişimi
-    kutunun bu noktasıdır, §2), dönüş (rotation, radyan, hiza noktası çevresinde), tür
-    (type), etiket (tag), dolu (fill). crossings: verilen aksların her çiftinin,
-    ikisinin de içinde kalan kesişimlerinde birer kolon; aynı ölçülerle. Etiketsiz
-    kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). Akslara bağlı kolonun yerini
-    belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı (place) iki aksın
+    L'de, gerekli, o yanından ince), hiza (anchor: center, left, right, bottom, top,
+    bottomLeft, bottomRight, topLeft, topRight; at ve aks kesişimi kutunun bu
+    noktasıdır, §2), dönüş (rotation, radyan, hiza noktası çevresinde), tür (type),
+    etiket (tag), dolu (fill). crossings: verilen aksların her çiftinin, ikisinin de
+    içinde kalan kesişimlerinde birer kolon; aynı ölçülerle. Etiketsiz kolonlar
+    tagStart'tan artarak etiketlenir (S1, S2 …). Akslara bağlı kolonun yerini belge
+    izler: aks taşınınca kolon kesişimde kalır, konum yazısı (place) iki aksın
     etiketlerinden “B-3” olur; aks silinir ya da akslar kesişmezse broken: gridGone.
     Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
     """
@@ -68,13 +68,13 @@ class _ColumnsCreate(LocalCommand[ColumnsCreate, ColumnsCreated, ColumnsPlan]):
         da iki aks (grids: kalıcı kimlikler; kolon kesişimlerinde durur, at verilirse ona en
         yakın kesişimde), biçim (shape: rect, round, lShape), en (width), boy (depth; yoksa
         en), L kolonun kolları (legs: en boyunca kolun boy yönündeki ve boy boyunca kolun en
-        yönündeki kalınlığı; yalnız L'de, gerekli, o yanından ince; docs/adr/0725 §3), hiza
-        (anchor: center, left, right, bottom, top, bottomLeft, bottomRight, topLeft,
-        topRight; at ve aks kesişimi kutunun bu noktasıdır, §2), dönüş (rotation, radyan,
-        hiza noktası çevresinde), tür (type), etiket (tag), dolu (fill). crossings: verilen
-        aksların her çiftinin, ikisinin de içinde kalan kesişimlerinde birer kolon; aynı
-        ölçülerle. Etiketsiz kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). Akslara
-        bağlı kolonun yerini belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı
+        yönündeki kalınlığı; yalnız L'de, gerekli, o yanından ince), hiza (anchor: center,
+        left, right, bottom, top, bottomLeft, bottomRight, topLeft, topRight; at ve aks
+        kesişimi kutunun bu noktasıdır, §2), dönüş (rotation, radyan, hiza noktası
+        çevresinde), tür (type), etiket (tag), dolu (fill). crossings: verilen aksların her
+        çiftinin, ikisinin de içinde kalan kesişimlerinde birer kolon; aynı ölçülerle.
+        Etiketsiz kolonlar tagStart'tan artarak etiketlenir (S1, S2 …). Akslara bağlı
+        kolonun yerini belge izler: aks taşınınca kolon kesişimde kalır, konum yazısı
         (place) iki aksın etiketlerinden “B-3” olur; aks silinir ya da akslar kesişmezse
         broken: gridGone. Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana
         uyarıyla yazılır.
@@ -200,14 +200,14 @@ create = _ColumnsCreate()
 
 class _ColumnsDistances(LocalCommand[ColumnsDistancesInput, ColumnsDistances, ColumnsDistances]):
     """``cad.columns.distances`` v1. Kolonun mesafeleri: Kalıcı kimlikleri verilen
-    kolonların dört yanındaki net mesafeleri okur (docs/adr/0712): her yandan (side: 0
-    merkezin altı, 1 sağı, 2 üstü, 3 solu, kolonun dönüşüyle; yuvarlak kolonda
-    çevreleyen karenin yanları) dışarıya, aynı kattaki ona paralel ve boyunca örtüşen en
-    yakın yüze dik uzaklık: bir duvarın bakan yüzü (target wall, edge yolun kenarı, face
-    yüzü) ya da başka bir kolonun yanı (target column, edge onun yanı). from ve to
-    örtüşmenin ortasında iki yüzdeki noktalardır (metre); paralel yüzü olmayan yan
-    yoktur. Akslara bağlı kolon tied ile söylenir: yeri aksların kesişimidir. Belgeye
-    yazmaz; kolonu kaydırmak için cad.arch.edit'in distance işlemi.
+    kolonların dört yanındaki net mesafeleri okur: her yandan (side: 0 merkezin altı, 1
+    sağı, 2 üstü, 3 solu, kolonun dönüşüyle; yuvarlak kolonda çevreleyen karenin
+    yanları) dışarıya, aynı kattaki ona paralel ve boyunca örtüşen en yakın yüze dik
+    uzaklık: bir duvarın bakan yüzü (target wall, edge yolun kenarı, face yüzü) ya da
+    başka bir kolonun yanı (target column, edge onun yanı). from ve to örtüşmenin
+    ortasında iki yüzdeki noktalardır (metre); paralel yüzü olmayan yan yoktur. Akslara
+    bağlı kolon tied ile söylenir: yeri aksların kesişimidir. Belgeye yazmaz; kolonu
+    kaydırmak için cad.arch.edit'in distance işlemi.
     """
     __slots__ = ()
     id = "cad.columns.distances"
@@ -228,14 +228,14 @@ class _ColumnsDistances(LocalCommand[ColumnsDistancesInput, ColumnsDistances, Co
         expected: Expected | None = None,
     ) -> ColumnsDistances:
         """Kolonun mesafeleri: Kalıcı kimlikleri verilen kolonların dört yanındaki net
-        mesafeleri okur (docs/adr/0712): her yandan (side: 0 merkezin altı, 1 sağı, 2 üstü,
-        3 solu, kolonun dönüşüyle; yuvarlak kolonda çevreleyen karenin yanları) dışarıya,
-        aynı kattaki ona paralel ve boyunca örtüşen en yakın yüze dik uzaklık: bir duvarın
-        bakan yüzü (target wall, edge yolun kenarı, face yüzü) ya da başka bir kolonun yanı
-        (target column, edge onun yanı). from ve to örtüşmenin ortasında iki yüzdeki
-        noktalardır (metre); paralel yüzü olmayan yan yoktur. Akslara bağlı kolon tied ile
-        söylenir: yeri aksların kesişimidir. Belgeye yazmaz; kolonu kaydırmak için
-        cad.arch.edit'in distance işlemi.
+        mesafeleri okur: her yandan (side: 0 merkezin altı, 1 sağı, 2 üstü, 3 solu, kolonun
+        dönüşüyle; yuvarlak kolonda çevreleyen karenin yanları) dışarıya, aynı kattaki ona
+        paralel ve boyunca örtüşen en yakın yüze dik uzaklık: bir duvarın bakan yüzü (target
+        wall, edge yolun kenarı, face yüzü) ya da başka bir kolonun yanı (target column,
+        edge onun yanı). from ve to örtüşmenin ortasında iki yüzdeki noktalardır (metre);
+        paralel yüzü olmayan yan yoktur. Akslara bağlı kolon tied ile söylenir: yeri
+        aksların kesişimidir. Belgeye yazmaz; kolonu kaydırmak için cad.arch.edit'in
+        distance işlemi.
 
         Args:
             doc: The drawing it works on.

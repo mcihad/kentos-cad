@@ -392,7 +392,7 @@ impl App {
                     Purpose::Block => dialog
                         .add_filter("Çizimler (.kcad, .dwg, .dxf)", &["kcad", "dwg", "dxf"])
                         .add_filter("KentOS çizimi (.kcad)", &["kcad"])
-                        .add_filter("AutoCAD (.dwg, .dxf)", &["dwg", "dxf"]),
+                        .add_filter("DWG ve DXF çizimleri (.dwg, .dxf)", &["dwg", "dxf"]),
                     Purpose::Take => dialog.add_filter("KentOS çizimi (.kcad)", &["kcad"]),
                 };
                 let file = dialog.pick_file().await?;

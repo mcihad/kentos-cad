@@ -502,7 +502,7 @@ impl App {
                 "Proje WGS 84 (EPSG:4326) sisteminde: dosya RFC 7946 GeoJSON olur (boylam, enlem).",
             )
         } else {
-            words::text_line(Line::Warn, format!("Dosya RFC 7946 GeoJSON olmayacak. Proje {system} (EPSG:{srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: QGIS ve GDAL doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. Web haritaları için “WGS 84'e çevir”i işaretleyin."))
+            words::text_line(Line::Warn, format!("Dosya RFC 7946 GeoJSON olmayacak. Proje {system} (EPSG:{srid}) sisteminde; RFC 7946 yalnız WGS 84 boylam, enlem ister. Koordinatlar dönüştürülmeden projenin sisteminde yazılır ve eski (2008) crs üyesiyle adlandırılır: CBS yazılımları doğru okur, yalnız RFC 7946'yı bilen programlar (web haritaları) yanlış yere koyar. Web haritaları için “WGS 84'e çevir”i işaretleyin."))
         });
         if curves > 0 {
             lines.push(words::text_line(Line::Info, format!("{curves} eğri (daire, yay, elips, spline, yaylı çizgi) GeoJSON'da olmadığı için uygulamanın kendi örneklemesiyle (turda 72 adım) çizgiye çevrilir.")));

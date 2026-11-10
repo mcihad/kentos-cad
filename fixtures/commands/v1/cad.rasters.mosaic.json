@@ -4244,7 +4244,7 @@
       "status": "failed",
       "error": {
        "code": "invalid_file_path",
-       "message": "“mozaik.tif” bir .vrt dosyası değil; mozaik GDAL'ın VRT dosyası olarak yazılır.",
+       "message": "“mozaik.tif” bir .vrt dosyası değil; mozaik VRT dosyası olarak yazılır.",
        "path": "path"
       }
      },

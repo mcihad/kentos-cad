@@ -203,10 +203,10 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
     KentOS öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
     bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
     kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
-    dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
-    171). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
-    “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
-    invalid_revision, revision_conflict.
+    dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (KCAD şema 171). Yeni
+    Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler:
+    not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision,
+    revision_conflict.
     """
     __slots__ = ()
     id = "road.hauls.edit"
@@ -248,10 +248,10 @@ class _RoadHaulsEdit(LocalCommand[HaulsEdit, HaulsWritten, HaulsWritten]):
         öntanımlı serbest taşıma ya da fiyat vermez. Brükner kübajını izler, yeniden
         bağlanmaz ve başka kübaja geçmez.  Uygunsuz malzeme (unsuitable: km aralıklarıyla
         kazının dolguya konamayan yüzde payı) ve engeller (barriers: ad, km, isteğe bağlı
-        dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (docs/adr/0944, KCAD şema
-        171). Yeni Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı
-        “Brükner”. Retler: not_a_road_project, unknown_haul, unknown_volume, invalid_haul,
-        invalid_revision, revision_conflict.
+        dolaşma m; yoksa kapalı) da yazılır, boş liste kaldırır (KCAD şema 171). Yeni
+        Brüknerin kimliği verilen ya da ilk boş h-n. Tek geri alma adımı “Brükner”. Retler:
+        not_a_road_project, unknown_haul, unknown_volume, invalid_haul, invalid_revision,
+        revision_conflict.
 
         Args:
             doc: The drawing it works on.
@@ -532,21 +532,20 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
     dolgudan fazlası ya da eksiği) ortasına, ödünç ve döküm alanları km'lerine konur;
     alanın hacmi kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç
     alanı en çok kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış
-    ardışık en kısa yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi);
-    yol bir doğru olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir.
-    Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık,
-    alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan
-    dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her
-    yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
-    fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
-    en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
-    taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel varsa plan malzemeyi ayırır
-    (docs/adr/0944): uygunsuz kazı yalnız döküm alanlarına gider ve döküm yetmezse önce
-    o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını geçemez; rapor
-    uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz kısmını ve
-    engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar:
-    haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project,
-    unknown_haul, invalid_haul (maliyette fiyat yoksa da).
+    ardışık en kısa yollarla kesin bulunur; yol bir doğru olduğundan parçaların akışı
+    her yerin verdiği ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu
+    fazlası, taşınan, moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı
+    (ileri artı); yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective:
+    cost` en düşük maliyeti arar: her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir
+    yay, fiyatı fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve
+    alanın birim fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma
+    momenti, kalemler, toplam ve ekonomik taşıma sınırı.  Brüknerde uygunsuz malzeme ya
+    da engel varsa plan malzemeyi ayırır: uygunsuz kazı yalnız döküm alanlarına gider ve
+    döküm yetmezse önce o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür,
+    kapalısını geçemez; rapor uygunsuz kazıyı, dökülemeyeni, momentteki payını,
+    alanların uygunsuz kısmını ve engellerden geçeni verir; ekonomik amaçla birlikte
+    reddedilir. Uyarılar: haul_plan_infeasible, corridor_stale, volume_gap. Retler:
+    not_a_road_project, unknown_haul, invalid_haul (maliyette fiyat yoksa da).
     """
     __slots__ = ()
     id = "road.hauls.plan"
@@ -572,19 +571,18 @@ class _RoadHaulsPlan(LocalCommand[HaulsPlan, HaulPlanned, HaulPlanned]):
         eksiği) ortasına, ödünç ve döküm alanları km'lerine konur; alanın hacmi
         kapasitesidir. Bütün yarma yerleşir, bütün dolgu karşılanır; ödünç alanı en çok
         kapasitesi kadar verir, döküm alanı alır. En küçük maliyetli akış ardışık en kısa
-        yollarla kesin bulunur (Trimble'ın kısıtlı taşıma eniyilemesi gibi); yol bir doğru
-        olduğundan parçaların akışı her yerin verdiği ve aldığıyla belirlidir. Cevap:
-        yerleşiyor mu, yarma ve dolgu fazlası, taşınan, moment ve ortalama uzaklık,
-        alanların kullanımı, parçaların akışı (ileri artı); yerleşmiyorsa karşılanmayan
-        dolgu ve yerleşmeyen yarma. `objective: cost` en düşük maliyeti arar (ADR 0925): her
-        yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı fazla taşıma birim
-        fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim fiyatı; aynı maliyette
-        en küçük moment. Cevabın `cost`'u fazla taşıma momenti, kalemler, toplam ve ekonomik
-        taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel varsa plan malzemeyi ayırır
-        (docs/adr/0944): uygunsuz kazı yalnız döküm alanlarına gider ve döküm yetmezse önce
-        o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını geçemez; rapor
-        uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz kısmını ve
-        engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar:
+        yollarla kesin bulunur; yol bir doğru olduğundan parçaların akışı her yerin verdiği
+        ve aldığıyla belirlidir. Cevap: yerleşiyor mu, yarma ve dolgu fazlası, taşınan,
+        moment ve ortalama uzaklık, alanların kullanımı, parçaların akışı (ileri artı);
+        yerleşmiyorsa karşılanmayan dolgu ve yerleşmeyen yarma. `objective: cost` en düşük
+        maliyeti arar: her yarma–dolgu, yarma–döküm ve ödünç–dolgu çifti bir yay, fiyatı
+        fazla taşıma birim fiyatı × serbest taşımanın ötesindeki uzaklık ve alanın birim
+        fiyatı; aynı maliyette en küçük moment. Cevabın `cost`'u fazla taşıma momenti,
+        kalemler, toplam ve ekonomik taşıma sınırı.  Brüknerde uygunsuz malzeme ya da engel
+        varsa plan malzemeyi ayırır: uygunsuz kazı yalnız döküm alanlarına gider ve döküm
+        yetmezse önce o yerleşir, açık engeli geçen taşıma dolaşmayı da yürür, kapalısını
+        geçemez; rapor uygunsuz kazıyı, dökülemeyeni, momentteki payını, alanların uygunsuz
+        kısmını ve engellerden geçeni verir; ekonomik amaçla birlikte reddedilir. Uyarılar:
         haul_plan_infeasible, corridor_stale, volume_gap. Retler: not_a_road_project,
         unknown_haul, invalid_haul (maliyette fiyat yoksa da).
 

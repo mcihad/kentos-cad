@@ -576,27 +576,26 @@ query = _SourcesQuery()
 class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, SourcesReconciled]):
     """``cad.sources.reconcile`` v1. Kaynakla uzlaştır: Hem katmanı hem tablosu son
     eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her
-    nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız
-    katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te,
-    başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur.
-    İkisinin de değiştirdiği nesne tabana karşı alan alan birleştirilir (docs/adr/0553):
-    yalnız bir yanın değiştirdiği öznitelik ve geometri o yanınkini alır, iki yan birden
-    farklı değiştirdiği öznitelik ya da geometri çatışmadır (iki yanın değerleriyle);
-    nesne, tabanın alan kaydı yoksa bütün olarak çatışır (field_base_missing). Birinin
-    silip öbürünün değiştirdiği nesne de çatışmadır. Birlikte değişen nesneler bir
-    gruptur ve birlikte, tek yanla çözülür: ortak köşesini iki yanın da taşıdığı
-    komşular ve bir yanın sildiği üst kayıtla öbür yanın eklediği ya da değiştirdiği alt
-    kayıt (ilişki). Son yazan kazanmaz: take (nesne ya da grup için) ve rest (kalanlar)
-    ile bir yan seçilir; bir grubun nesneleri farklı yanlara seçilemez (group_split).
-    with ile aynı GeoPackage dosyasının başka bağlı katmanları aynı çağrıda ve tek
-    SQLite işleminde uzlaştırılır (başka dosyadaki katman transaction_split). plan
-    dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar
-    çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı
-    katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır:
-    tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ
-    (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz
-    (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız
-    alandaki satırlar karşılaştırılır.
+    nesnenin katmandaki ve tablodaki özeti) ile karşılaştırılır: yalnız katmanın
+    değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (başka bir
+    yazılımda ya da KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği
+    uyuşur. İkisinin de değiştirdiği nesne tabana karşı alan alan birleştirilir: yalnız
+    bir yanın değiştirdiği öznitelik ve geometri o yanınkini alır, iki yan birden farklı
+    değiştirdiği öznitelik ya da geometri çatışmadır (iki yanın değerleriyle); nesne,
+    tabanın alan kaydı yoksa bütün olarak çatışır (field_base_missing). Birinin silip
+    öbürünün değiştirdiği nesne de çatışmadır. Birlikte değişen nesneler bir gruptur ve
+    birlikte, tek yanla çözülür: ortak köşesini iki yanın da taşıdığı komşular ve bir
+    yanın sildiği üst kayıtla öbür yanın eklediği ya da değiştirdiği alt kayıt (ilişki).
+    Son yazan kazanmaz: take (nesne ya da grup için) ve rest (kalanlar) ile bir yan
+    seçilir; bir grubun nesneleri farklı yanlara seçilemez (group_split). with ile aynı
+    GeoPackage dosyasının başka bağlı katmanları aynı çağrıda ve tek SQLite işleminde
+    uzlaştırılır (başka dosyadaki katman transaction_split). plan dosyayı okur, hiçbir
+    şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz
+    (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın
+    yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın
+    yazılamaması ikisini de geri alır. Tabanı olmayan bağ (bu sürümden önce bağlanan,
+    MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya
+    da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır.
     """
     __slots__ = ()
     id = "cad.sources.reconcile"
@@ -620,25 +619,25 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         expected: Expected | None = None,
     ) -> SourcesReconciled:
         """Kaynakla uzlaştır: Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı
-        uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti,
-        docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya
-        yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır,
-        ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin de değiştirdiği nesne tabana
-        karşı alan alan birleştirilir (docs/adr/0553): yalnız bir yanın değiştirdiği
-        öznitelik ve geometri o yanınkini alır, iki yan birden farklı değiştirdiği öznitelik
-        ya da geometri çatışmadır (iki yanın değerleriyle); nesne, tabanın alan kaydı yoksa
-        bütün olarak çatışır (field_base_missing). Birinin silip öbürünün değiştirdiği nesne
-        de çatışmadır. Birlikte değişen nesneler bir gruptur ve birlikte, tek yanla çözülür:
-        ortak köşesini iki yanın da taşıdığı komşular ve bir yanın sildiği üst kayıtla öbür
-        yanın eklediği ya da değiştirdiği alt kayıt (ilişki). Son yazan kazanmaz: take
-        (nesne ya da grup için) ve rest (kalanlar) ile bir yan seçilir; bir grubun nesneleri
-        farklı yanlara seçilemez (group_split). with ile aynı GeoPackage dosyasının başka
-        bağlı katmanları aynı çağrıda ve tek SQLite işleminde uzlaştırılır (başka dosyadaki
-        katman transaction_split). plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler.
-        Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict);
-        çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma
-        adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır.
-        Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman)
+        uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti)
+        ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız
+        tablonun değiştirdiği (başka bir yazılımda ya da KentOS'ta) katmana alınır, ikisinin
+        aynı biçimde değiştirdiği uyuşur. İkisinin de değiştirdiği nesne tabana karşı alan
+        alan birleştirilir: yalnız bir yanın değiştirdiği öznitelik ve geometri o yanınkini
+        alır, iki yan birden farklı değiştirdiği öznitelik ya da geometri çatışmadır (iki
+        yanın değerleriyle); nesne, tabanın alan kaydı yoksa bütün olarak çatışır
+        (field_base_missing). Birinin silip öbürünün değiştirdiği nesne de çatışmadır.
+        Birlikte değişen nesneler bir gruptur ve birlikte, tek yanla çözülür: ortak köşesini
+        iki yanın da taşıdığı komşular ve bir yanın sildiği üst kayıtla öbür yanın eklediği
+        ya da değiştirdiği alt kayıt (ilişki). Son yazan kazanmaz: take (nesne ya da grup
+        için) ve rest (kalanlar) ile bir yan seçilir; bir grubun nesneleri farklı yanlara
+        seçilemez (group_split). with ile aynı GeoPackage dosyasının başka bağlı katmanları
+        aynı çağrıda ve tek SQLite işleminde uzlaştırılır (başka dosyadaki katman
+        transaction_split). plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme
+        bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce
+        tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı
+        (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı
+        olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman)
         uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma
         kopyasında yalnız alandaki satırlar karşılaştırılır.
 
@@ -741,17 +740,17 @@ reconcile = _SourcesReconcile()
 class _SourcesRelate(LocalCommand[SourcesRelate, SourcesRelated, SourcesRelated]):
     """``cad.sources.relate`` v1. İlişkiyi dosyaya eşle: Projenin bir ilişkisinin
     (cad.relations.edit) çok değerli alanı (alt kayıt birden çok üstün kimliğini “; ”
-    ile tutar, docs/adr/0409) bağlı GeoPackage'da nasıl tutuluyor: iki katman da aynı
-    dosyanın tablolarına bağlıysa metin sütunu (text), KentOS'un ilişki temsili
-    (mapped), dosyanın başka bir temsilli ilişkisi (foreign) ya da profile uymayan
-    ilişkisi (broken); bağlı olmayan (unbound), ayrı kaynaklardaki (split) ve tek
-    kimlikli (single) ilişki. check hiçbir şey yazmaz, durumu ve nedenini söyler. map
-    GeoPackage ilişki profilinde (OGC 18-000, gpkgext_relations) “kentos_references”
-    ilişkisini ve eşleme tablosunu (base_id: alt kaydın fid'i, related_id: üstün fid'i)
-    tek SQLite işleminde yazar; satırlar katmanların alandaki başvurularından kurulur.
-    Eşlenen alan sütun olarak yazılmaz ve okunmaz, eşleme tablosu tek temsildir;
-    cad.sources.sync eşleme satırlarını katmanlarla birlikte yazar ve okur. Dosyanın
-    başka bir temsilli ilişkisi ya da eşleme tablosu olmayan bir tablo üzerine yazılmaz
+    ile tutar) bağlı GeoPackage'da nasıl tutuluyor: iki katman da aynı dosyanın
+    tablolarına bağlıysa metin sütunu (text), KentOS'un ilişki temsili (mapped),
+    dosyanın başka bir temsilli ilişkisi (foreign) ya da profile uymayan ilişkisi
+    (broken); bağlı olmayan (unbound), ayrı kaynaklardaki (split) ve tek kimlikli
+    (single) ilişki. check hiçbir şey yazmaz, durumu ve nedenini söyler. map GeoPackage
+    ilişki profilinde (OGC 18-000, gpkgext_relations) “kentos_references” ilişkisini ve
+    eşleme tablosunu (base_id: alt kaydın fid'i, related_id: üstün fid'i) tek SQLite
+    işleminde yazar; satırlar katmanların alandaki başvurularından kurulur. Eşlenen alan
+    sütun olarak yazılmaz ve okunmaz, eşleme tablosu tek temsildir; cad.sources.sync
+    eşleme satırlarını katmanlarla birlikte yazar ve okur. Dosyanın başka bir temsilli
+    ilişkisi ya da eşleme tablosu olmayan bir tablo üzerine yazılmaz
     (relation_unsupported), noktalı virgüllü metne de çevrilmez. unmap ilişkiyi ve
     eşleme tablosunu dosyadan kaldırır; başvurular katmanda kalır ve sonraki yazmada
     metin sütunu olur (relation_unmapped uyarısıyla). Dosya katmanlar onunla son
@@ -780,11 +779,11 @@ class _SourcesRelate(LocalCommand[SourcesRelate, SourcesRelated, SourcesRelated]
         expected: Expected | None = None,
     ) -> SourcesRelated:
         """İlişkiyi dosyaya eşle: Projenin bir ilişkisinin (cad.relations.edit) çok değerli
-        alanı (alt kayıt birden çok üstün kimliğini “; ” ile tutar, docs/adr/0409) bağlı
-        GeoPackage'da nasıl tutuluyor: iki katman da aynı dosyanın tablolarına bağlıysa
-        metin sütunu (text), KentOS'un ilişki temsili (mapped), dosyanın başka bir temsilli
-        ilişkisi (foreign) ya da profile uymayan ilişkisi (broken); bağlı olmayan (unbound),
-        ayrı kaynaklardaki (split) ve tek kimlikli (single) ilişki. check hiçbir şey yazmaz,
+        alanı (alt kayıt birden çok üstün kimliğini “; ” ile tutar) bağlı GeoPackage'da
+        nasıl tutuluyor: iki katman da aynı dosyanın tablolarına bağlıysa metin sütunu
+        (text), KentOS'un ilişki temsili (mapped), dosyanın başka bir temsilli ilişkisi
+        (foreign) ya da profile uymayan ilişkisi (broken); bağlı olmayan (unbound), ayrı
+        kaynaklardaki (split) ve tek kimlikli (single) ilişki. check hiçbir şey yazmaz,
         durumu ve nedenini söyler. map GeoPackage ilişki profilinde (OGC 18-000,
         gpkgext_relations) “kentos_references” ilişkisini ve eşleme tablosunu (base_id: alt
         kaydın fid'i, related_id: üstün fid'i) tek SQLite işleminde yazar; satırlar
@@ -894,29 +893,28 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
     kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla
     son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi
     tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna
-    kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı,
-    docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan
-    öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya
-    yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan
-    oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda
-    olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz
-    (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı
-    işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı
-    kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı
-    source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar:
-    üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce
-    denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed,
-    relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek
-    PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının
-    sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa
-    birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı,
-    relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen
-    çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt
-    katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş
-    çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile
-    söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin
-    alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve
-    sayıları söyler.
+    kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı);
+    tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır
+    (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun
+    satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen
+    nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman
+    son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict).
+    PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo
+    yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın
+    kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. with (yalnız
+    write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep
+    birlikte ya hiç: her katman önce denetlenir, biri reddedilirse (source_readonly,
+    geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar
+    tek GeoPackage dosyasında ya da tek PostGIS veritabanında olmalıdır (veritabanında
+    tablolar adlarının sırasıyla kilitlenir, her birinin satırları tabanına karşı
+    denetlenir; iki kaynağa birden tek işlem olmaz, transaction_split); cevabın layers'ı
+    her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır.
+    cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır:
+    eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin
+    sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin
+    olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli
+    ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur.
+    plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.
     """
     __slots__ = ()
     id = "cad.sources.sync"
@@ -947,29 +945,28 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. Dosya katman onunla son
         eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi
         tablonun sütununa uymayan nesne geometry_mismatch (Z ve M de: Z'yi yasaklayan sütuna
-        kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı,
-        docs/adr/0584 §2); tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan
-        öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya
-        yazılır. read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan
-        oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda
-        olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz
-        (pending_changes, conflict). PostGIS tablosu da aynı kurallarla, tek veritabanı
-        işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı
-        kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı
-        source_unreachable. with (yalnız write) başka bağlı katmanları aynı işlemde yazar:
-        üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce
-        denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed,
-        relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında ya da tek
-        PostGIS veritabanında olmalıdır (docs/adr/0584 §1: veritabanında tablolar adlarının
-        sırasıyla kilitlenir, her birinin satırları tabanına karşı denetlenir; iki kaynağa
-        birden tek işlem olmaz, transaction_split); cevabın layers'ı her katmanın payı,
-        relations'ı eşli ilişkilerin eşleme satırlarıdır. cad.sources.relate ile eşlenen
-        çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt
-        katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş
-        çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile
-        söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin
-        alanını eşleme satırlarından doldurur. plan dosyayı okur, hiçbir şey yazmaz ve
-        sayıları söyler.
+        kotlu, isteyene kotsuz, hiçbirine kısmen kotlu nesne yazılmaz; M için de aynı);
+        tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır
+        (export_losses). Yazma geri alma adımı değildir: dosya yazılır. read: tablonun
+        satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen
+        nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman
+        son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict).
+        PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo
+        yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın
+        kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. with (yalnız
+        write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep
+        birlikte ya hiç: her katman önce denetlenir, biri reddedilirse (source_readonly,
+        geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar
+        tek GeoPackage dosyasında ya da tek PostGIS veritabanında olmalıdır (veritabanında
+        tablolar adlarının sırasıyla kilitlenir, her birinin satırları tabanına karşı
+        denetlenir; iki kaynağa birden tek işlem olmaz, transaction_split); cevabın layers'ı
+        her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır.
+        cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır:
+        eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin
+        sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin
+        olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli
+        ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur.
+        plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler.
 
         Args:
             doc: The drawing it works on.

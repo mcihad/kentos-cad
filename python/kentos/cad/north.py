@@ -24,9 +24,9 @@ if TYPE_CHECKING:
 
 
 class _NorthCreate(LocalCommand[NorthCreate, NorthCreated, NorthPlan]):
-    """``cad.north.create`` v1. Kuzey oku: Kuzey okunu yerleştirir (docs/adr/0721 §3); tek
-    geri alma adımı “Kuzey oku”. Çizimin kendi “Kuzey oku” bloğu varsa o, yoksa KentOS
-    blok kitaplığınınki aynı adımda eklenip yerleştirilir (added). at okun dairesinin
+    """``cad.north.create`` v1. Kuzey oku: Kuzey okunu yerleştirir; tek geri alma adımı
+    “Kuzey oku”. Çizimin kendi “Kuzey oku” bloğu varsa o, yoksa KentOS blok
+    kitaplığınınki aynı adımda eklenip yerleştirilir (added). at okun dairesinin
     merkezidir; size kâğıttaki eni (mm, yok: 15; 0'dan büyük, en çok 200), çizim
     ölçeğiyle büyür: ölçek = size/1000 · ölçek paydası / bloğun doğu-batı eni (yazıları
     sayılmaz). north okun gösterdiği kuzeydir: plan (yok: çizimin yukarısı, projenin
@@ -62,20 +62,19 @@ class _NorthCreate(LocalCommand[NorthCreate, NorthCreated, NorthPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> NorthCreated:
-        """Kuzey oku: Kuzey okunu yerleştirir (docs/adr/0721 §3); tek geri alma adımı “Kuzey
-        oku”. Çizimin kendi “Kuzey oku” bloğu varsa o, yoksa KentOS blok kitaplığınınki aynı
-        adımda eklenip yerleştirilir (added). at okun dairesinin merkezidir; size kâğıttaki
-        eni (mm, yok: 15; 0'dan büyük, en çok 200), çizim ölçeğiyle büyür: ölçek = size/1000
-        · ölçek paydası / bloğun doğu-batı eni (yazıları sayılmaz). north okun gösterdiği
-        kuzeydir: plan (yok: çizimin yukarısı, projenin plan kuzeyi), true (bu noktadan
-        geçen meridyen: projenin koordinat sisteminin meridyen yakınsaması, convergence;
-        yerel projede no_true_north) ya da angle (planın kuzeyinden saat yönünün tersine
-        radyan). Dönüş (rotation) bu açıdır. Ret sırası: not_finite (at, açı, boy),
-        invalid_scale, invalid_revision, revision_conflict, no_true_north, katman
-        (layer_not_found, not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı.
-        Plan yerleştirmeyi (id 0), eklenecek bloğu, dönüşü ve yakınsamayı verir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        """Kuzey oku: Kuzey okunu yerleştirir; tek geri alma adımı “Kuzey oku”. Çizimin kendi
+        “Kuzey oku” bloğu varsa o, yoksa KentOS blok kitaplığınınki aynı adımda eklenip
+        yerleştirilir (added). at okun dairesinin merkezidir; size kâğıttaki eni (mm, yok:
+        15; 0'dan büyük, en çok 200), çizim ölçeğiyle büyür: ölçek = size/1000 · ölçek
+        paydası / bloğun doğu-batı eni (yazıları sayılmaz). north okun gösterdiği kuzeydir:
+        plan (yok: çizimin yukarısı, projenin plan kuzeyi), true (bu noktadan geçen
+        meridyen: projenin koordinat sisteminin meridyen yakınsaması, convergence; yerel
+        projede no_true_north) ya da angle (planın kuzeyinden saat yönünün tersine radyan).
+        Dönüş (rotation) bu açıdır. Ret sırası: not_finite (at, açı, boy), invalid_scale,
+        invalid_revision, revision_conflict, no_true_north, katman (layer_not_found,
+        not_a_layer, layer_locked); gizli katmana layer_hidden uyarısı. Plan yerleştirmeyi
+        (id 0), eklenecek bloğu, dönüşü ve yakınsamayı verir. expectedRevision verilmişse ve
+        çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

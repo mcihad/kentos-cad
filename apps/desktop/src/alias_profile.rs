@@ -1,8 +1,8 @@
-//! AutoCAD takma adları (docs/adr/0282, CAD-INPUT-18): a profile of typed
-//! names, off by default (`drafting.autocadAliases`), that lets the command
-//! line take AutoCAD's English command names and their acad.pgp short names
+//! Klasik CAD komut adları (docs/adr/0282, CAD-INPUT-18): a profile of typed
+//! names, off by default (`drafting.autocadAliases`, a stored setting's key kept as it was), that lets the command
+//! line take the classic English CAD command names and their .pgp short names
 //! (RECTANG, LA, JOG …) beside KentOS's own. The profile is data,
-//! `catalog/v1/aliases-autocad.json`: a name, the AutoCAD command it stands
+//! `catalog/v1/aliases-classic.json`: a name, the classic command it stands
 //! for, and the KentOS command (with a tool's method option, JOG is
 //! Ölçülendirme as Kırıklı yarıçap) it starts.
 //!
@@ -27,15 +27,15 @@ use crate::input::release_keyboard;
 pub const SETTING: &str = "drafting.autocadAliases";
 
 /// The profile's file, embedded.
-const AUTOCAD: &str = include_str!("../../../catalog/v1/aliases-autocad.json");
+const CLASSIC: &str = include_str!("../../../catalog/v1/aliases-classic.json");
 
 /// One typed name of a profile.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Name {
     /// What is typed (`RECTANG`).
     pub name: &'static str,
-    /// The AutoCAD command it stands for (`RECTANG`; `LA` stands for `LAYER`).
-    pub autocad: &'static str,
+    /// The classic command it stands for (`RECTANG`; `LA` stands for `LAYER`).
+    pub classic: &'static str,
     /// The KentOS command it starts.
     pub command: &'static str,
     /// The tool's method it starts, as the ribbon's menu gives it (`I`).
@@ -60,10 +60,10 @@ impl Profile {
     }
 }
 
-/// The AutoCAD profile.
-pub fn autocad() -> &'static Profile {
+/// The classic CAD names' profile.
+pub fn classic() -> &'static Profile {
     static PROFILE: OnceLock<Profile> = OnceLock::new();
-    PROFILE.get_or_init(|| load(AUTOCAD).expect("catalog/v1/aliases-autocad.json reads"))
+    PROFILE.get_or_init(|| load(CLASSIC).expect("catalog/v1/aliases-classic.json reads"))
 }
 
 #[derive(Deserialize)]
@@ -82,7 +82,7 @@ struct RawProfile {
 #[serde(deny_unknown_fields)]
 struct RawName {
     name: String,
-    autocad: String,
+    classic: String,
     command: String,
     #[serde(default)]
     option: Option<String>,
@@ -102,7 +102,7 @@ fn load(text: &str) -> Result<Profile, String> {
     for n in raw.names {
         let name = Name {
             name: leak(n.name),
-            autocad: leak(n.autocad),
+            classic: leak(n.classic),
             command: leak(n.command),
             option: n.option.map(leak),
         };
@@ -162,7 +162,7 @@ pub fn method(id: &str, option: &str) -> Option<&'static Entry> {
 /// (its first is the list's name), then the profile's for it, methods left out.
 pub fn line_aliases(command: &Command) -> &'static [&'static str] {
     let own = command.aliases.get(1..).unwrap_or(&[]);
-    let added: Vec<&'static str> = autocad()
+    let added: Vec<&'static str> = classic()
         .names
         .iter()
         .filter(|n| n.command == command.id && n.option.is_none())
@@ -176,7 +176,7 @@ pub fn line_aliases(command: &Command) -> &'static [&'static str] {
 
 /// A command's row in the command line's list with the profile on: its names
 /// and the profile's (`line_aliases`). A command with no typed name of its own
-/// is listed by its first AutoCAD name in the file, not its id (LA for Katman ve
+/// is listed by its first classic name in the file, not its id (LA for Katman ve
 /// öznitelik paneli); Enter runs that name, which the profile knows.
 pub fn line_command(command: &Command, row: LineCommand<'static>) -> LineCommand<'static> {
     let names = line_aliases(command);
@@ -190,14 +190,14 @@ pub fn line_command(command: &Command, row: LineCommand<'static>) -> LineCommand
 /// row of the tool would run its name, without the method (JOG is
 /// Ölçülendirme as Kırıklı yarıçap).
 pub fn method_lines() -> Vec<(&'static str, LineCommand<'static>)> {
-    autocad()
+    classic()
         .names
         .iter()
         .filter_map(|n| {
             let entry = method(n.command, n.option?)?;
             let command = catalog().get(n.command)?;
             let title = leak(format!("{} › {}", command.title, entry.label));
-            let description = leak(format!("AutoCAD: {}", n.autocad));
+            let description = leak(format!("Komut adı: {}", n.classic));
             Some((
                 command.id,
                 LineCommand::new(n.name, title)
@@ -216,10 +216,10 @@ type Gathered = (
 );
 
 /// The shortcuts window's rows (shortcuts.rs): with the profile on, what each
-/// command is and its AutoCAD names, in the file's order, then the names
+/// command is and its classic names, in the file's order, then the names
 /// KentOS keeps for itself; off, where to turn it on.
 pub fn shortcut_rows(on: bool) -> Vec<(String, String)> {
-    let profile = autocad();
+    let profile = classic();
     if !on {
         return vec![(
             format!(
@@ -250,7 +250,7 @@ pub fn shortcut_rows(on: bool) -> Vec<(String, String)> {
     if !profile.skipped.is_empty() {
         let kept: Vec<&str> = profile.skipped.iter().map(|n| n.name).collect();
         rows.push((
-            "KentOS'ta başka bir işi olduğu için AutoCAD anlamıyla çalışmayanlar".to_owned(),
+            "KentOS'ta başka bir işi olduğu için bu anlamıyla çalışmayanlar".to_owned(),
             kept.join(", "),
         ));
     }
@@ -258,8 +258,8 @@ pub fn shortcut_rows(on: bool) -> Vec<(String, String)> {
 }
 
 impl App {
-    /// Whether the command line takes AutoCAD's names (`drafting.autocadAliases`).
-    pub(crate) fn autocad_names(&self) -> bool {
+    /// Whether the command line takes the classic CAD names (`drafting.autocadAliases`).
+    pub(crate) fn classic_names(&self) -> bool {
         self.settings.bool(SETTING)
     }
 
@@ -268,10 +268,10 @@ impl App {
     /// otherwise, and the line goes on as before. KentOS's own names never
     /// reach here: the profile left them out.
     pub(crate) fn run_profile_name(&mut self, text: &str) -> Option<Task<Message>> {
-        if !self.autocad_names() {
+        if !self.classic_names() {
             return None;
         }
-        let name = *autocad().find(text)?;
+        let name = *classic().find(text)?;
         let folded = fold(text);
         if self
             .user_models()
@@ -325,8 +325,8 @@ mod tests {
 
     #[test]
     fn every_name_starts_a_command_the_desktop_runs() {
-        let profile = autocad();
-        assert_eq!(profile.title, "AutoCAD takma adları");
+        let profile = classic();
+        assert_eq!(profile.title, "Klasik CAD komut adları");
         let not_run: Vec<&str> = profile
             .names
             .iter()
@@ -351,16 +351,16 @@ mod tests {
                 n.name
                     .chars()
                     .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit()),
-                "{}: names are written as AutoCAD writes them",
+                "{}: names are written as the classic command names are",
                 n.name
             );
-            assert!(!n.autocad.is_empty(), "{}: the AutoCAD command", n.name);
+            assert!(!n.classic.is_empty(), "{}: the classic command", n.name);
         }
     }
 
     #[test]
     fn no_name_of_the_profile_names_two_things() {
-        let profile = autocad();
+        let profile = classic();
         let mut seen = BTreeSet::new();
         for n in profile.names.iter().chain(&profile.skipped) {
             assert!(
@@ -376,7 +376,7 @@ mod tests {
     /// the same command (it would add nothing).
     #[test]
     fn kentos_names_and_keys_win() {
-        let profile = autocad();
+        let profile = classic();
         let skipped: Vec<(&str, &str)> = profile
             .skipped
             .iter()
@@ -413,7 +413,7 @@ mod tests {
         let jog = method_lines();
         let (_, jog) = jog.iter().find(|(_, l)| l.name == "JOG").expect("JOG's row");
         assert_eq!(jog.title, "Ölçülendirme › Kırıklı yarıçap");
-        assert_eq!(jog.description, "AutoCAD: DIMJOGGED");
+        assert_eq!(jog.description, "Komut adı: DIMJOGGED");
     }
 
     fn with_profile(on: bool) -> App {
@@ -423,7 +423,7 @@ mod tests {
             .choose(&[(SETTING, serde_json::Value::Bool(on))]);
         assert!(refused.is_empty(), "{refused:?}");
         app.apply_settings();
-        assert_eq!(app.autocad_names(), on);
+        assert_eq!(app.classic_names(), on);
         app
     }
 
@@ -456,7 +456,7 @@ mod tests {
     #[test]
     fn off_by_default_and_the_names_are_unknown_then() {
         let mut app = crate::files_testing::app_with_drawing();
-        assert!(!app.autocad_names(), "off by default");
+        assert!(!app.classic_names(), "off by default");
         let _ = app.update(Message::CommandRun("JOG".into()));
         assert!(!app.session.is_running());
         assert_eq!(
@@ -466,7 +466,7 @@ mod tests {
     }
 
     #[test]
-    fn with_the_profile_on_autocad_names_run_and_kentos_names_keep_their_meaning() {
+    fn with_the_profile_on_classic_names_run_and_kentos_names_keep_their_meaning() {
         let mut app = with_profile(true);
         let _ = app.update(Message::CommandRun("rectang".into()));
         assert_eq!(
@@ -479,7 +479,7 @@ mod tests {
         let _ = app.update(Message::CommandRun("JOG".into()));
         assert_eq!(app.session.tool_id(), "dimension");
         let _ = app.run("tool.cancel");
-        // KentOS's names: T is Yazı, not AutoCAD's MTEXT; the Turkish names work.
+        // KentOS's names: T is Yazı, not the classic MTEXT; the Turkish names work.
         let _ = app.update(Message::CommandRun("T".into()));
         assert_eq!(app.session.tool_id(), "text");
         let _ = app.run("tool.cancel");

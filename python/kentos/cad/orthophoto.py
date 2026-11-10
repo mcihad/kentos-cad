@@ -204,26 +204,26 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
     passed hepsinin içinde olup olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse
     her görüntü ayrıca cad.orthophoto.check ile kendi doğruluğuyla denetlenir
     (firstCheck, secondCheck). İki zamanın farkı kendiliğinden deformasyon değildir.
-    Salt okunur. İstenirse (seam; ADR 2460) kayma görüntülerin kendisinden ölçülür:
-    örtüşmede step metrede bir yer, birinci görüntünün window × window piksellik parçası
-    ikincide search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır,
-    tepe parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük),
-    edge (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır.
-    Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample
-    ile ikinci görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye
-    bakmalı; cevapta resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460):
-    iki görüntünün mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan
-    bölümü: alan ya da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca
-    (birincinin halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin
-    sırasıyla), her parçanın başından adım aralıklı; cevapta seam.shared (parçalar,
-    uzunluk, yerler, dışarıdakiler), her yerin part'ı; line ile birlikte verilmez.
-    Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (raster projenin
-    sisteminde değil), layer_not_found, invalid_input (aynı raster iki kez, ölçek 0,
-    kural paketi kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search,
-    correlation'ı; resample'sız farklı pikseller, yeniden örneklemede dönük birinci,
-    örtüşme yok; line ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan
-    olmayan ya da yaylı mozaik elemanı, ortak sınır yok, ortak sınır örtüşmede değil),
-    file_not_found (görüntünün dosyası yok).
+    Salt okunur. İstenirse (seam) kayma görüntülerin kendisinden ölçülür: örtüşmede step
+    metrede bir yer, birinci görüntünün window × window piksellik parçası ikincide
+    search piksel içinde sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe
+    parabolle piksel altına inceltilir; yer durumu ok, low (correlation'dan düşük), edge
+    (tepe arama sınırında), flat (dokusuz); ok yerlerin kayma istatistiği ve sınır.
+    Görüntülerin pikselleri aynı boyda ve dönüksüz olmalı ya da seam.resample ile ikinci
+    görüntü birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı;
+    cevapta resampled); dosya göreliyse seam.folder. seam.polygons: iki görüntünün
+    mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya
+    da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin
+    halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla),
+    her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler,
+    dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid,
+    entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
+    layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
+    kimliksiz, kaynaksız ya da mosaic'siz; seam'in step, window, search, correlation'ı;
+    resample'sız farklı pikseller, yeniden örneklemede dönük birinci, örtüşme yok; line
+    ile polygons birlikte, aynı çokgen iki kez, çizimde olmayan, alan olmayan ya da
+    yaylı mozaik elemanı, ortak sınır yok, ortak sınır örtüşmede değil), file_not_found
+    (görüntünün dosyası yok).
     """
     __slots__ = ()
     id = "cad.orthophoto.compare"
@@ -262,19 +262,19 @@ class _OrthophotoCompare(LocalCommand[OrthophotoCompare, OrthophotoCompared, Ort
         KentOS'un okumasıdır); sınırı aşan nokta işaretlenir, passed hepsinin içinde olup
         olmadığıdır. Arazide ölçülmüş noktalar (known) verilirse her görüntü ayrıca
         cad.orthophoto.check ile kendi doğruluğuyla denetlenir (firstCheck, secondCheck).
-        İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam;
-        ADR 2460) kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer,
-        birinci görüntünün window × window piksellik parçası ikincide search piksel içinde
-        sıfır ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına
+        İki zamanın farkı kendiliğinden deformasyon değildir. Salt okunur. İstenirse (seam)
+        kayma görüntülerin kendisinden ölçülür: örtüşmede step metrede bir yer, birinci
+        görüntünün window × window piksellik parçası ikincide search piksel içinde sıfır
+        ortalamalı normalize çapraz korelasyonla aranır, tepe parabolle piksel altına
         inceltilir; yer durumu ok, low (correlation'dan düşük), edge (tepe arama sınırında),
         flat (dokusuz); ok yerlerin kayma istatistiği ve sınır. Görüntülerin pikselleri aynı
-        boyda ve dönüksüz olmalı ya da (ADR 3660) seam.resample ile ikinci görüntü
-        birincinin ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta
-        resampled); dosya göreliyse seam.folder. seam.polygons (ADR 4460): iki görüntünün
-        mozaik elemanları (TUCBS Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya
-        da düz kenarlı kapalı çoklu çizgi); yerler ortak sınırları boyunca (birincinin
-        halkalarının ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla),
-        her parçanın başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler,
+        boyda ve dönüksüz olmalı ya da seam.resample ile ikinci görüntü birincinin
+        ızgarasına kübik evrişimle örneklenir (birinci kuzeye bakmalı; cevapta resampled);
+        dosya göreliyse seam.folder. seam.polygons: iki görüntünün mozaik elemanları (TUCBS
+        Ortogörüntü; görüntünün mozaikte kullanılan bölümü: alan ya da düz kenarlı kapalı
+        çoklu çizgi); yerler ortak sınırları boyunca (birincinin halkalarının
+        ikincininkilere 1 mm içinde oturan parçaları, birincinin sırasıyla), her parçanın
+        başından adım aralıklı; cevapta seam.shared (parçalar, uzunluk, yerler,
         dışarıdakiler), her yerin part'ı; line ile birlikte verilmez. Retler: invalid_uid,
         entity_not_found, not_a_raster, crs_mismatch (raster projenin sisteminde değil),
         layer_not_found, invalid_input (aynı raster iki kez, ölçek 0, kural paketi
@@ -423,44 +423,43 @@ class _OrthophotoSeamlines(LocalCommand[OrthophotoSeamlines, OrthophotoSeamlines
     """``cad.orthophoto.seamlines`` v1. Mozaik birleşme çizgisi: İki ortofotonun (raster;
     first, second) mozaikteki birleşme çizgisini ve mozaik elemanlarını kurar (TUCBS
     Ortogörüntü: mozaik elemanı görüntünün mozaikte kullanılan bölümüdür, elemanlar
-    örtüşmez; ArcGIS Pro'nun Build Seamlines'ı gibi). Ayak izleri rasterlerin sınırı ya
-    da verilen alanlardır (footprints: alan ya da düz kenarlı kapalı çoklu çizgi,
-    dışbükey). method voronoi, eşit uzaklık (ilk değer; Pan ve ark. 2009, örtüşmeli alan
-    Voronoi diyagramı): örtüşmenin bir noktası kendi bölgesi (ayak izinin öbürününkinin
-    dışında kalan bölümü) daha yakın olan görüntüye düşer; birleşme çizgisi iki bölgeden
-    eşit uzak noktalardır: en yakın öğeleri iki kenar (ya da iki köşe, ya da kenarın
-    doğrusundaki köşe) olan parçası düz (açıortay) ve yalnız dönüm noktaları yazılır;
-    köşe ile kenar arasındaki eğri parçasının noktaları kirişe dik doğrularda step
-    metrede bir (ilk değer 1). Uçlar iki sınırın kesiştiği yerler ya da ortak sınırın
-    iki bölgeden eşit uzak noktasıdır (ends: crossing, shared). method radiometry,
-    radyometrik fark (Chon, Kim, Lin 2010): ızgara birinci görüntünün cell × cell
-    pikselidir (ilk değer 1); pikselin farkı ortak bantların mutlak farklarının en
-    büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik evrişimiyle birincinin piksel
-    merkezinde okunur); hücrenin farkı piksellerininkilerin en büyüğü. Hücre bütün
-    pikselleri örtüşmede ve okunur, merkezi eşit uzaklık çizgisine corridor (arama
-    bandı) metreden yakın (verilirse) ve hiçbir pikseli avoid katmanının alanlarında
-    (geçilmeyecek alanlar: bina, köprü; USGS) değilse aranır. Eşit uzaklık çizgisinin
-    uçlarına en yakın aranan hücreler arasında önce en büyük farkı en küçük yol, sonra
-    onu aşmayan hücrelerde en az maliyetli yol (hareketin boyu × (1 + iki hücrenin
-    farklarının ortalaması); 8 komşu); çizgi başlangıç, yolun dönen hücrelerinin
-    merkezleri ve bitiştir. difference: en büyük fark, yolun ve aranan hücrelerin
-    ortalaması, hücre sayıları, hücrenin yerdeki boyu. Mozaik elemanlarının halkaları:
-    birincininki kendi sınırında bitişten başlangıca, sonra birleşme çizgisi;
-    ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat yönünün tersine); ikisi
-    de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı (öznitelikleri Görüntü:
-    rasterin kimliği, Yöntem) layer katmanına tek geri alma adımında (“Mozaik
-    elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik elemanları”) aynı adımda
-    açılır (opened). Sonuç Ortofoto karşılaştırması'nın seam.polygons'ına doğrudan
-    verilir (ADR 4460). BÖHHBÜY birleşme çizgisinin yerine kural koymaz; m. 67(6) ortak
-    alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister. Retler: invalid_uid,
-    entity_not_found, not_a_raster, crs_mismatch (first, second); invalid_input (aynı
-    raster iki kez; step, cell (1..64), corridor; voronoi ile cell, corridor ya da
-    avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi değil, yaylı,
-    delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün içinde, sınır
-    ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok piksel, iki
-    uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found (layer, avoid),
-    layer_locked; invalid_revision, revision_conflict; invalid_file_path,
-    file_not_found, import_unreadable (görüntünün dosyası).
+    örtüşmez). Ayak izleri rasterlerin sınırı ya da verilen alanlardır (footprints: alan
+    ya da düz kenarlı kapalı çoklu çizgi, dışbükey). method voronoi, eşit uzaklık (ilk
+    değer; Pan ve ark. 2009, örtüşmeli alan Voronoi diyagramı): örtüşmenin bir noktası
+    kendi bölgesi (ayak izinin öbürününkinin dışında kalan bölümü) daha yakın olan
+    görüntüye düşer; birleşme çizgisi iki bölgeden eşit uzak noktalardır: en yakın
+    öğeleri iki kenar (ya da iki köşe, ya da kenarın doğrusundaki köşe) olan parçası düz
+    (açıortay) ve yalnız dönüm noktaları yazılır; köşe ile kenar arasındaki eğri
+    parçasının noktaları kirişe dik doğrularda step metrede bir (ilk değer 1). Uçlar iki
+    sınırın kesiştiği yerler ya da ortak sınırın iki bölgeden eşit uzak noktasıdır
+    (ends: crossing, shared). method radiometry, radyometrik fark (Chon, Kim, Lin 2010):
+    ızgara birinci görüntünün cell × cell pikselidir (ilk değer 1); pikselin farkı ortak
+    bantların mutlak farklarının en büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik
+    evrişimiyle birincinin piksel merkezinde okunur); hücrenin farkı
+    piksellerininkilerin en büyüğü. Hücre bütün pikselleri örtüşmede ve okunur, merkezi
+    eşit uzaklık çizgisine corridor (arama bandı) metreden yakın (verilirse) ve hiçbir
+    pikseli avoid katmanının alanlarında (geçilmeyecek alanlar: bina, köprü; USGS)
+    değilse aranır. Eşit uzaklık çizgisinin uçlarına en yakın aranan hücreler arasında
+    önce en büyük farkı en küçük yol, sonra onu aşmayan hücrelerde en az maliyetli yol
+    (hareketin boyu × (1 + iki hücrenin farklarının ortalaması); 8 komşu); çizgi
+    başlangıç, yolun dönen hücrelerinin merkezleri ve bitiştir. difference: en büyük
+    fark, yolun ve aranan hücrelerin ortalaması, hücre sayıları, hücrenin yerdeki boyu.
+    Mozaik elemanlarının halkaları: birincininki kendi sınırında bitişten başlangıca,
+    sonra birleşme çizgisi; ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat
+    yönünün tersine); ikisi de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı
+    (öznitelikleri Görüntü: rasterin kimliği, Yöntem) layer katmanına tek geri alma
+    adımında (“Mozaik elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik
+    elemanları”) aynı adımda açılır (opened). Sonuç Ortofoto karşılaştırması'nın
+    seam.polygons'ına doğrudan verilir. BÖHHBÜY birleşme çizgisinin yerine kural koymaz;
+    m. 67(6) ortak alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister. Retler:
+    invalid_uid, entity_not_found, not_a_raster, crs_mismatch (first, second);
+    invalid_input (aynı raster iki kez; step, cell (1..64), corridor; voronoi ile cell,
+    corridor ya da avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi
+    değil, yaylı, delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün
+    içinde, sınır ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok
+    piksel, iki uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found
+    (layer, avoid), layer_locked; invalid_revision, revision_conflict;
+    invalid_file_path, file_not_found, import_unreadable (görüntünün dosyası).
     """
     __slots__ = ()
     id = "cad.orthophoto.seamlines"
@@ -492,44 +491,44 @@ class _OrthophotoSeamlines(LocalCommand[OrthophotoSeamlines, OrthophotoSeamlines
     ) -> OrthophotoSeamlinesBuilt:
         """Mozaik birleşme çizgisi: İki ortofotonun (raster; first, second) mozaikteki birleşme
         çizgisini ve mozaik elemanlarını kurar (TUCBS Ortogörüntü: mozaik elemanı görüntünün
-        mozaikte kullanılan bölümüdür, elemanlar örtüşmez; ArcGIS Pro'nun Build Seamlines'ı
-        gibi). Ayak izleri rasterlerin sınırı ya da verilen alanlardır (footprints: alan ya
-        da düz kenarlı kapalı çoklu çizgi, dışbükey). method voronoi, eşit uzaklık (ilk
-        değer; Pan ve ark. 2009, örtüşmeli alan Voronoi diyagramı): örtüşmenin bir noktası
-        kendi bölgesi (ayak izinin öbürününkinin dışında kalan bölümü) daha yakın olan
-        görüntüye düşer; birleşme çizgisi iki bölgeden eşit uzak noktalardır: en yakın
-        öğeleri iki kenar (ya da iki köşe, ya da kenarın doğrusundaki köşe) olan parçası düz
-        (açıortay) ve yalnız dönüm noktaları yazılır; köşe ile kenar arasındaki eğri
-        parçasının noktaları kirişe dik doğrularda step metrede bir (ilk değer 1). Uçlar iki
-        sınırın kesiştiği yerler ya da ortak sınırın iki bölgeden eşit uzak noktasıdır
-        (ends: crossing, shared). method radiometry, radyometrik fark (Chon, Kim, Lin 2010):
-        ızgara birinci görüntünün cell × cell pikselidir (ilk değer 1); pikselin farkı ortak
-        bantların mutlak farklarının en büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik
-        evrişimiyle birincinin piksel merkezinde okunur); hücrenin farkı
-        piksellerininkilerin en büyüğü. Hücre bütün pikselleri örtüşmede ve okunur, merkezi
-        eşit uzaklık çizgisine corridor (arama bandı) metreden yakın (verilirse) ve hiçbir
-        pikseli avoid katmanının alanlarında (geçilmeyecek alanlar: bina, köprü; USGS)
-        değilse aranır. Eşit uzaklık çizgisinin uçlarına en yakın aranan hücreler arasında
-        önce en büyük farkı en küçük yol, sonra onu aşmayan hücrelerde en az maliyetli yol
-        (hareketin boyu × (1 + iki hücrenin farklarının ortalaması); 8 komşu); çizgi
-        başlangıç, yolun dönen hücrelerinin merkezleri ve bitiştir. difference: en büyük
-        fark, yolun ve aranan hücrelerin ortalaması, hücre sayıları, hücrenin yerdeki boyu.
-        Mozaik elemanlarının halkaları: birincininki kendi sınırında bitişten başlangıca,
-        sonra birleşme çizgisi; ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat
-        yönünün tersine); ikisi de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı
-        (öznitelikleri Görüntü: rasterin kimliği, Yöntem) layer katmanına tek geri alma
-        adımında (“Mozaik elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik
-        elemanları”) aynı adımda açılır (opened). Sonuç Ortofoto karşılaştırması'nın
-        seam.polygons'ına doğrudan verilir (ADR 4460). BÖHHBÜY birleşme çizgisinin yerine
-        kural koymaz; m. 67(6) ortak alanda radyometrik düzeltme ve ±2·YÖA kayıklık ister.
-        Retler: invalid_uid, entity_not_found, not_a_raster, crs_mismatch (first, second);
-        invalid_input (aynı raster iki kez; step, cell (1..64), corridor; voronoi ile cell,
-        corridor ya da avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi
-        değil, yaylı, delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün
-        içinde, sınır ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok
-        piksel, iki uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found
-        (layer, avoid), layer_locked; invalid_revision, revision_conflict;
-        invalid_file_path, file_not_found, import_unreadable (görüntünün dosyası).
+        mozaikte kullanılan bölümüdür, elemanlar örtüşmez). Ayak izleri rasterlerin sınırı
+        ya da verilen alanlardır (footprints: alan ya da düz kenarlı kapalı çoklu çizgi,
+        dışbükey). method voronoi, eşit uzaklık (ilk değer; Pan ve ark. 2009, örtüşmeli alan
+        Voronoi diyagramı): örtüşmenin bir noktası kendi bölgesi (ayak izinin öbürününkinin
+        dışında kalan bölümü) daha yakın olan görüntüye düşer; birleşme çizgisi iki bölgeden
+        eşit uzak noktalardır: en yakın öğeleri iki kenar (ya da iki köşe, ya da kenarın
+        doğrusundaki köşe) olan parçası düz (açıortay) ve yalnız dönüm noktaları yazılır;
+        köşe ile kenar arasındaki eğri parçasının noktaları kirişe dik doğrularda step
+        metrede bir (ilk değer 1). Uçlar iki sınırın kesiştiği yerler ya da ortak sınırın
+        iki bölgeden eşit uzak noktasıdır (ends: crossing, shared). method radiometry,
+        radyometrik fark (Chon, Kim, Lin 2010): ızgara birinci görüntünün cell × cell
+        pikselidir (ilk değer 1); pikselin farkı ortak bantların mutlak farklarının en
+        büyüğü (ikinci, merkezleri çakışmıyorsa Keys kübik evrişimiyle birincinin piksel
+        merkezinde okunur); hücrenin farkı piksellerininkilerin en büyüğü. Hücre bütün
+        pikselleri örtüşmede ve okunur, merkezi eşit uzaklık çizgisine corridor (arama
+        bandı) metreden yakın (verilirse) ve hiçbir pikseli avoid katmanının alanlarında
+        (geçilmeyecek alanlar: bina, köprü; USGS) değilse aranır. Eşit uzaklık çizgisinin
+        uçlarına en yakın aranan hücreler arasında önce en büyük farkı en küçük yol, sonra
+        onu aşmayan hücrelerde en az maliyetli yol (hareketin boyu × (1 + iki hücrenin
+        farklarının ortalaması); 8 komşu); çizgi başlangıç, yolun dönen hücrelerinin
+        merkezleri ve bitiştir. difference: en büyük fark, yolun ve aranan hücrelerin
+        ortalaması, hücre sayıları, hücrenin yerdeki boyu. Mozaik elemanlarının halkaları:
+        birincininki kendi sınırında bitişten başlangıca, sonra birleşme çizgisi;
+        ikincininki başlangıçtan bitişe, sonra çizginin tersi (saat yönünün tersine); ikisi
+        de basit olmalı. Plan hiçbir şey yazmaz; execute iki alanı (öznitelikleri Görüntü:
+        rasterin kimliği, Yöntem) layer katmanına tek geri alma adımında (“Mozaik
+        elemanları”) yazar; layer yoksa mozaik-elemanlari (“Mozaik elemanları”) aynı adımda
+        açılır (opened). Sonuç Ortofoto karşılaştırması'nın seam.polygons'ına doğrudan
+        verilir. BÖHHBÜY birleşme çizgisinin yerine kural koymaz; m. 67(6) ortak alanda
+        radyometrik düzeltme ve ±2·YÖA kayıklık ister. Retler: invalid_uid,
+        entity_not_found, not_a_raster, crs_mismatch (first, second); invalid_input (aynı
+        raster iki kez; step, cell (1..64), corridor; voronoi ile cell, corridor ya da
+        avoid; ayak izi iki kez, çizimde yok, alan ya da kapalı çoklu çizgi değil, yaylı,
+        delikli ya da parçalı, dışbükey değil; örtüşme yok, biri öbürünün içinde, sınır
+        ikiden çok el değiştiriyor; radyometrik farkta aranacak hücre yok, çok piksel, iki
+        uç arasında yol yok; kendini kesen mozaik elemanı); layer_not_found (layer, avoid),
+        layer_locked; invalid_revision, revision_conflict; invalid_file_path,
+        file_not_found, import_unreadable (görüntünün dosyası).
 
         Args:
             doc: The drawing it works on.

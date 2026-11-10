@@ -1,4 +1,4 @@
-//! A layer's look as a QGIS layer style file (docs/adr/0555, plan/gis.md CBS-17): Katmanlar's menu writes it with
+//! A layer's look as a QML layer style file (docs/adr/0555, plan/gis.md CBS-17): Katmanlar's menu writes it with
 //! `file.export.qml` (what the QML cannot say told in the command line) and takes a QML's look with `file.import.qml`,
 //! one undo step “Katman stili” (what KentOS cannot take told). The path is asked; tests give it through
 //! `Picker::File`. The SLD's twin is `layer_sld.rs`.
@@ -31,7 +31,7 @@ impl App {
             async move {
                 rfd::AsyncFileDialog::new()
                     .set_title("Görünüşü QML olarak kaydet")
-                    .add_filter("QGIS stili (QML)", &["qml"])
+                    .add_filter("QML stili (.qml)", &["qml"])
                     .set_file_name(format!("{name}.qml"))
                     .save_file()
                     .await
@@ -59,7 +59,7 @@ impl App {
             async move {
                 rfd::AsyncFileDialog::new()
                     .set_title("QML'den görünüş al")
-                    .add_filter("QGIS stili (QML)", &["qml"])
+                    .add_filter("QML stili (.qml)", &["qml"])
                     .pick_file()
                     .await
                     .map(|f| f.path().to_path_buf())

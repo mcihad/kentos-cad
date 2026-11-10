@@ -209,24 +209,24 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
     Tek puanla en iyi senaryo seçilmez. stamp mevcut durumun katmanlarının özetidir:
     önceki bir karşılaştırmanın damgası since ile verilince stale taban o zamandan beri
     değişti mi söyler (senaryo kendiliğinden yeni veriye uymuş sayılmaz). İstenince,
-    değerleri kullanıcının iki ölçü daha (ADR 2040; KentOS değer vermez): impervious
-    (her kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı
-    verilmeyen kullanım veri eksiği; access (distance m, from ve to kullanımları):
-    ağırlık merkezi en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan
-    from alanlarının toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri
-    eksiği; infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir
-    nesnesine o uzaklıkta olan alanların toplamı (ADR 2660), near'da yakın ve uzak
-    alanlar ve katmanın nesneleri (ADR 3060), baseLinks ve alternativeLinks'te her
-    ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık merkezi, nesnenin en yakın
-    yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce gelen); yakınlıktır, kapasite ya
-    da bağlanma hakkı değildir; slope (surface, threshold %, from; ADR 4260): ölçülen
-    alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her üçgenin eğimi
-    düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan ağırlıklı,
-    slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki alan
-    (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input (impervious.<kullanım>
-    0–1 dışında, access.distance 0'dan büyük değil, access.from/to boş, slope.threshold
-    0'dan büyük değil), scenario_not_found, nothing_to_compare, not_a_road_project,
-    unknown_terrain, terrain_unbuildable (slope).
+    değerleri kullanıcının iki ölçü daha (KentOS değer vermez): impervious (her
+    kullanımın geçirimsizlik payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen
+    kullanım veri eksiği; access (distance m, from ve to kullanımları): ağırlık merkezi
+    en yakın to alanına düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının
+    toplamı ve from alanlarına oranı (%), to alanı olmayan taraf veri eksiği;
+    infrastructure (layer, distance m, from): ağırlık merkezi katmanın bir nesnesine o
+    uzaklıkta olan alanların toplamı, near'da yakın ve uzak alanlar ve katmanın
+    nesneleri, baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine
+    bağlı: nesne, ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde
+    önce gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface,
+    threshold %, from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen
+    parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %),
+    ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı,
+    yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input
+    (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
+    access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found,
+    nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable
+    (slope).
     """
     __slots__ = ()
     id = "cad.scenarios.impact"
@@ -263,20 +263,20 @@ class _ScenariosImpact(LocalCommand[ScenariosImpact, ScenariosImpacted, Scenario
         seçilmez. stamp mevcut durumun katmanlarının özetidir: önceki bir karşılaştırmanın
         damgası since ile verilince stale taban o zamandan beri değişti mi söyler (senaryo
         kendiliğinden yeni veriye uymuş sayılmaz). İstenince, değerleri kullanıcının iki
-        ölçü daha (ADR 2040; KentOS değer vermez): impervious (her kullanımın geçirimsizlik
-        payı 0–1): geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği;
-        access (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına
-        düz uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
+        ölçü daha (KentOS değer vermez): impervious (her kullanımın geçirimsizlik payı 0–1):
+        geçirimsiz alan = Σ alan × pay, payı verilmeyen kullanım veri eksiği; access
+        (distance m, from ve to kullanımları): ağırlık merkezi en yakın to alanına düz
+        uzaklıkta (içindeyse 0, yaylar kesin) olan from alanlarının toplamı ve from
         alanlarına oranı (%), to alanı olmayan taraf veri eksiği; infrastructure (layer,
         distance m, from): ağırlık merkezi katmanın bir nesnesine o uzaklıkta olan alanların
-        toplamı (ADR 2660), near'da yakın ve uzak alanlar ve katmanın nesneleri (ADR 3060),
-        baseLinks ve alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne,
-        ağırlık merkezi, nesnenin en yakın yeri ve uzaklık (ADR 3460; eşitlerde çizimde önce
-        gelen); yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface,
-        threshold %, from; ADR 4260): ölçülen alanların projenin arazi yüzeyinin üçgenlerine
-        düşen parçaları, her üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %),
-        ortalama eğim (alan ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı,
-        yüzeyin dışındaki alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input
+        toplamı, near'da yakın ve uzak alanlar ve katmanın nesneleri, baseLinks ve
+        alternativeLinks'te her ölçülen alan en yakın nesnesine bağlı: nesne, ağırlık
+        merkezi, nesnenin en yakın yeri ve uzaklık (eşitlerde çizimde önce gelen);
+        yakınlıktır, kapasite ya da bağlanma hakkı değildir; slope (surface, threshold %,
+        from): ölçülen alanların projenin arazi yüzeyinin üçgenlerine düşen parçaları, her
+        üçgenin eğimi düzleminden (normali, düşeyin yataya oranı, %), ortalama eğim (alan
+        ağırlıklı, slopeMean), eşiği aşan dik alan (slopeSteep) ve payı, yüzeyin dışındaki
+        alan (slopeOff, veri eksiği). Salt okunur. Retler: invalid_input
         (impervious.<kullanım> 0–1 dışında, access.distance 0'dan büyük değil,
         access.from/to boş, slope.threshold 0'dan büyük değil), scenario_not_found,
         nothing_to_compare, not_a_road_project, unknown_terrain, terrain_unbuildable

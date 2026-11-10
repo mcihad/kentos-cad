@@ -26,19 +26,19 @@ if TYPE_CHECKING:
 
 class _HatchpatternsEdit(LocalCommand[HatchPatternsEdit, HatchPatternsEdited, HatchPatternsEdited]):
     """``cad.hatchpatterns.edit`` v1. Tarama desenleri: Projenin kendi tarama desenlerini
-    değiştirir (AutoCAD'in PAT dosyaları): load bir PAT dosyasının metnindeki (pat;
-    source dosyanın adı, her desenin kaynağı; unit sayıların birimi: mm ya da inch
-    kâğıtta, drawing çizimde, yoksa mm) desenleri alır, names verilmişse yalnız onları;
-    projede aynı adlı desen (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir,
-    replace ile değişir; dosyanın okunmayan satırları problems'ta satırlarıyla söylenir
-    ve o desen alınmaz. add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı,
-    başlangıç, öteleme, kesikler) ekler, replace ile aynı adlıyı değiştirir. remove adı
-    verilen deseni siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez.
-    export desenleri (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi
-    değiştirmez. Projenin desenleri kitaplığınkilerden önce aranır:
-    cad.entities.hatch'in pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje
-    ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir. expectedRevision
-    verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    değiştirir: load bir PAT dosyasının metnindeki (pat; source dosyanın adı, her
+    desenin kaynağı; unit sayıların birimi: mm ya da inch kâğıtta, drawing çizimde,
+    yoksa mm) desenleri alır, names verilmişse yalnız onları; projede aynı adlı desen
+    (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir;
+    dosyanın okunmayan satırları problems'ta satırlarıyla söylenir ve o desen alınmaz.
+    add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı, başlangıç, öteleme,
+    kesikler) ekler, replace ile aynı adlıyı değiştirir. remove adı verilen deseni
+    siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez. export desenleri
+    (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi değiştirmez.
+    Projenin desenleri kitaplığınkilerden önce aranır: cad.entities.hatch'in
+    pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje ayarıdır: değiştirmek çizimi
+    kirli yapar, geri alma adımı değildir. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.hatchpatterns.edit"
@@ -66,20 +66,20 @@ class _HatchpatternsEdit(LocalCommand[HatchPatternsEdit, HatchPatternsEdited, Ha
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> HatchPatternsEdited:
-        """Tarama desenleri: Projenin kendi tarama desenlerini değiştirir (AutoCAD'in PAT
-        dosyaları): load bir PAT dosyasının metnindeki (pat; source dosyanın adı, her
-        desenin kaynağı; unit sayıların birimi: mm ya da inch kâğıtta, drawing çizimde,
-        yoksa mm) desenleri alır, names verilmişse yalnız onları; projede aynı adlı desen
-        (harf büyüklüğüne bakılmaz) kalır ve skipped'da söylenir, replace ile değişir;
-        dosyanın okunmayan satırları problems'ta satırlarıyla söylenir ve o desen alınmaz.
-        add tek bir deseni (pattern: ad, açıklama, birim, aileler: açı, başlangıç, öteleme,
-        kesikler) ekler, replace ile aynı adlıyı değiştirir. remove adı verilen deseni
-        siler; tarama kendi tanımını taşıdığı için hiçbir tarama değişmez. export desenleri
-        (names verilmişse onları) PAT metni olarak pat'ta verir, çizimi değiştirmez.
-        Projenin desenleri kitaplığınkilerden önce aranır: cad.entities.hatch'in
-        pattern.name'i ve Tarama'nın Desen menüsü. Tablo proje ayarıdır: değiştirmek çizimi
-        kirli yapar, geri alma adımı değildir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Tarama desenleri: Projenin kendi tarama desenlerini değiştirir: load bir PAT
+        dosyasının metnindeki (pat; source dosyanın adı, her desenin kaynağı; unit sayıların
+        birimi: mm ya da inch kâğıtta, drawing çizimde, yoksa mm) desenleri alır, names
+        verilmişse yalnız onları; projede aynı adlı desen (harf büyüklüğüne bakılmaz) kalır
+        ve skipped'da söylenir, replace ile değişir; dosyanın okunmayan satırları
+        problems'ta satırlarıyla söylenir ve o desen alınmaz. add tek bir deseni (pattern:
+        ad, açıklama, birim, aileler: açı, başlangıç, öteleme, kesikler) ekler, replace ile
+        aynı adlıyı değiştirir. remove adı verilen deseni siler; tarama kendi tanımını
+        taşıdığı için hiçbir tarama değişmez. export desenleri (names verilmişse onları) PAT
+        metni olarak pat'ta verir, çizimi değiştirmez. Projenin desenleri kitaplığınkilerden
+        önce aranır: cad.entities.hatch'in pattern.name'i ve Tarama'nın Desen menüsü. Tablo
+        proje ayarıdır: değiştirmek çizimi kirli yapar, geri alma adımı değildir.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

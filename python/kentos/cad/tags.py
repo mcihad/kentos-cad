@@ -167,14 +167,14 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
     mahalde {number}, {name} ve {area} üç satır, kolonda {tag}, aksta {label}, duvarda
     {style}, merdivende {risers}, rampada {slope}, blokta {attr:NO}). Mahalin
     floorElevation değeri bitmiş döşemesinin kotudur (kendi döşeme kot farkı, yoksa
-    altındaki döşemenin üstü, yoksa katın kotu; docs/adr/8040 §3); ceilingElevation
-    tavanının kotudur (asma tavan, yazılan iç yükseklik ya da üst döşemenin sıvalı
-    altı). Katın döşemeden döşemeye yüksekliği tavan sayılmaz; katı bilinmeyen mahalde
-    ikisi, tavanı bilinmeyende ceilingElevation boş yazılır. Kot yazımı diğer uzunluklar
-    gibi çizim birimi ve basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon
-    tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır
-    veya elle çizilmiş brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle,
-    hexagon, rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
+    altındaki döşemenin üstü, yoksa katın kotu); ceilingElevation tavanının kotudur
+    (asma tavan, yazılan iç yükseklik ya da üst döşemenin sıvalı altı). Katın döşemeden
+    döşemeye yüksekliği tavan sayılmaz; katı bilinmeyen mahalde ikisi, tavanı
+    bilinmeyende ceilingElevation boş yazılır. Kot yazımı diğer uzunluklar gibi çizim
+    birimi ve basamağındadır. netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle
+    iç yüzler alanıdır; area seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle
+    çizilmiş brüt/eksen mahalında netArea boş kalır. shape çerçevedir (circle, hexagon,
+    rectangle, rounded, none; verilmezse açıklıkta altıgen, mahalde dikdörtgen,
     ötekilerde daire), size yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader
     çerçeveden nesnenin bağ noktasına çizgi. at verilmezse mahalde bağ noktası,
     ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin etiketsiz ve görünen
@@ -229,36 +229,35 @@ class _TagsCreate(LocalCommand[TagsCreate, TagsCreated, TagsPlan]):
         verilmezse türün şablonu (açıklıkta {number}, mahalde {number}, {name} ve {area} üç
         satır, kolonda {tag}, aksta {label}, duvarda {style}, merdivende {risers}, rampada
         {slope}, blokta {attr:NO}). Mahalin floorElevation değeri bitmiş döşemesinin kotudur
-        (kendi döşeme kot farkı, yoksa altındaki döşemenin üstü, yoksa katın kotu;
-        docs/adr/8040 §3); ceilingElevation tavanının kotudur (asma tavan, yazılan iç
-        yükseklik ya da üst döşemenin sıvalı altı). Katın döşemeden döşemeye yüksekliği
-        tavan sayılmaz; katı bilinmeyen mahalde ikisi, tavanı bilinmeyende ceilingElevation
-        boş yazılır. Kot yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır.
-        netArea mahalın aynı kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area
-        seçilmiş yöntem alanı olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen
-        mahalında netArea boş kalır. shape çerçevedir (circle, hexagon, rectangle, rounded,
-        none; verilmezse açıklıkta altıgen, mahalde dikdörtgen, ötekilerde daire), size
-        yazının kâğıttaki yüksekliği (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ
-        noktasına çizgi. at verilmezse mahalde bağ noktası, ötekilerde onun 4 yazı
-        yüksekliği üstü. all verilen türlerin etiketsiz ve görünen nesnelerine etiket koyar.
-        all.refresh yok/null/false mevcut etiketleri korur. true yalnız layerId katmanındaki
-        uygun mevcut etiketlere açıkça verilen all.content/shape/size alanlarını uygular;
-        boş alan mevcut değeri korur. Kimlik, elle konum, kol ve diğer özellikler korunur;
-        başka etiket katmanlarına dokunulmaz ve orada etiketi bulunan kaynak için ikinci
-        etiket yaratılmaz. all.layers kaynak CAD katmanlarını, all.phases kaynak tadilat
-        durumlarını, all.levels mimari kat kimliklerini süzer. levels yok/null tüm katlar,
-        [null] yalnız atanmamış, dolu kimlik listesi verilen katlar, [] hiçbir kaynaktır;
-        birleşim ve tekrar desteklenir. Dolu kimlik projede yoksa
-        level_not_found/all.levels[i] tüm çağrıyı reddeder. Açıklık katını duvardan alır;
-        host kayıpsa/duvar değilse açık kat ve atanmamış kapsamına girmez. Bloklar kat
-        atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı değildir. Açık tags girdisindeki
-        kaynaklar all tarafından yeniden işlenmez. Plan tags yeni, refreshed değişen mevcut
-        etiketlerdir; çıktı uids/ids yalnız yeni etiketler, isteğe bağlı refreshed yenilenen
-        UUID'lerdir. Değişmeyenler yazılmaz; yeni+yenilenen en çok10.000 ve birlikte tek
-        undo'dur. Etiketin yazısı ve bağ noktası belgenindir: nesne değişince aynı adımda
-        yeniden yazılır, nesne taşınınca etiket de taşınır, nesne silinince etiket son
-        yazısıyla targetGone kalır. Katman açıkça verilir; kilitli katmana yazılmaz, gizli
-        katmana uyarıyla yazılır.
+        (kendi döşeme kot farkı, yoksa altındaki döşemenin üstü, yoksa katın kotu);
+        ceilingElevation tavanının kotudur (asma tavan, yazılan iç yükseklik ya da üst
+        döşemenin sıvalı altı). Katın döşemeden döşemeye yüksekliği tavan sayılmaz; katı
+        bilinmeyen mahalde ikisi, tavanı bilinmeyende ceilingElevation boş yazılır. Kot
+        yazımı diğer uzunluklar gibi çizim birimi ve basamağındadır. netArea mahalın aynı
+        kat/kapsam/kaynak ve kolon tercihiyle iç yüzler alanıdır; area seçilmiş yöntem alanı
+        olarak kalır. Kopuk sınır veya elle çizilmiş brüt/eksen mahalında netArea boş kalır.
+        shape çerçevedir (circle, hexagon, rectangle, rounded, none; verilmezse açıklıkta
+        altıgen, mahalde dikdörtgen, ötekilerde daire), size yazının kâğıttaki yüksekliği
+        (mm, verilmezse 2,5), leader çerçeveden nesnenin bağ noktasına çizgi. at verilmezse
+        mahalde bağ noktası, ötekilerde onun 4 yazı yüksekliği üstü. all verilen türlerin
+        etiketsiz ve görünen nesnelerine etiket koyar. all.refresh yok/null/false mevcut
+        etiketleri korur. true yalnız layerId katmanındaki uygun mevcut etiketlere açıkça
+        verilen all.content/shape/size alanlarını uygular; boş alan mevcut değeri korur.
+        Kimlik, elle konum, kol ve diğer özellikler korunur; başka etiket katmanlarına
+        dokunulmaz ve orada etiketi bulunan kaynak için ikinci etiket yaratılmaz. all.layers
+        kaynak CAD katmanlarını, all.phases kaynak tadilat durumlarını, all.levels mimari
+        kat kimliklerini süzer. levels yok/null tüm katlar, [null] yalnız atanmamış, dolu
+        kimlik listesi verilen katlar, [] hiçbir kaynaktır; birleşim ve tekrar desteklenir.
+        Dolu kimlik projede yoksa level_not_found/all.levels[i] tüm çağrıyı reddeder.
+        Açıklık katını duvardan alır; host kayıpsa/duvar değilse açık kat ve atanmamış
+        kapsamına girmez. Bloklar kat atanmamış sayılır. Bu süzgeç görünüş/pafta bağlamı
+        değildir. Açık tags girdisindeki kaynaklar all tarafından yeniden işlenmez. Plan
+        tags yeni, refreshed değişen mevcut etiketlerdir; çıktı uids/ids yalnız yeni
+        etiketler, isteğe bağlı refreshed yenilenen UUID'lerdir. Değişmeyenler yazılmaz;
+        yeni+yenilenen en çok10.000 ve birlikte tek undo'dur. Etiketin yazısı ve bağ noktası
+        belgenindir: nesne değişince aynı adımda yeniden yazılır, nesne taşınınca etiket de
+        taşınır, nesne silinince etiket son yazısıyla targetGone kalır. Katman açıkça
+        verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır.
 
         Args:
             doc: The drawing it works on.

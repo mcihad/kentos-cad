@@ -41,11 +41,11 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
     gerçek sol/sağ yüzünü ve açıklık uçlarını veya merkezlerini kalıcı bir tariften
     ölçer. Birden çok kenarlı (kapalı ya da çok köşeli) duvarda edge ölçülecek düz
     kenarı verir (köşe edge → edge+1); around ise her düz kenara birer dizi koyar,
-    kapalı duvarda dış yüzden, hepsi tek adımda (çıktının sets'i; docs/adr/0700).
-    Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır.
-    Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe eklenip silinince
-    kenar uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı
-    korur. Yay kenar ve pahlanmış yüz işlemden önce reddedilir.
+    kapalı duvarda dış yüzden, hepsi tek adımda (çıktının sets'i). Sıralar
+    openings/overall; gapMm kağıt mm, geometri metre; belge stili kullanılır. Plan
+    kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe eklenip silinince kenar
+    uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle yerleştirilen yazıyı korur.
+    Yay kenar ve pahlanmış yüz işlemden önce reddedilir.
     """
     __slots__ = ()
     id = "cad.dimensionsets.create"
@@ -85,11 +85,10 @@ class _DimensionsetsCreate(LocalCommand[DimensionSetsCreateInput, DimensionSetsC
         uçlarını veya merkezlerini kalıcı bir tariften ölçer. Birden çok kenarlı (kapalı ya
         da çok köşeli) duvarda edge ölçülecek düz kenarı verir (köşe edge → edge+1); around
         ise her düz kenara birer dizi koyar, kapalı duvarda dış yüzden, hepsi tek adımda
-        (çıktının sets'i; docs/adr/0700). Sıralar openings/overall; gapMm kağıt mm, geometri
-        metre; belge stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik
-        güncellenir; köşe eklenip silinince kenar uçlarıyla izlenir; aynı kaynak çifti
-        kimliğini ve elle yerleştirilen yazıyı korur. Yay kenar ve pahlanmış yüz işlemden
-        önce reddedilir.
+        (çıktının sets'i). Sıralar openings/overall; gapMm kağıt mm, geometri metre; belge
+        stili kullanılır. Plan kimlik ayırmaz. Kaynak değişince üyelik güncellenir; köşe
+        eklenip silinince kenar uçlarıyla izlenir; aynı kaynak çifti kimliğini ve elle
+        yerleştirilen yazıyı korur. Yay kenar ve pahlanmış yüz işlemden önce reddedilir.
 
         Args:
             doc: The drawing it works on.

@@ -134,20 +134,20 @@ construct = _CurvesConstruct()
 
 class _CurvesEdit(LocalCommand[CurvesEdit, EntitiesEdited, EntitiesEditPlan]):
     """``cad.curves.edit`` v1. Eğriyi düzenle: Kalıcı kimliğiyle verilen çoklu çizgiyi ya
-    da NURBS eğrisini değişecek olanla düzenler (AutoCAD'in PEDIT'i ve SPLINEDIT'i); tek
-    geri alma adımı “Eğriyi düzenle”, nesne katmanını, görünüşünü ve verisini korur.
-    Çoklu çizgide close (Kapat), open (Aç: kapanış kenarının bükümü ve genişliği gider),
-    decurve (Düzleştir: yaylar düz olur) ve toSpline (Eğriye çevir: köşelerden geçen ya
-    da köşeleri denetim noktası olan NURBS eğrisi, derece yoksa 3). Geçiş noktalı NURBS
-    eğrisinde addFit, moveFit, removeFit ve tangents (uç teğetleri): eğri noktalardan
-    yeniden kurulur, açık eğri teğetlerini korur. Her NURBS eğrisinde moveControl ve
-    weight (kapalı eğride sarılan kopya da; geçiş noktaları gider), removeControl,
-    insertKnot (açık eğride, aralığın içinde, derece kereden az olan yere; eğri
-    değişmez), close ve open, toPolyline (her kiriş eğriye tolerance'tan yakın çoklu
-    çizgi). Retler: not_a_curve (tür ya da düzenleme uymuyor), multi_part,
-    no_fit_points, invalid_index, invalid_knot, invalid_weight, invalid_tolerance,
-    too_few_points, coincident_points, invalid_nurbs. expectedRevision verilmişse ve
-    çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+    da NURBS eğrisini değişecek olanla düzenler; tek geri alma adımı “Eğriyi düzenle”,
+    nesne katmanını, görünüşünü ve verisini korur. Çoklu çizgide close (Kapat), open
+    (Aç: kapanış kenarının bükümü ve genişliği gider), decurve (Düzleştir: yaylar düz
+    olur) ve toSpline (Eğriye çevir: köşelerden geçen ya da köşeleri denetim noktası
+    olan NURBS eğrisi, derece yoksa 3). Geçiş noktalı NURBS eğrisinde addFit, moveFit,
+    removeFit ve tangents (uç teğetleri): eğri noktalardan yeniden kurulur, açık eğri
+    teğetlerini korur. Her NURBS eğrisinde moveControl ve weight (kapalı eğride sarılan
+    kopya da; geçiş noktaları gider), removeControl, insertKnot (açık eğride, aralığın
+    içinde, derece kereden az olan yere; eğri değişmez), close ve open, toPolyline (her
+    kiriş eğriye tolerance'tan yakın çoklu çizgi). Retler: not_a_curve (tür ya da
+    düzenleme uymuyor), multi_part, no_fit_points, invalid_index, invalid_knot,
+    invalid_weight, invalid_tolerance, too_few_points, coincident_points, invalid_nurbs.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.curves.edit"
@@ -170,20 +170,20 @@ class _CurvesEdit(LocalCommand[CurvesEdit, EntitiesEdited, EntitiesEditPlan]):
         expected: Expected | None = None,
     ) -> EntitiesEdited:
         """Eğriyi düzenle: Kalıcı kimliğiyle verilen çoklu çizgiyi ya da NURBS eğrisini
-        değişecek olanla düzenler (AutoCAD'in PEDIT'i ve SPLINEDIT'i); tek geri alma adımı
-        “Eğriyi düzenle”, nesne katmanını, görünüşünü ve verisini korur. Çoklu çizgide close
-        (Kapat), open (Aç: kapanış kenarının bükümü ve genişliği gider), decurve (Düzleştir:
-        yaylar düz olur) ve toSpline (Eğriye çevir: köşelerden geçen ya da köşeleri denetim
-        noktası olan NURBS eğrisi, derece yoksa 3). Geçiş noktalı NURBS eğrisinde addFit,
-        moveFit, removeFit ve tangents (uç teğetleri): eğri noktalardan yeniden kurulur,
-        açık eğri teğetlerini korur. Her NURBS eğrisinde moveControl ve weight (kapalı
-        eğride sarılan kopya da; geçiş noktaları gider), removeControl, insertKnot (açık
-        eğride, aralığın içinde, derece kereden az olan yere; eğri değişmez), close ve open,
-        toPolyline (her kiriş eğriye tolerance'tan yakın çoklu çizgi). Retler: not_a_curve
-        (tür ya da düzenleme uymuyor), multi_part, no_fit_points, invalid_index,
-        invalid_knot, invalid_weight, invalid_tolerance, too_few_points, coincident_points,
-        invalid_nurbs. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-        yazılmaz, sonuç conflict olur.
+        değişecek olanla düzenler; tek geri alma adımı “Eğriyi düzenle”, nesne katmanını,
+        görünüşünü ve verisini korur. Çoklu çizgide close (Kapat), open (Aç: kapanış
+        kenarının bükümü ve genişliği gider), decurve (Düzleştir: yaylar düz olur) ve
+        toSpline (Eğriye çevir: köşelerden geçen ya da köşeleri denetim noktası olan NURBS
+        eğrisi, derece yoksa 3). Geçiş noktalı NURBS eğrisinde addFit, moveFit, removeFit ve
+        tangents (uç teğetleri): eğri noktalardan yeniden kurulur, açık eğri teğetlerini
+        korur. Her NURBS eğrisinde moveControl ve weight (kapalı eğride sarılan kopya da;
+        geçiş noktaları gider), removeControl, insertKnot (açık eğride, aralığın içinde,
+        derece kereden az olan yere; eğri değişmez), close ve open, toPolyline (her kiriş
+        eğriye tolerance'tan yakın çoklu çizgi). Retler: not_a_curve (tür ya da düzenleme
+        uymuyor), multi_part, no_fit_points, invalid_index, invalid_knot, invalid_weight,
+        invalid_tolerance, too_few_points, coincident_points, invalid_nurbs.
+        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+        conflict olur.
 
         Args:
             doc: The drawing it works on.

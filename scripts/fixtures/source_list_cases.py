@@ -59,7 +59,7 @@ LABELS = {
     "geojson": "GeoJSON",
     "shapefile": "Shapefile",
     "dxf": "DXF",
-    "ncz": "Netcad NCZ",
+    "ncz": "NCZ çizimi",
     "gnss": "GNSS (GPX, NMEA)",
     "coords": "Koordinat listesi",
     "kml": "KML/KMZ",

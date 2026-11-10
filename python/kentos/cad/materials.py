@@ -23,9 +23,9 @@ if TYPE_CHECKING:
 class _MaterialsEdit(LocalCommand[MaterialsEdit, MaterialsEdited, MaterialsEdited]):
     """``cad.materials.edit`` v1. Malzemeler: Projenin yapı malzemelerini (kalıcı kimlik,
     ad, kategori, metrajda alan ya da hacim, kesitin taraması ve kalemi) yönetir ve
-    duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar
-    (docs/adr/0785); tek geri alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler
-    aynı adımda. operation: define (name, id isteğe bağlı: adından; change: category
+    duvar stili bileşenlerini, duvar bileşenlerini ve döşemeleri onlara bağlar; tek geri
+    alma adımı “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation:
+    define (name, id isteğe bağlı: adından; change: category
     structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern,
     scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik
     ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin
@@ -39,13 +39,13 @@ class _MaterialsEdit(LocalCommand[MaterialsEdit, MaterialsEdited, MaterialsEdite
     kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked.
     Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir.
     Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis
-    malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da
-    name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi;
-    onConflict: refuse varsayılan material_exists, keep projeninkini korur
-    material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları
-    izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced,
-    kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın
-    library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library.
+    malzeme kitaplığı: import (library: kentos.materials 1 dosyası ya da name: KentOS
+    kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi; onConflict: refuse
+    varsayılan material_exists, keep projeninkini korur material_kept, replace aynı
+    kimlikliyi kitaplığınkiyle değiştirir ve bağlıları izler; başka kimlikli aynı ad
+    keep dışında reddedilir; report.taken, replaced, kept), export (library: adı,
+    materials: yoksa hepsi; çizim değişmez, cevabın library'si dosyanın içeriği). Bozuk
+    ya da bilinmeyen kitaplık invalid_library.
     """
     __slots__ = ()
     id = "cad.materials.edit"
@@ -68,29 +68,29 @@ class _MaterialsEdit(LocalCommand[MaterialsEdit, MaterialsEdited, MaterialsEdite
     ) -> MaterialsEdited:
         """Malzemeler: Projenin yapı malzemelerini (kalıcı kimlik, ad, kategori, metrajda alan
         ya da hacim, kesitin taraması ve kalemi) yönetir ve duvar stili bileşenlerini, duvar
-        bileşenlerini ve döşemeleri onlara bağlar (docs/adr/0785); tek geri alma adımı
-        “Malzeme”, bağlı stiller, duvarlar ve döşemeler aynı adımda. operation: define
-        (name, id isteğe bağlı: adından; change: category
-        structure/insulation/finish/membrane/other, quantity area/volume, hatch {pattern,
-        scale, angle, color}, cut {color, lineWeight, lineType}), update (material: kimlik
-        ya da ad, change; name yeniden adlandırır, kimlik değişmez; bağlı bileşenlerin
-        material metni, taraması ve kalemi, döşemelerin material metni yeni değerleri alır),
-        remove (material; bağlı bir şey varsa material_in_use ve bağlı duvar ve döşemelerin
-        kimlikleri), assign (material: kimlik ya da ad, yoksa bağdan ayırır; targets:
-        wallStyle {style, component}, wall {uid, component}, slab {uid}; bileşen sırası
-        soldan 0'dan), adopt (bağsız her metin malzemeden bir proje malzemesi açar ve
-        bağlar; aynı metnin taraması ya da kalemi farklı bileşenler bağlanmaz, görünüş
-        değişmez: material_adopt_left). Kilitli katmandaki duvar ve döşeme eski değerleriyle
-        kalır (report.locked, material_locked); bağlanacak nesne kilitliyse layer_locked.
-        Plan yazmadan tabloyu ve etkilenenleri (report: styles, walls, slabs) gösterir.
-        Malzeme lejandı ve Metraj bağlı bileşenleri malzemenin kimliğiyle gruplar. Ofis
-        malzeme kitaplığı (docs/adr/0791): import (library: kentos.materials 1 dosyası ya da
-        name: KentOS kitaplığı kentos-temel; materials: kimlik ya da ad, yoksa hepsi;
-        onConflict: refuse varsayılan material_exists, keep projeninkini korur
-        material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir ve bağlıları
-        izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken, replaced,
-        kept), export (library: adı, materials: yoksa hepsi; çizim değişmez, cevabın
-        library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık invalid_library.
+        bileşenlerini ve döşemeleri onlara bağlar; tek geri alma adımı “Malzeme”, bağlı
+        stiller, duvarlar ve döşemeler aynı adımda. operation: define (name, id isteğe
+        bağlı: adından; change: category structure/insulation/finish/membrane/other,
+        quantity area/volume, hatch {pattern, scale, angle, color}, cut {color, lineWeight,
+        lineType}), update (material: kimlik ya da ad, change; name yeniden adlandırır,
+        kimlik değişmez; bağlı bileşenlerin material metni, taraması ve kalemi, döşemelerin
+        material metni yeni değerleri alır), remove (material; bağlı bir şey varsa
+        material_in_use ve bağlı duvar ve döşemelerin kimlikleri), assign (material: kimlik
+        ya da ad, yoksa bağdan ayırır; targets: wallStyle {style, component}, wall {uid,
+        component}, slab {uid}; bileşen sırası soldan 0'dan), adopt (bağsız her metin
+        malzemeden bir proje malzemesi açar ve bağlar; aynı metnin taraması ya da kalemi
+        farklı bileşenler bağlanmaz, görünüş değişmez: material_adopt_left). Kilitli
+        katmandaki duvar ve döşeme eski değerleriyle kalır (report.locked, material_locked);
+        bağlanacak nesne kilitliyse layer_locked. Plan yazmadan tabloyu ve etkilenenleri
+        (report: styles, walls, slabs) gösterir. Malzeme lejandı ve Metraj bağlı bileşenleri
+        malzemenin kimliğiyle gruplar. Ofis malzeme kitaplığı: import (library:
+        kentos.materials 1 dosyası ya da name: KentOS kitaplığı kentos-temel; materials:
+        kimlik ya da ad, yoksa hepsi; onConflict: refuse varsayılan material_exists, keep
+        projeninkini korur material_kept, replace aynı kimlikliyi kitaplığınkiyle değiştirir
+        ve bağlıları izler; başka kimlikli aynı ad keep dışında reddedilir; report.taken,
+        replaced, kept), export (library: adı, materials: yoksa hepsi; çizim değişmez,
+        cevabın library'si dosyanın içeriği). Bozuk ya da bilinmeyen kitaplık
+        invalid_library.
 
         Args:
             doc: The drawing it works on.

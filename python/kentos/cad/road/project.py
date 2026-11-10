@@ -31,11 +31,11 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
     """``road.project.edit`` v1. Kendiliğinden yeniden üret: autoRebuild açıkken bir yazma,
     eskittiği yol çizimlerini kendi adımında yeniden üretir (uyarı drawings_rebuilt);
     elle değişenler (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve
-    söylenir. regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız
-    değişeni yazar (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer
-    (false). Tek geri alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya
-    da ikisi birden “Yeniden üretim”. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, nothing_to_set.
+    söylenir. regional: yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar
+    (true, projenin ilk seçimi) ya da her çizimi bütün çizer (false). Tek geri alma
+    adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden
+    “Yeniden üretim”. Retler: invalid_revision, revision_conflict, not_a_road_project,
+    nothing_to_set.
     """
     __slots__ = ()
     id = "road.project.edit"
@@ -60,10 +60,10 @@ class _RoadProjectEdit(LocalCommand[RoadProjectEdit, RoadProjectEdited, RoadProj
         """Kendiliğinden yeniden üret: autoRebuild açıkken bir yazma, eskittiği yol çizimlerini
         kendi adımında yeniden üretir (uyarı drawings_rebuilt); elle değişenler
         (drawing_edited) ve üretilemeyenler (drawing_not_rebuilt) kalır ve söylenir.
-        regional (ADR 4740): yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar
-        (true, projenin ilk seçimi; ADR 4320) ya da her çizimi bütün çizer (false). Tek geri
-        alma adımı “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden
-        “Yeniden üretim”. Retler: invalid_revision, revision_conflict, not_a_road_project,
+        regional: yeniden üretim, elle de kendiliğinden de, yalnız değişeni yazar (true,
+        projenin ilk seçimi) ya da her çizimi bütün çizer (false). Tek geri alma adımı
+        “Kendiliğinden yeniden üret”, “Yalnız değişeni yaz” ya da ikisi birden “Yeniden
+        üretim”. Retler: invalid_revision, revision_conflict, not_a_road_project,
         nothing_to_set.
 
         Args:
@@ -166,12 +166,11 @@ class _RoadProjectGraph(LocalCommand[RoadProjectGraphQuery, RoadProjectGraph, Ro
     dışarıda). Her çizimin tarifi (recipe): komut, yeniden çizen sürüm, saklanan girdi,
     yazılan ve bugün duran nesne sayısı, nesnelerin damgası; çizildiği katmanın tanımı
     (layer: adı, rengi, çizgi türü, kalınlığı, grupları, bütün stili ve adladığı proje
-    çizgi türü, ADR 3640, 4040; saydamlığı ve karışım kipi, maskesi değil, türü ve
-    yazdırılmıyorsa Yazdır'ı, ADR 4440). Güncel olmayan (stale, missing, edited, gone)
-    bir çizimi gösteren pafta stale olur: baskı öncesi denetim onu outdated_drawing ile
-    reddeder (ADR 1720). Projenin sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar:
-    çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta. Retler:
-    not_a_road_project (yol ve harita projesi değil).
+    çizgi türü; saydamlığı ve karışım kipi, maskesi değil, türü ve yazdırılmıyorsa
+    Yazdır'ı). Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta
+    stale olur: baskı öncesi denetim onu outdated_drawing ile reddeder. Projenin sistemi
+    (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta,
+    teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi değil).
     """
     __slots__ = ()
     id = "road.project.graph"
@@ -202,13 +201,12 @@ class _RoadProjectGraph(LocalCommand[RoadProjectGraphQuery, RoadProjectGraph, Ro
         haritası her sayfada başka zemin gösterdiği için dışarıda). Her çizimin tarifi
         (recipe): komut, yeniden çizen sürüm, saklanan girdi, yazılan ve bugün duran nesne
         sayısı, nesnelerin damgası; çizildiği katmanın tanımı (layer: adı, rengi, çizgi
-        türü, kalınlığı, grupları, bütün stili ve adladığı proje çizgi türü, ADR 3640, 4040;
-        saydamlığı ve karışım kipi, maskesi değil, türü ve yazdırılmıyorsa Yazdır'ı, ADR
-        4440). Güncel olmayan (stale, missing, edited, gone) bir çizimi gösteren pafta stale
-        olur: baskı öncesi denetim onu outdated_drawing ile reddeder (ADR 1720). Projenin
-        sistemi (EPSG ve adı), epoku ve kot sistemi; sayılar: çizim, güncel olmayan çizim,
-        pafta, teslim edilemeyen pafta. Retler: not_a_road_project (yol ve harita projesi
-        değil).
+        türü, kalınlığı, grupları, bütün stili ve adladığı proje çizgi türü; saydamlığı ve
+        karışım kipi, maskesi değil, türü ve yazdırılmıyorsa Yazdır'ı). Güncel olmayan
+        (stale, missing, edited, gone) bir çizimi gösteren pafta stale olur: baskı öncesi
+        denetim onu outdated_drawing ile reddeder. Projenin sistemi (EPSG ve adı), epoku ve
+        kot sistemi; sayılar: çizim, güncel olmayan çizim, pafta, teslim edilemeyen pafta.
+        Retler: not_a_road_project (yol ve harita projesi değil).
 
         Args:
             doc: The drawing it works on.
@@ -287,30 +285,29 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
     bu projede çizer; tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla
     (bu KentOS'un çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir;
     girdinin tarifin projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit,
-    koridor…) bu projede adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin
-    katmanına verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa
-    burada o adlı tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane
-    ise sorulur) ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman
-    (hiçbir çizim ona çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen
-    katman tarifteki gruplarına, bütün stiliyle ve proje çizgi türüyle (ADR 4040),
-    saydamlığı, karışım kipi, türü ve Yazdır'ıyla (ADR 4440) eklenir; adıyla bulunan ya
-    da verilen katman kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği
-    katmanları ve nasıl bulunduklarını (given, name, id, created) söyler. Projede aynı
-    komutla, aynı ana kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists
-    ile kalır (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o
-    çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi
-    iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada
-    çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin
-    çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje
-    ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında
-    duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş;
-    girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve
-    çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
-    not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
-    unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
-    katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
-    yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da; ADR
-    4440) ve çizim komutlarının retleri.
+    koridor…) bu projede adıyla bulunur. Çizimin katmanı: layers'ın tarifin katmanına
+    verdiği bu projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı
+    tek katman (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur)
+    ya da tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona
+    çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki
+    gruplarına, bütün stiliyle ve proje çizgi türüyle, saydamlığı, karışım kipi, türü ve
+    Yazdır'ıyla eklenir; adıyla bulunan ya da verilen katman kendi görünüşünü korur.
+    Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name,
+    id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş
+    çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in).
+    drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri:
+    komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır;
+    verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
+    sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
+    nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
+    çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
+    başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
+    (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
+    invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
+    file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
+    ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
+    service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa
+    layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.produce"
@@ -338,30 +335,29 @@ class _RoadProjectProduce(LocalCommand[RoadProjectProduce, RoadProjectProduced, 
         tek geri alma adımı “Tariften üret”. Her çizim tarifteki komutuyla (bu KentOS'un
         çizdiği sürüm; başkası ret), tarifin sakladığı girdiyle çizilir; girdinin tarifin
         projesindeki kimlikle andığı kaynak (yüzey, aks, boykesit, koridor…) bu projede
-        adıyla bulunur. Çizimin katmanı (ADR 3640): layers'ın tarifin katmanına verdiği bu
-        projenin katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman
+        adıyla bulunur. Çizimin katmanı: layers'ın tarifin katmanına verdiği bu projenin
+        katmanı; yoksa tarif katmanın tanımını taşıyorsa burada o adlı tek katman
         (Katmanları çevir gibi büyük küçük harf ayrımsız; iki tane ise sorulur) ya da
         tarifteki rengi, çizgi türü ve kalınlığıyla eklenen katman (hiçbir çizim ona
         çizilmezse geri alınır); eski tarifte katmanın kimliği. Eklenen katman tarifteki
-        gruplarına, bütün stiliyle ve proje çizgi türüyle (ADR 4040), saydamlığı, karışım
-        kipi, türü ve Yazdır'ıyla (ADR 4440) eklenir; adıyla bulunan ya da verilen katman
-        kendi görünüşünü korur. Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl
-        bulunduklarını (given, name, id, created) söyler. Projede aynı komutla, aynı ana
-        kaynaktan, aynı katmana çizilmiş çizim varsa çizim left'te exists ile kalır
-        (güncellemesi road.project.rebuild'in). drawings verilirse yalnız o çizimler
-        (tarifteki kimlikleri), hepsi ya da hiçbiri: komutun reddi, tarifin çizimi
-        iletisinde adlanarak bütün yazmayı geri alır; verilmezse bütün çizimler, burada
-        çizilmeyen çizim left'te refused ve komutun sözüyle kalır. Her çizim bu projenin
-        çizimi olarak kaydedilir (kaynak damgaları, nesneleri); İş grafiği'nde ve Proje
-        ağacında görünür. İş olarak ilerleme çizim çizimdir, durdurma çizimler arasında
-        duyulur. Uyarılar: recipe_other_system (tarif başka sistemdeki projede kaydedilmiş;
-        girdiler aynen alınır), recipe_layer_created (tarifin katmanı tanımıyla eklendi) ve
-        çizim komutlarının uyarıları. Retler: invalid_revision, revision_conflict,
-        not_a_road_project, invalid_file_path, file_not_found, invalid_project_recipe,
-        unknown_drawing, unknown_recipe_layer, ambiguous_recipe_layer, layers'ta verilen
-        katmanın layer_not_found, not_a_layer, service_layer, layer_locked'u, çizimin
-        yazdığı nesneyi katmanının türü tutmuyorsa layer_geometry_mismatch (plan da; ADR
-        4440) ve çizim komutlarının retleri.
+        gruplarına, bütün stiliyle ve proje çizgi türüyle, saydamlığı, karışım kipi, türü ve
+        Yazdır'ıyla eklenir; adıyla bulunan ya da verilen katman kendi görünüşünü korur.
+        Cevabın layers'ı çizimlerin gittiği katmanları ve nasıl bulunduklarını (given, name,
+        id, created) söyler. Projede aynı komutla, aynı ana kaynaktan, aynı katmana çizilmiş
+        çizim varsa çizim left'te exists ile kalır (güncellemesi road.project.rebuild'in).
+        drawings verilirse yalnız o çizimler (tarifteki kimlikleri), hepsi ya da hiçbiri:
+        komutun reddi, tarifin çizimi iletisinde adlanarak bütün yazmayı geri alır;
+        verilmezse bütün çizimler, burada çizilmeyen çizim left'te refused ve komutun
+        sözüyle kalır. Her çizim bu projenin çizimi olarak kaydedilir (kaynak damgaları,
+        nesneleri); İş grafiği'nde ve Proje ağacında görünür. İş olarak ilerleme çizim
+        çizimdir, durdurma çizimler arasında duyulur. Uyarılar: recipe_other_system (tarif
+        başka sistemdeki projede kaydedilmiş; girdiler aynen alınır), recipe_layer_created
+        (tarifin katmanı tanımıyla eklendi) ve çizim komutlarının uyarıları. Retler:
+        invalid_revision, revision_conflict, not_a_road_project, invalid_file_path,
+        file_not_found, invalid_project_recipe, unknown_drawing, unknown_recipe_layer,
+        ambiguous_recipe_layer, layers'ta verilen katmanın layer_not_found, not_a_layer,
+        service_layer, layer_locked'u, çizimin yazdığı nesneyi katmanının türü tutmuyorsa
+        layer_geometry_mismatch (plan da) ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.
@@ -468,10 +464,9 @@ class _RoadProjectQuery(LocalCommand[RoadProjectQuery, RoadProjectTree, RoadProj
     missing, edited, gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri
     değişince stale, nesnelerinden biri silinince missing, elle değişince edited, ana
     kaynağı silinince gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları
-    ve Brükner'leri hesaplar. Harita projesinde de (ADR 1720): yüzeyleri, platformları
-    ve onlardan çizilenler (eş yükselti, planda platform, sıfır hattı; sıfır hattı iki
-    yüzeyinin değişimini izler). Retler: not_a_road_project (yol ve harita projesi
-    değil).
+    ve Brükner'leri hesaplar. Harita projesinde de: yüzeyleri, platformları ve onlardan
+    çizilenler (eş yükselti, planda platform, sıfır hattı; sıfır hattı iki yüzeyinin
+    değişimini izler). Retler: not_a_road_project (yol ve harita projesi değil).
     """
     __slots__ = ()
     id = "road.project.query"
@@ -500,9 +495,9 @@ class _RoadProjectQuery(LocalCommand[RoadProjectQuery, RoadProjectTree, RoadProj
         gone) ve nedenleri. Çizim, kaynaklarından biri çizildiğinden beri değişince stale,
         nesnelerinden biri silinince missing, elle değişince edited, ana kaynağı silinince
         gone olur. deep yüzeyleri ve koridorları kurar, onaylı kübajları ve Brükner'leri
-        hesaplar. Harita projesinde de (ADR 1720): yüzeyleri, platformları ve onlardan
-        çizilenler (eş yükselti, planda platform, sıfır hattı; sıfır hattı iki yüzeyinin
-        değişimini izler). Retler: not_a_road_project (yol ve harita projesi değil).
+        hesaplar. Harita projesinde de: yüzeyleri, platformları ve onlardan çizilenler (eş
+        yükselti, planda platform, sıfır hattı; sıfır hattı iki yüzeyinin değişimini izler).
+        Retler: not_a_road_project (yol ve harita projesi değil).
 
         Args:
             doc: The drawing it works on.
@@ -577,29 +572,29 @@ query = _RoadProjectQuery()
 
 class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, RoadProjectRebuilt]):
     """``road.project.rebuild`` v1. Yol çizimlerini yeniden üret: Yol ve harita projesinde
-    (ADR 1720) yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle
-    yeniden yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak
+    yol komutlarının çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden
+    yazar: eski nesneleri silinir, aynı katmana yenileri yazılır, kaydın kaynak
     damgaları ve nesneleri yenilenir; tek geri alma adımı “Yeniden üret”. drawings
     verilmezse eskiyen ve nesnesi eksik bütün çizimler; elle değişenler ve kaynağı
     silinenler left'te nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited
     ile yeniden üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman
     yok ya da kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak
-    çalıştırılınca (ADR 2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında
-    duyulur; durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR
-    4320) yalnız değişeni yazar: her çizim önce projenin bir kopyasında yeniden yapılır;
-    nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır,
-    nesneleri kimlikleriyle yerinde kalır); değişen çizimde komutun sırasıyla her yeni
-    nesne tıpatıp aynı, alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız
-    sırada önündeki bir nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve
-    ikisi öbür sırada başka bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk
-    ve saydamlıktaki yazısız çizgi ve çoklu çizgiler her sırada aynı resmi çizer;
-    maskeli yazı, nokta, dolgu sırasını korur); kalan eskiler silinir, kalan yeniler
-    çizimin sırasıyla sona yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri
-    yazılınca ondan sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde
-    kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve region (silinen ve
-    yazılan nesnelerin kutusu, yazı ekleme noktasıyla: değişen bölge). Retler:
-    invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
-    drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
+    çalıştırılınca ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur;
+    durdurulan yeniden üretim hiçbir şey yazmaz (cancelled). regional yalnız değişeni
+    yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan
+    çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle
+    yerinde kalır); değişen çizimde komutun sırasıyla her yeni nesne tıpatıp aynı,
+    alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız sırada önündeki bir
+    nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve ikisi öbür sırada başka
+    bir resim çizebiliyorsa yazılır (yalnız tek renk ve saydamlıktaki yazısız çizgi ve
+    çoklu çizgiler her sırada aynı resmi çizer; maskeli yazı, nokta, dolgu sırasını
+    korur); kalan eskiler silinir, kalan yeniler çizimin sırasıyla sona yazılır. Pafta
+    eğrilerinde aynı çıkan eğriler kalır, bir eğri yazılınca ondan sonraki kotlar da
+    yeniden yazılır (maskeleri eğrilerin üstünde kalır). Cevabın her çiziminde kept
+    (yerinde kalan nesne) ve region (silinen ve yazılan nesnelerin kutusu, yazı ekleme
+    noktasıyla: değişen bölge). Retler: invalid_revision, revision_conflict,
+    not_a_road_project, unknown_drawing, drawing_source_gone, drawing_edited ve çizim
+    komutlarının retleri.
     """
     __slots__ = ()
     id = "road.project.rebuild"
@@ -622,30 +617,29 @@ class _RoadProjectRebuild(LocalCommand[RoadProjectRebuild, RoadProjectRebuilt, R
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> RoadProjectRebuilt:
-        """Yol çizimlerini yeniden üret: Yol ve harita projesinde (ADR 1720) yol komutlarının
-        çizimlerini (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri
-        silinir, aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri
-        yenilenir; tek geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve
-        nesnesi eksik bütün çizimler; elle değişenler ve kaynağı silinenler left'te
-        nedeniyle kalır. Adıyla verilen elle değişmiş çizim yalnız edited ile yeniden
-        üretilir (değişiklikleri silinir). Çizim komutunun kendi retleri (katman yok ya da
-        kilitli, kaynak çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca (ADR
-        2440) ilerlemesi çizim çizimdir, durdurma çizimler arasında duyulur; durdurulan
-        yeniden üretim hiçbir şey yazmaz (cancelled). regional (ADR 4320) yalnız değişeni
-        yazar: her çizim önce projenin bir kopyasında yeniden yapılır; nesneleri aynı çıkan
-        çizim yazılmaz (kaydı kaynaklarının bugünkü damgasını alır, nesneleri kimlikleriyle
-        yerinde kalır); değişen çizimde komutun sırasıyla her yeni nesne tıpatıp aynı,
-        alınmamış ilk eski nesnenin yerinde kimliğiyle kalır; yalnız sırada önündeki bir
-        nesne yazılıyorsa ya da daha sonraki bir yerden kalıyorsa ve ikisi öbür sırada başka
-        bir resim çizebiliyorsa yazılır (ADR 4740: yalnız tek renk ve saydamlıktaki yazısız
-        çizgi ve çoklu çizgiler her sırada aynı resmi çizer; maskeli yazı, nokta, dolgu
-        sırasını korur); kalan eskiler silinir, kalan yeniler çizimin sırasıyla sona
-        yazılır. Pafta eğrilerinde aynı çıkan eğriler kalır, bir eğri yazılınca ondan
-        sonraki kotlar da yeniden yazılır (maskeleri eğrilerin üstünde kalır). Cevabın her
-        çiziminde kept (yerinde kalan nesne) ve region (silinen ve yazılan nesnelerin
-        kutusu, yazı ekleme noktasıyla: değişen bölge). Retler: invalid_revision,
-        revision_conflict, not_a_road_project, unknown_drawing, drawing_source_gone,
-        drawing_edited ve çizim komutlarının retleri.
+        """Yol çizimlerini yeniden üret: Yol ve harita projesinde yol komutlarının çizimlerini
+        (sıfır hattı dahil) çizildikleri girdiyle yeniden yazar: eski nesneleri silinir,
+        aynı katmana yenileri yazılır, kaydın kaynak damgaları ve nesneleri yenilenir; tek
+        geri alma adımı “Yeniden üret”. drawings verilmezse eskiyen ve nesnesi eksik bütün
+        çizimler; elle değişenler ve kaynağı silinenler left'te nedeniyle kalır. Adıyla
+        verilen elle değişmiş çizim yalnız edited ile yeniden üretilir (değişiklikleri
+        silinir). Çizim komutunun kendi retleri (katman yok ya da kilitli, kaynak
+        çizilmiyor) bütün yazmayı geri alır. İş olarak çalıştırılınca ilerlemesi çizim
+        çizimdir, durdurma çizimler arasında duyulur; durdurulan yeniden üretim hiçbir şey
+        yazmaz (cancelled). regional yalnız değişeni yazar: her çizim önce projenin bir
+        kopyasında yeniden yapılır; nesneleri aynı çıkan çizim yazılmaz (kaydı kaynaklarının
+        bugünkü damgasını alır, nesneleri kimlikleriyle yerinde kalır); değişen çizimde
+        komutun sırasıyla her yeni nesne tıpatıp aynı, alınmamış ilk eski nesnenin yerinde
+        kimliğiyle kalır; yalnız sırada önündeki bir nesne yazılıyorsa ya da daha sonraki
+        bir yerden kalıyorsa ve ikisi öbür sırada başka bir resim çizebiliyorsa yazılır
+        (yalnız tek renk ve saydamlıktaki yazısız çizgi ve çoklu çizgiler her sırada aynı
+        resmi çizer; maskeli yazı, nokta, dolgu sırasını korur); kalan eskiler silinir,
+        kalan yeniler çizimin sırasıyla sona yazılır. Pafta eğrilerinde aynı çıkan eğriler
+        kalır, bir eğri yazılınca ondan sonraki kotlar da yeniden yazılır (maskeleri
+        eğrilerin üstünde kalır). Cevabın her çiziminde kept (yerinde kalan nesne) ve region
+        (silinen ve yazılan nesnelerin kutusu, yazı ekleme noktasıyla: değişen bölge).
+        Retler: invalid_revision, revision_conflict, not_a_road_project, unknown_drawing,
+        drawing_source_gone, drawing_edited ve çizim komutlarının retleri.
 
         Args:
             doc: The drawing it works on.

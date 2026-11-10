@@ -52,10 +52,10 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
     ve leastSagK (tepe ve çukur kurbun en küçük K'si, m/%), leastCurve (düşey kurbun
     yatay boyu), leastGradeLength (iki kurp arasındaki düz eğim). Cevap: kırılan
     kurallar km sırasıyla: kural, PVI'ler, km aralığı, bulunan değer, sınır ve sözü.
-    Boykesitin kesişmeleri de denetlenir (docs/adr/0946): açıklığı ya da örtüsü yetmeyen
-    her kesişme clearance kuralıyla bulgu olur; kesişmesi olan boykesit başka kural
-    verilmeden de denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler:
-    not_a_road_project, unknown_road_profile, invalid_design_check.
+    Boykesitin kesişmeleri de denetlenir: açıklığı ya da örtüsü yetmeyen her kesişme
+    clearance kuralıyla bulgu olur; kesişmesi olan boykesit başka kural verilmeden de
+    denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project,
+    unknown_road_profile, invalid_design_check.
     """
     __slots__ = ()
     id = "road.profiles.check"
@@ -90,10 +90,10 @@ class _RoadProfilesCheck(LocalCommand[RoadProfilesCheck, RoadProfilesChecked, Ro
         kurbun en küçük K'si, m/%), leastCurve (düşey kurbun yatay boyu), leastGradeLength
         (iki kurp arasındaki düz eğim). Cevap: kırılan kurallar km sırasıyla: kural,
         PVI'ler, km aralığı, bulunan değer, sınır ve sözü.  Boykesitin kesişmeleri de
-        denetlenir (docs/adr/0946): açıklığı ya da örtüsü yetmeyen her kesişme clearance
-        kuralıyla bulgu olur; kesişmesi olan boykesit başka kural verilmeden de
-        denetlenir.Uyarılar: design_rule_broken, profile_stale. Retler: not_a_road_project,
-        unknown_road_profile, invalid_design_check.
+        denetlenir: açıklığı ya da örtüsü yetmeyen her kesişme clearance kuralıyla bulgu
+        olur; kesişmesi olan boykesit başka kural verilmeden de denetlenir.Uyarılar:
+        design_rule_broken, profile_stale. Retler: not_a_road_project, unknown_road_profile,
+        invalid_design_check.
 
         Args:
             doc: The drawing it works on.
@@ -409,16 +409,16 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
     çizgisi (kırmızı; kurp 16 parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında
     bantlar: Km, Siyah kot, Kırmızı kot, Fark (kırmızı − siyah), her every metrelik
     yuvarlak km'de (yoksa 50) ve uçlarda, Eğim PVI'ler arasında. bands: kgm KGM'nin 2019
-    teknik şartnamesinin sırasını çizer (ADR 0980): Kırmızı Kot, Siyah Kot, Kilometre
-    (değerler bant boyunca dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte
-    yukarı sola dönüşte aşağı basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ,
-    L, klotoidin A'sı), Düşey Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı
-    çukur aşağı basamak, ŞK ve K; PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan
-    kesikli; superelevation: boykesitin aksındaki dever çizelgesi, yoksa bant çizelge
-    verilmedi der). Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum
-    verilmezse gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en
-    yükseğin bir metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara
-    aralığı ve bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler:
+    teknik şartnamesinin sırasını çizer: Kırmızı Kot, Siyah Kot, Kilometre (değerler
+    bant boyunca dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte yukarı sola
+    dönüşte aşağı basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ, L, klotoidin
+    A'sı), Düşey Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı çukur aşağı
+    basamak, ŞK ve K; PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan kesikli;
+    superelevation: boykesitin aksındaki dever çizelgesi, yoksa bant çizelge verilmedi
+    der). Yazılar height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse
+    gösterilen en alçak kotun bir metre altı (aşağı yuvarlanmış), tepe en yükseğin bir
+    metre üstü. Cevap çerçevenin köşeleri, datum, tepe, abartma, ızgara aralığı ve
+    bantların sütunlarıdır. Tek geri alma adımı “Boykesit çiz”. Retler:
     not_a_road_project, unknown_road_profile, invalid_label, unknown_superelevation,
     layer_not_found, not_a_layer, service_layer, layer_locked, invalid_revision,
     revision_conflict; uyarılar layer_hidden, profile_stale, profile_surface_gone.
@@ -463,10 +463,10 @@ class _RoadProfilesDraw(LocalCommand[ProfilesDraw, ProfilesDrawn, ProfilesDrawn]
         parçada) ve her kurbun boyları ve K'sı. Çerçevenin altında bantlar: Km, Siyah kot,
         Kırmızı kot, Fark (kırmızı − siyah), her every metrelik yuvarlak km'de (yoksa 50) ve
         uçlarda, Eğim PVI'ler arasında. bands: kgm KGM'nin 2019 teknik şartnamesinin
-        sırasını çizer (ADR 0980): Kırmızı Kot, Siyah Kot, Kilometre (değerler bant boyunca
-        dik), Yatay Geometri (aliyman eksende, kurp sağa dönüşte yukarı sola dönüşte aşağı
-        basamak, klotoid aradaki eğik çizgi; R, grad cinsinden Δ, L, klotoidin A'sı), Düşey
-        Geometri (eğimler +%5.241 biçiminde, tepe kurbu yukarı çukur aşağı basamak, ŞK ve K;
+        sırasını çizer: Kırmızı Kot, Siyah Kot, Kilometre (değerler bant boyunca dik), Yatay
+        Geometri (aliyman eksende, kurp sağa dönüşte yukarı sola dönüşte aşağı basamak,
+        klotoid aradaki eğik çizgi; R, grad cinsinden Δ, L, klotoidin A'sı), Düşey Geometri
+        (eğimler +%5.241 biçiminde, tepe kurbu yukarı çukur aşağı basamak, ŞK ve K;
         PVI'lerin km ve kotu) ve Dever (sol yan düz, sağ yan kesikli; superelevation:
         boykesitin aksındaki dever çizelgesi, yoksa bant çizelge verilmedi der). Yazılar
         height mm (yoksa 2,5) yüksekliğinde, çizim ölçeğiyle. datum verilmezse gösterilen en
@@ -678,11 +678,10 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
     boş surface yüzeyi kaldırır) boykesitinkinin yerini alır. rebind: boykesit aksının
     bugünkü revizyonunu alır, eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove:
     boykesit kalkar.  Kesişmeler (crossings: ad, km, side above/below, elevation alt ya
-    da üst yüzü, clearance açıklık ya da örtü) da yazılır, boş liste kaldırır
-    (docs/adr/0946, KCAD şema 172).Boykesitin revizyonu her değişiklikte bir artar. Tek
-    geri alma adımı “Boykesiti düzenle”. Retler: not_a_road_project,
-    unknown_road_profile, unknown_terrain, invalid_road_profile, profile_curves_overlap,
-    invalid_revision, revision_conflict.
+    da üst yüzü, clearance açıklık ya da örtü) da yazılır, boş liste kaldırır (KCAD şema
+    172).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti
+    düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
+    invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.
     """
     __slots__ = ()
     id = "road.profiles.edit"
@@ -713,9 +712,9 @@ class _RoadProfilesEdit(LocalCommand[ProfilesEdit, ProfilesWritten, ProfilesWrit
         boykesitinkinin yerini alır. rebind: boykesit aksının bugünkü revizyonunu alır,
         eskimiş olmaktan çıkar; PVI'ler kaydırılmaz. remove: boykesit kalkar.  Kesişmeler
         (crossings: ad, km, side above/below, elevation alt ya da üst yüzü, clearance
-        açıklık ya da örtü) da yazılır, boş liste kaldırır (docs/adr/0946, KCAD şema
-        172).Boykesitin revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti
-        düzenle”. Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
+        açıklık ya da örtü) da yazılır, boş liste kaldırır (KCAD şema 172).Boykesitin
+        revizyonu her değişiklikte bir artar. Tek geri alma adımı “Boykesiti düzenle”.
+        Retler: not_a_road_project, unknown_road_profile, unknown_terrain,
         invalid_road_profile, profile_curves_overlap, invalid_revision, revision_conflict.
 
         Args:
@@ -1180,8 +1179,8 @@ impact = _RoadProfilesImpact()
 class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths, RoadProfileLengths]):
     """``road.profiles.lengths`` v1. Düşey kurp boyu öner: Bir boykesitin her düşey kurbu
     için verilen ölçütlerin istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz.
-    speed verilmezse boykesitin aksının proje hızıdır (ADR 0986). Durma görüş mesafesi
-    v·t + v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma
+    speed verilmezse boykesitin aksının proje hızıdır. Durma görüş mesafesi v·t +
+    v²/(2(a + g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma
     eğimlerinde, iki yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ +
     √h₂)²), S > L için 2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz
     yüksekliğinde). Çukur far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya
@@ -1225,13 +1224,13 @@ class _RoadProfilesLengths(LocalCommand[RoadProfilesLengths, RoadProfileLengths,
     ) -> RoadProfileLengths:
         """Düşey kurp boyu öner: Bir boykesitin her düşey kurbu için verilen ölçütlerin
         istediği en kısa boyu ve öneriyi verir; hiçbir şey yazmaz. speed verilmezse
-        boykesitin aksının proje hızıdır (ADR 0986). Durma görüş mesafesi v·t + v²/(2(a +
-        g·G)), v = speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki
-        yönün uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için
-        2S − 200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur
-        far (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan
-        β)/A; konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü
-        kendi verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez.
+        boykesitin aksının proje hızıdır. Durma görüş mesafesi v·t + v²/(2(a + g·G)), v =
+        speed/3,6, g 9,80665 (time ve decel; grades ile yaklaşma eğimlerinde, iki yönün
+        uzunu). Tepe (eye, object): S ≤ L için L = A·S²/(200(√h₁ + √h₂)²), S > L için 2S −
+        200(√h₁ + √h₂)²/A; passing ile geçme görüşü (nesne göz yüksekliğinde). Çukur far
+        (headlight, beam derece): L = A·S²/(200(h + S·tan β)) ya da 2S − 200(h + S·tan β)/A;
+        konfor (accel): A·V²/(1296·a). Bisektris (external): 800·E/A. Eğimler görüşü kendi
+        verirse 0. Değerlerin hepsi standardın ya da kullanıcının; KentOS sayı vermez.
         Cevap: düz yoldaki durma mesafesi; her kurbun tepe ya da çukur oluşu, A, şimdiki
         boyu (dairenin aynı K'li parabol boyu R·|A|/100), ölçütlerin boyları, belirleyen
         ölçüt, gereken ve step'e yukarı yuvarlanmış önerilen boy, kısa olup olmadığı.
@@ -1416,11 +1415,11 @@ class _RoadProfilesPropose(LocalCommand[ProfilesPropose, ProfileProposed, Profil
     (KKT koşulları tutar). Sınırlar ve kilitler kullanıcınındır; KentOS değer vermez.
     Öneri yazılacaksa road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların
     önerilen ve önceki kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki
-    boy, karesel ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır
-    (docs/adr/0946): üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar
-    aşağıda, alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her
-    kesişmenin sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını
-    verir.Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile,
+    boy, karesel ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri
+    kısıttır: üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar aşağıda,
+    alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her kesişmenin
+    sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını verir.Uyarılar:
+    profile_stale. Retler: not_a_road_project, unknown_road_profile,
     invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).
     """
     __slots__ = ()
@@ -1454,12 +1453,12 @@ class _RoadProfilesPropose(LocalCommand[ProfilesPropose, ProfileProposed, Profil
         ve kilitler kullanıcınındır; KentOS değer vermez. Öneri yazılacaksa
         road.profiles.create ile yeni boykesit olur. Cevap: PVI'ların önerilen ve önceki
         kotları, eğimler ve sınıra dayananlar, kareler toplamı, yüzeydeki boy, karesel
-        ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır
-        (docs/adr/0946): üstteki yapının altında kırmızı kot alt yüzünden açıklık kadar
-        aşağıda, alttakinin üstünde üst yüzünden örtü kadar yukarıda kalır; rapor her
-        kesişmenin sınırını, önerilen kotu, payını ve çizgiyi tutup tutmadığını
-        verir.Uyarılar: profile_stale. Retler: not_a_road_project, unknown_road_profile,
-        invalid_profile_proposal (yüzeyi yoksa ya da kurulamıyorsa da).
+        ortalama fark, kazı ve dolgu alanları.  Boykesitin kesişmeleri kısıttır: üstteki
+        yapının altında kırmızı kot alt yüzünden açıklık kadar aşağıda, alttakinin üstünde
+        üst yüzünden örtü kadar yukarıda kalır; rapor her kesişmenin sınırını, önerilen
+        kotu, payını ve çizgiyi tutup tutmadığını verir.Uyarılar: profile_stale. Retler:
+        not_a_road_project, unknown_road_profile, invalid_profile_proposal (yüzeyi yoksa ya
+        da kurulamıyorsa da).
 
         Args:
             doc: The drawing it works on.

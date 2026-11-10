@@ -356,19 +356,18 @@ query = _MapWorkQuery()
 
 class _MapWorkRestore(LocalCommand[MapWorkRestore, MapWorkRestored, MapWorkRestored]):
     """``map.work.restore`` v1. Onaylı hâline getir: Onaylı bir harita işi öğesinin (item)
-    nesnelerini onayın tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri
-    alma adımı “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne
-    aynı kalıcı kimlikle yeniden oluşturulur (restored); değişen ya da öğenin
-    katmanlarından çıkan nesne onaylanan değerine döner (reverted). uids verilirse
-    yalnız o onaylı nesneler (her biri silinmiş ya da değişmiş olmalı); verilmezse
-    hepsi. Onaydan sonra eklenen nesneler yerinde kalır (added sayısı); asApproved
-    öğenin içeriğinin onaylanan içerikle aynı olup olmadığını söyler. Geri gelen
-    nesnenin katmanı çizimde, katman, kilitsiz ve türüne uygun olmalı; değişen nesnenin
-    şimdiki katmanı kilitli olmamalı. Uyarılar: layer_hidden. Retler: invalid_revision,
-    revision_conflict, not_a_map_project, unknown_work_item, work_not_approved,
-    no_approved_values (dosyalı öğe, değerleri tutmayan onay), invalid_uid,
-    not_approved_object, nothing_to_restore, layer_not_found, not_a_layer, layer_locked,
-    layer_geometry_mismatch.
+    nesnelerini onayın tuttuğu değerlerle (şema 213) geri getirir; tek geri alma adımı
+    “Onaylı hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı
+    kimlikle yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan
+    nesne onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler
+    (her biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen
+    nesneler yerinde kalır (added sayısı); asApproved öğenin içeriğinin onaylanan
+    içerikle aynı olup olmadığını söyler. Geri gelen nesnenin katmanı çizimde, katman,
+    kilitsiz ve türüne uygun olmalı; değişen nesnenin şimdiki katmanı kilitli olmamalı.
+    Uyarılar: layer_hidden. Retler: invalid_revision, revision_conflict,
+    not_a_map_project, unknown_work_item, work_not_approved, no_approved_values (dosyalı
+    öğe, değerleri tutmayan onay), invalid_uid, not_approved_object, nothing_to_restore,
+    layer_not_found, not_a_layer, layer_locked, layer_geometry_mismatch.
     """
     __slots__ = ()
     id = "map.work.restore"
@@ -391,8 +390,8 @@ class _MapWorkRestore(LocalCommand[MapWorkRestore, MapWorkRestored, MapWorkResto
         expected: Expected | None = None,
     ) -> MapWorkRestored:
         """Onaylı hâline getir: Onaylı bir harita işi öğesinin (item) nesnelerini onayın
-        tuttuğu değerlerle (şema 213, ADR 3680) geri getirir; tek geri alma adımı “Onaylı
-        hâline getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle
+        tuttuğu değerlerle (şema 213) geri getirir; tek geri alma adımı “Onaylı hâline
+        getir”, hepsi ya da hiçbiri. Onaydan sonra silinen nesne aynı kalıcı kimlikle
         yeniden oluşturulur (restored); değişen ya da öğenin katmanlarından çıkan nesne
         onaylanan değerine döner (reverted). uids verilirse yalnız o onaylı nesneler (her
         biri silinmiş ya da değişmiş olmalı); verilmezse hepsi. Onaydan sonra eklenen

@@ -1,6 +1,6 @@
 //! CSV dışa aktar and CSV içe aktar (docs/adr/0522, plan/gis.md CBS-05). Out: the geometry as WKT, as X and Y, or
 //! none, and the separator are chosen; the window shows before anything is written the rows, the columns with their
-//! GDAL types and what is left out; Dışa aktar… asks for the path and writes through `file.export.csv`. In: the file
+//! column types (.csvt) and what is left out; Dışa aktar… asks for the path and writes through `file.export.csv`. In: the file
 //! picked, its columns are offered for the geometry (WKT, X and Y, none; found by their names first), the plan of
 //! `file.import.csv` shown as the choice changes; İçe aktar takes the rows in one undo step. A script and the window do
 //! the same.
@@ -501,7 +501,7 @@ impl App {
                 |f| event(Event::Form(f)),
             ),
             Some(match s.geometry {
-                CsvGeometry::Wkt => "İlk sütun WKT: her nesne türü, yaylar CIRCULARSTRING olarak kesin. QGIS'in ayrılmış metin katmanı ve GDAL okur.",
+                CsvGeometry::Wkt => "İlk sütun WKT: her nesne türü, yaylar CIRCULARSTRING olarak kesin. CBS yazılımları ayrılmış metin olarak okur.",
                 CsvGeometry::Xy => "Noktalar X (doğu), Y (kuzey) ve kotluysa Z sütunlarında; nokta olmayan nesneler yazılmaz.",
                 CsvGeometry::None => "Yalnız öznitelikler; her nesne bir satır.",
             }

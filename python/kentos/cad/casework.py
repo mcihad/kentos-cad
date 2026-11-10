@@ -35,17 +35,16 @@ if TYPE_CHECKING:
 
 class _CaseworkEdit(LocalCommand[CaseworkEdit, CaseworkBuilt, CaseworkPlan]):
     """``cad.casework.edit`` v1. Mutfak dizisini düzenle: Mutfak dizisini yeniden dizer ya
-    da bırakır (docs/adr/0727 §6). run dizinin kimliği ya da bir nesnesinin kalıcı
-    kimliğidir. edit kind module: bir modülün kendi eni (width), kapısının açıldığı yan
-    (hand) ve ne taşıdığı (holds: base, sink, cooktop, dishwasher); width ve hand
-    verilmezse modülün kendi değerleri kalkar. kind recipe: dizinin bütün tarifi
-    (cad.casework.run'ın girdisi). Dizi yeniden dizilir: nesneler dizideki yerleriyle
-    (modül, evye, ocak, dolgu, köşe, üst dolap, tezgâh) yerinde güncellenir, artık
-    olmayanlar silinir, yenileri eklenir; tek geri alma adımı “Mutfak dizisini düzenle”.
-    kind release: dizinin kaydı kalkar, nesneleri olduğu gibi kalır (“Mutfak dizisini
-    bırak”). Modül düzenlemesinin retleri edit, tarifinkiler edit.recipe yolundadır.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    da bırakır. run dizinin kimliği ya da bir nesnesinin kalıcı kimliğidir. edit kind
+    module: bir modülün kendi eni (width), kapısının açıldığı yan (hand) ve ne taşıdığı
+    (holds: base, sink, cooktop, dishwasher); width ve hand verilmezse modülün kendi
+    değerleri kalkar. kind recipe: dizinin bütün tarifi (cad.casework.run'ın girdisi).
+    Dizi yeniden dizilir: nesneler dizideki yerleriyle (modül, evye, ocak, dolgu, köşe,
+    üst dolap, tezgâh) yerinde güncellenir, artık olmayanlar silinir, yenileri eklenir;
+    tek geri alma adımı “Mutfak dizisini düzenle”. kind release: dizinin kaydı kalkar,
+    nesneleri olduğu gibi kalır (“Mutfak dizisini bırak”). Modül düzenlemesinin retleri
+    edit, tarifinkiler edit.recipe yolundadır. expectedRevision verilmişse ve çizim o
+    sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.casework.edit"
@@ -67,17 +66,17 @@ class _CaseworkEdit(LocalCommand[CaseworkEdit, CaseworkBuilt, CaseworkPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CaseworkBuilt:
-        """Mutfak dizisini düzenle: Mutfak dizisini yeniden dizer ya da bırakır (docs/adr/0727
-        §6). run dizinin kimliği ya da bir nesnesinin kalıcı kimliğidir. edit kind module:
-        bir modülün kendi eni (width), kapısının açıldığı yan (hand) ve ne taşıdığı (holds:
-        base, sink, cooktop, dishwasher); width ve hand verilmezse modülün kendi değerleri
-        kalkar. kind recipe: dizinin bütün tarifi (cad.casework.run'ın girdisi). Dizi
-        yeniden dizilir: nesneler dizideki yerleriyle (modül, evye, ocak, dolgu, köşe, üst
-        dolap, tezgâh) yerinde güncellenir, artık olmayanlar silinir, yenileri eklenir; tek
-        geri alma adımı “Mutfak dizisini düzenle”. kind release: dizinin kaydı kalkar,
-        nesneleri olduğu gibi kalır (“Mutfak dizisini bırak”). Modül düzenlemesinin retleri
-        edit, tarifinkiler edit.recipe yolundadır. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Mutfak dizisini düzenle: Mutfak dizisini yeniden dizer ya da bırakır. run dizinin
+        kimliği ya da bir nesnesinin kalıcı kimliğidir. edit kind module: bir modülün kendi
+        eni (width), kapısının açıldığı yan (hand) ve ne taşıdığı (holds: base, sink,
+        cooktop, dishwasher); width ve hand verilmezse modülün kendi değerleri kalkar. kind
+        recipe: dizinin bütün tarifi (cad.casework.run'ın girdisi). Dizi yeniden dizilir:
+        nesneler dizideki yerleriyle (modül, evye, ocak, dolgu, köşe, üst dolap, tezgâh)
+        yerinde güncellenir, artık olmayanlar silinir, yenileri eklenir; tek geri alma adımı
+        “Mutfak dizisini düzenle”. kind release: dizinin kaydı kalkar, nesneleri olduğu gibi
+        kalır (“Mutfak dizisini bırak”). Modül düzenlemesinin retleri edit, tarifinkiler
+        edit.recipe yolundadır. expectedRevision verilmişse ve çizim o sürümde değilse
+        hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -167,12 +166,12 @@ edit = _CaseworkEdit()
 
 
 class _CaseworkQuery(LocalCommand[CaseworkQuery, CaseworkRuns, CaseworkRuns]):
-    """``cad.casework.query`` v1. Mutfak dizilerini sorgula: Çizimin mutfak dizilerini okur
-    (docs/adr/0727 §6); hiçbir şey yazmaz. run verilirse yalnız o dizi (dizinin kimliği
-    ya da bir nesnesinin kalıcı kimliği). Her dizi için tarifi, kolları (boy, dolapların
-    başı ve sonu, dolgu, bağlı duvar), modülleri (sıra, tür, baş, en, kol, kapının
-    açılması), buzdolabının yeri, toplam dolgu, nesneleri dizideki yerleriyle, çizimde
-    artık olmayan nesneleri (missing) ve dizinin neden koptuğu (broken: wallGone duvarı
+    """``cad.casework.query`` v1. Mutfak dizilerini sorgula: Çizimin mutfak dizilerini
+    okur; hiçbir şey yazmaz. run verilirse yalnız o dizi (dizinin kimliği ya da bir
+    nesnesinin kalıcı kimliği). Her dizi için tarifi, kolları (boy, dolapların başı ve
+    sonu, dolgu, bağlı duvar), modülleri (sıra, tür, baş, en, kol, kapının açılması),
+    buzdolabının yeri, toplam dolgu, nesneleri dizideki yerleriyle, çizimde artık
+    olmayan nesneleri (missing) ve dizinin neden koptuğu (broken: wallGone duvarı
     silindi, notBuilt yeni yolunda dizilemedi).
     """
     __slots__ = ()
@@ -193,13 +192,13 @@ class _CaseworkQuery(LocalCommand[CaseworkQuery, CaseworkRuns, CaseworkRuns]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CaseworkRuns:
-        """Mutfak dizilerini sorgula: Çizimin mutfak dizilerini okur (docs/adr/0727 §6); hiçbir
-        şey yazmaz. run verilirse yalnız o dizi (dizinin kimliği ya da bir nesnesinin kalıcı
-        kimliği). Her dizi için tarifi, kolları (boy, dolapların başı ve sonu, dolgu, bağlı
-        duvar), modülleri (sıra, tür, baş, en, kol, kapının açılması), buzdolabının yeri,
-        toplam dolgu, nesneleri dizideki yerleriyle, çizimde artık olmayan nesneleri
-        (missing) ve dizinin neden koptuğu (broken: wallGone duvarı silindi, notBuilt yeni
-        yolunda dizilemedi).
+        """Mutfak dizilerini sorgula: Çizimin mutfak dizilerini okur; hiçbir şey yazmaz. run
+        verilirse yalnız o dizi (dizinin kimliği ya da bir nesnesinin kalıcı kimliği). Her
+        dizi için tarifi, kolları (boy, dolapların başı ve sonu, dolgu, bağlı duvar),
+        modülleri (sıra, tür, baş, en, kol, kapının açılması), buzdolabının yeri, toplam
+        dolgu, nesneleri dizideki yerleriyle, çizimde artık olmayan nesneleri (missing) ve
+        dizinin neden koptuğu (broken: wallGone duvarı silindi, notBuilt yeni yolunda
+        dizilemedi).
 
         Args:
             doc: The drawing it works on.
@@ -273,27 +272,27 @@ query = _CaseworkQuery()
 
 
 class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
-    """``cad.casework.run`` v1. Mutfak dizisi: Düz, L ya da U mutfak dizisi yazar
-    (docs/adr/0706, 0727); tek geri alma adımı “Mutfak dizisi”. from, through (en çok
-    iki dik köşe) ve to dolapların sırtının dayandığı yoldur (duvarın yüzü), side yolun
-    hangi yanında durdukları (left, right; yok: left); köşeler dolapların yanına döner.
-    Köşe kör (corner blind, öntanımlı: sonraki kol köşeden tezgâh derinliği + 5 cm sonra
-    başlar, köşe dolgusuyla) ya da açıktır (open: iki kol da köşeden tezgâh derinliği
-    kadar uzakta durur). İlk kol köşesine dayanır, dolgusu başında; öbür kollar baştan
-    dizilir, dolguları sonunda (casework_filler). Kör köşeye bir dolap derinliği kadar
-    giren modül kördür (modüllerde blind: önünü sonraki kolun dolapları kapatır); orada
-    evye, ocak ya da bulaşık makinesi uyarılır (casework_blind_corner). Alt dolaplar
-    module eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) dizilir;
-    sink, cooktop ve dishwasher 1'den başlayan modül sırasıdır: evye 0.90 m modül,
-    bulaşık makinesi ve fırın 0.60 m; oven true ocağın modülüne fırın koyar; fridge
-    (start, end) yolun başına ya da sonuna 0.60 m buzdolabı yeri ayırır. perModule bir
-    modülün kendi enini ve kapısının açıldığı yanı (left, right) verir; 0.60'tan geniş
-    dolap çift kapılıdır. Tezgâh (alan) bütün kolları depth derinliğinde (0.30–1.20 m;
-    yok: 0.60) tek parça örter, evye ve ocak için kesimleriyle; upper true üst dolapları
-    ekler. Dolaplar Modül, Tür ve Açılma öznitelikleriyle yazılır. Çizimde adı olan blok
-    olduğu gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks);
-    dolabın eni Genişlik parametresidir. Kolun ucu bir duvarın düz yüzündeyse dizi o
-    yüze bağlanır ve duvarı izler; önüne gelen kapı ve alçak pencere uyarılır
+    """``cad.casework.run`` v1. Mutfak dizisi: Düz, L ya da U mutfak dizisi yazar; tek geri
+    alma adımı “Mutfak dizisi”. from, through (en çok iki dik köşe) ve to dolapların
+    sırtının dayandığı yoldur (duvarın yüzü), side yolun hangi yanında durdukları (left,
+    right; yok: left); köşeler dolapların yanına döner. Köşe kör (corner blind,
+    öntanımlı: sonraki kol köşeden tezgâh derinliği + 5 cm sonra başlar, köşe
+    dolgusuyla) ya da açıktır (open: iki kol da köşeden tezgâh derinliği kadar uzakta
+    durur). İlk kol köşesine dayanır, dolgusu başında; öbür kollar baştan dizilir,
+    dolguları sonunda (casework_filler). Kör köşeye bir dolap derinliği kadar giren
+    modül kördür (modüllerde blind: önünü sonraki kolun dolapları kapatır); orada evye,
+    ocak ya da bulaşık makinesi uyarılır (casework_blind_corner). Alt dolaplar module
+    eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) dizilir; sink,
+    cooktop ve dishwasher 1'den başlayan modül sırasıdır: evye 0.90 m modül, bulaşık
+    makinesi ve fırın 0.60 m; oven true ocağın modülüne fırın koyar; fridge (start, end)
+    yolun başına ya da sonuna 0.60 m buzdolabı yeri ayırır. perModule bir modülün kendi
+    enini ve kapısının açıldığı yanı (left, right) verir; 0.60'tan geniş dolap çift
+    kapılıdır. Tezgâh (alan) bütün kolları depth derinliğinde (0.30–1.20 m; yok: 0.60)
+    tek parça örter, evye ve ocak için kesimleriyle; upper true üst dolapları ekler.
+    Dolaplar Modül, Tür ve Açılma öznitelikleriyle yazılır. Çizimde adı olan blok olduğu
+    gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks); dolabın
+    eni Genişlik parametresidir. Kolun ucu bir duvarın düz yüzündeyse dizi o yüze
+    bağlanır ve duvarı izler; önüne gelen kapı ve alçak pencere uyarılır
     (casework_clash). Dizi kaydıyla tutulur: nesneleri cad.casework.edit ile düzenlenir.
     Plan yazacaklarını, modülleri, kolları ve dolguyu verir. expectedRevision verilmişse
     ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
@@ -333,30 +332,30 @@ class _CaseworkRun(LocalCommand[CaseworkRun, CaseworkBuilt, CaseworkPlan]):
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> CaseworkBuilt:
-        """Mutfak dizisi: Düz, L ya da U mutfak dizisi yazar (docs/adr/0706, 0727); tek geri
-        alma adımı “Mutfak dizisi”. from, through (en çok iki dik köşe) ve to dolapların
-        sırtının dayandığı yoldur (duvarın yüzü), side yolun hangi yanında durdukları (left,
-        right; yok: left); köşeler dolapların yanına döner. Köşe kör (corner blind,
-        öntanımlı: sonraki kol köşeden tezgâh derinliği + 5 cm sonra başlar, köşe
-        dolgusuyla) ya da açıktır (open: iki kol da köşeden tezgâh derinliği kadar uzakta
-        durur). İlk kol köşesine dayanır, dolgusu başında; öbür kollar baştan dizilir,
-        dolguları sonunda (casework_filler). Kör köşeye bir dolap derinliği kadar giren
-        modül kördür (modüllerde blind: önünü sonraki kolun dolapları kapatır); orada evye,
-        ocak ya da bulaşık makinesi uyarılır (casework_blind_corner). Alt dolaplar module
-        eninde (kitaplığın 0.30–1.20 m, 0.15 adımlı enlerinden; yok: 0.60) dizilir; sink,
-        cooktop ve dishwasher 1'den başlayan modül sırasıdır: evye 0.90 m modül, bulaşık
-        makinesi ve fırın 0.60 m; oven true ocağın modülüne fırın koyar; fridge (start, end)
-        yolun başına ya da sonuna 0.60 m buzdolabı yeri ayırır. perModule bir modülün kendi
-        enini ve kapısının açıldığı yanı (left, right) verir; 0.60'tan geniş dolap çift
-        kapılıdır. Tezgâh (alan) bütün kolları depth derinliğinde (0.30–1.20 m; yok: 0.60)
-        tek parça örter, evye ve ocak için kesimleriyle; upper true üst dolapları ekler.
-        Dolaplar Modül, Tür ve Açılma öznitelikleriyle yazılır. Çizimde adı olan blok olduğu
-        gibi kullanılır, yoksa KentOS kitaplığından aynı adımda getirilir (blocks); dolabın
-        eni Genişlik parametresidir. Kolun ucu bir duvarın düz yüzündeyse dizi o yüze
-        bağlanır ve duvarı izler; önüne gelen kapı ve alçak pencere uyarılır
-        (casework_clash). Dizi kaydıyla tutulur: nesneleri cad.casework.edit ile düzenlenir.
-        Plan yazacaklarını, modülleri, kolları ve dolguyu verir. expectedRevision verilmişse
-        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        """Mutfak dizisi: Düz, L ya da U mutfak dizisi yazar; tek geri alma adımı “Mutfak
+        dizisi”. from, through (en çok iki dik köşe) ve to dolapların sırtının dayandığı
+        yoldur (duvarın yüzü), side yolun hangi yanında durdukları (left, right; yok: left);
+        köşeler dolapların yanına döner. Köşe kör (corner blind, öntanımlı: sonraki kol
+        köşeden tezgâh derinliği + 5 cm sonra başlar, köşe dolgusuyla) ya da açıktır (open:
+        iki kol da köşeden tezgâh derinliği kadar uzakta durur). İlk kol köşesine dayanır,
+        dolgusu başında; öbür kollar baştan dizilir, dolguları sonunda (casework_filler).
+        Kör köşeye bir dolap derinliği kadar giren modül kördür (modüllerde blind: önünü
+        sonraki kolun dolapları kapatır); orada evye, ocak ya da bulaşık makinesi uyarılır
+        (casework_blind_corner). Alt dolaplar module eninde (kitaplığın 0.30–1.20 m, 0.15
+        adımlı enlerinden; yok: 0.60) dizilir; sink, cooktop ve dishwasher 1'den başlayan
+        modül sırasıdır: evye 0.90 m modül, bulaşık makinesi ve fırın 0.60 m; oven true
+        ocağın modülüne fırın koyar; fridge (start, end) yolun başına ya da sonuna 0.60 m
+        buzdolabı yeri ayırır. perModule bir modülün kendi enini ve kapısının açıldığı yanı
+        (left, right) verir; 0.60'tan geniş dolap çift kapılıdır. Tezgâh (alan) bütün
+        kolları depth derinliğinde (0.30–1.20 m; yok: 0.60) tek parça örter, evye ve ocak
+        için kesimleriyle; upper true üst dolapları ekler. Dolaplar Modül, Tür ve Açılma
+        öznitelikleriyle yazılır. Çizimde adı olan blok olduğu gibi kullanılır, yoksa KentOS
+        kitaplığından aynı adımda getirilir (blocks); dolabın eni Genişlik parametresidir.
+        Kolun ucu bir duvarın düz yüzündeyse dizi o yüze bağlanır ve duvarı izler; önüne
+        gelen kapı ve alçak pencere uyarılır (casework_clash). Dizi kaydıyla tutulur:
+        nesneleri cad.casework.edit ile düzenlenir. Plan yazacaklarını, modülleri, kolları
+        ve dolguyu verir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
+        yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
