@@ -17,6 +17,12 @@
 //!   nothing nearer covers them: a point is hidden behind what is cut there, and behind a face whose projection holds
 //!   it strictly inside and which is nearer than it by more than a micrometre. A face is taken as closed over its
 //!   solid's boxes: an opening is a window or a door one does not see through; its outline is a mark.
+//! - **Sloped** (docs/adr/8044 §5). A roof's face: its footprint (the face's ring in plan), its top a plane, its bottom
+//!   a thickness under it (measured upright). Cut: between its bottom and top along the line, a band that slopes as the
+//!   plane does. Seen: its top where the plane rises away from the viewer, its underside where it rises towards them
+//!   (looking into a roof space), each with its footprint's edges; and on its edges along the roof's eaves line a
+//!   vertical face (the eaves' fascia, a gable end's rake) with its top, its bottom and a vertical edge at each corner.
+//!   An edge one roof's faces share (a hip, a ridge) is drawn once.
 //! - **Joint** (docs/adr/8043 §7). A prism's face edge with a prism face in its own plane on both sides is where two
 //!   faces meet under one finish (a plastered wall and the beam, the column or the slab flush with it): not drawn,
 //!   unless the two solids' finishes differ (a stone plinth under plaster). A crease (two planes) and a mark always are.
@@ -181,6 +187,45 @@ impl Flight {
     }
 }
 
+/// A roof's face as a sloped slab (docs/adr/8044 §5): its top the plane `top + dx·x + dy·y` (metres over ±0.00 at a
+/// plan point), its bottom `thickness` under it, measured upright.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Sloped {
+    pub top: f64,
+    pub dx: f64,
+    pub dy: f64,
+    pub thickness: f64,
+    /// The roof's eaves line (closed): a footprint edge on it has a vertical face (the fascia, a rake); the others meet
+    /// the roof's other faces (a hip, a ridge, a valley) and have none.
+    pub eaves: Vec<Vec2>,
+    /// Which roof the face is of: an edge one roof's faces share is drawn once.
+    pub roof: usize,
+}
+
+impl Sloped {
+    /// Its top at plan point `p`.
+    pub fn z(&self, p: Vec2) -> f64 {
+        self.top + self.dx * p.x + self.dy * p.y
+    }
+
+    /// Whether the plan edge `p`→`q` lies on its roof's eaves line (its middle within `SIDE` of an eaves edge).
+    fn open(&self, p: Vec2, q: Vec2) -> bool {
+        let m = Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0);
+        let n = self.eaves.len();
+        (0..n).any(|i| {
+            let (a, b) = (self.eaves[i], self.eaves[(i + 1) % n]);
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let len2 = dx * dx + dy * dy;
+            if len2 <= EPS * EPS {
+                return false;
+            }
+            let t = ((m.x - a.x) * dx + (m.y - a.y) * dy) / len2;
+            let off = ((m.x - a.x) * dy - (m.y - a.y) * dx).abs() / len2.sqrt();
+            off <= SIDE && t >= -EPS && t <= 1.0 + EPS
+        })
+    }
+}
+
 /// How high a solid stands.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Height {
@@ -190,6 +235,8 @@ pub enum Height {
         top: f64,
     },
     Flight(Flight),
+    /// A roof's face (docs/adr/8044 §5).
+    Sloped(Sloped),
 }
 
 /// A box taken out of a solid: its outline in plan, its bottom and its top.
@@ -740,6 +787,23 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
                 }
                 flight_faces(frame, i, &rings, f, &mut covers, &mut edges);
             }
+            Height::Sloped(s) => {
+                for &(a, b) in &stretches {
+                    let (ta, tb) = (s.z(frame.at(a, 0.0)), s.z(frame.at(b, 0.0)));
+                    let ring = vec![
+                        Vec2::new(a, ta - s.thickness),
+                        Vec2::new(b, tb - s.thickness),
+                        Vec2::new(b, tb),
+                        Vec2::new(a, ta),
+                    ];
+                    covers.extend(Cover::cut(ring.clone()));
+                    out.cut.push(Cut {
+                        solid: i,
+                        ring: canonical(ring),
+                    });
+                }
+                sloped_faces(frame, i, &rings, s, &mut covers, &mut edges);
+            }
         }
         for [(p, zp), (q, zq)] in &solid.marks {
             if let Some((t0, t1)) = frame.clip(*p, *q) {
@@ -757,6 +821,11 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
         }
     }
     let finishes: Vec<Option<&str>> = solids.iter().map(|s| s.finish.as_deref()).collect();
+    // An edge is drawn once for its solid, or for its roof: a hip or a ridge two of a roof's faces share.
+    let group = |solid: usize| match solids.get(solid).map(|s| &s.height) {
+        Some(Height::Sloped(s)) => solids.len() + s.roof,
+        _ => solid,
+    };
     let mut drawn = std::collections::HashSet::new();
     for e in &edges {
         let length = js_hypot(e.q.x - e.p.x, e.q.y - e.p.y);
@@ -791,7 +860,7 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
             };
             // An edge two faces share (a corner's vertical edge) is drawn once.
             let (ka, kb) = (key(seen.a), key(seen.b));
-            if drawn.insert((seen.solid, ka.min(kb), ka.max(kb))) {
+            if drawn.insert((group(seen.solid), ka.min(kb), ka.max(kb))) {
                 out.seen.push(seen);
             }
         }
@@ -805,6 +874,12 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
 pub fn seen_at(frame: &Frame, solids: &[Solid], at: Vec2) -> Option<(usize, f64)> {
     let mut best: Option<(usize, f64)> = None;
     for (i, solid) in solids.iter().enumerate() {
+        if let Height::Sloped(s) = &solid.height
+            && let Some(d) = sloped_seen_at(frame, solid, s, at)
+            && best.is_none_or(|(_, n)| d < n)
+        {
+            best = Some((i, d));
+        }
         let Height::Prism { bottom, top } = &solid.height else {
             continue;
         };
@@ -1211,6 +1286,180 @@ fn flight_faces(
             });
         }
     }
+}
+
+/// What bounds the view in plan: past the line, within its length and its depth; each not below 0 inside.
+fn view_bounds(frame: &Frame) -> Vec<Box<dyn Fn(Vec2) -> f64>> {
+    let fr = *frame;
+    let mut b: Vec<Box<dyn Fn(Vec2) -> f64>> = vec![
+        Box::new(move |p| fr.d(p)),
+        Box::new(move |p| fr.u(p)),
+        Box::new(move |p| fr.length - fr.u(p)),
+    ];
+    if let Some(depth) = fr.depth {
+        b.push(Box::new(move |p| depth - fr.d(p)));
+    }
+    b
+}
+
+/// A sloped slab's plane in the section's frame: `z = k0 + ku·u + kd·d` at its top.
+fn sloped_frame(frame: &Frame, s: &Sloped) -> (f64, f64, f64) {
+    (
+        s.z(frame.origin),
+        s.dx * frame.right.x + s.dy * frame.right.y,
+        s.dx * frame.look.x + s.dy * frame.look.y,
+    )
+}
+
+/// A sloped slab's faces that look back at the viewer (docs/adr/8044 §5): its top where its plane rises away from the
+/// viewer, else its underside where it rises towards them (none where it stands edge-on), with its footprint's edges
+/// within the view; and the vertical faces on its edges along the roof's eaves line, with their top, their bottom and
+/// a vertical edge at each corner (never where the view clips the face): covers, and their edges to draw.
+fn sloped_faces(
+    frame: &Frame,
+    solid: usize,
+    rings: &[Vec<Vec2>],
+    s: &Sloped,
+    covers: &mut Vec<Cover>,
+    edges: &mut Vec<Edge>,
+) {
+    let Some(ring) = rings.first() else {
+        return;
+    };
+    let (k0, ku, kd) = sloped_frame(frame, s);
+    for (lift, shown) in [(0.0, kd > 1e-9), (-s.thickness, kd < -1e-9)] {
+        if !shown {
+            continue;
+        }
+        let mut plan = ring.clone();
+        for bound in view_bounds(frame) {
+            if plan.len() < 3 {
+                break;
+            }
+            plan = clip_ring(&plan, bound.as_ref());
+        }
+        if plan.len() >= 3 {
+            // d = (z − k0 − lift − ku·u) / kd.
+            let depth = (-(k0 + lift) / kd, -ku / kd, 1.0 / kd);
+            covers.extend(Cover::new(
+                plan.iter()
+                    .map(|p| Vec2::new(frame.u(*p), s.z(*p) + lift))
+                    .collect(),
+                depth,
+            ));
+        }
+        let n = ring.len();
+        for k in 0..n {
+            let (p, q) = (ring[k], ring[(k + 1) % n]);
+            let Some((t0, t1)) = frame.clip(p, q) else {
+                continue;
+            };
+            let on = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
+            let (a, b) = (on(t0), on(t1));
+            edges.push(Edge {
+                solid,
+                p: Vec2::new(frame.u(a), s.z(a) + lift),
+                q: Vec2::new(frame.u(b), s.z(b) + lift),
+                dp: frame.d(a),
+                dq: frame.d(b),
+                plane: None,
+            });
+        }
+    }
+    for (p, q, m) in outward(rings) {
+        if !s.open(p, q) || !facing(frame, m) {
+            continue;
+        }
+        let Some((t0, t1)) = frame.clip(p, q) else {
+            continue;
+        };
+        let on = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
+        let (a, b) = (on(t0), on(t1));
+        let (u0, u1, d0, d1) = (frame.u(a), frame.u(b), frame.d(a), frame.d(b));
+        let (z0, z1) = (s.z(a), s.z(b));
+        let t = s.thickness;
+        let plane = vertical_depth(u0, d0, u1, d1);
+        if let Some(depth) = plane {
+            covers.extend(Cover::face(
+                vec![
+                    Vec2::new(u0, z0 - t),
+                    Vec2::new(u1, z1 - t),
+                    Vec2::new(u1, z1),
+                    Vec2::new(u0, z0),
+                ],
+                depth,
+                solid,
+            ));
+        }
+        for lift in [0.0, -t] {
+            edges.push(Edge {
+                solid,
+                p: Vec2::new(u0, z0 + lift),
+                q: Vec2::new(u1, z1 + lift),
+                dp: d0,
+                dq: d1,
+                plane,
+            });
+        }
+        // A corner's vertical edge, never where the view clips the face.
+        for (tt, u, d, z) in [(t0, u0, d0, z0), (t1, u1, d1, z1)] {
+            if tt <= 1e-12 || tt >= 1.0 - 1e-12 {
+                edges.push(Edge {
+                    solid,
+                    p: Vec2::new(u, z - t),
+                    q: Vec2::new(u, z),
+                    dp: d,
+                    dq: d,
+                    plane,
+                });
+            }
+        }
+    }
+}
+
+/// How far past the line a sloped slab's face looking back at the viewer is at `at` (`u`, `z`): its top, its
+/// underside or a vertical face on the eaves line; none where none of them is.
+fn sloped_seen_at(frame: &Frame, solid: &Solid, s: &Sloped, at: Vec2) -> Option<f64> {
+    let rings: Vec<Vec<Vec2>> = solid
+        .rings
+        .iter()
+        .map(|r| clean(r))
+        .filter(|r| r.len() >= 3)
+        .collect();
+    let (k0, ku, kd) = sloped_frame(frame, s);
+    let mut best: Option<f64> = None;
+    let mut take = |d: f64| {
+        if d >= -EPS
+            && frame.depth.is_none_or(|depth| d <= depth + EPS)
+            && best.is_none_or(|b| d < b)
+        {
+            best = Some(d);
+        }
+    };
+    for (lift, shown) in [(0.0, kd > 1e-9), (-s.thickness, kd < -1e-9)] {
+        if shown {
+            let d = (at.y - k0 - lift - ku * at.x) / kd;
+            if inside(&rings, frame.at(at.x, d)) {
+                take(d);
+            }
+        }
+    }
+    for (p, q, m) in outward(&rings) {
+        if !s.open(p, q) || !facing(frame, m) {
+            continue;
+        }
+        let (u0, u1) = (frame.u(p), frame.u(q));
+        if (u1 - u0).abs() <= EPS || at.x < js_min(u0, u1) - EPS || at.x > js_max(u0, u1) + EPS {
+            continue;
+        }
+        let k = (at.x - u0) / (u1 - u0);
+        let w = Vec2::new(p.x + (q.x - p.x) * k, p.y + (q.y - p.y) * k);
+        let z = s.z(w);
+        if at.y >= z - s.thickness - EPS && at.y <= z + EPS {
+            take(frame.d(w));
+        }
+    }
+    best
 }
 
 /// A ring cut to where `keep` is not below 0 (Sutherland–Hodgman; a convex ring stays one ring).

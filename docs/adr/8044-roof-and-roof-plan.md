@@ -1,8 +1,8 @@
 # ADR 8044: Çatı ve çatı planı — saçak çizgisinden çatı yüzleri, mahya, kırma, dere; çatı planı
 
 - **Durum:** sürüyor (10 Kasım 2026); `plan/architecture-advanced.md` ADV-20, M44. 1. bölüm yapıldı: çekirdek
-  geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). Sırada kesit ve görünüşte çatı, baca, çatı
-  penceresi, oluk ve iniş borusu, kar siperliği, çatı planı paftası ve PAİY 40/42 denetimi.
+  geometri (§2), çatı nesnesi (§1), plan çizimi (§3) ve Çatı aracı (§4). 2. bölüm yapıldı: kesit ve görünüşte çatı
+  (§5). Sırada baca, çatı penceresi, oluk ve iniş borusu, kar siperliği, çatı planı paftası ve PAİY 40/42 denetimi.
 - **Bağlam belgesi:** ADR 8040 (düşey model: kat yükseklikleri, döşemenin katmanları), ADR 8042–8043 (kesit ve görünüş:
   "çizilmeyen: çatı"), ADR 8008 (EK-4 katman anahtarı), ADR 8011 (ölçeğe göre ayrıntı).
 
@@ -35,6 +35,15 @@ projede çatı planını ister.
 - **Revit, Roof by Footprint** (Revit 2024 Get Started, *Revit Roof Sample File*): taslağın her kenarı "Defines slope"
   ya da değil; dört kenar eğim verirse kırma, karşılıklı iki kenar beşik, bir kenar tek eğim, hiçbiri düz çatı
   (`.run/gui-evidence/mimari-m44/referans/revit-cati-turleri.png`). Kenar başına ayrı eğim verilebilir.
+- **Revit, Roof Properties** (help.autodesk.com, Revit 2020): Base Level ve Base Offset From Level; "Rafter or Truss":
+  "If you choose Rafter, the Plate Offset from Base is measured from the inside of the wall", Truss'ta duvarın dış
+  yüzünden: çatının alt yüzü taban kotuna duvarın iç ya da dış yüzünde oturur. "Maximum Ridge Height: The maximum height
+  of the top of the roof above the base level": mahya çatının üst yüzünden ölçülür. Rafter Cut: Plumb Cut (saçak alnı
+  düşey), Two Cut Plumb, Two Cut Square (Fascia Depth ile).
+- **Archicad, Floor Plan Display** (help.graphisoft.com, Archicad 29): çatıların varsayılanı "Projected with
+  Overhead"; "the part of the element that is above the Floor Plan Cut Plane" overhead çizgileriyle, ayarlarda
+  "Overhead Lines: Hidden Line". Kenar kesimleri (edge trims): vertical, perpendicular, horizontal, custom angle.
+- Görüntüler: `.run/gui-evidence/mimari-m44/referans/cati-kesit-referans.png`.
 
 ## Karar
 
@@ -115,7 +124,7 @@ projede çatı planını ister.
   kenara paralel uzanır, öbür kenarlar kalkandır. Böylece aynı binada beşiğin yönü tıklanan yerle seçilir, ayrı bir soru
   sorulmaz.
 - **Değerler ve harfler** (ADR 8003): Eğim **M** (Rampa'nın Eğim'i gibi; yüzde, `33` ya da `%33`), Saçak **A**, Kalınlık
-  **E**, Kot farkı **F**, Kaplama **P** (K Kapat'ın), Kat **L**. Varsayılanlar: %33 (18°; kiremitli çatının olağan
+  **E**, Kot farkı **F** (boş: çatı duvara oturur, §5), Kaplama **P** (K Kapat'ın), Kat **L**. Varsayılanlar: %33 (18°; kiremitli çatının olağan
   eğimi, Sivas İmar Yönetmeliği'nin %40'ının altında), saçak 50 cm (PAİY 42 en çok 1,00 m), kalınlık 25 cm, Kiremit.
 - **Önizleme** yazılacak çatıyı planıyla çizer; etiketi türünü, eğimini, mahyanın kotunu ve yüksekliğini söyler. Mahya
   saçaktan 5,00 m'den yüksekse (PAİY 40/4) etiket kırmızıya döner ve "PAİY 40: mahya en çok 5,00 m yüksek olur" der;
@@ -128,6 +137,43 @@ projede çatı planını ister.
   Revit'in Circulation paneli gibi bir çıkış ailesi; kodda da merdiven ve rampa tek araç (`FlightTool`).
 - **Simgeler** cepheden görünüşle çizildi (çatının biçimi, altında ince duvar): plan simgesi (dikdörtgende mahya ve
   kırmalar) gerçek boyda zarfa (✉) benziyordu. `roof`, `roofGable`, `roofShed`, `roofFlat`.
+
+### 5. Kesit ve görünüşte çatı (2. bölüm)
+
+- **Mevzuat:** Mimarlık Hizmetleri Şartnamesi 14.3.4 (kesitler, ön proje) c) "Giriş saçakları, meyilli çatılar, çatı
+  örtüleri kaplamaları belirtilir", g) "Çatı eğimi ve örtü malzemeleri, dereler, yağmur inişleri belirtilir … Dere
+  mahya, saçak … bacalar kotlandırılır", h) "Kesit düzlemi arkasında kalan bina görünüşleri çizilir"; 14.5.4 q) "Çatı
+  konstrüksiyonu … çizilir … derelerin, mahyaların … bacaların kotları ile çatı eğimi yazılır"; 14.5.3 j) görünüşte
+  "Saçaklar … kalkan duvarları, oluk, mahya, baca ve çıkıntılarına kot verilir". PAİY 4: saçak seviyesi "son kat tavan
+  döşemesinin üst kotu".
+- **Çekirdek (`geom::section`, `Height::Sloped`):** çatının her yüzü eğik bir katı: tabanı yüzün halkası, üstü çatının
+  düzlemi, altı kalınlık kadar aşağıda (düşey ölçülür). Kesilen yer düzlem kadar eğik bir bant. Görünen: düzlem bakandan
+  uzaklaşarak yükseliyorsa üst yüz, bakana doğru yükseliyorsa alt yüz (çatı arasından görünen arka yüzün altı), tabanın
+  kenarlarıyla; saçak çizgisi üzerindeki kenarlarda düşey yüz (saçak alnı, kalkanın ucu: Revit'in "Plumb cut"ı,
+  Archicad'in "vertical" kenarı), üst ve alt çizgisiyle, köşelerde düşey çizgiyle. Bir çatının yüzlerinin paylaştığı
+  kırma ve mahya bir kez çizilir; beşiğin kalkanında iki yüzün aynı düzlemdeki uçlarının tepedeki ek yeri çizilmez
+  (8043 §7). Önündeki çatı arkasındakini örter.
+- **Bağımsız başvuru:** `scripts/fixtures/section_cases.py` 4 yeni durum (24'e çıktı): 8 × 6 m %50 kırma çatının
+  enine kesiti (üç yüzün bandı, arka yüzün altı), önden görünüşü (saçak alnı, kırmalar, mahya; arka yüz görünmez),
+  beşiğin kalkanı (tepedeki ek yeri yok), arkadaki duvarın tepesini örtmesi (kırmaların arasında kalan parçası
+  görünmez). Elle hesapla da karşılaştırıldı.
+- **Model (`sections::roof`):** yüzler `geom::roof::face_planes` ile; kesilen bant TS 5319 SN23 "Ağaç malzeme" ile
+  taranır (eğimli çatının ahşap konstrüksiyonu), kaplamasının katmanında (MM-CATI-KIREMIT), kalın çizgiyle. Düz çatı
+  saçağın altında kalınlığı kadar bir döşeme. Çatı varsa "çatı (modelde yok)" notu düşer.
+- **Kotlar:** görünen her çatının oturduğu katın üstü soldaki kot sütununda "Saçak" adıyla (PAİY 4'ün saçak seviyesi;
+  ayrı bir saçak kotu yazmak aynı yerde iki kot üst üste bindirirdi), mahyanın üstü "Mahya" adıyla: "+6.00 Saçak",
+  "+7.69 Mahya". Görünüşte de.
+- **Eğim:** kesit çizgisi bir yüzün eğim doğrultusunda geçiyorsa (bandın görünen eğimi gerçek eğime eşit) bandın
+  üstüne "%33"; yüzü eğik ya da yatay kesiyorsa yazılmaz (görünen eğim gerçeği değildir). 1 m'den kısa kesimlere yazı
+  konmaz.
+- **Görünüşte kaplama:** kaplama yazısı taraması artık mahya kotuna kadar çıkar; çatının örtüsü ("Kiremit") cephe
+  kaplamalarıyla birlikte yazılır (14.3.4 c).
+- **Çatının duvara oturması (araç):** Binadan'da kot farkı boş bırakılırsa çatının alt yüzü duvarın dış yüzünde katın
+  üstüne oturur (Revit'in "Truss"ı): kot farkı = kalınlık − saçak × eğim (25 cm − 50 cm × %33 = 8,5 cm); köşeler
+  çizilince saçak çizgisinde (kot farkı = kalınlık). İlk denemede çatı bandı 50 cm saçakla duvar başlarına 8,5 cm
+  gömülüyordu. Kot farkı yazılırsa o kullanılır; boşaltılınca yeniden oturur.
+- **Bulunan eski hata:** kesitin sağındaki kat yüksekliği yazıları ("3,00") π/2 ile döndürülüyordu; metnin dönüşü
+  derece olduğu için 90° yerine 1,57° dönüktüler (M42–M43). Artık 90°.
 
 ## Doğrulama
 
@@ -145,12 +191,21 @@ projede çatı planını ister.
   tıklamayla beşik: mahya kuzey–güney, +8.19 (2.186 m); Yalnız etkin kat'ta yalnız kesikli saçak, yazılar yeniden
   yerleşti ("105 Mutfak", "%33" yok).
 
+- 2. bölüm (§5): çekirdek ile bağımsız başvuru 24 durumda aynı (4'ü çatı); `roof_sections` 4 (B-B'de iki bant ve
+  "%33", "+6.00 Saçak", "+7.69 Mahya", çatı artık "eksik" değil; A-A'da yatay bantta eğim yazılmaz; çatısız binada not
+  durur; kuzey görünüşünde 3 m'lik mahya, 13,25 m'lik saçak alnı, iki kırma, "Kiremit"); Çatı aracı 7 (duvara oturma:
+  %40'ta kot farkı 5 cm, mahya +5.05; yazılan kot farkı korunur, boşaltılınca yeniden oturur); `face_planes` 1.
+- Gerçek pencere (`fixtures/interaction/real/cati-kesit.txt`, `cati-gorunus.txt`): B-B'de iki bant mahyada birleşti,
+  saçak alnı düşey, altı duvarın dış yüzünde +6.00'a oturdu, "+7.78 Mahya" (kot farkı 8,5 cm ile), sağdaki "3,00"lar
+  düşey; kuzey görünüşünde saçak alnı, kırmalar, mahya.
+
 ## Sonraya kalan
 
 - §9: içe dönen köşeli saçak (L, T) ve dereler.
-- Kesit ve görünüşte çatı (notu şimdilik "çatı (kesit ve görünüşte henüz çizilmiyor)"); baca, çatı penceresi, oluk, iniş
-  borusu, kar siperliği; çatı planı paftası; PAİY 40/42 ve Sivas denetimleri; çatının Öznitelikler'den düzenlenmesi
-  (kenar eğimi, saçak, kaplama).
+- Baca, çatı penceresi, oluk, iniş borusu, kar siperliği; çatı planı paftası; PAİY 40/42 ve Sivas denetimleri (PAİY 40'ın
+  mahya yüksekliği saçak seviyesinden, yani çatının oturduğu katın üstünden ölçülmeli: kot farkı da sayılır);
+  çatının Öznitelikler'den düzenlenmesi (kenar eğimi, saçak, kaplama); çatı katmanlarının (kiremit, çıta, tahta,
+  mertek) ayrı ayrı çizilmesi (14.5.4 q, uygulama projesi).
 - `scripts/ui/ribbon.py` depodaki `catalog/v1/ribbon.json`'u artık aynen üretmiyor: sonradan eklenen arazi ve nokta
   bulutu girdilerini ve İmar panelini siliyor. Bu adımda çatının iki girdisi dosyaya elle eklendi; betik ayrıca
   güncellenmeli.

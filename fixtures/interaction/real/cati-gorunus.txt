@@ -1,0 +1,42 @@
+# M44 2. bölüm (docs/adr/8044 §5), on fixtures/arch/v1/facade-building.kcad: the roof by Binadan on 1. kat, then Görünüş
+# çıkar on the north mark, placed right of the plan and everything fitted: the north facade's roof, its fascia over the
+# walls, its two hips and its ridge, "Kiremit" among the finishes, "+7.78 Mahya" at the left.
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Görünüş çıkar
+wait 1500
+key Return
+wait 1500
+click 766 203
+wait 1500
+move 1300 560
+wait 1500
+click 1300 560
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot g1-genel

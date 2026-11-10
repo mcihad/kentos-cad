@@ -99,6 +99,8 @@ fn a_click_inside_the_walls_writes_a_hip_roof_over_their_outer_faces() {
     // Katman anahtarları on (docs/adr/8008): the roof on its covering's layer.
     b.memory.layer_keys = true;
     b.start("roof");
+    // Its eaves at Zemin kat's top itself (Kot farkı 0), not seated on the walls.
+    assert!(b.run(|s, cx| s.configure("F", "0", cx)));
     b.click(6.0, 1.0);
     let r = newest_roof(&b);
     let mut c = corners(&r);
@@ -158,13 +160,15 @@ fn corners_drawn_are_the_eaves_and_the_first_edge_is_the_front() {
         corners(&r),
         [(20.0, 0.0), (28.0, 0.0), (28.0, 6.0), (20.0, 6.0)]
     );
-    // A shed: its water runs off the first edge; the eaves drawn, no overhang said.
+    // A shed: its water runs off the first edge; the eaves drawn, no overhang said. Seated at its eaves line: its
+    // underside on Zemin kat's top there, its eaves its thickness over it.
     assert_eq!(r.roof.slopes, vec![Some(10.0), None, None, None]);
     assert_eq!(r.roof.overhang, None);
+    assert!((r.roof.offset - 0.25).abs() < 1e-12);
     assert_eq!(
         b.last_text(),
         Some(
-            "Tek eğimli çatı çizildi; mahya +3.60. Kat planında saçağı kesikli; bütünü “Çatı” planında ve Bütün katlar'da."
+            "Tek eğimli çatı çizildi; mahya +3.85. Kat planında saçağı kesikli; bütünü “Çatı” planında ve Bütün katlar'da."
         )
     );
 }
@@ -193,6 +197,7 @@ fn a_roof_drawn_on_its_own_storey_stands_on_the_walls_under_it() {
     // Çatı active: it has no walls; Binadan finds Zemin kat's under it, the eaves at Çatı's floor, +3.00.
     b.level = Some("cati".into());
     b.start("roof");
+    assert!(b.run(|s, cx| s.configure("F", "0", cx)));
     b.click(6.0, 1.0);
     let r = newest_roof(&b);
     assert_eq!(r.roof.arch.level.as_deref(), Some("cati"));
@@ -265,4 +270,27 @@ fn its_own_storeys_plan_shows_a_roof_dashed_and_the_storey_above_whole() {
         .set_level_view(&b.doc, LevelView::Active, Some("cati".into()));
     assert!(!dashed(&b));
     assert!(pieces(&b).shapes.len() > 1);
+}
+
+#[test]
+fn without_an_offset_the_roof_sits_on_the_walls_outer_faces() {
+    let mut b = building();
+    b.start("roof");
+    assert!(b.run(|s, cx| s.configure("M", "40", cx)));
+    b.click(6.0, 1.0);
+    let r = newest_roof(&b);
+    // 25 cm thick, 50 cm out at 40 %: its eaves 5 cm over Zemin kat's top, so its underside meets it at the walls'
+    // outer faces (Revit's Truss); 13 × 10 m: the ridge 2.00 m over the eaves.
+    assert!((r.roof.offset - 0.05).abs() < 1e-12, "{}", r.roof.offset);
+    assert_eq!(
+        b.last_text(),
+        Some(
+            "Kırma çatı çizildi; mahya +5.05. Kat planında saçağı kesikli; bütünü “Çatı” planında ve Bütün katlar'da."
+        )
+    );
+    // A typed offset is kept; an empty one seats it again.
+    assert!(b.run(|s, cx| s.configure("F", "-0.1", cx)));
+    assert!(b.run(|s, cx| s.configure("F", "", cx)));
+    b.click(6.0, 1.0);
+    assert!((newest_roof(&b).roof.offset - 0.05).abs() < 1e-12);
 }

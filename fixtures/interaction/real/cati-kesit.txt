@@ -1,0 +1,63 @@
+# M44 2. bölüm (docs/adr/8044 §5), on fixtures/arch/v1/facade-building.kcad ("Görünüş binası", --modul mimari): 1. kat
+# active, Çatı by Binadan near the south wall (Kot farkı empty: its underside on +6.00 at the walls' outer faces), Kesit
+# çıkar on B-B's line inside the building (its bubble is not its line), placed right of the plan and everything fitted:
+# the section's roof bands hatched as wood, "%33" over each, "+6.00 Saçak" and "+7.78 Mahya" at the left, the heights at
+# the right turned upright; then close views of the eaves (its plumb fascia, its underside on the slab at the wall's
+# face) and the ridge (one band, no joint).
+fit KentOS Mimari — Görünüş binası
+wait 4000
+click 800 500 middle
+click 800 500 middle
+wait 2000
+key ctrl+Up
+wait 1500
+key alt+q
+wait 600
+type Çatı
+wait 1500
+key Return
+wait 1500
+move 765 735
+wait 1500
+click 765 735
+wait 2500
+key Escape
+wait 800
+key alt+q
+wait 600
+type Kesit çıkar
+wait 1500
+shot k0-arama
+key Return
+wait 1500
+move 730 500
+wait 1200
+shot k0-arac
+click 730 500
+wait 1500
+shot k0-isaret
+move 1300 560
+wait 1500
+click 1300 560
+wait 3000
+key Escape
+wait 800
+click 800 500 middle
+click 800 500 middle
+wait 2000
+move 1400 120
+wait 800
+shot k1-genel
+wheel 1000 315 4
+wait 1500
+move 1400 120
+wait 800
+shot k2-sacak
+click 800 500 middle
+click 800 500 middle
+wait 1500
+wheel 1188 260 4
+wait 1500
+move 1400 120
+wait 800
+shot k3-mahya

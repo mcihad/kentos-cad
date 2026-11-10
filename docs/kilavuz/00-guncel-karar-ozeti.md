@@ -356,6 +356,11 @@
       Kaplama P, Kat L. Mahya 5,00 m'yi aşınca önizleme PAİY 40'ı söyler. Rampa Merdiven ▾'ye alındı (30 düğme sınırı).
     - Kendi katının planında yalnız saçak kesikli (MO 14.5.3 u "Saçak … nokta nokta"), seçilir; bütünü saçağın durduğu
       üst katın planında ve Bütün katlar'da (`level_view::LevelLooks::roofs`).
+  - **Kesit ve görünüşte çatı (M44 2. bölüm, ADR 8044 §5):** çekirdekte `Height::Sloped` (yüzün halkası, düzlemi, düşey
+    kalınlığı; kesilen eğik bant; bakana dönük üst ya da alt yüz; saçak çizgisinde düşey saçak alnı/kalkan ucu; bir
+    çatının kırma ve mahyası bir kez). Bant TS 5319 SN23 ile, MM-CATI-<kaplama>; kot sütununda "+6.00 Saçak" (PAİY 4:
+    son kat tavan döşemesinin üst kotu) ve "+7.78 Mahya"; eğim doğrultusunda kesilen yüze "%33". Binadan'da kot farkı
+    boşsa çatının altı duvarın dış yüzünde katın üstüne oturur (Revit Truss). Kesitin "3,00" yazıları 90° (π/2 dereceydi).
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

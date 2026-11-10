@@ -26,6 +26,14 @@ The rules, as ADR 8042 §2 gives them:
   the plane too, a riser on the line being the cut's own face), or a seen face (each piece of it) nearer than it by
   more than a millionth of a metre. What is left, in pieces longer than a
   millionth of a metre, is seen; an edge two faces share is drawn once.
+- Sloped (docs/adr/8044 §5): a roof's face, its footprint the face's ring, its top z = top + dx·x + dy·y, its bottom
+  `thickness` under it. Cut: along each stretch a band between its bottom and its top. Seen: its top where the plane
+  rises into the view (dx·look_x + dy·look_y > 0), its underside where it falls into it (< 0): the footprint cut to
+  what is in view and lifted (a cover), and each footprint edge cut to what is in view (an edge); on each footprint
+  edge whose middle lies on the roof's eaves line and whose outward normal points back at the viewer, a vertical face
+  between its bottom and its top (a cover, its solid's face), its top and bottom edges and a vertical edge at each end
+  the view did not cut, in the face's plane (a joint is looked for). An edge a roof's faces share is drawn once for
+  the roof.
 - A joint is not drawn (docs/adr/8043 §7): where a prism's face edge has, a millionth of a metre off on both sides,
   a prism face in the same plane (its own or another's) whose solid's finish is the same as the edge's solid's, or
   either has none (a beam, a column or a slab takes the finish of the wall it is flush with). Marks and a flight's
@@ -385,6 +393,80 @@ def joints(e, covers, finishes):
     return out
 
 
+def on_eaves(eaves, p, q):
+    """Whether the middle of p→q lies on the closed eaves line."""
+    m = ((p[0] + q[0]) / 2, (p[1] + q[1]) / 2)
+    n = len(eaves)
+    for i in range(n):
+        a, b = eaves[i], eaves[(i + 1) % n]
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        if (m[0] - a[0]) * dy - (m[1] - a[1]) * dx != 0:
+            continue
+        t = ((m[0] - a[0]) * dx + (m[1] - a[1]) * dy) / (dx * dx + dy * dy)
+        if 0 <= t <= 1:
+            return True
+    return False
+
+
+def view_bounds(frame):
+    out = [lambda p: frame.d(p), lambda p: frame.u(p), lambda p: frame.length - frame.u(p)]
+    if frame.depth is not None:
+        out.append(lambda p: frame.depth - frame.d(p))
+    return out
+
+
+def sloped_faces(frame, i, rings, sl, covers, edges):
+    """A roof face's top or underside as it faces the viewer, and its vertical faces on the eaves line."""
+    def z(p):
+        return sl["top"] + sl["dx"] * p[0] + sl["dy"] * p[1]
+
+    t = sl["thickness"]
+    ring = rings[0]
+    k0 = z(frame.origin)
+    ku = sl["dx"] * frame.right[0] + sl["dy"] * frame.right[1]
+    kd = sl["dx"] * frame.look[0] + sl["dy"] * frame.look[1]
+    for lift, shown in ((F(0), kd > 0), (-t, kd < 0)):
+        if not shown:
+            continue
+        plan = ring
+        for bound in view_bounds(frame):
+            if len(plan) < 3:
+                break
+            plan = clip_ring(plan, bound)
+        if len(plan) >= 3:
+            covers.append(cover([(frame.u(p), z(p) + lift) for p in plan], (-(k0 + lift) / kd, -ku / kd, 1 / kd)))
+        n = len(ring)
+        for k in range(n):
+            p, q = ring[k], ring[(k + 1) % n]
+            view = frame.in_view(p, q)
+            if view is None:
+                continue
+            t0, t1 = view
+            a = (p[0] + (q[0] - p[0]) * t0, p[1] + (q[1] - p[1]) * t0)
+            b = (p[0] + (q[0] - p[0]) * t1, p[1] + (q[1] - p[1]) * t1)
+            edges.append((i, (frame.u(a), z(a) + lift), (frame.u(b), z(b) + lift), frame.d(a), frame.d(b)))
+    for p, q, m, _ in outward(rings):
+        if not on_eaves(sl["eaves"], p, q) or not facing(frame, m):
+            continue
+        view = frame.in_view(p, q)
+        if view is None:
+            continue
+        t0, t1 = view
+        a = (p[0] + (q[0] - p[0]) * t0, p[1] + (q[1] - p[1]) * t0)
+        b = (p[0] + (q[0] - p[0]) * t1, p[1] + (q[1] - p[1]) * t1)
+        u0, u1, d0, d1 = frame.u(a), frame.u(b), frame.d(a), frame.d(b)
+        z0, z1 = z(a), z(b)
+        dep = vertical_depth(u0, d0, u1, d1)
+        if dep is not None:
+            covers.append(cover([(u0, z0 - t), (u1, z1 - t), (u1, z1), (u0, z0)], dep, solid=i))
+        for lift in (F(0), -t):
+            edges.append((i, (u0, z0 + lift), (u1, z1 + lift), d0, d1, dep))
+        if t0 == 0:
+            edges.append((i, (u0, z0 - t), (u0, z0), d0, d0, dep))
+        if t1 == 1:
+            edges.append((i, (u1, z1 - t), (u1, z1), d1, d1, dep))
+
+
 def clip_ring(ring, keep):
     n = len(ring)
     out = []
@@ -408,7 +490,18 @@ def section(frame, solids):
         if rings:
             stretches = through(rings, frame.origin, frame.right, frame.look, F(0), frame.length)
             h = solid["height"]
-            if "flight" not in h:
+            if "sloped" in h:
+                sl = h["sloped"]
+                for a, b in stretches:
+                    pa, pb = frame.at(a, F(0)), frame.at(b, F(0))
+                    za = sl["top"] + sl["dx"] * pa[0] + sl["dy"] * pa[1]
+                    zb = sl["top"] + sl["dx"] * pb[0] + sl["dy"] * pb[1]
+                    t = sl["thickness"]
+                    ring = [(a, za - t), (b, zb - t), (b, zb), (a, za)]
+                    covers.append(cover(ring, (F(0), F(0), F(0)), cut=True))
+                    cuts.append({"solid": i, "ring": canonical(ring)})
+                sloped_faces(frame, i, rings, sl, covers, edges)
+            elif "flight" not in h:
                 bottom, top = h["bottom"], h["top"]
                 rects = [(a, b, bottom, top) for a, b in stretches]
                 for v in solid["voids"]:
@@ -459,6 +552,11 @@ def section(frame, solids):
                           frame.d(b)))
     covers = [c for c in covers if c is not None]
     finishes = [s.get("finish") for s in solids]
+
+    def group(i):
+        h = solids[i]["height"]
+        return ("roof", h["sloped"]["roof"]) if "sloped" in h else ("solid", i)
+
     seen, drawn = [], set()
     for e in edges:
         e = e if len(e) == 6 else (*e, None)
@@ -481,7 +579,7 @@ def section(frame, solids):
             pb = (p[0] + (q[0] - p[0]) * b, p[1] + (q[1] - p[1]) * b)
             da, db = dp + (dq - dp) * a, dp + (dq - dp) * b
             lo_end, hi_end = sorted([pa, pb])
-            k = (solid, lo_end, hi_end)
+            k = (group(solid), lo_end, hi_end)
             if k in drawn:
                 continue
             drawn.add(k)
@@ -647,6 +745,38 @@ def flight(ring, start, dir, risers, rise, tread, waist_v, floor, base=F(0)):
             "voids": [], "marks": []}
 
 
+def roof_face(ring, top, dx, dy, eaves, thickness=F(1, 4), roof=0, finish=None):
+    """A roof's face (docs/adr/8044 §5): its ring, its top's plane, its eaves line."""
+    out = {"rings": [ring], "height": {"sloped": {"top": F(top), "dx": F(dx), "dy": F(dy), "thickness": F(thickness),
+                                                  "eaves": eaves, "roof": roof}},
+           "voids": [], "marks": []}
+    if finish is not None:
+        out["finish"] = finish
+    return out
+
+
+def hip_roof(finish="kiremit"):
+    """An 8 × 6 m hip roof at 50 %, its eaves at +3.00: its ridge from (3, 3) to (5, 3) at +4.50."""
+    eaves = rect(0, 0, 8, 6)
+    half = F(1, 2)
+    return [
+        roof_face([P(0, 0), P(8, 0), P(5, 3), P(3, 3)], 3, 0, half, eaves, finish=finish),
+        roof_face([P(8, 0), P(8, 6), P(5, 3)], 7, -half, 0, eaves, finish=finish),
+        roof_face([P(8, 6), P(0, 6), P(3, 3), P(5, 3)], 6, 0, -half, eaves, finish=finish),
+        roof_face([P(0, 6), P(0, 0), P(3, 3)], 3, half, 0, eaves, finish=finish),
+    ]
+
+
+def gable_roof(finish="kiremit"):
+    """An 8 × 6 m gable roof at 50 %, its eaves on the south and north at +3.00, its gable ends on the east and west."""
+    eaves = rect(0, 0, 8, 6)
+    half = F(1, 2)
+    return [
+        roof_face([P(0, 0), P(8, 0), P(8, 3), P(0, 3)], 3, 0, half, eaves, finish=finish),
+        roof_face([P(0, 3), P(8, 3), P(8, 6), P(0, 6)], 6, 0, -half, eaves, finish=finish),
+    ]
+
+
 def cases():
     east = (P(0, 0), P(10, 0), False, None)
     out = []
@@ -746,6 +876,15 @@ def cases():
         prism(rect(0, 4, 5, F("4.25")), F("0.6"), 3, finish="sıva"),
         prism([P(5, 4), P(10, F("6.5")), P(10, F("6.75")), P(5, F("4.25"))], 0, 3, finish="sıva"),
     ]))
+    # docs/adr/8044 §5: roofs.
+    out.append(("Kırma çatı kesilir: üç yüzün bandı, arkadaki yüzün altı çatı arasında görünür",
+                (P(-1, 2), P(9, 2), False, None), hip_roof()))
+    out.append(("Kırma çatı önden görünür: saçak alnı, kırmalar ve mahya; arka yüz görünmez",
+                (P(-1, -2), P(9, -2), False, None), hip_roof()))
+    out.append(("Beşik çatının kalkanı yandan görünür: iki yüzün ucu, tepedeki ek yeri çizilmez",
+                (P(10, -1), P(10, 7), False, None), gable_roof()))
+    out.append(("Çatı arkasındaki duvarın tepesini örter: kırmaların arasında kalan parçası görünmez",
+                (P(-1, -2), P(9, -2), False, None), hip_roof() + [prism(rect(-1, 8, 9, F("8.25")), 0, 4)]))
     return out
 
 
@@ -760,7 +899,12 @@ def pt(p):
 def doc_solid(s):
     out = {"rings": [[pt(p) for p in r] for r in s["rings"]]}
     h = s["height"]
-    if "flight" in h:
+    if "sloped" in h:
+        sl = h["sloped"]
+        out["sloped"] = {"top": num(sl["top"]), "dx": num(sl["dx"]), "dy": num(sl["dy"]),
+                         "thickness": num(sl["thickness"]), "eaves": [pt(p) for p in sl["eaves"]],
+                         "roof": sl["roof"]}
+    elif "flight" in h:
         f = h["flight"]
         out["flight"] = {"start": pt(f["start"]), "dir": pt(f["dir"]), "steps": [[num(a), num(b)] for a, b in f["steps"]],
                          "soffit": num(f["soffit"]), "slope": num(f["slope"]), "floor": num(f["floor"])}

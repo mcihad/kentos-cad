@@ -8,8 +8,10 @@
 //!   a shed's water runs off it, a gable roof's ridge runs along it.
 //! - Eğim (M: per cent, as Rampa's), Saçak (A), Kalınlık (E), Kot farkı (F), Kaplama (P), Kat (L).
 //!
-//! The roof's eaves stand at its storey's top and its offset; its tag says its ridge's height over ±0.00 and, past PAİY
-//! 40's 5.00 m, that it is too high.
+//! The roof's eaves stand at its storey's top and its offset. Without an offset typed (Kot farkı empty) its underside sits
+//! on its storey's top at the walls' outer faces (Revit's Truss: the plate on the wall's outside): the offset is its
+//! thickness less the overhang's rise (25 cm − 50 cm × %33 = 8.5 cm); drawn by its corners, at its eaves line. Its tag
+//! says its ridge's height over ±0.00 and, past PAİY 40's 5.00 m, that it is too high.
 
 use kentos_commands::{CommandResult, Entity, NewRoof, RoofsCreate};
 use kentos_geometry_core::entity::Shape;
@@ -90,7 +92,8 @@ pub struct RoofTool {
     slope: f64,
     overhang: f64,
     thickness: f64,
-    offset: f64,
+    /// Its offset as typed; none: its underside sits on its storey's top at the walls ([`RoofTool::offset_now`]).
+    offset: Option<f64>,
     material: Option<String>,
     level: crate::architecture_level::Choice,
     pts: Vec<Vec2>,
@@ -111,7 +114,7 @@ impl Default for RoofTool {
             slope: ROOF_SLOPE,
             overhang: ROOF_OVERHANG,
             thickness: kentos_commands::DEFAULT_ROOF_THICKNESS,
-            offset: 0.0,
+            offset: None,
             material: None,
             level: Default::default(),
             pts: Vec::new(),
@@ -132,6 +135,27 @@ impl RoofTool {
 
     fn draws(&self) -> bool {
         self.bound == Bound::Draw
+    }
+
+    /// Its offset: as typed, else what sits its underside on its storey's top at the walls' outer faces (its thickness
+    /// less the overhang's rise at its slope; drawn by its corners, at its eaves line: its thickness).
+    fn offset_now(&self) -> f64 {
+        self.offset.unwrap_or_else(|| {
+            let run = if self.draws() { 0.0 } else { self.overhang };
+            let rise = if self.form == RoofForm::Flat {
+                0.0
+            } else {
+                run * self.slope / 100.0
+            };
+            self.thickness - rise
+        })
+    }
+
+    fn offset_text(&self, f: &Format) -> String {
+        match self.offset {
+            Some(v) => f.length(v),
+            None => format!("Duvara oturur ({})", f.length(self.offset_now())),
+        }
     }
 
     /// The roof at the click (Binadan) or over the corners drawn (the first edge the front one); why there is none.
@@ -155,7 +179,7 @@ impl RoofTool {
         Ok(NewRoof {
             slopes: slopes_for(&pts, self.form, self.slope, front),
             pts,
-            offset: (self.offset != 0.0).then_some(self.offset),
+            offset: Some(self.offset_now()).filter(|v| *v != 0.0),
             thickness: Some(self.thickness),
             // Drawn by its corners, the walls are not known: no overhang is said.
             overhang: (!self.draws()).then_some(self.overhang),
@@ -284,7 +308,7 @@ impl RoofTool {
         let level = self.level.id();
         let seen = level
             .as_deref()
-            .filter(|l| crate::level_view::roof_over(cx.doc.settings(), l, self.offset))
+            .filter(|l| crate::level_view::roof_over(cx.doc.settings(), l, self.offset_now()))
             .map(|l| match crate::level_view::above(cx.doc.settings(), l) {
                 Some(up) => format!(
                     " Kat planında saçağı kesikli; bütünü “{}” planında ve Bütün katlar'da.",
@@ -343,6 +367,11 @@ impl RoofTool {
             self.material = (!text.is_empty()).then(|| text.to_owned());
             return true;
         }
+        // Empty: the underside sits on the storey's top at the walls again.
+        if ask == Ask::Offset && text.is_empty() {
+            self.offset = None;
+            return true;
+        }
         if ask == Ask::Slope {
             let typed = text.strip_prefix('%').unwrap_or(text).trim();
             return match parse_number(typed)
@@ -388,7 +417,7 @@ impl RoofTool {
                 return false;
             }
             Ask::Thickness => self.thickness = v,
-            Ask::Offset => self.offset = v,
+            Ask::Offset => self.offset = Some(v),
             Ask::Slope | Ask::Material => {}
         }
         true
@@ -461,7 +490,9 @@ impl Tool for RoofTool {
             }
             Some(Ask::Thickness) => return words("çatının kalınlığını yazın (25 cm gibi)"),
             Some(Ask::Offset) => {
-                return words("saçağın katın üstüne göre farkını yazın (-10 cm gibi)");
+                return words(
+                    "saçağın katın üstüne göre farkını yazın (-10 cm gibi); boş: çatı duvara oturur",
+                );
             }
             Some(Ask::Material) => return words("kaplamayı yazın (Kiremit gibi)"),
             None => {}
@@ -479,7 +510,7 @@ impl Tool for RoofTool {
             .option_with("Eğim", "M", self.slope_text())
             .option_with("Saçak", "A", f.length(self.overhang))
             .option_with("Kalınlık", "E", f.length(self.thickness))
-            .option_with("Kot farkı", "F", f.length(self.offset))
+            .option_with("Kot farkı", "F", self.offset_text(f))
             .option_with(
                 "Kaplama",
                 "P",
@@ -584,7 +615,7 @@ impl Tool for RoofTool {
             Setting::text("M", "Eğim (%)", self.slope_text()),
             Setting::text("A", "Saçak", f.length(self.overhang)),
             Setting::text("E", "Kalınlık", f.length(self.thickness)),
-            Setting::text("F", "Kot farkı", f.length(self.offset)),
+            Setting::text("F", "Kot farkı (boş: duvara oturur)", self.offset_text(f)),
             Setting::text(
                 "P",
                 "Kaplama",

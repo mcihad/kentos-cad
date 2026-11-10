@@ -3,7 +3,7 @@
 //! same points in the same turn, from any of them) and its seen pieces (the same segments, either way round, with the
 //! same depth), within 1e-7.
 
-use kentos_geometry_core::geom::section::{Flight, Frame, Height, Solid, Void, section};
+use kentos_geometry_core::geom::section::{Flight, Frame, Height, Sloped, Solid, Void, section};
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -19,6 +19,22 @@ fn ring(v: &Value) -> Vec<Vec2> {
 }
 
 fn solid(v: &Value) -> Solid {
+    if let Some(sl) = v.get("sloped") {
+        return Solid {
+            rings: v["rings"].as_array().unwrap().iter().map(ring).collect(),
+            height: Height::Sloped(Sloped {
+                top: sl["top"].as_f64().unwrap(),
+                dx: sl["dx"].as_f64().unwrap(),
+                dy: sl["dy"].as_f64().unwrap(),
+                thickness: sl["thickness"].as_f64().unwrap(),
+                eaves: ring(&sl["eaves"]),
+                roof: sl["roof"].as_u64().unwrap() as usize,
+            }),
+            voids: Vec::new(),
+            marks: Vec::new(),
+            finish: v["finish"].as_str().map(str::to_owned),
+        };
+    }
     let height = match v.get("flight") {
         Some(f) => Height::Flight(Flight {
             start: pt(&f["start"]),
@@ -132,5 +148,5 @@ fn sections_cut_and_see_as_the_reference_says() {
         }
         seen_cases += 1;
     }
-    assert_eq!(seen_cases, 20, "every case read");
+    assert_eq!(seen_cases, 24, "every case read");
 }

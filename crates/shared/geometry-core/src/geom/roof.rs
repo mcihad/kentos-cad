@@ -228,6 +228,23 @@ pub fn faces(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<Face>, Problem> {
     Ok(out)
 }
 
+/// A face's plane: `(c, dx, dy)`, its top `c + dx·x + dy·y` metres over ±0.00.
+pub type Plane = (f64, f64, f64);
+
+/// Each face with its plane (docs/adr/8044 §5), the eaves at `spec.base`, in the faces' order.
+pub fn face_planes(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<(Face, Plane)>, Problem> {
+    let (ring, edges) = checked(pts, spec)?;
+    let n = ring.len();
+    Ok(faces(pts, spec)?
+        .into_iter()
+        .filter_map(|f| {
+            let k = edges.iter().position(|e| e.0 == f.edge)?;
+            let (c, dx, dy) = plane(ring[k], ring[(k + 1) % n], f.slope);
+            Some((f, (c + spec.base, dx, dy)))
+        })
+        .collect())
+}
+
 /// The roof's height over its eaves at `p`: the lowest sloping plane's there; 0 for a flat roof.
 pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem> {
     let (ring, edges) = checked(pts, spec)?;
@@ -606,6 +623,24 @@ mod tests {
         let f = faces(&cw, &s).unwrap();
         assert_eq!(f.iter().map(|f| f.edge).collect::<Vec<_>>(), [1, 3]);
         assert!((ridge_rise(&cw, &s).unwrap() - 1.8).abs() < 1e-9);
+    }
+
+    #[test]
+    fn each_face_has_its_plane_over_the_eaves() {
+        let s = spec([Some(33.0); 4]);
+        let planes = face_planes(&rect(12.0, 9.0), &s).unwrap();
+        assert_eq!(planes.len(), 4);
+        // The south face (edge 0, along y = 0) rises north at 33 % from the eaves at +6.00.
+        let (f, (c, dx, dy)) = &planes[0];
+        assert_eq!(f.edge, 0);
+        assert!((c - 6.0).abs() < 1e-12 && dx.abs() < 1e-12 && (dy - 0.33).abs() < 1e-12);
+        // Each face's plane gives the roof's height over its own ring.
+        for (f, (c, dx, dy)) in &planes {
+            for q in &f.ring {
+                let z = c + dx * q.x + dy * q.y;
+                assert!((z - s.base - height_at(&rect(12.0, 9.0), &s, *q).unwrap()).abs() < 1e-9);
+            }
+        }
     }
 
     #[test]

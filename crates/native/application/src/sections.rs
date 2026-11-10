@@ -14,8 +14,13 @@
 //!   depth (EK-4 4.14.3: `-1` nearest … `-4` farthest); the storeys' levels at its left (EK-4 Şekil 4.3), the grids the
 //!   line crosses (Şekil 4.5), the rooms' numbers and names where the line passes through them (Mimarlar Odası), the
 //!   graded ground at ±0.00, its title and scale under it.
-//! - **What the model does not hold** is listed, not drawn (§3; ADR 0347 §3): the roof, the natural ground, a curved
-//!   stair or wall, a ramp, a block's height.
+//! - **Roofs** (docs/adr/8044 §5): each face a sloped slab (its ring, the roof's plane over it, the roof's thickness
+//!   under it, upright), hatched as wood (TS 5319 SN23) on its covering's layer (MM-CATI-KIREMIT); a flat roof a slab
+//!   of its thickness under its eaves. Their eaves' and ridges' levels join the storeys' at the left ("+7.69 Mahya",
+//!   Mimarlar Odası 14.3.4 g, 14.5.4 q: "Dere mahya, saçak … kotlandırılır"), and a face cut down its fall line is
+//!   given its slope ("%33").
+//! - **What the model does not hold** is listed, not drawn (§3; ADR 0347 §3): the roof when it has none, the natural
+//!   ground, a curved stair or wall, a ramp, a block's height.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -78,9 +83,6 @@ pub struct Look {
 pub enum Left {
     /// The roof: the model has none (ADV-20).
     Roof,
-    /// The roof the model has (docs/adr/8044 §1): not drawn in a section or an elevation yet (M44, part 2). Said apart
-    /// from [`Left::Roof`]: "modelde yok" was false once the model could hold one.
-    RoofNotDrawn,
     /// The natural ground: the model has no survey of it (EK-4 4.30).
     NaturalGround,
     /// A curved wall or stair: drawn as its chords, not as a curve.
@@ -102,7 +104,6 @@ impl Left {
     pub fn words(self) -> &'static str {
         match self {
             Left::Roof => "çatı (modelde yok)",
-            Left::RoofNotDrawn => "çatı (kesit ve görünüşte henüz çizilmiyor)",
             Left::NaturalGround => "tabii zemin (modelde yok)",
             Left::Curved => "eğri duvar ya da merdiven (kirişleriyle)",
             Left::Ramp => "rampa",
@@ -139,6 +140,18 @@ pub struct Model {
     pub left: BTreeSet<(Left, Option<String>)>,
     /// The storeys: id, name, floor, height.
     pub levels: Vec<(String, String, f64, Option<f64>)>,
+    /// The roofs (docs/adr/8044 §5): their eaves' and ridges' levels and their solids.
+    pub roofs: Vec<RoofAt>,
+}
+
+/// A roof as a section reads it: its eaves' level, its ridge's, its solids (its faces, or its flat slab).
+#[derive(Clone, Debug, Default)]
+pub struct RoofAt {
+    pub eaves: f64,
+    pub ridge: f64,
+    /// The top of the storey it stands on: PAİY 4's saçak seviyesi ("son kat tavan döşemesinin üst kotu").
+    pub seat: f64,
+    pub solids: Vec<usize>,
 }
 
 fn fold(s: &str) -> String {
@@ -266,15 +279,10 @@ pub fn model(doc: &Document) -> Model {
         levels: levels(doc),
         ..Model::default()
     };
-    let roofed = doc.entities().any(|e| matches!(e, Entity::Roof(_)));
-    m.left.insert((
-        if roofed {
-            Left::RoofNotDrawn
-        } else {
-            Left::Roof
-        },
-        None,
-    ));
+    // The roof the model has is drawn (docs/adr/8044 §5); without one it is said to be missing.
+    if !doc.entities().any(|e| matches!(e, Entity::Roof(_))) {
+        m.left.insert((Left::Roof, None));
+    }
     m.left.insert((Left::NaturalGround, None));
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
     let slabs: Vec<SlabAt> = entities
@@ -305,6 +313,7 @@ pub fn model(doc: &Document) -> Model {
             Entity::Slab(s) => slab(&s.slab, &m.levels.clone(), owner, &mut m),
             Entity::Column(c) => column(&c.column, &slabs, owner, &mut m),
             Entity::Beam(b) => beam(doc, &b.beam, owner, &mut m),
+            Entity::Roof(r) => roof(doc, r, owner, &mut m),
             Entity::Stair(s) => stair(&s.stair, &slabs, owner, &mut m),
             Entity::Ramp(_) => {
                 m.left.insert((Left::Ramp, owner));
@@ -712,6 +721,88 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         finish: None,
     };
     push(m, solid, material_look(element, None, None), owner);
+}
+
+/// A roof's look in a section (docs/adr/8044 §5): its cut hatched as wood (TS 5319 SN23, a pitched roof's structure
+/// under its covering), on its covering's layer (EK-2 Çatı, CATI: MM-CATI-KIREMIT), outlined heavy.
+fn roof_look(r: &kentos_commands::RoofFields) -> Look {
+    let material = r.material_name();
+    Look {
+        key: format!("CATI:{}", fold(material)),
+        layer: kentos_commands::ek4_layer("CATI", material),
+        heavy: true,
+        fill: Some(Fill {
+            pattern: "SN23".into(),
+            scale: 1.0,
+            angle: 0.0,
+            color: None,
+        }),
+    }
+}
+
+/// A roof (docs/adr/8044 §5): each face a sloped slab, its top the roof's plane over it (the eaves at its storey's
+/// top and its offset), the roof's thickness under it; a flat roof a slab of its thickness under its eaves. Its eaves'
+/// and ridge's levels are kept for the drawing.
+fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, m: &mut Model) {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::geom::roof as core;
+    let Shape::Roof { pts, roof: spec } = crate::geometry::roof_shape(r, doc.settings()) else {
+        return;
+    };
+    let Ok(faces) = core::face_planes(&pts, &spec) else {
+        return;
+    };
+    let thickness = r.roof.thickness_m();
+    let look = roof_look(&r.roof);
+    let finish = Some(r.roof.material_name().to_owned());
+    let k = m.roofs.len();
+    let mut at = RoofAt {
+        eaves: spec.base,
+        ridge: spec.base + core::ridge_rise(&pts, &spec).unwrap_or(0.0),
+        seat: spec.base - r.roof.offset,
+        solids: Vec::new(),
+    };
+    let solid = |rings: Vec<Vec<P>>, height: Height| Solid {
+        rings,
+        height,
+        voids: Vec::new(),
+        marks: Vec::new(),
+        finish: finish.clone(),
+    };
+    if faces.is_empty() {
+        at.solids.push(m.solids.len());
+        push(
+            m,
+            solid(
+                vec![pts.clone()],
+                Height::Prism {
+                    bottom: spec.base - thickness,
+                    top: spec.base,
+                },
+            ),
+            look,
+            owner,
+        );
+    } else {
+        for (f, (c, dx, dy)) in faces {
+            at.solids.push(m.solids.len());
+            let sloped = sec::Sloped {
+                top: c,
+                dx,
+                dy,
+                thickness,
+                eaves: pts.clone(),
+                roof: k,
+            };
+            push(
+                m,
+                solid(vec![f.ring], Height::Sloped(sloped)),
+                look.clone(),
+                owner.clone(),
+            );
+        }
+    }
+    m.roofs.push(at);
 }
 
 /// A stair: each straight leg a flight, each landing a slab, as thick as the slab it arrives at (docs/adr/8042 §3).
@@ -1505,20 +1596,40 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
         out.line("MM-CVRE-TESVIYE", P::new(a, 0.0), P::new(b, 0.0), HEAVY);
     }
     // The storeys' levels at the left (EK-4 Şekil 4.3): the line, the triangle on it, the words over it.
-    let mut zs: Vec<f64> = m.levels.iter().map(|l| l.2).collect();
+    let mut marks: Vec<(f64, Option<&str>)> = m.levels.iter().map(|l| (l.2, None)).collect();
     if let Some(top) = m
         .levels
         .iter()
         .filter_map(|l| l.3.map(|h| l.2 + h))
         .fold(None, |a: Option<f64>, b| Some(a.map_or(b, |a| a.max(b))))
     {
-        zs.push(top);
+        marks.push((top, None));
     }
-    zs.push(0.0);
-    zs.sort_by(f64::total_cmp);
-    zs.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
+    marks.push((0.0, None));
+    // A roof the drawing shows (docs/adr/8044 §5; Mimarlar Odası 14.3.4 g: "Dere mahya, saçak … kotlandırılır"): the top
+    // of the storey it stands on is the saçak seviyesi (PAİY 4: "son kat tavan döşemesinin üst kotu"), its ridge's top
+    // the mahya.
+    let shown: BTreeSet<usize> = s
+        .cut
+        .iter()
+        .map(|c| c.solid)
+        .chain(s.seen.iter().map(|e| e.solid))
+        .collect();
+    for r in m
+        .roofs
+        .iter()
+        .filter(|r| r.solids.iter().any(|i| shown.contains(i)))
+    {
+        marks.push((r.seat, Some("Saçak")));
+        if r.ridge > r.eaves + 1e-6 {
+            marks.push((r.ridge, Some("Mahya")));
+        }
+    }
+    marks.sort_by(|a, b| a.0.total_cmp(&b.0).then(b.1.is_some().cmp(&a.1.is_some())));
+    marks.dedup_by(|a, b| (a.0 - b.0).abs() < 1e-6);
+    let zs: Vec<f64> = marks.iter().map(|m| m.0).collect();
     let x0 = bx0 - 1.0;
-    for z in &zs {
+    for (z, word) in &marks {
         let tip = P::new(x0, *z);
         let w = text * 0.6;
         out.line(
@@ -1542,14 +1653,50 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             P::new(x0 + 0.1, *z + w * 1.2),
             FAINT,
         );
+        let words = match word {
+            Some(w) => format!("{} {w}", level_words(*z)),
+            None => level_words(*z),
+        };
         out.text(
             "MM-XXXX-OLCU",
             P::new(x0 - 0.75, *z + w * 1.2 + text * 0.4),
-            &level_words(*z),
+            &words,
             text,
             "bottomLeft",
         );
         hi.y = hi.y.max(*z);
+    }
+    // A roof's face cut down its fall line is given its slope over its band (Mimarlar Odası 14.3.4 g: "Çatı eğimi …
+    // belirtilir"); cut across it at an angle the band's slope is not the roof's and nothing is written.
+    for c in &s.cut {
+        let Height::Sloped(sl) = &m.solids[c.solid].height else {
+            continue;
+        };
+        let ku = sl.dx * frame.right.x + sl.dy * frame.right.y;
+        let grade = sl.dx.hypot(sl.dy);
+        if ku.abs() <= 1e-6 || (ku.abs() - grade).abs() > 1e-6 * grade.max(1.0) {
+            continue;
+        }
+        let (u0, u1) = c
+            .ring
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), q| {
+                (a.min(q.x), b.max(q.x))
+            });
+        if u1 - u0 < 1.0 {
+            continue;
+        }
+        let mid = (u0 + u1) / 2.0;
+        let top = sl.z(frame.at(mid, 0.0));
+        let turn = ku.atan();
+        let lift = text * 0.5;
+        out.put(
+            "MM-XXXX-ETIKET",
+            json!({"kind": "text",
+                   "p": {"x": mid - turn.sin() * lift, "y": top + turn.cos() * lift},
+                   "text": kentos_geometry_core::geom::roof::slope_words(grade * 100.0),
+                   "height": text, "rotation": turn.to_degrees(), "align": "bottomCenter", "lineWeight": FAINT}),
+        );
     }
     lo.x = lo.x.min(x0 - 1.0);
     // The storeys' heights beside it on the right: a chain between the levels.
@@ -1566,10 +1713,11 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             );
         }
         let words = format!("{:.2}", b - a).replace('.', ",");
+        // Read from the right, turned a quarter (a text's turn is in degrees: given π/2 it lay almost flat, M42–M43).
         out.put(
             "MM-XXXX-OLCU",
             json!({"kind": "text", "p": {"x": xd - 0.1, "y": (a + b) / 2.0}, "text": words, "height": text,
-                   "rotation": std::f64::consts::FRAC_PI_2, "align": "bottomCenter", "lineWeight": FAINT}),
+                   "rotation": 90.0, "align": "bottomCenter", "lineWeight": FAINT}),
         );
     }
     hi.x = hi.x.max(xd + 0.5);
