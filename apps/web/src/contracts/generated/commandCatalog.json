@@ -65086,7 +65086,7 @@
       "id": "map.work.query",
       "version": 1,
       "title": "Harita işini sorgula",
-      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol) ADR 1201. Onaydan sonra değişen öğenin changes'i (ADR 2880, 3280, 3680, 4480): eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve silinen nesnelerin onaylanan hâli (removedObjects). Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
+      "summary": "Harita projesinin iş yapısını bugün okur; hiçbir şey yazmaz: öğeler (arazi ölçümü, altlık, çalışma verisi, tasarım, denetim, teslim) projedeki sırasıyla, her birinin türü, adı, durumu (draft, review, approved: ofisin kaydı, kurum onayı değil), katmanları, katmanlarındaki nesne sayısı, dosyası (yolu, kabul edilen SHA-256 revizyonu, found, current, changed, missing) ve durumu (current, missing, changed, incomplete, stale) nedenleriyle; türetme kayıtları (kaynak öğe, üretim işlemi, kaynağın o zamanki revizyonu, nesne sayısı) ve durumları (current, stale: kaynağı değişti, missing: nesnesi silindi). Bir nesne kendi katmanının ya da üstündeki en yakın grubun öğesinindir (katman profili). uid verilince o nesnenin kaynağı: source (arazi ölçümü ya da altlık katmanında), derived (türetme kaydı, kaynağı, revizyonu, işlemi, güncelliği) ya da free (kullanıcının çizimi). deep her dosyayı okuyup SHA-256'sını karşılaştırır; içeriği değişen dosyanın türevleri güncel değildir. drawing (açık projenin dosyası, mutlak yol) verilince yolunda olmayan dosya proje klasöründen göreli yoluyla, sonra projenin arama yollarında aranır; dosyanın via'sı (path, relative, searchPath, none), at'i (bulunduğu yer) ve relative'i (kayıtlı göreli yol). Onaydan sonra değişen öğenin changes'i: eklenen, silinen, değişen nesneler; onay parçaları tuttuysa her değişen nesnenin değişen parçaları; değerleri de tuttuysa değişen özniteliklerin adları, onaylanan ve şimdiki değerleri, geometrisi değişen nesnenin onaylanan hâli (objects[].approved) ve ne kadar kaydığı (objects[].shift: aynı türde ve aynı köşe sayısındaysa köşe köşe en büyük kayma, köşe numarası ve KOH; her durumda iki şeklin Hausdorff uzaklığı ve yeri), silinen nesnelerin onaylanan hâli (removedObjects). Profili olan öğenin profile'ı: profil bulundu mu, başlığı, sürümü, öğenin sınıfları (katmanı, nesne ve bulgu sayısı), bulguları (cad.profiles.check'inkiler) ve sınıfı olmayan, nesnesi olan serbest katmanları. Retler: not_a_map_project, invalid_file_path, invalid_uid, entity_not_found.",
       "aliases": [
         "haritaisi"
       ],
@@ -65260,7 +65260,7 @@
       "id": "map.work.edit",
       "version": 1,
       "title": "Harita işini düzenle",
-      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release: verilen nesneler kendi türetme kayıtlarından çıkar (Civil 3D'nin promote'u gibi bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink, kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz), uyarı link_not_followed (ADR 1201). Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, not_derived, approval_stale, layer_locked, work_full.",
+      "summary": "Harita projesinin iş yapısını değiştirir; her işlem tek geri alma adımı, ya hep ya hiç. add: yeni öğe is-N (türü, adı, katmanları: her katman tek öğenin; file mutlak yol ise SHA-256'sı revizyonudur). set: adı, durumu (draft, review, approved) ya da katmanları; katmanlarında kaynağı değişmiş türetilmiş nesne olan öğe onaylanmaz (approval_stale); onay ofisin teslim revizyonu kaydıdır, kurum onayı değildir ve hiçbir denetim onu kendiliğinden koymaz. remove: öğe ve ondan türetme kayıtları gider, nesneler kalır. relink: kaynağın dosyası artık file; öğenin yolu ve katmanlarında eski dosyayı gösteren raster ve resimlerin yolu aynı adımda değişir; içerik farklıysa yeni revizyon yazılır, türevleri güncel değildir (uyarı source_content_changed). refresh: dosyanın bugünkü içeriği revizyon olur. derive: nesneler dosyası olan bir öğeden operation ile, onun bugünkü revizyonundan türetildi diye kaydedilir; bir nesne tek kayıtta olur. forget: türetme kaydı gider. release: verilen nesneler kendi türetme kayıtlarından çıkar (bağımsız çizim olur), nesnesi kalmayan kayıt gider (freed, released). relink, kaynağı eski dosya olan dış başvuruları da aynı adımda yeni dosyaya geçirir, son yükledikleri içerik yeni dosyanınkiyse (links); başka içerik yükleyen dış başvuruya ve eski dosyadaki bağlı katmana dokunmaz (bağ projenin ayarıdır, geri alınmaz), uyarı link_not_followed. profile: öğenin tipli katman profili (name: veri profilinin adı, classes: sınıfları; yoksa hepsi); eksik sınıf katmanları profilin yerine eklenir, katmanların eksik alanları eklenir, sınıfların katmanları öğeye girer, öbür katmanlar serbest kalır; name verilmezse profil kalkar. Profili olan öğe tipli katmanlarında bulgu varken onaylanmaz (approval_profile). drawing: açık projenin dosyası, profil klasörü için. Retler: invalid_revision, revision_conflict, not_a_map_project, unknown_work_item, unknown_derivation, invalid_work_text, layer_not_found, layer_in_work_item, nothing_to_set, invalid_file_path, file_not_found, work_item_no_file, no_entities, invalid_uid, entity_not_found, already_derived, not_derived, approval_stale, unknown_profile, invalid_profile, unknown_profile_class, approval_profile, layer_refused, layer_locked, work_full.",
       "aliases": [
         "haritaisiduzenle"
       ],
@@ -65278,8 +65278,15 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,\n“Bağımsız yap”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or\nrefresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object\nanother derivation names), `own_content` (an object of the source's own layers, the source without a file),\n`not_derived` (release of an object no derivation names), `approval_stale`,\n`layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),\n`work_full`.",
+        "description": "Input of `map.work.edit` v1: one operation, one undo step (“Harita işine ekle”, “Harita işi öğesini değiştir”,\n“Harita işinden çıkar”, “Kaynağı yeniden bağla”, “Kaynağı yenile”, “Kaynaktan türet”, “Türetme kaydını sil”,\n“Bağımsız yap”).\n\nRefusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_map_project`, then by operation:\n`unknown_work_item`, `unknown_derivation`, `invalid_work_text` (a name or an operation not 1–200 characters without\nspace at its ends), `layer_not_found`, `layer_in_work_item` (a layer another item holds, or one given twice),\n`nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or\nrefresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object\nanother derivation names), `own_content` (an object of the source's own layers, the source without a file),\n`not_derived` (release of an object no derivation names), `approval_stale`, `unknown_profile` and `invalid_profile`\n(a profile, `operation.name`; an approved item's, `operation.status`), `unknown_profile_class` (`operation.classes[i]`),\n`approval_profile` (approving an item whose typed layers break its profile), `layer_refused` (a class's layer or\nfield the drawing refuses), `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),\n`work_full`.",
         "properties": {
+          "drawing": {
+            "description": "The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "expectedRevision": {
             "pattern": "^(0|[1-9][0-9]*)$",
             "type": [
@@ -65321,6 +65328,13 @@
               "null"
             ]
           },
+          "fields": {
+            "description": "The fields a profile added, `layer.field`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "fileRevision": {
             "type": [
               "string",
@@ -65339,6 +65353,13 @@
               "string",
               "null"
             ]
+          },
+          "layers": {
+            "description": "The layers a profile added (docs/adr/4880).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "links": {
             "description": "How many external references a relink pointed at the new file (docs/adr/1201 §2).",
@@ -65400,6 +65421,13 @@
               "null"
             ]
           },
+          "fields": {
+            "description": "The fields a profile added, `layer.field`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "fileRevision": {
             "type": [
               "string",
@@ -65418,6 +65446,13 @@
               "string",
               "null"
             ]
+          },
+          "layers": {
+            "description": "The layers a profile added (docs/adr/4880).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           },
           "links": {
             "description": "How many external references a relink pointed at the new file (docs/adr/1201 §2).",
@@ -65476,12 +65511,20 @@
           "own_content",
           "not_derived",
           "approval_stale",
+          "unknown_profile",
+          "invalid_profile",
+          "unknown_profile_class",
+          "approval_profile",
+          "layer_refused",
           "layer_locked",
           "work_full"
         ],
         "warnings": [
           "source_content_changed",
-          "link_not_followed"
+          "link_not_followed",
+          "profile_field_differs",
+          "profile_domain_differs",
+          "profile_layer_skipped"
         ]
       },
       "examples": [
@@ -106297,6 +106340,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın."
+    },
+    {
+      "code": "approval_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğenin tipli katmanlarında profiline uymayan nesne ya da eksik alan var; Profili denetle ile düzeltin, sonra onaylayın."
+    },
+    {
+      "code": "unknown_profile_class",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikte sınıf profilde yok; profilin sınıflarından birini verin."
     },
     {
       "code": "work_full",
@@ -156767,6 +156822,36 @@
                   "type": "null"
                 }
               ]
+            }
+          },
+          "required": [
+            "op",
+            "item"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "description": "An item's typed layers' profile (docs/adr/4880): the data profile `name` (built in, the drawing's copy or the\nproject's folder by `drawing`) and its `classes` (none: all). Each class's layer the drawing lacks is added as the\nprofile places it, the fields a class's layer lacks are added (a layer's own field of another kind is kept,\nwarning `profile_field_differs`; a locked layer gets none, `profile_layer_skipped`), and the classes' layers join\nthe item; its other layers stay free drawing layers. Without `name` the profile is taken away; the layers stay.",
+          "properties": {
+            "classes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "item": {
+              "type": "string"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "op": {
+              "const": "profile",
+              "type": "string"
             }
           },
           "required": [
@@ -217142,6 +217227,17 @@
           },
           "type": "array"
         },
+        "shift": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkShift"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How far its geometry moved from the approved one (docs/adr/4880), when its geometry changed and the approval kept\nits objects' values."
+        },
         "uid": {
           "type": "string"
         }
@@ -217333,6 +217429,42 @@
       ],
       "type": "object"
     },
+    "WorkFarthest": {
+      "description": "The Hausdorff distance and where it is reached: `from` on the approved outline, `to` on the outline now.",
+      "properties": {
+        "d": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "from": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        },
+        "to": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "m"
+        }
+      },
+      "required": [
+        "d",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
     "WorkFile": {
       "additionalProperties": false,
       "description": "The file an item is: where it is and the content the project last accepted.",
@@ -217483,6 +217615,17 @@
           "description": "1–200 characters, no space at either end.",
           "type": "string"
         },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkProfile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its typed layers' profile (schema 239, docs/adr/4880): a data profile by name whose classes type the item's\nlayers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers."
+        },
         "status": {
           "$ref": "#/$defs/WorkStatus"
         }
@@ -217601,6 +217744,79 @@
       ],
       "type": "object"
     },
+    "WorkProfile": {
+      "additionalProperties": false,
+      "description": "An item's typed layers' profile (docs/adr/4880): a data profile (`catalog/v1/profiles/`, or the project's own) by\nname and the classes of it the item holds; none listed, all of them.",
+      "properties": {
+        "classes": {
+          "description": "Class ids, each once, at most [`MAX_PROFILE_CLASS_IDS`]; empty: every class of the profile.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "The profile's name, 1–200 characters without space at its ends.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "WorkProfileRow": {
+      "description": "An item's typed layers' profile as it stands (docs/adr/4880): the profile (its title and version, when it was\nfound), each class the item holds with its layer, objects and findings, all the findings, and the item's layers that\nhold objects but no class: its free drawing layers.",
+      "properties": {
+        "classes": {
+          "items": {
+            "$ref": "#/$defs/ProfileClassSummary"
+          },
+          "type": "array"
+        },
+        "findings": {
+          "description": "The classes' findings (`cad.profiles.check`'s), at most [`WORK_CHANGES_LISTED`].",
+          "items": {
+            "$ref": "#/$defs/ProfileFinding"
+          },
+          "type": "array"
+        },
+        "found": {
+          "description": "The profile was found (built in, the drawing's copy or the project's folder) and holds.",
+          "type": "boolean"
+        },
+        "free": {
+          "description": "The item's layers holding objects that no class of it types.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ],
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "name",
+        "found"
+      ],
+      "type": "object"
+    },
     "WorkRemovedObject": {
       "description": "A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id).",
       "properties": {
@@ -217674,6 +217890,17 @@
           "type": "integer",
           "x-unit": "count"
         },
+        "profile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkProfileRow"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Its typed layers' profile and how its classes stand (docs/adr/4880)."
+        },
         "state": {
           "$ref": "#/$defs/WorkState"
         },
@@ -217694,6 +217921,63 @@
         "status",
         "objects",
         "state"
+      ],
+      "type": "object"
+    },
+    "WorkShift": {
+      "description": "How far a changed object's geometry moved from the approved one (docs/adr/4880): with as many vertices of the same\nkind, vertex by vertex (the largest move and its number, the moves' root mean square); always the two outlines'\nHausdorff distance (the farthest a point of either is from the other) and where it is reached.",
+      "properties": {
+        "hausdorff": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkFarthest"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text)."
+        },
+        "largest": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WorkVertexMove"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The largest vertex move, when paired."
+        },
+        "paired": {
+          "description": "Its vertices pair one to one with the approved ones (same kind, as many).",
+          "type": "boolean"
+        },
+        "rms": {
+          "description": "The vertex moves' root mean square, when paired.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-unit": "m"
+        },
+        "vertices": {
+          "description": "How many vertices it had approved and has now.",
+          "items": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array",
+          "x-unit": "count"
+        }
+      },
+      "required": [
+        "paired",
+        "vertices"
       ],
       "type": "object"
     },
@@ -217728,6 +218012,39 @@
           "type": "string"
         }
       ]
+    },
+    "WorkVertexMove": {
+      "description": "One vertex's move: its number (from 0, in the object's vertex order), east and north, its length.",
+      "properties": {
+        "d": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "dx": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "dy": {
+          "format": "double",
+          "type": "number",
+          "x-unit": "m"
+        },
+        "index": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer",
+          "x-unit": "1"
+        }
+      },
+      "required": [
+        "index",
+        "dx",
+        "dy",
+        "d"
+      ],
+      "type": "object"
     },
     "WorkflowStep": {
       "additionalProperties": false,

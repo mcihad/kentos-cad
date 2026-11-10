@@ -2291,6 +2291,10 @@ fn has_heights(s: &ProjectSettings) -> bool {
 /// always was, byte for byte. (An insert needs a definition: one without is
 /// refused before the schema is written.)
 fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
+    // Schema 239 (docs/adr/4880): a map work item's typed layers' profile.
+    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_profiles) {
+        return crate::SCHEMA_WITH_WORK_PROFILES;
+    }
     // Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing
     // again whole.
     if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_sheet_contour_drawings) {

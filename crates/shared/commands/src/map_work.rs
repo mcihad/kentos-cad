@@ -138,6 +138,10 @@ pub struct WorkRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub changes: Option<WorkChanges>,
+    /// Its typed layers' profile and how its classes stand (docs/adr/4880).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub profile: Option<WorkProfileRow>,
     pub state: WorkState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
@@ -246,6 +250,104 @@ pub struct WorkChangedObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
     pub approved: Option<serde_json::Value>,
+    /// How far its geometry moved from the approved one (docs/adr/4880), when its geometry changed and the approval kept
+    /// its objects' values.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub shift: Option<WorkShift>,
+}
+
+/// How far a changed object's geometry moved from the approved one (docs/adr/4880): with as many vertices of the same
+/// kind, vertex by vertex (the largest move and its number, the moves' root mean square); always the two outlines'
+/// Hausdorff distance (the farthest a point of either is from the other) and where it is reached.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkShift {
+    /// Its vertices pair one to one with the approved ones (same kind, as many).
+    pub paired: bool,
+    /// How many vertices it had approved and has now.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub vertices: [u32; 2],
+    /// The largest vertex move, when paired.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub largest: Option<WorkVertexMove>,
+    /// The vertex moves' root mean square, when paired.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub rms: Option<f64>,
+    /// The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub hausdorff: Option<WorkFarthest>,
+}
+
+/// One vertex's move: its number (from 0, in the object's vertex order), east and north, its length.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkVertexMove {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub index: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub dx: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub dy: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub d: f64,
+}
+
+/// The Hausdorff distance and where it is reached: `from` on the approved outline, `to` on the outline now.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkFarthest {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub d: f64,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub from: [f64; 2],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub to: [f64; 2],
+}
+
+/// An item's typed layers' profile as it stands (docs/adr/4880): the profile (its title and version, when it was
+/// found), each class the item holds with its layer, objects and findings, all the findings, and the item's layers that
+/// hold objects but no class: its free drawing layers.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct WorkProfileRow {
+    pub name: String,
+    /// The profile was found (built in, the drawing's copy or the project's folder) and holds.
+    pub found: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub title: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub version: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProfileClassSummary>>", optional))]
+    pub classes: Vec<crate::ProfileClassSummary>,
+    /// The classes' findings (`cad.profiles.check`'s), at most [`WORK_CHANGES_LISTED`].
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProfileFinding>>", optional))]
+    pub findings: Vec<crate::ProfileFinding>,
+    /// The item's layers holding objects that no class of it types.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub free: Vec<String>,
 }
 
 /// The most ids [`WorkChanges`] lists.
@@ -376,6 +478,20 @@ pub enum MapWorkOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         layers: Option<Vec<String>>,
     },
+    /// An item's typed layers' profile (docs/adr/4880): the data profile `name` (built in, the drawing's copy or the
+    /// project's folder by `drawing`) and its `classes` (none: all). Each class's layer the drawing lacks is added as the
+    /// profile places it, the fields a class's layer lacks are added (a layer's own field of another kind is kept,
+    /// warning `profile_field_differs`; a locked layer gets none, `profile_layer_skipped`), and the classes' layers join
+    /// the item; its other layers stay free drawing layers. Without `name` the profile is taken away; the layers stay.
+    Profile {
+        item: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        name: Option<String>,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+        classes: Vec<String>,
+    },
     /// An item taken out, with the derivations made from it (their objects stay, the user's own drawing).
     Remove { item: String },
     /// An item's file is now `file` (moved): the item's path, and the path of every raster and image on its layers that
@@ -392,7 +508,7 @@ pub enum MapWorkOperation {
     Derive { source: String, uids: Vec<String>, operation: String },
     /// A derivation's record taken away; its objects stay, the user's own drawing.
     Forget { derivation: String },
-    /// Objects let go of their derivations (Civil 3D's promote, docs/adr/1201 §3): each object out of the derivation
+    /// Objects let go of their derivations (promoted to the user's own drawing, docs/adr/1201 §3): each object out of the derivation
     /// that names it, a derivation left without objects taken away; the objects stay, the user's own drawing.
     Release { uids: Vec<String> },
 }
@@ -407,8 +523,10 @@ pub enum MapWorkOperation {
 /// `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
 /// refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
 /// another derivation names), `own_content` (an object of the source's own layers, the source without a file),
-/// `not_derived` (release of an object no derivation names), `approval_stale`,
-/// `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+/// `not_derived` (release of an object no derivation names), `approval_stale`, `unknown_profile` and `invalid_profile`
+/// (a profile, `operation.name`; an approved item's, `operation.status`), `unknown_profile_class` (`operation.classes[i]`),
+/// `approval_profile` (approving an item whose typed layers break its profile), `layer_refused` (a class's layer or
+/// field the drawing refuses), `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
 /// `work_full`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -417,6 +535,10 @@ pub enum MapWorkOperation {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct MapWorkEdit {
     pub operation: MapWorkOperation,
+    /// The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub drawing: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
@@ -471,6 +593,14 @@ pub struct MapWorkEdited {
     pub freed: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub stale: u32,
+    /// The layers a profile added (docs/adr/4880).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub layers: Vec<String>,
+    /// The fields a profile added, `layer.field`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub fields: Vec<String>,
     pub revision: String,
 }
 

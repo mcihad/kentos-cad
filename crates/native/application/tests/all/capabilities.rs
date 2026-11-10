@@ -826,6 +826,26 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "beklenmez: komutlar belgenin blok kurallarını önce kendileri denetler",
     ),
     (
+        "map.work.edit",
+        "invalid_profile",
+        "KentOS'un profilleri tutar; projenin bozuk profil dosyası cad.profiles.apply'ın aynı okuyucusunun durumunda (ADR 4880)",
+    ),
+    (
+        "map.work.edit",
+        "profile_field_differs",
+        "profil cad.profiles.apply'ın yazıcısıyla yazılır; uyarısı onun durumlarında (ADR 4880)",
+    ),
+    (
+        "map.work.edit",
+        "profile_domain_differs",
+        "profil cad.profiles.apply'ın yazıcısıyla yazılır; uyarısı onun durumlarında (ADR 4880)",
+    ),
+    (
+        "map.work.edit",
+        "profile_layer_skipped",
+        "profil cad.profiles.apply'ın yazıcısıyla yazılır; uyarısı onun durumlarında (ADR 4880)",
+    ),
+    (
         "*",
         "layer_refused",
         "beklenmez: komutun denetimleri belgenin reddedeceği katmanı önce yakalar",

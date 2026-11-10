@@ -169,6 +169,26 @@ fn attributes_changed(then: &serde_json::Value, now: &serde_json::Value) -> (Vec
     (changed, then.get("attachments") != now.get("attachments"))
 }
 
+/// How far an object's geometry moved from its approved value (docs/adr/4880): vertex by vertex when they pair, and the
+/// two outlines' Hausdorff distance.
+fn shift_of(doc: &Document, approved: &serde_json::Value, uid: &kentos_commands::EntityId) -> Option<kentos_commands::WorkShift> {
+    let then = crate::map_work_restore::approved_entity(approved)?;
+    let now = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0)).and_then(|s| doc.get(s))?;
+    let s = kentos_geometry_core::ops::shape_shift::shift(&crate::geometry::shape(&then), &crate::geometry::shape(now));
+    let n = |k: usize| u32::try_from(k).unwrap_or(u32::MAX);
+    Some(kentos_commands::WorkShift {
+        paired: s.paired,
+        vertices: [n(s.vertices[0]), n(s.vertices[1])],
+        largest: s.largest.map(|m| kentos_commands::WorkVertexMove { index: n(m.index), dx: m.dx, dy: m.dy, d: m.d }),
+        rms: s.rms,
+        hausdorff: s.hausdorff.map(|h| kentos_commands::WorkFarthest {
+            d: h.d,
+            from: [h.from.x, h.from.y],
+            to: [h.to.x, h.to.y],
+        }),
+    })
+}
+
 /// What changed since an approval that kept its objects' digests (docs/adr/2880): the added, the removed and the
 /// changed, by the persistent id; the ids there now listed (added or changed) by id, at most `WORK_CHANGES_LISTED`.
 /// With the approval's parts (`then_parts`, docs/adr/3280), each changed object's parts set against its parts now; with
@@ -222,14 +242,16 @@ pub(crate) fn changes_of(
                                 (Some(t), Some(n)) => attributes_changed(t, &n),
                                 _ => (Vec::new(), false),
                             };
-                            // docs/adr/4480: a changed geometry's object as approved.
+                            // docs/adr/4480: a changed geometry's object as approved; docs/adr/4880: how far it moved.
                             let approved = if differ.contains(&0) { then_value } else { None };
+                            let shift = approved.as_ref().and_then(|a| shift_of(doc, a, &b.0));
                             objects.push(kentos_commands::WorkChangedObject {
                                 uid: kentos_commands::uuid_text(&b.0.0),
                                 parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
                                 attributes,
                                 attachments,
                                 approved,
+                                shift,
                             });
                         }
                     }
@@ -510,6 +532,7 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, drawing: Optio
             content,
             approved: i.approved.clone(),
             changes,
+            profile: crate::map_work_profile::row(doc, &work, i, drawing),
             state,
             why,
         });

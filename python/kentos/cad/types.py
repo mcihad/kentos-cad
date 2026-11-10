@@ -10609,6 +10609,7 @@ class MapWorkOperation(_Union):
 
     - :class:`AddMapWorkOperation` (``op: add``)
     - :class:`SetMapWorkOperation` (``op: set``)
+    - :class:`ProfileMapWorkOperation` (``op: profile``)
     - :class:`RemoveMapWorkOperation` (``op: remove``)
     - :class:`RelinkMapWorkOperation` (``op: relink``)
     - :class:`RefreshMapWorkOperation` (``op: refresh``)
@@ -56129,16 +56130,23 @@ class MapWorkEdit(_Model):
     `nothing_to_set`, `invalid_file_path` (not an absolute path), `file_not_found`, `work_item_no_file` (relink or
     refresh of an item without a file), `no_entities`, `invalid_uid`, `entity_not_found`, `already_derived` (an object
     another derivation names), `own_content` (an object of the source's own layers, the source without a file),
-    `not_derived` (release of an object no derivation names), `approval_stale`,
-    `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
+    `not_derived` (release of an object no derivation names), `approval_stale`, `unknown_profile` and `invalid_profile`
+    (a profile, `operation.name`; an approved item's, `operation.status`), `unknown_profile_class` (`operation.classes[i]`),
+    `approval_profile` (approving an item whose typed layers break its profile), `layer_refused` (a class's layer or
+    field the drawing refuses), `layer_locked` (a raster, an image, an external reference's insert or a bound layer to relink on a locked layer),
     `work_full`.
+    Attributes:
+        drawing: The open project's file, an absolute path (docs/adr/4880): a profile not built in is looked for in its folder.
     """
     operation: MapWorkOperation
+    drawing: str | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["operation"] = self.operation.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -56147,6 +56155,7 @@ class MapWorkEdit(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> MapWorkEdit:
         return cls(
             operation=MapWorkOperation.from_json(data["operation"]),
+            drawing=data.get("drawing", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -56162,7 +56171,9 @@ class MapWorkEdited(_Model):
         stale: Unit: count.
         approved: The stamp an approval wrote (docs/adr/2080 §3).
         content: Without a file: the item's content revision a derive recorded or an approval stamped (docs/adr/2080 §1).
+        fields: The fields a profile added, `layer.field`.
         freed: How many objects a release let go of. Unit: count.
+        layers: The layers a profile added (docs/adr/4880).
         links: How many external references a relink pointed at the new file (docs/adr/1201 §2). Unit: count.
         released: Unit: count.
         relinked: Unit: count.
@@ -56172,9 +56183,11 @@ class MapWorkEdited(_Model):
     approved: str | None | Unset = UNSET
     content: str | None | Unset = UNSET
     derivation: str | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
     file_revision: str | None | Unset = UNSET
     freed: int | Unset = UNSET
     item: str | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
     links: int | Unset = UNSET
     released: int | Unset = UNSET
     relinked: int | Unset = UNSET
@@ -56189,12 +56202,16 @@ class MapWorkEdited(_Model):
             out["content"] = self.content
         if self.derivation is not UNSET:
             out["derivation"] = self.derivation
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
         if self.file_revision is not UNSET:
             out["fileRevision"] = self.file_revision
         if self.freed is not UNSET:
             out["freed"] = self.freed
         if self.item is not UNSET:
             out["item"] = self.item
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
         if self.links is not UNSET:
             out["links"] = self.links
         if self.released is not UNSET:
@@ -56211,9 +56228,11 @@ class MapWorkEdited(_Model):
             approved=data.get("approved", UNSET),
             content=data.get("content", UNSET),
             derivation=data.get("derivation", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
             file_revision=data.get("fileRevision", UNSET),
             freed=data.get("freed", UNSET),
             item=data.get("item", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
             links=data.get("links", UNSET),
             released=data.get("released", UNSET),
             relinked=data.get("relinked", UNSET),
@@ -113365,12 +113384,15 @@ class WorkChangedObject(_Model):
     Attributes:
         approved: Its snapshot form as approved (without the slot id; docs/adr/4480), when its geometry changed and the approval
             kept its objects' values: the shape Harita işi draws over the drawing.
+        shift: How far its geometry moved from the approved one (docs/adr/4880), when its geometry changed and the approval kept
+            its objects' values.
     """
     uid: str
     parts: list[str]
     approved: Any | Unset = UNSET
     attachments: bool | Unset = UNSET
     attributes: list[WorkChangedAttribute] | Unset = UNSET
+    shift: WorkShift | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -113382,6 +113404,8 @@ class WorkChangedObject(_Model):
             out["attachments"] = self.attachments
         if self.attributes is not UNSET:
             out["attributes"] = [e0.to_json() for e0 in self.attributes]
+        if self.shift is not UNSET:
+            out["shift"] = None if self.shift is None else self.shift.to_json()
         return out
 
     @classmethod
@@ -113392,6 +113416,7 @@ class WorkChangedObject(_Model):
             approved=data.get("approved", UNSET),
             attachments=data.get("attachments", UNSET),
             attributes=[WorkChangedAttribute.from_json(e0) for e0 in data["attributes"]] if "attributes" in data else UNSET,
+            shift=UNSET if "shift" not in data else None if data["shift"] is None else WorkShift.from_json(data["shift"]),
         )
 
 
@@ -113559,6 +113584,34 @@ class WorkDerivationRow(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkFarthest(_Model):
+    """The Hausdorff distance and where it is reached: `from` on the approved outline, `to` on the outline now.
+    Attributes:
+        d: Unit: m.
+        from_: Unit: m.
+        to: Unit: m.
+    """
+    d: float
+    from_: list[float]
+    to: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["d"] = float(self.d)
+        out["from"] = [float(e0) for e0 in self.from_]
+        out["to"] = [float(e0) for e0 in self.to]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkFarthest:
+        return cls(
+            d=float(data["d"]),
+            from_=[float(e0) for e0 in data["from"]],
+            to=[float(e0) for e0 in data["to"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkFile(_Model):
     """The file an item is: where it is and the content the project last accepted.
     Attributes:
@@ -113647,6 +113700,8 @@ class WorkItem(_Model):
             sorted, compact JSON), so what an attribute was and what a removed object was can be said. Empty: approved before
             213, no `approved_objects`, or their texts together over [`MAX_APPROVED_VALUES_BYTES`].
         layers: Layer or group ids; a layer is in one item at most.
+        profile: Its typed layers' profile (schema 239, docs/adr/4880): a data profile by name whose classes type the item's
+            layers (each class's layer its kind of geometry and fields); the item's other layers stay free drawing layers.
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -113657,6 +113712,7 @@ class WorkItem(_Model):
     approved_values: list[str] | Unset = UNSET
     file: WorkFile | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
+    profile: WorkProfile | None | Unset = UNSET
     status: WorkStatus | WorkStatusName | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -113676,6 +113732,8 @@ class WorkItem(_Model):
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.status is not UNSET:
             out["status"] = _enum_out(self.status)
         return out
@@ -113692,6 +113750,7 @@ class WorkItem(_Model):
             approved_values=list(data["approvedValues"]) if "approvedValues" in data else UNSET,
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFile.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else WorkProfile.from_json(data["profile"]),
             status=_enum_in(WorkStatus, data["status"]) if "status" in data else UNSET,
         )
 
@@ -113744,6 +113803,80 @@ class WorkObjectSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class WorkProfile(_Model):
+    """An item's typed layers' profile (docs/adr/4880): a data profile (`catalog/v1/profiles/`, or the project's own) by
+    name and the classes of it the item holds; none listed, all of them.
+    Attributes:
+        name: The profile's name, 1–200 characters without space at its ends.
+        classes: Class ids, each once, at most [`MAX_PROFILE_CLASS_IDS`]; empty: every class of the profile.
+    """
+    name: str
+    classes: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.classes is not UNSET:
+            out["classes"] = list(self.classes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfile:
+        return cls(
+            name=data["name"],
+            classes=list(data["classes"]) if "classes" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkProfileRow(_Model):
+    """An item's typed layers' profile as it stands (docs/adr/4880): the profile (its title and version, when it was
+    found), each class the item holds with its layer, objects and findings, all the findings, and the item's layers that
+    hold objects but no class: its free drawing layers.
+    Attributes:
+        found: The profile was found (built in, the drawing's copy or the project's folder) and holds.
+        findings: The classes' findings (`cad.profiles.check`'s), at most [`WORK_CHANGES_LISTED`].
+        free: The item's layers holding objects that no class of it types.
+        version: Unit: 1.
+    """
+    name: str
+    found: bool
+    classes: list[ProfileClassSummary] | Unset = UNSET
+    findings: list[ProfileFinding] | Unset = UNSET
+    free: list[str] | Unset = UNSET
+    title: str | None | Unset = UNSET
+    version: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["found"] = self.found
+        if self.classes is not UNSET:
+            out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.findings is not UNSET:
+            out["findings"] = [e0.to_json() for e0 in self.findings]
+        if self.free is not UNSET:
+            out["free"] = list(self.free)
+        if self.title is not UNSET:
+            out["title"] = self.title
+        if self.version is not UNSET:
+            out["version"] = self.version
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkProfileRow:
+        return cls(
+            name=data["name"],
+            found=data["found"],
+            classes=[ProfileClassSummary.from_json(e0) for e0 in data["classes"]] if "classes" in data else UNSET,
+            findings=[ProfileFinding.from_json(e0) for e0 in data["findings"]] if "findings" in data else UNSET,
+            free=list(data["free"]) if "free" in data else UNSET,
+            title=data.get("title", UNSET),
+            version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class WorkRemovedObject(_Model):
     """A removed object as approved (docs/adr/3680): its persistent id and its snapshot form then (without the slot id)."""
     uid: str
@@ -113775,6 +113908,7 @@ class WorkRow(_Model):
             approval kept its objects' digests.
         content: Without a file: the digest of the objects its layers hold (`kentos.work-content/1`, docs/adr/2080 §1), when the
             read worked it out (deep, a source of a derivation, an approved item with a stamp).
+        profile: Its typed layers' profile and how its classes stand (docs/adr/4880).
     """
     id: str
     kind: WorkKind | WorkKindName
@@ -113787,6 +113921,7 @@ class WorkRow(_Model):
     content: str | None | Unset = UNSET
     file: WorkFileRow | None | Unset = UNSET
     layers: list[str] | Unset = UNSET
+    profile: WorkProfileRow | None | Unset = UNSET
     why: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -113807,6 +113942,8 @@ class WorkRow(_Model):
             out["file"] = None if self.file is None else self.file.to_json()
         if self.layers is not UNSET:
             out["layers"] = list(self.layers)
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
         if self.why is not UNSET:
             out["why"] = list(self.why)
         return out
@@ -113825,7 +113962,81 @@ class WorkRow(_Model):
             content=data.get("content", UNSET),
             file=UNSET if "file" not in data else None if data["file"] is None else WorkFileRow.from_json(data["file"]),
             layers=list(data["layers"]) if "layers" in data else UNSET,
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else WorkProfileRow.from_json(data["profile"]),
             why=list(data["why"]) if "why" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkShift(_Model):
+    """How far a changed object's geometry moved from the approved one (docs/adr/4880): with as many vertices of the same
+    kind, vertex by vertex (the largest move and its number, the moves' root mean square); always the two outlines'
+    Hausdorff distance (the farthest a point of either is from the other) and where it is reached.
+    Attributes:
+        paired: Its vertices pair one to one with the approved ones (same kind, as many).
+        vertices: How many vertices it had approved and has now. Unit: count.
+        hausdorff: The outlines' Hausdorff distance, to a millionth of a millimetre; none for an object without a point (a text).
+        largest: The largest vertex move, when paired.
+        rms: The vertex moves' root mean square, when paired. Unit: m.
+    """
+    paired: bool
+    vertices: list[int]
+    hausdorff: WorkFarthest | None | Unset = UNSET
+    largest: WorkVertexMove | None | Unset = UNSET
+    rms: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["paired"] = self.paired
+        out["vertices"] = list(self.vertices)
+        if self.hausdorff is not UNSET:
+            out["hausdorff"] = None if self.hausdorff is None else self.hausdorff.to_json()
+        if self.largest is not UNSET:
+            out["largest"] = None if self.largest is None else self.largest.to_json()
+        if self.rms is not UNSET:
+            out["rms"] = None if self.rms is None else float(self.rms)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkShift:
+        return cls(
+            paired=data["paired"],
+            vertices=list(data["vertices"]),
+            hausdorff=UNSET if "hausdorff" not in data else None if data["hausdorff"] is None else WorkFarthest.from_json(data["hausdorff"]),
+            largest=UNSET if "largest" not in data else None if data["largest"] is None else WorkVertexMove.from_json(data["largest"]),
+            rms=UNSET if "rms" not in data else None if data["rms"] is None else float(data["rms"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WorkVertexMove(_Model):
+    """One vertex's move: its number (from 0, in the object's vertex order), east and north, its length.
+    Attributes:
+        index: Unit: 1.
+        dx: Unit: m.
+        dy: Unit: m.
+        d: Unit: m.
+    """
+    index: int
+    dx: float
+    dy: float
+    d: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["d"] = float(self.d)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WorkVertexMove:
+        return cls(
+            index=data["index"],
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            d=float(data["d"]),
         )
 
 
@@ -124202,6 +124413,37 @@ class SetMapWorkOperation(MapWorkOperation):
             layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
             name=data.get("name", UNSET),
             status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(WorkStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileMapWorkOperation(MapWorkOperation):
+    """An item's typed layers' profile (docs/adr/4880): the data profile `name` (built in, the drawing's copy or the
+    project's folder by `drawing`) and its `classes` (none: all). Each class's layer the drawing lacks is added as the
+    profile places it, the fields a class's layer lacks are added (a layer's own field of another kind is kept,
+    warning `profile_field_differs`; a locked layer gets none, `profile_layer_skipped`), and the classes' layers join
+    the item; its other layers stay free drawing layers. Without `name` the profile is taken away; the layers stay.
+    """
+    TAG_VALUE: ClassVar[str] = "profile"
+    item: str
+    classes: list[str] | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"op": "profile"}
+        out["item"] = self.item
+        if self.classes is not UNSET:
+            out["classes"] = list(self.classes)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileMapWorkOperation:
+        return cls(
+            item=data["item"],
+            classes=list(data["classes"]) if "classes" in data else UNSET,
+            name=data.get("name", UNSET),
         )
 
 
@@ -135366,7 +135608,7 @@ _LENGTHEN_CHANGE: dict[str, type[LengthenChange]] = {"delta": DeltaLengthenChang
 _MAP_SURVEY_OPERATION: dict[str, type[MapSurveyOperation]] = {"campaign": CampaignMapSurveyOperation, "setCampaign": SetCampaignMapSurveyOperation, "session": SessionMapSurveyOperation, "setSession": SetSessionMapSurveyOperation, "solve": SolveMapSurveyOperation, "solution": SolutionMapSurveyOperation, "exclude": ExcludeMapSurveyOperation, "include": IncludeMapSurveyOperation, "adjust": AdjustMapSurveyOperation, "baselines": BaselinesMapSurveyOperation, "baseline": BaselineMapSurveyOperation, "known": KnownMapSurveyOperation, "network": NetworkMapSurveyOperation, "accept": AcceptMapSurveyOperation, "regenerate": RegenerateMapSurveyOperation, "use": UseMapSurveyOperation, "remove": RemoveMapSurveyOperation}
 
 
-_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
+_MAP_WORK_OPERATION: dict[str, type[MapWorkOperation]] = {"add": AddMapWorkOperation, "set": SetMapWorkOperation, "profile": ProfileMapWorkOperation, "remove": RemoveMapWorkOperation, "relink": RelinkMapWorkOperation, "refresh": RefreshMapWorkOperation, "derive": DeriveMapWorkOperation, "forget": ForgetMapWorkOperation, "release": ReleaseMapWorkOperation}
 
 
 _MATERIAL_TARGET: dict[str, type[MaterialTarget]] = {"wallStyle": WallStyleMaterialTarget, "wall": WallMaterialTarget, "slab": SlabMaterialTarget}
@@ -138326,6 +138568,7 @@ __all__ = [
     "ProfileImported",
     "ProfileLimit",
     "ProfileListed",
+    "ProfileMapWorkOperation",
     "ProfileMapping",
     "ProfileMigration",
     "ProfilePoint",
@@ -139835,6 +140078,7 @@ __all__ = [
     "WorkChanges",
     "WorkDerivation",
     "WorkDerivationRow",
+    "WorkFarthest",
     "WorkFile",
     "WorkFileRow",
     "WorkFileState",
@@ -139845,12 +140089,16 @@ __all__ = [
     "WorkObjectRole",
     "WorkObjectRoleName",
     "WorkObjectSource",
+    "WorkProfile",
+    "WorkProfileRow",
     "WorkRemovedObject",
     "WorkRow",
+    "WorkShift",
     "WorkState",
     "WorkStateName",
     "WorkStatus",
     "WorkStatusName",
+    "WorkVertexMove",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",

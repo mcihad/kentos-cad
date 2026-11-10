@@ -70,6 +70,7 @@ pub mod road;
 pub mod rubber;
 pub mod sampling;
 pub mod seamlines;
+pub mod shape_shift;
 pub mod spatial_query;
 pub mod spatial_stats;
 pub mod split;

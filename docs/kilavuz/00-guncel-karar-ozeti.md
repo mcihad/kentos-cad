@@ -661,6 +661,10 @@
 - **Poligon hesabında karşılıklı başucu açıları (10 Kasım 2026; MAP-02, [ADR 4500](../../docs/adr/4500-traverse-reciprocal-zenith-angles.md)).**
   `cad.survey.points`'in `heights.back`'i: geri nişanlı kenarın kot farkı iki yönün ortalaması (k düşer), aynı iki uç
   arasındaki çiftin k'sı `refractions`'ta (Baselga vd. 2014, denklem 11). Poligon hesabı › Karşılıklı. CAD + CBS.
+- **Harita işinde tipli katman profili, köşe köşe kayma ve silinenin şekli (10 Kasım 2026; MAP-01, [ADR 4880](../../docs/adr/4880-map-work-typed-layer-profile-shift-and-removed-shape.md)).**
+  Öğenin veri profili (`profile`, şema 239): `map.work.edit profile` sınıfların katmanını ve alanlarını ekler, öğeye
+  katar; bulgusu olan öğe onaylanmaz (`approval_profile`). `changes.objects[].shift`: köşe köşe en büyük kayma, KOH,
+  kesin Hausdorff (`shape_shift`). Değişenler silinenleri de çizer, kaymaları tabloda gösterir. Yalnız Harita.
 - **Onaydan sonra geometrisi değişenin onaylanan şekli (10 Kasım 2026; MAP-01, [ADR 4480](../../docs/adr/4480-map-work-approved-shape-in-the-drawing.md)).**
   `map.work.query`'nin değişen nesnesinde `approved` (geometrisi değiştiyse); Harita işi › Değişenler onaylanan şekli
   kesik çizgiyle çizimin üstünde gösterir (approved_layer.rs). Yalnız Harita.

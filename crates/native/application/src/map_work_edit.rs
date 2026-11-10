@@ -114,6 +114,12 @@ struct Change {
     approved: Option<String>,
     released: u32,
     warnings: Vec<CommandWarning>,
+    /// The item's profile, narrowed to its classes, to write before the work (docs/adr/4880): its classes' layers and
+    /// fields the drawing lacks; the classes' layers then join the item.
+    profile: Option<kentos_commands::DataProfile>,
+    /// The layers and fields the profile adds (a plan's are worked out on a reading copy).
+    layers: Vec<String>,
+    fields: Vec<String>,
 }
 
 impl Change {
@@ -131,8 +137,73 @@ impl Change {
             approved: None,
             released: 0,
             warnings: Vec::new(),
+            profile: None,
+            layers: Vec::new(),
+            fields: Vec::new(),
         }
     }
+}
+
+/// The classes' layers of `p` in `doc` (those it has).
+fn class_layers(doc: &Document, p: &kentos_commands::DataProfile) -> Vec<String> {
+    p.classes
+        .iter()
+        .filter_map(|c| match crate::profiles::find(doc.layers().nodes(), &c.layer) {
+            crate::profiles::Place::Layer(id) => Some(id),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The work with `item`'s layers joined by the profile's classes' layers in `doc` that it does not hold yet; a class
+/// layer another item holds is refused.
+fn joined(doc: &Document, work: &MapWork, item: &str, p: &kentos_commands::DataProfile) -> Result<MapWork, Stop> {
+    let mut next = work.clone();
+    let Some(at) = next.items.iter().position(|i| i.id == item) else { return Ok(next) };
+    for layer in class_layers(doc, p) {
+        match item_of_layer(doc, work, &layer) {
+            Some(i) if i.id == item => {}
+            Some(other) => {
+                return Err(fail(
+                    codes::LAYER_IN_WORK_ITEM,
+                    format!(
+                        "Profilin “{}” katmanı harita işinin “{}” öğesinde; bir katman tek öğenin olur.",
+                        doc.layers().path(&layer),
+                        other.name
+                    ),
+                    "operation.name",
+                ));
+            }
+            None => {
+                if next.items[at].layers.len() >= kentos_commands::MAX_ITEM_LAYERS {
+                    return Err(full());
+                }
+                next.items[at].layers.push(layer);
+            }
+        }
+    }
+    Ok(next)
+}
+
+/// Whether an item's typed layers keep its profile: refused with the first finding when not (docs/adr/4880).
+fn profile_kept(doc: &Document, item: &WorkItem, drawing: Option<&str>) -> Result<(), Stop> {
+    let Some(p) = crate::map_work_profile::of_item(doc, item, drawing) else { return Ok(()) };
+    let p = p?;
+    let (_, mine) = crate::map_work_profile::findings(doc, &p);
+    if let Some(first) = mine.first() {
+        return Err(fail(
+            codes::APPROVAL_PROFILE,
+            format!(
+                "“{}” onaylanamaz: tipli katmanlarında “{}” profiline uymayan {} bulgu var; ilki: {} Profili denetle ile düzeltin.",
+                item.name,
+                p.title,
+                mine.len(),
+                first.message
+            ),
+            "operation.status",
+        ));
+    }
+    Ok(())
 }
 
 fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
@@ -164,6 +235,7 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 approved_objects: Vec::new(),
                 approved_parts: Vec::new(),
                 approved_values: Vec::new(),
+                profile: None,
             });
             Ok(Change { item: Some(id), file_revision: revision, ..Change::new(work, "Harita işine ekle") })
         }
@@ -222,6 +294,9 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
                 *slot = next.clone();
             }
+            if next.status == WorkStatus::Approved && status == &Some(WorkStatus::Approved) {
+                profile_kept(doc, &next, input.drawing.as_deref())?;
+            }
             if next.status == WorkStatus::Approved {
                 let n = stale_objects_in(doc, &work, &next, false);
                 if n > 0 {
@@ -240,6 +315,63 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 content,
                 approved: stamped,
                 ..Change::new(work, "Harita işi öğesini değiştir")
+            })
+        }
+        Op::Profile { item, name, classes } => {
+            let old = item_at(&now, item, "operation.item")?;
+            let Some(name) = name else {
+                if old.profile.is_none() || !classes.is_empty() {
+                    return Err(nothing());
+                }
+                let mut work = now.clone();
+                if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
+                    slot.profile = None;
+                }
+                return Ok(Change { item: Some(item.clone()), ..Change::new(work, "Harita işi öğesinin profilini kaldır") });
+            };
+            if !text_ok(name) {
+                return Err(fail(
+                    codes::INVALID_WORK_TEXT,
+                    "Profilin adı boşlukla başlamayan ve bitmeyen 1–200 karakter olmalı.".into(),
+                    "operation.name",
+                ));
+            }
+            if classes.len() > kentos_commands::MAX_PROFILE_CLASS_IDS {
+                return Err(fail(
+                    codes::INVALID_WORK_TEXT,
+                    format!("Bir öğenin profilinde en çok {} sınıf olur.", kentos_commands::MAX_PROFILE_CLASS_IDS),
+                    "operation.classes",
+                ));
+            }
+            for (i, c) in classes.iter().enumerate() {
+                if classes[..i].contains(c) {
+                    return Err(fail(
+                        codes::INVALID_WORK_TEXT,
+                        format!("“{c}” sınıfı iki kez verilmiş."),
+                        &format!("operation.classes[{i}]"),
+                    ));
+                }
+            }
+            let whole = crate::map_work_profile::load(doc, name, input.drawing.as_deref(), "operation.name")?;
+            let p = crate::map_work_profile::narrowed(&whole, classes)?;
+            // What the profile writes, on a reading copy: the layers and fields it adds, its warnings.
+            let mut copy = doc.reading_copy();
+            let (applied, warnings) = crate::profiles::write(&mut copy, &p).map_err(|s| s.at("operation.name"))?;
+            let mut work = now.clone();
+            if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
+                slot.profile = Some(kentos_commands::WorkProfile { name: name.clone(), classes: classes.clone() });
+            }
+            let work = joined(&copy, &work, item, &p)?;
+            if work == now && applied.layers.is_empty() && applied.fields.is_empty() {
+                return Err(nothing());
+            }
+            Ok(Change {
+                item: Some(item.clone()),
+                warnings,
+                profile: Some(p),
+                layers: applied.layers,
+                fields: applied.fields,
+                ..Change::new(work, "Harita işi öğesine profil ver")
             })
         }
         Op::Remove { item } => {
@@ -514,6 +646,8 @@ fn output(doc: &Document, c: &Change, revision: String) -> MapWorkEdited {
         links: u32::try_from(c.blocks.len()).unwrap_or(u32::MAX),
         freed: c.freed,
         stale: stale_count(doc, &c.work),
+        layers: c.layers.clone(),
+        fields: c.fields.clone(),
         revision,
     }
 }
@@ -526,20 +660,35 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<Map
     let label = change.label;
     let relink = change.relink.clone();
     let blocks = change.blocks.clone();
+    let mut change = change;
     let work = change.work.clone();
-    let _ = cx.doc.transact(label, |doc| -> Result<(), ()> {
+    let profile = change.profile.clone();
+    let item = change.item.clone();
+    let done = cx.doc.transact(label, |doc| -> Result<(), Option<Stop>> {
+        let mut work = work;
+        // Docs/adr/4880: the profile's layers and fields first, then its classes' layers join the item.
+        if let (Some(p), Some(item)) = (&profile, &item) {
+            let (applied, _) = crate::profiles::write(doc, p).map_err(|s| Some(s.at("operation.name")))?;
+            work = joined(doc, &work, item, p).map_err(Some)?;
+            change.layers = applied.layers;
+            change.fields = applied.fields;
+        }
         if !relink.is_empty() {
             doc.update_many(relink, label);
         }
         for block in blocks {
             // A source's path only: the definition stays as it was checked.
             if doc.update_block(block).is_err() {
-                return Err(());
+                return Err(None);
             }
         }
+        change.work = work.clone();
         doc.set_map_work(Some(work), label);
         Ok(())
     });
+    if let Err(Some(stop)) = done {
+        return stop.into();
+    }
     let output = output(cx.doc, &change, cx.doc.revision().to_string());
     CommandResult::Completed { output, warnings: change.warnings }
 }

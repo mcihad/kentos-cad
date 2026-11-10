@@ -27,12 +27,12 @@ listelenmesi bu yeni kabul kapsamlarının tamamlandığı anlamına gelmez.
 Hiçbir madde `[x]` değildir: her maddenin kabulü gerçek veri, cihaz ya da yetkili kabul de ister. Her maddenin en az iki
 dilimi `main`'dedir; ayrıntısı maddenin tarihli notlarında ve ADR'sindedir. **Sıradaki** sütunu sahibini beklemeden
 yapılabilecek işi, son sütun sahibini, cihazı ya da kurumu bekleyeni söyler. Turlar her satırın ilk işini MAP-01'den
-sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), dokuzuncu tur MAP-01'le başlar
-(ADR 4480).
+sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), dokuzuncu tur MAP-01'le başladı
+(ADR 4480–4860), onuncu tur MAP-01'le başlar (ADR 4880).
 
 | Madde | Dilimler (ADR) | Sıradaki (sahibini beklemez) | Sahibini, cihazı ya da kurumu bekler |
 | --- | --- | --- | --- |
-| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480 | tipli katman profili; köşe köşe kayma (en büyük kayma) ve silinenin şekli | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
+| MAP-01 İş yapısı | 1200, 1201, 2080, 2480, 2880, 3280, 3680, 4080, 4480, 4880 | öğe türüne göre önerilen profil (kurum profiliyle); kaymanın kullanıcının seçtiği resmî değerle (yanılma sınırı) karşılaştırılması | içe aktarmanın türetme kaydını kendiliğinden yazması (sahip kararı); gerçek projede GUI kabulü; onaydan sonra eklenenleri de silen tam onaylı hâl (sahip kararı) |
 | MAP-02 Koordinat zinciri | 1230, 1231, 2100, 2500, 2900, 3300, 3700, 4100, 4500 | EPSG'nin çokgen kullanım alanları; ölçülen k'nın projeye önerilmesi | zamana bağlı Helmert'in resmî parametreleri; resmî TUREF hız alanı; geoit doğruluğu |
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520 | GVX oturum korelasyonları (korelasyonlu gözlemde baz testi kararıyla); yeni noktaların hızı; sınırların projede saklanması | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540 | katalog geçiş raporu | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
@@ -295,6 +295,17 @@ Harita işi › Değişenler değişenleri seçerken geometrisi değişenlerin o
 rengiyle kesik çizgiyle gösterir, seçim durdukça. 2 yeni bağımsız durum (query 38), bağımsız okuyucuyla Python testi,
 MCP, masaüstü. Açık: köşe köşe kayma, silinenin şekli, tipli katman profili, eklenenleri de silen tam onaylı hâl
 (sahip kararı).
+
+**10 Kasım 2026, onuncu tur — tipli katman profili, köşe köşe kayma ve silinenin şekli ([ADR 4880](../docs/adr/4880-map-work-typed-layer-profile-shift-and-removed-shape.md)).**
+Kapsam: **yalnız Harita (CAD)**. Dayanak: BÖHHBÜY katman adı tanımlamaz (Ek-1 detay kodu ve öznitelikleri); Netcad'de
+tipli katman bir uzamsal tablodur (kolon, veri türü, gerekli, geometri türü); ArcGIS Pro'nun farklar görünümü silineni de
+gösterir ama sayısal kayma vermez. Kanıtlanan: öğenin veri profili (`profile`, `.kcad` şema 239) — `map.work.edit
+profile` sınıfların katmanını ve alanlarını ekleyip öğeye katar, öbür katmanlar serbest kalır; sorguda sınıflar,
+bulgular, serbest katmanlar; bulgusu olan öğe onaylanmaz (`approval_profile`). Değişen nesnede `shift`: köşe köşe en
+büyük kayma, KOH ve kesin Hausdorff uzaklığı (ortak çekirdek); Değişenler silinenlerin şeklini de çizer, kaymaları
+tabloda gösterir. 11 yeni bağımsız durum (query 41, edit 65), şema 239 örnekleri, Python, MCP, masaüstü. Açık: öğe
+türüne göre önerilen profil, kaymanın resmî değerle karşılaştırılması, eklenenleri de silen tam onaylı hâl (sahip
+kararı).
 
 ### MAP-02 — Hassasiyet, koordinat, epok ve ölçeği tek güvenilir zincire bağla [ ]
 

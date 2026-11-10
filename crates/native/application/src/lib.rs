@@ -349,6 +349,7 @@ pub mod pointcloud_overlap;
 pub mod pointcloud_network;
 pub mod pointcloud_register;
 pub mod map_work_edit;
+pub mod map_work_profile;
 pub mod map_work_restore;
 pub mod map_survey;
 pub mod map_survey_edit;

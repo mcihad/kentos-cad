@@ -194,7 +194,7 @@ Yük, üç anahtarlı bir haritadır (anahtarlar kodlanmış sırasıyla):
 | Anahtar | Tür | Değer |
 |---|---|---|
 | `format` | metin | `"kentos.document"`; değilse `schema_format` |
-| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `238`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-239.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
+| `version` | tam sayı | desteklenen belge şemaları (`SCHEMAS`, en yenisi `239`); değilse `schema_version` (`fixtures/kcad/v2/broken/schema-version-240.kcad`). Okuyucunun bildiğinden yeni bir şema “bozuk” değil “daha yeni bir sürümle yazılmış” iletisini alır |
 | `document` | harita | belge (§6.2) |
 
 `format` ve `version` sıralamada `document`'ten önce gelir: okuyucu belgenin kendisini okumadan şema sürümünü bilir.
@@ -1002,6 +1002,12 @@ SHA-256'sının ilk 16 hanesidir. `road.rebuildWhole` (mantıksal; yalnız `true
 kendiliğinden de her çizimi bütün çizer; yazılmamışsa yalnız değişeni yazar (ADR 4320). Yazıcı 238'i böyle bir çizim,
 `layer` kaynağı ya da `rebuildWhole` varken seçer; 237 ve öncesi üçünü de `bad_value` sayar
 (`broken/sheet-contour-drawing-in-schema-237.kcad`). Örnek `map-sheet-contours.json/.kcad`.
+
+**Şema 239** (ADR 4880; MAP-01): harita işi öğesinin tipli katman profili (`mapWork.items[].profile`): `name` (veri
+profilinin adı, başında ve sonunda boşluk olmayan 1–200 karakter) ve `classes` (sınıf kimlikleri, her biri bir kez, en
+çok 64; boş liste yazılmaz: hepsi demektir). Yazıcı 239'u bir öğenin profili varken seçer; 238 ve öncesi alanı
+`unknown_field` sayar (`broken/map-work-profile-in-schema-238.kcad`); boş liste, iki kez yazılmış sınıf ve boşluklu ad
+`bad_value`. Örnek `map-work-profile.json/.kcad`.
 
 **Şema 191** (ADR 0977; ROAD-DEVER-08): yol projesinin eğimleri oran olarak yazılır (düşey bölü yatay; −0,025
 %−2,5'tir): tip kesit bileşeninin `slope`'u, basamağın `fall`'ı, dever çizelgesinin `normalLeft`/`normalRight`'ı,

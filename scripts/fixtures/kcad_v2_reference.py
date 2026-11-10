@@ -2740,6 +2740,9 @@ def document(d):
             for x in kept.get("drawings", [])):
         # A sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing again whole (docs/adr/4740).
         schema = max(schema, 238)
+    if any("profile" in i for i in d["settings"].get("mapWork", {}).get("items", [])):
+        # A map work item's typed layers' profile (docs/adr/4880).
+        schema = max(schema, 239)
     tables = [e for e in d["entities"] + [x for b in d.get("blocks", []) for x in b["entities"]] if e["kind"] == "table"]
     if any("breaks" in t or (t.get("source") or {}).get("kind") == "extraction"
            or any("\n" in w for r in t["cells"] for w in r) for t in tables):
@@ -3644,7 +3647,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-239.kcad"] = container(root(cmap(parts), version=uint(239)))
+    files["schema-version-240.kcad"] = container(root(cmap(parts), version=uint(240)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -6312,6 +6315,25 @@ def build():
         broken_values = copy.deepcopy(kept_values)
         change(broken_values)
         out[f"broken/map-work-approved-values-{name}.kcad"] = container(document(broken_values))
+    # Schema 239 (docs/adr/4880): a map work item's typed layers' profile (a data profile's name and its classes);
+    # schema 238 refuses the field, an empty class list, a class given twice and a name with a space at its end too.
+    profiled = copy.deepcopy(mapped)
+    profiled["settings"]["mapWork"]["items"][0]["profile"] = {"name": "harita-varliklari",
+                                                              "classes": ["kontrol-noktasi", "rogar"]}
+    profiled["settings"]["mapWork"]["items"][2]["profile"] = {"name": "imar-plani"}
+    out["map-work-profile.json"] = json_text(profiled).encode("utf-8")
+    profiled_data = document(profiled)
+    assert profiled_data.count(b"\x67version\x18\xef") == 1, "an item's profile is schema 239"
+    out["map-work-profile.kcad"] = container(profiled_data)
+    out["broken/map-work-profile-in-schema-238.kcad"] = container(
+        profiled_data.replace(b"\x67version\x18\xef", b"\x67version\x18\xee"))
+    for name, change in (
+            ("classes-empty", lambda p: p.update({"classes": []})),
+            ("class-twice", lambda p: p.update({"classes": ["kontrol-noktasi", "kontrol-noktasi"]})),
+            ("name-spaced", lambda p: p.update({"name": "harita-varliklari "}))):
+        broken_profile = copy.deepcopy(profiled)
+        change(broken_profile["settings"]["mapWork"]["items"][0]["profile"])
+        out[f"broken/map-work-profile-{name}.kcad"] = container(document(broken_profile))
     # Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, its network a source; 211 knows neither.
     piped = document(load("map-pipe-profile.json"))
     assert piped.count(b"\x67version\x18\xd4") == 1, "a pipe run profile's drawing is schema 212"

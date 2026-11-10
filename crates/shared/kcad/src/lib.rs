@@ -940,11 +940,13 @@ pub const SCHEMA_WITH_ROOFS: u32 = 237;
 /// Schema 238 (docs/adr/4740): a sheet's contour lines kept as a drawing (`road.terrains.sheetcontours`), a layer as a
 /// drawing's source (`kind` `layer`), and drawing again whole (`road.rebuildWhole`).
 pub const SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS: u32 = 238;
+/// Schema 239 (docs/adr/4880): a map work item's typed layers' profile (`profile`).
+pub const SCHEMA_WITH_WORK_PROFILES: u32 = 239;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 236] = [
+pub const SCHEMAS: [u32; 237] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -1181,6 +1183,7 @@ pub const SCHEMAS: [u32; 236] = [
     SCHEMA_WITH_BEAM_ROLES,
     SCHEMA_WITH_ROOFS,
     SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS,
+    SCHEMA_WITH_WORK_PROFILES,
 ];
 
 /// The file a drawing is saved as.

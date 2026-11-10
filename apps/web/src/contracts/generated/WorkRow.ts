@@ -2,6 +2,7 @@
 import type { WorkChanges } from "./WorkChanges";
 import type { WorkFileRow } from "./WorkFileRow";
 import type { WorkKind } from "./WorkKind";
+import type { WorkProfileRow } from "./WorkProfileRow";
 import type { WorkState } from "./WorkState";
 import type { WorkStatus } from "./WorkStatus";
 
@@ -24,4 +25,8 @@ approved?: string,
  * What changed since its approval, object by object (docs/adr/2880): on a revised item without a file whose
  * approval kept its objects' digests.
  */
-changes?: WorkChanges, state: WorkState, why?: Array<string>, };
+changes?: WorkChanges, 
+/**
+ * Its typed layers' profile and how its classes stand (docs/adr/4880).
+ */
+profile?: WorkProfileRow, state: WorkState, why?: Array<string>, };

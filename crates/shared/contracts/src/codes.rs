@@ -640,6 +640,10 @@ codes! {
     OWN_CONTENT = "own_content", Failed, false, "Nesne kaynağın kendi katmanında: dosyası olmayan öğe kendi nesnelerinin kaynağı olamaz.";
     /// Approving an item that holds derived objects whose source moved on.
     APPROVAL_STALE = "approval_stale", Failed, false, "Öğenin katmanlarında kaynağı değişmiş (güncel olmayan) türetilmiş nesne var; önce yeniden üretin ya da kaydını güncelleyin, sonra onaylayın.";
+    /// Approving an item whose typed layers break its profile (docs/adr/4880).
+    APPROVAL_PROFILE = "approval_profile", Failed, false, "Öğenin tipli katmanlarında profiline uymayan nesne ya da eksik alan var; Profili denetle ile düzeltin, sonra onaylayın.";
+    /// A class an item's profile names is not in the profile (docs/adr/4880).
+    UNKNOWN_PROFILE_CLASS = "unknown_profile_class", Failed, false, "Bu kimlikte sınıf profilde yok; profilin sınıflarından birini verin.";
     /// The map's work would pass its most items or derivations.
     WORK_FULL = "work_full", Failed, false, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.";
     /// An item put back as approved that is not approved (docs/adr/4080).

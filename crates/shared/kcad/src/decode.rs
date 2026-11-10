@@ -1155,6 +1155,10 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 if !has.approved_values && v.has_approved_values() {
                     return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedValues (şema 213'ten önce yok)"));
                 }
+                // Schema 239 (docs/adr/4880): an item's typed layers' profile.
+                if !has.work_profiles && v.has_profiles() {
+                    return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde profile (şema 239'dan önce yok)"));
+                }
                 if let Some((field, words)) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
                 }

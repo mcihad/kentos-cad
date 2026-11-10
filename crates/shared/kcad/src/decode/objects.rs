@@ -417,6 +417,8 @@ pub(super) struct Features {
     pub(super) approved_parts: bool,
     /// Schema 213: a map work approval's objects' values (docs/adr/3680).
     pub(super) approved_values: bool,
+    /// Schema 239: a map work item's typed layers' profile (docs/adr/4880).
+    pub(super) work_profiles: bool,
     /// Schema 214: a terrain surface's edit that pastes another surface (docs/adr/3920).
     pub(super) surface_pastes: bool,
     /// Schema 215: a review note's decision (docs/adr/4140).
@@ -756,6 +758,7 @@ impl Features {
             approved_objects: schema >= crate::SCHEMA_WITH_APPROVED_OBJECTS,
             approved_parts: schema >= crate::SCHEMA_WITH_APPROVED_PARTS,
             approved_values: schema >= crate::SCHEMA_WITH_APPROVED_VALUES,
+            work_profiles: schema >= crate::SCHEMA_WITH_WORK_PROFILES,
             surface_pastes: schema >= crate::SCHEMA_WITH_SURFACE_PASTES,
             review_decisions: schema >= crate::SCHEMA_WITH_REVIEW_DECISIONS,
             parcel_register: schema >= crate::SCHEMA_WITH_PARCEL_REGISTER,

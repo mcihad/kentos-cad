@@ -250,7 +250,7 @@ fn check_apply(doc: &Document, input: &ProfilesApply) -> Result<DataProfile, Sto
 }
 
 /// The profile's parts written to `doc`.
-fn write(
+pub(crate) fn write(
     doc: &mut Document,
     p: &DataProfile,
 ) -> Result<(ProfilesApplied, Vec<CommandWarning>), Stop> {

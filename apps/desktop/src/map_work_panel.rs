@@ -9,6 +9,11 @@
 //! the kind and the name of a new item, added with the layer chosen in Katmanlar (else the active one) and, by its
 //! second button, a file; Dosyaları oku reads every file's SHA-256. The tree is read again only when the drawing's
 //! revision or the depth changes.
+//!
+//! docs/adr/4880: Tipli katman gives an item a class of a data profile (its layer and fields added where missing, the
+//! layer joining the item); an item with a profile has a Profil row under it (its classes, findings and free layers).
+//! Değişenler also draws the removed objects' approved shapes and lists how far each changed geometry moved (vertex by
+//! vertex, the Hausdorff distance) in a table under the tree.
 
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -62,6 +67,12 @@ pub enum Event {
     /// The item the selection is recorded as derived from (`derive`), and the recording.
     DeriveFrom(String),
     Derive,
+    /// Tipli katman (docs/adr/4880): the item and the profile's class (`profile/class`) chosen, the class given to the
+    /// item; an item's profile taken away.
+    ProfileItem(String),
+    ProfileClass(String),
+    ProfileAdd,
+    ProfileRemove(String),
 }
 
 fn msg(e: Event) -> Message {
@@ -83,6 +94,11 @@ pub struct PanelState {
     /// The approved shapes of the objects Değişenler selected whose geometry changed (docs/adr/4480), drawn over the
     /// drawing while that selection stands (approved_layer.rs).
     pub(crate) approved: Option<crate::approved_layer::Approved>,
+    /// Tipli katman's item and class (docs/adr/4880).
+    profile_item: Option<String>,
+    profile_class: Option<String>,
+    /// How far the objects Değişenler selected moved (docs/adr/4880): the table's rows.
+    pub(crate) shifts: Vec<Vec<String>>,
 }
 
 impl Default for PanelState {
@@ -96,6 +112,9 @@ impl Default for PanelState {
             derive_from: None,
             read: RefCell::new(None),
             approved: None,
+            profile_item: None,
+            profile_class: None,
+            shifts: Vec::new(),
         }
     }
 }
@@ -181,7 +200,9 @@ impl App {
 
     fn map_work_edit(&mut self, operation: MapWorkOperation) -> Option<kentos_commands::MapWorkEdited> {
         let doc = self.document.as_mut()?;
-        let input = MapWorkEdit { operation, expected_revision: None };
+        // A project's own profile is found in its folder (docs/adr/4880).
+        let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
+        let input = MapWorkEdit { operation, drawing, expected_revision: None };
         let result = map_work_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         self.answered(result)
     }
@@ -219,6 +240,45 @@ impl App {
         if let Some(out) = self.map_work_edit(operation) {
             self.map_work.name.clear();
             self.say(Level::Success, format!("“{name}” harita işine eklendi ({}).", out.item.unwrap_or_default()));
+        }
+    }
+
+    /// Tipli katman (docs/adr/4880): the chosen class given to the chosen item; with the same profile the item keeps
+    /// its classes and takes this one, another profile takes the place of its own (said).
+    fn map_work_profile_add(&mut self) {
+        let Some(Ok(tree)) = self.map_work_read() else { return };
+        let Some(item) = self.map_work.profile_item.clone().filter(|i| tree.items.iter().any(|r| r.id == *i))
+            .or_else(|| tree.items.first().map(|r| r.id.clone()))
+        else {
+            return;
+        };
+        let chosen = self.map_work.profile_class.clone().unwrap_or_else(|| profile_classes()[0].0.clone());
+        let Some((name, class)) = chosen.split_once('/') else { return };
+        let had = self.document.as_ref().and_then(|d| d.model.map_work()).and_then(|w| w.item(&item)).and_then(|i| i.profile.clone());
+        let (classes, replaced) = match had {
+            Some(p) if p.name == name && p.classes.is_empty() => (Vec::new(), None),
+            Some(p) if p.name == name => {
+                let mut c = p.classes.clone();
+                if !c.iter().any(|x| x == class) {
+                    c.push(class.to_owned());
+                }
+                (c, None)
+            }
+            Some(p) => (vec![class.to_owned()], Some(p.name)),
+            None => (vec![class.to_owned()], None),
+        };
+        let op = MapWorkOperation::Profile { item: item.clone(), name: Some(name.to_owned()), classes };
+        if let Some(out) = self.map_work_edit(op) {
+            let title = profile_classes().into_iter().find(|c| c.0 == chosen).map_or(chosen.clone(), |c| c.1);
+            let mut words = format!("“{title}” sınıfı öğeye verildi");
+            if !out.layers.is_empty() || !out.fields.is_empty() {
+                words.push_str(&format!(" ({} katman, {} alan eklendi)", out.layers.len(), out.fields.len()));
+            }
+            words.push('.');
+            if let Some(old) = replaced {
+                words.push_str(&format!(" Öğenin “{old}” profili bunun yerine geçti."));
+            }
+            self.say(Level::Success, words);
         }
     }
 
@@ -280,6 +340,14 @@ impl App {
             Event::Filter(f) => self.map_work.filter = f,
             Event::DeriveFrom(id) => self.map_work.derive_from = Some(id),
             Event::Derive => self.map_work_derive(),
+            Event::ProfileItem(id) => self.map_work.profile_item = Some(id),
+            Event::ProfileClass(c) => self.map_work.profile_class = Some(c),
+            Event::ProfileAdd => self.map_work_profile_add(),
+            Event::ProfileRemove(id) => {
+                if self.map_work_edit(MapWorkOperation::Profile { item: id, name: None, classes: Vec::new() }).is_some() {
+                    self.say(Level::Info, "Öğenin tipli katman profili kaldırıldı; katmanları öğede kalır.".to_owned());
+                }
+            }
         }
         Task::none()
     }
@@ -298,7 +366,7 @@ impl App {
     }
 
     /// `map.workSource` (docs/adr/1201 §3): one selected object's source said, its item's layer chosen in Katmanlar
-    /// and Harita işi brought to the front: Civil 3D's contextual tab's way to the source of what is selected.
+    /// and Harita işi brought to the front: the way from what is selected to where it came from.
     pub(crate) fn map_work_show_source(&mut self) {
         let Some(src) = self.selected_sources().into_iter().next() else {
             self.say(Level::Warn, "Seçili nesne harita işinin bir öğesinde değil.");
@@ -487,16 +555,39 @@ impl App {
                     .collect();
             if named.is_empty() { String::new() } else { format!("; değişen: {}{attributes}", named.join(", ")) }
         });
-        // Docs/adr/4480: the approved shapes of those whose geometry changed, over the drawing with the selection.
-        let shapes: Vec<kentos_commands::Entity> = c
+        // Docs/adr/4480: the approved shapes of those whose geometry changed, over the drawing with the selection;
+        // docs/adr/4880: and of the removed ones.
+        let mut shapes: Vec<kentos_commands::Entity> = c
             .objects
             .iter()
             .filter_map(|o| o.approved.as_ref())
             .filter_map(kentos_native_application::map_work_restore::approved_entity)
             .collect();
-        let drawn = match shapes.len() {
-            0 => String::new(),
-            k => format!(" Geometrisi değişen {k} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
+        let moved = shapes.len();
+        shapes.extend(
+            c.removed_objects.iter().filter_map(|r| kentos_native_application::map_work_restore::approved_entity(&r.approved)),
+        );
+        let gone_drawn = shapes.len() - moved;
+        let drawn = match (moved, gone_drawn) {
+            (0, 0) => String::new(),
+            (k, 0) => format!(" Geometrisi değişen {k} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
+            (0, g) => format!(" Silinen {g} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
+            (k, g) => format!(
+                " Geometrisi değişen {k} ve silinen {g} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."
+            ),
+        };
+        // Docs/adr/4880: how far each moved, in the table under the tree; the largest said.
+        let decimals = self.document.as_ref().map_or(3, |d| d.model.settings().length_decimals as usize);
+        self.map_work.shifts = shift_rows(&c, decimals);
+        let largest = c
+            .objects
+            .iter()
+            .filter_map(|o| o.shift.as_ref().and_then(|s| s.hausdorff.as_ref()))
+            .map(|h| h.d)
+            .fold(None, |m: Option<f64>, d| Some(m.map_or(d, |m| m.max(d))));
+        let drawn = match largest {
+            Some(h) => format!("{drawn} En büyük kayma (Hausdorff) {h:.decimals$} m; kaymalar tabloda."),
+            None => drawn,
         };
         let words = if n == 0 {
             format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
@@ -505,8 +596,8 @@ impl App {
             self.select_slots(slots);
             format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.{drawn}")
         };
-        self.map_work.approved = (n > 0 && !shapes.is_empty())
-            .then(|| crate::approved_layer::Approved::of(&shapes, self.selection.version()));
+        self.map_work.approved =
+            (!shapes.is_empty()).then(|| crate::approved_layer::Approved::of(&shapes, self.selection.version()));
         self.say(Level::Info, words);
     }
 
@@ -568,6 +659,35 @@ impl App {
                 .align_y(Center),
             );
         }
+        // Tipli katman (docs/adr/4880): an item and a class of a data profile; + gives the class to the item.
+        if !tree.items.is_empty() {
+            let owners: Vec<(String, String)> = tree.items.iter().map(|r| (r.id.clone(), r.name.clone())).collect();
+            let item = self.map_work.profile_item.clone().filter(|i| owners.iter().any(|o| o.0 == *i)).unwrap_or_else(|| owners[0].0.clone());
+            let classes = profile_classes();
+            let class = self.map_work.profile_class.clone().unwrap_or_else(|| classes[0].0.clone());
+            // Two rows in the narrow dock: the item, then the class (its profile's title and its own) and the button.
+            head = head.push(
+                row![
+                    container(label::caption("Tipli katman")).width(84),
+                    container(crate::style::fields::select_owned(owners, &item, |id| msg(Event::ProfileItem(id)))).width(Fill),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+            head = head.push(
+                row![
+                    container(label::caption("Sınıf")).width(84),
+                    container(crate::style::fields::select_owned(classes, &class, |c| msg(Event::ProfileClass(c)))).width(Fill),
+                    crate::style::strip::icon_button(
+                        Icon::Plus,
+                        "Sınıfı öğeye ver: katmanı ve alanları yoksa eklenir, katman öğeye girer",
+                        Some(msg(Event::ProfileAdd)),
+                    ),
+                ]
+                .spacing(4)
+                .align_y(Center),
+            );
+        }
         let mut items = Vec::new();
         for (name, kind, heading, glyph) in KINDS {
             let rows: Vec<&WorkRow> = tree.items.iter().filter(|i| i.kind == kind).collect();
@@ -591,7 +711,28 @@ impl App {
             .filter(self.map_work.filter, |f| msg(Event::Filter(f)))
             .counted("Güncel değil", "Sorun")
             .empty("Harita işinde öğe yok: türünü ve adını yazıp Katmanlar'da seçili katmanla ya da dosyasıyla ekleyin.");
-        column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
+        let mut all = column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]);
+        // Docs/adr/4880: how far the objects Değişenler selected moved, while their shapes are drawn.
+        if self.map_work.approved.as_ref().is_some_and(|a| a.version == self.selection.version()) && !self.map_work.shifts.is_empty() {
+            use crate::road_dialog::{col, num};
+            let cols = vec![
+                col("Nesne", 90.0),
+                num("Köşe", 56.0),
+                num("En büyük (m)", 88.0),
+                num("No", 36.0),
+                num("KOH (m)", 72.0),
+                num("Hausdorff (m)", 92.0),
+            ];
+            all = all.push(
+                column![
+                    label::caption("Onaydan sonra kaymalar"),
+                    crate::road_dialog::sheet(cols, self.map_work.shifts.clone(), "Kayan nesne yok.", 160.0),
+                ]
+                .spacing(4)
+                .padding([0, 12]),
+            );
+        }
+        all.into()
     }
 }
 
@@ -663,7 +804,83 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     if let Some(c) = &r.changes {
         item = item.push(changes_item(r, c));
     }
+    if let Some(p) = &r.profile {
+        item = item.push(profile_item(r, p));
+    }
     item
+}
+
+/// The classes of KentOS's data profiles as Tipli katman offers them: `profile/class`, “Sınıf · Profil” (the class
+/// first: the dock is narrow).
+pub(crate) fn profile_classes() -> Vec<(String, String)> {
+    ["harita-varliklari", "tucbs-temel", "imar-plani"]
+        .into_iter()
+        .filter_map(kentos_commands::builtin_profile)
+        .flat_map(|p| {
+            let title = p.title.clone();
+            let name = p.name.clone();
+            p.classes.into_iter().map(move |c| (format!("{name}/{}", c.id), format!("{} · {title}", c.title)))
+        })
+        .collect()
+}
+
+/// Profil, the row under an item with a typed layers' profile (docs/adr/4880): its title, how many classes, whether
+/// its classes keep it (a pill), the classes, findings and free layers in the tip; its button takes the profile away.
+fn profile_item<'a>(r: &WorkRow, p: &kentos_commands::WorkProfileRow) -> StatusItem<'a, Message> {
+    let title = p.title.clone().unwrap_or_else(|| p.name.clone());
+    let mut detail = Vec::new();
+    let (tone, words) = if !p.found {
+        detail.push(format!("“{}” profili bulunamadı: KentOS'un profili değil, projenin klasöründe de yok.", p.name));
+        (Status::Warning, "Profil yok".to_owned())
+    } else if p.findings.is_empty() {
+        (Status::Ok, "Uyuyor".to_owned())
+    } else {
+        (Status::Warning, format!("{} bulgu", p.findings.len()))
+    };
+    for c in &p.classes {
+        let state = if c.findings == 0 { "uyuyor".to_owned() } else { format!("{} bulgu", c.findings) };
+        detail.push(format!("{}: {} nesne, {state}.", c.title, c.objects));
+    }
+    for f in p.findings.iter().take(3) {
+        detail.push(f.message.clone());
+    }
+    if !p.free.is_empty() {
+        detail.push(format!("Serbest katmanlar (tipsiz): {}.", p.free.join(", ")));
+    }
+    detail.push("Bulgusu olan öğe onaylanmaz.".to_owned());
+    StatusItem::new(format!("pr:{}", r.id), format!("Profil: {title}"))
+        .icon(icon(Icon::Layers).size(14.0))
+        .meta(format!("{} sınıf", p.classes.len()))
+        .status(tone, words)
+        .detail(detail.join(" "))
+        .action(icon(Icon::Close).size(13.0), "Profili kaldır (katmanlar öğede kalır)", msg(Event::ProfileRemove(r.id.clone())))
+}
+
+/// docs/adr/4880: the shift table's rows: each changed object whose geometry moved, its kind, its vertices then and
+/// now, the largest vertex move and its number (from 1) and their root mean square when they pair, the Hausdorff
+/// distance.
+pub(crate) fn shift_rows(c: &WorkChanges, decimals: usize) -> Vec<Vec<String>> {
+    let m = |v: f64| format!("{v:.decimals$}");
+    c.objects
+        .iter()
+        .filter_map(|o| {
+            let s = o.shift.as_ref()?;
+            let kind = o.approved.as_ref().and_then(|a| a.get("kind")).and_then(serde_json::Value::as_str).unwrap_or("");
+            let corners = if s.vertices[0] == s.vertices[1] {
+                s.vertices[0].to_string()
+            } else {
+                format!("{} → {}", s.vertices[0], s.vertices[1])
+            };
+            Some(vec![
+                crate::selecting::kind_title(kind).to_string(),
+                corners,
+                s.largest.as_ref().map_or("—".to_owned(), |l| m(l.d)),
+                s.largest.as_ref().map_or("—".to_owned(), |l| (l.index + 1).to_string()),
+                s.rms.map_or("—".to_owned(), m),
+                s.hausdorff.as_ref().map_or("—".to_owned(), |h| m(h.d)),
+            ])
+        })
+        .collect()
 }
 
 /// A value as said: a text in quotes, anything else as written.
