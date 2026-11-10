@@ -1,7 +1,8 @@
 //! `cad.pipes.profile` v1 (plan/map-cad.md MAP-16, docs/adr/1860): Hat profili, a gravity line's longitudinal profile
 //! (kanal boykesiti) drawn on a layer. From a pipe of a utility network the run follows the flow through every node one
 //! pipe leaves, to the outlet, a split or the pipe asked to end at; along it the ground (a terrain surface at every
-//! triangle edge the pipes cross, or the structures' cover levels), each pipe's invert and crown, the structures, and
+//! triangle edge the pipes cross, or the structures' cover levels), each pipe's invert and crown (and, its wall known,
+//! its outer walls, docs/adr/4780), the structures, and
 //! under the frame the bands: the structure's name, the distance, the ground, the inverts in and out, the depth, and
 //! each pipe's slope, diameter and length. The values are read as `cad.pipes.check` reads them (its inverts, diameter
 //! and ground). The drawing follows `road.profiles.draw`'s rules (docs/adr/0902 §8): `at` is the frame's lower left
@@ -148,8 +149,8 @@ pub struct PipeProfileCrossing {
 }
 
 /// A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
-/// drawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown
-/// (none asked: over the invert).
+/// drawn against the flow, its inverts up and down the flow, its slope, diameter (m), wall and least cover over the
+/// crown (none asked: over the invert; its wall known: over its top outside, as `cad.pipes.check` measures it).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -185,6 +186,13 @@ pub struct PipeProfilePipe {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub diameter: Option<f64>,
+    /// Its wall thickness (m), when the diameter asks it (its own attribute or the outer diameter's) and the pipe's is
+    /// known (docs/adr/4780): above zero, its outer walls are drawn, the bottom outside under the invert and the top
+    /// outside over the crown.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
+    pub wall: Option<f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]

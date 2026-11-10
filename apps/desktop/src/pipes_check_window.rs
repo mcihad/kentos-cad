@@ -10,7 +10,10 @@
 //! clearance and which is above; where they pass, the horizontal one. The least clearances and the side that must be
 //! above are the user's; Kesişim and Yakın geçiş list them. With it, Hat profili draws its pipes crossing the run too
 //! (kesişen borular, docs/adr/2760). Kesişimleri göster (docs/adr/3160) leaves the crossings and near passes marked on
-//! the drawing, coloured by the check's verdict, until İşareti kaldır; the window closes.
+//! the drawing, coloured by the check's verdict, until İşareti kaldır; the window closes. Docs/adr/4780: the wall may
+//! be read from an outer diameter's attribute (Dış çap) beside or instead of Et, and Kural takes the limits not written
+//! from a system of KentOS's rule package (the 2017 sewer and storm water regulations), each pipe's slope class and
+//! its limits in the table; the profile draws the run's own outer walls.
 
 use std::path::PathBuf;
 
@@ -19,7 +22,7 @@ use kentos_ui::widget::grow::Grows;
 use iced::{Center, Element, Task};
 use kentos_commands::{
     CommandResult, NetworkKind, PipeAbove, PipeCheck, PipeClearanceAsk, PipeCrossing, PipeDiameter, PipeGround,
-    PipeInverts, PipeNear, PipeProfileOther, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
+    PipeInverts, PipeNear, PipeProfileOther, PipeRulesAsk, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -131,7 +134,11 @@ pub struct State {
     pub unit: String,
     /// The wall thickness's attribute (docs/adr/3960; empty: not asked), in the diameter's unit.
     pub wall: String,
+    /// The outer diameter's attribute (docs/adr/4780; empty: not asked), in the diameter's unit.
+    pub outer: String,
     pub catalog: String,
+    /// The rule package's system the limits not written are taken from (docs/adr/4780; empty: none).
+    pub rules: String,
     pub ground: Ground,
     /// The project's surfaces: id and name.
     pub surfaces: Vec<(String, String)>,
@@ -159,6 +166,7 @@ pub struct State {
     pub other_end: String,
     pub other_diameter: String,
     pub other_wall: String,
+    pub other_outer: String,
     pub other_unit: String,
     pub vertical: String,
     pub horizontal: String,
@@ -174,7 +182,9 @@ pub enum Event {
     Diameter(String),
     Unit(String),
     Wall(String),
+    Outer(String),
     Catalog(String),
+    Rules(String),
     Ground(Ground),
     Surface(String),
     CoverField(String),
@@ -194,6 +204,7 @@ pub enum Event {
     OtherEnd(String),
     OtherDiameter(String),
     OtherWall(String),
+    OtherOuter(String),
     OtherUnit(String),
     Vertical(String),
     Horizontal(String),
@@ -226,7 +237,11 @@ pub fn kind_word(kind: &str) -> &'static str {
         "noDiameter" => "Çap yok",
         "diameterUnit" => "Çap birimi yanlış olabilir",
         "notInCatalog" => "Çap katalogda yok",
+        "noRule" => "Çap kuralda yok",
         "noWall" => "Et kalınlığı yok",
+        "wallMismatch" => "Dış çap uyuşmuyor",
+        "longSpan" => "Baca aralığı uzun",
+        "exceptionalSlope" => "Eğim istisnai",
         "noGround" => "Zemin kotu yok",
         "offSurface" => "Yüzeyin dışında",
         "aboveGround" => "Zeminin üstünde",
@@ -333,6 +348,7 @@ impl App {
                     unit: unit_of(&s.other_unit),
                     catalog: Vec::new(),
                     wall: (!s.other_wall.trim().is_empty()).then(|| s.other_wall.clone()),
+                    outer: (!s.other_outer.trim().is_empty()).then(|| s.other_outer.clone()),
                 }),
                 vertical: limit(&s.vertical, "En az düşey açıklık")?,
                 horizontal: limit(&s.horizontal, "En az yatay açıklık")?,
@@ -356,6 +372,7 @@ impl App {
                         unit,
                         catalog: c,
                         wall: (!s.wall.trim().is_empty()).then(|| s.wall.clone()),
+                        outer: (!s.outer.trim().is_empty()).then(|| s.outer.clone()),
                     })
                 })
                 .transpose()?,
@@ -369,6 +386,7 @@ impl App {
             min_slope: slope(&s.min_slope, "En az eğim")?,
             max_slope: slope(&s.max_slope, "En çok eğim")?,
             clearance,
+            rules: (!s.rules.is_empty()).then(|| PipeRulesAsk { system: s.rules.clone(), package: None }),
         })
     }
 
@@ -442,6 +460,7 @@ impl App {
             end: "Akar son".into(),
             diameter: if has(&edge_layers, "Çap") { "Çap".into() } else { String::new() },
             wall: ["Et kalınlığı", "Et"].iter().find(|f| has(&edge_layers, f)).map_or_else(String::new, |f| (*f).to_owned()),
+            outer: if has(&edge_layers, "Dış çap") { "Dış çap".into() } else { String::new() },
             unit: "mm".into(),
             ground,
             surface: surfaces.first().map(|s| s.0.clone()).unwrap_or_default(),
@@ -512,6 +531,9 @@ impl App {
                 .filter(|c| c.invert.is_some() && c.diameter.is_some() && c.wall.is_some_and(|w| w > 0.0))
                 .count();
             let crossing = if walls > 0 { format!("{crossing}, {walls} kesişen borunun dış duvarı") } else { crossing };
+            // Docs/adr/4780: the run's own pipes drawn with their outer walls.
+            let own = out.pipes.iter().filter(|p| p.wall.is_some_and(|w| w > 0.0)).count();
+            let crossing = if own > 0 { format!(", {own} borunun dış duvarı{crossing}") } else { crossing };
             self.say(
                 Level::Success,
                 format!(
@@ -537,13 +559,15 @@ impl App {
                 doc.model.entities().any(|e| layers.contains(&e.base().layer_id.as_str()) && e.base().attrs.contains_key(field))
             };
             let wall = ["Et kalınlığı", "Et"].iter().find(|f| has(f)).map_or_else(String::new, |f| (*f).to_owned());
-            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall))
+            let outer = if has("Dış çap") { "Dış çap".to_owned() } else { String::new() };
+            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall, outer))
         });
         let s = &mut self.pipes_check;
-        if let Some((from, diameter, wall)) = guess {
+        if let Some((from, diameter, wall, outer)) = guess {
             s.other_from = from;
             s.other_diameter = if diameter { "Çap".into() } else { String::new() };
             s.other_wall = wall;
+            s.other_outer = outer;
         }
         if id.is_empty() && matches!(s.show, Show::Crossings | Show::Near) {
             s.show = Show::All;
@@ -577,8 +601,10 @@ impl App {
             Event::End(v) => s.end = v,
             Event::Diameter(v) => s.diameter = v,
             Event::Wall(v) => s.wall = v,
+            Event::Outer(v) => s.outer = v,
             Event::Unit(v) => s.unit = v,
             Event::Catalog(v) => s.catalog = v,
+            Event::Rules(v) => s.rules = v,
             Event::Ground(v) => s.ground = v,
             Event::Surface(v) => s.surface = v,
             Event::CoverField(v) => s.cover_field = v,
@@ -616,6 +642,7 @@ impl App {
             Event::OtherEnd(v) => s.other_end = v,
             Event::OtherDiameter(v) => s.other_diameter = v,
             Event::OtherWall(v) => s.other_wall = v,
+            Event::OtherOuter(v) => s.other_outer = v,
             Event::OtherUnit(v) => s.other_unit = v,
             Event::Vertical(v) => s.vertical = v,
             Event::Horizontal(v) => s.horizontal = v,
@@ -728,6 +755,8 @@ impl App {
                     container(fields::select_owned(units, &s.unit, |v| msg(Event::Unit(v)))).width(70),
                     label::caption("Et"),
                     text(&s.wall, "Öznitelik", Event::Wall, 100.0),
+                    label::caption("Dış çap"),
+                    text(&s.outer, "Öznitelik", Event::Outer, 100.0),
                     label::caption("Katalog"),
                     text(&s.catalog, "200 300 400", Event::Catalog, 130.0)
                 ]
@@ -753,6 +782,16 @@ impl App {
                     text(&s.min_slope, "—", Event::MinSlope, 80.0),
                     label::caption("en çok"),
                     text(&s.max_slope, "—", Event::MaxSlope, 80.0)
+                ]
+                .spacing(8)
+                .align_y(Center),
+            )
+            // Docs/adr/4780: the limits not written taken from a system of KentOS's rule package.
+            .field(
+                "Kural",
+                row![
+                    container(fields::select_owned(crate::pipes_check_rules::choices(), &s.rules, |v| msg(Event::Rules(v)))).width(170),
+                    label::caption("yazılmayan sınırlar yönetmeliğin ekinden; yazdığınız önce gelir")
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -784,7 +823,9 @@ impl App {
                     text(&s.other_diameter, "Öznitelik", Event::OtherDiameter, 110.0),
                     container(fields::select_owned(units, &s.other_unit, |v| msg(Event::OtherUnit(v)))).width(70),
                     label::caption("Et"),
-                    text(&s.other_wall, "Öznitelik", Event::OtherWall, 100.0)
+                    text(&s.other_wall, "Öznitelik", Event::OtherWall, 100.0),
+                    label::caption("Dış çap"),
+                    text(&s.other_outer, "Öznitelik", Event::OtherOuter, 100.0)
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -840,8 +881,12 @@ impl App {
                         }
                     ),
                 ));
+                if let Some(line) = crate::pipes_check_rules::line(&s.rules, &f) {
+                    lines.push(words::text_line(Kind::Info, line));
+                }
                 if !s.other.is_empty() {
-                    lines.push(words::text_line(Kind::Info, clearance_line(r, r.cover_to == "outside" || !s.other_wall.trim().is_empty())));
+                    let walled = r.cover_to == "outside" || !s.other_wall.trim().is_empty() || !s.other_outer.trim().is_empty();
+                    lines.push(words::text_line(Kind::Info, clearance_line(r, walled)));
                 }
                 let names = self.pipes_check_names();
                 match s.show {
@@ -852,7 +897,15 @@ impl App {
                             if s.show == Show::Found && p.findings.is_empty() {
                                 continue;
                             }
-                            rows.push(pipe_row(p, name, &f));
+                            let mut row = pipe_row(p, name, &f);
+                            // Docs/adr/4780: the pipe's slope class and its limits, before the findings.
+                            if !s.rules.is_empty() {
+                                let class = p.class.clone().unwrap_or_default();
+                                let limits = p.class.as_deref().and_then(|c| crate::pipes_check_rules::limits(&s.rules, c));
+                                row.insert(row.len() - 1, class);
+                                row.insert(row.len() - 1, limits.unwrap_or_default());
+                            }
+                            rows.push(row);
                         }
                     }
                 }
@@ -889,6 +942,19 @@ impl App {
                 } else {
                     "En az yatay açıklıktan yakın geçen boru yok."
                 },
+            ),
+            Show::All | Show::Found if !s.rules.is_empty() => (
+                vec![
+                    col("Boru", 80.0),
+                    num("Uzunluk", 80.0),
+                    num("Eğim ‰", 70.0),
+                    num("Çap (mm)", 70.0),
+                    num("En az örtü", 80.0),
+                    col("Sınıf", 110.0),
+                    col("Eğim sınırı ‰", 150.0),
+                    col("Bulgular", 330.0),
+                ],
+                "Bu süzgeçte boru yok.",
             ),
             Show::All | Show::Found => (
                 vec![

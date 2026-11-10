@@ -212,6 +212,9 @@ Hedef: aynı Rust hesaplama kütüphanelerini kullanan, uyumlu veri ve servis s�
 - MAP-11 / ADR 3880: `cad.readjustment.sheets`'in web işleyicisinde numara retinin parsel adıyla ve nedeniyle sözü (38
   ortak durum) ve web'in Dış parça no ayrıştırıcısı.
 - MAP-13 / ADR 3900: web'in Dönüşüm uygula'sında Son dönüşümü geri al (`undoLast`; pointcloud.json'un 3 yeni durumu).
+- MAP-16 / ADR 4780: web'in `cad.pipes.check` işleyicisinde `diameter.outer`, `wallMismatch` ve `rules`
+  (kanal-csb-2017.json; `class`, `noRule`, `exceptionalSlope`, `longSpan`; cad.pipes.check.json'un 15 yeni durumu),
+  `cad.pipes.profile`'da hattın kendi dış duvarları (7 yeni durum); web Boru hattı denetiminde Dış çap ve Kural.
 - MAP-11 / ADR 4680: web'in `cad.readjustment.sheets` işleyicisinde sığmayan numaranın kılavuzla dışarıda yazılması
   (`numberLeader`, etiketin `leader`'ı; cad.readjustment.sheets.json'un 3 yeni durumu) ve web Ayırma çapında anahtar.
 - MAP-10 / ADR 4660: web'in `cad.scenarios.impact` işleyicisinde eğim sınıfları ve bakı (`slope.classes`,

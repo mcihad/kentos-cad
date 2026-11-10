@@ -3,13 +3,16 @@
 //! each pipe's inverts at its ends (two attributes, or its vertices' heights), its slope the way it flows, its diameter
 //! (an attribute in a unit, against a catalogue of sizes), its cover over the crown from a terrain surface (measured at
 //! every place the pipe crosses a triangle's edge, so the least cover is exact) or from the structures' cover levels,
-//! over the pipe's top outside when its wall thickness is asked (docs/adr/3960, Civil 3D's), and how it meets the
-//! others: detached parts, an end without a structure, an outlet higher than the lowest inlet.
+//! over the pipe's top outside when its wall thickness is asked (docs/adr/3960, Civil 3D's; the wall from its own
+//! attribute or from the outer diameter's, docs/adr/4780), and how it meets the others: detached parts, an end without
+//! a structure, an outlet higher than the lowest inlet.
 //! A value that would fit read in another unit is reported as a likely unit mistake, never corrected.
 //!
-//! No limit is the program's: the least and the greatest cover and slope are the user's (the regulation's annexes,
-//! the administration's specification or the project's own), and with none given only what is wrong in any project is
-//! reported (a rising pipe, a crown above the ground, a pipe not connected). Asked for (docs/adr/2360), the clearances
+//! No limit is the program's: the least and the greatest cover and slope are the user's (the administration's
+//! specification or the project's own) or a rule package's the user names (docs/adr/4780: KentOS's is the Ministry's
+//! 2017 sewer and storm water regulations' annexes, `cad_pipes_rules`; the user's own limits go first), and with none
+//! given only what is wrong in any project is reported (a rising pipe, a crown above the ground, a pipe not
+//! connected). Asked for (docs/adr/2360), the clearances
 //! to another network's pipes: vertical where they cross in plan, horizontal where they pass without crossing, and
 //! which must be above; the least clearances are the user's too. Nothing is written. The shared cases are
 //! `fixtures/commands/v1/cad.pipes.check.json`.
@@ -28,21 +31,25 @@ pub const PIPE_FINDING_LIMIT: usize = 5000;
 pub const PIPE_CATALOG_LIMIT: usize = 200;
 
 /// The findings' kinds, in the order a pipe's are listed.
-pub const PIPE_FINDINGS: [&str; 24] = [
+pub const PIPE_FINDINGS: [&str; 28] = [
     "detached",
     "noStructure",
+    "longSpan",
     "noInvert",
     "invertUnit",
     "invertIsDepth",
     "reverseSlope",
     "flat",
     "lowSlope",
+    "exceptionalSlope",
     "steepSlope",
     "outletAbove",
     "noDiameter",
     "diameterUnit",
     "notInCatalog",
+    "noRule",
     "noWall",
+    "wallMismatch",
     "noGround",
     "offSurface",
     "aboveGround",
@@ -103,24 +110,34 @@ impl PipeUnit {
 }
 
 /// The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
-/// optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
-/// then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
-/// outside to outside.
+/// optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
+/// pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct PipeDiameter {
+    /// The attribute holding each pipe's inner diameter.
     pub field: String,
+    /// The unit it is written in.
     pub unit: PipeUnit,
+    /// The sizes a pipe may have, in that unit (none: any).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
     pub catalog: Vec<f64>,
+    /// The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub wall: Option<String>,
+    /// The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the
+    /// outer less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the
+    /// outer): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not
+    /// taken from either.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub outer: Option<String>,
 }
 
 /// Where the ground over a pipe is read.
@@ -139,8 +156,10 @@ pub enum PipeGround {
 
 /// Input of `cad.pipes.check` v1.
 ///
-/// Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
-/// greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
+/// Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's and the outer diameter's too, a
+/// limit not above zero, a least above a greatest, a catalogue of more than 200 sizes or a size not above zero; rules
+/// asked without a diameter, of a system the package does not have, or of a package not whole, at `rules`,
+/// docs/adr/4780); `unknown_network` (no network of the id or
 /// name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
 /// surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
 /// `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
@@ -184,6 +203,11 @@ pub struct PipesCheck {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub clearance: Option<PipeClearanceAsk>,
+    /// The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and
+    /// greatest slope by its diameter's class, the least cover, the greatest span between two structures.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub rules: Option<crate::PipeRulesAsk>,
 }
 
 /// The other network of the clearance check (docs/adr/2360): its id or name, where its inverts and diameters are read
@@ -304,8 +328,9 @@ pub struct PipeFinding {
 
 /// A pipe as checked: its layer, length (metres, along it), whether it flows against its drawing (the network's
 /// direction field), the inverts upstream and downstream, the slope the way it flows (falling: above zero), its
-/// diameter and wall thickness (metres; the wall when asked and read), the least cover and where, the greatest cover,
-/// and its findings' kinds.
+/// diameter and wall thickness (metres; the wall when asked and read, from its own attribute or the outer diameter's),
+/// the least cover and where, the greatest cover, the rule package's slope class it is in (rules asked), and its
+/// findings' kinds.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -351,6 +376,10 @@ pub struct PipeCheck {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub max_cover: Option<f64>,
+    /// The rule package's slope class its diameter is in (docs/adr/4780); none: no rules asked, or none holds it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub class: Option<String>,
     pub findings: Vec<String>,
 }
 

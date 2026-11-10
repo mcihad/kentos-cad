@@ -47,7 +47,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-13 LiDAR | 1500, 1800, 2300, 2700, 3100, 3500, 3900, 4300 | çoklu tarama demeti; dönüşümün dosyasız nesnede tutulması | gerçek veri ölçümü (süre, bellek, yoğunluk); Euler açılarının sırası (kaynak) |
 | MAP-14 Yüzey | 1520, 1560, 1820, 2320, 2720, 3120, 3520, 3920, 4320 | pafta eğrilerinin kayıtlı çizim olması (yüzey sürümüne bağ); kendiliğinden yeniden üretimin yalnız değişeni yazması; fark eşiği ve m. 63(2) yerleşimi (kaynak beklenir) | gerçek veri ölçümü (karolu hesap) |
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
-| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360 | hattın kendi borularının dış duvarı; dış çap özniteliği | EK-1 değerleri (sahibin PDF'i); EPANET/SWMM; “yüzey kaplaması”nın anlamı (kaynak) |
+| MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380 | tanımlı özniteliğin boşluklu etiketinin geri adı | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
 | MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
@@ -2042,6 +2042,19 @@ merkezli dış elips ve iki elips arası kesin sınırlı dolu halka, yazı dı�
 çerçevede; 5 yeni bağımsız durum (52; eskiler değişmedi), Python (testin kendi geometrisi), MCP; masaüstünde Diğer ağın
 Et'iyle çizilen profil ve ileti; Boru hattı denetimi açıkken çizim değişince sonucunu yeniden okur. Açık: hattın kendi
 borularının dış duvarı, dış çap özniteliği.
+
+**10 Kasım 2026, dokuzuncu tur — dış çap, hattın dış duvarı, EK-1 kural paketi ([ADR 4780](../docs/adr/4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)).**
+Kapsam: **Harita + Yol + CBS**; maddenin bütün sıradaki işi. Dayanak: Atıksu Toplama ve Uzaklaştırma Sistemleri
+Hakkında Yönetmelik (RG 06.01.2017/29940) EK-1 ve EK-2, Yağmursuyu Toplama, Depolama ve Deşarj Sistemleri Hakkında
+Yönetmelik (RG 23.06.2017/30105) EK-1 Çizelge 1.4, RG'nin metinlerinden 10 Kasım 2026'da okundu; Civil 3D'nin “Outside
+Pipe Walls”'u. Kanıtlanan: `diameter.outer` (et = (dış − iç) / 2; etle birlikte uyuşmazsa `wallMismatch`, et yok);
+`cad.pipes.profile` hattın kendi borularının dış alt ve dış tepe çizgileri (ince kırmızı), örtü dış tepeden;
+`catalog/v1/rules/kanal-csb-2017.json` (atıksu: 4 eğim sınıfı, 2,70 m, baca aralığı; yağmursuyu: Çizelge 1.4'ün 14 çapı,
+1,2 m) ve `cad.pipes.check`'in `rules`'u: yazılmayan sınırlar paketten, `class`, yeni bulgular `noRule`,
+`exceptionalSlope`, `longSpan`; 15 + 7 bağımsız durum (64, 59; değerler betikte elle yazılı, paketle karşılaştırılır),
+Python, MCP; masaüstünde Dış çap kutusu, Kural satırı, tabloda Sınıf ve Eğim sınırı. “Yüzey kaplaması”nın anlamı
+bulundu: hendeğin üstündeki yol kaplaması (m. 16, EK-2). Açık: taramanın türü, yol kaplamasının profilde gösterimi,
+hız/doluluk (hidrolik), EPANET/SWMM.
 
 ### MAP-17 — Modern ve kayıp raporlu CAD/CBS veri devri sağla [ ]
 

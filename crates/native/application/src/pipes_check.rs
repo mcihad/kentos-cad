@@ -9,24 +9,30 @@
 //!   likely unit mistake;
 //! - its cover over the crown (invert + diameter), or over its top outside (invert + diameter + wall, Civil 3D's: “from
 //!   the top outside of the pipe to the reference surface”) when a wall thickness attribute is asked (docs/adr/3960; a
-//!   pipe without one is said, `noWall`, and measured over its crown): from a terrain surface at every place the pipe
-//!   crosses a triangle's edge and at its vertices (the ground and the crown are linear between them, so the least is
-//!   exact), or from the structures' cover level at the ends; an invert that would fit the cover limits read in
+//!   pipe without one is said, `noWall`, and measured over its crown) or an outer diameter's (docs/adr/4780: the wall
+//!   half the outer less the inner; with both asked they must agree, else `wallMismatch` and no wall): from a terrain
+//!   surface at every place the pipe crosses a triangle's edge and at its vertices (the ground and the crown are linear
+//!   between them, so the least is exact), or from the structures' cover level at the ends; an invert that would fit
+//!   the cover limits read in
 //!   centimetres or millimetres, or as a depth, is a likely unit mistake;
 //! - how it meets the others: a part not connected to the longest, an end at no structure (when the network has
 //!   structures), an outlet higher than the lowest inlet at a node (Civil 3D's Pipe Drop Across Structure rule's
 //!   question, with no drop asked);
-//! - asked for, its clearances to another network's pipes (`pipes_clearance`, docs/adr/2360).
+//! - asked for, its clearances to another network's pipes (`pipes_clearance`, docs/adr/2360);
+//! - asked for, a rule package's limits where the user gave none (`pipes_rules`, docs/adr/4780): the least, exceptional
+//!   least and greatest slope of its diameter's class (`noRule` when no class holds it), the least cover, the greatest
+//!   span between the structures at its two ends (`longSpan`).
 //!
-//! Nothing is corrected or written, and no limit is the program's (CLAUDE.md: değer uydurulmaz). The shared cases are
+//! Nothing is corrected or written, and no limit is the program's (CLAUDE.md: değer uydurulmaz): the package's are the
+//! regulations' as read, in `catalog/v1/rules/kanal-csb-2017.json`. The shared cases are
 //! `fixtures/commands/v1/cad.pipes.check.json`.
 
 use std::collections::HashMap;
 
 use kentos_commands::{
     CommandResult, Entity, NetworkDef, NetworkKind, PIPE_CATALOG_LIMIT, PIPE_FINDING_LIMIT, PIPE_FINDINGS, PIPE_LIMIT,
-    PipeCheck, PipeCount, PipeDiameter, PipeFinding, PipeGround, PipeInverts, PipeUnit, PipesCheck, PipesChecked,
-    network_caseless,
+    PipeCheck, PipeCount, PipeDiameter, PipeFinding, PipeGround, PipeInverts, PipeRuleSystem, PipeUnit, PipesCheck,
+    PipesChecked, network_caseless,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::network::{Dir, Graph};
@@ -36,6 +42,7 @@ use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
 use crate::pipes_clearance as clearance;
+use crate::pipes_rules as rules;
 use crate::processing_host::host;
 use crate::road_terrains as terrains;
 
@@ -60,14 +67,15 @@ pub(crate) fn attr(e: &Entity, field: &str) -> Option<f64> {
     e.base().attrs.get(field).and_then(|v| plain_number(v))
 }
 
-/// The question's own rules, before the drawing is read.
-fn asked(input: &PipesCheck) -> Result<(), Stop> {
+/// The question's own rules, before the drawing is read, and the rule package's system when one is asked.
+fn asked(input: &PipesCheck) -> Result<Option<PipeRuleSystem>, Stop> {
     asked_values(&input.inverts, input.diameter.as_ref(), input.ground.as_ref())?;
     limits_of(input)?;
-    match &input.clearance {
-        Some(c) => clearance::asked(c),
-        None => Ok(()),
+    let system = rules::asked(input)?;
+    if let Some(c) = &input.clearance {
+        clearance::asked(c)?;
     }
+    Ok(system)
 }
 
 /// The rules of where the values are read (`cad.pipes.check`'s and `cad.pipes.profile`'s): attributes named, a
@@ -99,6 +107,9 @@ pub(crate) fn asked_values(
         }
         if d.wall.as_deref().is_some_and(|w| !named(w)) {
             return bad("Et kalınlığının özniteliği boş; özniteliğin adını yazın.".into(), "diameter.wall");
+        }
+        if d.outer.as_deref().is_some_and(|w| !named(w)) {
+            return bad("Dış çapın özniteliği boş; özniteliğin adını yazın.".into(), "diameter.outer");
         }
     }
     match ground {
@@ -216,11 +227,45 @@ pub(crate) fn diameter_of(e: Option<&Entity>, d: &PipeDiameter) -> Result<f64, (
     e.and_then(|e| attr(e, &d.field)).filter(|v| *v > 0.0).ok_or(())
 }
 
-/// A pipe's wall thickness in metres (docs/adr/3960), its attribute read in the diameter's unit, 0 or more: none when
-/// no wall is asked, an error when one is asked and the pipe has none.
-pub(crate) fn wall_of(e: Option<&Entity>, d: &PipeDiameter) -> Option<Result<f64, ()>> {
-    let field = d.wall.as_deref()?;
-    Some(e.and_then(|e| attr(e, field)).filter(|v| *v >= 0.0).map(|v| v * d.unit.metres()).ok_or(()))
+/// Why a pipe's wall asked is not known (docs/adr/3960, 4780).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) enum NoWall {
+    /// Neither its wall nor its outer diameter is given (`noWall`).
+    Missing,
+    /// Its outer diameter is below its inner one, or not the inner plus two walls: the difference, outer − (inner + 2 ×
+    /// wall) in metres, the wall 0 when it is not given (`wallMismatch`).
+    Mismatch(f64),
+    /// Its outer diameter is given and its inner one not: the inner's own finding says it (`noDiameter`).
+    NoInner,
+}
+
+/// A pipe's wall thickness in metres (docs/adr/3960, 4780), read in the diameter's unit from its wall attribute (0 or
+/// more) or as half its outer diameter (above 0) less its inner; with both asked and given they must agree to a
+/// billionth of the outer. None when neither is asked.
+pub(crate) fn wall_of(e: Option<&Entity>, d: &PipeDiameter) -> Option<Result<f64, NoWall>> {
+    if d.wall.is_none() && d.outer.is_none() {
+        return None;
+    }
+    let read = |field: Option<&str>| field.and_then(|f| e.and_then(|e| attr(e, f)));
+    let wall = read(d.wall.as_deref()).filter(|v| *v >= 0.0);
+    let outer = read(d.outer.as_deref()).filter(|v| *v > 0.0);
+    let inner = diameter_of(e, d).ok();
+    let unit = d.unit.metres();
+    Some(match (outer, inner) {
+        (Some(o), Some(i)) => {
+            let gap = o - (i + 2.0 * wall.unwrap_or(0.0));
+            if o < i || (wall.is_some() && gap.abs() > 1e-9 * o.abs().max(1.0)) {
+                Err(NoWall::Mismatch(gap * unit))
+            } else {
+                Ok(wall.unwrap_or((o - i) / 2.0) * unit)
+            }
+        }
+        _ => match wall {
+            Some(w) => Ok(w * unit),
+            None if outer.is_some() => Err(NoWall::NoInner),
+            None => Err(NoWall::Missing),
+        },
+    })
 }
 
 fn in_catalog(v: f64, catalog: &[f64]) -> bool {
@@ -232,6 +277,8 @@ struct Ask<'a> {
     def: &'a NetworkDef,
     surface: Option<&'a Surface>,
     other: Option<&'a clearance::Other<'a>>,
+    /// The rule package's system (docs/adr/4780).
+    rules: Option<&'a PipeRuleSystem>,
 }
 
 struct Found {
@@ -301,7 +348,7 @@ pub(crate) fn load(
 }
 
 fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
-    asked(input)?;
+    let system = asked(input)?;
     let (def, made, session) = load(doc, &input.network, input.ground.as_ref())?;
     let surface = match &made {
         Some(m) => Some(m.built()?),
@@ -323,7 +370,7 @@ fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
         (Some(c), Some((_, session))) => Some(clearance::Other::new(doc, c, session)),
         _ => None,
     };
-    Ok(check(doc, g, &Ask { input, def: &def, surface, other: ready.as_ref() }))
+    Ok(check(doc, g, &Ask { input, def: &def, surface, other: ready.as_ref(), rules: system.as_ref() }))
 }
 
 fn root(parent: &mut [u32], mut x: u32) -> u32 {
@@ -424,12 +471,40 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             Some((d, Ok(v))) => Some(v * d.unit.metres()),
             _ => None,
         };
-        // Its wall (docs/adr/3960): asked and missing is said, and the crown is the inner one.
+        // Its wall (docs/adr/3960, 4780): asked and missing, or an outer diameter not agreeing, is said, and the crown
+        // is the inner one.
         let wall = input.diameter.as_ref().and_then(|d| wall_of(e, d));
-        if let Some(Err(())) = wall {
-            mark("noWall", start, None, None);
+        match wall {
+            Some(Err(NoWall::Missing)) => mark("noWall", start, None, None),
+            Some(Err(NoWall::Mismatch(v))) => mark("wallMismatch", start, Some(v), None),
+            _ => {}
         }
         let wall_m = wall.and_then(Result::ok);
+        // The rule package's class for its diameter in millimetres (docs/adr/4780); the user's own limits go first.
+        let read_mm = match diameter {
+            Some((d, Ok(v))) => Some((v, v * (d.unit.metres() * 1000.0))),
+            _ => None,
+        };
+        let class = ask.rules.zip(read_mm).and_then(|(r, (_, mm))| rules::slope_class(r, mm));
+        if let (Some(_), Some((v, _)), None) = (ask.rules, read_mm, class) {
+            mark("noRule", start, Some(v), None);
+        }
+        let least_slope = input.min_slope.or(class.map(|c| 1.0 / c.least));
+        let exceptional_slope = match input.min_slope {
+            Some(_) => None,
+            None => class.and_then(|c| c.exceptional).map(|a| 1.0 / a),
+        };
+        let greatest_slope = input.max_slope.or(class.map(|c| 1.0 / c.greatest));
+        let min_cover_limit = input.min_cover.or(ask.rules.and_then(|r| r.min_cover));
+        if let (Some(r), Some((_, mm)), true) = (ask.rules, read_mm, structures) {
+            let (na, nb) = edge.nodes.unzip();
+            let between = [na, nb].iter().all(|n| n.is_some_and(|n| at_node.contains_key(&n)));
+            if let (true, Some(span)) = (between, rules::span_class(r, mm))
+                && l > span.greatest
+            {
+                mark("longSpan", start, Some(l), None);
+            }
+        }
         // The crown's offset over the invert: the diameter and the wall (the top outside), none when a diameter is
         // asked and the pipe has none.
         let crown: Option<f64> = match diameter {
@@ -463,7 +538,7 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         }
         // A likely unit mistake in an invert: read as written it misses the cover limits, read in cm or mm (or as a
         // depth) it fits them.
-        if let (Some((i0, i1)), Some(lo), Some(hi), Some(c)) = (ends, input.min_cover, input.max_cover, crown) {
+        if let (Some((i0, i1)), Some(lo), Some(hi), Some(c)) = (ends, min_cover_limit, input.max_cover, crown) {
             let fits = |cover: f64| (lo..=hi).contains(&cover);
             for (v, g0, place) in [(i0, end_ground[0], start), (i1, end_ground[1], end)] {
                 let Some(g0) = g0 else { continue };
@@ -486,10 +561,13 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
                 mark("reverseSlope", start, Some(sl), None);
             } else if sl == 0.0 {
                 mark("flat", start, Some(sl), None);
-            } else if input.min_slope.is_some_and(|m| sl < m) {
+            } else if exceptional_slope.or(least_slope).is_some_and(|m| sl < m) {
                 mark("lowSlope", start, Some(sl), None);
+            } else if exceptional_slope.is_some() && least_slope.is_some_and(|m| sl < m) {
+                // Docs/adr/4780: between the exceptional least and the least, allowed only by exception.
+                mark("exceptionalSlope", start, Some(sl), None);
             }
-            if input.max_slope.is_some_and(|m| sl > m) {
+            if greatest_slope.is_some_and(|m| sl > m) {
                 mark("steepSlope", start, Some(sl), None);
             }
         }
@@ -541,7 +619,7 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             if let Some((v, at)) = min_cover {
                 if v < 0.0 {
                     mark("aboveGround", at, Some(v), None);
-                } else if input.min_cover.is_some_and(|m| v < m) {
+                } else if min_cover_limit.is_some_and(|m| v < m) {
                     mark("shallow", at, Some(v), None);
                 }
             }
@@ -567,6 +645,7 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             min_cover: min_cover.map(|m| m.0),
             min_cover_at: min_cover.map(|m| m.1),
             max_cover: max_cover.map(|m| m.0),
+            class: class.map(|c| c.name.clone()),
             findings: Vec::new(),
         });
     }
@@ -611,7 +690,7 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
     PipesChecked {
         network: ask.def.id.clone(),
         cover_to: match &input.diameter {
-            Some(d) if d.wall.is_some() => "outside",
+            Some(d) if d.wall.is_some() || d.outer.is_some() => "outside",
             Some(_) => "crown",
             None => "invert",
         }

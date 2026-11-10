@@ -130,6 +130,7 @@ yanlış birimi yakala”. Durum: taslak. İlgili ADR'ler:
 ## Sonra
 
 - EK-1'in değerleri okunduğunda sürümlü bir kural paketi. Kullanıcı yine başka değer verebilir.
+  [ADR 4780](4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)'de (`catalog/v1/rules/kanal-csb-2017.json`).
 - Hat profili:
   - zemin, akar, tepe ve örtünün birlikte çizimi;
   - plan değişince denetimin güncellenmesi.

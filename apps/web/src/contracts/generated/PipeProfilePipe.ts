@@ -2,7 +2,13 @@
 
 /**
  * A pipe of the run: its uid and name (its `Ad` attribute), its distances along the run, its length, whether it is
- * drawn against the flow, its inverts up and down the flow, its slope, diameter (m) and least cover over the crown
- * (none asked: over the invert).
+ * drawn against the flow, its inverts up and down the flow, its slope, diameter (m), wall and least cover over the
+ * crown (none asked: over the invert; its wall known: over its top outside, as `cad.pipes.check` measures it).
  */
-export type PipeProfilePipe = { uid: string, name?: string, from: number, to: number, length: number, reversed?: boolean, upstream?: number, downstream?: number, slope?: number, diameter?: number, minCover?: number, };
+export type PipeProfilePipe = { uid: string, name?: string, from: number, to: number, length: number, reversed?: boolean, upstream?: number, downstream?: number, slope?: number, diameter?: number, 
+/**
+ * Its wall thickness (m), when the diameter asks it (its own attribute or the outer diameter's) and the pipe's is
+ * known (docs/adr/4780): above zero, its outer walls are drawn, the bottom outside under the invert and the top
+ * outside over the crown.
+ */
+wall?: number, minCover?: number, };

@@ -602,6 +602,11 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Dış çap, hattın dış duvarı, kanal yönetmeliklerinin kural paketi (10 Kasım 2026; MAP-16, [ADR 4780](../../docs/adr/4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)).**
+  `diameter.outer` (et = (dış − iç) / 2; etle uyuşmazsa `wallMismatch`); hat profilinde kendi borularının dış duvarları;
+  `cad.pipes.check`'in `rules`'u `catalog/v1/rules/kanal-csb-2017.json`'dan (atıksu EK-1, yağmursuyu Çizelge 1.4):
+  yazılmayan sınırlar paketten, `class`, `noRule`, `exceptionalSlope`, `longSpan`. Boru hattı denetimi › Kural. Harita +
+  Yol + CBS.
 - **Ayırma çapında sığmayan numara kılavuzla dışarıda (10 Kasım 2026; MAP-11, [ADR 4680](../../docs/adr/4680-separation-number-on-a-leader.md)).**
   `cad.readjustment.sheets`'in `numberLeader`'ı: numara tam boyda sığmazsa küçültülmeden, yatay, kılavuzla dışarıda
   (uç parçanın etiket yeri, iniş doğu sınırdan bir boy öte); cevapta `leader`. Düzenleme › Ayırma çapı › Sığmayan

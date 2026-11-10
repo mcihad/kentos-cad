@@ -326,6 +326,7 @@ pub mod parcels_check;
 pub mod pipes_check;
 mod pipes_clearance;
 pub mod pipes_profile;
+mod pipes_rules;
 pub mod asbuilt_check;
 pub(crate) mod asbuilt_series;
 mod asbuilt_package;

@@ -78,7 +78,7 @@ denetimi'nin kendi sonucunun ağ değişince kendiliğinden yeniden okunması (p
 
 ## Sonra
 
-- Hattın kendi borularının dış duvarı ve taraması; taramanın türünün seçilmesi.
-- Et yerine dış çap özniteliği (ADR 3960 Sonra).
+- Hattın kendi borularının dış duvarı ([ADR 4780](4780-pipe-outer-diameter-own-walls-and-sewer-rules.md)'de) ve taraması; taramanın türünün seçilmesi.
+- Et yerine dış çap özniteliği (ADR 3960 Sonra); ADR 4780'de.
 - “Yüzey kaplaması”nın anlamı (kaynak beklenir); EK-1 değerleri (sahibin PDF'i); EPANET/SWMM.
 - Web (TODOS §0.2).

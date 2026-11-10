@@ -3,8 +3,30 @@ import type { PipeUnit } from "./PipeUnit";
 
 /**
  * The pipes' inner diameter: the attribute, its unit and, optionally, the sizes a pipe may have (in that unit); and,
- * optionally, the attribute holding each pipe's wall thickness (docs/adr/3960; in the diameter's unit, 0 or more):
- * then the cover is measured over the pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances
- * outside to outside.
+ * optionally, where each pipe's wall thickness is read (docs/adr/3960, 4780): then the cover is measured over the
+ * pipe's top outside (invert + diameter + wall, Civil 3D's) and the clearances outside to outside.
  */
-export type PipeDiameter = { field: string, unit: PipeUnit, catalog?: Array<number>, wall?: string, };
+export type PipeDiameter = { 
+/**
+ * The attribute holding each pipe's inner diameter.
+ */
+field: string, 
+/**
+ * The unit it is written in.
+ */
+unit: PipeUnit, 
+/**
+ * The sizes a pipe may have, in that unit (none: any).
+ */
+catalog?: Array<number>, 
+/**
+ * The attribute holding each pipe's wall thickness, in the diameter's unit, 0 or more (docs/adr/3960).
+ */
+wall?: string, 
+/**
+ * The attribute holding each pipe's outer diameter, in the diameter's unit (docs/adr/4780): its wall is half the
+ * outer less the inner. With `wall` too, the two must agree (outer = inner + 2 × wall, to a billionth of the
+ * outer): a pipe whose do not, or whose outer is below its inner, is said (`wallMismatch`) and its wall is not
+ * taken from either.
+ */
+outer?: string, };

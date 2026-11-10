@@ -3,12 +3,15 @@ import type { PipeClearanceAsk } from "./PipeClearanceAsk";
 import type { PipeDiameter } from "./PipeDiameter";
 import type { PipeGround } from "./PipeGround";
 import type { PipeInverts } from "./PipeInverts";
+import type { PipeRulesAsk } from "./PipeRulesAsk";
 
 /**
  * Input of `cad.pipes.check` v1.
  *
- * Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's too, a limit not above zero, a least above a
- * greatest, a catalogue of more than 200 sizes or a size not above zero); `unknown_network` (no network of the id or
+ * Refusals, in this order: `invalid_pipe_check` (an empty attribute's name, the wall's and the outer diameter's too, a
+ * limit not above zero, a least above a greatest, a catalogue of more than 200 sizes or a size not above zero; rules
+ * asked without a diameter, of a system the package does not have, or of a package not whole, at `rules`,
+ * docs/adr/4780); `unknown_network` (no network of the id or
  * name), `not_a_pipe_network` (a road network); `not_a_road_project` (a surface asked outside Harita and Yol), the
  * surface's own (`unknown_terrain`, `terrain_unbuildable`); `invalid_network` (the network does not build),
  * `tools_unavailable`. Asked, the clearance's (docs/adr/2360): its question's after the checked one's
@@ -32,4 +35,9 @@ minSlope?: number, maxSlope?: number,
 /**
  * Another network's pipes and the clearances to them (docs/adr/2360).
  */
-clearance?: PipeClearanceAsk, };
+clearance?: PipeClearanceAsk, 
+/**
+ * The rule package the limits not given are taken from (docs/adr/4780): each pipe's least, exceptional least and
+ * greatest slope by its diameter's class, the least cover, the greatest span between two structures.
+ */
+rules?: PipeRulesAsk, };
