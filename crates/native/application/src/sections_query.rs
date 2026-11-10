@@ -24,10 +24,9 @@ pub fn state_of(
     let Some(block) = doc.block(sections::block_id(mark)) else {
         return BuildingSectionState::NotDrawn;
     };
-    let Some(frame) = sections::frame_of(fields) else {
+    let Some(drawn) = sections::draw_mark(doc, fields) else {
         return BuildingSectionState::Stale;
     };
-    let drawn = sections::draw(doc, &frame, &fields.mark);
     // The block's objects name their layers by id; the drawing names them by their EK-4 names.
     let ids = |name: &str| -> String {
         let id = name.to_ascii_lowercase();
@@ -63,7 +62,7 @@ pub fn rows(doc: &Document) -> Vec<BuildingSectionRow> {
     let mut seen = std::collections::BTreeSet::new();
     for (u, e) in doc.entities_with_uids() {
         let Entity::ViewMark(v) = e else { continue };
-        if v.mark.form != ViewMarkForm::Section {
+        if !matches!(v.mark.form, ViewMarkForm::Section | ViewMarkForm::Elevation) {
             continue;
         }
         let id = sections::block_id(u);
@@ -74,18 +73,21 @@ pub fn rows(doc: &Document) -> Vec<BuildingSectionRow> {
             .count() as u32;
         out.push(BuildingSectionRow {
             mark: Some(u.to_string()),
-            name: format!("{} kesiti", sections::label(&v.mark.mark)),
+            name: sections::view_name(doc, &v.mark),
             block: doc.block(id).map(|_| id.to_string()),
             state: state_of(doc, u, &v.mark),
             inserts,
         });
     }
     for b in doc.blocks() {
-        if b.name.starts_with("MM-XXXX-KESIT")
+        if (b.name.starts_with("MM-XXXX-KESIT") || b.name.starts_with("MM-XXXX-GORUNUS"))
             && !seen.contains(&b.id)
             && b.description
                 .as_deref()
-                .is_some_and(|d| d.contains("kesit işaretinden çıkarır"))
+                .is_some_and(|d| {
+                    d.contains("KentOS kesit işaretinden çıkarır")
+                        || d.contains("KentOS görünüş işaretinden çıkarır")
+                })
         {
             out.push(BuildingSectionRow {
                 mark: None,
@@ -113,14 +115,11 @@ pub fn stale_on_sheets(
     let mut stale: Vec<(kentos_commands::BlockId, String)> = Vec::new();
     for (u, e) in doc.entities_with_uids() {
         let Entity::ViewMark(v) = e else { continue };
-        if v.mark.form == ViewMarkForm::Section
+        if matches!(v.mark.form, ViewMarkForm::Section | ViewMarkForm::Elevation)
             && doc.block(sections::block_id(u)).is_some()
             && state_of(doc, u, &v.mark) == BuildingSectionState::Stale
         {
-            stale.push((
-                sections::block_id(u),
-                format!("{} kesiti", sections::label(&v.mark.mark)),
-            ));
+            stale.push((sections::block_id(u), sections::view_name(doc, &v.mark)));
         }
     }
     if stale.is_empty() {

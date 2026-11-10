@@ -131,5 +131,5 @@ fn sections_cut_and_see_as_the_reference_says() {
         }
         seen_cases += 1;
     }
-    assert_eq!(seen_cases, 17, "every case read");
+    assert_eq!(seen_cases, 18, "every case read");
 }

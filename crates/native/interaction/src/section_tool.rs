@@ -21,9 +21,13 @@ use crate::prompt::Prompt;
 use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Tag, TextGhost, Tone, Tool};
 
 pub const ID: &str = "sectionDraw";
+/// Görünüş çıkar (docs/adr/8043): the same tool on an elevation mark, picked by its bubble.
+pub const FACADE_ID: &str = "facadeDraw";
 
 #[derive(Clone, Debug, Default)]
 pub struct SectionTool {
+    /// The marks it draws from: section marks (Kesit çıkar) or elevation marks (Görünüş çıkar).
+    form: ViewMarkForm,
     mark: Option<Slot>,
     hover: Option<Vec2>,
     drawn: Preview,
@@ -62,15 +66,38 @@ impl SectionTool {
         Self::default()
     }
 
-    /// The section mark whose line passes nearest the point, within the pick distance, on a shown layer.
-    fn mark_at(at: Vec2, cx: &Context<'_>) -> Option<Slot> {
+    /// Görünüş çıkar: elevation marks.
+    pub fn facades() -> Self {
+        Self {
+            form: ViewMarkForm::Elevation,
+            ..Self::default()
+        }
+    }
+
+    fn elevations(&self) -> bool {
+        self.form == ViewMarkForm::Elevation
+    }
+
+    /// The mark of the tool's form nearest the point on a shown layer: a section mark whose line passes within the
+    /// pick distance; an elevation mark whose bubble holds the point (twice its words' height, at least the pick
+    /// distance).
+    fn mark_at(&self, at: Vec2, cx: &Context<'_>) -> Option<Slot> {
         let tol = cx.pick_tolerance();
         let mut best: Option<(f64, Slot)> = None;
         for e in cx.doc.entities() {
             let Entity::ViewMark(v) = e else { continue };
-            if v.mark.form != ViewMarkForm::Section
-                || !cx.doc.layers().is_visible(&e.base().layer_id)
-            {
+            if v.mark.form != self.form || !cx.doc.layers().is_visible(&e.base().layer_id) {
+                continue;
+            }
+            if self.elevations() {
+                let Some(c) = v.mark.points.first() else {
+                    continue;
+                };
+                let h = v.mark.size.unwrap_or(2.5) * cx.doc.settings().plot_scale / 1000.0;
+                let d = (at.x - c.x).hypot(at.y - c.y);
+                if d <= (2.0 * h).max(tol) && best.is_none_or(|(b, _)| d < b) {
+                    best = Some((d, Slot(e.base().id)));
+                }
                 continue;
             }
             for w in v.mark.points.windows(2) {
@@ -202,11 +229,15 @@ impl SectionTool {
 
 impl Tool for SectionTool {
     fn id(&self) -> &'static str {
-        ID
+        if self.elevations() { FACADE_ID } else { ID }
     }
 
     fn label(&self) -> &'static str {
-        "Kesit çıkar"
+        if self.elevations() {
+            "Görünüş çıkar"
+        } else {
+            "Kesit çıkar"
+        }
     }
 
     fn cursor(&self) -> Cursor {
@@ -228,7 +259,7 @@ impl Tool for SectionTool {
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         // A section mark selected before the tool started is the one.
         if let [one] = cx.selection.ids()
-            && matches!(cx.doc.get(*one), Some(Entity::ViewMark(v)) if v.mark.form == ViewMarkForm::Section)
+            && matches!(cx.doc.get(*one), Some(Entity::ViewMark(v)) if v.mark.form == self.form)
         {
             self.mark = Some(*one);
             self.see(cx);
@@ -237,20 +268,21 @@ impl Tool for SectionTool {
     }
 
     fn prompt(&self) -> Prompt {
-        let step = if self.mark.is_none() {
-            "kesiti çıkarılacak kesit işaretinin çizgisine tıklayın"
-        } else if self.pieces.is_empty() {
-            "kesit çıkarılmış: Enter ile yeniden çizin"
-        } else {
-            "kesitin sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)"
+        let step = match (self.elevations(), self.mark.is_none(), self.pieces.is_empty()) {
+            (false, true, _) => "kesiti çıkarılacak kesit işaretinin çizgisine tıklayın",
+            (true, true, _) => "görünüşü çıkarılacak görünüş işaretinin balonuna tıklayın",
+            (false, false, true) => "kesit çıkarılmış: Enter ile yeniden çizin",
+            (true, false, true) => "görünüş çıkarılmış: Enter ile yeniden çizin",
+            (false, false, false) => "kesitin sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
+            (true, false, false) => "görünüşün sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
         };
-        Prompt::new("Kesit çıkar", step)
+        Prompt::new(self.label(), step)
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover = Some(p.world);
         if self.mark.is_none() {
-            let mark = Self::mark_at(p.raw, cx);
+            let mark = self.mark_at(p.raw, cx);
             cx.selection.set_hover(mark);
             return;
         }
@@ -263,11 +295,15 @@ impl Tool for SectionTool {
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.mark.is_none() {
-            self.mark = Self::mark_at(p.raw, cx);
+            self.mark = self.mark_at(p.raw, cx);
             if self.mark.is_none() {
                 cx.say(
                     Level::Info,
-                    "Burada kesit işareti yok; planda kesit çizgisine tıklayın.",
+                    if self.elevations() {
+                        "Burada görünüş işareti yok; planda görünüş işaretinin balonuna tıklayın."
+                    } else {
+                        "Burada kesit işareti yok; planda kesit çizgisine tıklayın."
+                    },
                 );
             }
             self.see(cx);
@@ -330,7 +366,10 @@ impl Tool for SectionTool {
         } else if let Some(note) = &self.note {
             out.tag = Some(Tag {
                 at,
-                lines: vec!["Kesit".into(), note.clone()],
+                lines: vec![
+                    if self.elevations() { "Görünüş" } else { "Kesit" }.into(),
+                    note.clone(),
+                ],
             });
         }
         out

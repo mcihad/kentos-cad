@@ -2300,6 +2300,11 @@
           "label": "Görünüş"
          },
          {
+          "command": "tool.facadeDraw",
+          "title": "İşaret",
+          "label": "Görünüş çıkar"
+         },
+         {
           "command": "tool.viewDetail",
           "title": "İşaret",
           "label": "Detay"

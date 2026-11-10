@@ -133,8 +133,9 @@ pub const TOOLS: &[&str] = &[
     crate::module_place::ID,
     // docs/adr/0799: Oda iç görünüşü.
     crate::room_elevation::ID,
-    // docs/adr/8042: Kesit çıkar.
+    // docs/adr/8042: Kesit çıkar; docs/adr/8043: Görünüş çıkar.
     crate::section_tool::ID,
+    crate::section_tool::FACADE_ID,
     // docs/adr/0789 §2: Kırpma çerçevesi.
     crate::view_crop::ID,
     crate::casework::ID,
@@ -557,6 +558,7 @@ impl Session {
             crate::module_place::ID => Box::new(crate::module_place::ModulePlace::new()),
             crate::room_elevation::ID => Box::new(crate::room_elevation::RoomElevationTool::new()),
             crate::section_tool::ID => Box::new(crate::section_tool::SectionTool::new()),
+            crate::section_tool::FACADE_ID => Box::new(crate::section_tool::SectionTool::facades()),
             crate::view_crop::ID => Box::new(crate::view_crop::ViewCrop::new()),
             crate::casework::ID => Box::new(crate::casework::Casework::new()),
             tag_tools::TAG_ID => Box::new(tag_tools::TagTool::new()),

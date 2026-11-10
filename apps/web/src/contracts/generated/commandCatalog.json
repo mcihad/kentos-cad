@@ -24692,7 +24692,7 @@
       },
       "output": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"), its block, its\nplacements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
+        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"; an elevation's \"Kuzey\ngörünüşü\"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
         "properties": {
           "block": {
             "type": "string"
@@ -24740,7 +24740,7 @@
       },
       "plan": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"), its block, its\nplacements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
+        "description": "Output of `cad.sections.edit` (and its plan): the mark, the section's name (\"A-A kesiti\"; an elevation's \"Kuzey\ngörünüşü\"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and\nwhat was left out.",
         "properties": {
           "block": {
             "type": "string"
@@ -24842,7 +24842,7 @@
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.sections.query` v1 (read-only): every section mark's section, the one of `mark`, or the one whose\nplacement `uid` is.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.",
+        "description": "Input of `cad.sections.query` v1 (read-only): every section mark's section and every elevation mark's facade, the\none of `mark`, or the one whose placement `uid` is.\n\nRefusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.",
         "properties": {
           "mark": {
             "type": [
@@ -121455,7 +121455,7 @@
           ]
         },
         "name": {
-          "description": "\"A-A kesiti\".",
+          "description": "\"A-A kesiti\", \"Kuzey görünüşü\".",
           "type": "string"
         },
         "state": {
@@ -121498,7 +121498,7 @@
       "description": "What `cad.sections.edit` does.",
       "oneOf": [
         {
-          "description": "Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into\nits block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at\ntheir bottom).",
+          "description": "Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into\nits block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at\ntheir bottom). Görünüş çıkar: an elevation mark's facade, seen from its bubble where its arrow looks, the\ndrawing's width across that look, placed the same way.",
           "properties": {
             "at": {
               "anyOf": [
@@ -121527,7 +121527,7 @@
           "type": "object"
         },
         {
-          "description": "Yeniden çiz: the section's block drawn again from the model as it is now; every placement of it shows the new\ndrawing where it is.",
+          "description": "Yeniden çiz: the section's (or the elevation's) block drawn again from the model as it is now; every placement\nof it shows the new drawing where it is.",
           "properties": {
             "kind": {
               "const": "refresh",

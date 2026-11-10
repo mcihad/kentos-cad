@@ -3,6 +3,10 @@
 //! with whether they still are what the model would draw (`cad.sections.query`). The block's objects are on EK-4's
 //! material layers (EK-4 4.14.3: the cut by its material, its hatch on `-T`, the seen by its depth `-1` … `-4`); what
 //! the model does not hold (a roof, the natural ground, a ramp) is listed (`leftOut`), not drawn.
+//!
+//! Görünüş çıkar (docs/adr/8043; M43): the same two commands on an elevation mark: the facade it looks at, nothing
+//! cut, its doors and windows with their opening lines, what is under the graded ground dashed, named by where it
+//! faces ("Kuzey görünüşü", the north arrow's north).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -17,6 +21,8 @@ pub const CAD_SECTIONS_QUERY_VERSION: u32 = 1;
 /// The undo steps' names.
 pub const SECTION_DERIVE_STEP: &str = "Kesit çıkar";
 pub const SECTION_REFRESH_STEP: &str = "Kesiti yeniden çiz";
+pub const FACADE_DERIVE_STEP: &str = "Görünüş çıkar";
+pub const FACADE_REFRESH_STEP: &str = "Görünüşü yeniden çiz";
 
 /// What `cad.sections.edit` does.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -31,7 +37,8 @@ pub const SECTION_REFRESH_STEP: &str = "Kesiti yeniden çiz";
 pub enum BuildingSectionsOperation {
     /// Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into
     /// its block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at
-    /// their bottom).
+    /// their bottom). Görünüş çıkar: an elevation mark's facade, seen from its bubble where its arrow looks, the
+    /// drawing's width across that look, placed the same way.
     Derive {
         #[cfg_attr(feature = "schema", schemars(extend("x-format" = "uuid")))]
         mark: String,
@@ -40,8 +47,8 @@ pub enum BuildingSectionsOperation {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         at: Option<Vec2>,
     },
-    /// Yeniden çiz: the section's block drawn again from the model as it is now; every placement of it shows the new
-    /// drawing where it is.
+    /// Yeniden çiz: the section's (or the elevation's) block drawn again from the model as it is now; every placement
+    /// of it shows the new drawing where it is.
     Refresh {
         #[cfg_attr(feature = "schema", schemars(extend("x-format" = "uuid")))]
         mark: String,
@@ -103,8 +110,8 @@ pub struct BuildingSectionLeftOut {
     pub uid: Option<String>,
 }
 
-/// Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"), its block, its
-/// placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
+/// Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"; an elevation's "Kuzey
+/// görünüşü"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
 /// what was left out.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -131,8 +138,8 @@ pub struct BuildingSectionsEdited {
     pub revision: String,
 }
 
-/// Input of `cad.sections.query` v1 (read-only): every section mark's section, the one of `mark`, or the one whose
-/// placement `uid` is.
+/// Input of `cad.sections.query` v1 (read-only): every section mark's section and every elevation mark's facade, the
+/// one of `mark`, or the one whose placement `uid` is.
 ///
 /// Refusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -177,7 +184,7 @@ pub struct BuildingSectionRow {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub mark: Option<String>,
-    /// "A-A kesiti".
+    /// "A-A kesiti", "Kuzey görünüşü".
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

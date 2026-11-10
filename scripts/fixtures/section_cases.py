@@ -337,50 +337,50 @@ def section(frame, solids):
     for i, solid in enumerate(solids):
         rings = [clean(r) for r in solid["rings"]]
         rings = [r for r in rings if len(r) >= 3]
-        if not rings:
-            continue
-        stretches = through(rings, frame.origin, frame.right, frame.look, F(0), frame.length)
-        h = solid["height"]
-        if "flight" not in h:
-            bottom, top = h["bottom"], h["top"]
-            rects = [(a, b, bottom, top) for a, b in stretches]
-            for v in solid["voids"]:
-                for a, b in through([clean(v["ring"])], frame.origin, frame.right, frame.look, F(0), frame.length):
-                    hole = (a, b, v["bottom"], v["top"])
-                    rects = [piece for r in rects for piece in subtract(r, hole)]
-            for u0, u1, z0, z1 in rects:
-                ring = [(u0, z0), (u1, z0), (u1, z1), (u0, z1)]
-                covers.append(cover(ring, (F(0), F(0), F(0)), cut=True))
-                cuts.append({"solid": i, "ring": canonical(ring)})
-            for p, q, m, _ in outward(rings):
-                if not facing(frame, m):
-                    continue
-                view = frame.in_view(p, q)
-                if view is None:
-                    continue
-                t0, t1 = view
-                a = (p[0] + (q[0] - p[0]) * t0, p[1] + (q[1] - p[1]) * t0)
-                b = (p[0] + (q[0] - p[0]) * t1, p[1] + (q[1] - p[1]) * t1)
-                u0, u1, d0, d1 = frame.u(a), frame.u(b), frame.d(a), frame.d(b)
-                dep = vertical_depth(u0, d0, u1, d1)
-                if dep is not None:
-                    covers.append(cover([(u0, bottom), (u1, bottom), (u1, top), (u0, top)], dep))
-                for z in (bottom, top):
-                    edges.append((i, (u0, z), (u1, z), d0, d1))
-                if t0 == 0:
-                    edges.append((i, (u0, bottom), (u0, top), d0, d0))
-                if t1 == 1:
-                    edges.append((i, (u1, bottom), (u1, top), d1, d1))
-        else:
-            f = Flight(**h["flight"])
-            for a, b in stretches:
-                p, q = frame.at(a, F(0)), frame.at(b, F(0))
-                trs = traps(frame, f, p, q, F(0), F(1))
-                for tr in trs:
-                    covers.append(cover(trap_ring(tr), (F(0), F(0), F(0)), cut=True))
-                for ring in flight_rings(trs):
+        # A solid without a footprint (an opening's lines on its wall's faces) is its marks alone.
+        if rings:
+            stretches = through(rings, frame.origin, frame.right, frame.look, F(0), frame.length)
+            h = solid["height"]
+            if "flight" not in h:
+                bottom, top = h["bottom"], h["top"]
+                rects = [(a, b, bottom, top) for a, b in stretches]
+                for v in solid["voids"]:
+                    for a, b in through([clean(v["ring"])], frame.origin, frame.right, frame.look, F(0), frame.length):
+                        hole = (a, b, v["bottom"], v["top"])
+                        rects = [piece for r in rects for piece in subtract(r, hole)]
+                for u0, u1, z0, z1 in rects:
+                    ring = [(u0, z0), (u1, z0), (u1, z1), (u0, z1)]
+                    covers.append(cover(ring, (F(0), F(0), F(0)), cut=True))
                     cuts.append({"solid": i, "ring": canonical(ring)})
-            flight_faces(frame, i, rings, f, covers, edges)
+                for p, q, m, _ in outward(rings):
+                    if not facing(frame, m):
+                        continue
+                    view = frame.in_view(p, q)
+                    if view is None:
+                        continue
+                    t0, t1 = view
+                    a = (p[0] + (q[0] - p[0]) * t0, p[1] + (q[1] - p[1]) * t0)
+                    b = (p[0] + (q[0] - p[0]) * t1, p[1] + (q[1] - p[1]) * t1)
+                    u0, u1, d0, d1 = frame.u(a), frame.u(b), frame.d(a), frame.d(b)
+                    dep = vertical_depth(u0, d0, u1, d1)
+                    if dep is not None:
+                        covers.append(cover([(u0, bottom), (u1, bottom), (u1, top), (u0, top)], dep))
+                    for z in (bottom, top):
+                        edges.append((i, (u0, z), (u1, z), d0, d1))
+                    if t0 == 0:
+                        edges.append((i, (u0, bottom), (u0, top), d0, d0))
+                    if t1 == 1:
+                        edges.append((i, (u1, bottom), (u1, top), d1, d1))
+            else:
+                f = Flight(**h["flight"])
+                for a, b in stretches:
+                    p, q = frame.at(a, F(0)), frame.at(b, F(0))
+                    trs = traps(frame, f, p, q, F(0), F(1))
+                    for tr in trs:
+                        covers.append(cover(trap_ring(tr), (F(0), F(0), F(0)), cut=True))
+                    for ring in flight_rings(trs):
+                        cuts.append({"solid": i, "ring": canonical(ring)})
+                flight_faces(frame, i, rings, f, covers, edges)
         for (p, zp), (q, zq) in solid["marks"]:
             view = frame.in_view(p, q)
             if view is None:
@@ -598,6 +598,13 @@ def cases():
               voids=[void(rect(4, 4, F("5.2"), F("4.25")), F("0.9"), F("2.1"))],
               marks=outline(4, 4, F("5.2"), 4, F("0.9"), F("2.1")) + outline(4, F("4.25"), F("5.2"), F("4.25"),
                                                                              F("0.9"), F("2.1"))),
+    ]))
+    # The same window with its lines as a solid of their own (no footprint, its marks alone; docs/adr/8043).
+    out.append(("Doğramanın çizgileri kendi katısında: ön yüzdeki görünür, arka yüzdeki görünmez", east, [
+        prism(rect(0, 4, 10, F("4.25")), 0, 3, voids=[void(rect(4, 4, F("5.2"), F("4.25")), F("0.9"), F("2.1"))]),
+        {"rings": [], "height": {"bottom": F("0.9"), "top": F("2.1")}, "voids": [],
+         "marks": outline(4, 4, F("5.2"), 4, F("0.9"), F("2.1")) + outline(4, F("4.25"), F("5.2"), F("4.25"),
+                                                                          F("0.9"), F("2.1"))},
     ]))
     slab = rect(0, -2, 6, 3)
     out.append(("Döşeme katmanları: kaplama, şap, taşıyıcı ve sıva ayrı ayrı kesilir", east, [

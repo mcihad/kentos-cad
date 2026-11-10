@@ -454,6 +454,8 @@ pub(crate) fn pages(
     // section's first placement, at the scale it is drawn for (its words' size), on the smallest A paper it fits.
     let section_scale = crate::sections::scale_of(doc).round() as u32;
     let mut sections = 0;
+    // The sections first, then the elevations (MO: kesitler, cepheler; docs/adr/8043).
+    let mut elevations: Vec<Page> = Vec::new();
     for row in crate::sections_query::rows(doc) {
         let (Some(mark), Some(block)) = (row.mark.as_deref(), row.block.as_deref()) else {
             continue;
@@ -469,35 +471,49 @@ pub(crate) fn pages(
             ));
             continue;
         };
-        if row.state == kentos_commands::BuildingSectionState::Stale {
-            notes.push(format!(
-                "{} eski: plan çıkarıldığından beri değişti; paftası eski kesiti gösterir. Kesiti seçip \
-                 Öznitelikler › Durum › Yeniden çiz ile güncelleyin",
-                row.name
-            ));
-        }
         let size = [on_paper(
             permit::padded(bounds, section_scale),
             section_scale,
         )];
-        let words = kentos_domain::Uuid::parse_str(mark)
+        let Some(fields) = kentos_domain::Uuid::parse_str(mark)
             .ok()
             .and_then(|u| doc.slot_of(u))
             .and_then(|s| doc.get(s))
             .and_then(|e| match e {
-                kentos_commands::Entity::ViewMark(v) => Some(v.mark.mark.clone()),
+                kentos_commands::Entity::ViewMark(v) => Some(v.mark.clone()),
                 _ => None,
             })
-            .unwrap_or_default();
+        else {
+            continue;
+        };
+        let elevation = fields.form == kentos_commands::ViewMarkForm::Elevation;
+        if row.state == kentos_commands::BuildingSectionState::Stale {
+            let (what, it) = if elevation {
+                ("görünüşü", "Görünüşü")
+            } else {
+                ("kesiti", "Kesiti")
+            };
+            notes.push(format!(
+                "{} eski: plan çıkarıldığından beri değişti; paftası eski {what} gösterir. {it} seçip Öznitelikler › \
+                 Durum › Yeniden çiz ile güncelleyin",
+                row.name
+            ));
+        }
+        let (file_type, place) = if elevation {
+            ("GR", crate::sections::facing(doc, &fields).code.to_owned())
+        } else {
+            ("KS", section_place(&fields.mark))
+        };
         match permit::PAPERS
             .into_iter()
             .find(|p| permit::shelf(*p, &size).is_some())
         {
             Some(p) => {
                 sections += 1;
-                out.push(Page::section(
+                let page = Page::section(
                     &row.name,
-                    &section_place(&words),
+                    file_type,
+                    &place,
                     bounds,
                     section_scale,
                     PaperChoice {
@@ -505,7 +521,12 @@ pub(crate) fn pages(
                         orientation: kentos_sheet::Orientation::Landscape,
                     },
                     mark,
-                ));
+                );
+                if elevation {
+                    elevations.push(page);
+                } else {
+                    out.push(page);
+                }
             }
             None => notes.push(format!(
                 "{} A0 kâğıda sığmadı; paftası kurulmadı.",
@@ -513,12 +534,13 @@ pub(crate) fn pages(
             )),
         }
     }
+    out.append(&mut elevations);
     // Mimarlar Odası: "plan kesit ve görünüşlerinin … aynı ölçekte olması tercih edilmelidir".
     if sections > 0 && section_scale != scale {
         notes.push(format!(
-            "Kesitler çizimin ölçeğinde (1/{section_scale}) basıldı, planlar 1/{scale}: yazıları ancak o ölçekte \
-             doğru boydadır. Planlarla aynı ölçek için Öznitelikler › Çizim ölçeğini 1/{scale} yapıp kesitleri yeniden \
-             çizin"
+            "Kesit ve görünüşler çizimin ölçeğinde (1/{section_scale}) basıldı, planlar 1/{scale}: yazıları ancak o \
+             ölçekte doğru boydadır. Planlarla aynı ölçek için Öznitelikler › Çizim ölçeğini 1/{scale} yapıp onları \
+             yeniden çizin"
         ));
     }
     // The lists after the plans (MO: mahal listesi, then the parking calculation), each on the smallest paper it fits.

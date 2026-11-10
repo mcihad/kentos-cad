@@ -23,7 +23,8 @@
       "0192f5a1-8042-7000-8000-00000000000b",
       "0192f5a1-8042-7000-8000-00000000000c",
       "0192f5a1-8042-7000-8000-00000000000d",
-      "0192f5a1-8042-7000-8000-00000000000e"
+      "0192f5a1-8042-7000-8000-00000000000e",
+      "0192f5a1-8042-7000-8000-00000000000f"
     ],
     "settings": {
       "srid": 0,
@@ -482,6 +483,29 @@
         "text": "Not",
         "height": 0.25,
         "rotation": 0.0
+      },
+      {
+        "kind": "viewmark",
+        "id": 15,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "detail",
+        "points": [
+          {
+            "x": 1.0,
+            "y": 1.0
+          }
+        ],
+        "radius": 0.5,
+        "at": {
+          "x": -1.5,
+          "y": -1.5
+        },
+        "mark": "F",
+        "words": {
+          "top": "F",
+          "bottom": "—"
+        }
       }
     ]
   },
@@ -1457,7 +1481,7 @@
             "status": "failed",
             "error": {
               "code": "not_a_section_mark",
-              "message": "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır.",
+              "message": "Nesne kesit ya da görünüş işareti değil; kesit ve görünüş, planda çizilmiş işaretinden çıkarılır.",
               "path": "operation.mark"
             }
           },
@@ -1468,7 +1492,7 @@
       ]
     },
     {
-      "name": "Ret: görünüş işaretinden kesit çıkmaz",
+      "name": "Görünüş işaretinden görünüşü çıkar: odanın kuzeyinden kuzeye bakan, Güney görünüşü",
       "steps": [
         {
           "op": "execute",
@@ -1476,14 +1500,112 @@
           "input": {
             "operation": {
               "kind": "derive",
-              "mark": "0192f5a1-8042-7000-8000-00000000000d"
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "at": {
+                "x": 20.0,
+                "y": 10.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "name": "Güney görünüşü",
+              "block": "9b50e60b-55f4-8ac5-a3db-108a8b97ad80",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Görünüşün geri alma adımı: Görünüş çıkar",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "at": {
+                "x": 20.0,
+                "y": 10.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "name": "Güney görünüşü",
+              "block": "9b50e60b-55f4-8ac5-a3db-108a8b97ad80",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Görünüş çıkar"
+        },
+        {
+          "op": "redo",
+          "returns": "Görünüş çıkar"
+        }
+      ]
+    },
+    {
+      "name": "Ret: detay işaretinden kesit ya da görünüş çıkmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000f"
             }
           },
           "result": {
             "status": "failed",
             "error": {
               "code": "not_a_section_mark",
-              "message": "İşaret görünüş ya da detay işareti; kesit yalnız kesit işaretinden çıkarılır.",
+              "message": "İşaret detay işareti; kesit ve görünüş yalnız kesit ya da görünüş işaretinden çıkarılır.",
               "path": "operation.mark"
             }
           },
@@ -1898,23 +2020,23 @@
                 },
                 {
                   "why": "curved",
-                  "uid": "0192f5a1-8042-7000-8000-00000000000f"
+                  "uid": "0192f5a1-8042-7000-8000-000000000015"
                 },
                 {
                   "why": "ramp",
-                  "uid": "0192f5a1-8042-7000-8000-000000000013"
+                  "uid": "0192f5a1-8042-7000-8000-000000000019"
                 },
                 {
                   "why": "headUnknown",
-                  "uid": "0192f5a1-8042-7000-8000-000000000010"
+                  "uid": "0192f5a1-8042-7000-8000-000000000016"
                 },
                 {
                   "why": "stairWaist",
-                  "uid": "0192f5a1-8042-7000-8000-000000000014"
+                  "uid": "0192f5a1-8042-7000-8000-00000000001a"
                 },
                 {
                   "why": "recess",
-                  "uid": "0192f5a1-8042-7000-8000-000000000010"
+                  "uid": "0192f5a1-8042-7000-8000-000000000016"
                 }
               ],
               "revision": "$current"
@@ -1946,11 +2068,12 @@
           "0192f5a1-8042-7000-8000-00000000000d",
           "0192f5a1-8042-7000-8000-00000000000e",
           "0192f5a1-8042-7000-8000-00000000000f",
-          "0192f5a1-8042-7000-8000-000000000010",
-          "0192f5a1-8042-7000-8000-000000000011",
-          "0192f5a1-8042-7000-8000-000000000012",
-          "0192f5a1-8042-7000-8000-000000000013",
-          "0192f5a1-8042-7000-8000-000000000014"
+          "0192f5a1-8042-7000-8000-000000000015",
+          "0192f5a1-8042-7000-8000-000000000016",
+          "0192f5a1-8042-7000-8000-000000000017",
+          "0192f5a1-8042-7000-8000-000000000018",
+          "0192f5a1-8042-7000-8000-000000000019",
+          "0192f5a1-8042-7000-8000-00000000001a"
         ],
         "settings": {
           "srid": 0,
@@ -2411,8 +2534,31 @@
             "rotation": 0.0
           },
           {
-            "kind": "wall",
+            "kind": "viewmark",
             "id": 15,
+            "layerId": "isaret",
+            "attrs": {},
+            "form": "detail",
+            "points": [
+              {
+                "x": 1.0,
+                "y": 1.0
+              }
+            ],
+            "radius": 0.5,
+            "at": {
+              "x": -1.5,
+              "y": -1.5
+            },
+            "mark": "F",
+            "words": {
+              "top": "F",
+              "bottom": "—"
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 21,
             "layerId": "duvar",
             "attrs": {},
             "pts": [
@@ -2436,7 +2582,7 @@
           },
           {
             "kind": "wall",
-            "id": 16,
+            "id": 22,
             "layerId": "duvar",
             "attrs": {},
             "pts": [
@@ -2457,10 +2603,10 @@
           },
           {
             "kind": "opening",
-            "id": 17,
+            "id": 23,
             "layerId": "kapi",
             "attrs": {},
-            "host": "0192f5a1-8042-7000-8000-000000000010",
+            "host": "0192f5a1-8042-7000-8000-000000000016",
             "at": 1.0,
             "width": 0.9,
             "form": "door",
@@ -2486,10 +2632,10 @@
           },
           {
             "kind": "opening",
-            "id": 18,
+            "id": 24,
             "layerId": "kapi",
             "attrs": {},
-            "host": "0192f5a1-8042-7000-8000-000000000010",
+            "host": "0192f5a1-8042-7000-8000-000000000016",
             "at": 3.0,
             "width": 0.6,
             "form": "niche",
@@ -2516,7 +2662,7 @@
           },
           {
             "kind": "ramp",
-            "id": 19,
+            "id": 25,
             "layerId": "cizim",
             "attrs": {},
             "pts": [
@@ -2535,7 +2681,7 @@
           },
           {
             "kind": "stair",
-            "id": 20,
+            "id": 26,
             "layerId": "cizim",
             "attrs": {},
             "pts": [
@@ -2604,15 +2750,15 @@
         },
         {
           "op": "captureUid",
-          "id": 15,
-          "as": "n15"
+          "id": 16,
+          "as": "n16"
         },
         {
           "op": "execute",
           "command": "cad.entities.delete",
           "input": {
             "uids": [
-              "$uid:n15"
+              "$uid:n16"
             ]
           },
           "result": {

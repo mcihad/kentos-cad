@@ -4,6 +4,7 @@
 
 mod beam_quantities;
 mod sections;
+mod facades;
 mod blocks_find;
 mod review_take;
 mod reconcile_large;

@@ -464,6 +464,9 @@ CAD = [
                 # the Mimari tab holds 30 buttons at most, so no family of its own.
                 {"command": "tool.sectionDraw", "title": "İşaret", "label": "Kesit çıkar"},
                 {"command": "tool.viewElevation", "title": "İşaret", "label": "Görünüş"},
+                # Görünüş çıkar (docs/adr/8043) under the elevation mark, as Kesit çıkar under the section mark: six
+                # entries, a menu's most (DESIGN.md §7.3.1).
+                {"command": "tool.facadeDraw", "title": "İşaret", "label": "Görünüş çıkar"},
                 {"command": "tool.viewDetail", "title": "İşaret", "label": "Detay"},
                 {"command": "tool.northArrow", "title": "İşaret", "label": "Kuzey oku"},
             ]}],

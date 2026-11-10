@@ -10,7 +10,7 @@ export type BuildingSectionRow = {
  */
 mark?: string, 
 /**
- * "A-A kesiti".
+ * "A-A kesiti", "Kuzey görünüşü".
  */
 name: string, block?: string, state: BuildingSectionState, 
 /**

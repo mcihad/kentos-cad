@@ -3,8 +3,8 @@ import type { BuildingSectionLeftOut } from "./BuildingSectionLeftOut";
 import type { Entity } from "./Entity";
 
 /**
- * Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"), its block, its
- * placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
+ * Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"; an elevation's "Kuzey
+ * görünüşü"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
  * what was left out.
  */
 export type BuildingSectionsEdited = { mark: string, name: string, block: string, inserts?: Array<string>, drawn?: Array<Entity>, changed: boolean, leftOut?: Array<BuildingSectionLeftOut>, revision: string, };

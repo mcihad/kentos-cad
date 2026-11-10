@@ -19,7 +19,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_commands::{BeamRole, Entity, OpeningForm, SlabLayerKind, Vec2};
+use kentos_commands::{BeamRole, Entity, OpeningForm, SlabLayerKind, Vec2, ViewMarkForm};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::section::{self as sec, Flight, Frame, Height, Solid, Void};
 use kentos_geometry_core::vec2::Vec2 as P;
@@ -346,14 +346,15 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             _ => None,
         })
         .collect();
-    // Each wall's openings, by its persistent id.
-    let mut openings: BTreeMap<String, Vec<&kentos_commands::OpeningFields>> = BTreeMap::new();
-    for (_, e) in entities {
+    // Each wall's openings, by its persistent id, with their own.
+    let mut openings: BTreeMap<String, Vec<(Uuid, &kentos_commands::OpeningFields)>> =
+        BTreeMap::new();
+    for (u, e) in entities {
         if let Entity::Opening(o) = e {
             openings
                 .entry(o.opening.host.clone())
                 .or_default()
-                .push(&o.opening);
+                .push((*u, &o.opening));
         }
     }
     for (((uid, w, shape), win), drawn) in walls.iter().zip(&ins).zip(&solved.drawn) {
@@ -386,8 +387,8 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             .and_then(|c| c.material.clone().or_else(|| c.name.clone()));
         let base = material_look("DUVA", core.as_deref(), None);
         let mut voids = Vec::new();
-        let mut marks = Vec::new();
-        for o in openings.get(&uid.to_string()).into_iter().flatten() {
+        let mut opening_solids: Vec<(Solid, Look, Option<String>)> = Vec::new();
+        for (opening, o) in openings.get(&uid.to_string()).into_iter().flatten() {
             let Ok([l0, r0, l1, r1]) = <[Vec2; 4]>::try_from(o.place.clone()) else {
                 continue;
             };
@@ -412,24 +413,56 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                 bottom: sill,
                 top: head,
             });
-            // Its outline on both faces of the wall; its frame inset by its width when its type gives one.
+            // Its lines on both faces of the wall, a solid of their own on its door's or window's layer (docs/adr/8043
+            // §2): its outline, its frame inset by its width when its type gives one, and on a hinged one Türkiye's
+            // opening lines (the joinery list's, docs/adr/8038: from the hinge side's corners to the middle of the
+            // handle side; a pair from both jambs to their meeting line). Where nothing nearer hides them the section
+            // and the elevation draw them; the face behind the wall is hidden as the wall is.
+            let mut lines: Vec<[(P, f64); 2]> = Vec::new();
             for (a, b) in [(p(l0), p(l1)), (p(r0), p(r1))] {
-                outline(&mut marks, a, b, sill, head);
+                outline(&mut lines, a, b, sill, head);
+                let (mut a2, mut b2, mut low, mut high) = (a, b, sill, head);
                 if let Some(f) = o.frame.filter(|f| *f > 0.0) {
                     let len = kentos_geometry_core::jsmath::js_hypot(b.x - a.x, b.y - a.y);
                     if len > 2.0 * f && head - sill > 2.0 * f {
                         let t = f / len;
-                        let a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
-                        let b2 = P::new(b.x - (b.x - a.x) * t, b.y - (b.y - a.y) * t);
-                        let low = if o.form == OpeningForm::Door {
+                        a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+                        b2 = P::new(b.x - (b.x - a.x) * t, b.y - (b.y - a.y) * t);
+                        low = if o.form == OpeningForm::Door {
                             sill
                         } else {
                             sill + f
                         };
-                        outline(&mut marks, a2, b2, low, head - f);
+                        high = head - f;
+                        outline(&mut lines, a2, b2, low, high);
                     }
                 }
+                if o.operation == kentos_commands::OpeningOperation::Swing {
+                    swing_lines(&mut lines, (a2, b2), (low, high), o.leaves, o.hand);
+                }
             }
+            let (layer, key) = match o.form {
+                OpeningForm::Door => ("MM-KAPI-GENEL", "kapi"),
+                _ => ("MM-PENC-GENEL", "pencere"),
+            };
+            opening_solids.push((
+                Solid {
+                    rings: Vec::new(),
+                    height: Height::Prism {
+                        bottom: sill,
+                        top: head,
+                    },
+                    voids: Vec::new(),
+                    marks: lines,
+                },
+                Look {
+                    key: key.into(),
+                    layer: layer.into(),
+                    heavy: false,
+                    fill: None,
+                },
+                Some(opening.to_string()),
+            ));
             let mid = |x: Vec2, y: Vec2| P::new((x.x + y.x) / 2.0, (x.y + y.y) / 2.0);
             m.gaps.push(Gap {
                 ring,
@@ -452,7 +485,6 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
         } else {
             vec![(None, &d.fill)]
         };
-        let mut first = true;
         for (comp, bodies) in bands {
             let fill = comp
                 .filter(|c| shown(c))
@@ -474,18 +506,45 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                     rings,
                     height: Height::Prism { bottom: foot, top },
                     voids: voids.clone(),
-                    // The openings' outlines once, on the wall's first piece.
-                    marks: if first {
-                        std::mem::take(&mut marks)
-                    } else {
-                        Vec::new()
-                    },
+                    marks: Vec::new(),
                 };
-                first = false;
                 push(m, solid, look.clone(), owner.clone());
             }
         }
+        for (solid, look, owner) in opening_solids.drain(..) {
+            push(m, solid, look, owner);
+        }
     }
+}
+
+/// A hinged opening's lines on a face from `a` to `b` (its frame's inner edge, or its jambs) between `low` and `high`
+/// (docs/adr/8043 §2; Türkiye's convention, the joinery list's, docs/adr/8038): one leaf from the corners at its hinge's
+/// end to the middle of the other jamb; two leaves each from its own jamb to the middle of their meeting line, which
+/// is drawn.
+fn swing_lines(
+    lines: &mut Vec<[(P, f64); 2]>,
+    (a, b): (P, P),
+    (low, high): (f64, f64),
+    leaves: u8,
+    hand: kentos_commands::OpeningHand,
+) {
+    let mid = (low + high) / 2.0;
+    let at = |t: f64| P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+    if leaves >= 2 {
+        let m = at(0.5);
+        for jamb in [a, b] {
+            lines.push([(jamb, low), (m, mid)]);
+            lines.push([(jamb, high), (m, mid)]);
+        }
+        lines.push([(m, low), (m, high)]);
+        return;
+    }
+    let (hinge, other) = match hand {
+        kentos_commands::OpeningHand::End => (b, a),
+        _ => (a, b),
+    };
+    lines.push([(hinge, low), (other, mid)]);
+    lines.push([(hinge, high), (other, mid)]);
 }
 
 /// A rectangle on a wall's face from `a` to `b` between two heights, as marks.
@@ -913,6 +972,163 @@ impl Out {
     }
 }
 
+/// What a view mark draws (docs/adr/8043 §1): a section through its line, or an elevation of what faces its bubble.
+#[derive(Clone, Debug, PartialEq)]
+pub enum View {
+    /// A section by its mark's words ("B").
+    Section(String),
+    /// An elevation by the direction its facade faces.
+    Elevation(Facing),
+}
+
+/// The direction a facade faces, as Türkiye names its elevation ("Kuzey görünüşü"), with its three letters in EK-2's
+/// place field (2.9.3: for an elevation the author's three characters).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Facing {
+    pub word: &'static str,
+    pub upper: &'static str,
+    pub code: &'static str,
+}
+
+/// The eight directions clockwise from north.
+pub const FACINGS: [Facing; 8] = [
+    Facing {
+        word: "Kuzey",
+        upper: "KUZEY",
+        code: "KUZ",
+    },
+    Facing {
+        word: "Kuzeydoğu",
+        upper: "KUZEYDOĞU",
+        code: "KDG",
+    },
+    Facing {
+        word: "Doğu",
+        upper: "DOĞU",
+        code: "DOG",
+    },
+    Facing {
+        word: "Güneydoğu",
+        upper: "GÜNEYDOĞU",
+        code: "GDG",
+    },
+    Facing {
+        word: "Güney",
+        upper: "GÜNEY",
+        code: "GUN",
+    },
+    Facing {
+        word: "Güneybatı",
+        upper: "GÜNEYBATI",
+        code: "GBT",
+    },
+    Facing {
+        word: "Batı",
+        upper: "BATI",
+        code: "BAT",
+    },
+    Facing {
+        word: "Kuzeybatı",
+        upper: "KUZEYBATI",
+        code: "KBT",
+    },
+];
+
+/// The plan's north (docs/adr/8043 §1): the drawing's north arrow's (its “Kuzey oku” turned), else the drawing's up.
+pub fn plan_north(doc: &Document) -> P {
+    let arrow = doc.block_named(kentos_commands::NORTH_BLOCK).map(|b| b.id);
+    arrow
+        .and_then(|id| {
+            doc.entities().find_map(|e| match e {
+                Entity::Insert(i) if i.block == id => Some(i.rotation),
+                _ => None,
+            })
+        })
+        .map_or(P::new(0.0, 1.0), |r| P::new(-r.sin(), r.cos()))
+}
+
+/// The direction an elevation mark's facade faces: back at the mark (its look, degrees from east, turned round),
+/// named by the nearest of the eight directions from the plan's north.
+pub fn facing(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Facing {
+    let a = mark.angle.unwrap_or(90.0).to_radians();
+    let face = P::new(-a.cos(), -a.sin());
+    let n = plan_north(doc);
+    let east = P::new(n.y, -n.x);
+    let bearing = (face.x * east.x + face.y * east.y)
+        .atan2(face.x * n.x + face.y * n.y)
+        .to_degrees();
+    let k = ((bearing.rem_euclid(360.0) + 22.5) / 45.0).floor() as usize % 8;
+    FACINGS[k]
+}
+
+/// What the mark draws; none for a detail mark.
+pub fn view_of(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Option<View> {
+    match mark.form {
+        ViewMarkForm::Section => Some(View::Section(mark.mark.clone())),
+        ViewMarkForm::Elevation => Some(View::Elevation(facing(doc, mark))),
+        ViewMarkForm::Detail => None,
+    }
+}
+
+/// How a mark's drawing is called: "B-B kesiti", "Kuzey görünüşü".
+pub fn view_name(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> String {
+    match view_of(doc, mark) {
+        Some(View::Elevation(f)) => format!("{} görünüşü", f.word),
+        _ => format!("{} kesiti", label(&mark.mark)),
+    }
+}
+
+/// Its block's name by EK-4 Tablo 4.4: "MM-XXXX-KESITB", "MM-XXXX-GORUNUSKUZEY".
+pub fn view_block_name(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> String {
+    match view_of(doc, mark) {
+        Some(View::Elevation(f)) => kentos_commands::ek4_layer(
+            kentos_commands::EK4_GENERAL,
+            &format!("GORUNUS{}", kentos_commands::ek4_word(f.word, 9)),
+        ),
+        _ => block_name(&mark.mark),
+    }
+}
+
+/// Where a mark's drawing is drawn from (docs/adr/8043 §1): a section's line; an elevation's line through its bubble
+/// across where it looks, as long as the model is wide there and 1 m on, the viewer at its left end looking where the
+/// mark looks; none for a detail mark, or an elevation of a model with nothing in it.
+pub fn frame_for(m: &Model, mark: &kentos_commands::ViewMarkFields) -> Option<Frame> {
+    match mark.form {
+        ViewMarkForm::Section => frame_of(mark),
+        ViewMarkForm::Elevation => {
+            let c = p(*mark.points.first()?);
+            let a = mark.angle.unwrap_or(90.0).to_radians();
+            let look = P::new(a.cos(), a.sin());
+            let t = P::new(look.y, -look.x);
+            let (mut lo, mut hi) = (f64::INFINITY, f64::NEG_INFINITY);
+            for q in m.solids.iter().flat_map(|s| s.rings.iter().flatten()) {
+                let v = (q.x - c.x) * t.x + (q.y - c.y) * t.y;
+                lo = lo.min(v);
+                hi = hi.max(v);
+            }
+            if lo > hi {
+                return None;
+            }
+            let (lo, hi) = (lo - 1.0, hi + 1.0);
+            Frame::new(
+                P::new(c.x + t.x * lo, c.y + t.y * lo),
+                P::new(c.x + t.x * hi, c.y + t.y * hi),
+                false,
+                None,
+            )
+        }
+        ViewMarkForm::Detail => None,
+    }
+}
+
+/// The mark's drawing from the model as it is now; none for a detail mark or what [`frame_for`] cannot frame.
+pub fn draw_mark(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> Option<Drawn> {
+    let m = model(doc);
+    let frame = frame_for(&m, mark)?;
+    let view = view_of(doc, mark)?;
+    Some(draw_view(doc, &m, &frame, &view))
+}
+
 /// The section of the mark: the line from its first point to its second, looking as its arrows do.
 pub fn frame_of(mark: &kentos_commands::ViewMarkFields) -> Option<Frame> {
     let (a, b) = (mark.points.first()?, mark.points.get(1)?);
@@ -936,7 +1152,18 @@ pub fn cut_owners(m: &Model, mark: &kentos_commands::ViewMarkFields) -> BTreeSet
 
 /// The section drawn (docs/adr/8042 §4): what is cut, what is seen, the levels, grids, rooms, ground and title.
 pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
-    let m = model(doc);
+    draw_view(
+        doc,
+        &model(doc),
+        frame,
+        &View::Section(mark_words.to_owned()),
+    )
+}
+
+/// [`draw`] of a view (docs/adr/8043): an elevation's title names its facade, what is seen under the graded ground is
+/// dashed (Mimarlar Odası: "zemin altında kalan yapı kısımlarının dış hatları kesik çizgilerle"), no room is named.
+pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn {
+    let elevation = matches!(view, View::Elevation(_));
     let s = sec::section(frame, &m.solids);
     let mut out = Out {
         entities: Vec::new(),
@@ -1071,7 +1298,34 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
             FAINT
         };
         for (a, b) in merged(pieces) {
-            out.line(&layer, a, b, weight);
+            if !elevation || (a.y >= -1e-9 && b.y >= -1e-9) {
+                out.line(&layer, a, b, weight);
+                continue;
+            }
+            // Under the graded ground (±0.00) dashed, above it as it is.
+            let at = |z: f64| {
+                let t = if (b.y - a.y).abs() > 1e-12 {
+                    (z - a.y) / (b.y - a.y)
+                } else {
+                    0.0
+                };
+                P::new(a.x + (b.x - a.x) * t, z)
+            };
+            let ((p0, p1), over) = if a.y < -1e-9 && b.y < -1e-9 {
+                ((a, b), None)
+            } else if a.y < -1e-9 {
+                ((a, at(0.0)), Some((at(0.0), b)))
+            } else {
+                ((at(0.0), b), Some((a, at(0.0))))
+            };
+            if let Some((q0, q1)) = over {
+                out.line(&layer, q0, q1, weight);
+            }
+            out.put(
+                &layer,
+                json!({"kind": "line", "a": {"x": p0.x, "y": p0.y}, "b": {"x": p1.x, "y": p1.y},
+                       "lineType": "dashed", "lineWeight": weight}),
+            );
         }
     }
     // The extent the annotations sit around.
@@ -1229,7 +1483,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     // stair hall's): mid height in the middle first, then aside, higher or lower; with no such place in the middle,
     // masked (the text's “fon”).
     let mut busy = Busy::of(&out, &s.cut, text);
-    for e in doc.entities() {
+    for e in doc.entities().filter(|_| !elevation) {
         let Entity::Space(sp) = e else { continue };
         let rings: Vec<Vec<P>> = sp
             .space
@@ -1267,7 +1521,10 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     out.text(
         "MM-XXXX-ETIKET",
         P::new(tx, lo.y - 0.9),
-        &title(mark_words),
+        &match view {
+            View::Section(words) => title(words),
+            View::Elevation(f) => format!("{} GÖRÜNÜŞÜ", f.upper),
+        },
         title_height,
         "bottomCenter",
     );
@@ -1287,7 +1544,7 @@ pub fn draw(doc: &Document, frame: &Frame, mark_words: &str) -> Drawn {
     Drawn {
         entities,
         layers: out.layers,
-        left: m.left.into_iter().collect(),
+        left: m.left.iter().cloned().collect(),
         lo,
         hi,
     }

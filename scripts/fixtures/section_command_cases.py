@@ -5,30 +5,34 @@ ADR's rules without KentOS code.
 The drawing: a 6 × 4 m room “101 Salon” on the ground floor (four 25 cm walls about their axes, the storey 3 m high),
 a door in the south wall, a window in the north wall, the floor slab; section marks A (x = 3.2 from the north through
 the door, looking east) and B (y = 2 from the west, looking north), a jogged mark C (three points), a mark D shorter
-than a millimetre, an elevation mark E and a note far off. A second drawing adds what a section leaves out.
+than a millimetre, an elevation mark E (north of the room, looking north: the south facade of what lies past it), a
+note far off and a detail mark F. A second drawing adds what a section leaves out.
 
 The rules:
 
 - §1 A section's block id: the first 16 bytes of SHA-256(“kentos.section/” + the mark's id) as a UUID of version 8
   (byte 6's high nibble 8, byte 8's two high bits 10). Its block's name MM-XXXX-KESIT and the mark's letter; its name
-  “A-A kesiti” (the mark's words trimmed, twice with a hyphen).
+  “A-A kesiti” (the mark's words trimmed, twice with a hyphen). An elevation mark's (docs/adr/8043) the same id, its
+  name the direction its facade faces (its look turned round, from the plan's north, the nearest of eight):
+  “Güney görünüşü”.
 - §5 derive, its checks in order: the mark's id a lower-case hyphenated UUID (invalid_uid), in the drawing
-  (entity_not_found), a view mark (not_a_section_mark) of the section form (not_a_section_mark, its own words), of
-  two points (section_jogged); its section not drawn (section_exists); the origin finite (not_finite); the line at
+  (entity_not_found), a view mark (not_a_section_mark) not a detail mark (not_a_section_mark, its own words), a
+  section mark of two points (section_jogged); its section not drawn (section_exists); the origin finite (not_finite); the line at
   least a millimetre long (section_jogged); the expected revision (invalid_revision, revision_conflict). Written: one
-  placement, one undo step “Kesit çıkar”. Its output: the mark, the name, the block, the placement's id, the objects
+  placement, one undo step “Kesit çıkar” (an elevation's “Görünüş çıkar”). Its output: the mark, the name, the block, the placement's id, the objects
   drawn (compared by the core's own cases: tests/all/sections.rs and fixtures/arch/v1/sections.json), changed, what
   is left out and the revision. A plan writes nothing and has no placement; a validation answers nothing.
 - refresh, after the mark's checks: its section drawn (section_not_found), the line a millimetre long, the expected
   revision, then a section the model draws as its block holds is nothing_to_set; else written again, one undo step
-  “Kesiti yeniden çiz”, changed, the ids of its placements.
+  “Kesiti yeniden çiz” (“Görünüşü yeniden çiz”), changed, the ids of its placements.
 - Left out, the whole drawing's, in this order and then by object id: the roof and the natural ground always; a
   curved wall or slab, a ramp, a wall or column without height, a wall with an opening without head, a stair with no
   slab to take its waist from (none at its top at the storey's height over its start, none at its foot at its floor),
   a wall with a niche or flue.
 - query: every section mark in the drawing's order with its section's state (notDrawn without a block; current while
   drawing it again gives its block's objects, stale once it does not) and its placements' count, then each section
-  block whose mark is gone (“MM-XXXX-KESITA (işareti yok)”, gone); by a mark (its checks as derive's), or by a
+  block whose mark is gone (“MM-XXXX-KESITA (işareti yok)”, an elevation's “MM-XXXX-GORUNUSGUNEY (işareti yok)”,
+  gone); by a mark (its checks as derive's), or by a
   placement's id (an insert of the drawing, else entity_not_found). A section is stale once an object it cuts or sees
   changes, the words of a room it passes through change, or its mark moves; a note, an object behind or beside its
   line, or its placements moved or deleted leave it current.
@@ -50,6 +54,7 @@ QUERY = ROOT / "fixtures/commands/v1/cad.sections.query.json"
 
 DERIVE = "Kesit çıkar"
 REFRESH = "Kesiti yeniden çiz"
+FACADE_DERIVE = "Görünüş çıkar"
 ANY = {"status": "completed", "output": "$any", "warnings": "$any"}
 LEFT_ORDER = ["roof", "naturalGround", "curved", "ramp", "noHeight", "headUnknown", "stairWaist", "recess"]
 
@@ -68,6 +73,32 @@ def block_id(mark_uid):
     b[8] = (b[8] & 0x3F) | 0x80
     h = b.hex()
     return f"{h[0:8]}-{h[8:12]}-{h[12:16]}-{h[16:20]}-{h[20:32]}"
+
+
+FACINGS = ["Kuzey", "Kuzeydoğu", "Doğu", "Güneydoğu", "Güney", "Güneybatı", "Batı", "Kuzeybatı"]
+
+
+def facing(e):
+    """The direction an elevation mark's facade faces: its look (degrees from east, absent 90) turned round, the
+    nearest of eight from the plan's north (the drawing's up: these drawings have no north arrow)."""
+    a = math.radians(e.get("angle", 90.0))
+    fx, fy = -math.cos(a), -math.sin(a)
+    bearing = math.degrees(math.atan2(fx, fy)) % 360.0
+    return FACINGS[int((bearing + 22.5) // 45.0) % 8]
+
+
+def view_name(e):
+    return f"{facing(e)} görünüşü" if e["form"] == "elevation" else f"{label(e['mark'])} kesiti"
+
+
+FOLD = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosuCGIOSU")
+
+
+def block_name(e):
+    """Its block's name (EK-4 Tablo 4.4: MM-XXXX-<ad>): the mark's letter, an elevation's direction in capitals."""
+    if e["form"] == "elevation":
+        return "MM-XXXX-GORUNUS" + facing(e).translate(FOLD).upper()
+    return f"MM-XXXX-KESIT{e['mark']}"
 
 
 def label(words):
@@ -154,6 +185,8 @@ def entities():
         mark(13, "elevation", [(3.0, 7.0), (3.0, 6.0)], "E"),
         {"kind": "text", "id": 14, "layerId": "cizim", "attrs": {}, "p": P(30, 30), "text": "Not", "height": 0.25,
          "rotation": 0.0},
+        {"kind": "viewmark", "id": 15, "layerId": "isaret", "attrs": {}, "form": "detail", "points": [P(1.0, 1.0)],
+         "radius": 0.5, "at": P(-1.5, -1.5), "mark": "F", "words": {"top": "F", "bottom": "—"}},
     ]
 
 
@@ -161,15 +194,15 @@ def left_out_entities():
     """The drawing with what a section leaves out: a curved wall, a door without head, a niche, a ramp and a stair
     outside the slab."""
     ents = entities()
-    curved = wall(15, (8, 0), (10, 0), bulges=[0.3])
-    straight = wall(16, (8, 4), (12, 4))
+    curved = wall(21, (8, 0), (10, 0), bulges=[0.3])
+    straight = wall(22, (8, 4), (12, 4))
     ents += [
         curved, straight,
-        opening(17, straight, 1.0, 0.9, "door", number="K02"),
-        opening(18, straight, 3.0, 0.6, "niche", sill=0.5, head=1.5),
-        {"kind": "ramp", "id": 19, "layerId": "cizim", "attrs": {}, "pts": [P(14, 0), P(17, 0)], "width": 1.2,
+        opening(23, straight, 1.0, 0.9, "door", number="K02"),
+        opening(24, straight, 3.0, 0.6, "niche", sill=0.5, head=1.5),
+        {"kind": "ramp", "id": 25, "layerId": "cizim", "attrs": {}, "pts": [P(14, 0), P(17, 0)], "width": 1.2,
          "rise": 0.15, "slope": 5.0},
-        {"kind": "stair", "id": 20, "layerId": "cizim", "attrs": {}, "pts": [P(20, 0), P(20, 3)], "width": 1.0,
+        {"kind": "stair", "id": 26, "layerId": "cizim", "attrs": {}, "pts": [P(20, 0), P(20, 3)], "width": 1.0,
          "risers": 16, "riserHeight": 0.1875, "tread": 0.25, "arch": {"level": "zemin"}},
     ]
     return ents
@@ -205,7 +238,7 @@ class Model:
     def __init__(self, ents):
         self.ents = {e["id"]: copy.deepcopy(e) for e in ents}
         self.next = max(self.ents) + 1
-        self.blocks = {}  # block id -> {"mark": slot, "words": text, "stale": bool}
+        self.blocks = {}  # block id -> {"mark": slot, "name": its block's name, "stale": bool}
         self.inserts = {}  # slot -> block id
 
     def by_uid(self, u):
@@ -266,12 +299,12 @@ class Model:
                                               "olabilir.", path)
         e = self.ents[slot]
         if e["kind"] != "viewmark":
-            raise Refused("not_a_section_mark", "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit "
+            raise Refused("not_a_section_mark", "Nesne kesit ya da görünüş işareti değil; kesit ve görünüş, planda "
+                                                "çizilmiş işaretinden çıkarılır.", path)
+        if e["form"] == "detail":
+            raise Refused("not_a_section_mark", "İşaret detay işareti; kesit ve görünüş yalnız kesit ya da görünüş "
                                                 "işaretinden çıkarılır.", path)
-        if e["form"] != "section":
-            raise Refused("not_a_section_mark", "İşaret görünüş ya da detay işareti; kesit yalnız kesit işaretinden "
-                                                "çıkarılır.", path)
-        if len(e["points"]) != 2:
+        if e["form"] == "section" and len(e["points"]) != 2:
             raise Refused("section_jogged", f"Kesit çizgisinin {len(e['points'])} noktası var; kırıklı kesit henüz "
                                             "çıkarılmıyor. İki noktalı bir kesit çizgisi çizin.", path)
         return slot, e
@@ -346,19 +379,20 @@ def derive(m, slot, op="execute", at=None, expected=None, uid=None, non_finite=N
         s, e = m.mark_of(uid, "operation.mark")
         bid = block_id(uid)
         if bid in m.blocks:
-            raise Refused("section_exists", f"{label(e['mark'])} kesiti zaten çıkarılmış; güncellemek için Yeniden "
+            raise Refused("section_exists", f"{view_name(e)} zaten çıkarılmış; güncellemek için Yeniden "
                                             "çiz'i kullanın.", "operation.mark")
         if non_finite:
             axis = next(iter(non_finite)).rsplit(".", 1)[1]
             name = "doğu (Y)" if axis == "x" else "kuzey (X)"
-            raise Refused("not_finite", f"Kesitin yerinin {name} değeri sonlu bir sayı değil (NaN ya da sonsuz). "
+            whose = "Görünüşün yerinin" if e["form"] == "elevation" else "Kesitin yerinin"
+            raise Refused("not_finite", f"{whose} {name} değeri sonlu bir sayı değil (NaN ya da sonsuz). "
                                         "Koordinatı sonlu bir sayıyla verin.", f"operation.at.{axis}")
-        if m.short(e):
+        if e["form"] == "section" and m.short(e):
             raise Refused("section_jogged", "Kesit çizgisi bir milimetreden kısa; çizilemez.", "operation.mark")
         revision(expected)
     except Refused as r:
         return edit_step(op, operation, failed(r), expected, expect={"revision": "same"}, **extra)
-    out = {"mark": uid, "name": f"{label(e['mark'])} kesiti", "block": bid, "inserts": [], "drawn": "$any",
+    out = {"mark": uid, "name": view_name(e), "block": bid, "inserts": [], "drawn": "$any",
            "changed": True, "leftOut": m.left_out(), "revision": "$current"}
     if op == "validate":
         return edit_step(op, operation, {"status": "completed", "output": None, "warnings": []}, expected,
@@ -366,7 +400,7 @@ def derive(m, slot, op="execute", at=None, expected=None, uid=None, non_finite=N
     if op == "plan":
         return edit_step(op, operation, {"status": "completed", "output": strip(out), "warnings": []}, expected,
                          expect={"revision": "same"})
-    m.blocks[bid] = {"mark": s, "words": e["mark"], "stale": False}
+    m.blocks[bid] = {"mark": s, "name": block_name(e), "stale": False}
     m.inserts[m.next] = bid
     m.next += 1
     out["inserts"] = ["$any"]
@@ -381,18 +415,19 @@ def refresh(m, slot, op="execute", expected=None):
         s, e = m.mark_of(uid, "operation.mark")
         bid = block_id(uid)
         if bid not in m.blocks:
-            raise Refused("section_not_found", f"{label(e['mark'])} kesiti çıkarılmamış; önce Kesit çıkar.",
+            raise Refused("section_not_found", f"{view_name(e)} çıkarılmamış; önce "
+                                               f"{'Görünüş çıkar' if e['form'] == 'elevation' else 'Kesit çıkar'}.",
                           "operation.mark")
         if m.short(e):
             raise Refused("section_jogged", "Kesit çizgisi bir milimetreden kısa; çizilemez.", "operation.mark")
         revision(expected)
         if not m.blocks[bid]["stale"]:
-            raise Refused("nothing_to_set", f"{label(e['mark'])} kesiti güncel: model çizdiğinden beri değişmedi.",
+            raise Refused("nothing_to_set", f"{view_name(e)} güncel: model çizdiğinden beri değişmedi.",
                           "operation.mark")
     except Refused as r:
         return edit_step(op, operation, failed(r), expected, expect={"revision": "same"})
     n = sum(1 for b in m.inserts.values() if b == bid)
-    out = {"mark": uid, "name": f"{label(e['mark'])} kesiti", "block": bid, "inserts": ["$any"] * n,
+    out = {"mark": uid, "name": view_name(e), "block": bid, "inserts": ["$any"] * n,
            "drawn": "$any", "changed": True, "leftOut": m.left_out(), "revision": "$current"}
     if op == "validate":
         return edit_step(op, operation, {"status": "completed", "output": None, "warnings": []}, expected,
@@ -408,11 +443,11 @@ def rows(m):
     seen = set()
     for i in sorted(m.ents):
         e = m.ents[i]
-        if e["kind"] != "viewmark" or e["form"] != "section":
+        if e["kind"] != "viewmark" or e["form"] not in ("section", "elevation"):
             continue
         bid = block_id(UID(i))
         seen.add(bid)
-        row = {"mark": UID(i), "name": f"{label(e['mark'])} kesiti",
+        row = {"mark": UID(i), "name": view_name(e),
                "state": "notDrawn", "inserts": sum(1 for b in m.inserts.values() if b == bid)}
         if bid in m.blocks:
             row["block"] = bid
@@ -420,7 +455,7 @@ def rows(m):
         out.append(row)
     for bid, b in m.blocks.items():
         if bid not in seen:
-            out.append({"name": f"MM-XXXX-KESIT{b['words']} (işareti yok)", "block": bid, "state": "gone",
+            out.append({"name": f"{b['name']} (işareti yok)", "block": bid, "state": "gone",
                         "inserts": sum(1 for x in m.inserts.values() if x == bid)})
     return out
 
@@ -545,7 +580,7 @@ def redo(m, returns):
     return {"op": "redo", "returns": returns}
 
 
-A, B, C, D, E, NOTE, WALL, DOOR, WINDOW, ROOM, INSERT = 9, 10, 11, 12, 13, 14, 1, 5, 6, 8, 15
+A, B, C, D, E, NOTE, WALL, DOOR, WINDOW, ROOM, F, INSERT = 9, 10, 11, 12, 13, 14, 1, 5, 6, 8, 15, 16
 
 
 def case(name, steps, ents=None):
@@ -599,7 +634,14 @@ def edit_cases():
     m = Model(entities())
     out.append(case("Ret: kesit işareti değil (duvar)", [derive(m, WALL)]))
     m = Model(entities())
-    out.append(case("Ret: görünüş işaretinden kesit çıkmaz", [derive(m, E)]))
+    out.append(case("Görünüş işaretinden görünüşü çıkar: odanın kuzeyinden kuzeye bakan, Güney görünüşü",
+                    [derive(m, E, at=(20, 10))]))
+    m = Model(entities())
+    out.append(case("Görünüşün geri alma adımı: Görünüş çıkar",
+                    [derive(m, E, at=(20, 10)), undo(m, FACADE_DERIVE, bid=block_id(UID(E))),
+                     redo(m, FACADE_DERIVE)]))
+    m = Model(entities())
+    out.append(case("Ret: detay işaretinden kesit ya da görünüş çıkmaz", [derive(m, F)]))
     m = Model(entities())
     out.append(case("Ret: kırıklı kesit çizgisi", [derive(m, C)]))
     m = Model(entities())
@@ -639,7 +681,7 @@ def edit_cases():
 def query_cases():
     out = []
     m = Model(entities())
-    out.append(case("Hiç kesit çıkarılmamış: dört kesit işareti, görünüş işareti okunmaz", [query(m)]))
+    out.append(case("Hiç kesit çıkarılmamış: dört kesit ve bir görünüş işareti, detay işareti okunmaz", [query(m)]))
     m = Model(entities())
     out.append(case("A-A çıkarılınca güncel, bir yerleşim", [derive(m, A, at=(20, 0)), query(m)]))
     m = Model(entities())
@@ -672,6 +714,9 @@ def query_cases():
     out.append(case("İşareti silinen kesit: bloğu kalır, kaynağı yok",
                     [derive(m, A, at=(20, 0)), delete(m, A), query(m)]))
     m = Model(entities())
+    out.append(case("İşareti silinen görünüş: bloğu kalır, kaynağı yok",
+                    [derive(m, E, at=(20, 10)), delete(m, E), query(m)]))
+    m = Model(entities())
     out.append(case("Geri alınan kesit yine çıkarılmamış",
                     [derive(m, A, at=(20, 0)), undo(m, DERIVE, bid=block_id(UID(A))), query(m)]))
     m = Model(entities())
@@ -686,7 +731,9 @@ def query_cases():
     m = Model(entities())
     out.append(case("Ret: kesit işareti değil (duvar)", [query(m, mark_slot=WALL)]))
     m = Model(entities())
-    out.append(case("Ret: görünüş işareti", [query(m, mark_slot=E)]))
+    out.append(case("İşaretle sorulur: görünüş işareti de listelenir", [query(m, mark_slot=E)]))
+    m = Model(entities())
+    out.append(case("Ret: detay işareti", [query(m, mark_slot=F)]))
     m = Model(entities())
     out.append(case("Ret: kırıklı kesit çizgisi", [query(m, mark_slot=C)]))
     m = Model(entities())

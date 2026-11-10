@@ -246,11 +246,12 @@ impl Page {
 }
 
 impl Page {
-    /// A section's sheet (EK-2 Tablo 2.12 Kesit, KS, Tablo 2.13 MMC; docs/adr/8042 §6): `view`, its drawing's box
-    /// (metres), at `scale` on `paper`; its place (2.9.3: the author's three characters for a section) `place`; `source`
-    /// the section's mark.
+    /// A section's or an elevation's sheet (EK-2 Tablo 2.12 Kesit KS, Görünüş GR, `file_type`; Tablo 2.13 MMC;
+    /// docs/adr/8042 §6, 8043): `view`, its drawing's box (metres), at `scale` on `paper`; its place (2.9.3: the
+    /// author's three characters for a section or an elevation) `place`; `source` its mark.
     pub fn section(
         title: &str,
+        file_type: &'static str,
         place: &str,
         view: [f64; 4],
         scale: u32,
@@ -263,7 +264,7 @@ impl Page {
             level: None,
             center: None,
             scale: Some(scale),
-            file_type: "KS",
+            file_type,
             file_kind: "MMC",
             place: place.to_owned(),
             views: vec![(title.to_owned(), view)],

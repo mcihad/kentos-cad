@@ -10,8 +10,8 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{
     BlockDefinition, BuildingSectionLeft, BuildingSectionLeftOut, BuildingSectionsEdit,
-    BuildingSectionsEdited, BuildingSectionsOperation, CommandResult, Entity, SECTION_DERIVE_STEP,
-    SECTION_REFRESH_STEP, Vec2, ViewMarkForm,
+    BuildingSectionsEdited, BuildingSectionsOperation, CommandResult, Entity, FACADE_DERIVE_STEP,
+    FACADE_REFRESH_STEP, SECTION_DERIVE_STEP, SECTION_REFRESH_STEP, Vec2, ViewMarkForm,
 };
 use kentos_domain::{Document, NewLayer, Uuid};
 
@@ -58,19 +58,19 @@ pub(crate) fn mark_of(
     let Entity::ViewMark(v) = e else {
         return Err(fail(
             codes::NOT_A_SECTION_MARK,
-            "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır."
+            "Nesne kesit ya da görünüş işareti değil; kesit ve görünüş, planda çizilmiş işaretinden çıkarılır."
                 .into(),
             path,
         ));
     };
-    if v.mark.form != ViewMarkForm::Section {
+    if v.mark.form == ViewMarkForm::Detail {
         return Err(fail(
             codes::NOT_A_SECTION_MARK,
-            "İşaret görünüş ya da detay işareti; kesit yalnız kesit işaretinden çıkarılır.".into(),
+            "İşaret detay işareti; kesit ve görünüş yalnız kesit ya da görünüş işaretinden çıkarılır.".into(),
             path,
         ));
     }
-    if v.mark.points.len() != 2 {
+    if v.mark.form == ViewMarkForm::Section && v.mark.points.len() != 2 {
         return Err(fail(
             codes::SECTION_JOGGED,
             format!(
@@ -80,7 +80,32 @@ pub(crate) fn mark_of(
             path,
         ));
     }
+    if v.mark.points.is_empty() {
+        return Err(fail(
+            codes::NOT_A_SECTION_MARK,
+            "Görünüş işaretinin noktası yok; görünüş, işaretin balonundan baktığı yöne çıkarılır.".into(),
+            path,
+        ));
+    }
     Ok((u, v.mark.clone()))
+}
+
+/// Why a mark's drawing cannot be framed: a section's line under a millimetre, an elevation of an empty model.
+fn unframed(m: &kentos_commands::ViewMarkFields, path: &str) -> Stop {
+    if m.form == ViewMarkForm::Elevation {
+        fail(
+            codes::NOTHING_TO_SET,
+            "Görünüş işaretinin önünde çizilecek bir şey yok: modelde duvar, döşeme, kolon ya da merdiven yok."
+                .into(),
+            path,
+        )
+    } else {
+        fail(
+            codes::SECTION_JOGGED,
+            "Kesit çizgisi bir milimetreden kısa; çizilemez.".into(),
+            path,
+        )
+    }
 }
 
 /// The layers' ids the block's objects need: an EK-4 name's layer as the drawing has it (by its id, the name in lower
@@ -147,17 +172,27 @@ fn left_out(drawn: &Drawn) -> Vec<BuildingSectionLeftOut> {
         .collect()
 }
 
-/// The block a section is drawn into.
-pub(crate) fn block_of(mark: Uuid, words: &str, entities: Vec<Entity>) -> BlockDefinition {
+/// The block a section or an elevation is drawn into.
+pub(crate) fn block_of(
+    doc: &Document,
+    mark: Uuid,
+    fields: &kentos_commands::ViewMarkFields,
+    entities: Vec<Entity>,
+) -> BlockDefinition {
+    let what = if fields.form == ViewMarkForm::Elevation {
+        "görünüş"
+    } else {
+        "kesit"
+    };
     BlockDefinition {
         id: sections::block_id(mark),
-        name: sections::block_name(words),
+        name: sections::view_block_name(doc, fields),
         base: Vec2 { x: 0.0, y: 0.0 },
         entities,
         attributes: Vec::new(),
         description: Some(format!(
-            "{} kesiti: KentOS kesit işaretinden çıkarır; plan değişince eskir, Yeniden çiz ile güncellenir.",
-            sections::label(words)
+            "{}: KentOS {what} işaretinden çıkarır; plan değişince eskir, Yeniden çiz ile güncellenir.",
+            sections::view_name(doc, fields)
         )),
         units: Some(kentos_commands::BlockUnits::M),
         card: None,
@@ -181,14 +216,14 @@ pub(crate) fn bare(entities: &[Entity]) -> Vec<Entity> {
 enum Checked {
     Derive {
         mark: Uuid,
-        words: String,
+        fields: kentos_commands::ViewMarkFields,
         drawn: Drawn,
         ids: BTreeMap<String, (String, bool)>,
         at: Vec2,
     },
     Refresh {
         mark: Uuid,
-        words: String,
+        fields: kentos_commands::ViewMarkFields,
         drawn: Drawn,
         ids: BTreeMap<String, (String, bool)>,
         changed: bool,
@@ -215,28 +250,26 @@ fn check(doc: &Document, input: &BuildingSectionsEdit) -> Result<Checked, Stop> 
                 return Err(fail(
                     codes::SECTION_EXISTS,
                     format!(
-                        "{} kesiti zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın.",
-                        sections::label(&m.mark)
+                        "{} zaten çıkarılmış; güncellemek için Yeniden çiz'i kullanın.",
+                        sections::view_name(doc, &m)
                     ),
                     path,
                 ));
             }
             if let Some(p) = at {
-                checks::point(*p, "Kesitin yerinin", "operation.at")?;
+                let whose = if m.form == ViewMarkForm::Elevation {
+                    "Görünüşün yerinin"
+                } else {
+                    "Kesitin yerinin"
+                };
+                checks::point(*p, whose, "operation.at")?;
             }
-            let frame = sections::frame_of(&m).ok_or_else(|| {
-                fail(
-                    codes::SECTION_JOGGED,
-                    "Kesit çizgisi bir milimetreden kısa; çizilemez.".into(),
-                    path,
-                )
-            })?;
-            let drawn = sections::draw(doc, &frame, &m.mark);
+            let drawn = sections::draw_mark(doc, &m).ok_or_else(|| unframed(&m, path))?;
             let ids = layer_ids(doc, &drawn.layers);
             checks::revision(doc, input.expected_revision.as_deref())?;
             Ok(Checked::Derive {
                 mark: u,
-                words: m.mark.clone(),
+                fields: m.clone(),
                 at: at.unwrap_or_else(|| beside(doc)),
                 drawn,
                 ids,
@@ -248,20 +281,18 @@ fn check(doc: &Document, input: &BuildingSectionsEdit) -> Result<Checked, Stop> 
                 return Err(fail(
                     codes::SECTION_NOT_FOUND,
                     format!(
-                        "{} kesiti çıkarılmamış; önce Kesit çıkar.",
-                        sections::label(&m.mark)
+                        "{} çıkarılmamış; önce {}.",
+                        sections::view_name(doc, &m),
+                        if m.form == ViewMarkForm::Elevation {
+                            "Görünüş çıkar"
+                        } else {
+                            "Kesit çıkar"
+                        }
                     ),
                     path,
                 ));
             };
-            let frame = sections::frame_of(&m).ok_or_else(|| {
-                fail(
-                    codes::SECTION_JOGGED,
-                    "Kesit çizgisi bir milimetreden kısa; çizilemez.".into(),
-                    path,
-                )
-            })?;
-            let drawn = sections::draw(doc, &frame, &m.mark);
+            let drawn = sections::draw_mark(doc, &m).ok_or_else(|| unframed(&m, path))?;
             let ids = layer_ids(doc, &drawn.layers);
             let changed = bare(&block.entities) != bare(&placed(&drawn, &ids));
             checks::revision(doc, input.expected_revision.as_deref())?;
@@ -269,15 +300,15 @@ fn check(doc: &Document, input: &BuildingSectionsEdit) -> Result<Checked, Stop> 
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     format!(
-                        "{} kesiti güncel: model çizdiğinden beri değişmedi.",
-                        sections::label(&m.mark)
+                        "{} güncel: model çizdiğinden beri değişmedi.",
+                        sections::view_name(doc, &m)
                     ),
                     path,
                 ));
             }
             Ok(Checked::Refresh {
                 mark: u,
-                words: m.mark.clone(),
+                fields: m.clone(),
                 drawn,
                 ids,
                 changed,
@@ -316,13 +347,13 @@ pub fn plan_in(
     let output = match c {
         Checked::Derive {
             mark,
-            words,
+            fields,
             drawn,
             ids,
             ..
         } => BuildingSectionsEdited {
             mark: mark.to_string(),
-            name: format!("{} kesiti", sections::label(&words)),
+            name: sections::view_name(doc, &fields),
             block: sections::block_id(mark).to_string(),
             inserts: Vec::new(),
             drawn: placed(&drawn, &ids),
@@ -332,13 +363,13 @@ pub fn plan_in(
         },
         Checked::Refresh {
             mark,
-            words,
+            fields,
             drawn,
             ids,
             changed,
         } => BuildingSectionsEdited {
             mark: mark.to_string(),
-            name: format!("{} kesiti", sections::label(&words)),
+            name: sections::view_name(doc, &fields),
             block: sections::block_id(mark).to_string(),
             inserts: inserts_of(doc, mark),
             drawn: placed(&drawn, &ids),
@@ -408,32 +439,36 @@ fn write_execute(
     match c {
         Checked::Derive {
             mark,
-            words,
+            fields,
             drawn,
             ids,
             at,
         } => {
-            let group = doc.begin_group(SECTION_DERIVE_STEP);
+            let facade = fields.form == ViewMarkForm::Elevation;
+            let step = if facade { FACADE_DERIVE_STEP } else { SECTION_DERIVE_STEP };
+            let group = doc.begin_group(step);
             if let Err(why) = open_layers(doc, &ids) {
                 return refused(doc, group, why);
             }
-            let block = block_of(mark, &words, placed(&drawn, &ids));
+            let block = block_of(doc, mark, &fields, placed(&drawn, &ids));
             if let Err(r) = doc.add_block(block) {
                 return refused(doc, group, r.to_string());
             }
-            // Its placement on a layer of its own (EK-4's form, the general element: MM-XXXX-KESIT), so a set's plan and
-            // site maps leave the sections drawn beside the building out (docs/adr/8042 §6).
+            // Its placement on a layer of its own (EK-4's form, the general element: MM-XXXX-KESIT, an elevation's
+            // MM-XXXX-GORUNUS), so a set's plan and site maps leave the sections and elevations drawn beside the
+            // building out (docs/adr/8042 §6, 8043).
+            let name = if facade { "MM-XXXX-GORUNUS" } else { "MM-XXXX-KESIT" };
             let mut one = BTreeMap::new();
             one.insert(
-                "MM-XXXX-KESIT".to_owned(),
-                layer_ids(doc, &std::iter::once("MM-XXXX-KESIT".to_owned()).collect())
-                    .remove("MM-XXXX-KESIT")
-                    .unwrap_or(("mm-xxxx-kesit".into(), true)),
+                name.to_owned(),
+                layer_ids(doc, &std::iter::once(name.to_owned()).collect())
+                    .remove(name)
+                    .unwrap_or((name.to_ascii_lowercase(), true)),
             );
             if let Err(why) = open_layers(doc, &one) {
                 return refused(doc, group, why);
             }
-            let layer = one["MM-XXXX-KESIT"].0.clone();
+            let layer = one[name].0.clone();
             let insert: Entity = match serde_json::from_value(serde_json::json!({
                 "kind": "insert", "id": 0, "layerId": layer, "attrs": {},
                 "block": sections::block_id(mark).to_string(), "p": {"x": at.x, "y": at.y}, "scale": 1.0, "rotation": 0.0
@@ -441,7 +476,7 @@ fn write_execute(
                 Ok(e) => e,
                 Err(why) => return refused(doc, group, why.to_string()),
             };
-            let slots = match doc.add_many(vec![insert], SECTION_DERIVE_STEP) {
+            let slots = match doc.add_many(vec![insert], step) {
                 Ok(s) => s,
                 Err(full) => {
                     doc.cancel_group(group);
@@ -458,7 +493,7 @@ fn write_execute(
             CommandResult::Completed {
                 output: BuildingSectionsEdited {
                     mark: mark.to_string(),
-                    name: format!("{} kesiti", sections::label(&words)),
+                    name: sections::view_name(doc, &fields),
                     block: sections::block_id(mark).to_string(),
                     inserts,
                     drawn: doc
@@ -474,16 +509,20 @@ fn write_execute(
         }
         Checked::Refresh {
             mark,
-            words,
+            fields,
             drawn,
             ids,
             changed,
         } => {
-            let group = doc.begin_group(SECTION_REFRESH_STEP);
+            let group = doc.begin_group(if fields.form == ViewMarkForm::Elevation {
+                FACADE_REFRESH_STEP
+            } else {
+                SECTION_REFRESH_STEP
+            });
             if let Err(why) = open_layers(doc, &ids) {
                 return refused(doc, group, why);
             }
-            let block = block_of(mark, &words, placed(&drawn, &ids));
+            let block = block_of(doc, mark, &fields, placed(&drawn, &ids));
             if let Err(r) = doc.update_block(block) {
                 return refused(doc, group, r.to_string());
             }
@@ -491,7 +530,7 @@ fn write_execute(
             CommandResult::Completed {
                 output: BuildingSectionsEdited {
                     mark: mark.to_string(),
-                    name: format!("{} kesiti", sections::label(&words)),
+                    name: sections::view_name(doc, &fields),
                     block: sections::block_id(mark).to_string(),
                     inserts: inserts_of(doc, mark),
                     drawn: doc

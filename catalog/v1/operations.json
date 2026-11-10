@@ -2935,6 +2935,14 @@
       ],
       "note": "Tıklanan kesit işareti ve kesitin yeri derive'a verilir; kesilen, görünen, kotlar, akslar ve leftOut komutun hesabı, önizleme planından. Çıkarılmış kesitin işaretine tıklamak refresh; durum çubuğunun eski kesit rozeti ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8042)."
     },
+    "tool.facadeDraw": {
+      "level": "semantic",
+      "via": [
+        "cad.sections.edit",
+        "cad.sections.query"
+      ],
+      "note": "Tıklanan görünüş işaretinin balonu ve görünüşün yeri derive'a verilir; görünenler, kapı ve pencerelerin açılım çizgileri, kotlar, akslar, kuzey okuna göre başlık ve leftOut komutun hesabı, önizleme planından. Çıkarılmış görünüşün işaretine tıklamak refresh; eski rozet ve Öznitelikler'in durum satırı cad.sections.query'den (ADR 8043)."
+    },
     "tool.roomElevation": {
       "level": "semantic",
       "via": [

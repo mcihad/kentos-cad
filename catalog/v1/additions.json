@@ -5074,10 +5074,20 @@
       "status": "implemented"
     },
     {
+      "id": "tool.facadeDraw",
+      "title": "Görünüş çıkar",
+      "icon": "facadeDraw",
+      "description": "Planda çizilmiş görünüş işaretinin baktığı cepheyi modelden 1/50 çıkarır (docs/adr/8043): işaretin balonuna, sonra görünüşün sol ucunun ±0,00'ının yerine tıklayın (Enter: çizimin sağına). Duvarlar ve döşeme kenarları, kapı ve pencereler doğramalarıyla ve açılım çizgileriyle kendi katmanlarında; kotlar, kat yükseklikleri, akslar, ±0,00'da zemin; zeminin altında kalanlar kesik çizgiyle. Başlık kuzey okuna göre: KUZEY GÖRÜNÜŞÜ. Çizim işaretin bloğundadır (EK-4 malzeme katmanları); plan değişince durum çubuğu ve Öznitelikler “eski” der, Yeniden çiz günceller. Modelin bilmediği (çatı, tabii zemin, rampa) çizilmez, söylenir. Çıkarılmış bir görünüşün işaretine tıklamak onu yeniden çizer.",
+      "aliases": ["GORUNUSCIKAR", "GÖRÜNÜŞÇIKAR", "BIMELEVATION"],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
       "id": "tool.roomElevation",
       "title": "Oda iç görünüşü",
       "icon": "roomElevation",
-      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Kesit/görünüş işareti yalnız başvurudur, çizim üretmez. Yanlar (Y), Aralık (A).",
+      "description": "Türetilmiş çizim: mahalin içine, sonra ilk yanın sol alt köşesine tıklayın (Enter: mahalin yanına). Her düz yan odanın içinden bakılarak modelin bildikleriyle çizilir: duvar yüzleri ve yükseklikleri, kapı ve pencereler denizlik ve lento kotlarıyla, başlık ve ölçüler; ayrı katmanda, tek geri alma adımında. Modelin bilmediği (yaylı yan, kolon, merdiven, donatı) çizilmez, söylenir. Model değişince Öznitelikler eski der; Yeniden üret aynı nesneleri günceller. Binanın kesit ve dış görünüşleri Kesit çıkar ve Görünüş çıkar ile çizilir. Yanlar (Y), Aralık (A).",
       "aliases": [
         "ICGORUNUS",
         "İÇGÖRÜNÜŞ",
@@ -5499,6 +5509,7 @@
     "moduleDetach": "<rect x=\"2.5\" y=\"2.5\" width=\"7\" height=\"7\" rx=\"0.5\"/><rect x=\"11\" y=\"11\" width=\"6.5\" height=\"6.5\" rx=\"0.5\"/><path d=\"M10.5 10.5l1-1M12.5 8.5l1-1\" stroke-width=\"1.2\"/>",
     "designOptions": "<rect x=\"2.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\"/><rect x=\"10.5\" y=\"3\" width=\"7\" height=\"14\" rx=\"0.5\" stroke-dasharray=\"1.6 1.2\"/><path d=\"M5 7h2M13 11h2\" stroke-width=\"1.2\"/>",
     "sectionDraw": "<path d=\"M2.5 3.5h15M2.5 10h15M2 17h16\" stroke-width=\"1.7\"/><path d=\"M3.5 3.5V17M16.5 3.5v1.6M16.5 8.6V17\" stroke-width=\"1.7\"/><path d=\"M16.5 5.6v2.5\" stroke-width=\"0.8\"/><path d=\"M6.5 17v-1.3h1.4v-1.3h1.4v-1.3h1.4v-1.3h1.4V10\" stroke-width=\"1\"/>",
+    "facadeDraw": "<path d=\"M3.5 15.5V3.5h13v12\"/><path d=\"M1.5 15.5h17\" stroke-width=\"1.7\"/><path d=\"M3.5 15.5v2.8h13v-2.8\" stroke-width=\"0.9\" stroke-dasharray=\"1.5 1.1\"/><rect x=\"5.4\" y=\"5.5\" width=\"3\" height=\"3.2\" stroke-width=\"1\"/><rect x=\"11.6\" y=\"5.5\" width=\"3\" height=\"3.2\" stroke-width=\"1\"/><rect x=\"5.4\" y=\"10.3\" width=\"3\" height=\"3.2\" stroke-width=\"1\"/><path d=\"M11.6 15.5v-5.2h3v5.2\" stroke-width=\"1\"/><path d=\"m11.6 10.3 3 2.6-3 2.6\" stroke-width=\"0.8\"/>",
     "roomElevation": "<rect x=\"2.5\" y=\"4.5\" width=\"15\" height=\"11\" rx=\"0.5\"/><rect x=\"4.5\" y=\"8.5\" width=\"3\" height=\"7\" stroke-width=\"1\"/><rect x=\"10.5\" y=\"7.5\" width=\"5\" height=\"4\" stroke-width=\"1\"/><path d=\"M2.5 17.5h15\" stroke-width=\"0.9\" stroke-dasharray=\"1.6 1.2\"/>",
     "alignmentEditor": "<path d=\"M2 16.5 6.5 12c2.6-2.6 5.6-4 11.5-4\" stroke-width=\"1.5\"/><path d=\"M4.1 13l1.7 1.7M8.4 9.6l1.2 2.1M12.9 7.9l.5 2.3\" stroke-width=\"1\"/><path d=\"M2 16.5 9 4.5 18 8\" stroke-width=\".7\" stroke-dasharray=\"1.5 1.2\"/>",
     "alignmentNew": "<path d=\"M2 16 6 12c2.3-2.3 5-3.6 10-3.6\" stroke-width=\"1.5\"/><path d=\"M3.9 12.6l1.6 1.6M7.9 9.4l1.1 2\" stroke-width=\"1\"/><path d=\"M15.5 12.2v6.3M12.4 15.4h6.3\" stroke-width=\"1.5\"/>",

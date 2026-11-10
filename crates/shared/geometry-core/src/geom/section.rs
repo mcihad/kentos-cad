@@ -586,15 +586,13 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
             .map(|r| clean(r))
             .filter(|r| r.len() >= 3)
             .collect();
-        if rings.is_empty() {
-            continue;
-        }
+        // A solid without a footprint (a door's or a window's lines on its wall's faces, docs/adr/8043) is its marks
+        // alone: nothing of it is cut and it has no faces; its marks are seen where nothing nearer hides them.
         let stretches = cut_stretches(frame, &rings);
         match &solid.height {
+            _ if rings.is_empty() => {}
+            Height::Prism { bottom, top } if top - bottom <= EPS => {}
             Height::Prism { bottom, top } => {
-                if top - bottom <= EPS {
-                    continue;
-                }
                 let mut rects: Vec<Rect> = stretches
                     .iter()
                     .map(|&(a, b)| (a, b, *bottom, *top))

@@ -23,7 +23,8 @@
       "0192f5a1-8042-7000-8000-00000000000b",
       "0192f5a1-8042-7000-8000-00000000000c",
       "0192f5a1-8042-7000-8000-00000000000d",
-      "0192f5a1-8042-7000-8000-00000000000e"
+      "0192f5a1-8042-7000-8000-00000000000e",
+      "0192f5a1-8042-7000-8000-00000000000f"
     ],
     "settings": {
       "srid": 0,
@@ -482,12 +483,35 @@
         "text": "Not",
         "height": 0.25,
         "rotation": 0.0
+      },
+      {
+        "kind": "viewmark",
+        "id": 15,
+        "layerId": "isaret",
+        "attrs": {},
+        "form": "detail",
+        "points": [
+          {
+            "x": 1.0,
+            "y": 1.0
+          }
+        ],
+        "radius": 0.5,
+        "at": {
+          "x": -1.5,
+          "y": -1.5
+        },
+        "mark": "F",
+        "words": {
+          "top": "F",
+          "bottom": "—"
+        }
       }
     ]
   },
   "cases": [
     {
-      "name": "Hiç kesit çıkarılmamış: dört kesit işareti, görünüş işareti okunmaz",
+      "name": "Hiç kesit çıkarılmamış: dört kesit ve bir görünüş işareti, detay işareti okunmaz",
       "steps": [
         {
           "op": "execute",
@@ -518,6 +542,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -605,6 +635,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -710,6 +746,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -851,6 +893,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -999,6 +1047,12 @@
                   "name": "D-D kesiti",
                   "state": "notDrawn",
                   "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
                 }
               ],
               "revision": "$current"
@@ -1145,6 +1199,12 @@
                   "name": "D-D kesiti",
                   "state": "notDrawn",
                   "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
                 }
               ],
               "revision": "$current"
@@ -1251,6 +1311,12 @@
                   "name": "D-D kesiti",
                   "state": "notDrawn",
                   "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
                 }
               ],
               "revision": "$current"
@@ -1308,15 +1374,15 @@
         },
         {
           "op": "captureUid",
-          "id": 15,
-          "as": "n15"
+          "id": 16,
+          "as": "n16"
         },
         {
           "op": "execute",
           "command": "cad.entities.transform",
           "input": {
             "uids": [
-              "$uid:n15"
+              "$uid:n16"
             ],
             "transform": {
               "kind": "move",
@@ -1360,6 +1426,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -1419,15 +1491,15 @@
         },
         {
           "op": "captureUid",
-          "id": 15,
-          "as": "n15"
+          "id": 16,
+          "as": "n16"
         },
         {
           "op": "execute",
           "command": "cad.entities.delete",
           "input": {
             "uids": [
-              "$uid:n15"
+              "$uid:n16"
             ]
           },
           "result": {
@@ -1466,6 +1538,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -1574,6 +1652,12 @@
                   "name": "D-D kesiti",
                   "state": "notDrawn",
                   "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
                 }
               ],
               "revision": "$current"
@@ -1675,6 +1759,12 @@
                   "name": "D-D kesiti",
                   "state": "notDrawn",
                   "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
                 }
               ],
               "revision": "$current"
@@ -1771,8 +1861,120 @@
                   "inserts": 0
                 },
                 {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
                   "name": "MM-XXXX-KESITA (işareti yok)",
                   "block": "85ab4861-2ef0-8bc4-aee8-64b1e2e77687",
+                  "state": "gone",
+                  "inserts": 1
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "İşareti silinen görünüş: bloğu kalır, kaynağı yok",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.edit",
+          "input": {
+            "operation": {
+              "kind": "derive",
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "at": {
+                "x": 20.0,
+                "y": 10.0
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "mark": "0192f5a1-8042-7000-8000-00000000000d",
+              "name": "Güney görünüşü",
+              "block": "9b50e60b-55f4-8ac5-a3db-108a8b97ad80",
+              "inserts": [
+                "$any"
+              ],
+              "drawn": "$any",
+              "changed": true,
+              "leftOut": [
+                {
+                  "why": "roof"
+                },
+                {
+                  "why": "naturalGround"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.entities.delete",
+          "input": {
+            "uids": [
+              "0192f5a1-8042-7000-8000-00000000000d"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          }
+        },
+        {
+          "op": "execute",
+          "command": "cad.sections.query",
+          "input": {},
+          "result": {
+            "status": "completed",
+            "output": {
+              "sections": [
+                {
+                  "mark": "0192f5a1-8042-7000-8000-000000000009",
+                  "name": "A-A kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000a",
+                  "name": "B-B kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000b",
+                  "name": "C-C kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000c",
+                  "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "name": "MM-XXXX-GORUNUSGUNEY (işareti yok)",
+                  "block": "9b50e60b-55f4-8ac5-a3db-108a8b97ad80",
                   "state": "gone",
                   "inserts": 1
                 }
@@ -1863,6 +2065,12 @@
                 {
                   "mark": "0192f5a1-8042-7000-8000-00000000000c",
                   "name": "D-D kesiti",
+                  "state": "notDrawn",
+                  "inserts": 0
+                },
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
                   "state": "notDrawn",
                   "inserts": 0
                 }
@@ -2133,14 +2341,14 @@
         },
         {
           "op": "captureUid",
-          "id": 15,
-          "as": "n15"
+          "id": 16,
+          "as": "n16"
         },
         {
           "op": "execute",
           "command": "cad.sections.query",
           "input": {
-            "uid": "$uid:n15"
+            "uid": "$uid:n16"
           },
           "result": {
             "status": "completed",
@@ -2177,7 +2385,7 @@
             "status": "failed",
             "error": {
               "code": "not_a_section_mark",
-              "message": "Nesne kesit işareti değil; kesit, planda çizilmiş bir kesit işaretinden çıkarılır.",
+              "message": "Nesne kesit ya da görünüş işareti değil; kesit ve görünüş, planda çizilmiş işaretinden çıkarılır.",
               "path": "mark"
             }
           },
@@ -2188,7 +2396,7 @@
       ]
     },
     {
-      "name": "Ret: görünüş işareti",
+      "name": "İşaretle sorulur: görünüş işareti de listelenir",
       "steps": [
         {
           "op": "execute",
@@ -2197,10 +2405,40 @@
             "mark": "0192f5a1-8042-7000-8000-00000000000d"
           },
           "result": {
+            "status": "completed",
+            "output": {
+              "sections": [
+                {
+                  "mark": "0192f5a1-8042-7000-8000-00000000000d",
+                  "name": "Güney görünüşü",
+                  "state": "notDrawn",
+                  "inserts": 0
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ret: detay işareti",
+      "steps": [
+        {
+          "op": "execute",
+          "command": "cad.sections.query",
+          "input": {
+            "mark": "0192f5a1-8042-7000-8000-00000000000f"
+          },
+          "result": {
             "status": "failed",
             "error": {
               "code": "not_a_section_mark",
-              "message": "İşaret görünüş ya da detay işareti; kesit yalnız kesit işaretinden çıkarılır.",
+              "message": "İşaret detay işareti; kesit ve görünüş yalnız kesit ya da görünüş işaretinden çıkarılır.",
               "path": "mark"
             }
           },

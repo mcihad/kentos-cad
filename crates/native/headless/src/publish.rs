@@ -546,18 +546,24 @@ fn work(
         }
     }
     let mut issues = Vec::new();
-    // A stale section a sheet prints (docs/adr/8042 §6): said, not refused (the drawing's own choice to print it).
+    // A stale section or elevation a sheet prints (docs/adr/8042 §6, 8043): said, not refused (the drawing's own choice
+    // to print it).
     for (sheet, name) in
         kentos_native_application::sections_query::stale_on_sheets(doc, &book, &chosen)
     {
+        let (what, it) = if name.ends_with("görünüşü") {
+            ("görünüş", "Görünüşü")
+        } else {
+            ("kesit", "Kesiti")
+        };
         issues.push(issue(
             &sheet,
             "section_stale",
             format!(
-                "{name} eski: plan, kesit çıkarıldığından beri değişti; paftada eski kesit basılır."
+                "{name} eski: plan, {what} çıkarıldığından beri değişti; paftada eski {what} basılır."
             ),
             false,
-            "Kesiti seçip Öznitelikler › Durum › Yeniden çiz ile güncelleyin.".into(),
+            format!("{it} seçip Öznitelikler › Durum › Yeniden çiz ile güncelleyin."),
         ));
     }
     let resource_plan = if input.resources {

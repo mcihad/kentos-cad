@@ -320,6 +320,16 @@
       (`sections_query::stale_on_sheets`).
     - Mevzuat: `paiy_sections_missing` (ikiden az çıkarılmış kesit), `paiy_section_stair_missing` (hiçbiri ortak merdiveni
       kesmiyor; `sections::cut_owners`), PAİY 57/2-a-6.
+  - **Görünüş çıkar (M43 1. bölüm, [ADR 8043](../adr/8043-elevation-derived-from-an-elevation-mark.md)):**
+    - Görünüş işaretinin bloğu (`MM-XXXX-GORUNUSKUZEY`), yerleşimi `MM-XXXX-GORUNUS` katmanında; komutlar kesitinkiler
+      (`cad.sections.edit`/`query`), geri alma adları "Görünüş çıkar", "Görünüşü yeniden çiz". Detay işareti reddedilir.
+    - Düzlem balondan, bakışa dik, modelin genişliği ±1 m. Ad cephenin yüzünün planın kuzeyine (kuzey oku, yoksa
+      yukarı) göre en yakın sekiz yönden biri: "Kuzey görünüşü"; ok dönünce görünüş eskir, Yeniden çiz adı da günceller.
+    - Kapı ve pencere taban alanı olmayan kendi katısı (çekirdek: taban alanı olmayan katının yalnız çizgileri); çevre,
+      kasa içi, Türkiye'nin açılım çizgileri (ADR 8038 §6); `MM-KAPI-GENEL-1`, `MM-PENC-GENEL-1`. ±0,00'ın altında görünen
+      kesik (MO). Mahal adı yok.
+    - Durum çubuğu "Kuzey görünüşü eski" / "1 kesit, 2 görünüş eski"; Öznitelikler Tür "Görünüş · plandan çıkarılır".
+      Ruhsat takımında kesitlerden sonra GR paftası, Konum KUZ/KDG/DOG/GDG/GUN/GBT/BAT/KBT.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

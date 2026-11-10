@@ -21048,7 +21048,7 @@ class BuildingSectionLeftOut(_Model):
 class BuildingSectionRow(_Model):
     """A section as `cad.sections.query` reads it.
     Attributes:
-        name: "A-A kesiti".
+        name: "A-A kesiti", "Kuzey görünüşü".
         inserts: Its placements in the drawing. Unit: count.
         mark: Its mark's persistent id; none when the mark is gone.
     """
@@ -21108,8 +21108,8 @@ class BuildingSectionsEdit(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BuildingSectionsEdited(_Model):
-    """Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"), its block, its
-    placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
+    """Output of `cad.sections.edit` (and its plan): the mark, the section's name ("A-A kesiti"; an elevation's "Kuzey
+    görünüşü"), its block, its placements' ids, the block's objects (after; a plan's are what it would write), whether a refresh changed them and
     what was left out.
     """
     mark: str
@@ -21172,8 +21172,8 @@ class BuildingSectionsQueried(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class BuildingSectionsQuery(_Model):
-    """Input of `cad.sections.query` v1 (read-only): every section mark's section, the one of `mark`, or the one whose
-    placement `uid` is.
+    """Input of `cad.sections.query` v1 (read-only): every section mark's section and every elevation mark's facade, the
+    one of `mark`, or the one whose placement `uid` is.
 
     Refusals: `invalid_uid`, `entity_not_found`, `not_a_section_mark`, `section_jogged`.
     """
@@ -114641,7 +114641,8 @@ class ToBoundChange(BoundChange):
 class DeriveBuildingSectionsOperation(BuildingSectionsOperation):
     """Kesit çıkar: the section mark `mark`'s section (its first two points, looking where its arrows look) drawn into
     its block and placed with its line's left end at ±0.00 at `at` (absent: 5 m right of the drawing's objects, at
-    their bottom).
+    their bottom). Görünüş çıkar: an elevation mark's facade, seen from its bubble where its arrow looks, the
+    drawing's width across that look, placed the same way.
     Attributes:
         at: Unit: length.
     """
@@ -114666,8 +114667,8 @@ class DeriveBuildingSectionsOperation(BuildingSectionsOperation):
 
 @dataclass(kw_only=True, slots=True)
 class RefreshBuildingSectionsOperation(BuildingSectionsOperation):
-    """Yeniden çiz: the section's block drawn again from the model as it is now; every placement of it shows the new
-    drawing where it is.
+    """Yeniden çiz: the section's (or the elevation's) block drawn again from the model as it is now; every placement
+    of it shows the new drawing where it is.
     """
     TAG_VALUE: ClassVar[str] = "refresh"
     mark: str
