@@ -2,6 +2,7 @@
 //! drawing opened as a .kcad file over MCP; the plan of 3 % ahead and 2 % back on the polyline gives the case's point
 //! (on the arc, added, high) and writes nothing; execute adds the vertex, and the saved file holds it with the case's
 //! place, elevations and the arc's two halves.
+//! Docs/adr/4980: the range on a further part's hole.
 use kentos_mcp::{MODERN, Server};
 use serde_json::{Value, json};
 
@@ -58,4 +59,39 @@ fn the_high_point_over_mcp_is_the_case_s() {
     }
     let _ = std::fs::remove_file(path);
     let _ = std::fs::remove_file(saved);
+}
+
+/// Docs/adr/4980: the range on the two-part area's second part's hole (410, 10), (430, 10), (430, 20), (410, 20) over
+/// MCP: vertices 1 to 3 from 101 m to 101.6 m along 30 m (2 %), the first vertex and the other rings left; a hole the
+/// part has not is refused at `ring`.
+#[test]
+fn a_range_on_a_further_parts_hole_over_mcp() {
+    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.entities.grade.json")).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
+    let uid = cases["setup"]["uids"][5].as_str().unwrap().to_owned();
+    let path = std::env::temp_dir().join(format!("kentos-grade-part-{}.kcad", std::process::id()));
+    std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path": path}));
+    let _ = std::fs::remove_file(&path);
+    assert_eq!(opened["isError"], false, "{opened}");
+    let drawing = opened["structuredContent"]["drawing"].clone();
+    let r = call(
+        &mut server,
+        "cad.entities.grade",
+        json!({"drawing": drawing, "uid": uid, "from": 1, "to": 3, "part": 1, "ring": 1, "start": 101.0, "end": 101.6}),
+    );
+    assert_eq!(r["isError"], false, "{r}");
+    let out = &r["structuredContent"]["output"];
+    assert!(close(&out["grade"], &json!(0.02), 1e-12) && close(&out["length"], &json!(30.0), 1e-9), "{out}");
+    let area = call(&mut server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+    let e = &area["structuredContent"]["entity"];
+    assert!(close(&e["parts"][0]["holes"][0]["zs"], &json!([null, 101.0, 101.2, 101.6]), 1e-9), "{e}");
+    assert!(e["zs"].is_null() && e["parts"][0]["zs"].is_null() && e["holes"][0]["zs"].is_null(), "{e}");
+    let r = call(
+        &mut server,
+        "cad.entities.grade",
+        json!({"drawing": drawing, "uid": uid, "from": 0, "to": 1, "part": 1, "ring": 2, "start": 100.0, "grade": 0.01}),
+    );
+    assert_eq!(r["structuredContent"]["error"]["path"], "ring", "{r}");
 }

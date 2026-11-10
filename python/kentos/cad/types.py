@@ -32352,18 +32352,28 @@ class DrainageQuery(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class DrapeRange(_Model):
-    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+    """The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based, of
+    the ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own
+    vertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.
     Attributes:
         from_: Unit: index.
         to: Unit: index.
+        part: Docs/adr/4980: the part, 0-based; absent: the first. Unit: index.
+        ring: Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     from_: int
     to: int
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["from"] = self.from_
         out["to"] = self.to
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -32371,6 +32381,8 @@ class DrapeRange(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 
@@ -34699,13 +34711,14 @@ class EntitiesDrape(_Model):
     the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
     only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
     keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
-    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
-    vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
+    none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's
+    vertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless
+    `part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
     `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
     object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
-    range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+    range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
     vertex of them, or of the range, on the surface), `layer_locked`.
     Attributes:
         offset: Docs/adr/4580: the height above (positive) or below (negative) the surface, m. Unit: m.
@@ -35098,14 +35111,15 @@ class EntitiesFlattened(_Model):
 
 @dataclass(kw_only=True, slots=True)
 class EntitiesGrade(_Model):
-    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
-    outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+    """Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`) on the ring
+    `ring` of the part `part` (docs/adr/4980, as `DrapeRange`'s: both 0 when absent, the first part's outer ring), the
+    start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
     or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
     `end` or else the end vertex's own.
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
-    `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+    (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or
+    `from` ≥ `to`), `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
     alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
     and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
     two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
@@ -35116,6 +35130,8 @@ class EntitiesGrade(_Model):
         back: The high or low point's grade back: from the end towards the start, rise over run (0.02 is 2 % up from the end). Unit: grade.
         end: Unit: elevation.
         grade: Unit: grade.
+        part: Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
         start: Unit: elevation.
     """
     uid: str
@@ -35126,6 +35142,8 @@ class EntitiesGrade(_Model):
     end: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
     start: float | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -35143,6 +35161,10 @@ class EntitiesGrade(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         if self.start is not UNSET:
             out["start"] = None if self.start is None else float(self.start)
         return out
@@ -35158,6 +35180,8 @@ class EntitiesGrade(_Model):
             end=UNSET if "end" not in data else None if data["end"] is None else float(data["end"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
             start=UNSET if "start" not in data else None if data["start"] is None else float(data["start"]),
         )
 
@@ -36000,18 +36024,21 @@ class EntitiesPropertiesSet(_Model):
 @dataclass(kw_only=True, slots=True)
 class EntitiesRaise(_Model):
     """Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
-    (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+    (0-based: a line's ends 0 and 1, a polyline's or an area's vertices of the ring `ring` of the part `part`,
+    docs/adr/4980, both 0 when absent: the first part's outer ring), the reference, and
     exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
     difference (the vertex's elevation minus the reference's, m).
 
     Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-    (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+    (not a line, a polyline or an area), `wrong_place` (no such part, ring or vertex), `invalid_input` (both or neither of `grade`
     and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
     from), `layer_locked`.
     Attributes:
         at: Unit: index.
         difference: Unit: length.
         grade: Unit: grade.
+        part: Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first. Unit: index.
+        ring: Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one. Unit: index.
     """
     uid: str
     at: int
@@ -36019,6 +36046,8 @@ class EntitiesRaise(_Model):
     difference: float | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
     grade: float | None | Unset = UNSET
+    part: int | Unset = UNSET
+    ring: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36031,6 +36060,10 @@ class EntitiesRaise(_Model):
             out["expectedRevision"] = self.expected_revision
         if self.grade is not UNSET:
             out["grade"] = None if self.grade is None else float(self.grade)
+        if self.part is not UNSET:
+            out["part"] = self.part
+        if self.ring is not UNSET:
+            out["ring"] = self.ring
         return out
 
     @classmethod
@@ -36042,6 +36075,8 @@ class EntitiesRaise(_Model):
             difference=UNSET if "difference" not in data else None if data["difference"] is None else float(data["difference"]),
             expected_revision=data.get("expectedRevision", UNSET),
             grade=UNSET if "grade" not in data else None if data["grade"] is None else float(data["grade"]),
+            part=data.get("part", UNSET),
+            ring=data.get("ring", UNSET),
         )
 
 

@@ -4,7 +4,7 @@
  "command": "cad.entities.grade",
  "commandVersion": 1,
  "title": "Eğimle kot ver",
- "note": "ADR 1290, 3380. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu, kotlar, yüksek/alçak noktanın yeri ve yayın yarıları elle; KentOS kodu yok.",
+ "note": "ADR 1290, 3380, 4980. Bağımsız başvuru scripts/fixtures/grade_cases.py: yay boyu, kotlar, yüksek/alçak noktanın yeri ve yayın yarıları elle; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 2,
@@ -182,6 +182,140 @@
     },
     "height": 2.0,
     "rotation": 0.0
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500300.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500340.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500300.0,
+      "y": 4400030.0
+     }
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 500310.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500330.0,
+        "y": 4400010.0
+       },
+       {
+        "x": 500330.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500310.0,
+        "y": 4400020.0
+       }
+      ]
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 500400.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500440.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500440.0,
+        "y": 4400030.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400030.0
+       }
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 500410.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500430.0,
+          "y": 4400010.0
+         },
+         {
+          "x": 500430.0,
+          "y": 4400020.0
+         },
+         {
+          "x": 500410.0,
+          "y": 4400020.0
+         }
+        ]
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 7,
+    "layerId": "tasarim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400500.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4400500.0
+     }
+    ],
+    "parts": [
+     {
+      "pts": [
+       {
+        "x": 500000.0,
+        "y": 4400520.0
+       },
+       {
+        "x": 500040.0,
+        "y": 4400520.0
+       },
+       {
+        "x": 500080.0,
+        "y": 4400540.0
+       }
+      ],
+      "bulges": [
+       0.0,
+       0.25,
+       0.0
+      ],
+      "zs": [
+       700.0,
+       null,
+       702.0
+      ]
+     }
+    ]
    }
   ],
   "uids": [
@@ -189,7 +323,9 @@
    "0192f5c0-1290-7000-8000-000000000002",
    "0192f5c0-1290-7000-8000-000000000003",
    "0192f5c0-1290-7000-8000-000000000004",
-   "0192f5c0-1290-7000-8000-000000000005"
+   "0192f5c0-1290-7000-8000-000000000005",
+   "0192f5c0-1290-7000-8000-000000000006",
+   "0192f5c0-1290-7000-8000-000000000007"
   ],
   "styles": {
    "items": [],
@@ -1092,7 +1228,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1144,7 +1282,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1243,7 +1383,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1295,7 +1437,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1442,7 +1586,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1494,7 +1640,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1586,7 +1734,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1638,7 +1788,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1714,7 +1866,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1739,7 +1893,9 @@
          "y": 4400180.0
         },
         "za": 900.0,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1828,7 +1984,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -1864,7 +2022,9 @@
         "a": null,
         "b": null,
         "za": null,
-        "zb": null
+        "zb": null,
+        "holes": null,
+        "parts": null
        }
       }
      }
@@ -2051,6 +2211,701 @@
        "code": "no_intersection",
        "message": "İki eğim aralığın içinde kesişmiyor: kesişme yol boyunca başlangıçtan 70.000 m'de, aralık 0 ile 70.000 m arası (uçlar sayılmaz). Eğimleri ya da kotları değiştirin.",
        "path": "back"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci parçanın dış halkası, eğimle: öbür halkalar olduğu gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 0,
+      "to": 2,
+      "part": 1,
+      "start": 100.0,
+      "grade": 0.02
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 70.0,
+       "start": 100.0,
+       "end": 101.4,
+       "grade": 0.02,
+       "zs": [
+        100.0,
+        100.8,
+        101.4
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "6": {
+        "zs": null,
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500310.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500310.0,
+            "y": 4400020.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500400.0,
+            "y": 4400030.0
+           }
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500410.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400020.0
+             },
+             {
+              "x": 500410.0,
+              "y": 4400020.0
+             }
+            ]
+           }
+          ],
+          "zs": [
+           100.0,
+           100.8,
+           101.4,
+           null
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "6": {
+        "zs": null,
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500310.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500310.0,
+            "y": 4400020.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500400.0,
+            "y": 4400030.0
+           }
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500410.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400020.0
+             },
+             {
+              "x": 500410.0,
+              "y": 4400020.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İkinci parçanın deliği, bitiş kotuyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 1,
+      "to": 3,
+      "part": 1,
+      "ring": 1,
+      "start": 101.0,
+      "end": 101.6
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 30.0,
+       "start": 101.0,
+       "end": 101.6,
+       "grade": 0.01999999999999981,
+       "zs": [
+        101.0,
+        101.2,
+        101.6
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-09,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "6": {
+        "zs": null,
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500310.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500310.0,
+            "y": 4400020.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500400.0,
+            "y": 4400030.0
+           }
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500410.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400020.0
+             },
+             {
+              "x": 500410.0,
+              "y": 4400020.0
+             }
+            ],
+            "zs": [
+             null,
+             101.0,
+             101.2,
+             101.6
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "expect": {
+      "fields": {
+       "6": {
+        "zs": null,
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 500310.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400010.0
+           },
+           {
+            "x": 500330.0,
+            "y": 4400020.0
+           },
+           {
+            "x": 500310.0,
+            "y": 4400020.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500400.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400000.0
+           },
+           {
+            "x": 500440.0,
+            "y": 4400030.0
+           },
+           {
+            "x": 500400.0,
+            "y": 4400030.0
+           }
+          ],
+          "holes": [
+           {
+            "pts": [
+             {
+              "x": 500410.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400010.0
+             },
+             {
+              "x": 500430.0,
+              "y": 4400020.0
+             },
+             {
+              "x": 500410.0,
+              "y": 4400020.0
+             }
+            ]
+           }
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "İlk parçanın deliği: plan yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 0,
+      "to": 3,
+      "ring": 1,
+      "start": 99.0,
+      "grade": -0.01
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 50.0,
+       "start": 99.0,
+       "end": 98.5,
+       "grade": -0.01,
+       "zs": [
+        99.0,
+        98.8,
+        98.7,
+        98.5
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Çoklu çizginin ikinci parçasında yüksek nokta: yaylı kenara köşe eklenir, ilk parça olduğu gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000007",
+      "from": 0,
+      "to": 2,
+      "part": 1,
+      "ahead": 0.05,
+      "back": 0.03
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "length": 86.56206022203861,
+       "start": 700.0,
+       "end": 702.0,
+       "grade": 0.05,
+       "zs": [
+        700.0,
+        702.0,
+        702.8730386291633,
+        702.0
+       ],
+       "back": 0.03,
+       "point": {
+        "index": 2,
+        "inserted": true,
+        "along": 57.46077258326447,
+        "x": 500057.14799687243,
+        "y": 4400522.722034488,
+        "z": 702.8730386291633,
+        "kind": "high"
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-06,
+     "expect": {
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "7": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400500.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400500.0
+         }
+        ],
+        "bulges": null,
+        "zs": null,
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null,
+        "holes": null,
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500000.0,
+            "y": 4400520.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400520.0
+           },
+           {
+            "x": 500057.14799687243,
+            "y": 4400522.722034488
+           },
+           {
+            "x": 500080.0,
+            "y": 4400540.0
+           }
+          ],
+          "bulges": [
+           0.0,
+           0.09212631267475792,
+           0.1543194664702813,
+           0.0
+          ],
+          "zs": [
+           700.0,
+           702.0,
+           702.8730386291633,
+           702.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Eğimle kot ver",
+     "within": 1e-06,
+     "expect": {
+      "fields": {
+       "7": {
+        "kind": "polyline",
+        "pts": [
+         {
+          "x": 500000.0,
+          "y": 4400500.0
+         },
+         {
+          "x": 500040.0,
+          "y": 4400500.0
+         }
+        ],
+        "bulges": null,
+        "zs": null,
+        "a": null,
+        "b": null,
+        "za": null,
+        "zb": null,
+        "holes": null,
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 500000.0,
+            "y": 4400520.0
+           },
+           {
+            "x": 500040.0,
+            "y": 4400520.0
+           },
+           {
+            "x": 500080.0,
+            "y": 4400540.0
+           }
+          ],
+          "bulges": [
+           0.0,
+           0.25,
+           0.0
+          ],
+          "zs": [
+           700.0,
+           null,
+           702.0
+          ]
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan parça",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 0,
+      "to": 1,
+      "part": 2,
+      "start": 100.0,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Nesnenin 2 parçası var (0'dan): 2. parça yok.",
+       "path": "part"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan delik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 0,
+      "to": 1,
+      "part": 1,
+      "ring": 2,
+      "start": 100.0,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "1. parçanın 1 deliği var: 2. halka yok (0 dış halka, 1'den delikler).",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizginin ikinci halkası yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000002",
+      "from": 0,
+      "to": 1,
+      "ring": 1,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Delikte aralık köşelerin dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uid": "0192f5c0-1290-7000-8000-000000000006",
+      "from": 2,
+      "to": 4,
+      "part": 1,
+      "ring": 1,
+      "start": 100.0,
+      "grade": 0.01
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "wrong_place",
+       "message": "Köşe aralığı 2–4 olamaz: 1. parçanın 1. halkasının 4 köşesi var (0'dan), başlangıç bitişten önce olmalı.",
+       "path": "to"
       }
      },
      "expect": {

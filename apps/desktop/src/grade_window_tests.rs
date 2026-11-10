@@ -2,6 +2,8 @@
 //! the window previews 2 % from its own start elevation; Uygula writes one undo step; by end elevation the grade
 //! follows; a text selected is refused; Harita and Yol offer it, GIS and Mimari do not. And its pictures. The high or
 //! low point (docs/adr/3380): the preview says where it falls and rings it; Uygula adds the vertex in one undo step.
+//! Docs/adr/4980: on the two-part area (slot 6) Halka chooses the second part's hole; the range, the preview and Uygula
+//! are that ring's, the other rings left; and its pictures.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -348,5 +350,81 @@ fn peak_screens() {
             snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
             println!("{}", file.display());
         }
+    }
+}
+
+/// The two-part area (slot 6) selected, Eğimle kot ver on Bitiş kotu, Halka the second part's hole, its vertices 2 to 4
+/// from 101 m to 101.6 m (docs/adr/4980).
+fn on_a_hole() -> App {
+    let mut app = opened(Some(Module::Map));
+    app.selection.set([Slot(6)]);
+    let _ = app.update(Message::Run("tool.grade"));
+    let _ = app.update(Message::Grade(G::Ring("1:1".into())));
+    assert_eq!((app.grade.ring, app.grade.from, app.grade.to), ((1, 1), 1.0, 4.0), "the ring, its first and last vertex");
+    for e in [G::From(2.0), G::Start(101.0), G::Target(crate::grade_window::Target::End), G::End(101.6)] {
+        let _ = app.update(Message::Grade(e));
+    }
+    app
+}
+
+#[test]
+fn halka_puts_the_range_on_a_further_part_s_hole() {
+    let mut app = on_a_hole();
+    let plan = app.grade.plan.clone().expect("a plan").expect("planned");
+    assert!((plan.grade - 0.02).abs() < 1e-12 && (plan.length - 30.0).abs() < 1e-9, "{plan:?}");
+    // The hole's range is marked: (430, 10) to (410, 20) from X0, Y0.
+    let (path, ends) = app.grade_marks();
+    assert!(!path.is_empty() && ends.len() == 2, "{path:?} {ends:?}");
+    let _ = app.update(Message::Grade(G::Apply));
+    assert_eq!(app.dialog, None);
+    let area = |app: &App| match app.document.as_ref().and_then(|d| d.model.get(Slot(6))) {
+        Some(kentos_commands::Entity::Polygon(p)) => p.clone(),
+        _ => panic!("the area"),
+    };
+    let p = area(&app);
+    let hole = &p.parts.as_ref().expect("parts")[0].holes.as_ref().expect("holes")[0];
+    let zs = hole.zs.clone().expect("elevations");
+    assert_eq!(zs[0], None);
+    for (got, want) in zs[1..].iter().zip([101.0, 101.2, 101.6]) {
+        assert!((got.expect("an elevation") - want).abs() < 1e-9, "{zs:?}");
+    }
+    assert!(p.zs.is_none() && p.parts.as_ref().expect("parts")[0].zs.is_none(), "the other rings are left");
+    let _ = app.update(Message::Run("edit.undo"));
+    let p = area(&app);
+    assert!(p.parts.as_ref().expect("parts")[0].holes.as_ref().expect("holes")[0].zs.is_none(), "one undo step");
+}
+
+/// `.run/gui-evidence/cok-parcali-aralik-4980/`: Halka on the second part's hole, light wide and dark narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib grade_window_tests::screens_on_a_ring -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_on_a_ring() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cok-parcali-aralik-4980");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = on_a_hole();
+        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        // The second part (400–440, 0–30 from X0, Y0) left of the window, which stands in the middle.
+        let camera = &mut app.viewport.camera;
+        camera.scale = if size.width > 1200.0 { 4.0 } else { 2.2 };
+        let (x0, y0) = (500_000.0, 4_400_000.0);
+        camera.center = kentos_interaction::Vec2::new(x0 + 420.0 + (camera.width / 2.0 - camera.width * 0.15) / camera.scale, y0 + 15.0);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("2-egimle-delikte-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
     }
 }

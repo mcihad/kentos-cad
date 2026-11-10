@@ -2,7 +2,8 @@
 //! (`fixtures/commands/v1/cad.entities.raise.json`): the kerb's fourth vertex 2 % up from the door's threshold previews
 //! the shared case's answer and Uygula writes it in one undo step; Sahneden seç takes the reference from a vertex with
 //! an elevation, then the vertex; the reference stays for the next object; a vertex without an elevation is said and
-//! Uygula stays off; on the drawing the reference and the vertex are ringed. And the pictures.
+//! Uygula stays off; on the drawing the reference and the vertex are ringed. And the pictures. Docs/adr/4980: on the
+//! two-part area Sahneden seç's vertex click by the first part's hole chooses that ring; Uygula writes the shared case's.
 
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -193,6 +194,94 @@ fn screens() {
         app.show_bottom(crate::bottom::BottomTab::Coords);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("uygulandi-{name}.png"));
+        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        println!("{}", file.display());
+    }
+}
+
+/// The two-part area (slot 3) on Referanstan: the reference typed place by Sahneden seç's first click, the vertex by its
+/// second by the first part's hole's second vertex (220, 10), 0.5 m down from 120.75 m (docs/adr/4980).
+fn on_a_hole() -> App {
+    let mut app = opened();
+    app.selection.set([Slot(3)]);
+    let _ = app.update(Message::Run("tool.grade"));
+    let _ = app.update(Message::Grade(G::Target(Target::Reference)));
+    let _ = app.update(Message::Grade(G::Pick));
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 260.0, y: Y0 - 15.0 })));
+    assert_eq!(app.grade.picking, Some(Pick::Vertex), "the vertex awaited");
+    assert!(app.grade_picked(Some(kentos_interaction::Vec2 { x: X0 + 220.01, y: Y0 + 9.99 })));
+    assert_eq!((app.grade.ring, app.grade.at), ((0, 1), 2.0), "the first part's hole, its second vertex");
+    // A real click ends its pick step before the point arrives; called directly here, the step is ended as it would be.
+    let _ = app.with_tool(|s, cx| s.cancel(cx));
+    for e in [G::Height(120.75), G::By(By::Difference), G::Difference(-0.5)] {
+        let _ = app.update(Message::Grade(e));
+    }
+    app
+}
+
+#[test]
+fn the_vertex_click_chooses_the_hole_and_uygula_writes_the_case() {
+    let mut app = on_a_hole();
+    let want = case("Alan: ilk parçanın deliğinin");
+    let raised = app.grade.raised.clone().expect("a plan").expect("planned");
+    assert!((raised.after - 120.25).abs() < 1e-9, "{raised:?}");
+    let _ = app.update(Message::Grade(G::Apply));
+    let doc = app.document.as_ref().expect("a drawing");
+    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(3)) else { panic!("the area") };
+    let got = serde_json::json!({"zs": p.zs, "holes": p.holes, "parts": p.parts});
+    let fields = &want["steps"][0]["expect"]["fields"]["3"];
+    for k in ["zs", "holes", "parts"] {
+        let (g, w) = (&got[k], &fields[k]);
+        let flat = |v: &Value| v.to_string();
+        // Elevations within 1e-9: compared through the case's numbers.
+        assert!(close(g, w), "{k}: {} vs {}", flat(g), flat(w));
+    }
+    let _ = app.update(Message::Run("edit.undo"));
+    let doc = app.document.as_ref().expect("a drawing");
+    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(Slot(3)) else { panic!("the area") };
+    assert_eq!(p.holes.as_ref().expect("holes")[0].zs.as_ref().expect("elevations")[1], Some(119.95), "one undo step");
+}
+
+fn close(a: &Value, b: &Value) -> bool {
+    match (a, b) {
+        (Value::Number(x), Value::Number(y)) => (x.as_f64().unwrap_or(f64::NAN) - y.as_f64().unwrap_or(f64::NAN)).abs() <= 1e-9,
+        (Value::Array(x), Value::Array(y)) => x.len() == y.len() && x.iter().zip(y).all(|(p, q)| close(p, q)),
+        (Value::Object(x), Value::Object(y)) => {
+            y.iter().all(|(k, w)| x.get(k).is_some_and(|v| close(v, w))) && x.iter().all(|(k, v)| v.is_null() || y.contains_key(k))
+        }
+        _ => a == b,
+    }
+}
+
+/// `.run/gui-evidence/cok-parcali-aralik-4980/`: Referanstan on the first part's hole, light wide and dark narrow.
+///
+/// ```text
+/// RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib grade_reference_tests::screens_on_a_hole -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn screens_on_a_hole() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cok-parcali-aralik-4980");
+    std::fs::create_dir_all(&out).expect("a folder");
+    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        let mut app = on_a_hole();
+        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        app.apply_settings();
+        let _ = app.update(Message::WindowResized(size));
+        let _ = app.update(Message::Run("view.zoomExtents"));
+        let mut snapshot = Snapshot::new(size).expect("a renderer");
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snapshot.settle(&mut app, App::view, &mut update);
+        // The first part and the reference (200–260, −15–30 from X0, Y0) left of the window, which stands in the middle.
+        let camera = &mut app.viewport.camera;
+        camera.scale = if size.width > 1200.0 { 3.0 } else { 1.8 };
+        camera.center = kentos_interaction::Vec2::new(X0 + 230.0 + (camera.width / 2.0 - camera.width * 0.15) / camera.scale, Y0 + 7.5);
+        snapshot.settle(&mut app, App::view, &mut update);
+        let file = out.join(format!("3-referanstan-delikte-{name}.png"));
         snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
         println!("{}", file.display());
     }

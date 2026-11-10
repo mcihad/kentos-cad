@@ -37,7 +37,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-03 GNSS arşivi | 1340, 1740, 2120, 2520, 2920, 3320, 3720, 4120, 4520, 4920 | bağımsız baz önerisi (oturum başına n − 1); oturumun bloklarının pencerede gösterilmesi | canlı RTK/NTRIP; gerçek alıcı kabulü; resmî hız alanı |
 | MAP-04 Nesne kataloğu | 1360, 1760, 2140, 2540, 2940, 3340, 3740, 4140, 4540, 4940 | iki katalog arasında rapordan taşıma (göç adımları) | AI çıkarımı; gerçek çıkarımın adaylarıyla ölçüm |
 | MAP-05 Ağ kalitesi | 1380, 1740, 2160, 2560, 2960, 3360, 3760, 4160, 4560, 4960 | ağırlıklı benzerlik; bölümlü dengeleme; kabulde dayanıklı kestirim | deformasyon için gerçek seri |
-| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580 | çok parçalı nesne; dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot | — |
+| MAP-06 Sahnede tasarım | 1290, 1960, 2180, 2580, 2980, 3380, 3780, 4180, 4580, 4980 | dönen ve yaylı referansın bağı; yüzeye bağlı (dinamik) kot; Paralel kaydır'da çok parçalı nesne | — |
 | MAP-07 Topoloji | 1261, 1262, 1980, 2200, 2600, 3000, 3400, 3800, 4200, 4600 | köşenin gidişine ok; tutamaçla birden çok nesne; yaylı kenarların birleşmesi | büyük veri ölçümü |
 | MAP-08 Kadastro | 1400, 2000, 2220, 2620, 3020, 3420, 3820, 4220, 4620 | kenarın belgedeki ölçüleri; belge taslağı ile onaylı kayıt; yaylı sınırın bölünmesi | erişim denetimli hak/pay; resmî kapsam |
 | MAP-09 İmar | 1420, 2020, 2240, 2640, 3040, 3440, 3840, 4240, 4640 | plan değişikliği taslağı; sembol seçimlerinin projede saklanması | resmî şema ve eşleme |
@@ -990,6 +990,17 @@ farkı, Partial) ve göreli özellik çizgileri (dinamik; yüzey değişince far
 kot verir, kırık noktası yalnız aradaki kenarlara girer (dış halka; kapanış kenarı, delik, öbür parçalar dışarıda);
 yeni `wrong_place` reddi. 34 bağımsız durum (13 yeni), Python, MCP, masaüstünde Kot farkı ve Aralık (Sahneden seç,
 çizimde işaret) ve resimler. Açık: yüzeye bağlı (dinamik) kot, çok parçalı nesne, dönen ve yaylı referans bağı.
+
+**11 Kasım 2026, onuncu tur — Kot araçlarında çok parçalı nesne ([ADR 4980](../docs/adr/4980-range-on-any-part-and-ring.md)).**
+Kapsam: **CAD (Harita + Yol)**. Araştırma: BÖHHBÜY Ek-2 UVDF'in GRUP tipi ve boşluk alanı; QGIS'in köşe adresi (part,
+ring, vertex) ve köşe düzenleyicisinin aralığı; Netcad'in wiki'si TLS hatasıyla okunamadı. Kanıtlanan: çok parçalı nesne
+alt maddesinin kot araçlarındaki parçası. `cad.entities.drape`'in `range`'i, `cad.entities.grade` ve `cad.entities.raise`
+`part` ile `ring` alır (0 ilk parça ve dış halka, 1'den sonraki parçalar ve delikler); aralık o halkanın köşeleridir (yüksek/alçak
+noktanın köşesi o halkaya eklenir; Referanstan'ın köşesi o halkanındır), öbür halkalar olduğu gibi kalır; olmayan parça
+ya da delik `wrong_place`. Üç komutta 24 yeni bağımsız durum (43, 43, 34; iki parçalı, delikli alanlar, iki parçalı
+çoklu çizgiler), bozma denemesi, Python, MCP, masaüstünde her Hedef'te Halka listesi ve Sahneden seç'in köşe
+tıklamasının halkayı seçmesi, çizimde işaret ve resimler. Açık: Paralel kaydır'da çok parçalı nesne (bugün “önce
+Parçalara ayır” der), yüzeye bağlı (dinamik) kot, dönen ve yaylı referans bağı.
 
 ### MAP-07 — Topolojik üretimi açıklanabilir kalite sürecine dönüştür [ ]
 

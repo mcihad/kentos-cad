@@ -4,7 +4,7 @@
 //! along the path (an arc edge along its arc). One undo step “Eğimle kot ver”. The core is
 //! `kentos_geometry_core::ops::grade`; the shared cases are `fixtures/commands/v1/cad.entities.grade.json`.
 //!
-//! docs/adr/3380 adds the high or low point, as Civil 3D's Insert High/Low Elevation Point: `ahead` (the grade from the
+//! docs/adr/3380 adds the high or low point: `ahead` (the grade from the
 //! start) and `back` (the grade from the end towards the start) instead of `grade`; where they meet a vertex goes (an
 //! arc's halves keep its circle; a line becomes a polyline, as Köşe ekle makes it), unless an existing vertex lies
 //! there; the vertices up to it take the grade ahead, those after it the grade back. The end's elevation is `end`, else
@@ -20,14 +20,15 @@ use crate::cad::REVISION_TEXT;
 pub const CAD_ENTITIES_GRADE: &str = "cad.entities.grade";
 pub const CAD_ENTITIES_GRADE_VERSION: u32 = 1;
 
-/// Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`; an area's
-/// outer ring), the start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
+/// Input of `cad.entities.grade` v1: the object, the range's first and last vertex (0-based, `from` < `to`) on the ring
+/// `ring` of the part `part` (docs/adr/4980, as `DrapeRange`'s: both 0 when absent, the first part's outer ring), the
+/// start's elevation (none: the vertex's own), and exactly one of the end's elevation and the grade;
 /// or, for the high or low point (docs/adr/3380), both `ahead` and `back` without `grade`, the end's elevation being
 /// `end` or else the end vertex's own.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-/// (not a line, a polyline or an area), `wrong_place` (the range not within the vertices, or `from` ≥ `to`),
-/// `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
+/// (not a line, a polyline or an area), `wrong_place` (no such part or ring, the range not within its vertices, or
+/// `from` ≥ `to`), `invalid_input` (both or neither of `end` and `grade`; `grade` with `ahead` or `back`; one of `ahead` and `back`
 /// alone), `elevation_missing` (no start given and the start vertex has none; for the high or low point, no end given
 /// and the end vertex has none), `invalid_input` (a number not finite, a range of no length), `no_intersection` (the
 /// two grades parallel, or meeting outside the range or at its start or end), `layer_locked`.
@@ -42,6 +43,16 @@ pub struct EntitiesGrade {
     pub from: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub to: u32,
+    /// Docs/adr/4980: the range's part, 0-based (0: the object's own vertices); absent: the first.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    /// Docs/adr/4980: the range's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub ring: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
@@ -136,8 +147,7 @@ pub enum GradePointKind {
     Break,
 }
 
-/// `cad.entities.raise` v1 (plan/map-cad.md MAP-06, docs/adr/3780): Referanstan kot ver, as Civil 3D's Raise/Lower by
-/// Reference. The object's vertex `at` takes the reference's elevation plus the grade times its horizontal distance
+/// `cad.entities.raise` v1 (plan/map-cad.md MAP-06, docs/adr/3780): Referanstan kot ver. The object's vertex `at` takes the reference's elevation plus the grade times its horizontal distance
 /// from the reference (or plus the difference), and every other elevation of the object moves by as much: the object
 /// is raised or lowered whole, its grades kept. One undo step “Referanstan kot ver”.
 pub const CAD_ENTITIES_RAISE: &str = "cad.entities.raise";
@@ -159,12 +169,13 @@ pub struct RaiseReference {
 }
 
 /// Input of `cad.entities.raise` v1: the object (a line, a polyline or an area), its vertex whose elevation is given
-/// (0-based: a line's ends 0 and 1, a polyline's first part's vertices, an area's outer ring's), the reference, and
+/// (0-based: a line's ends 0 and 1, a polyline's or an area's vertices of the ring `ring` of the part `part`,
+/// docs/adr/4980, both 0 when absent: the first part's outer ring), the reference, and
 /// exactly one of the grade from the reference to the vertex (rise over run, up positive: 0.02 is 2 % up) and the
 /// difference (the vertex's elevation minus the reference's, m).
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `invalid_uid`, `entity_not_found`, `not_a_path`
-/// (not a line, a polyline or an area), `wrong_place` (no such vertex), `invalid_input` (both or neither of `grade`
+/// (not a line, a polyline or an area), `wrong_place` (no such part, ring or vertex), `invalid_input` (both or neither of `grade`
 /// and `difference`; a number not finite, the result's too), `elevation_missing` (the vertex has no elevation to move
 /// from), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -176,6 +187,16 @@ pub struct EntitiesRaise {
     pub uid: String,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub at: u32,
+    /// Docs/adr/4980: the vertex's part, 0-based (0: the object's own vertices); absent: the first.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    /// Docs/adr/4980: the vertex's ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub ring: u32,
     pub reference: RaiseReference,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -220,12 +241,12 @@ pub struct EntitiesRaised {
     pub revision: String,
 }
 
-/// Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180), as Civil 3D's Elevations From Surface: each vertex of the
-/// objects takes the project's terrain surface's height under it; one off the surface keeps its own. With `breaks`,
-/// as its Insert Intermediate Grade Break Points, a vertex is put wherever a straight edge crosses an edge of the
-/// surface's triangles. With `offset` (docs/adr/4580, its Relative Elevation to Surface's offset) the vertices take the
-/// surface's height plus it; with `range` (its Partial) only one object's vertices from `from` to `to` take heights and
-/// only the edges between them take break points. The heights are not kept tied to the surface. One undo step
+/// Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180): each vertex of the
+/// objects takes the project's terrain surface's height under it; one off the surface keeps its own. With `breaks`
+/// a vertex is put wherever a straight edge crosses an edge of the
+/// surface's triangles. With `offset` (docs/adr/4580) the vertices take the
+/// surface's height plus it; with `range` only one object's vertices from `from` to `to` take heights and
+/// only the edges between them take break points; docs/adr/4980: in any part and ring of it (`part`, `ring`). The heights are not kept tied to the surface. One undo step
 /// “Yüzeyden kot ver”.
 pub const CAD_ENTITIES_DRAPE: &str = "cad.entities.drape";
 pub const CAD_ENTITIES_DRAPE_VERSION: u32 = 1;
@@ -237,13 +258,14 @@ pub const MAX_DRAPED: usize = 10_000;
 /// the map or road project's terrain surface (its id or name) and whether intermediate break points go in. Breaks go
 /// only into straight edges of polylines and areas that carry no measures (M) nor widths: an arc is not split, a line
 /// keeps its two ends. The height above (positive) or below (negative) the surface the vertices take (docs/adr/4580;
-/// none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's outer ring's
-/// vertices (its first part; holes and further parts keep theirs), 0-based, `from` < `to`; the closing edge is not in it.
+/// none: on it). The range of one object's vertices (docs/adr/4580): a line's ends, a polyline's or an area's ring's
+/// vertices, 0-based, `from` < `to`; the closing edge is not in it. The ring is the first part's outer one unless
+/// `part` and `ring` (docs/adr/4980) name another; the object's other rings keep theirs.
 ///
 /// Refusals, in this order: `invalid_revision`, `revision_conflict`, `not_a_road_project`, `unknown_terrain`,
 /// `invalid_input` (no object, more than 10 000, one given twice, an offset not finite, a range with more than one
 /// object), `invalid_uid`, `entity_not_found`, `not_a_path` (not a point, a line, a polyline or an area; a point with a
-/// range), `wrong_place` (the range not within the vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
+/// range), `wrong_place` (no such part or ring, the range not within its vertices, or `from` ≥ `to`), `terrain_unbuildable`, `off_surface` (no
 /// vertex of them, or of the range, on the surface), `layer_locked`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -271,7 +293,9 @@ pub struct EntitiesDrape {
     pub expected_revision: Option<String>,
 }
 
-/// The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based.
+/// The vertices of one object `cad.entities.drape` gives heights to (docs/adr/4580): from `from` to `to`, 0-based, of
+/// the ring `ring` (0: the outer one, 1 on: the holes in order) of the part `part` (0: the first, the object's own
+/// vertices; 1 on: the further parts in order), docs/adr/4980. A line has one part and one ring.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -282,6 +306,20 @@ pub struct DrapeRange {
     pub from: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub to: u32,
+    /// Docs/adr/4980: the part, 0-based; absent: the first.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub part: u32,
+    /// Docs/adr/4980: the ring of the part, 0 the outer one, 1 on the holes; absent: the outer one.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub ring: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }
 
 /// One object as `cad.entities.drape` leaves it: its vertices given the surface's height, those off the surface (kept
