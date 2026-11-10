@@ -17,6 +17,9 @@
 //!   nothing nearer covers them: a point is hidden behind what is cut there, and behind a face whose projection holds
 //!   it strictly inside and which is nearer than it by more than a micrometre. A face is taken as closed over its
 //!   solid's boxes: an opening is a window or a door one does not see through; its outline is a mark.
+//! - **Joint** (docs/adr/8043 §7). A prism's face edge with a prism face in its own plane on both sides is where two
+//!   faces meet under one finish (a plastered wall and the beam, the column or the slab flush with it): not drawn,
+//!   unless the two solids' finishes differ (a stone plinth under plaster). A crease (two planes) and a mark always are.
 //!
 //! `scripts/fixtures/section_cases.py` computes the same from these rules without KentOS's code, in exact fractions.
 
@@ -206,6 +209,9 @@ pub struct Solid {
     pub voids: Vec<Void>,
     /// Segments on its faces, each end a plan point and a height: seen where visible, never cut.
     pub marks: Vec<[(Vec2, f64); 2]>,
+    /// Its faces' finish (a wall layer's material); none: a solid that takes the finish of what it is flush with (a
+    /// beam, a column, a slab). Two faces in one plane meet without a line unless both have one and they differ.
+    pub finish: Option<String>,
 }
 
 /// What the line cuts of a solid: a ring in the section's plane (`x` = u, `y` = z).
@@ -425,6 +431,8 @@ struct Cover {
     /// A cut hides what lies in the plane too: a riser on the line is the cut's own face, its edges inside the
     /// hatch (a section line drawn on a riser in plan drew the tread's nosing through the cut flight).
     cut: bool,
+    /// A prism's face: its solid (a joint is where two such faces meet in one plane).
+    face_of: Option<usize>,
 }
 
 impl Cover {
@@ -468,7 +476,50 @@ impl Cover {
             hi,
             near,
             cut: false,
+            face_of: None,
         })
+    }
+
+    /// A prism's face of `solid`.
+    fn face(ring: Vec<Vec2>, depth: (f64, f64, f64), solid: usize) -> Option<Cover> {
+        Cover::new(ring, depth).map(|c| Cover {
+            face_of: Some(solid),
+            ..c
+        })
+    }
+
+    /// Whether it lies in the plane `(a, b, c)`: the same slopes, the same depth at `at`.
+    fn in_plane(&self, (a, b, c): (f64, f64, f64), at: Vec2) -> bool {
+        (self.b - b).abs() <= 1e-9 * (1.0 + b.abs())
+            && (self.c - c).abs() <= 1e-9 * (1.0 + c.abs())
+            && ((self.a + self.b * at.x + self.c * at.y) - (a + b * at.x + c * at.y)).abs() <= 1e-7
+    }
+
+    /// The part `(t0, t1)` of `p`→`q` inside it or on its outline.
+    fn holds(&self, p: Vec2, q: Vec2) -> Option<(f64, f64)> {
+        let (mut lo, mut hi) = (0.0_f64, 1.0_f64);
+        let n = self.ring.len();
+        let dir = Vec2::new(q.x - p.x, q.y - p.y);
+        for i in 0..n {
+            let (r, s) = (self.ring[i], self.ring[(i + 1) % n]);
+            let side = Vec2::new(s.x - r.x, s.y - r.y);
+            let len = js_hypot(side.x, side.y);
+            if len <= 1e-15 {
+                continue;
+            }
+            let a = (side.x * (p.y - r.y) - side.y * (p.x - r.x)) / len + EPS;
+            let b = (side.x * dir.y - side.y * dir.x) / len;
+            if b.abs() <= 1e-15 {
+                if a < 0.0 {
+                    return None;
+                }
+            } else if b > 0.0 {
+                lo = js_max(lo, -a / b);
+            } else {
+                hi = js_min(hi, -a / b);
+            }
+        }
+        (hi - lo > 1e-12).then_some((lo, hi))
     }
 
     /// What the plane cuts: at depth 0, hiding what lies in the plane as well as behind it.
@@ -531,6 +582,66 @@ struct Edge {
     q: Vec2,
     dp: f64,
     dq: f64,
+    /// A prism face's edge: the face's plane (a joint is looked for); none for a mark or a flight's edge.
+    plane: Option<(f64, f64, f64)>,
+}
+
+/// Spans in order, the overlapping ones joined.
+fn joined(mut spans: Vec<(f64, f64)>) -> Vec<(f64, f64)> {
+    spans.sort_by(|a, b| a.0.total_cmp(&b.0));
+    let mut out: Vec<(f64, f64)> = Vec::new();
+    for (a, b) in spans {
+        match out.last_mut() {
+            Some(last) if a <= last.1 => last.1 = js_max(last.1, b),
+            _ => out.push((a, b)),
+        }
+    }
+    out
+}
+
+/// The parts of a prism face's edge that are a joint (docs/adr/8043 §7): a prism face in its plane on both sides,
+/// `SIDE` away, whose solid's finish goes with the edge's solid's (the same, or either has none).
+fn joints(e: &Edge, covers: &[Cover], finishes: &[Option<&str>]) -> Vec<(f64, f64)> {
+    let Some(plane) = e.plane else {
+        return Vec::new();
+    };
+    let (du, dz) = (e.q.x - e.p.x, e.q.y - e.p.y);
+    let norm = du.abs() + dz.abs();
+    if norm <= EPS {
+        return Vec::new();
+    }
+    let mid = Vec2::new((e.p.x + e.q.x) / 2.0, (e.p.y + e.q.y) / 2.0);
+    let mine = finishes.get(e.solid).copied().flatten();
+    let side = |sign: f64| {
+        let o = Vec2::new(-dz * SIDE * sign / norm, du * SIDE * sign / norm);
+        let (p, q) = (
+            Vec2::new(e.p.x + o.x, e.p.y + o.y),
+            Vec2::new(e.q.x + o.x, e.q.y + o.y),
+        );
+        joined(
+            covers
+                .iter()
+                .filter(|c| {
+                    c.face_of.is_some_and(|s| {
+                        let theirs = finishes.get(s).copied().flatten();
+                        mine.is_none() || theirs.is_none() || mine == theirs
+                    }) && c.in_plane(plane, mid)
+                })
+                .filter_map(|c| c.holds(p, q))
+                .collect(),
+        )
+    };
+    let (left, right) = (side(1.0), side(-1.0));
+    let mut out = Vec::new();
+    for &(a0, a1) in &left {
+        for &(b0, b1) in &right {
+            let (lo, hi) = (js_max(a0, b0), js_min(a1, b1));
+            if hi > lo {
+                out.push((lo, hi));
+            }
+        }
+    }
+    out
 }
 
 /// A ring without its repeated points and the points it runs straight through.
@@ -640,10 +751,12 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
                     q: Vec2::new(frame.u(b), zp + (zq - zp) * t1),
                     dp: frame.d(a),
                     dq: frame.d(b),
+                    plane: None,
                 });
             }
         }
     }
+    let finishes: Vec<Option<&str>> = solids.iter().map(|s| s.finish.as_deref()).collect();
     let mut drawn = std::collections::HashSet::new();
     for e in &edges {
         let length = js_hypot(e.q.x - e.p.x, e.q.y - e.p.y);
@@ -651,6 +764,7 @@ pub fn section(frame: &Frame, solids: &[Solid]) -> Section {
             continue;
         }
         let mut hidden: Vec<(f64, f64)> = covers.iter().filter_map(|c| c.hides(e)).collect();
+        hidden.extend(joints(e, &covers, &finishes));
         hidden.sort_by(|a, b| a.0.total_cmp(&b.0));
         let mut t = 0.0;
         let mut pieces: Vec<(f64, f64)> = Vec::new();
@@ -774,8 +888,9 @@ fn prism_faces(
         let at = |t: f64| Vec2::new(p.x + (q.x - p.x) * t, p.y + (q.y - p.y) * t);
         let (a, b) = (at(t0), at(t1));
         let (u0, u1, d0, d1) = (frame.u(a), frame.u(b), frame.d(a), frame.d(b));
-        if let Some(depth) = vertical_depth(u0, d0, u1, d1) {
-            covers.extend(Cover::new(
+        let plane = vertical_depth(u0, d0, u1, d1);
+        if let Some(depth) = plane {
+            covers.extend(Cover::face(
                 vec![
                     Vec2::new(u0, bottom),
                     Vec2::new(u1, bottom),
@@ -783,6 +898,7 @@ fn prism_faces(
                     Vec2::new(u0, top),
                 ],
                 depth,
+                solid,
             ));
         }
         for z in [bottom, top] {
@@ -792,6 +908,7 @@ fn prism_faces(
                 q: Vec2::new(u1, z),
                 dp: d0,
                 dq: d1,
+                plane,
             });
         }
         // A corner's vertical edge, never where the view clips the face.
@@ -803,6 +920,7 @@ fn prism_faces(
                     q: Vec2::new(u, top),
                     dp: d,
                     dq: d,
+                    plane,
                 });
             }
         }
@@ -883,6 +1001,7 @@ fn flight_faces(
                 q: Vec2::new(tr.u1, tr.top),
                 dp: tr.d0,
                 dq: tr.d1,
+                plane: None,
             });
             edges.push(Edge {
                 solid,
@@ -890,6 +1009,7 @@ fn flight_faces(
                 q: Vec2::new(tr.u1, tr.b1),
                 dp: tr.d0,
                 dq: tr.d1,
+                plane: None,
             });
             // Where the next steps up: the riser's line on the side.
             if let Some(next) = traps.get(k + 1)
@@ -901,6 +1021,7 @@ fn flight_faces(
                     q: Vec2::new(tr.u1, js_max(tr.top, next.top)),
                     dp: tr.d1,
                     dq: tr.d1,
+                    plane: None,
                 });
             }
         }
@@ -914,6 +1035,7 @@ fn flight_faces(
                 q: Vec2::new(first.u0, first.top),
                 dp: first.d0,
                 dq: first.d0,
+                plane: None,
             });
         }
         if let Some(last) = traps.last()
@@ -925,6 +1047,7 @@ fn flight_faces(
                 q: Vec2::new(last.u1, last.top),
                 dp: last.d1,
                 dq: last.d1,
+                plane: None,
             });
         }
     }
@@ -971,6 +1094,7 @@ fn flight_faces(
                     q: Vec2::new(u1, z),
                     dp: d0,
                     dq: d1,
+                    plane: None,
                 });
             }
             // Its ends where it meets the flight's sides, never where the view clips it.
@@ -982,6 +1106,7 @@ fn flight_faces(
                         q: Vec2::new(u, z1),
                         dp: d,
                         dq: d,
+                        plane: None,
                     });
                 }
             }
@@ -1040,6 +1165,7 @@ fn flight_faces(
                 q: b.0,
                 dp: a.1,
                 dq: b.1,
+                plane: None,
             });
         }
     }
@@ -1082,6 +1208,7 @@ mod tests {
             height: Height::Prism { bottom, top },
             voids: Vec::new(),
             marks: Vec::new(),
+            finish: None,
         }
     }
 
@@ -1198,6 +1325,7 @@ mod tests {
             height: Height::Flight(f),
             voids: Vec::new(),
             marks: Vec::new(),
+            finish: None,
         };
         let s = section(&east(), &[solid]);
         assert_eq!(s.cut.len(), 1);
@@ -1235,6 +1363,7 @@ mod tests {
             height: Height::Flight(f),
             voids: Vec::new(),
             marks: Vec::new(),
+            finish: None,
         };
         let s = section(&east(), &[solid]);
         assert_eq!(s.cut.len(), 1, "{:?}", s.cut);

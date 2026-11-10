@@ -1,6 +1,7 @@
 # ADR 8043: Görünüş çıkar — görünüş işaretinden bina görünüşü, yönüne göre adı, ruhsat takımında görünüş paftası
 
-- **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ikinci teslimi (M43 1. bölüm).
+- **Durum:** kabul edildi (10 Kasım 2026); `plan/architecture-advanced.md` ADV-19'un ikinci teslimi (M43 1. bölüm:
+  §1–§6; 2. bölüm: §7).
 - **Bağlam belgesi:** ADR 0345 (görünüm işaretleri), ADR 8038 §6 (Türkiye'nin açılım çizgileri), ADR 8042 (Kesit çıkar:
   blok, çekirdek, eskime, ruhsat takımı; bu ADR onun üstüne kurulur).
 
@@ -66,6 +67,10 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
 
 - Kesitin çekirdeği (`geom::section`) aynen; görünüşte çoğu şey **görünen**dir: malzemesinin katmanında derinlik ekiyle
   (EK-4 4.14.3), en yakın iki dilim 0,25 mm, uzak iki dilim 0,18 mm.
+- **Derinlik dilimi en yakın yüzden (2. bölüm):** kesit dilimi düzleminden ölçer; görünüş en yakın yüzünden ve dilimleri
+  en az 1 m. 1. bölümde dilim balondan ölçülüyordu: görünüşte cephe hem en yakın hem en uzak şey olduğundan bütün cephe
+  4. dilime, en ince kaleme (0,18 mm) düşüyordu; dilim cephenin kendi derinliğine göre ölçülünce de 2,5 cm çıkıntılı kolon
+  1. dilimde, pencereler 4. dilimde kalıyordu. Şimdi düz bir cephe bütünüyle `-1`; 1 m geri çekilmiş bir kat `-2`.
 - **Kapı ve pencere kendi katısı:** taban alanı olmayan, yalnız duvarın iki yüzünde çizgileri olan katı (çekirdek
   değişikliği: taban alanı olmayan katı önceden atlanıyordu; şimdi çizgileri, önünde bir şey yokken görünür). Çizgiler:
   açıklığın çevresi, kasa genişliği biliniyorsa kasanın iç çevresi, kanatlı açılımda **Türkiye'nin açılım çizgileri**
@@ -96,6 +101,22 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
   planlar, kesitler, görünüşler). Pafta adı "Kuzey görünüşü", EK-2 türü GR, Konum KUZ, MMC; işaretin balonunun altına
   paftanın numarası yazılır. Takımın notu "Kesit ve görünüşler çizimin ölçeğinde…" der.
 
+### 7. Ek yeri çizilmez (2. bölüm)
+
+- **Kural (çekirdek):** bir prizma yüzünün kenarının iki yanında da (1 µm öteden bakılınca) aynı düzlemde bir prizma yüzü
+  varsa orası bir ek yeridir ve çizilmez: sıvalı duvar ile ona hizalı kiriş, kolon ve döşeme tek bir yüz olarak görünür.
+  İki katının kaplaması varsa ve farklıysa (taş subasman üstünde sıva) ek yeri çizilir. Kaplaması olmayan katı (kiriş,
+  kolon, döşeme) hizalı olduğu yüzün kaplamasını alır. İki ayrı düzlemin köşesi (açılı cephe) ve işaretler (açıklığın
+  çizgileri) her zaman çizilir.
+- **Kaplama:** duvar katmanının proje malzemesi (yoksa malzemesinin adı); katmansız duvarın kaplaması yok.
+- **Dayanak:** Revit aynı malzemeli birleştirilmiş elemanların ortak kenarını çizmez, malzeme farklıysa çizer; Archicad
+  aynı yüzeyli eş düzlemli elemanları birleşik gösterir. Türkiye kaynaklarında açık bir kural bulunmadı; sıvalı cephede
+  kiriş ve döşeme alnı görünmez.
+- **Ölçüm (kuzey cephe):** kiriş altları (+2,50, +5,50) ve döşeme altı (+2,85) boyunca çizgi 0 (önce cephe boyunca);
+  30/30 kolonlar 2,5 cm önde olduğu için çiziliyor (8 düşey çizgi); cephenin bütün çizgileri `-1` diliminde.
+- Bağımsız başvuruya 19. ve 20. durumlar: duvar–kiriş–döşeme ek yerleri gizli, önde duran kolon görünür; farklı
+  kaplamanın ek yeri ve açılı yüzün köşesi görünür. Önceki 18 durumun hiçbiri değişmedi.
+
 ## Doğrulama
 
 - **Çekirdek:** bağımsız başvuruya (`scripts/fixtures/section_cases.py`) 18. durum: doğramanın çizgileri kendi
@@ -117,14 +138,11 @@ görünüşünü M42'nin kesit çekirdeğiyle, işaretin balonundan çıkarır.
   görünüşü eski"; tıklayınca yerleşim seçilir (Katman `MM-XXXX-GORUNUS`), Durum › Yeniden çiz → "Güncel", pencere
   görünüşte 0,5 m sağa geçer. Ruhsat takımı: UP-05 "Kuzey görünüşü" A2 (594 × 420 mm) 1:50, antette "Kuzey görünüşü",
   1/50, UP-05.
-- **Görülen ve 2. bölüme kalan:** kolon ve kiriş alınları, duvarın yüzüyle aynı düzlemde oldukları için görünüşte çizgi
-  olarak çıkıyor; sıvalı bir cephede görünmezler (§7 olarak 2. bölümde).
+- **Görülen ve 2. bölümde düzeltilen:** kolon ve kiriş alınları, duvarın yüzüyle aynı düzlemde oldukları için görünüşte
+  çizgi olarak çıkıyordu (§7); bütün cephe en ince kalemdeydi (§4).
 
 ## Sonraya kalan (M43 2. bölüm)
 
-- Aynı düzlemde birleşen yüzlerin ek yeri çizilmez (sıvalı duvar, ona hizalı kiriş, kolon ve döşeme); kaplaması farklı
-  iki yüzün ek yeri ve açılı yüzlerin köşesi çizilir. Revit ve Archicad aynı malzemeli birleşik yüzlerin ortak kenarını
-  çizmez.
 - Dört görünüşü birden çıkarmak (balonlara tek tek tıklamadan).
 - Cephe kaplama malzemesi ve renk yazısı (MO: "Cephe kaplama malzemesi ve renkler yazılır").
 - Denetim › Mevzuat: "yeteri sayıda görünüş" (her cephenin görünüşü var mı).

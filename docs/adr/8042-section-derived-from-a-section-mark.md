@@ -80,6 +80,8 @@ tabanı ve tepesi, döşemenin katmanları, kiriş, lento, kolonun malzemesi. Bu
   Gerçek pencerede A-A (y 2,40, ilk rıhttan 5 × 0,28) kolun gri kesitini ortadan bir çizgiyle bölüyordu.
 - Bağımsız başvuru: `scripts/fixtures/section_cases.py` (KentOS kodu olmadan, tam kesirlerle, 17 durum; 17.si rıhtın
   üstünden geçen kesit).
+- **Ek yeri (ADR 8043 §7):** aynı düzlemde ve uyumlu kaplamalı iki yüzün ortak kenarı kesitin görünen kısmında da
+  çizilmez (sıvalı duvar ile hizalı kiriş ve döşeme).
 
 ### 3. Modelin katıları
 

@@ -330,6 +330,11 @@
       kesik (MO). Mahal adı yok.
     - Durum çubuğu "Kuzey görünüşü eski" / "1 kesit, 2 görünüş eski"; Öznitelikler Tür "Görünüş · plandan çıkarılır".
       Ruhsat takımında kesitlerden sonra GR paftası, Konum KUZ/KDG/DOG/GDG/GUN/GBT/BAT/KBT.
+  - **Ek yeri çizilmez (M43 2. bölüm, [ADR 8043](../adr/8043-elevation-derived-from-an-elevation-mark.md) §7):**
+    - Çekirdek: prizma yüzünün kenarının iki yanında aynı düzlemde prizma yüzü varsa ek yeridir, çizilmez; iki katının
+      kaplaması (`Solid.finish`: duvar katmanının proje malzemesi ya da malzeme adı) varsa ve farklıysa çizilir; kaplamasız
+      katı (kiriş, kolon, döşeme) hizalı yüzünkini alır. Köşe (iki düzlem) ve işaretler her zaman çizilir. Kesitte de.
+    - Görünüşün derinlik dilimi en yakın yüzden, en az 1 m'lik dilimlerle (kesit düzleminden); düz cephe bütünüyle `-1`.
 
 - **KentOS Harita: iş yapısı ve kaynak kaydı (6 Kasım 2026; [plan/map-cad.md](../../plan/map-cad.md) MAP-01, [ADR 1200](../../docs/adr/1200-map-work-structure-and-provenance.md)).**
   Harita projesinin `settings.mapWork`'ü (`.kcad` şema 188): öğeler (kampanya, referans, çalışma, tasarım,

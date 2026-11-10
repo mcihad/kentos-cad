@@ -454,6 +454,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                     },
                     voids: Vec::new(),
                     marks: lines,
+                    finish: None,
                 },
                 Look {
                     key: key.into(),
@@ -499,6 +500,14 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                 fill,
                 ..base.clone()
             };
+            // Its faces' finish (docs/adr/8043 §7): the layer's project material, else its material's name; a wall
+            // without layers has none and meets what is flush with it without a line.
+            let finish = comp.and_then(|c| {
+                c.material_id
+                    .clone()
+                    .or_else(|| c.material.clone())
+                    .filter(|f| !f.trim().is_empty())
+            });
             for (ring, holes) in bodies {
                 let mut rings = vec![ring.clone()];
                 rings.extend(holes.iter().flatten().cloned());
@@ -507,6 +516,7 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
                     height: Height::Prism { bottom: foot, top },
                     voids: voids.clone(),
                     marks: Vec::new(),
+                    finish: finish.clone(),
                 };
                 push(m, solid, look.clone(), owner.clone());
             }
@@ -584,6 +594,7 @@ fn slab(
         height: Height::Prism { bottom, top },
         voids: Vec::new(),
         marks: Vec::new(),
+        finish: None,
     };
     for l in &s.layers.over {
         push(
@@ -653,6 +664,7 @@ fn column(
         height: Height::Prism { bottom, top },
         voids: Vec::new(),
         marks: Vec::new(),
+        finish: None,
     };
     push(
         m,
@@ -685,6 +697,7 @@ fn beam(doc: &Document, b: &kentos_commands::BeamFields, owner: Option<String>, 
         height: Height::Prism { bottom, top },
         voids: Vec::new(),
         marks: Vec::new(),
+        finish: None,
     };
     push(m, solid, material_look(element, None, None), owner);
 }
@@ -796,6 +809,7 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
                 height: Height::Flight(flight),
                 voids: Vec::new(),
                 marks: Vec::new(),
+                finish: None,
             },
             look.clone(),
             owner.clone(),
@@ -817,6 +831,7 @@ fn stair(s: &kentos_commands::StairFields, slabs: &[SlabAt], owner: Option<Strin
                 height: Height::Prism { bottom, top },
                 voids: Vec::new(),
                 marks: Vec::new(),
+                finish: None,
             },
             look.clone(),
             owner.clone(),
@@ -1275,16 +1290,31 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             }
         }
     }
-    // What is seen: on its material's layer with its depth, 1 nearest … 4 farthest (EK-4 4.14.3).
+    // What is seen: on its material's layer with its depth, 1 nearest … 4 farthest (EK-4 4.14.3). A section measures
+    // the depth from its plane over what it sees; an elevation from its nearest face, in slices at least a metre deep
+    // (docs/adr/8043 §4): measured from the bubble 3.5 m off, the whole facade fell in the fourth slice at the faintest
+    // pen, and over the facade's own depth a column 2.5 cm proud of the plaster was the first slice, the windows the
+    // fourth.
     let far = s
         .seen
         .iter()
         .map(|e| e.depth)
         .fold(0.0, kentos_geometry_core::jsmath::js_max);
+    let (near, span) = if elevation {
+        let near = s
+            .seen
+            .iter()
+            .map(|e| e.depth)
+            .fold(f64::INFINITY, kentos_geometry_core::jsmath::js_min)
+            .min(far);
+        (near, (far - near).max(4.0))
+    } else {
+        (0.0, far)
+    };
     let mut seen: BTreeMap<String, Vec<(P, P)>> = BTreeMap::new();
     for e in &s.seen {
-        let rank = if far > 0.0 {
-            (1.0 + (4.0 * e.depth / far).floor()).clamp(1.0, 4.0) as u8
+        let rank = if span > 1e-6 {
+            (1.0 + (4.0 * (e.depth - near) / span).floor()).clamp(1.0, 4.0) as u8
         } else {
             1
         };

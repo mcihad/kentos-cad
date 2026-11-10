@@ -108,8 +108,10 @@ fn the_north_facade_is_drawn_from_its_mark_with_its_windows_opening_lines() {
             })
             .collect()
     };
-    let windows = on("mm-penc-genel-");
-    let doors = on("mm-kapi-genel-");
+    // The facade is the nearest thing seen: its windows and door in the first depth slice (EK-4 4.14.3), not the
+    // fourth; nothing of it in the others (it hides the rest of the building).
+    let windows = on("mm-penc-genel-1");
+    let doors = on("mm-kapi-genel-1");
     assert!(
         !windows.is_empty() && !doors.is_empty(),
         "windows {} doors {}",
@@ -124,6 +126,37 @@ fn the_north_facade_is_drawn_from_its_mark_with_its_windows_opening_lines() {
     };
     assert!(slanted(&windows) >= 2, "{}", slanted(&windows));
     assert!(slanted(&doors) >= 2, "{}", slanted(&doors));
+    // The beams (25 cm, flush with the 25 cm wall's outer plaster) and the slabs meet the plastered face without a
+    // line (docs/adr/8043 §7): nothing runs along the facade at the beams' undersides (+2.50, +5.50) or the slab's
+    // underside (+2.85); the 30/30 columns, 2.5 cm proud of it, are drawn.
+    let level_lines = |z: f64| {
+        block
+            .entities
+            .iter()
+            .filter(|e| matches!(e, Entity::Line(l)
+                if (l.a.y - z).abs() < 1e-6 && (l.b.y - z).abs() < 1e-6 && (l.a.x - l.b.x).abs() > 1.0))
+            .count()
+    };
+    for z in [2.5, 2.85, 5.5] {
+        assert_eq!(level_lines(z), 0, "a joint drawn at {z}");
+    }
+    let uprights = block
+        .entities
+        .iter()
+        .filter(|e| {
+            matches!(e, Entity::Line(l)
+            if (l.a.x - l.b.x).abs() < 1e-6 && (l.a.y - l.b.y).abs() > 2.0
+                && l.base.layer_id.starts_with("mm-tasi-betonarme"))
+        })
+        .count();
+    assert!(uprights >= 8, "the four columns' edges: {uprights}");
+    let deeper: Vec<&str> = block
+        .entities
+        .iter()
+        .map(|e| e.base().layer_id.as_str())
+        .filter(|l| l.ends_with("-2") || l.ends_with("-3") || l.ends_with("-4"))
+        .collect();
+    assert!(deeper.is_empty(), "{deeper:?}");
     // What is seen under the graded ground (the ground slab's edge) is dashed.
     assert!(block.entities.iter().any(|e| matches!(e, Entity::Line(l)
         if serde_json::to_value(l.base.look.line_type).unwrap() == serde_json::json!("dashed") && l.a.y < 0.0)));

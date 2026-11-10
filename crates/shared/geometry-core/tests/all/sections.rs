@@ -66,6 +66,7 @@ fn solid(v: &Value) -> Solid {
                 [end(&m[0]), end(&m[1])]
             })
             .collect(),
+        finish: v["finish"].as_str().map(str::to_owned),
     }
 }
 
@@ -131,5 +132,5 @@ fn sections_cut_and_see_as_the_reference_says() {
         }
         seen_cases += 1;
     }
-    assert_eq!(seen_cases, 18, "every case read");
+    assert_eq!(seen_cases, 20, "every case read");
 }

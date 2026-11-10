@@ -26,6 +26,10 @@ The rules, as ADR 8042 §2 gives them:
   the plane too, a riser on the line being the cut's own face), or a seen face (each piece of it) nearer than it by
   more than a millionth of a metre. What is left, in pieces longer than a
   millionth of a metre, is seen; an edge two faces share is drawn once.
+- A joint is not drawn (docs/adr/8043 §7): where a prism's face edge has, a millionth of a metre off on both sides,
+  a prism face in the same plane (its own or another's) whose solid's finish is the same as the edge's solid's, or
+  either has none (a beam, a column or a slab takes the finish of the wall it is flush with). Marks and a flight's
+  edges are always drawn.
 """
 
 import argparse
@@ -263,8 +267,9 @@ def facing(frame, m):
     return m[0] * frame.look[0] + m[1] * frame.look[1] < 0
 
 
-def cover(ring, depth, cut=False):
-    """A convex ring (counter-clockwise) and its depth a + b u + c z; a cut hides what lies in the plane too."""
+def cover(ring, depth, cut=False, solid=None):
+    """A convex ring (counter-clockwise) and its depth a + b u + c z; a cut hides what lies in the plane too. A prism's
+    face knows its solid and its plane (a joint is where two such faces meet in one plane)."""
     ring = [r for r in ring]
     if len(ring) < 3 or area2(ring) == 0:
         return None
@@ -272,7 +277,8 @@ def cover(ring, depth, cut=False):
         ring = ring[::-1]
     a, b, c = depth
     near = min(a + b * x + c * y for x, y in ring)
-    return {"ring": ring, "a": a, "b": b, "c": c, "near": near, "behind": -BEHIND if cut else BEHIND}
+    return {"ring": ring, "a": a, "b": b, "c": c, "near": near, "behind": -BEHIND if cut else BEHIND,
+            "solid": solid, "plane": None if solid is None else (a, b, c)}
 
 
 def vertical_depth(u0, d0, u1, d1):
@@ -316,6 +322,67 @@ def hides(cv, e):
     else:
         hi = min(hi, -a / b)
     return (lo, hi) if hi > lo else None
+
+
+def within(ring, p, q):
+    """The part (t0, t1) of p→q inside the convex ring or on its outline."""
+    lo, hi = F(0), F(1)
+    n = len(ring)
+    for i in range(n):
+        r, s = ring[i], ring[(i + 1) % n]
+        side = (s[0] - r[0], s[1] - r[1])
+        a = side[0] * (p[1] - r[1]) - side[1] * (p[0] - r[0])
+        b = side[0] * (q[1] - p[1]) - side[1] * (q[0] - p[0])
+        if b == 0:
+            if a < 0:
+                return None
+        elif b > 0:
+            lo = max(lo, -a / b)
+        else:
+            hi = min(hi, -a / b)
+    return (lo, hi) if hi > lo else None
+
+
+def spans_union(spans):
+    out = []
+    for a, b in sorted(spans):
+        if out and a <= out[-1][1]:
+            out[-1] = (out[-1][0], max(out[-1][1], b))
+        else:
+            out.append((a, b))
+    return out
+
+
+def joints(e, covers, finishes):
+    """The parts of a prism face's edge that are a joint: a face in its plane on both sides, of a finish that goes
+    with the edge's solid's (the same, or either has none)."""
+    solid, p, q, dp, dq, plane = e
+    if plane is None:
+        return []
+    du, dz = q[0] - p[0], q[1] - p[1]
+    norm = abs(du) + abs(dz)
+    sides = []
+    for sign in (1, -1):
+        o = (-dz * SIDE * sign / norm, du * SIDE * sign / norm)
+        ps, qs = (p[0] + o[0], p[1] + o[1]), (q[0] + o[0], q[1] + o[1])
+        spans = []
+        for c in covers:
+            if c["plane"] != plane:
+                continue
+            f, g = finishes[c["solid"]], finishes[solid]
+            if f is not None and g is not None and f != g:
+                continue
+            span = within(c["ring"], ps, qs)
+            if span is not None:
+                spans.append(span)
+        sides.append(spans_union(spans))
+    out = []
+    for a0, a1 in sides[0]:
+        for b0, b1 in sides[1]:
+            lo, hi = max(a0, b0), min(a1, b1)
+            if hi > lo:
+                out.append((lo, hi))
+    return out
 
 
 def clip_ring(ring, keep):
@@ -364,13 +431,13 @@ def section(frame, solids):
                     u0, u1, d0, d1 = frame.u(a), frame.u(b), frame.d(a), frame.d(b)
                     dep = vertical_depth(u0, d0, u1, d1)
                     if dep is not None:
-                        covers.append(cover([(u0, bottom), (u1, bottom), (u1, top), (u0, top)], dep))
+                        covers.append(cover([(u0, bottom), (u1, bottom), (u1, top), (u0, top)], dep, solid=i))
                     for z in (bottom, top):
-                        edges.append((i, (u0, z), (u1, z), d0, d1))
+                        edges.append((i, (u0, z), (u1, z), d0, d1, dep))
                     if t0 == 0:
-                        edges.append((i, (u0, bottom), (u0, top), d0, d0))
+                        edges.append((i, (u0, bottom), (u0, top), d0, d0, dep))
                     if t1 == 1:
-                        edges.append((i, (u1, bottom), (u1, top), d1, d1))
+                        edges.append((i, (u1, bottom), (u1, top), d1, d1, dep))
             else:
                 f = Flight(**h["flight"])
                 for a, b in stretches:
@@ -391,13 +458,15 @@ def section(frame, solids):
             edges.append((i, (frame.u(a), zp + (zq - zp) * t0), (frame.u(b), zp + (zq - zp) * t1), frame.d(a),
                           frame.d(b)))
     covers = [c for c in covers if c is not None]
+    finishes = [s.get("finish") for s in solids]
     seen, drawn = [], set()
     for e in edges:
-        solid, p, q, dp, dq = e
+        e = e if len(e) == 6 else (*e, None)
+        solid, p, q, dp, dq, _ = e
         len2 = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2
         if len2 <= SHORTEST ** 2:
             continue
-        hidden = sorted(h for h in (hides(c, e) for c in covers) if h is not None)
+        hidden = sorted([h for h in (hides(c, e[:5]) for c in covers) if h is not None] + joints(e, covers, finishes))
         t, pieces = F(0), []
         for a, b in hidden:
             if a > t:
@@ -547,9 +616,12 @@ def rect(x0, y0, x1, y1):
     return [P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)]
 
 
-def prism(ring, bottom, top, voids=(), marks=()):
-    return {"rings": [ring], "height": {"bottom": F(bottom), "top": F(top)}, "voids": list(voids),
-            "marks": list(marks)}
+def prism(ring, bottom, top, voids=(), marks=(), finish=None):
+    out = {"rings": [ring], "height": {"bottom": F(bottom), "top": F(top)}, "voids": list(voids),
+           "marks": list(marks)}
+    if finish is not None:
+        out["finish"] = finish
+    return out
 
 
 def void(ring, bottom, top):
@@ -660,6 +732,20 @@ def cases():
               voids=[void(rect(2, 5, F("3.5"), F("5.25")), F("3.9"), F("5.1"))],
               marks=outline(2, 5, F("3.5"), 5, F("3.9"), F("5.1"))),
     ]))
+    # docs/adr/8043 §7: a plastered wall, the beam and the slab flush with it meet without a line; a column 2.5 cm
+    # proud of it is seen.
+    out.append(("Aynı düzlemde birleşen duvar, kiriş ve döşemenin ek yeri çizilmez; önde duran kolon görünür", east, [
+        prism(rect(0, 4, 10, F("4.25")), 0, F("2.5"), finish="sıva"),
+        prism(rect(0, 4, 10, F("4.25")), F("2.5"), 3),
+        prism(rect(0, 4, 10, 8), 3, F("3.15")),
+        prism(rect(F("4.85"), F("3.975"), F("5.15"), F("4.275")), 0, F("2.5")),
+    ]))
+    # A stone plinth under the plaster: two finishes, the joint drawn; a face at an angle meets the wall at a crease.
+    out.append(("Farklı kaplamanın ek yeri ve açılı yüzün köşesi çizilir", east, [
+        prism(rect(0, 4, 5, F("4.25")), 0, F("0.6"), finish="taş"),
+        prism(rect(0, 4, 5, F("4.25")), F("0.6"), 3, finish="sıva"),
+        prism([P(5, 4), P(10, F("6.5")), P(10, F("6.75")), P(5, F("4.25"))], 0, 3, finish="sıva"),
+    ]))
     return out
 
 
@@ -685,6 +771,8 @@ def doc_solid(s):
                         for v in s["voids"]]
     if s["marks"]:
         out["marks"] = [[[*pt(a[0]), num(a[1])], [*pt(b[0]), num(b[1])]] for a, b in s["marks"]]
+    if s.get("finish") is not None:
+        out["finish"] = s["finish"]
     return out
 
 
