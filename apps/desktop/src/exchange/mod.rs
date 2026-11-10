@@ -28,6 +28,8 @@ pub(crate) mod sheet_publish;
 mod atlas_tests;
 #[cfg(test)]
 mod atlas_update_pdf_tests;
+#[cfg(test)]
+mod atlas_look_tests;
 // Tables bound on a thread of their own (docs/adr/0757).
 pub(crate) mod binding;
 pub(crate) mod coord_export;

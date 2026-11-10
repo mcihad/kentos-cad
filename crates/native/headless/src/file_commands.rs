@@ -1061,6 +1061,7 @@ pub fn atlas_changes(
                 changed: Vec::new(),
                 added: Vec::new(),
                 removed: Vec::new(),
+                look: None,
             });
             continue;
         };
@@ -1080,6 +1081,7 @@ pub fn atlas_changes(
             changed,
             added,
             removed,
+            look: None,
         });
     }
     let gone = previous
@@ -1237,12 +1239,29 @@ fn atlas(
         }
         planned.keep_pages(&written.iter().copied().collect());
     }
-    let (bytes, findings, notes, read) = if bytes {
+    let (bytes, findings, notes, read, looks) = if bytes {
         let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
-        (made.bytes, made.findings, made.notes, made.read)
+        (made.bytes, made.findings, made.notes, made.read, made.looks)
     } else {
-        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone())
+        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone(), Vec::new())
     };
+    // Docs/adr/4820: each page's look, made now; a page an update did not make keeps the previous record's.
+    let made_look = |feature: &str| looks.iter().find(|(f, _)| f == feature).map(|(_, l)| l.clone());
+    let then_look = |feature: &str| {
+        previous.as_ref().and_then(|r| r.pages.iter().find(|q| q.feature == feature)).and_then(|q| q.look.clone())
+    };
+    for p in pages.iter_mut() {
+        p.look = made_look(&p.feature).or_else(|| then_look(&p.feature).filter(|_| !written.is_empty()));
+    }
+    // A changed page's look against the previous atlas's, when this run made it and the record knew it.
+    let mut changes = changes;
+    if let Some(c) = changes.as_mut() {
+        for ch in c.pages.iter_mut().filter(|ch| ch.state == kentos_commands::AtlasPageState::Changed) {
+            if let (Some(now), Some(then)) = (made_look(&ch.feature), then_look(&ch.feature)) {
+                ch.look = Some(if now == then { kentos_commands::AtlasLook::Same } else { kentos_commands::AtlasLook::Changed });
+            }
+        }
+    }
     let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,

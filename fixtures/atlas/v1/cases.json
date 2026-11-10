@@ -44605,6 +44605,1731 @@
    ]
   },
   {
+   "name": "Görünüş: çizilmeyen malik değişince onu listeleyen sayfalar değişti, görünüşleri aynı",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "Malik": "Yeni Malik"
+      }
+     },
+     "result": {
+      "status": "completed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changes": {
+        "pages": [
+         {
+          "index": 1,
+          "feature": "$uidOf:1",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 2,
+          "feature": "$uidOf:2",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 3,
+          "feature": "$uidOf:3",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 4,
+          "feature": "$uidOf:4",
+          "state": "same"
+         },
+         {
+          "index": 5,
+          "feature": "$uidOf:6",
+          "state": "same"
+         },
+         {
+          "index": 6,
+          "feature": "$uidOf:7",
+          "state": "same"
+         },
+         {
+          "index": 7,
+          "feature": "$uidOf:8",
+          "state": "same"
+         },
+         {
+          "index": 8,
+          "feature": "$uidOf:9",
+          "state": "same"
+         },
+         {
+          "index": 9,
+          "feature": "$uidOf:10",
+          "state": "same"
+         },
+         {
+          "index": 10,
+          "feature": "$uidOf:11",
+          "state": "same"
+         },
+         {
+          "index": 11,
+          "feature": "$uidOf:12",
+          "state": "same"
+         },
+         {
+          "index": 12,
+          "feature": "$uidOf:13",
+          "state": "same"
+         },
+         {
+          "index": 13,
+          "feature": "$uidOf:14",
+          "state": "same"
+         },
+         {
+          "index": 14,
+          "feature": "$uidOf:15",
+          "state": "same"
+         },
+         {
+          "index": 15,
+          "feature": "$uidOf:16",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 16,
+          "feature": "$uidOf:17",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 17,
+          "feature": "$uidOf:18",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 18,
+          "feature": "$uidOf:19",
+          "state": "same"
+         },
+         {
+          "index": 19,
+          "feature": "$uidOf:21",
+          "state": "same"
+         },
+         {
+          "index": 20,
+          "feature": "$uidOf:22",
+          "state": "same"
+         },
+         {
+          "index": 21,
+          "feature": "$uidOf:23",
+          "state": "same"
+         },
+         {
+          "index": 22,
+          "feature": "$uidOf:24",
+          "state": "same"
+         },
+         {
+          "index": 23,
+          "feature": "$uidOf:25",
+          "state": "same"
+         },
+         {
+          "index": 24,
+          "feature": "$uidOf:26",
+          "state": "same"
+         },
+         {
+          "index": 25,
+          "feature": "$uidOf:27",
+          "state": "same"
+         },
+         {
+          "index": 26,
+          "feature": "$uidOf:28",
+          "state": "same"
+         },
+         {
+          "index": 27,
+          "feature": "$uidOf:29",
+          "state": "same"
+         },
+         {
+          "index": 28,
+          "feature": "$uidOf:30",
+          "state": "same"
+         },
+         {
+          "index": 29,
+          "feature": "$uidOf:31",
+          "state": "same"
+         },
+         {
+          "index": 30,
+          "feature": "$uidOf:32",
+          "state": "same"
+         },
+         {
+          "index": 31,
+          "feature": "$uidOf:33",
+          "state": "same"
+         },
+         {
+          "index": 32,
+          "feature": "$uidOf:34",
+          "state": "same"
+         },
+         {
+          "index": 33,
+          "feature": "$uidOf:36",
+          "state": "same"
+         },
+         {
+          "index": 34,
+          "feature": "$uidOf:37",
+          "state": "same"
+         },
+         {
+          "index": 35,
+          "feature": "$uidOf:38",
+          "state": "same"
+         },
+         {
+          "index": 36,
+          "feature": "$uidOf:39",
+          "state": "same"
+         },
+         {
+          "index": 37,
+          "feature": "$uidOf:40",
+          "state": "same"
+         },
+         {
+          "index": 38,
+          "feature": "$uidOf:41",
+          "state": "same"
+         },
+         {
+          "index": 39,
+          "feature": "$uidOf:42",
+          "state": "same"
+         },
+         {
+          "index": 40,
+          "feature": "$uidOf:43",
+          "state": "same"
+         },
+         {
+          "index": 41,
+          "feature": "$uidOf:44",
+          "state": "same"
+         },
+         {
+          "index": 42,
+          "feature": "$uidOf:45",
+          "state": "same"
+         },
+         {
+          "index": 43,
+          "feature": "$uidOf:46",
+          "state": "same"
+         },
+         {
+          "index": 44,
+          "feature": "$uidOf:47",
+          "state": "same"
+         },
+         {
+          "index": 45,
+          "feature": "$uidOf:48",
+          "state": "same"
+         },
+         {
+          "index": 46,
+          "feature": "$uidOf:49",
+          "state": "same"
+         },
+         {
+          "index": 47,
+          "feature": "$uidOf:51",
+          "state": "same"
+         },
+         {
+          "index": 48,
+          "feature": "$uidOf:52",
+          "state": "same"
+         },
+         {
+          "index": 49,
+          "feature": "$uidOf:53",
+          "state": "same"
+         },
+         {
+          "index": 50,
+          "feature": "$uidOf:54",
+          "state": "same"
+         },
+         {
+          "index": 51,
+          "feature": "$uidOf:55",
+          "state": "same"
+         },
+         {
+          "index": 52,
+          "feature": "$uidOf:56",
+          "state": "same"
+         },
+         {
+          "index": 53,
+          "feature": "$uidOf:57",
+          "state": "same"
+         },
+         {
+          "index": 54,
+          "feature": "$uidOf:58",
+          "state": "same"
+         },
+         {
+          "index": 55,
+          "feature": "$uidOf:59",
+          "state": "same"
+         },
+         {
+          "index": 56,
+          "feature": "$uidOf:60",
+          "state": "same"
+         },
+         {
+          "index": 57,
+          "feature": "$uidOf:61",
+          "state": "same"
+         },
+         {
+          "index": 58,
+          "feature": "$uidOf:62",
+          "state": "same"
+         },
+         {
+          "index": 59,
+          "feature": "$uidOf:63",
+          "state": "same"
+         },
+         {
+          "index": 60,
+          "feature": "$uidOf:64",
+          "state": "same"
+         },
+         {
+          "index": 61,
+          "feature": "$uidOf:66",
+          "state": "same"
+         },
+         {
+          "index": 62,
+          "feature": "$uidOf:67",
+          "state": "same"
+         },
+         {
+          "index": 63,
+          "feature": "$uidOf:68",
+          "state": "same"
+         },
+         {
+          "index": 64,
+          "feature": "$uidOf:69",
+          "state": "same"
+         },
+         {
+          "index": 65,
+          "feature": "$uidOf:70",
+          "state": "same"
+         },
+         {
+          "index": 66,
+          "feature": "$uidOf:71",
+          "state": "same"
+         },
+         {
+          "index": 67,
+          "feature": "$uidOf:72",
+          "state": "same"
+         },
+         {
+          "index": 68,
+          "feature": "$uidOf:73",
+          "state": "same"
+         },
+         {
+          "index": 69,
+          "feature": "$uidOf:74",
+          "state": "same"
+         },
+         {
+          "index": 70,
+          "feature": "$uidOf:75",
+          "state": "same"
+         },
+         {
+          "index": 71,
+          "feature": "$uidOf:76",
+          "state": "same"
+         },
+         {
+          "index": 72,
+          "feature": "$uidOf:77",
+          "state": "same"
+         },
+         {
+          "index": 73,
+          "feature": "$uidOf:78",
+          "state": "same"
+         },
+         {
+          "index": 74,
+          "feature": "$uidOf:79",
+          "state": "same"
+         },
+         {
+          "index": 75,
+          "feature": "$uidOf:80",
+          "state": "same"
+         },
+         {
+          "index": 76,
+          "feature": "$uidOf:81",
+          "state": "same"
+         },
+         {
+          "index": 77,
+          "feature": "$uidOf:82",
+          "state": "same"
+         },
+         {
+          "index": 78,
+          "feature": "$uidOf:83",
+          "state": "same"
+         },
+         {
+          "index": 79,
+          "feature": "$uidOf:84",
+          "state": "same"
+         },
+         {
+          "index": 80,
+          "feature": "$uidOf:85",
+          "state": "same"
+         },
+         {
+          "index": 81,
+          "feature": "$uidOf:86",
+          "state": "same"
+         },
+         {
+          "index": 82,
+          "feature": "$uidOf:87",
+          "state": "same"
+         },
+         {
+          "index": 83,
+          "feature": "$uidOf:88",
+          "state": "same"
+         },
+         {
+          "index": 84,
+          "feature": "$uidOf:89",
+          "state": "same"
+         },
+         {
+          "index": 85,
+          "feature": "$uidOf:90",
+          "state": "same"
+         },
+         {
+          "index": 86,
+          "feature": "$uidOf:91",
+          "state": "same"
+         },
+         {
+          "index": 87,
+          "feature": "$uidOf:92",
+          "state": "same"
+         },
+         {
+          "index": 88,
+          "feature": "$uidOf:93",
+          "state": "same"
+         },
+         {
+          "index": 89,
+          "feature": "$uidOf:94",
+          "state": "same"
+         },
+         {
+          "index": 90,
+          "feature": "$uidOf:95",
+          "state": "same"
+         },
+         {
+          "index": 91,
+          "feature": "$uidOf:96",
+          "state": "same"
+         },
+         {
+          "index": 92,
+          "feature": "$uidOf:97",
+          "state": "same"
+         },
+         {
+          "index": 93,
+          "feature": "$uidOf:98",
+          "state": "same"
+         },
+         {
+          "index": 94,
+          "feature": "$uidOf:99",
+          "state": "same"
+         },
+         {
+          "index": 95,
+          "feature": "$uidOf:100",
+          "state": "same"
+         },
+         {
+          "index": 96,
+          "feature": "$uidOf:101",
+          "state": "same"
+         },
+         {
+          "index": 97,
+          "feature": "$uidOf:102",
+          "state": "same"
+         },
+         {
+          "index": 98,
+          "feature": "$uidOf:103",
+          "state": "same"
+         },
+         {
+          "index": 99,
+          "feature": "$uidOf:104",
+          "state": "same"
+         },
+         {
+          "index": 100,
+          "feature": "$uidOf:105",
+          "state": "same"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Görünüş: parselin adası değişince yalnız kendi sayfasının görünüşü değişti, komşularınınki aynı",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "Ada": "A9"
+      }
+     },
+     "result": {
+      "status": "completed"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changes": {
+        "pages": [
+         {
+          "index": 1,
+          "feature": "$uidOf:1",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 2,
+          "feature": "$uidOf:2",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "changed"
+         },
+         {
+          "index": 3,
+          "feature": "$uidOf:3",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 4,
+          "feature": "$uidOf:4",
+          "state": "same"
+         },
+         {
+          "index": 5,
+          "feature": "$uidOf:6",
+          "state": "same"
+         },
+         {
+          "index": 6,
+          "feature": "$uidOf:7",
+          "state": "same"
+         },
+         {
+          "index": 7,
+          "feature": "$uidOf:8",
+          "state": "same"
+         },
+         {
+          "index": 8,
+          "feature": "$uidOf:9",
+          "state": "same"
+         },
+         {
+          "index": 9,
+          "feature": "$uidOf:10",
+          "state": "same"
+         },
+         {
+          "index": 10,
+          "feature": "$uidOf:11",
+          "state": "same"
+         },
+         {
+          "index": 11,
+          "feature": "$uidOf:12",
+          "state": "same"
+         },
+         {
+          "index": 12,
+          "feature": "$uidOf:13",
+          "state": "same"
+         },
+         {
+          "index": 13,
+          "feature": "$uidOf:14",
+          "state": "same"
+         },
+         {
+          "index": 14,
+          "feature": "$uidOf:15",
+          "state": "same"
+         },
+         {
+          "index": 15,
+          "feature": "$uidOf:16",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 16,
+          "feature": "$uidOf:17",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 17,
+          "feature": "$uidOf:18",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 18,
+          "feature": "$uidOf:19",
+          "state": "same"
+         },
+         {
+          "index": 19,
+          "feature": "$uidOf:21",
+          "state": "same"
+         },
+         {
+          "index": 20,
+          "feature": "$uidOf:22",
+          "state": "same"
+         },
+         {
+          "index": 21,
+          "feature": "$uidOf:23",
+          "state": "same"
+         },
+         {
+          "index": 22,
+          "feature": "$uidOf:24",
+          "state": "same"
+         },
+         {
+          "index": 23,
+          "feature": "$uidOf:25",
+          "state": "same"
+         },
+         {
+          "index": 24,
+          "feature": "$uidOf:26",
+          "state": "same"
+         },
+         {
+          "index": 25,
+          "feature": "$uidOf:27",
+          "state": "same"
+         },
+         {
+          "index": 26,
+          "feature": "$uidOf:28",
+          "state": "same"
+         },
+         {
+          "index": 27,
+          "feature": "$uidOf:29",
+          "state": "same"
+         },
+         {
+          "index": 28,
+          "feature": "$uidOf:30",
+          "state": "same"
+         },
+         {
+          "index": 29,
+          "feature": "$uidOf:31",
+          "state": "same"
+         },
+         {
+          "index": 30,
+          "feature": "$uidOf:32",
+          "state": "same"
+         },
+         {
+          "index": 31,
+          "feature": "$uidOf:33",
+          "state": "same"
+         },
+         {
+          "index": 32,
+          "feature": "$uidOf:34",
+          "state": "same"
+         },
+         {
+          "index": 33,
+          "feature": "$uidOf:36",
+          "state": "same"
+         },
+         {
+          "index": 34,
+          "feature": "$uidOf:37",
+          "state": "same"
+         },
+         {
+          "index": 35,
+          "feature": "$uidOf:38",
+          "state": "same"
+         },
+         {
+          "index": 36,
+          "feature": "$uidOf:39",
+          "state": "same"
+         },
+         {
+          "index": 37,
+          "feature": "$uidOf:40",
+          "state": "same"
+         },
+         {
+          "index": 38,
+          "feature": "$uidOf:41",
+          "state": "same"
+         },
+         {
+          "index": 39,
+          "feature": "$uidOf:42",
+          "state": "same"
+         },
+         {
+          "index": 40,
+          "feature": "$uidOf:43",
+          "state": "same"
+         },
+         {
+          "index": 41,
+          "feature": "$uidOf:44",
+          "state": "same"
+         },
+         {
+          "index": 42,
+          "feature": "$uidOf:45",
+          "state": "same"
+         },
+         {
+          "index": 43,
+          "feature": "$uidOf:46",
+          "state": "same"
+         },
+         {
+          "index": 44,
+          "feature": "$uidOf:47",
+          "state": "same"
+         },
+         {
+          "index": 45,
+          "feature": "$uidOf:48",
+          "state": "same"
+         },
+         {
+          "index": 46,
+          "feature": "$uidOf:49",
+          "state": "same"
+         },
+         {
+          "index": 47,
+          "feature": "$uidOf:51",
+          "state": "same"
+         },
+         {
+          "index": 48,
+          "feature": "$uidOf:52",
+          "state": "same"
+         },
+         {
+          "index": 49,
+          "feature": "$uidOf:53",
+          "state": "same"
+         },
+         {
+          "index": 50,
+          "feature": "$uidOf:54",
+          "state": "same"
+         },
+         {
+          "index": 51,
+          "feature": "$uidOf:55",
+          "state": "same"
+         },
+         {
+          "index": 52,
+          "feature": "$uidOf:56",
+          "state": "same"
+         },
+         {
+          "index": 53,
+          "feature": "$uidOf:57",
+          "state": "same"
+         },
+         {
+          "index": 54,
+          "feature": "$uidOf:58",
+          "state": "same"
+         },
+         {
+          "index": 55,
+          "feature": "$uidOf:59",
+          "state": "same"
+         },
+         {
+          "index": 56,
+          "feature": "$uidOf:60",
+          "state": "same"
+         },
+         {
+          "index": 57,
+          "feature": "$uidOf:61",
+          "state": "same"
+         },
+         {
+          "index": 58,
+          "feature": "$uidOf:62",
+          "state": "same"
+         },
+         {
+          "index": 59,
+          "feature": "$uidOf:63",
+          "state": "same"
+         },
+         {
+          "index": 60,
+          "feature": "$uidOf:64",
+          "state": "same"
+         },
+         {
+          "index": 61,
+          "feature": "$uidOf:66",
+          "state": "same"
+         },
+         {
+          "index": 62,
+          "feature": "$uidOf:67",
+          "state": "same"
+         },
+         {
+          "index": 63,
+          "feature": "$uidOf:68",
+          "state": "same"
+         },
+         {
+          "index": 64,
+          "feature": "$uidOf:69",
+          "state": "same"
+         },
+         {
+          "index": 65,
+          "feature": "$uidOf:70",
+          "state": "same"
+         },
+         {
+          "index": 66,
+          "feature": "$uidOf:71",
+          "state": "same"
+         },
+         {
+          "index": 67,
+          "feature": "$uidOf:72",
+          "state": "same"
+         },
+         {
+          "index": 68,
+          "feature": "$uidOf:73",
+          "state": "same"
+         },
+         {
+          "index": 69,
+          "feature": "$uidOf:74",
+          "state": "same"
+         },
+         {
+          "index": 70,
+          "feature": "$uidOf:75",
+          "state": "same"
+         },
+         {
+          "index": 71,
+          "feature": "$uidOf:76",
+          "state": "same"
+         },
+         {
+          "index": 72,
+          "feature": "$uidOf:77",
+          "state": "same"
+         },
+         {
+          "index": 73,
+          "feature": "$uidOf:78",
+          "state": "same"
+         },
+         {
+          "index": 74,
+          "feature": "$uidOf:79",
+          "state": "same"
+         },
+         {
+          "index": 75,
+          "feature": "$uidOf:80",
+          "state": "same"
+         },
+         {
+          "index": 76,
+          "feature": "$uidOf:81",
+          "state": "same"
+         },
+         {
+          "index": 77,
+          "feature": "$uidOf:82",
+          "state": "same"
+         },
+         {
+          "index": 78,
+          "feature": "$uidOf:83",
+          "state": "same"
+         },
+         {
+          "index": 79,
+          "feature": "$uidOf:84",
+          "state": "same"
+         },
+         {
+          "index": 80,
+          "feature": "$uidOf:85",
+          "state": "same"
+         },
+         {
+          "index": 81,
+          "feature": "$uidOf:86",
+          "state": "same"
+         },
+         {
+          "index": 82,
+          "feature": "$uidOf:87",
+          "state": "same"
+         },
+         {
+          "index": 83,
+          "feature": "$uidOf:88",
+          "state": "same"
+         },
+         {
+          "index": 84,
+          "feature": "$uidOf:89",
+          "state": "same"
+         },
+         {
+          "index": 85,
+          "feature": "$uidOf:90",
+          "state": "same"
+         },
+         {
+          "index": 86,
+          "feature": "$uidOf:91",
+          "state": "same"
+         },
+         {
+          "index": 87,
+          "feature": "$uidOf:92",
+          "state": "same"
+         },
+         {
+          "index": 88,
+          "feature": "$uidOf:93",
+          "state": "same"
+         },
+         {
+          "index": 89,
+          "feature": "$uidOf:94",
+          "state": "same"
+         },
+         {
+          "index": 90,
+          "feature": "$uidOf:95",
+          "state": "same"
+         },
+         {
+          "index": 91,
+          "feature": "$uidOf:96",
+          "state": "same"
+         },
+         {
+          "index": 92,
+          "feature": "$uidOf:97",
+          "state": "same"
+         },
+         {
+          "index": 93,
+          "feature": "$uidOf:98",
+          "state": "same"
+         },
+         {
+          "index": 94,
+          "feature": "$uidOf:99",
+          "state": "same"
+         },
+         {
+          "index": 95,
+          "feature": "$uidOf:100",
+          "state": "same"
+         },
+         {
+          "index": 96,
+          "feature": "$uidOf:101",
+          "state": "same"
+         },
+         {
+          "index": 97,
+          "feature": "$uidOf:102",
+          "state": "same"
+         },
+         {
+          "index": 98,
+          "feature": "$uidOf:103",
+          "state": "same"
+         },
+         {
+          "index": 99,
+          "feature": "$uidOf:104",
+          "state": "same"
+         },
+         {
+          "index": 100,
+          "feature": "$uidOf:105",
+          "state": "same"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Görünüş: planda da sayfalar yapılır, görünüş söylenir",
+   "setup": "plain",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$tmp/atlas.pdf",
+      "sheet": "atlas-paftasi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "record": "$tmp/atlas.kaynaklar.json"
+      }
+     }
+    },
+    {
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "operation": "attributes",
+      "attrs": {
+       "Malik": "Yeni Malik"
+      }
+     },
+     "result": {
+      "status": "completed"
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "path": "$tmp/atlas-2.pdf",
+      "sheet": "atlas-paftasi",
+      "previous": "$tmp/atlas.kaynaklar.json"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "changes": {
+        "pages": [
+         {
+          "index": 1,
+          "feature": "$uidOf:1",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 2,
+          "feature": "$uidOf:2",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 3,
+          "feature": "$uidOf:3",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 4,
+          "feature": "$uidOf:4",
+          "state": "same"
+         },
+         {
+          "index": 5,
+          "feature": "$uidOf:6",
+          "state": "same"
+         },
+         {
+          "index": 6,
+          "feature": "$uidOf:7",
+          "state": "same"
+         },
+         {
+          "index": 7,
+          "feature": "$uidOf:8",
+          "state": "same"
+         },
+         {
+          "index": 8,
+          "feature": "$uidOf:9",
+          "state": "same"
+         },
+         {
+          "index": 9,
+          "feature": "$uidOf:10",
+          "state": "same"
+         },
+         {
+          "index": 10,
+          "feature": "$uidOf:11",
+          "state": "same"
+         },
+         {
+          "index": 11,
+          "feature": "$uidOf:12",
+          "state": "same"
+         },
+         {
+          "index": 12,
+          "feature": "$uidOf:13",
+          "state": "same"
+         },
+         {
+          "index": 13,
+          "feature": "$uidOf:14",
+          "state": "same"
+         },
+         {
+          "index": 14,
+          "feature": "$uidOf:15",
+          "state": "same"
+         },
+         {
+          "index": 15,
+          "feature": "$uidOf:16",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 16,
+          "feature": "$uidOf:17",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 17,
+          "feature": "$uidOf:18",
+          "state": "changed",
+          "changed": [
+           "$uidOf:2"
+          ],
+          "look": "same"
+         },
+         {
+          "index": 18,
+          "feature": "$uidOf:19",
+          "state": "same"
+         },
+         {
+          "index": 19,
+          "feature": "$uidOf:21",
+          "state": "same"
+         },
+         {
+          "index": 20,
+          "feature": "$uidOf:22",
+          "state": "same"
+         },
+         {
+          "index": 21,
+          "feature": "$uidOf:23",
+          "state": "same"
+         },
+         {
+          "index": 22,
+          "feature": "$uidOf:24",
+          "state": "same"
+         },
+         {
+          "index": 23,
+          "feature": "$uidOf:25",
+          "state": "same"
+         },
+         {
+          "index": 24,
+          "feature": "$uidOf:26",
+          "state": "same"
+         },
+         {
+          "index": 25,
+          "feature": "$uidOf:27",
+          "state": "same"
+         },
+         {
+          "index": 26,
+          "feature": "$uidOf:28",
+          "state": "same"
+         },
+         {
+          "index": 27,
+          "feature": "$uidOf:29",
+          "state": "same"
+         },
+         {
+          "index": 28,
+          "feature": "$uidOf:30",
+          "state": "same"
+         },
+         {
+          "index": 29,
+          "feature": "$uidOf:31",
+          "state": "same"
+         },
+         {
+          "index": 30,
+          "feature": "$uidOf:32",
+          "state": "same"
+         },
+         {
+          "index": 31,
+          "feature": "$uidOf:33",
+          "state": "same"
+         },
+         {
+          "index": 32,
+          "feature": "$uidOf:34",
+          "state": "same"
+         },
+         {
+          "index": 33,
+          "feature": "$uidOf:36",
+          "state": "same"
+         },
+         {
+          "index": 34,
+          "feature": "$uidOf:37",
+          "state": "same"
+         },
+         {
+          "index": 35,
+          "feature": "$uidOf:38",
+          "state": "same"
+         },
+         {
+          "index": 36,
+          "feature": "$uidOf:39",
+          "state": "same"
+         },
+         {
+          "index": 37,
+          "feature": "$uidOf:40",
+          "state": "same"
+         },
+         {
+          "index": 38,
+          "feature": "$uidOf:41",
+          "state": "same"
+         },
+         {
+          "index": 39,
+          "feature": "$uidOf:42",
+          "state": "same"
+         },
+         {
+          "index": 40,
+          "feature": "$uidOf:43",
+          "state": "same"
+         },
+         {
+          "index": 41,
+          "feature": "$uidOf:44",
+          "state": "same"
+         },
+         {
+          "index": 42,
+          "feature": "$uidOf:45",
+          "state": "same"
+         },
+         {
+          "index": 43,
+          "feature": "$uidOf:46",
+          "state": "same"
+         },
+         {
+          "index": 44,
+          "feature": "$uidOf:47",
+          "state": "same"
+         },
+         {
+          "index": 45,
+          "feature": "$uidOf:48",
+          "state": "same"
+         },
+         {
+          "index": 46,
+          "feature": "$uidOf:49",
+          "state": "same"
+         },
+         {
+          "index": 47,
+          "feature": "$uidOf:51",
+          "state": "same"
+         },
+         {
+          "index": 48,
+          "feature": "$uidOf:52",
+          "state": "same"
+         },
+         {
+          "index": 49,
+          "feature": "$uidOf:53",
+          "state": "same"
+         },
+         {
+          "index": 50,
+          "feature": "$uidOf:54",
+          "state": "same"
+         },
+         {
+          "index": 51,
+          "feature": "$uidOf:55",
+          "state": "same"
+         },
+         {
+          "index": 52,
+          "feature": "$uidOf:56",
+          "state": "same"
+         },
+         {
+          "index": 53,
+          "feature": "$uidOf:57",
+          "state": "same"
+         },
+         {
+          "index": 54,
+          "feature": "$uidOf:58",
+          "state": "same"
+         },
+         {
+          "index": 55,
+          "feature": "$uidOf:59",
+          "state": "same"
+         },
+         {
+          "index": 56,
+          "feature": "$uidOf:60",
+          "state": "same"
+         },
+         {
+          "index": 57,
+          "feature": "$uidOf:61",
+          "state": "same"
+         },
+         {
+          "index": 58,
+          "feature": "$uidOf:62",
+          "state": "same"
+         },
+         {
+          "index": 59,
+          "feature": "$uidOf:63",
+          "state": "same"
+         },
+         {
+          "index": 60,
+          "feature": "$uidOf:64",
+          "state": "same"
+         },
+         {
+          "index": 61,
+          "feature": "$uidOf:66",
+          "state": "same"
+         },
+         {
+          "index": 62,
+          "feature": "$uidOf:67",
+          "state": "same"
+         },
+         {
+          "index": 63,
+          "feature": "$uidOf:68",
+          "state": "same"
+         },
+         {
+          "index": 64,
+          "feature": "$uidOf:69",
+          "state": "same"
+         },
+         {
+          "index": 65,
+          "feature": "$uidOf:70",
+          "state": "same"
+         },
+         {
+          "index": 66,
+          "feature": "$uidOf:71",
+          "state": "same"
+         },
+         {
+          "index": 67,
+          "feature": "$uidOf:72",
+          "state": "same"
+         },
+         {
+          "index": 68,
+          "feature": "$uidOf:73",
+          "state": "same"
+         },
+         {
+          "index": 69,
+          "feature": "$uidOf:74",
+          "state": "same"
+         },
+         {
+          "index": 70,
+          "feature": "$uidOf:75",
+          "state": "same"
+         },
+         {
+          "index": 71,
+          "feature": "$uidOf:76",
+          "state": "same"
+         },
+         {
+          "index": 72,
+          "feature": "$uidOf:77",
+          "state": "same"
+         },
+         {
+          "index": 73,
+          "feature": "$uidOf:78",
+          "state": "same"
+         },
+         {
+          "index": 74,
+          "feature": "$uidOf:79",
+          "state": "same"
+         },
+         {
+          "index": 75,
+          "feature": "$uidOf:80",
+          "state": "same"
+         },
+         {
+          "index": 76,
+          "feature": "$uidOf:81",
+          "state": "same"
+         },
+         {
+          "index": 77,
+          "feature": "$uidOf:82",
+          "state": "same"
+         },
+         {
+          "index": 78,
+          "feature": "$uidOf:83",
+          "state": "same"
+         },
+         {
+          "index": 79,
+          "feature": "$uidOf:84",
+          "state": "same"
+         },
+         {
+          "index": 80,
+          "feature": "$uidOf:85",
+          "state": "same"
+         },
+         {
+          "index": 81,
+          "feature": "$uidOf:86",
+          "state": "same"
+         },
+         {
+          "index": 82,
+          "feature": "$uidOf:87",
+          "state": "same"
+         },
+         {
+          "index": 83,
+          "feature": "$uidOf:88",
+          "state": "same"
+         },
+         {
+          "index": 84,
+          "feature": "$uidOf:89",
+          "state": "same"
+         },
+         {
+          "index": 85,
+          "feature": "$uidOf:90",
+          "state": "same"
+         },
+         {
+          "index": 86,
+          "feature": "$uidOf:91",
+          "state": "same"
+         },
+         {
+          "index": 87,
+          "feature": "$uidOf:92",
+          "state": "same"
+         },
+         {
+          "index": 88,
+          "feature": "$uidOf:93",
+          "state": "same"
+         },
+         {
+          "index": 89,
+          "feature": "$uidOf:94",
+          "state": "same"
+         },
+         {
+          "index": 90,
+          "feature": "$uidOf:95",
+          "state": "same"
+         },
+         {
+          "index": 91,
+          "feature": "$uidOf:96",
+          "state": "same"
+         },
+         {
+          "index": 92,
+          "feature": "$uidOf:97",
+          "state": "same"
+         },
+         {
+          "index": 93,
+          "feature": "$uidOf:98",
+          "state": "same"
+         },
+         {
+          "index": 94,
+          "feature": "$uidOf:99",
+          "state": "same"
+         },
+         {
+          "index": 95,
+          "feature": "$uidOf:100",
+          "state": "same"
+         },
+         {
+          "index": 96,
+          "feature": "$uidOf:101",
+          "state": "same"
+         },
+         {
+          "index": 97,
+          "feature": "$uidOf:102",
+          "state": "same"
+         },
+         {
+          "index": 98,
+          "feature": "$uidOf:103",
+          "state": "same"
+         },
+         {
+          "index": 99,
+          "feature": "$uidOf:104",
+          "state": "same"
+         },
+         {
+          "index": 100,
+          "feature": "$uidOf:105",
+          "state": "same"
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
    "name": "Güncelleme PDF'i: yalnız değişen sayfalar yazılır, kendi numaralarıyla; kayıt bütün atlasın",
    "setup": "plain",
    "steps": [

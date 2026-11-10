@@ -704,6 +704,20 @@ AtlasLayerRoleName = Literal["coverage", "map"]
 """The names of :class:`AtlasLayerRole`, for a plain string."""
 
 
+class AtlasLook(_StrEnum):
+    """Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.
+
+    - ``same``: It draws the same: only what it does not draw changed (an attribute no text, table or label shows).
+    - ``changed``: It draws otherwise.
+    """
+    SAME = "same"
+    CHANGED = "changed"
+
+
+AtlasLookName = Literal["same", "changed"]
+"""The names of :class:`AtlasLook`, for a plain string."""
+
+
 class AtlasPageState(_StrEnum):
     """How a page stands against the previous atlas (docs/adr/4000).
 
@@ -18154,12 +18168,15 @@ class AtlasPageChange(_Model):
     persistent id in the order listed; `changed` too when the project's parts the pages read changed.
     Attributes:
         index: Unit: index.
+        look: A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its
+            look; none otherwise (a previous record without looks, a page the previous update did not make).
     """
     index: int
     feature: str
     state: AtlasPageState | AtlasPageStateName
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
+    look: AtlasLook | AtlasLookName | None | Unset = UNSET
     removed: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18171,6 +18188,8 @@ class AtlasPageChange(_Model):
             out["added"] = list(self.added)
         if self.changed is not UNSET:
             out["changed"] = list(self.changed)
+        if self.look is not UNSET:
+            out["look"] = None if self.look is None else _enum_out(self.look)
         if self.removed is not UNSET:
             out["removed"] = list(self.removed)
         return out
@@ -18183,6 +18202,7 @@ class AtlasPageChange(_Model):
             state=_enum_in(AtlasPageState, data["state"]),
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
+            look=UNSET if "look" not in data else None if data["look"] is None else _enum_in(AtlasLook, data["look"]),
             removed=list(data["removed"]) if "removed" in data else UNSET,
         )
 
@@ -18197,6 +18217,11 @@ class AtlasPageInfo(_Model):
         scale: The first atlas map's scale, the denominator (1000 is 1/1000). Unit: scale.
         center: The map's centre: the middle of the object's box. Unit: length.
         bbox: The object's box: minimum east, north, maximum east, north. Unit: length.
+        look: The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list
+            with the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an
+            empty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps
+            that stand still on every page. None where the pages were not made (a check), and for a page an update did not
+            make whose previous record had none.
         sources: The page's sources (docs/adr/3600; ADR 1320 §2's rule a page at a time): its own object first, then the objects
             its maps draw (its atlas maps on its own ground) or its tables read, by persistent id in drawing order; empty
             when they are not listed (a check that makes no pages).
@@ -18207,6 +18232,7 @@ class AtlasPageInfo(_Model):
     scale: int
     center: Vec2
     bbox: list[float]
+    look: str | None | Unset = UNSET
     sources: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -18217,6 +18243,8 @@ class AtlasPageInfo(_Model):
         out["scale"] = self.scale
         out["center"] = _vec2_out(self.center)
         out["bbox"] = [float(e0) for e0 in self.bbox]
+        if self.look is not UNSET:
+            out["look"] = self.look
         if self.sources is not UNSET:
             out["sources"] = list(self.sources)
         return out
@@ -18230,6 +18258,7 @@ class AtlasPageInfo(_Model):
             scale=data["scale"],
             center=Vec2.from_json(data["center"]),
             bbox=[float(e0) for e0 in data["bbox"]],
+            look=data.get("look", UNSET),
             sources=list(data["sources"]) if "sources" in data else UNSET,
         )
 
@@ -134500,6 +134529,8 @@ __all__ = [
     "AtlasGonePage",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
+    "AtlasLook",
+    "AtlasLookName",
     "AtlasPageChange",
     "AtlasPageInfo",
     "AtlasPageState",

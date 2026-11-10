@@ -49,7 +49,7 @@ sırayla alır; sekizinci tur 10 Kasım'da MAP-12 ile bitti (ADR 4080–4460), d
 | MAP-15 Tesviye | 1580, 1600, 1620, 1840, 2340, 2740, 3140, 3540, 3940, 4340 | malzeme bölgelerinin çizime yazılması; kesitlerin çizime yazılması ve aks boyunca kesit | — |
 | MAP-16 Altyapı | 1640, 1860, 2360, 2760, 3160, 3560, 3960, 4360, 4780 | taramanın türü; yol kaplamasının (yüzey kaplaması) profilde gösterimi | EPANET/SWMM (hız, doluluk); iç çap mı anma çapı mı (idarenin kataloğu) |
 | MAP-17 Veri devri | 1660, 1880, 2380, 2780, 3180, 3580, 3980, 4380, 4800 | kurum profilinde ad dönüşümünün biçimi (TUCBS, BÖHHBÜY) | kurum profilleri; DXF'te TABLE yazımı (doğrulama yolu: AutoCAD ya da bağımsız okuyucu) |
-| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması); atlas sayfasının görünüşünün değiştiği ayrımı | kurum eksen adları; resmî profil kapısı |
+| MAP-18 Pafta | 1320, 1680, 1900, 2400, 2800, 3200, 3600, 4000, 4400, 4820 | total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; .kcad bölümü); önizlemede görünüş | kurum eksen adları; resmî profil kapısı |
 | MAP-19 Saha | 1700, 1920, 2420, 2820, 3220, 3620, 4020, 4420 | yetkili inceleme kaydı; dönemlerden doğru uydurma ve iki eşik | canlı cihaz; cihaz biçimleri |
 | MAP-20 Yeniden üretim | 1720, 1940, 2440, 2840, 3240, 3640, 4040, 4440 | bütçe (gerçek veriyle ölçüm); etiket, boykesit, korkuluk, menfez, kavşak, platform ve boru profili çizimlerinin kendi hesabının içinde durması; katmanın alanları | — |
 
@@ -2278,6 +2278,16 @@ PDF yalnız değişen ve yeni sayfaları atlas sırasıyla tutar, her sayfa kend
 sayfa etiketleri aynı; cevapta ve kayıtta `written`, kayıt bütün atlasın; `atlas_unchanged` ve önceki kayıtsız
 `no_previous` retleri; 4 bağımsız durum (eski 40 bayt bayt aynı), Python (pypdf etiketleri, pdftotext), MCP; masaüstünde
 Yalnız değişen ve yeni sayfalar. Açık: total station ve nivelman kalitesi, görünüşü değişen sayfa ayrımı.
+
+**10 Kasım 2026, dokuzuncu tur — atlas sayfasının görünüşü ([ADR 4820](../docs/adr/4820-atlas-page-look.md)).**
+Kapsam: **CAD + CBS**; maddenin sıradaki işinin ikinci parçası (total station ve nivelman kalitesi projenin kaydına yeni
+bir `.kcad` bölümü istediği için açık). Dayanak: QGIS QgsRenderChecker ve diff-pdf (çizerek karşılaştırma), BÖHHBÜY m. 76
+(imza çizilen sayfaya ait); 10 Kasım 2026'da okundu. Kanıtlanan: sayfalar yapılırken her sayfanın görünüş özeti (`look`,
+SHA-256): görüntü listesi yayının damgaları dışarıda (gün, kullanıcı, KentOS'un boş `kaynak`'a yazdığı çizim durumu),
+haritaların yolları ve yazıları, tablolar, koordinat listeleri, lejantlar, kalite notları, duran haritalar; PDF baytları
+ve yazı tipi alt kümesi değil; kayıtta da, güncellemenin yapmadığı sayfa öncekini taşır; değişen sayfanın
+`changes[].look`'u same ya da changed; 3 bağımsız durum (47; eskiler bayt bayt aynı), Python, MCP; masaüstünde yazıldı
+iletisi. Açık: total station ve nivelman kalitesi, önizlemede görünüş.
 
 ### MAP-19 — Modern saha uygulaması ve gerçekleşen durum kontrolünü tamamla [ ]
 

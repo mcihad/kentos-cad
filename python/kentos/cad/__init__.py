@@ -315,6 +315,8 @@ __all__ = [
     "AtlasGonePage",
     "AtlasLayerRole",
     "AtlasLayerRoleName",
+    "AtlasLook",
+    "AtlasLookName",
     "AtlasPageChange",
     "AtlasPageInfo",
     "AtlasPageState",

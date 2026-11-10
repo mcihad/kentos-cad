@@ -99195,7 +99195,7 @@
       "id": "file.export.atlas",
       "version": 1,
       "title": "Atlası PDF yap",
-      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
+      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. Her sayfanın kaynak dökümü (ADR 3600): sayfanın kendi nesnesi önce, sonra o sayfada çizilen haritaların (atlas haritası sayfanın yerinde, genel bakış onu izleyerek, duran haritalar kendi yerinde) zeminine değen ve haritanın bastığı nesneler, tabloların okuduğu nesneler, kalıcı kimlikleriyle çizim sırasında (pages[].sources); listelenen her nesnenin içerik özeti (objects, kentos.object-digest/1). Kaynak kaydı (ADR 4000): execute PDF'in yanına <ad>.kaynaklar.json yazar (kentos.atlas-sources/1: PDF'in adı ve SHA-256'sı, pafta, gün, pin, sayfalar ve kaynakları, nesnelerin özetleri; record). previous önceki atlasın kaydının mutlak yoludur; verilince changes her sayfayı ona göre söyler: same, changed (listelediği nesnelerden özeti değişen changed, yeni listelenen added, artık listelenmeyen removed; projenin settings, layers, styles ya da sheets parçası değiştiyse parts ve her sayfa changed), new; nesnesi artık sayfa olmayan önceki sayfalar gone. Kayıt değilse ya da başka paftanınsa no_previous. Sayfanın görünüşü (ADR 4820): sayfalar yapılınca her sayfanın look'u (SHA-256): paftanın görüntü listesi yayının kendi damgaları dışarıda (gün, kullanıcı, boş kaynak notuna yazılan çizim durumu), haritalarının yolları ve yazıları, tabloları, koordinat listeleri, lejantları, kalite notları ve her sayfada duran haritalar; kayıtta da. Önceki kayıt görünüşleri biliyorsa değişen her sayfanın changes[].look'u same (yalnız çizmediği değişti) ya da changed. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
       "aliases": [
         "atlaspdf"
       ],
@@ -118856,6 +118856,21 @@
         }
       ]
     },
+    "AtlasLook": {
+      "description": "Whether a changed page also looks other (docs/adr/4820): its look's digest against the previous atlas's.",
+      "oneOf": [
+        {
+          "const": "same",
+          "description": "It draws the same: only what it does not draw changed (an attribute no text, table or label shows).",
+          "type": "string"
+        },
+        {
+          "const": "changed",
+          "description": "It draws otherwise.",
+          "type": "string"
+        }
+      ]
+    },
     "AtlasPageChange": {
       "description": "A page against the previous atlas (docs/adr/4000), ADR 1320's rule: the objects it listed then and lists now\nwhose digest changed (`changed`), the ones it lists now and not then (`added`), then and not now (`removed`), by\npersistent id in the order listed; `changed` too when the project's parts the pages read changed.",
       "properties": {
@@ -118879,6 +118894,17 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "index"
+        },
+        "look": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AtlasLook"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A changed page's look against the previous atlas's (docs/adr/4820), when both runs made the page and knew its\nlook; none otherwise (a previous record without looks, a page the previous update did not make)."
         },
         "removed": {
           "items": {
@@ -118926,6 +118952,13 @@
           "minimum": 0,
           "type": "integer",
           "x-unit": "index"
+        },
+        "look": {
+          "description": "The page's look (docs/adr/4820): the SHA-256 of what it draws, as made for the PDF: its sheet's display list\nwith the publication's own stamps set aside (the day, the user, the drawing state's note KentOS writes into an\nempty `kaynak`), its maps' paths and texts, its tables, coordinate lists, legends and survey notes, and the maps\nthat stand still on every page. None where the pages were not made (a check), and for a page an update did not\nmake whose previous record had none.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "name": {
           "description": "The page's name (the atlas's page-name expression; a repeated one is numbered).",

@@ -79,6 +79,6 @@ ve yeni sayfaların ayrı bir PDF'e yazılması (güncelleme teslimi), sayfa num
 
 ## Sonra
 
-- Atlas sayfalarının bayt özetiyle “görünüşü değişti” ayrımı (ADR 4000 Sonra).
+- Atlas sayfalarının bayt özetiyle “görünüşü değişti” ayrımı (ADR 4000 Sonra): [ADR 4820](4820-atlas-page-look.md)'de.
 - Total station ve nivelman kalitesi (önce dengeleme doğruluklarının saklanması; MAP-18'in öbür maddesi).
 - Web (TODOS §0.2).

@@ -602,6 +602,9 @@
 - **Kalite notu kırpma şekliyle (9 Kasım 2026; MAP-18, [ADR 3200](../../docs/adr/3200-sheet-survey-quality-by-clip-shape.md)).**
   Haritanın ölçme kalitesi notu çerçeve yerine haritanın kırpma şeklinin (dikdörtgen, çokgen, atlas nesnesi) gösterdiği
   noktalarla; içerilme kesin yüklemle. CAD + CBS.
+- **Atlas sayfasının görünüşü (10 Kasım 2026; MAP-18, [ADR 4820](../../docs/adr/4820-atlas-page-look.md)).**
+  `file.export.atlas` sayfalar yapılınca her sayfanın `look`'u (çizdiğinin SHA-256'sı, yayının damgaları dışarıda) ve
+  değişen sayfanın `changes[].look`'u (same: yalnız çizmediği değişti); kayıtta da. CAD + CBS.
 - **Tanımlı özniteliğin boşluklu etiketinin geri adı (10 Kasım 2026; MAP-17, [ADR 4800](../../docs/adr/4800-dxf-defined-attribute-name-back.md)).**
   Etiketi adından başka yazılan ATTDEF'in KentOS verisinde `tagname`; geri okumada tanım ve eklemelerin değerleri adı alır,
   dosya kazanır (büyük harfli etiket uyar, değişen etiket ad olur ve söylenir). İstem ad kaynağı değil. CAD + CBS.
