@@ -512,6 +512,8 @@ mod pipes_profile_walls_tests;
 #[cfg(test)]
 mod pipes_rules_tests;
 #[cfg(test)]
+mod dxf_attribute_names_tests;
+#[cfg(test)]
 mod culvert_window_tests;
 #[cfg(test)]
 mod guardrail_window_tests;

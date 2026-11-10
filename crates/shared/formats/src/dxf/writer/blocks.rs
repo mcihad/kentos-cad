@@ -10,7 +10,8 @@
 //! with it is an anonymous block), and a name DXF's case-blind comparison
 //! takes for another's gets " (2)"; every change is said. A definition's
 //! attribute definitions (§7) follow its objects as ATTDEFs; a tag's white
-//! space and control characters become "_" (DXF's tags have none), and said.
+//! space and control characters become "_" (DXF's tags have none), and said;
+//! the name is then kept in the ATTDEF's KentOS data (docs/adr/4800).
 
 use std::collections::{HashMap, HashSet};
 
@@ -64,7 +65,7 @@ pub(super) fn tags(
             report.note(
                 "Öznitelik etiketi",
                 &format!(
-                    "“{name}” bloğunun “{}” etiketi “{tag}” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz)",
+                    "“{name}” bloğunun “{}” etiketi “{tag}” olarak yazıldı (DXF'te etiket boşluk içermez, büyük küçük harf ayırmaz); adı ATTDEF'in KentOS verisinde, KentOS geri okurken düzeltir",
                     a.tag
                 ),
                 0,
@@ -270,6 +271,14 @@ pub(super) fn block(
         out.int(70, attribute_flags(&a.options));
         if vertical != 0 {
             out.int(74, vertical);
+        }
+        // Docs/adr/4800: a tag DXF's tags could not hold as the name is gets the name in the ATTDEF's KentOS data;
+        // read back, the definition and its inserts' values take the name while the file's tag is still this one.
+        if *tag != a.tag {
+            out.xdata(&super::super::xdata::groups(&super::super::xdata::Meta {
+                tag_names: std::collections::BTreeMap::from([(tag.clone(), a.tag.clone())]),
+                ..Default::default()
+            }));
         }
     }
     let h = handles.take();

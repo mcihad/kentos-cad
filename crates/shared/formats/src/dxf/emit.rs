@@ -569,6 +569,9 @@ pub struct Emitter<'l> {
     pub closed_lines: bool,
     /// Whether a block's objects carry heights (docs/adr/2100 §2), by upper-case name, worked out once.
     heights: HashMap<String, bool>,
+    /// The block read as a definition: its attribute definitions' names KentOS kept for their tags (docs/adr/4800),
+    /// upper-case tag → name.
+    named: HashMap<String, String>,
 }
 
 impl<'l> Emitter<'l> {
@@ -586,7 +589,46 @@ impl<'l> Emitter<'l> {
             aside: HashMap::new(),
             closed_lines: false,
             heights: HashMap::new(),
+            named: HashMap::new(),
         }
+    }
+
+    /// The names KentOS kept for a block's attribute tags DXF's tags could not hold (docs/adr/4800): each ATTDEF's own
+    /// KentOS data holds its name under the tag it was written with. The file wins: the name is taken only while the
+    /// ATTDEF's tag is still that one, case-blind as DXF's tags are (AutoCAD writes them in capitals), and no other
+    /// ATTDEF of the block has the name as its tag (KentOS's data edited by hand); a name taken by an earlier tag is
+    /// not given twice. Upper-case tag → name; and the tags whose record no longer fits (tag, the record's tag, its
+    /// name), to be said.
+    fn defined_names(&self, block: &str) -> (HashMap<String, String>, Vec<(String, String, String)>) {
+        let mut names = HashMap::new();
+        let mut stale = Vec::new();
+        let Some(block) = self.lib.blocks.get(&block.to_uppercase()) else {
+            return (names, stale);
+        };
+        let defs: Vec<(&str, Option<&crate::dxf::xdata::Meta>)> = block
+            .entities
+            .iter()
+            .filter_map(|x| match &x.kind {
+                Kind::Text { prompt: Some(_), constant: false, tag, .. } if !tag.trim().is_empty() => {
+                    Some((tag.trim(), x.meta.as_ref()))
+                }
+                _ => None,
+            })
+            .collect();
+        for (tag, meta) in &defs {
+            let Some(m) = meta else { continue };
+            for (written, name) in &m.tag_names {
+                if written.to_uppercase() != tag.to_uppercase() {
+                    stale.push(((*tag).to_owned(), written.clone(), name.clone()));
+                    continue;
+                }
+                let taken = defs.iter().any(|(other, _)| *other == name.as_str()) || names.values().any(|n| n == name);
+                if !taken {
+                    names.insert(tag.to_uppercase(), name.clone());
+                }
+            }
+        }
+        (names, stale)
     }
 
     /// Whether the block `key`'s own objects carry heights KentOS keeps (a line's ends, a point, a polyline's
@@ -818,10 +860,22 @@ impl<'l> Emitter<'l> {
             let own = n.starts_with('_');
             let outer = own.then(|| std::mem::take(&mut self.out.report));
             self.defining = true;
+            // Docs/adr/4800: its attribute definitions' names KentOS kept for their tags; a record whose tag the file
+            // changed since is said and not taken.
+            let (named, stale) = self.defined_names(n);
+            self.named = named;
+            for (tag, written, name) in stale {
+                let why = format!(
+                    "“{}” bloğunun “{tag}” etiketi KentOS'un yazdığı “{written}” değil (başka bir programda değişmiş); KentOS verisindeki “{name}” adı alınmadı, etiket ad oldu",
+                    block.name
+                );
+                self.note("Öznitelik etiketi", &why, 0);
+            }
             let ctx = Ctx::definition(n);
             if !block.xref {
                 for x in &block.entities { self.emit(x, &ctx); }
             }
+            self.named.clear();
             self.notes_done();
             // The rings KentOS wrote as polylines of their own go back into their polygons, as in the drawing.
             self.merge_holes();
@@ -1647,6 +1701,17 @@ impl<'l> Emitter<'l> {
                         {
                             attrs.insert(name.clone(), v);
                         }
+                    }
+                }
+                // Docs/adr/4800: the values of its definition's attributes take the names its ATTDEFs keep, by the
+                // same rule (the file's tag still the one KentOS wrote; a name already there left as it is).
+                for (wanted, named) in self.defined_names(name).0 {
+                    let found = attrs.keys().find(|k| k.to_uppercase() == wanted).cloned();
+                    if let Some(k) = found
+                        && !attrs.contains_key(&named)
+                        && let Some(v) = attrs.remove(&k)
+                    {
+                        attrs.insert(named, v);
                     }
                 }
                 let placed = Placed {
@@ -2536,6 +2601,9 @@ impl<'l> Emitter<'l> {
         if tag.is_empty() {
             return self.skip(WHAT, "etiketi yok", e.line);
         }
+        // Docs/adr/4800: the name KentOS kept for a tag DXF's tags could not hold, while the file's tag is still it.
+        let named = self.named.get(&tag.to_uppercase()).cloned();
+        let tag = named.as_deref().unwrap_or(tag);
         if self.out.attributes.iter().any(|a| a.tag == tag) {
             let why = format!("“{tag}” etiketi blokta ikinci kez var; ilki alındı");
             return self.skip(WHAT, &why, e.line);
